@@ -7,12 +7,12 @@ function findMarkersFor(messageId: string, allMessages: Message[]) {
 
 /**
  * Risolve il livello spunta UI per un messaggio inviato da me.
- * Priorità: reading > received > sent
+ * XEP-0333 v1.0: solo `displayed` → lettura (✓✓ blu).
  */
 export function resolveCheckmarkLevel(
   message: Message,
   allMessages: Message[],
-  uiOverlays: { reading: ReadonlySet<string>; received: ReadonlySet<string> }
+  readingUi: ReadonlySet<string>
 ): CheckmarkLevel {
   if (message.from !== 'me') {
     return 'sent'
@@ -22,16 +22,10 @@ export function resolveCheckmarkLevel(
   if (message.status === 'failed') return 'failed'
 
   const markers = findMarkersFor(message.messageId, allMessages)
-  const hasReadingMarker = markers.some(
-    (m) => m.markerType === 'displayed' || m.markerType === 'acknowledged'
-  )
-  const hasReceivedMarker = markers.some((m) => m.markerType === 'received')
+  const hasDisplayed = markers.some((m) => m.markerType === 'displayed')
 
-  if (hasReadingMarker || uiOverlays.reading.has(message.messageId)) {
+  if (hasDisplayed || readingUi.has(message.messageId)) {
     return 'reading'
-  }
-  if (hasReceivedMarker || uiOverlays.received.has(message.messageId)) {
-    return 'received'
   }
 
   return 'sent'

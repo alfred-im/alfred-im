@@ -27,11 +27,8 @@ interface VirtualMessagesContextValue {
   removeVirtual: (conversationJid: string, virtualId: string) => void
   pruneMatchedVirtuals: (conversationJid: string, virtualIds: string[]) => void
   readingUi: ReadonlySet<string>
-  receivedUi: ReadonlySet<string>
   setReadingUi: (messageId: string) => void
-  setReceivedUi: (messageId: string) => void
   clearReadingUi: (messageId: string) => void
-  clearReceivedUi: (messageId: string) => void
 }
 
 const VirtualMessagesContext = createContext<VirtualMessagesContextValue | undefined>(
@@ -43,7 +40,6 @@ export function VirtualMessagesProvider({ children }: { children: ReactNode }) {
     () => new Map()
   )
   const [readingUi, setReadingUiSet] = useState<Set<string>>(() => new Set())
-  const [receivedUi, setReceivedUiSet] = useState<Set<string>>(() => new Set())
 
   const getVirtuals = useCallback(
     (conversationJid: string) => {
@@ -133,20 +129,8 @@ export function VirtualMessagesProvider({ children }: { children: ReactNode }) {
     setReadingUiSet((prev) => new Set(prev).add(messageId))
   }, [])
 
-  const setReceivedUi = useCallback((messageId: string) => {
-    setReceivedUiSet((prev) => new Set(prev).add(messageId))
-  }, [])
-
   const clearReadingUi = useCallback((messageId: string) => {
     setReadingUiSet((prev) => {
-      const next = new Set(prev)
-      next.delete(messageId)
-      return next
-    })
-  }, [])
-
-  const clearReceivedUi = useCallback((messageId: string) => {
-    setReceivedUiSet((prev) => {
       const next = new Set(prev)
       next.delete(messageId)
       return next
@@ -161,11 +145,8 @@ export function VirtualMessagesProvider({ children }: { children: ReactNode }) {
       removeVirtual,
       pruneMatchedVirtuals,
       readingUi,
-      receivedUi,
       setReadingUi,
-      setReceivedUi,
       clearReadingUi,
-      clearReceivedUi,
     }),
     [
       getVirtuals,
@@ -174,11 +155,8 @@ export function VirtualMessagesProvider({ children }: { children: ReactNode }) {
       removeVirtual,
       pruneMatchedVirtuals,
       readingUi,
-      receivedUi,
       setReadingUi,
-      setReceivedUi,
       clearReadingUi,
-      clearReceivedUi,
     ]
   )
 

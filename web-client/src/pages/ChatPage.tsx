@@ -34,7 +34,7 @@ export function ChatPage() {
   const { client, isConnected, jid: myJid } = useConnection()
   const { conversations, markAsRead } = useConversations()
   const { subscribeToMessages } = useMessaging()
-  const { readingUi, receivedUi } = useVirtualMessages()
+  const { readingUi } = useVirtualMessages()
   
   const jid = useMemo(() => encodedJid ? decodeURIComponent(encodedJid) : '', [encodedJid])
   const conversation = useMemo(() => conversations.find((c) => c.jid === jid), [conversations, jid])
@@ -336,7 +336,6 @@ export function ChatPage() {
         showDate={showDate}
         allMessages={dbMessages}
         readingUi={readingUi}
-        receivedUi={receivedUi}
         virtualSendState={virtualSendState}
       />
     )

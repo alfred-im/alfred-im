@@ -8,4 +8,4 @@ export type ReceiveAxisState = 'none' | 'ui' | 'synced'
 export type ReadAxisState = 'none' | 'ui' | 'synced'
 
 /** Livello spunta solo UI (non persistito come stato DB separato) */
-export type CheckmarkLevel = 'pending' | 'failed' | 'sent' | 'received' | 'reading'
+export type CheckmarkLevel = 'pending' | 'failed' | 'sent' | 'reading'

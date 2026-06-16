@@ -1,6 +1,6 @@
 # Stati del messaggio — Policy di sviluppo
 
-**Versione**: 1.0  
+**Versione**: 1.1  
 **Data**: 2026-06-16  
 **Stato**: Policy attiva per implementazione
 
@@ -26,7 +26,7 @@ Solo **MAM** persiste messaggi e marker nel database messaggi.
 | **Ricezione** | Campanello → messaggio in UI | MAM scarica e salva |
 | **Lettura** | Campanello marker → spunta in UI | MAM allinea marker nel DB |
 
-`none` su un asse = quell’asse non si applica al messaggio (es. ricezione su messaggio inviato da te).
+`none` su un asse = quell'asse non si applica al messaggio (es. ricezione su messaggio inviato da te).
 
 ### Invio (messaggi tuoi)
 
@@ -55,33 +55,35 @@ ui → synced
 
 ## Spunte in UI (solo grafica)
 
-Tre livelli visivi, **indipendenti** dagli stati DB:
+Due livelli visivi, allineati a **XEP-0333 v1.0** (solo `markable` + `displayed`):
 
 | Livello UI | Aspetto | Significato |
 |------------|---------|-------------|
 | **Inviato** | ✓ grigia | Messaggio accettato dal server |
-| **Ricevuto** | ✓✓ grigie | Arrivato sul dispositivo dell’altro |
-| **Lettura** | ✓✓ blu | L’altro ha visto / letto il messaggio |
+| **Lettura** | ✓✓ blu | L'altro ha visualizzato il messaggio (`displayed`) |
 
-### Mapping protocollo XMPP → UI
+### Cosa NON implementiamo
 
-| Marker XMPP (DB) | Stato UI spunta |
-|------------------|-----------------|
-| — (solo `status: sent`) | ✓ grigia |
-| `received` | ✓✓ grigie |
-| `displayed` | ✓✓ blu (lettura) |
-| `acknowledged` | ✓✓ blu (lettura) |
+| Marker | Stato in XEP-0333 v1.0 | Nostra policy |
+|--------|------------------------|---------------|
+| `received` | **Rimosso** (2024) | Ignorato in UI; stanza.js può ancora inviarlo in automatico verso altri client |
+| `acknowledged` | **Rimosso** (2024) | Non gestito |
+| XEP-0184 delivery receipts | Protocollo separato | Non usato |
 
-`displayed` e `acknowledged` sono **distinti nel DB** ma **un solo stato grafico “lettura”** (✓✓ blu).
+### Mapping protocollo → UI
+
+| Marker XMPP | Stato UI spunta |
+|-------------|-----------------|
+| — (solo inviato) | ✓ grigia |
+| `displayed` | ✓✓ blu |
 
 ### Stato implementazione spunte
 
 | Funzionalità | Stato |
 |--------------|-------|
-| ✓ grigia (inviato) | ✅ Implementato |
-| ✓✓ blu (lettura da `displayed` / `acknowledged`) | ✅ Parziale — da unificare in un solo stato UI `reading` |
-| ✓✓ grigie (ricevuto, `received`) | ⏳ **Da implementare** (listener + UI + sync MAM) |
-| Modello `ui` → `synced` per lettura | ⏳ **Da implementare** (overlay UI + MAM, no salvataggio marker dal listener) |
+| ✓ grigia (inviato) | ✅ |
+| ✓✓ blu (`displayed`) | ✅ |
+| `received` / `acknowledged` | ❌ Fuori scope |
 
 ---
 
@@ -98,13 +100,13 @@ Tre livelli visivi, **indipendenti** dagli stati DB:
 
 - **`messageId` (locale)** = `origin-id` (XEP-0359) se presente nello stanza archiviato, altrimenti `id` stanza, ultimo fallback archive UID MAM.
 - **`mamArchiveId`** = UID riga archivio MAM (`MAMResult.id`); usato solo per migrazione/paginazione, non per marker.
-- **Marker XEP-0333** referenziano l’origin-id del messaggio target → stesso valore di `messageId` canonico.
+- **Marker XEP-0333** referenziano l'origin-id del messaggio target → stesso valore di `messageId` canonico.
 
 ---
 
 ## Trigger sync MAM (campanello)
 
-All’evento real-time (messaggio, marker):
+All'evento real-time (messaggio, marker):
 
 1. Aggiorna UI (`ui`)
 2. Schedula fetch MAM con `start = ora − 2 secondi` (debounce per conversazione)

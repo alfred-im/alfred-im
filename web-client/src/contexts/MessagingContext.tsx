@@ -37,7 +37,7 @@ function extractContactJid(message: ReceivedMessage, myJid: string): string {
 export function MessagingProvider({ children }: { children: ReactNode }) {
   const { client, isConnected, jid } = useConnection()
   const { refreshConversation } = useConversations()
-  const { addIncomingVirtual, setReadingUi, setReceivedUi } = useVirtualMessages()
+  const { addIncomingVirtual, setReadingUi } = useVirtualMessages()
   const messageCallbacks = useRef<Set<MessageCallback>>(new Set())
 
   useEffect(() => {
@@ -93,42 +93,14 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       scheduleConversationMamSync(client, contactJid, 'marker-displayed')
     }
 
-    const handleAcknowledgedMarker = (message: ReceivedMessage) => {
-      if (!syncBoundaryService.isActive() || !message.marker?.id) return
-
-      const contactJid = normalizeJID(message.from || '')
-      setReadingUi(message.marker.id)
-      scheduleConversationMamSync(client, contactJid, 'marker-acknowledged')
-    }
-
-    const handleReceivedMarker = (message: ReceivedMessage) => {
-      if (!syncBoundaryService.isActive() || !message.marker?.id) return
-
-      const contactJid = normalizeJID(message.from || '')
-      setReceivedUi(message.marker.id)
-      scheduleConversationMamSync(client, contactJid, 'marker-received')
-    }
-
     client.on('message', handleMessage)
     client.on('marker:displayed', handleDisplayedMarker)
-    client.on('marker:acknowledged', handleAcknowledgedMarker)
-    client.on('marker:received', handleReceivedMarker)
 
     return () => {
       client.off('message', handleMessage)
       client.off('marker:displayed', handleDisplayedMarker)
-      client.off('marker:acknowledged', handleAcknowledgedMarker)
-      client.off('marker:received', handleReceivedMarker)
     }
-  }, [
-    client,
-    isConnected,
-    jid,
-    refreshConversation,
-    addIncomingVirtual,
-    setReadingUi,
-    setReceivedUi,
-  ])
+  }, [client, isConnected, jid, refreshConversation, addIncomingVirtual, setReadingUi])
 
   const subscribeToMessages = useCallback((callback: MessageCallback) => {
     messageCallbacks.current.add(callback)

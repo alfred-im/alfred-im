@@ -34,7 +34,7 @@ export interface Message {
   mamArchiveId?: string
   
   // XEP-0333 Chat Markers
-  markerType?: 'received' | 'displayed' | 'acknowledged'
+  markerType?: 'displayed'
   markerFor?: string // messageId del messaggio referenziato
 }
 
