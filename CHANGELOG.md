@@ -11,6 +11,13 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **Funzioni non usate**: `loadAllConversations`, `updateConversationOnNewMessage`, `reloadAllMessagesFromServer`, `handleIncomingMessage`
 - **Documentazione obsoleta**: `pull-to-refresh-fix.md`, `INTEGRAZIONE_MAPPA_COMPLETATA.md`, riferimenti a sync legacy e pull-to-refresh custom
 
+### Corretti / Completati
+- **Re-sync su reconnect**: `AppInitializer` resetta lo stato sync alla disconnessione
+- **LoginPopup**: gestisce correttamente errori di `connect()`
+- **Lista conversazioni**: aggiornamento mirato con `refreshConversation()` invece di reload completo
+- **Persistence messaggi**: salvataggio unificato via `messageRepository` (rimosso wrapper circolare in `conversations-db`)
+- **CSS morto**: rimossi stili pull-to-refresh non usati
+
 ### Da Fare
 - Chat di gruppo (MUC - XEP-0045)
 - Crittografia E2E (OMEMO - XEP-0384)

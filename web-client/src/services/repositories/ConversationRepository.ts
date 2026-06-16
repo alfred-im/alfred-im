@@ -212,11 +212,21 @@ export class ConversationRepository {
    * Incrementa il contatore non letti di una conversazione
    */
   async incrementUnread(jid: string): Promise<void> {
-    const conversation = await this.getByJid(jid)
-    if (conversation) {
-      await this.update(jid, {
-        unreadCount: conversation.unreadCount + 1,
-      })
+    const db = await getDB()
+    const tx = db.transaction('conversations', 'readwrite')
+
+    try {
+      const existing = await tx.store.get(jid)
+      if (existing) {
+        await tx.store.put({
+          ...existing,
+          unreadCount: existing.unreadCount + 1,
+        })
+      }
+      await tx.done
+    } catch (error) {
+      console.error('Errore nell\'incremento unread:', error)
+      throw new Error('Impossibile aggiornare il contatore non letti')
     }
   }
 }

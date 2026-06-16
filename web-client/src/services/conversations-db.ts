@@ -273,22 +273,6 @@ export async function clearConversations(): Promise<void> {
 // ============================================================================
 
 /**
- * Salva multipli messaggi nel database (con de-duplicazione per messageId)
- */
-export async function saveMessages(messages: Message[]): Promise<void> {
-  if (messages.length === 0) return
-
-  console.log(`💾 saveMessages: salvando ${messages.length} messaggi`)
-  console.log(`   - Conversazioni: ${[...new Set(messages.map(m => m.conversationJid))].join(', ')}`)
-  
-  // Usa il repository singleton per notificare gli observer
-  const { messageRepository } = await import('./repositories')
-  await messageRepository.saveAll(messages)
-  
-  console.log(`✓ saveMessages completato`)
-}
-
-/**
  * Aggiunge un singolo messaggio
  */
 export async function addMessage(message: Message): Promise<void> {
@@ -458,16 +442,6 @@ export async function deleteMessage(messageId: string): Promise<void> {
   const tx = db.transaction('messages', 'readwrite')
   await tx.store.delete(messageId)
   await tx.done
-}
-
-/**
- * Pulisce tutti i messaggi di una conversazione
- * Usa MessageRepository per notificare observer
- */
-export async function clearMessagesForConversation(conversationJid: BareJID): Promise<void> {
-  // Usa il repository singleton per notificare gli observer
-  const { messageRepository } = await import('./repositories')
-  await messageRepository.clearForConversation(conversationJid)
 }
 
 // ============================================================================

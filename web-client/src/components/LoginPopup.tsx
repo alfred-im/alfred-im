@@ -103,20 +103,21 @@ export function LoginPopup({ isInitializing }: LoginPopupProps) {
 
     setLoginStatus({ state: 'pending', message: 'Connessione al server...' })
 
-    try {
-      await connect(jidValidation.jid!, password)
-      setLoginStatus({
-        state: 'success',
-        message: 'Accesso completato con successo!',
-      })
-      // Il popup si chiuderà automaticamente quando isConnected diventa true
-    } catch (error) {
+    const result = await connect(jidValidation.jid!, password)
+    if (!result.success) {
       setLoginStatus({
         state: 'error',
-        message: 'Errore durante il login.',
-        details: (error as Error).message,
+        message: 'Impossibile connettersi al server.',
+        details: result.error,
       })
+      return
     }
+
+    setLoginStatus({
+      state: 'success',
+      message: 'Accesso completato con successo!',
+    })
+    // Il popup si chiuderà automaticamente quando isConnected diventa true
   }
 
   return (

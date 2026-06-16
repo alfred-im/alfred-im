@@ -1,7 +1,6 @@
 import type { Agent } from 'stanza'
 import type { MAMResult } from 'stanza/protocol'
 import {
-  saveMessages,
   getMessagesForConversation,
   type Message,
 } from './conversations-db'
@@ -167,7 +166,7 @@ export async function loadMessagesForContact(
 
     // Salva TUTTI i messaggi nel database (dati raw, senza alternanza self-chat)
     if (allMessages.length > 0) {
-      await saveMessages(allMessages)
+      await messageRepository.saveAll(allMessages)
     }
 
     // Filtra solo messaggi di chat validi (con body) per la visualizzazione nella UI

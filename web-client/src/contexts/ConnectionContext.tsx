@@ -12,7 +12,7 @@ interface ConnectionContextType {
   isConnecting: boolean
   jid: string | null
   error: string | null
-  connect: (jid: string, password: string) => Promise<boolean>
+  connect: (jid: string, password: string) => Promise<{ success: boolean; error?: string }>
   disconnect: () => void
   clearError: () => void
 }
@@ -47,9 +47,9 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
       console.log('✅ Credenziali trovate, tentativo auto-login per:', savedCredentials.jid)
       
       // Tenta auto-login
-      const success = await connect(savedCredentials.jid, savedCredentials.password)
+      const result = await connect(savedCredentials.jid, savedCredentials.password)
       
-      if (success) {
+      if (result.success) {
         console.log('✅ Auto-login completato con successo')
       } else {
         console.log('❌ Auto-login fallito - credenziali non più valide')
@@ -77,7 +77,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
     }
   }, [client, isConnected])
 
-  const connect = useCallback(async (userJid: string, password: string): Promise<boolean> => {
+  const connect = useCallback(async (userJid: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsConnecting(true)
     setError(null)
 
@@ -102,13 +102,13 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
       saveAuth(userJid, password)
       
       setIsConnecting(false)
-      return true
+      return { success: true }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Errore di connessione'
       setError(errorMessage)
       clearAuth()
       setIsConnecting(false)
-      return false
+      return { success: false, error: errorMessage }
     }
   }, [saveAuth, clearAuth])
 

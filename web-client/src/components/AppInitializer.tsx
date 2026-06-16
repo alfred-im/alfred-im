@@ -28,13 +28,16 @@ export function AppInitializer({ children }: AppInitializerProps) {
   const hasSyncedRef = useRef(false)
 
   useEffect(() => {
-    // Se non connesso, non fare nulla
-    if (!client || !isConnected) {
+    if (!isConnected) {
+      hasSyncedRef.current = false
       syncStatusService.setSyncing(false)
       return
     }
 
-    // Se già sincronizzato in questa sessione, non risincronizzare
+    if (!client) {
+      return
+    }
+
     if (hasSyncedRef.current) {
       return
     }

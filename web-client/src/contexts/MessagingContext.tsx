@@ -43,7 +43,7 @@ function extractContactJid(message: ReceivedMessage, myJid: string): string {
  */
 export function MessagingProvider({ children }: { children: ReactNode }) {
   const { client, isConnected, jid } = useConnection()
-  const { reloadFromDB } = useConversations()
+  const { refreshConversation } = useConversations()
   const messageCallbacks = useRef<Set<MessageCallback>>(new Set())
 
   // Gestione messaggi in arrivo - SEMPLIFICATO: solo salvataggio diretto
@@ -96,7 +96,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         }
 
         // Aggiorna lista conversazioni
-        await reloadFromDB()
+        await refreshConversation(contactJid)
 
         // Notifica subscribers
         messageCallbacks.current.forEach((callback) => {
@@ -172,7 +172,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       client.off('marker:displayed', handleDisplayedMarker)
       client.off('marker:acknowledged', handleAcknowledgedMarker)
     }
-  }, [client, isConnected, jid, reloadFromDB])
+  }, [client, isConnected, jid, refreshConversation])
 
   const subscribeToMessages = useCallback((callback: MessageCallback) => {
     messageCallbacks.current.add(callback)

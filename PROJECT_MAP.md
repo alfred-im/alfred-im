@@ -249,7 +249,7 @@ State management globale con React Context
 |------|----------------|---------------|
 | `ConnectionContext.tsx` | **CONTEXT PRINCIPALE** - Connessione XMPP e auto-login all'avvio | Client, isConnected, isConnecting, JID |
 | `AuthContext.tsx` | Gestione credenziali (salvataggio/caricamento) | JID, Password, Login status |
-| `ConversationsContext.tsx` | Lista conversazioni e sincronizzazione | Conversations[], Sync state |
+| `ConversationsContext.tsx` | Lista conversazioni (cache locale) | Conversations[], `refreshConversation` |
 | `MessagingContext.tsx` | Gestione messaggi real-time (inclusi marker XEP-0333) | Message handlers, Marker handlers |
 
 ##### **Services (`services/`)**

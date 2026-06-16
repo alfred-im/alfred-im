@@ -13,24 +13,6 @@
   position: relative;
 }
 
-.conversations-list__pull-refresh {
-  position: absolute;
-  top: -60px;
-  left: 0;
-  right: 0;
-  height: 60px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  color: #707579;
-  font-size: 0.875rem;
-  pointer-events: none;
-  z-index: 5;
-  transition: transform 0.2s ease-out;
-}
-
 .conversations-list__spinner {
   width: 20px;
   height: 20px;
@@ -221,10 +203,6 @@
   .conversation-item__time,
   .conversation-item__body,
   .conversation-item__sender {
-    color: #8c98a4;
-  }
-
-  .conversations-list__pull-refresh {
     color: #8c98a4;
   }
 }

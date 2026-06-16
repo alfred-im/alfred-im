@@ -409,7 +409,7 @@ Queste modifiche sono state rollback perché:
 - Funzionano solo localmente
 
 ### Funzionalità esistenti da mantenere:
-- ✅ `clearMessagesForConversation()` - elimina messaggi locali
+- `clearMessagesForConversation()` in `MessageRepository` - elimina messaggi locali
 - ✅ `clearDatabase()` - pulisce tutto il database locale
 - ✅ Sync completo da MAM - ricarica tutto dal server
 

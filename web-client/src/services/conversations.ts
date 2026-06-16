@@ -3,6 +3,7 @@ import type { MAMResult } from 'stanza/protocol'
 import { type Conversation } from './conversations-db'
 import { normalizeJID, type BareJID } from '../utils/jid'
 import { PAGINATION } from '../config/constants'
+import { messageRepository } from './repositories'
 
 // Re-export per comodità
 export type { Conversation } from './conversations-db'
@@ -157,9 +158,6 @@ export async function loadConversationsFromServer(
     const myJid = client.jid || ''
     const myBareJid = normalizeJID(myJid)
     
-    // Importa saveMessages dal database
-    const { saveMessages: saveMessagesToDB } = await import('./conversations-db')
-    
     // Converti MAMResult[] in Message[]
     const messages = result.results
       .filter(msg => msg.item.message?.body) // Solo messaggi con body
@@ -179,7 +177,7 @@ export async function loadConversationsFromServer(
     
     // Salva tutti i messaggi nel database
     if (messages.length > 0) {
-      await saveMessagesToDB(messages)
+      await messageRepository.saveAll(messages)
     }
   }
 
