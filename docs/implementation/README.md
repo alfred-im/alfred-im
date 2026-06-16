@@ -4,33 +4,29 @@ Analisi tecniche implementazioni completate per comprensione dettagli e decision
 
 ## Documenti Disponibili
 
-- **login-system.md** - Login popup glassmorphism (LoginPopup, route preservation, stati, logoutIntentional flag)
-- **sync-system-complete.md** - Sistema sync "Sync-Once + Listen" (cache-first, IndexedDB)
-- **scrollable-containers.md** + **scrollable-containers-implementation.md** - Utility class `.scrollable-container` (scroll verticale, touch support, iOS)
-- **chat-markers-xep-0333.md** - Chat Markers XEP-0333 (strategia rendering, storage marker, invio/ricezione, sync MAM)
+- **login-system.md** - Login popup glassmorphism
+- **sync-system-complete.md** - Sistema sync Virtual UI + MAM-only DB (v4.0)
+- **delivery-receipts-xep-0184.md** - XEP-0184 livello 2 spunte (✓✓ grigie)
+- **chat-markers-xep-0333.md** - XEP-0333 livello 3 spunte (✓✓ blu)
+- **scrollable-containers.md** + **scrollable-containers-implementation.md** - Utility scroll
+
+**Policy spunte**: [message-states.md](../architecture/message-states.md)
 
 ## Status Implementazioni
 
-| Feature | Status | Data | Documenti |
-|---------|--------|------|-----------|
-| Login System | ✅ Completato | 30 Nov 2025 | [login-system.md](./login-system.md) |
-| Sync System | ✅ Completato | 15 Dic 2025 | [sync-system-complete.md](./sync-system-complete.md) |
-| Scrollable Containers | ✅ Completato | 30 Nov 2025 | [scrollable-containers.md](./scrollable-containers.md) |
-| Chat Markers (XEP-0333) | ✅ Completato | 17 Dic 2025 | [chat-markers-xep-0333.md](./chat-markers-xep-0333.md) |
-| Conversations List | ✅ Completato | Nov 2025 | - |
-| Chat Interface | ✅ Completato | Nov 2025 | - |
-| vCard Support | ✅ Completato | Nov 2025 | - |
+| Feature | Status | Documenti |
+|---------|--------|-----------|
+| Login System | ✅ | [login-system.md](./login-system.md) |
+| Sync + Virtual UI + MAM | ✅ | [sync-system-complete.md](./sync-system-complete.md), [message-states.md](../architecture/message-states.md) |
+| Spunte livello 1 (✓ inviato) | ✅ | [message-states.md](../architecture/message-states.md) |
+| Spunte livello 2 XEP-0184 | ✅ | [delivery-receipts-xep-0184.md](./delivery-receipts-xep-0184.md) |
+| Spunte livello 3 XEP-0333 | ✅ | [chat-markers-xep-0333.md](./chat-markers-xep-0333.md) |
+| Scrollable Containers | ✅ | [scrollable-containers.md](./scrollable-containers.md) |
 
 ## Pattern (Riferimento Rapido)
 
-**Custom Hooks**: useMessages, useBackButton
+**Context**: Auth → Connection → VirtualMessages → Conversations → Messaging
 
-**Context**: AuthProvider → ConnectionProvider → ConversationsProvider → MessagingProvider
+**Services**: xmpp.ts, outbox-send.ts, mam-sync.ts, messages.ts, sync-initializer.ts
 
-**Services**: xmpp.ts, sync-initializer.ts, conversations.ts, messages.ts, vcard.ts, conversations-db.ts
-
-**Repositories**: services/repositories/ (ConversationRepository, MessageRepository, MetadataRepository, VCardRepository)
-
-**Error Handling**: Try-catch async, logging console, fallback a cache
-
-**Performance**: debouncing, lazy loading, code splitting
+**Repositories**: MessageRepository, ConversationRepository, MetadataRepository, OutboxRepository

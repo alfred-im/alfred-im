@@ -25,7 +25,7 @@ Vedi `PROJECT_MAP.md` per dettagli completi.
 - Login XMPP con auto-login
 - Lista conversazioni con sync ottimizzata
 - Chat 1-to-1 con real-time messaging
-- Chat Markers (XEP-0333) - spunte di lettura stile WhatsApp
+- Spunte WhatsApp 3 livelli: ✓ inviato, ✓✓ grigie (XEP-0184), ✓✓ blu (XEP-0333)
 - vCard (avatar, profilo)
 - Sync iniziale intelligente (full/incremental)
 - MAM (XEP-0313) con marcatori RSM

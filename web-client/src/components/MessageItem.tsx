@@ -13,6 +13,7 @@ interface MessageItemProps {
   showDate: boolean
   allMessages: Message[]
   readingUi: ReadonlySet<string>
+  deliveredUi: ReadonlySet<string>
   virtualSendState: { sent: ReadonlySet<string>; failed: ReadonlySet<string> }
 }
 
@@ -33,6 +34,8 @@ function renderCheckmarks(level: CheckmarkLevel) {
       return <span className="chat-page__checkmark-pending">🕐</span>
     case 'sent':
       return <span className="chat-page__checkmark-single">✓</span>
+    case 'delivered':
+      return <span className="chat-page__checkmark-double">✓✓</span>
     case 'reading':
       return <span className="chat-page__checkmark-double-blue">✓✓</span>
     case 'failed':
@@ -47,6 +50,7 @@ export const MessageItem = memo(function MessageItem({
   showDate,
   allMessages,
   readingUi,
+  deliveredUi,
   virtualSendState,
 }: MessageItemProps) {
   const isMe = message.from === 'me'
@@ -82,7 +86,7 @@ export const MessageItem = memo(function MessageItem({
 
   if (message.body && message.body.trim().length > 0) {
     const checkmark = isMe
-      ? resolveCheckmarkLevel(message, allMessages, readingUi)
+      ? resolveCheckmarkLevel(message, allMessages, { reading: readingUi, delivered: deliveredUi })
       : undefined
 
     return (

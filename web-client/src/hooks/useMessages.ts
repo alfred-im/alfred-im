@@ -59,6 +59,7 @@ export function useMessages({
     addOutgoingVirtual,
     pruneMatchedVirtuals,
     clearReadingUi,
+    clearDeliveredUi,
   } = useVirtualMessages()
 
   const virtuals = useMemo(
@@ -110,12 +111,16 @@ export function useMessages({
       }
 
       for (const msg of updated) {
-        if (msg.markerType === 'displayed' && msg.markerFor) {
+        if (!msg.markerFor) continue
+        if (msg.markerType === 'displayed') {
           clearReadingUi(msg.markerFor)
+        }
+        if (msg.markerType === 'receipt') {
+          clearDeliveredUi(msg.markerFor)
         }
       }
     },
-    [jid, getVirtuals, pruneMatchedVirtuals, clearReadingUi]
+    [jid, getVirtuals, pruneMatchedVirtuals, clearReadingUi, clearDeliveredUi]
   )
 
   useEffect(() => {

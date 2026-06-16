@@ -7,7 +7,11 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 ## [Unreleased]
 
 ### Aggiunto
-- **Sync Boundary Handoff**: all'avvio salva momento T, attiva listener da T, sync MAM fino a T + 5s overlap (`sync-boundary.ts`, `AppInitializer`, `MessagingContext`, `sync-initializer`)
+- **Spunte WhatsApp 3 livelli**: ✓ inviato, ✓✓ grigie (XEP-0184), ✓✓ blu (XEP-0333)
+- **Virtual UI + MAM-only DB**: listener campanello, outbox, origin-id canonico
+- **XEP-0184**: `receipt request` in invio, listener `receipt`, overlay `deliveredUi`
+- **Documentazione**: `message-states.md` v2.0, `delivery-receipts-xep-0184.md`
+- **Sync Boundary Handoff**: all'avvio salva momento T, attiva listener da T, sync MAM fino a T + 5s overlap
 
 ### Rimosso
 - **Codice morto**: `sync.ts`, `SyncService.ts`, `usePullToRefresh.ts`, `src/repositories/`, `App.css`

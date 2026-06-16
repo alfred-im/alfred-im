@@ -5,7 +5,8 @@ Analisi architetturali per comprensione sistema e decisioni implementative. Docu
 ## Documenti Disponibili
 
 ### Analisi MAM e Sincronizzazione
-- **conversations-analysis.md** - Analisi tecnica recupero conversazioni XMPP (XEP-0313, XEP-0059, paginazione, algoritmi)
+- **message-states.md** - **Policy spunte WhatsApp 3 livelli** + virtual UI + MAM-only DB (v2.0)
+- **conversations-analysis.md** - Analisi tecnica recupero conversazioni XMPP
 - **mam-global-strategy-explained.md** - Strategia MAM globale (query singola vs N query, vantaggi/svantaggi, implementazione)
 - **mam-performance-long-term.md** - Performance MAM a lungo termine (scalabilità, grandi volumi, ottimizzazioni)
 - **strategy-comparison.md** - Confronto strategie sync (ibrido vs globale vs per-contatto, decisione finale)
@@ -28,14 +29,15 @@ Data Layer (IndexedDB + XMPP Server)
 
 ## Principi Chiave
 
-### Architettura "Sync-Once + Listen" (v3.0 - 15 dicembre 2025)
+### Architettura "Virtual UI + MAM-only DB" (v4.0 - giugno 2026)
 
-1. **Sync-Once**: Sincronizzazione SOLO all'avvio (full se DB vuoto, incremental se popolato)
-2. **Listen**: Dopo sync iniziale, solo messaggi real-time via listener XMPP
-3. **Cache-First**: Mostra sempre dati locali prima (< 100ms)
-4. **Offline-First**: Funziona completamente senza connessione
-5. **Minimal Server Queries**: 1 sync all'avvio, poi 0 query durante utilizzo
-6. **Separation of Concerns**: Layer ben definiti (UI, Context, Services, Repository, Data)
+1. **Listener = campanello**: aggiorna UI virtuale, schedula MAM (no write diretto DB messaggi)
+2. **MAM = unico writer** messaggi e acknowledgement nel DB locale
+3. **Spunte WhatsApp 3 livelli**: inviato (XMPP) + XEP-0184 + XEP-0333
+4. **origin-id canonico** per marker e dedup (XEP-0359)
+5. **Cache-First / Offline-First**
+
+Vedi [message-states.md](./message-states.md) per policy completa.
 
 ### Differenze con Architettura Precedente
 

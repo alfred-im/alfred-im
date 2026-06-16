@@ -25,33 +25,33 @@ Questo documento elenca le funzionalità desiderate per lo sviluppo futuro di Al
 
 ---
 
-### XEP-0333: Chat Markers (displayed)
-**Riferimento**: [XEP-0333 v1.0](https://xmpp.org/extensions/xep-0333.html)  
-**Stato**: ✅ Parzialmente implementato (✓ grigia + ✓✓ blu lettura)
+### XEP-0184: Message Delivery Receipts
+**Riferimento**: [XEP-0184](https://xmpp.org/extensions/xep-0184.html)  
+**Stato**: ✅ Implementato (livello 2 — ✓✓ grigie)
 
-**Descrizione**: Indicatore “visualizzato” quando l'interlocutore apre la chat. Unico marker in XEP-0333 v1.0 stabile.
+**Descrizione**: Conferma consegna sul device del destinatario. Protocollo separato da XEP-0333.
 
 **Implementato**:
-- Invio con `<markable/>`
-- `markDisplayed()` all'apertura chat
-- ✓✓ blu su marker `displayed` (origin-id canonico)
+- `receipt: { type: 'request' }` in invio (`outbox-send.ts`)
+- Risposta automatica in ricezione (`sendReceipts: true` in `xmpp.ts`)
+- Listener `receipt` + overlay `deliveredUi` + sync MAM
 
-**Non in scope** (rimossi da spec 2024):
-- `received`, `acknowledged` in XEP-0333
-
-**Policy**: [message-states.md](./architecture/message-states.md)
+**Policy**: [delivery-receipts-xep-0184.md](./implementation/delivery-receipts-xep-0184.md)
 
 ---
 
-### XEP-0184: Message Delivery Receipts (opzionale, non pianificato)
-**Riferimento**: [XEP-0184](https://xmpp.org/extensions/xep-0184.html)  
-**Stato**: ❌ Non in roadmap
+### XEP-0333: Chat Markers (displayed)
+**Riferimento**: [XEP-0333 v1.0](https://xmpp.org/extensions/xep-0333.html)  
+**Stato**: ✅ Implementato (livello 3 — ✓✓ blu)
 
-**Descrizione**: Conferma che il messaggio è **arrivato sul device** del destinatario (`<received/>` in namespace `urn:xmpp:receipts`). Protocollo **separato** da XEP-0333.
+**Descrizione**: Indicatore “visualizzato” quando l'interlocutore apre la chat.
 
-**Perché non è in todo**: la policy attuale usa solo due spunte (inviato + letto). Il passo intermedio “consegnato” (✓✓ grigie stile WhatsApp) richiederebbe XEP-0184 come **seconda integrazione** distinta da `displayed`. Deciso di non implementarlo.
+**Implementato**:
+- Invio con `<markable/>`
+- `markDisplayed()` in `ChatPage.tsx`
+- Listener `marker:displayed` + overlay `readingUi` + sync MAM
 
-**Nota**: stanza.js può inviare receipt 0184 in automatico; noi non li mostriamo in UI.
+**Policy**: [chat-markers-xep-0333.md](./implementation/chat-markers-xep-0333.md)
 
 ---
 
@@ -178,6 +178,5 @@ Ogni nuova XEP deve includere:
 
 **Prossimi Passi**:
 1. Implementare XEP-0280 (Carbons) per sync multi-device
-2. Implementare XEP-0333 (Chat Markers) per spunte lettura
-3. Aggiungere XEP-0308 (Message Correction) per edit messaggi
-4. Valutare XEP-0363 (File Upload) dopo testing server
+2. Aggiungere XEP-0308 (Message Correction) per edit messaggi
+3. Valutare XEP-0363 (File Upload) dopo testing server

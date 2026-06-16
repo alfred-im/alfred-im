@@ -50,6 +50,7 @@ export async function transmitOutboxEntry(
       body: entry.body,
       type: 'chat',
       marker: { type: 'markable' },
+      receipt: { type: 'request' },
     })
 
     const stanzaId = typeof messageId === 'string' ? messageId : tempId

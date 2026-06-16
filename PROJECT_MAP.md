@@ -1,7 +1,7 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-16 (Sync Boundary Handoff)  
-**Versione**: 1.1.0 (XEP-0333 Chat Markers)
+**Ultimo aggiornamento**: 2026-06-16 (Virtual UI + MAM-only DB + 3 livelli spunte)  
+**Versione**: 2.1.0 (XEP-0184 + XEP-0333)
 
 ---
 
@@ -106,25 +106,33 @@
    - Logica di presentazione (filtri, combinazioni, calcoli) avviene durante rendering
    - Esempio: marker XEP-0333 salvati come messaggi separati, combinati visualmente nel rendering
 
-### Strategia Chat Markers (XEP-0333)
+### Stati messaggi e spunte (XEP-0184 + XEP-0333)
 
-**Implementazione spunte di lettura stile WhatsApp/Telegram**
+**Implementazione spunte stile WhatsApp — 3 livelli**
+
+| Livello | UI | Meccanismo |
+|---------|-----|------------|
+| 1 Inviato | ✓ grigia | Conferma server XMPP (`sendMessage` / outbox) |
+| 2 Consegnato | ✓✓ grigie | **XEP-0184** `<received id="origin-id"/>` |
+| 3 Lettura | ✓✓ blu | **XEP-0333** `<displayed id="origin-id"/>` |
+
+Priorità UI: `reading` > `delivered` > `sent`.
 
 #### Architettura Dati
 
 **Messaggi nel DB**:
 - Messaggi testuali: `body: "testo"`, `markerType: undefined`
-- Marker: `body: ""`, `markerType: 'displayed'|'acknowledged'`, `markerFor: messageId`
+- Acknowledgement: `body: ""`, `markerType: 'receipt'|'displayed'`, `markerFor: origin-id`
 
 **Fonte dati**:
-- Sincronizzazione MAM: scarica messaggi testuali E marker insieme nella stessa query
-- Eventi real-time: marker `displayed`/`acknowledged` arrivano come eventi separati
-- Invio marker: `client.markDisplayed()` invia al server, poi ritorna via MAM
+- Sincronizzazione MAM: scarica messaggi testuali E acknowledgement insieme
+- Eventi real-time (campanello): `receipt` (0184) e `marker:displayed` (0333) → overlay UI
+- Invio: `markable` + `receipt request` in uscita; `markDisplayed()` all'apertura chat in ricezione
 
 **Storage**:
-- Tutti salvati come messaggi nel DB (`messages` object store)
-- Marker hanno campi speciali: `markerType` e `markerFor`
-- NO modifica DB: marker salvati esattamente come arrivano dal server
+- Solo MAM scrive nel DB messaggi (listener = campanello)
+- Overlay `deliveredUi` / `readingUi` in VirtualMessagesContext per feedback immediato
+- Ack salvati come messaggi speciali con `markerType` e `markerFor`
 
 #### Strategia Rendering
 
@@ -135,29 +143,25 @@ Per ogni messaggio nell'array:
 
 1. HA body con testo?
    → SÌ: Messaggio normale
-      - Cerca marker con markerFor === messageId
-      - Determina spunta: marker?.markerType || message.status
+      - resolveCheckmarkLevel() con ack MAM + overlay deliveredUi/readingUi
       - Renderizza messaggio CON spunta appropriata
    
-2. È un marker (body vuoto + markerType)?
+2. È un ack (body vuoto + markerType)?
    → SÌ: return null (nascosto, applicato solo visivamente)
-   
-3. Altro (body vuoto, no markerType)?
-   → Messaggio sconosciuto, renderizza per debug
 ```
 
-**Logica spunte**:
-- `status: 'sent'` → ✓ singola grigia
-- `markerType: 'displayed'` → ✓✓ doppie grigie
-- `markerType: 'acknowledged'` → ✓✓ doppie blu
-
-**Priorità**: Se esiste marker per un messaggio, `markerType` sovrascrive `message.status`.
+**Logica spunte** (`utils/checkmark.ts`):
+- `status: 'sent'` (o overlay assente) → ✓ singola grigia
+- `markerType: 'receipt'` o `deliveredUi` → ✓✓ doppie grigie
+- `markerType: 'displayed'` o `readingUi` → ✓✓ doppie blu
 
 **Vantaggi strategia**:
-- DB contiene dati grezzi esattamente come dal server
-- Nessuna modifica/mutazione dei dati
+- DB contiene dati grezzi esattamente come dal server (MAM-only)
+- Overlay UI per latenza zero su receipt e displayed
 - Logica presentazione separata dai dati
 - Coerenza con principio "Rendering Fa Le Scelte"
+
+**Documentazione**: `docs/architecture/message-states.md`, `docs/implementation/delivery-receipts-xep-0184.md`, `docs/implementation/chat-markers-xep-0333.md`
 
 ---
 
@@ -250,7 +254,7 @@ State management globale con React Context
 | `ConnectionContext.tsx` | **CONTEXT PRINCIPALE** - Connessione XMPP e auto-login all'avvio | Client, isConnected, isConnecting, JID |
 | `AuthContext.tsx` | Gestione credenziali (salvataggio/caricamento) | JID, Password, Login status |
 | `ConversationsContext.tsx` | Lista conversazioni (cache locale) | Conversations[], `refreshConversation` |
-| `MessagingContext.tsx` | Gestione messaggi real-time (inclusi marker XEP-0333) | Message handlers, Marker handlers |
+| `MessagingContext.tsx` | Campanello real-time: messaggi, receipt (0184), marker displayed (0333) | Message/receipt/marker handlers |
 
 ##### **Services (`services/`)**
 Business logic e comunicazione con XMPP server
@@ -422,7 +426,8 @@ index.html
 | XEP-0059 | Result Set Management (RSM) | `sync-initializer.ts` (tokens) |
 | XEP-0054 | vCard-temp | `vcard.ts` |
 | XEP-0357 | Push Notifications | `push-notifications.ts` |
-| XEP-0333 | Chat Markers | `MessagingContext.tsx`, `ChatPage.tsx`, `MessageItem.tsx` |
+| XEP-0184 | Message Delivery Receipts | `outbox-send.ts`, `MessagingContext.tsx`, `xmpp.ts` |
+| XEP-0333 | Chat Markers (displayed) | `MessagingContext.tsx`, `ChatPage.tsx`, `MessageItem.tsx` |
 | XEP-0030 | Service Discovery | `xmpp.ts`, `push-notifications.ts` |
 | XEP-0077 | In-Band Registration | `xmpp.ts` |
 | XEP-0199 | XMPP Ping | Stanza.js built-in |
@@ -568,9 +573,9 @@ npm run test:browser:setup  # Install Playwright browsers
   status: 'pending' | 'sent' | 'delivered' | 'failed'
   tempId?: string         // ID temporaneo pre-conferma
   
-  // XEP-0333 Chat Markers
-  markerType?: 'received' | 'displayed' | 'acknowledged'
-  markerFor?: string      // messageId del messaggio referenziato
+  // XEP-0184 + XEP-0333 acknowledgements
+  markerType?: 'receipt' | 'displayed'
+  markerFor?: string      // origin-id del messaggio referenziato
 }
 ```
 **Note strategia**:
@@ -671,10 +676,11 @@ class ConversationRepository {
 - ✅ **Cache-first loading** (IndexedDB)
 - ✅ **Offline support** (Service Worker)
 - ✅ **Push Notifications** (XEP-0357) con abilitazione automatica
-- ✅ **Chat Markers (XEP-0333)** - Spunte di lettura stile WhatsApp/Telegram
-  - Marker sincronizzati da MAM come messaggi speciali
-  - Applicazione visiva durante rendering (no modifica DB)
-  - ✓ grigia (sent), ✓✓ grigie (displayed), ✓✓ blu (acknowledged)
+- ✅ **Delivery Receipts (XEP-0184)** + **Chat Markers (XEP-0333)** — Spunte WhatsApp 3 livelli
+  - Livello 1: ✓ grigia (inviato al server XMPP)
+  - Livello 2: ✓✓ grigie (XEP-0184 receipt)
+  - Livello 3: ✓✓ blu (XEP-0333 displayed)
+  - Overlay `deliveredUi` / `readingUi` + persistenza MAM
 - ✅ **Typing indicators** (future - base implementata)
 - ✅ **Presence** (online/offline status)
 - ✅ **Debug Logger** (intercetta e visualizza tutti i console.log)
@@ -781,20 +787,21 @@ Documentati in `docs/fixes/known-issues.md`:
 
 ## 🔄 Ultima Revisione
 
-**Data**: 2025-12-17  
-**Branch**: `cursor/message-read-receipts-support-46f8`  
-**Versione**: Architettura v3.0 "Sync-Once + Listen" + XEP-0333 Chat Markers
+**Data**: 2026-06-16  
+**Branch**: `cursor/fix-duplicate-messages-efc7`  
+**Versione**: Architettura v4.0 Virtual UI + MAM-only DB + Spunte WhatsApp 3 livelli
 
-**Modifiche Recenti** (v3.1 - 17 dicembre 2025):
-- ✅ **Implementato XEP-0333 (Chat Markers)** - Spunte di lettura stile WhatsApp/Telegram:
-  - Schema Message esteso con `markerType` e `markerFor`
-  - Marker sincronizzati da MAM come messaggi speciali (body vuoto, hanno markerType + markerFor)
-  - Marker salvati nel DB locale esattamente come arrivano dal server (no modifica)
-  - Strategia rendering: ciclo messaggi → se testo mostra, se marker cerca referenziato e applica spunta
-  - Invio marker real-time: client.markDisplayed quando si visualizzano messaggi
-  - UI con spunte: ✓ (sent), ✓✓ grigie (displayed), ✓✓ blu (acknowledged)
-  - CSS stile WhatsApp con `letter-spacing: -4px` per sovrapporre le spunte
-  - Logica applicazione marker interamente nel rendering (MessageItem), no modifica DB
+**Modifiche Recenti** (v4.0 - 16 giugno 2026):
+- ✅ **Spunte WhatsApp 3 livelli** (XEP-0184 + XEP-0333):
+  - Livello 1: ✓ grigia — conferma invio server XMPP
+  - Livello 2: ✓✓ grigie — XEP-0184 delivery receipt (`receipt request` + listener `receipt`)
+  - Livello 3: ✓✓ blu — XEP-0333 `displayed` (`markable` + `markDisplayed()`)
+  - Virtual UI + overlay `deliveredUi`/`readingUi`; solo MAM scrive nel DB
+  - `markerType: 'receipt' | 'displayed'`, `markerFor` = origin-id canonico
+  - Policy documentata in `docs/architecture/message-states.md` v2.0
+
+**Modifiche Precedenti** (v3.1 - 17 dicembre 2025):
+- ✅ **Implementato XEP-0333 (Chat Markers)** — sostituito dal modello 3 livelli v4.0
 
 **Modifiche Precedenti** (v3.0.1 - 17 dicembre 2025):
 - ✅ **Ripristinato auto-login funzionante**:

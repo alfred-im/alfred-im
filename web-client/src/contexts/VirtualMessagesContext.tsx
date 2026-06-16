@@ -27,8 +27,11 @@ interface VirtualMessagesContextValue {
   removeVirtual: (conversationJid: string, virtualId: string) => void
   pruneMatchedVirtuals: (conversationJid: string, virtualIds: string[]) => void
   readingUi: ReadonlySet<string>
+  deliveredUi: ReadonlySet<string>
   setReadingUi: (messageId: string) => void
+  setDeliveredUi: (messageId: string) => void
   clearReadingUi: (messageId: string) => void
+  clearDeliveredUi: (messageId: string) => void
 }
 
 const VirtualMessagesContext = createContext<VirtualMessagesContextValue | undefined>(
@@ -40,6 +43,7 @@ export function VirtualMessagesProvider({ children }: { children: ReactNode }) {
     () => new Map()
   )
   const [readingUi, setReadingUiSet] = useState<Set<string>>(() => new Set())
+  const [deliveredUi, setDeliveredUiSet] = useState<Set<string>>(() => new Set())
 
   const getVirtuals = useCallback(
     (conversationJid: string) => {
@@ -137,6 +141,18 @@ export function VirtualMessagesProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const setDeliveredUi = useCallback((messageId: string) => {
+    setDeliveredUiSet((prev) => new Set(prev).add(messageId))
+  }, [])
+
+  const clearDeliveredUi = useCallback((messageId: string) => {
+    setDeliveredUiSet((prev) => {
+      const next = new Set(prev)
+      next.delete(messageId)
+      return next
+    })
+  }, [])
+
   const value = useMemo(
     () => ({
       getVirtuals,
@@ -145,8 +161,11 @@ export function VirtualMessagesProvider({ children }: { children: ReactNode }) {
       removeVirtual,
       pruneMatchedVirtuals,
       readingUi,
+      deliveredUi,
       setReadingUi,
+      setDeliveredUi,
       clearReadingUi,
+      clearDeliveredUi,
     }),
     [
       getVirtuals,
@@ -155,8 +174,11 @@ export function VirtualMessagesProvider({ children }: { children: ReactNode }) {
       removeVirtual,
       pruneMatchedVirtuals,
       readingUi,
+      deliveredUi,
       setReadingUi,
+      setDeliveredUi,
       clearReadingUi,
+      clearDeliveredUi,
     ]
   )
 

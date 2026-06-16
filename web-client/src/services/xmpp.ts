@@ -198,6 +198,8 @@ const buildClient = async (settings: XmppConnectionSettings): Promise<Agent> => 
     autoReconnect: false,
     timeout: 20,
     password,
+    sendReceipts: true,
+    chatMarkers: true,
     credentials: {
       username,
       password,

@@ -37,7 +37,7 @@ function extractContactJid(message: ReceivedMessage, myJid: string): string {
 export function MessagingProvider({ children }: { children: ReactNode }) {
   const { client, isConnected, jid } = useConnection()
   const { refreshConversation } = useConversations()
-  const { addIncomingVirtual, setReadingUi } = useVirtualMessages()
+  const { addIncomingVirtual, setReadingUi, setDeliveredUi } = useVirtualMessages()
   const messageCallbacks = useRef<Set<MessageCallback>>(new Set())
 
   useEffect(() => {
@@ -93,14 +93,24 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       scheduleConversationMamSync(client, contactJid, 'marker-displayed')
     }
 
+    const handleReceipt = (message: ReceivedMessage) => {
+      if (!syncBoundaryService.isActive() || !message.receipt?.id) return
+
+      const contactJid = normalizeJID(message.from || '')
+      setDeliveredUi(message.receipt.id)
+      scheduleConversationMamSync(client, contactJid, 'receipt')
+    }
+
     client.on('message', handleMessage)
     client.on('marker:displayed', handleDisplayedMarker)
+    client.on('receipt', handleReceipt)
 
     return () => {
       client.off('message', handleMessage)
       client.off('marker:displayed', handleDisplayedMarker)
+      client.off('receipt', handleReceipt)
     }
-  }, [client, isConnected, jid, refreshConversation, addIncomingVirtual, setReadingUi])
+  }, [client, isConnected, jid, refreshConversation, addIncomingVirtual, setReadingUi, setDeliveredUi])
 
   const subscribeToMessages = useCallback((callback: MessageCallback) => {
     messageCallbacks.current.add(callback)

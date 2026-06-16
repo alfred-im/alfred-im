@@ -46,7 +46,7 @@ function mamResultToMessage(msg: MAMResult, conversationJid: string, myJid: stri
   const timestamp = extractTimestamp(msg)
   const normalizedContactJid = normalizeJID(conversationJid)
 
-  // Marker XEP-0333 v1.0: solo `displayed` (received/acknowledged rimossi dalla spec)
+  // XEP-0333 displayed
   if (inner?.marker?.type === 'displayed' && inner.marker.id) {
     return {
       messageId: `mam-marker-${mamArchiveId ?? Date.now()}`,
@@ -58,6 +58,21 @@ function mamResultToMessage(msg: MAMResult, conversationJid: string, myJid: stri
       status: 'sent',
       markerType: 'displayed',
       markerFor: inner.marker.id,
+    }
+  }
+
+  // XEP-0184 delivery receipt
+  if (inner?.receipt?.type === 'received' && inner.receipt.id) {
+    return {
+      messageId: `mam-receipt-${mamArchiveId ?? Date.now()}`,
+      mamArchiveId,
+      conversationJid: normalizedContactJid,
+      body: '',
+      timestamp,
+      from: fromMe ? 'me' : 'them',
+      status: 'sent',
+      markerType: 'receipt',
+      markerFor: inner.receipt.id,
     }
   }
 

@@ -1,123 +1,67 @@
-# Chat Markers (XEP-0333) — Implementazione
+# Chat Markers (XEP-0333) — Livello 3 (✓✓ blu)
 
 **Data aggiornamento**: 2026-06-16  
 **XEP**: [XEP-0333 v1.0 — Displayed Markers](https://xmpp.org/extensions/xep-0333.html)  
-**Policy canonica**: [message-states.md](../architecture/message-states.md) — **leggere quella prima**
-
-> Documento storico (dic 2025) aggiornato per riflettere architettura v4.0 (virtual UI + MAM-only DB + origin-id).
+**Policy canonica**: [message-states.md](../architecture/message-states.md)
 
 ---
 
-## Cosa implementiamo oggi
+## Ruolo nel modello WhatsApp a 3 livelli
 
-Due spunte, allineate a **XEP-0333 v1.0**:
+| Livello | Meccanismo | UI |
+|---------|------------|-----|
+| 1 | Invio XMPP | ✓ grigia |
+| 2 | [XEP-0184](./delivery-receipts-xep-0184.md) | ✓✓ grigie |
+| **3** | **XEP-0333 `displayed`** | **✓✓ blu** |
 
-| UI | Protocollo | Chi invia |
-|----|------------|-----------|
-| ✓ grigia | invio accettato dal server | mittente |
-| ✓✓ blu | `<displayed id="origin-id"/>` | **client destinatario** quando apre la chat |
-
-### Cosa NON implementiamo
-
-- `received` e `acknowledged` — **rimossi** da XEP-0333 v1.0 (2024)
-- **XEP-0184** delivery receipts — protocollo separato, fuori scope (vedi tabella in `message-states.md`)
+XEP-0333 v1.0 definisce **solo** `markable` + `displayed`. I marker `received` e `acknowledged` delle bozze vecchie sono **rimossi** (2024).
 
 ---
 
-## Architettura attuale (v4.0)
-
-```
-INVIO messaggio
-  outbox → virtual UI → MAM → DB (messageId = origin-id)
-
-RICEZIONE marker displayed (campanello)
-  listener → overlay readingUi → schedule MAM → DB marker
-
-RENDERING
-  resolveCheckmarkLevel(): displayed o readingUi → ✓✓ blu
-```
-
-### File principali
-
-| File | Ruolo |
-|------|-------|
-| `outbox-send.ts` | Invio con `<markable/>`, nessun save diretto nel DB messaggi |
-| `MessagingContext.tsx` | Campanello: solo `marker:displayed` → `setReadingUi` + MAM |
-| `ChatPage.tsx` | Destinatario invia `client.markDisplayed({ id: origin-id })` |
-| `utils/message-id.ts` | `messageId` canonico = origin-id (non archive UID MAM) |
-| `utils/checkmark.ts` | ✓ / ✓✓ blu da `displayed` |
-| `mam-sync.ts` | Unico writer DB dopo campanello |
-
-Il listener **non** salva marker nel DB. Solo MAM persiste `markerType: 'displayed'` con `markerFor` = origin-id del messaggio target.
-
----
-
-## Flusso displayed (lettura)
-
-### 1. Mittente invia
+## Invio (mittente)
 
 ```typescript
-client.sendMessage({
-  to: contactJid,
-  body: 'Ciao',
-  marker: { type: 'markable' },
-})
-// origin-id generato da stanza.js → salvato come messageId dopo MAM
+marker: { type: 'markable' }
 ```
 
-### 2. Destinatario visualizza
+In `outbox-send.ts` insieme a `receipt: { type: 'request' }`.
 
-`ChatPage.tsx` — su messaggi DB da loro senza marker `displayed`:
+---
+
+## Ricezione (destinatario)
+
+Quando apri la chat, `ChatPage.tsx` invia `displayed` per ogni messaggio da loro non ancora marcato:
 
 ```typescript
 client.markDisplayed({
-  id: msg.messageId,  // origin-id canonico
+  id: msg.messageId,  // origin-id
   from: jid,
   type: 'chat',
 })
 ```
 
-### 3. Mittente riceve
+---
+
+## Mittente riceve la conferma di lettura
 
 ```typescript
 client.on('marker:displayed', (message) => {
-  setReadingUi(message.marker.id)      // overlay UI immediato
-  scheduleConversationMamSync(...)   // MAM allinea DB
+  setReadingUi(message.marker.id)
+  scheduleConversationMamSync(...)
 })
 ```
 
 ---
 
-## Origin-id (fix 2026-06)
+## Architettura v4.0
 
-MAM assegna un **archive UID** diverso per ogni account. I marker referenziano l’**origin-id** dello stanza.
-
-Priorità per `messageId` locale:
-
-```
-origin-id  →  id stanza  →  archive UID MAM (fallback)
-```
-
-Vedi `utils/message-id.ts` e `mamResultToMessage()` in `messages.ts`.
-
----
-
-## XEP-0184 — serve metterlo in todo?
-
-**No**, con la policy attuale.
-
-| Se vuoi… | Cosa serve |
-|----------|------------|
-| ✓ + ✓✓ blu (inviato + letto) | Solo XEP-0333 `displayed` — **già fatto** |
-| ✓ + ✓✓ grigio + ✓✓ blu (modello WhatsApp classico) | XEP-0184 **+** XEP-0333 — **due integrazioni separate** |
-
-XEP-0184 e XEP-0333 usano namespace XML diversi, trigger diversi e significati diversi. Non si sostituiscono.
-
-Stanza.js può già inviare receipt 0184 in automatico (`sendReceipts !== false`), ma **noi non li mostriamo in UI**.
+- Listener = campanello → overlay UI → MAM (unico writer DB)
+- MAM persiste `markerType: 'displayed'`, `markerFor: origin-id`
+- `utils/checkmark.ts`: `reading` ha priorità su `delivered` e `sent`
 
 ---
 
 ## Riferimenti
 
+- [delivery-receipts-xep-0184.md](./delivery-receipts-xep-0184.md) — livello 2
 - [message-states.md](../architecture/message-states.md) — policy completa
-- [sync-system-complete.md](./sync-system-complete.md) — sync iniziale e handoff

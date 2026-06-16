@@ -33,8 +33,8 @@ export interface Message {
   /** UID archivio MAM (per migrazione da vecchi record e paginazione) */
   mamArchiveId?: string
   
-  // XEP-0333 Chat Markers
-  markerType?: 'displayed'
+  // Acknowledgements (markerFor = origin-id del messaggio target)
+  markerType?: 'displayed' | 'receipt'
   markerFor?: string // messageId del messaggio referenziato
 }
 

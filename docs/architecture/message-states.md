@@ -1,8 +1,8 @@
 # Stati del messaggio — Policy di sviluppo
 
-**Versione**: 1.1  
+**Versione**: 2.0  
 **Data**: 2026-06-16  
-**Stato**: Policy attiva per implementazione
+**Stato**: Policy attiva
 
 ---
 
@@ -14,100 +14,82 @@ Ogni flusso ha **due fasi**:
 2. **`synced`** — dato autoritativo da MAM nel database locale
 
 Il listener real-time **non scrive il corpo dei messaggi nel DB**.  
-Solo **MAM** persiste messaggi e marker nel database messaggi.
+Solo **MAM** persiste messaggi e acknowledgement nel database messaggi.
 
 ---
 
-## Tre flussi paralleli
+## Spunte WhatsApp — 3 livelli
 
-| Flusso | `ui` (campanello / azione) | `synced` (MAM → DB) |
-|--------|----------------------------|---------------------|
-| **Invio** | Messaggio mostrato in chat; outbox se offline | MAM conferma e salva |
-| **Ricezione** | Campanello → messaggio in UI | MAM scarica e salva |
-| **Lettura** | Campanello marker → spunta in UI | MAM allinea marker nel DB |
+| Livello | UI | Significato | Meccanismo |
+|---------|-----|-------------|------------|
+| **1 — Inviato** | ✓ grigia | Il server XMPP ha accettato il messaggio | Invio riuscito (`sendMessage` / outbox) |
+| **2 — Consegnato** | ✓✓ grigie | Arrivato sul device del destinatario | **XEP-0184** delivery receipt |
+| **3 — Lettura** | ✓✓ blu | Il destinatario ha visualizzato in chat | **XEP-0333** `displayed` |
 
-`none` su un asse = quell'asse non si applica al messaggio (es. ricezione su messaggio inviato da te).
+Priorità UI: `reading` > `delivered` > `sent`.
 
-### Invio (messaggi tuoi)
+### Tre meccanismi distinti (non un solo XEP)
 
-```
-queued → ui → synced
-   ↑ send_failed / offline (outbox persistito)
-```
+| Livello | Standard | Namespace / azione |
+|---------|----------|-------------------|
+| 1 | XMPP core + MAM | Invio stanza; conferma implicita al successo di `client.sendMessage()` |
+| 2 | [XEP-0184](https://xmpp.org/extensions/xep-0184.html) | `urn:xmpp:receipts` — `<request/>` in invio, `<received id="origin-id"/>` in risposta |
+| 3 | [XEP-0333 v1.0](https://xmpp.org/extensions/xep-0333.html) | `urn:xmpp:chat-markers:0` — `<markable/>` + `<displayed id="origin-id"/>` |
 
-- **`queued`**: in outbox IndexedDB; sopravvive a disconnessione
-- **`ui`**: visibile in chat prima di MAM
-- **`synced`**: presente nel DB da MAM
+> Il livello 1 **non è un XEP**: è l'accettazione del messaggio da parte del server XMPP (e opzionalmente la presenza in archivio MAM). I livelli 2 e 3 sono **due estensioni separate** con trigger e XML diversi.
 
-### Ricezione (messaggi in arrivo)
+---
 
-```
-ui → synced
-```
+## Flussi invio e ricezione
 
-### Lettura (spunte su messaggi inviati da te)
+### Mittente (messaggi nostri)
 
 ```
-ui → synced
+INVIO
+  outbox → virtual UI → sendMessage (markable + receipt request)
+  ✓ grigia quando transmit OK
+
+CONSEGNA (XEP-0184)
+  destinatario risponde <received/>
+  campanello receipt → deliveredUi overlay → MAM → markerType: 'receipt'
+
+LETTURA (XEP-0333)
+  destinatario invia <displayed/>
+  campanello marker:displayed → readingUi overlay → MAM → markerType: 'displayed'
+```
+
+### Destinatario (messaggi in arrivo)
+
+```
+RICEZIONE
+  campanello → virtual UI → MAM
+
+CONSEGNA (XEP-0184) — nostra risposta automatica
+  stanza.js invia <received id="origin-id"/> se il messaggio ha <request/>
+  (sendReceipts: true in xmpp.ts)
+
+LETTURA (XEP-0333) — nostra risposta esplicita
+  ChatPage invia markDisplayed() all'apertura chat
 ```
 
 ---
 
-## Spunte in UI (solo grafica)
+## Tre flussi paralleli (ui → synced)
 
-Due livelli visivi, allineati a **XEP-0333 v1.0** (solo `markable` + `displayed`):
-
-| Livello UI | Aspetto | Significato |
-|------------|---------|-------------|
-| **Inviato** | ✓ grigia | Messaggio accettato dal server |
-| **Lettura** | ✓✓ blu | L'altro ha visualizzato il messaggio (`displayed`) |
-
-### Cosa NON implementiamo
-
-| Marker | Stato in XEP-0333 v1.0 | Nostra policy |
-|--------|------------------------|---------------|
-| `received` | **Rimosso** (2024) | Ignorato in UI; stanza.js può ancora inviarlo in automatico verso altri client |
-| `acknowledged` | **Rimosso** (2024) | Non gestito |
-| XEP-0184 delivery receipts | Protocollo separato | Non usato |
-
-### Mapping protocollo → UI
-
-| Marker XMPP | Stato UI spunta |
-|-------------|-----------------|
-| — (solo inviato) | ✓ grigia |
-| `displayed` | ✓✓ blu |
-
-### Stato implementazione spunte
-
-| Funzionalità | Stato |
-|--------------|-------|
-| ✓ grigia (inviato) | ✅ |
-| ✓✓ blu (`displayed`) | ✅ |
-| `received` / `acknowledged` | ❌ Fuori scope |
+| Flusso | `ui` | `synced` (MAM → DB) |
+|--------|------|---------------------|
+| **Invio** | Virtual + outbox | MAM conferma messaggio |
+| **Ricezione** | Campanello messaggio | MAM scarica messaggio |
+| **Consegna** | Campanello receipt → `deliveredUi` | MAM salva `markerType: 'receipt'` |
+| **Lettura** | Campanello displayed → `readingUi` | MAM salva `markerType: 'displayed'` |
 
 ---
 
-## XEP-0184 vs XEP-0333 — due protocolli, due cose diverse
+## Identificatori
 
-**Non sono la stessa funzione.** Non vanno confusi né implementati come un unico meccanismo.
-
-| | **XEP-0184** Delivery Receipts | **XEP-0333 v1.0** Displayed Markers |
-|--|------------------------------|-------------------------------------|
-| **Cosa significa** | “Il messaggio è **arrivato** sul mio client/device” | “Ho **visualizzato** il messaggio in chat” |
-| **Chi invia** | Client destinatario, spesso **in automatico** all’arrivo | Client destinatario, quando **apre/legge** la chat |
-| **Stanza XML** | `<received xmlns='urn:xmpp:receipts' id='…'/>` | `<displayed xmlns='urn:xmpp:chat-markers:0' id='…'/>` |
-| **Nella nostra UI** | ❌ **Non implementato** (fuori scope) | ✅ ✓✓ blu |
-| **In XEP-0333 v1.0** | Protocollo **separato** — per questo `received` è stato **rimosso** da 0333 | Unico marker di “lettura” |
-
-### Cosa mettere in todo
-
-| Voce | Todo? |
-|------|-------|
-| `displayed` (lettura, ✓✓ blu) | ✅ Già in scope — implementato |
-| XEP-0184 (consegnato, ✓✓ grigie stile WhatsApp) | ❌ **Non in todo** — deciso esplicitamente di non usarlo |
-| `received` / `acknowledged` in 0333 | ❌ Rimossi dalla spec 2024 — non implementare |
-
-Se in futuro volessi **tre** stati (inviato → consegnato → letto), servirebbero **due integrazioni separate**: XEP-0184 per il passo centrale **e** XEP-0333 `displayed` per il blu. Oggi abbiamo scelto il modello **a due stati**: ✓ grigia + ✓✓ blu.
+- **`messageId`** = `origin-id` (XEP-0359), non archive UID MAM
+- **`markerFor` / `receipt.id` / `displayed id`** = stesso origin-id del messaggio target
+- Vedi `utils/message-id.ts`
 
 ---
 
@@ -115,31 +97,28 @@ Se in futuro volessi **tre** stati (inviato → consegnato → letto), servirebb
 
 | Layer | Contenuto |
 |-------|-----------|
-| **Outbox** (IndexedDB) | Messaggi in uscita: `queued`, `sending`, `failed`; `stanzaId` = origin-id XMPP |
-| **UI virtuale** (React) | Messaggi e overlay spunte in fase `ui` |
-| **DB messaggi** (IndexedDB) | Solo dati `synced` da MAM; `messageId` = **origin-id** (non archive UID MAM) |
-| **Metadata sync** | Watermark / token per query MAM |
-
-### Identificatori messaggio
-
-- **`messageId` (locale)** = `origin-id` (XEP-0359) se presente nello stanza archiviato, altrimenti `id` stanza, ultimo fallback archive UID MAM.
-- **`mamArchiveId`** = UID riga archivio MAM (`MAMResult.id`); usato solo per migrazione/paginazione, non per marker.
-- **Marker XEP-0333** referenziano l'origin-id del messaggio target → stesso valore di `messageId` canonico.
+| **Outbox** | Messaggi in uscita; `stanzaId` = origin-id |
+| **UI virtuale** | Messaggi virtuali + overlay `deliveredUi` / `readingUi` |
+| **DB messaggi** | Solo dati `synced` da MAM |
+| **Ack nel DB** | `markerType: 'receipt' \| 'displayed'`, `markerFor: origin-id` |
 
 ---
 
-## Trigger sync MAM (campanello)
+## File implementazione
 
-All'evento real-time (messaggio, marker):
-
-1. Aggiorna UI (`ui`)
-2. Schedula fetch MAM con `start = ora − 2 secondi` (debounce per conversazione)
-3. MAM salva nel DB → `synced`
-4. UI sostituisce / rimuove il virtuale; overlay spunte allineati al DB
+| File | Ruolo |
+|------|-------|
+| `outbox-send.ts` | Invio con `markable` + `receipt: request` |
+| `xmpp.ts` | `sendReceipts: true`, `chatMarkers: true` |
+| `MessagingContext.tsx` | Campanello `receipt` + `marker:displayed` |
+| `ChatPage.tsx` | `markDisplayed()` per messaggi da loro |
+| `utils/checkmark.ts` | Risoluzione 3 livelli |
+| `messages.ts` | Parse receipt/displayed da MAM |
 
 ---
 
 ## Riferimenti
 
-- [sync-system-complete.md](../implementation/sync-system-complete.md) — Sync-once + listen
-- [chat-markers-xep-0333.md](../implementation/chat-markers-xep-0333.md) — Marker XEP-0333 (da allineare a questa policy)
+- [delivery-receipts-xep-0184.md](../implementation/delivery-receipts-xep-0184.md)
+- [chat-markers-xep-0333.md](../implementation/chat-markers-xep-0333.md)
+- [sync-system-complete.md](../implementation/sync-system-complete.md)
