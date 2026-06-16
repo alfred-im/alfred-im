@@ -9,6 +9,7 @@ import { conversationRepository } from '../services/repositories'
 import { normalizeJID } from '../utils/jid'
 import type { Message } from '../services/conversations-db'
 import { syncBoundaryService } from '../services/sync-boundary'
+import { buildMessageFingerprint, extractStableMessageId } from '../utils/message'
 
 type MessageCallback = (message: ReceivedMessage) => void
 
@@ -46,6 +47,27 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
   const { client, isConnected, jid } = useConnection()
   const { refreshConversation } = useConversations()
   const messageCallbacks = useRef<Set<MessageCallback>>(new Set())
+  const recentFingerprintsRef = useRef<Map<string, number>>(new Map())
+
+  const isDuplicateRealtimeMessage = useCallback((fingerprint: string): boolean => {
+    const now = Date.now()
+    const recent = recentFingerprintsRef.current
+
+    // Pulisci fingerprint scadute (> 30s)
+    for (const [key, seenAt] of recent.entries()) {
+      if (now - seenAt > 30_000) {
+        recent.delete(key)
+      }
+    }
+
+    if (recent.has(fingerprint)) {
+      console.log('   ⚠️ Messaggio duplicato ignorato (fingerprint già visto)')
+      return true
+    }
+
+    recent.set(fingerprint, now)
+    return false
+  }, [])
 
   // Listener registrato alla connessione; elabora messaggi solo dopo beginHandoff() (momento T)
   useEffect(() => {
@@ -66,14 +88,32 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         const myBareJid = normalizeJID(jid)
         const from = message.from || ''
         const isFromMe = from.toLowerCase().startsWith(myBareJid.toLowerCase())
+        const fromDirection: 'me' | 'them' = isFromMe ? 'me' : 'them'
+        const timestamp = message.delay?.timestamp || new Date()
+        const normalizedContactJid = normalizeJID(contactJid)
+        const fingerprint = buildMessageFingerprint({
+          conversationJid: normalizedContactJid,
+          body: message.body,
+          from: fromDirection,
+          timestamp,
+        })
+
+        if (isDuplicateRealtimeMessage(fingerprint)) {
+          return
+        }
+
+        const stableMessageId = extractStableMessageId(
+          { id: message.id, originId: message.originId },
+          fingerprint
+        )
 
         // Crea oggetto messaggio
         const messageToSave: Message = {
-          messageId: message.id || `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-          conversationJid: normalizeJID(contactJid),
+          messageId: stableMessageId,
+          conversationJid: normalizedContactJid,
           body: message.body,
-          timestamp: message.delay?.timestamp || new Date(),
-          from: isFromMe ? 'me' : 'them',
+          timestamp,
+          from: fromDirection,
           status: 'sent',
         }
 
@@ -82,7 +122,8 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
         console.log('   ✅ Messaggio salvato nel DB')
 
         // Aggiorna conversazione con ultimo messaggio
-        await conversationRepository.update(contactJid, {
+        await conversationRepository.update(normalizedContactJid, {
+          jid: normalizedContactJid,
           lastMessage: {
             body: messageToSave.body,
             timestamp: messageToSave.timestamp,
@@ -94,11 +135,11 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
 
         // Se messaggio è da altri, incrementa unread
         if (!isFromMe) {
-          await conversationRepository.incrementUnread(contactJid)
+          await conversationRepository.incrementUnread(normalizedContactJid)
         }
 
         // Aggiorna lista conversazioni
-        await refreshConversation(contactJid)
+        await refreshConversation(normalizedContactJid)
 
         // Notifica subscribers
         messageCallbacks.current.forEach((callback) => {
@@ -176,7 +217,7 @@ export function MessagingProvider({ children }: { children: ReactNode }) {
       client.off('marker:displayed', handleDisplayedMarker)
       client.off('marker:acknowledged', handleAcknowledgedMarker)
     }
-  }, [client, isConnected, jid, refreshConversation])
+  }, [client, isConnected, jid, refreshConversation, isDuplicateRealtimeMessage])
 
   const subscribeToMessages = useCallback((callback: MessageCallback) => {
     messageCallbacks.current.add(callback)

@@ -6,7 +6,7 @@ import {
 } from './conversations-db'
 import { normalizeJID } from '../utils/jid'
 import type { BareJID } from '../types/jid'
-import { generateTempId } from '../utils/message'
+import { buildMessageFingerprint, extractStableMessageId, generateTempId } from '../utils/message'
 import { PAGINATION } from '../config/constants'
 import { messageRepository, conversationRepository } from './repositories'
 
@@ -39,16 +39,36 @@ function extractTimestamp(msg: MAMResult): Date {
  */
 function mamResultToMessage(msg: MAMResult, conversationJid: string, myJid: string): Message {
   const myBareJid = normalizeJID(myJid)
-  const from = msg.item.message?.from || ''
+  const innerMessage = msg.item.message
+  const from = innerMessage?.from || ''
   const fromMe = from.startsWith(myBareJid)
+  const body = innerMessage?.body || ''
+  const timestamp = extractTimestamp(msg)
+  const normalizedJid = normalizeJID(conversationJid)
+  const fromDirection: 'me' | 'them' = fromMe ? 'me' : 'them'
+  const fingerprint = body
+    ? buildMessageFingerprint({
+        conversationJid: normalizedJid,
+        body,
+        from: fromDirection,
+        timestamp,
+      })
+    : undefined
 
   return {
-    messageId: msg.id || `mam_${Date.now()}`,
-    conversationJid: normalizeJID(conversationJid),
-    body: msg.item.message?.body || '',
-    timestamp: extractTimestamp(msg),
+    // Preferisci ID del messaggio originale, non l'ID archivio MAM
+    messageId: extractStableMessageId(
+      {
+        id: innerMessage?.id,
+        originId: innerMessage?.originId,
+      },
+      fingerprint
+    ) || msg.id || `mam_${Date.now()}`,
+    conversationJid: normalizedJid,
+    body,
+    timestamp,
     // La direzione base (sovrascritta da applySelfChatLogic per self-chat)
-    from: fromMe ? 'me' : 'them',
+    from: fromDirection,
     status: 'sent', // Messaggi MAM sono già inviati
   }
 }

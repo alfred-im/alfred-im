@@ -4,6 +4,66 @@
 
 import type { Message } from '../services/conversations-db'
 
+/** Finestra temporale per considerare due messaggi come lo stesso (overlap MAM/listener, doppio evento) */
+export const MESSAGE_DEDUP_WINDOW_MS = 10_000
+
+type MessageIdSource = {
+  id?: string
+  originId?: string
+}
+
+/**
+ * Hash semplice e deterministico per fingerprint messaggi
+ */
+function hashString(value: string): string {
+  let hash = 0
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash).toString(36)
+}
+
+/**
+ * Fingerprint stabile per deduplicare lo stesso messaggio da sorgenti diverse
+ * (real-time, MAM, carbon) anche con messageId differenti.
+ */
+export function buildMessageFingerprint(params: {
+  conversationJid: string
+  body: string
+  from: 'me' | 'them'
+  timestamp: Date
+}): string {
+  const second = Math.floor(params.timestamp.getTime() / 1000)
+  return `${params.conversationJid}|${params.from}|${second}|${params.body}`
+}
+
+/**
+ * Estrae un ID stabile: originId > stanza id > fingerprint deterministico.
+ * Evita ID random che impediscono la de-duplicazione su doppio evento.
+ */
+export function extractStableMessageId(
+  source: MessageIdSource,
+  fingerprint?: string
+): string {
+  if (source.originId) return source.originId
+  if (source.id) return source.id
+  if (fingerprint) return `fp_${hashString(fingerprint)}`
+  return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+}
+
+/**
+ * Verifica se due messaggi rappresentano probabilmente lo stesso contenuto
+ */
+export function areLikelyDuplicateMessages(a: Message, b: Message): boolean {
+  if (a.messageId === b.messageId) return true
+  if (!a.body || !b.body || a.body !== b.body) return false
+  if (a.from !== b.from) return false
+  if (a.conversationJid !== b.conversationJid) return false
+
+  const delta = Math.abs(a.timestamp.getTime() - b.timestamp.getTime())
+  return delta <= MESSAGE_DEDUP_WINDOW_MS
+}
+
 /**
  * Genera un ID temporaneo univoco per messaggi ottimistici
  * 

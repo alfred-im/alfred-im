@@ -4,6 +4,7 @@ import { type Conversation } from './conversations-db'
 import { normalizeJID, type BareJID } from '../utils/jid'
 import { PAGINATION } from '../config/constants'
 import { messageRepository } from './repositories'
+import { buildMessageFingerprint, extractStableMessageId } from '../utils/message'
 
 // Re-export per comodità
 export type { Conversation } from './conversations-db'
@@ -164,13 +165,28 @@ export async function loadConversationsFromServer(
       .map(msg => {
         const from = msg.item.message?.from || ''
         const contactJid = extractContactJid(msg, myJid)
-        
-        return {
-          messageId: msg.id || `mam_${Date.now()}_${Math.random()}`,
+        const body = extractMessageBody(msg)
+        const timestamp = extractTimestamp(msg)
+        const fromDirection: 'me' | 'them' = from.startsWith(myBareJid) ? 'me' : 'them'
+        const fingerprint = buildMessageFingerprint({
           conversationJid: contactJid,
-          body: extractMessageBody(msg),
-          timestamp: extractTimestamp(msg),
-          from: from.startsWith(myBareJid) ? 'me' as const : 'them' as const,
+          body,
+          from: fromDirection,
+          timestamp,
+        })
+
+        return {
+          messageId: extractStableMessageId(
+            {
+              id: msg.item.message?.id,
+              originId: msg.item.message?.originId,
+            },
+            fingerprint
+          ) || msg.id || `mam_${Date.now()}_${Math.random()}`,
+          conversationJid: contactJid,
+          body,
+          timestamp,
+          from: fromDirection,
           status: 'sent' as const,
         }
       })

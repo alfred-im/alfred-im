@@ -1,6 +1,7 @@
 import { getDB } from '../conversations-db'
 import type { Message, MessageStatus } from '../conversations-db'
 import type { BareJID } from '../../types/jid'
+import { areLikelyDuplicateMessages, MESSAGE_DEDUP_WINDOW_MS } from '../../utils/message'
 
 /**
  * Callback chiamato quando i messaggi di una conversazione cambiano
@@ -78,6 +79,7 @@ export class MessageRepository {
       }
     })
   }
+
   /**
    * Salva multipli messaggi con de-duplicazione automatica
    * Transazione atomica: tutto o niente
@@ -99,7 +101,30 @@ export class MessageRepository {
         const existing = await tx.store.get(message.messageId)
         
         if (!existing) {
-          // Nuovo messaggio - inserisci
+          const index = tx.store.index('by-conversation-timestamp')
+          const minTime = new Date(message.timestamp.getTime() - MESSAGE_DEDUP_WINDOW_MS)
+          const maxTime = new Date(message.timestamp.getTime() + MESSAGE_DEDUP_WINDOW_MS)
+          const range = IDBKeyRange.bound(
+            [message.conversationJid, minTime],
+            [message.conversationJid, maxTime],
+            false,
+            false
+          )
+          const candidates = await index.getAll(range)
+          const duplicate = candidates.find(
+            (candidate) =>
+              candidate.messageId !== message.messageId &&
+              areLikelyDuplicateMessages(candidate, message)
+          )
+
+          if (duplicate) {
+            const shouldUpdate = this.shouldUpdateExisting(duplicate, message)
+            if (shouldUpdate.update) {
+              await tx.store.put(shouldUpdate.updated)
+            }
+            continue
+          }
+
           await tx.store.put(message)
         } else {
           // Messaggio esiste - aggiorna solo se necessario
