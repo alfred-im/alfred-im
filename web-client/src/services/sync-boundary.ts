@@ -4,12 +4,22 @@
  * All'avvio della sync:
  * 1. Salva il momento T (boundary)
  * 2. Attiva il listener (messaggi da T in poi)
- * 3. La sync scarica solo il passato (MAM con end = T)
+ * 3. La sync scarica il passato via MAM fino a T + margine di sovrapposizione
+ *    (per skew orologi; i doppioni in overlap sono eliminati per messageId)
  */
+
+import { SYNC } from '../config/constants'
 
 export interface SyncBoundaryState {
   boundary: Date | null
   isListenerActive: boolean
+}
+
+/**
+ * Fine intervallo MAM: T + overlap. Il listener resta ancorato a T.
+ */
+export function getMamSyncEnd(boundary: Date): Date {
+  return new Date(boundary.getTime() + SYNC.BOUNDARY_OVERLAP_MS)
 }
 
 type SyncBoundaryListener = (state: SyncBoundaryState) => void

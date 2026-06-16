@@ -397,7 +397,7 @@ index.html
           └─→ LISTEN continua (messaggi da T in poi)
 ```
 
-**Handoff esplicito**: sync copia il passato (≤ T), listener copia il futuro (> T). De-duplicazione per messageId come rete di sicurezza ai bordi.
+**Handoff esplicito**: sync copia il passato (MAM fino a T + 5s di margine), listener copia il futuro (da T). Sovrapposizione intenzionale ai bordi; de-duplicazione per messageId.
 
 **Novità v3.0**: `AppInitializer` gestisce sync iniziale PRIMA di renderizzare l'app normale.
 

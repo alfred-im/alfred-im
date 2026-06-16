@@ -1,7 +1,8 @@
 /**
  * Opzioni condivise per la sincronizzazione MAM all'avvio.
- * endBefore è il momento T: la sync copre il passato, il listener il futuro.
+ * boundary è il momento T: il listener copre da T in poi.
+ * MAM usa T + margine di sovrapposizione (vedi getMamSyncEnd).
  */
 export interface SyncOptions {
-  endBefore: Date
+  boundary: Date
 }

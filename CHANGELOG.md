@@ -7,7 +7,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 ## [Unreleased]
 
 ### Aggiunto
-- **Sync Boundary Handoff**: all'avvio salva momento T, attiva listener da T, sync MAM solo fino a T (`sync-boundary.ts`, `AppInitializer`, `MessagingContext`, `sync-initializer`)
+- **Sync Boundary Handoff**: all'avvio salva momento T, attiva listener da T, sync MAM fino a T + 5s overlap (`sync-boundary.ts`, `AppInitializer`, `MessagingContext`, `sync-initializer`)
 
 ### Rimosso
 - **Codice morto**: `sync.ts`, `SyncService.ts`, `usePullToRefresh.ts`, `src/repositories/`, `App.css`

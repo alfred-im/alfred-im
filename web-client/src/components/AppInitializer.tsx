@@ -56,7 +56,7 @@ export function AppInitializer({ children }: AppInitializerProps) {
           const boundary = syncBoundaryService.beginHandoff(new Date())
 
           // 2. Sync MAM solo fino a T (il listener copre da T in poi)
-          await performInitialSync(client, { endBefore: boundary }, (progress) => {
+          await performInitialSync(client, { boundary }, (progress) => {
             setSyncMessage(progress.message)
           })
           

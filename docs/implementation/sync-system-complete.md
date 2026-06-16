@@ -90,7 +90,7 @@ Semplificare drasticamente l'architettura di sincronizzazione implementando il p
         NO MORE SYNC DURING USE!
 ```
 
-**Regola handoff**: sync = passato (≤ T via MAM), listener = futuro (da T via real-time). De-duplicazione messageId ai bordi.
+**Regola handoff**: sync = passato (MAM fino a T + overlap), listener = futuro (da T). Overlap 5s per skew orologi; de-duplicazione messageId sui doppioni.
 
 ### Componenti Chiave
 

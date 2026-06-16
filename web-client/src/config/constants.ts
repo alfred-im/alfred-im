@@ -29,6 +29,12 @@ export const TIMEOUTS = {
   CONNECTION: 5000, // ms - XMPP connection timeout
 } as const;
 
+// Sync boundary: margine di sovrapposizione tra MAM e listener (skew orologi client/server)
+export const SYNC = {
+  /** MAM scarica fino a T + overlap; il listener parte da T. I doppioni sono gestiti da messageId. */
+  BOUNDARY_OVERLAP_MS: 5000,
+} as const;
+
 // Text Limits
 export const TEXT_LIMITS = {
   MAX_MESSAGE_PREVIEW_LENGTH: 50,

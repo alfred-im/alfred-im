@@ -2,6 +2,7 @@ import type { Agent } from 'stanza'
 import { downloadAllConversations, enrichWithRoster } from './conversations'
 import { getVCardsForJids } from './vcard'
 import type { SyncOptions } from './sync-types'
+import { getMamSyncEnd } from './sync-boundary'
 
 // Import singleton instances from repositories
 import { conversationRepository, metadataRepository } from './repositories'
@@ -35,11 +36,12 @@ async function performFullSync(
   options: SyncOptions,
   onProgress: ProgressCallback
 ): Promise<void> {
-  const { endBefore } = options
+  const { boundary } = options
+  const mamEndBefore = getMamSyncEnd(boundary)
   onProgress({ phase: 'full', message: 'Scaricamento conversazioni...' })
 
-  // 1. Scarica tutte le conversazioni (senza messaggi, solo la lista) fino a T
-  const { conversations, lastToken } = await downloadAllConversations(client, false, endBefore)
+  // 1. Scarica tutte le conversazioni (senza messaggi, solo la lista) fino a T + overlap
+  const { conversations, lastToken } = await downloadAllConversations(client, false, mamEndBefore)
 
   onProgress({
     phase: 'full',
@@ -74,7 +76,7 @@ async function performFullSync(
         const result = await loadMessagesForContact(client, conv.jid, {
           maxResults: 100,
           afterToken,
-          endBefore,
+          endBefore: mamEndBefore,
         })
 
         if (result.lastToken) {
@@ -126,7 +128,8 @@ async function performIncrementalSync(
   options: SyncOptions,
   onProgress: ProgressCallback
 ): Promise<void> {
-  const { endBefore } = options
+  const { boundary } = options
+  const mamEndBefore = getMamSyncEnd(boundary)
   onProgress({ phase: 'incremental', message: 'Controllo nuovi messaggi...' })
 
   const metadata = await metadataRepo.get()
@@ -161,7 +164,7 @@ async function performIncrementalSync(
       
       const queryOptions: { maxResults: number; afterToken?: string; endBefore: Date } = {
         maxResults: 100, // Assume max 100 nuovi messaggi per conversazione
-        endBefore,
+        endBefore: mamEndBefore,
       }
 
       if (conversationToken) {
