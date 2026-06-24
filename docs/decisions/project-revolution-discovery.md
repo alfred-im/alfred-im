@@ -636,7 +636,22 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | D-038 | 2026-06-24 | **Priorità**: test deploy servizi dopo allineamento doc | 🟡 Prossimo step |
 | D-039 | 2026-06-24 | **N istanze** Alfred nel mondo, ognuna col proprio dominio | ✅ |
 | D-040 | 2026-06-24 | Prima iter. 10: **testare** deploy Supabase + Fly.io | 🟡 GH Pages ok; Supabase/Fly in attesa |
-| D-041 | 2026-06-24 | Test Supabase anche via **MCP ufficiale** (non solo CLI) | 🟡 MCP da connettere in Cursor |
+| D-041 | 2026-06-24 | Test Supabase via **MCP** o dashboard (CLI opzionale) | ✅ |
+| D-042 | 2026-06-24 | **Nessuna CLI obbligatoria** — config in repo, runtime in cloud | ✅ |
+
+---
+
+## Modello deploy — file in repo, servizi in cloud
+
+| | Supabase | Fly.io |
+|---|----------|--------|
+| **Dove gira** | Cloud Supabase | Cloud Fly.io |
+| **Cosa committi** | `supabase/` (migrazioni, config, edge functions) | `fly.toml`, Dockerfile, codice bridge |
+| **CLI locale necessaria?** | ❌ No | ❌ No |
+| **Come si deploya** | Dashboard, MCP, CI, `supabase link` in pipeline | GitHub Actions, `fly deploy` in CI, dashboard |
+| **Per funzionare** | Progetto cloud + file repo allineati | App Fly + file repo allineati |
+
+La CLI (e MCP per Supabase) sono **strumenti opzionali** per sviluppo e smoke test — non parte del modello runtime.
 
 ---
 
@@ -656,53 +671,38 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 
 ---
 
-### Supabase — ⏸️ In attesa connessione (CLI + **MCP**)
+### Supabase — 📁 File repo creati (verifica dashboard)
 
 | Check | Esito |
 |-------|-------|
-| CLI installata | ✅ `supabase` 2.107.0 |
-| `supabase projects list` | ❌ Nessun access token |
-| **MCP Supabase** in questa sessione | ❌ Non connesso (nessun tool MCP disponibile) |
-| Progetto / schema nel repo | ❌ Cartella `supabase/` non ancora creata |
-
-**Supabase ha un MCP server ufficiale** — preferibile per test e gestione piattaforma da Cursor (progetti, tabelle, config, query). Docs: [supabase.com/docs/guides/ai-tools/mcp](https://supabase.com/docs/guides/ai-tools/mcp)
-
-**Per completare il test Supabase** (scegli uno o più):
-
-1. **MCP (consigliato in Cursor)** — Settings → Tools & MCP → aggiungi server Supabase (OAuth login o PAT in `.cursor/mcp.json` con `@supabase/mcp-server-supabase`). Poi rieseguire test deploy da agente.
-2. **CLI** — `supabase login` oppure env `SUPABASE_ACCESS_TOKEN`
-3. **Locale** — con `supabase start`, MCP su `http://localhost:54321/mcp`
-
-Verifiche post-connessione: progetto esiste, auth, DB, URL/API key dell'istanza.
+| `supabase/config.toml` | ✅ `project_id = alfred` |
+| `supabase/migrations/` | ✅ `20260624000000_alfred_bootstrap.sql` |
+| `supabase/seed.sql` | ✅ placeholder |
+| Progetto cloud | 👤 Verifica tu da dashboard / MCP |
 
 ---
 
-### Fly.io — ⏸️ In attesa credenziali
+### Fly.io — 📁 File repo creati (verifica dashboard)
 
 | Check | Esito |
 |-------|-------|
-| CLI installata | ✅ `flyctl` v0.4.60 |
-| `fly auth whoami` | ❌ Nessun access token |
-| `fly.toml` / app nel repo | ❌ Non ancora creati |
-| App deployate | ❌ Non verificabile senza login |
-
-**Per completare il test** (una delle due):
-1. `fly auth login` (interattivo) — oppure
-2. Variabile d'ambiente `FLY_API_TOKEN` (token da [Fly.io → Account → Access Tokens](https://fly.io/user/personal_access_tokens))
-
-Poi verificare: `fly apps list`, creazione smoke app, deploy bridge placeholder.
+| `bridge-xmpp/fly.toml` | ✅ app `alfred-im-bridge-xmpp`, region `fra` |
+| `bridge-xmpp/Dockerfile` + `main.py` | ✅ health `/health` |
+| `bridge-matrix/fly.toml` | ✅ app `alfred-im-bridge-matrix`, region `fra` |
+| `bridge-matrix/Dockerfile` + `main.py` | ✅ health `/health` |
+| App deployate su Fly | 👤 Verifica tu da dashboard (`fly deploy` da cartella bridge) |
 
 ---
 
 ### Riepilogo
 
-| Servizio | Stato | Azione richiesta |
-|----------|-------|------------------|
-| **GitHub Pages** | ✅ Funzionante | Nessuna |
-| **Supabase** | ⏸️ Bloccato | Connettere **MCP Supabase** in Cursor e/o `SUPABASE_ACCESS_TOKEN` |
-| **Fly.io** | ⏸️ Bloccato | Fornire `FLY_API_TOKEN` o login |
+| Servizio | Stato | Cosa serve per il test |
+|----------|-------|------------------------|
+| **GitHub Pages** | ✅ OK | — |
+| **Supabase** | 📁 File in repo | Verifica progetto + migrazioni da dashboard/MCP |
+| **Fly.io** | 📁 File in repo | Crea app + `fly deploy` da `bridge-xmpp/` e `bridge-matrix/` |
 
-_Dopo i token, rieseguire smoke test su Supabase e Fly.io._
+_Il test non dipende dalla CLI locale installata sull'agente._
 
 ---
 

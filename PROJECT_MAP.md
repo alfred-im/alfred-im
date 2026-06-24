@@ -188,7 +188,10 @@ Per ogni messaggio nell'array:
 │   ├── decisions/             # Architecture Decision Records
 │   ├── fixes/                 # Analisi bug fix
 │   └── archive/               # Ricerca XMPP e documenti storici
-├── web-client/                # Applicazione React principale
+├── bridge-matrix/             # Bridge Python Matrix (fly.toml, Dockerfile)
+├── bridge-xmpp/               # Bridge Python XMPP (fly.toml, Dockerfile)
+├── client/                    # Flutter Web (placeholder Alpha)
+├── supabase/                  # Config + migrazioni piattaforma Alfred
 ├── README.md                  # Documentazione principale
 ├── CHANGELOG.md               # Change log del progetto
 ├── LICENSE                    # Licenza MIT
