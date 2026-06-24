@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-24 (Fly bridge documentato: xmpptest, XMPP+Matrix ✅)  
+**Ultimo aggiornamento**: 2026-06-24 (Supabase + Fly bridge documentati ✅)  
 **Versione**: 2.2.0 (per-account IndexedDB + XEP-0184 + XEP-0333)
 
 ---
@@ -178,7 +178,7 @@ Per ogni messaggio nell'array:
 ├── .cursor-rules.md          # Regole di sviluppo per AI assistant
 ├── .cursor/rules/            # Regole Cursor (main.mdc → punta a .cursor-rules.md)
 │   └── main.mdc
-├── deploy/                    # Manifest deploy (fly-bridges.json)
+├── deploy/                    # Manifest deploy (fly-bridges.json, supabase.json)
 ├── fly.toml                   # Un’app Fly, due demoni bridge
 ├── Dockerfile                 # Build XMPP + Matrix
 ├── scripts/start-bridges.sh   # Avvio entrambi i demoni
@@ -432,7 +432,22 @@ index.html
 
 ## 🌐 Servizi Esterni
 
-### 1. **Fly.io — Bridge Alfred (Alpha bootstrap)**
+### 1. **Supabase — Piattaforma Alfred (Alpha bootstrap)**
+
+**Progetto cloud**: `tvwpoxxcqwphryvuyqzu` (region `eu-west-1`, status `ACTIVE_HEALTHY`)
+
+| Check | Esito |
+|-------|-------|
+| URL API | https://tvwpoxxcqwphryvuyqzu.supabase.co |
+| Auth health | ✅ 200 (GoTrue, con `apikey`) |
+| MCP Supabase (agente) | ✅ `execute_sql`, `apply_migration`, `list_migrations` |
+| REST API (anon) | ✅ 200 — tabella smoke `platform_agent_smoke` |
+
+Config in repo: `supabase/config.toml`, `supabase/migrations/` (bootstrap + smoke test), `deploy/supabase.json` (ref/URL/region — **no secret**). Chiavi anon/publishable solo su Supabase; l’agente le ottiene via MCP.
+
+**Test live (2026-06-24)**: migrazione `platform_agent_smoke` applicata; REST restituisce `{"label":"cursor-agent-ok"}`.
+
+### 2. **Fly.io — Bridge Alfred (Alpha bootstrap)**
 
 **App Fly**: `xmpptest` (region `fra`)
 
@@ -447,7 +462,7 @@ Config deploy in root: `fly.toml` (due `[[services]]`), `Dockerfile`. Fly colleg
 
 **Test live (2026-06-24)**: XMPP `/health` ✅ 200 · Matrix `:8081/health` ✅ 200. PR Fly #103 (`app/fly-io`): chiudere senza merge.
 
-### 2. **XMPP Server** (legacy web-client)
+### 3. **XMPP Server** (legacy web-client)
 
 **Server di Default**:
 - **Domain**: `jabber.hot-chilli.net`
@@ -470,7 +485,7 @@ Config deploy in root: `fly.toml` (due `[[services]]`), `Dockerfile`. Fly colleg
 | XEP-0077 | In-Band Registration | `xmpp.ts` |
 | XEP-0199 | XMPP Ping | Stanza.js built-in |
 
-### 3. **IndexedDB (Local)**
+### 4. **IndexedDB (Local)**
 
 **Database per account**: `conversations-db-{jid_normalizzato}` (es. `conversations-db-testardo_conversations_im`)  
 **Legacy (migrazione)**: `conversations-db` — DB condiviso pre-v2.2; copiato al primo login account se dedicato vuoto  

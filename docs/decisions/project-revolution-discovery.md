@@ -1,6 +1,6 @@
 # Rivoluzione Alfred — Discovery Q&A
 
-**Stato**: 🟡 In corso — test deploy **Supabase**; **Fly.io ✅** (bridge live)  
+**Stato**: 🟡 In corso — **Supabase ✅** · **Fly.io ✅** · schema Alpha da espandere  
 
 ### Prima della prossima iterazione — test deploy
 
@@ -8,7 +8,7 @@
 
 | Servizio | Scopo | Test |
 |----------|-------|------|
-| **Supabase** | Piattaforma (cloud) | Progetto attivo, config in repo |
+| **Supabase** | Piattaforma (cloud) | ✅ Progetto attivo, MCP + API OK |
 | **Fly.io** | Bridge Python (cloud) | ✅ `xmpptest` live — XMPP + Matrix |
 | **GitHub Pages** | Flutter Web | Build + URL |
 
@@ -633,9 +633,10 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | D-035 | 2026-06-24 | ~~Gmail~~ → **stack OSS self-hosted** (analogia **Mastodon**) | ✅ Corretto iter.9 |
 | D-036 | 2026-06-24 | **Account Alfred** (login) ≠ **Contatti** (interni + XMPP + Matrix) | ✅ |
 | D-037 | 2026-06-24 | Daemon = **per istanza**, sempre attivo | ✅ |
-| D-038 | 2026-06-24 | **Priorità**: test deploy servizi dopo allineamento doc | 🟡 Prossimo step |
+| D-038 | 2026-06-24 | **Priorità**: test deploy servizi dopo allineamento doc | ✅ Completato |
 | D-039 | 2026-06-24 | **N istanze** Alfred nel mondo, ognuna col proprio dominio | ✅ |
-| D-040 | 2026-06-24 | Test deploy Supabase + Fly.io | 🟡 Supabase in attesa; **Fly ✅** |
+| D-040 | 2026-06-24 | Test deploy Supabase + Fly.io | ✅ **Entrambi OK** |
+| D-048 | 2026-06-24 | Agente **può programmare** Supabase (MCP + migrazione + REST) | ✅ |
 | D-041 | 2026-06-24 | Test Supabase via **MCP** o dashboard (CLI opzionale) | ✅ |
 | D-042 | 2026-06-24 | **Nessuna CLI obbligatoria** — config in repo, runtime in cloud | ✅ |
 | D-043 | 2026-06-24 | Fly deploy: config + Dockerfile in root; Fly legge repo (no GitHub Actions token) | ✅ |
@@ -676,14 +677,32 @@ La CLI (e MCP per Supabase) sono **strumenti opzionali** per sviluppo e smoke te
 
 ---
 
-### Supabase — 📁 File repo creati (verifica dashboard)
+### Supabase — ✅ OK (2026-06-24, verificato)
 
 | Check | Esito |
 |-------|-------|
-| `supabase/config.toml` | ✅ `project_id = alfred` |
-| `supabase/migrations/` | ✅ `20260624000000_alfred_bootstrap.sql` |
-| `supabase/seed.sql` | ✅ placeholder |
-| Progetto cloud | 👤 Verifica tu da dashboard / MCP |
+| Progetto cloud | `tvwpoxxcqwphryvuyqzu` — **ACTIVE_HEALTHY** (region `eu-west-1`) |
+| URL API | https://tvwpoxxcqwphryvuyqzu.supabase.co |
+| Auth health | ✅ **200** (GoTrue) |
+| Migrazioni cloud | `20260624000000_alfred_bootstrap` + `20260624180000_platform_agent_smoke` |
+| `pgcrypto` | ✅ installato (v1.3) |
+| MCP Supabase (agente) | ✅ `execute_sql`, `apply_migration`, `list_tables` |
+| REST API (anon) | ✅ **200** — lettura tabella smoke |
+
+**Test programmazione agente (end-to-end)**
+
+1. Applicata migrazione `platform_agent_smoke` (tabella + RLS read anon + riga test)
+2. Letta via REST: `[{"label":"cursor-agent-ok",...}]` → **200**
+
+**Conclusione**: l’agente **può programmare** sulla piattaforma — SQL via MCP, schema via migrazioni, accesso client via REST/Auth. Nessuna azione utente richiesta.
+
+| File repo | Ruolo |
+|-----------|-------|
+| `supabase/config.toml` | Config locale (`project_id = alfred`) |
+| `supabase/migrations/` | Migrazioni versionate (sync con cloud) |
+| `deploy/supabase.json` | Riferimento progetto cloud (ref, URL, region — **no secret**) |
+
+**Nota**: chiavi API (anon/publishable) restano su Supabase — **non** in repo. L’agente le ottiene via MCP quando serve.
 
 ---
 
@@ -766,7 +785,7 @@ Dopo Launch, il bot `app/fly-io` apre **PR #103** (`Fly.io Launch config files`)
 | Servizio | Stato | Cosa serve per il test |
 |----------|-------|------------------------|
 | **GitHub Pages** | ✅ OK | — |
-| **Supabase** | 📁 File in repo | Verifica progetto + migrazioni da dashboard/MCP |
+| **Supabase** | ✅ OK | MCP + REST verificati |
 | **Fly.io** | ✅ OK | XMPP + Matrix health verificati |
 
 _Fly legge config e Dockerfile dalla root del repo — nessun secret GitHub Actions._
@@ -787,6 +806,7 @@ _Fly legge config e Dockerfile dalla root del repo — nessun secret GitHub Acti
 - [x] Librerie bridge Python (proposta)
 - [x] Contatti unificati (protocollo solo interno)
 - [x] Test deploy Fly.io ✅ (XMPP + Matrix su xmpptest.fly.dev)
+- [x] Test deploy Supabase ✅ (MCP + migrazione smoke + REST)
 - [x] Dominio per istanza (non SaaS globale)
 - [x] Profilo Alfred unico
 - [x] Push escluso
@@ -816,3 +836,4 @@ _Fly legge config e Dockerfile dalla root del repo — nessun secret GitHub Acti
 | 9+ | 2026-06-24 | Prima iter. 10: **testare** deploy Supabase + Fly.io |
 | 10 | 2026-06-24 | Test deploy GitHub Pages + Fly; Supabase file in repo |
 | 11 | 2026-06-24 | Fly: un’app due demoni; due porte; PR #103 da chiudere; bridge live ✅ |
+| 12 | 2026-06-24 | Supabase: MCP migrazione smoke; REST anon OK; agente può programmare ✅ |
