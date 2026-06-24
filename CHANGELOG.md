@@ -29,6 +29,10 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - Client: `ConversationService` usa RPC; `Conversation.fromListRpcRow`
 - Test: `schema_smoke.sql` + unit test parsing payload RPC
 
+### Corretti (2026-06-24 — inbox rotella infinita fino a interazione)
+- **Provider**: `ChangeNotifierProxyProvider` al posto di `ProxyProvider` per Conversations/Contacts/Profile — la UI non ascoltava `notifyListeners()`
+- Test widget + e2e Playwright inbox senza digitare nella ricerca
+
 ### Corretti (2026-06-24 — inbox bloccata all'avvio)
 - **Race auth web**: attendere `waitForSupabaseSessionReady()` dopo `Supabase.initialize` prima delle RPC
 - **ConversationsController**: realtime dopo primo load; timeout 30s; UI errore + Riprova

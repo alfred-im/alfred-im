@@ -58,6 +58,7 @@ client/lib/
 
 - Scope Alpha: pochi controller globali (`Auth`, `Conversations`, `Contacts`, `Profile`)
 - `ProxyProvider` ricrea controller al cambio `userId` (switch account) senza boilerplate
+- **`ChangeNotifierProxyProvider`** (non `ProxyProvider`) per inbox/contatti/profilo — altrimenti `notifyListeners()` del controller non aggiorna la UI
 - Coerente con dimensione progetto mock precedente
 
 ### 2.3 Flusso bootstrap

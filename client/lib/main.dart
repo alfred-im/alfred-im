@@ -26,7 +26,11 @@ class AlfredApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => AuthController()..initialize(),
         ),
-        ProxyProvider<AuthController, ConversationsController?>(
+        // ChangeNotifierProxyProvider (non ProxyProvider): ascolta notifyListeners
+        // del controller — altrimenti la UI resta sulla rotella finché un altro
+        // evento (ricerca, navigazione) non forza un rebuild.
+        ChangeNotifierProxyProvider<AuthController, ConversationsController?>(
+          create: (_) => null,
           update: (_, auth, previous) {
             if (!auth.sessionReady) return null;
             final userId = auth.userId;
@@ -35,7 +39,8 @@ class AlfredApp extends StatelessWidget {
             return ConversationsController(userId: userId);
           },
         ),
-        ProxyProvider<AuthController, ContactsController?>(
+        ChangeNotifierProxyProvider<AuthController, ContactsController?>(
+          create: (_) => null,
           update: (_, auth, previous) {
             if (!auth.sessionReady) return null;
             final userId = auth.userId;
@@ -44,8 +49,10 @@ class AlfredApp extends StatelessWidget {
             return ContactsController(ownerId: userId);
           },
         ),
-        ProxyProvider<AuthController, ProfileController?>(
+        ChangeNotifierProxyProvider<AuthController, ProfileController?>(
+          create: (_) => null,
           update: (_, auth, previous) {
+            if (!auth.sessionReady) return null;
             final userId = auth.userId;
             if (userId == null) return null;
             if (previous?.userId == userId) return previous;
