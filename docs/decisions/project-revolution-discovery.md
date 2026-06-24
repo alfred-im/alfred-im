@@ -1,6 +1,6 @@
 # Rivoluzione Alfred — Discovery Q&A
 
-**Stato**: 🟡 In corso — Iterazione 8 (modello servizio; priorità deploy)  
+**Stato**: 🟡 In corso — Iterazione 9 (modello stack self-hosted, analogia Mastodon)  
 
 ### Prossima priorità (utente)
 
@@ -35,30 +35,68 @@ _Stato deploy: non ancora verificato in questa sessione._
 
 **Alfred viene riscritto da zero.** Il `web-client/` React **muore del tutto** (tag `legacy/web-client-final` @ `6e792eb`). Nuovo stack: **Flutter Web** + **Piattaforma (Supabase)** + **due bridge Python** (XMPP + Matrix) su **Fly.io**. Inbox unificata, chat separate per protocollo, brand grafico **identico** all'attuale.
 
-**Alfred è un servizio di chat federato** — **non un client generico** XMPP/Matrix.
+**Alfred è software open source** — uno **stack completo** che si **installa** sulla propria infrastruttura. **Non** è un SaaS centralizzato tipo Gmail dove un solo operatore ospita tutti.
 
-**Analogia vincolante**: Alfred è come **Gmail** o **Facebook Messenger**:
-- Esiste un **servizio** (Alfred) con la sua piattaforma
-- L'app web ufficiale serve **solo quel servizio** — non puoi usarla per un altro provider
-- Fai login **sul servizio Alfred**, non su un server XMPP/Matrix a scelta
+### Cosa è Alfred (modello corretto — Iterazione 9)
+
+**Analogia vincolante**: **Mastodon**
+- Mastodon è software che **installi** → ottieni **il tuo server** con **il tuo dominio**
+- Esiste un **client ufficiale** che parla con **quell'istanza**
+- Ci sono **molte istanze** Mastodon nel mondo, ognuna con il proprio dominio
+
+**Alfred uguale**:
+- **Stack Alfred** = Flutter Web + piattaforma (Supabase) + bridge XMPP + bridge Matrix — tutto installabile
+- **Istanza Alfred** = una installazione completa su un dominio (es. `chat.miodominio.it`, oppure `alfred.im` per *una* delle tante installazioni)
+- **Client ufficiale Alfred** = app che parla con **un'istanza Alfred** — non è un client XMPP/Matrix generico
+- Nel mondo possono esistere **server Alfred @ dominio A**, **server Alfred @ dominio B**, ecc.
+
+```
+                    ┌─────────────────────────────────────┐
+                    │  Software Alfred (open source)       │
+                    │  stack: client + piattaforma + bridge │
+                    └─────────────────────────────────────┘
+                           │ installi          │ installi
+                           ▼                   ▼
+              ┌────────────────────┐  ┌────────────────────┐
+              │ Istanza @ domA     │  │ Istanza @ domB     │
+              │ (es. alfred.im)    │  │ (es. chat.foo.org) │
+              │ utenti, contatti   │  │ utenti, contatti   │
+              └────────────────────┘  └────────────────────┘
+```
+
+### Cosa Alfred NON è
+
+| ❌ Non è | Perché |
+|---------|--------|
+| Client generico XMPP/Matrix | È lo stack + client ufficiale di **un'istanza** |
+| Gmail / Messenger centralizzato | Non compri `alfred.im` per far chattare **tutto il mondo** lì |
+| Un solo server globale Alfred | Ogni operatore **installa** la propria istanza col proprio dominio |
+
+### Cosa Alfred È (per l'utente finale su un'istanza)
+
+Su **una** istanza installata, l'utente:
+- fa login **solo** con account Alfred **di quell'istanza**
+- non fa login su XMPP/Matrix esterni come identità
+- aggiunge **contatti** (interni, XMPP, Matrix) nella rubrica
+- usa il **client ufficiale** collegato a quell'istanza — non per istanze Alfred arbitrarie senza configurazione (come l'app Mastodon per la tua istanza)
 
 ### Account Alfred vs Contatti — due cose diverse
 
 | | **Account Alfred** | **Contatti** |
 |---|-------------------|--------------|
-| **Cos'è** | La tua identità sul **servizio** Alfred | Persone con cui chatti |
-| **Login** | ✅ Solo con account Alfred | ❌ Non si fa login sui contatti |
-| **Multi** | Puoi avere **più account Alfred** (stile Thunderbird / più caselle Gmail) | Rubrica unificata |
+| **Cos'è** | La tua identità su **questa istanza** Alfred | Persone con cui chatti |
+| **Login** | ✅ Solo account Alfred (su quell'istanza) | ❌ Non si fa login sui contatti |
+| **Multi** | Più account Alfred (es. Thunderbird — anche su istanze diverse? _da dettagliare_) | Rubrica unificata |
 | **Tipi** | Solo Alfred | **Interni** Alfred + esterni **XMPP** + esterni **Matrix** |
 | **UI** | Switch account Alfred | Lista contatti unificata, senza badge protocollo |
 
-**Aggiungere un contatto** XMPP o Matrix **non** è "collegare un account protocollo". È aggiungere qualcuno alla rubrica — da rete XMPP, da rete Matrix, o contatto **interno** al servizio Alfred.
+**Aggiungere un contatto** XMPP o Matrix è aggiungere qualcuno alla rubrica — non "collegare un account protocollo".
 
-### Daemon = servizio condiviso, non personale
+### Daemon = per istanza, non per utente
 
-I bridge Python su Fly.io sono **daemon del servizio Alfred** — sempre attivi, usati da **tutte** le persone sulla piattaforma. Non sono daemon personali che si accendono al tuo login. È ovvio per definizione: un demone di servizio con migliaia di utenti sopra.
+I bridge Python sono **daemon dell'istanza Alfred** — sempre attivi per **tutti** gli utenti **su quell'installazione**. Non sono personali al login. Un'installazione = un paio di bridge (XMPP + Matrix) in run continuo.
 
-### Modello identità (login)
+### Modello identità (login, per istanza)
 
 ```
 Utente
@@ -84,18 +122,18 @@ Utente
 
 L'app gestisce **multi-account Alfred**: l'utente può avere **quanti account Alfred vuole** e passare tra loro (come più caselle email in Thunderbird). Ogni account Alfred ha la propria identità e i propri dati sulla piattaforma.
 
-### Identità verso il mondo esterno — un solo dominio
+### Dominio federato — per istanza, uno solo
 
-**Risposta utente**: fuori mi presento come **`me@alfred.im`** — un dominio, non due.
+**Chiarimento Iterazione 9**: quando si diceva `me@alfred.im`, **`alfred.im` è il dominio di un'istanza** — un esempio tra tanti possibili. **Non** significa che tutti gli utenti Alfred al mondo stanno su `alfred.im`.
 
-| Concetto | Decisione |
-|----------|-----------|
-| Dominio federato | **`alfred.im`** — unico |
-| Identità esterna | es. `mario@alfred.im` (JID XMPP) — stesso concetto identità Alfred |
-| Due domini / due server distinti per protocollo | ❌ **No** — non ha senso nel modello Alfred |
-| Matrix fuori | Stesso principio identità Alfred su dominio unico — dettaglio Matrix **da definire** (utente non conosce ancora Matrix) |
+| Livello | Regola |
+|---------|--------|
+| **Globale** | Molte istanze Alfred, ognuna col **proprio dominio** |
+| **Per istanza** | **Un dominio** per installazione (es. `alfred.im` o `chat.foo.org`) |
+| **Per istanza** | **Non** due domini diversi per XMPP vs Matrix sulla stessa installazione |
+| **Identità esterna** | es. `mario@alfred.im` = identità Alfred federata verso XMPP **da quell'istanza** |
 
-**Analogia email**: come avere `mario@alfred.im` come il tuo indirizzo — non due provider con due domini diversi per la stessa persona.
+**Analogia Mastodon**: su `mastodon.social` sei `@user@mastodon.social`; su un'altra istanza hai `@user@altro.dom` — domini diversi, stesso software.
 
 ### Principio card — federazione XMPP (fondamentale)
 
@@ -375,6 +413,18 @@ _(Vedi sezione "Identità verso il mondo esterno" in cima.)_
 
 ---
 
+## Iterazione 9 — Stack self-hosted (feedback utente)
+
+**Correzione**: l'analogia **Gmail/Messenger** era **sbagliata** — suggeriva un servizio centralizzato unico. Alfred **non** è "compri alfred.im e ci metti tutti".
+
+**Modello corretto**:
+- Software **open source** = stack completo installabile
+- **N istanze** nel mondo, ognuna col proprio dominio
+- Client ufficiale per **la tua istanza** — come Mastodon
+- `alfred.im` = esempio di dominio di **una** istanza, non il dominio globale obbligatorio
+
+---
+
 ## Iterazione 8 — Correzioni audit (feedback utente)
 
 ### C1 e C2 — non erano contraddizioni tue
@@ -485,7 +535,7 @@ Il daemon è del **servizio**, non dell'utente. **Chiuso** — non era ambiguit�
 ### Domande ancora aperte (non contraddizioni — da chiudere)
 
 1. **Multi-account Alfred**: come si presenta in UI il cambio account? (Thunderbird-like — confermato ma non dettagliato)
-2. **Matrix su `alfred.im`**: formato identità Matrix con dominio unico — da definire quando serve Matrix
+2. **Matrix per istanza**: formato identità Matrix sul dominio dell'istanza — da definire
 3. **Ordine tappe Alpha** dopo messaggi v1 — posticipato
 
 ---
@@ -572,17 +622,18 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | D-025 | 2026-06-24 | Bridge XMPP: **slixmpp** | ✅ Accettata a livello alto |
 | D-026 | 2026-06-24 | Bridge Matrix: **matrix-nio** | ✅ Accettata a livello alto |
 | D-027 | 2026-06-24 | Contatti **unificati** | ✅ Corretto iter.7: protocollo **non** in UI |
-| D-028 | 2026-06-24 | Federazione esterna: **`@alfred.im`** dominio unico | ✅ |
+| D-028 | 2026-06-24 | **Un dominio per istanza**; `alfred.im` = esempio, non dominio globale | ✅ Corretto iter.9 |
 | D-029 | 2026-06-24 | Profilo = **solo profilo Alfred** | ✅ |
 | D-030 | 2026-06-24 | **Push** fuori scope per ora | ✅ |
 | D-031 | 2026-06-24 | **Web solo online**; cache nativa posticipata | ✅ |
 | D-032 | 2026-06-24 | **Alpha v1**: invio/ricezione/lettura messaggi, XMPP | ✅ |
 | D-033 | 2026-06-24 | **Principio card** federazione XMPP | ✅ Vincolante |
 | D-034 | 2026-06-24 | Protocollo **mai visibile in UI** | ✅ |
-| D-035 | 2026-06-24 | Alfred = **servizio** (Gmail/Messenger), non client generico | ✅ |
+| D-035 | 2026-06-24 | ~~Gmail~~ → **stack OSS self-hosted** (analogia **Mastodon**) | ✅ Corretto iter.9 |
 | D-036 | 2026-06-24 | **Account Alfred** (login) ≠ **Contatti** (interni + XMPP + Matrix) | ✅ |
-| D-037 | 2026-06-24 | Daemon = **servizio condiviso**, sempre attivo per tutti | ✅ |
+| D-037 | 2026-06-24 | Daemon = **per istanza**, sempre attivo | ✅ |
 | D-038 | 2026-06-24 | **Priorità**: test deploy servizi dopo allineamento doc | 🟡 Prossimo step |
+| D-039 | 2026-06-24 | **N istanze** Alfred nel mondo, ognuna col proprio dominio | ✅ |
 
 ---
 
@@ -599,7 +650,8 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 - [x] Multi-account Alfred
 - [x] Librerie bridge Python (proposta)
 - [x] Contatti unificati (protocollo solo interno)
-- [x] Federazione `@alfred.im`
+- [x] Modello stack self-hosted (Mastodon)
+- [x] Dominio per istanza (non SaaS globale)
 - [x] Profilo Alfred unico
 - [x] Push escluso
 - [x] Alpha v1 (messaggi XMPP)
@@ -624,4 +676,5 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | 6 | 2026-06-24 | Contatti unificati; `@alfred.im`; Alpha v1 messaggi; principio card; push no; offline TBD |
 | 7 | 2026-06-24 | Audit contraddizioni; protocollo invisibile; web online |
 | 8 | 2026-06-24 | Servizio ≠ client; account ≠ contatti; daemon servizio; priorità deploy |
-| 9 | _prossima_ | **Test deploy** Supabase / Fly.io / GH Pages |
+| 9 | 2026-06-24 | Stack OSS self-hosted; analogia Mastodon; alfred.im = istanza esempio |
+| 10 | _prossima_ | **Test deploy** istanza; Alpha tappe 2+ |
