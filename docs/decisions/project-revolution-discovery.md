@@ -648,8 +648,8 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | **Dove gira** | Cloud Supabase | Cloud Fly.io |
 | **Cosa committi** | `supabase/` (migrazioni, config, edge functions) | `fly.toml`, Dockerfile, codice bridge |
 | **CLI locale necessaria?** | ❌ No | ❌ No |
-| **Come si deploya** | Dashboard, MCP, CI, `supabase link` in pipeline | GitHub Actions, `fly deploy` in CI, dashboard |
-| **Per funzionare** | Progetto cloud + file repo allineati | App Fly + file repo allineati |
+| **Come si deploya** | Dashboard, MCP, CI, `supabase link` in pipeline | **Solo file repo**: manifest + script + GitHub Actions (no architettura in dashboard) |
+| **Per funzionare** | Progetto cloud + file repo allineati | Secret `FLY_API_TOKEN` su GitHub + file repo allineati |
 
 La CLI (e MCP per Supabase) sono **strumenti opzionali** per sviluppo e smoke test — non parte del modello runtime.
 
@@ -682,17 +682,29 @@ La CLI (e MCP per Supabase) sono **strumenti opzionali** per sviluppo e smoke te
 
 ---
 
-### Fly.io — monorepo (2 app separate)
+### Fly.io — due container, tutto in repo (no dashboard)
+
+| File | Ruolo |
+|------|-------|
+| `deploy/fly-bridges.json` | Manifest: quale cartella → quale app Fly |
+| `bridge-xmpp/fly.toml` + `Dockerfile` | Container XMPP |
+| `bridge-matrix/fly.toml` + `Dockerfile` | Container Matrix |
+| `scripts/fly-bootstrap.sh` | Crea app Fly se mancanti (CLI, idempotente) |
+| `scripts/fly-deploy-all.sh` | Bootstrap + deploy di entrambi |
+| `.github/workflows/deploy-fly-bridges.yml` | CI: esegue `fly-deploy-all.sh` su push |
+
+**Setup una tantum** (solo secret, non architettura):
+
+1. `fly tokens create deploy` → secret GitHub `FLY_API_TOKEN`
+2. Push su `main` oppure `gh workflow run deploy-fly-bridges.yml`
+
+**Non usare** il wizard Fly “Launch from GitHub” dalla root del monorepo: non trova Dockerfile e spinge a configurare working directory in dashboard. L’architettura è già nei file committati.
 
 | Check | Esito |
 |-------|-------|
-| `bridge-xmpp/fly.toml` | ✅ app `alfred-im-bridge-xmpp`, region `fra` |
-| `bridge-xmpp/Dockerfile` + `main.py` | ✅ health `/health` |
-| `bridge-matrix/fly.toml` | ✅ app `alfred-im-bridge-matrix`, region `fra` |
-| `bridge-matrix/Dockerfile` + `main.py` | ✅ health `/health` |
-| `.github/workflows/deploy-fly-bridges.yml` | ✅ deploy da sottocartelle (non dalla root) |
-
-**Errore tipico dashboard** (`Could not find a Dockerfile…`): Fly lancia dalla **root** del repo; qui non c’è Dockerfile. Servono **due app Fly**, ciascuna con **Current Working Directory** = `bridge-xmpp` oppure `bridge-matrix` (Config path vuoto se `fly.toml` è nella cartella). Oppure CLI: `fly deploy ./bridge-xmpp` / `fly deploy ./bridge-matrix`. Oppure GitHub Actions con secret `FLY_API_TOKEN` (app create prima su Fly).
+| Due container separati | ✅ un’app Fly per bridge |
+| Config fuori dalla dashboard | ✅ manifest + fly.toml + CI |
+| App deployate su Fly | 👤 dopo `FLY_API_TOKEN` + workflow |
 
 ---
 
@@ -702,7 +714,7 @@ La CLI (e MCP per Supabase) sono **strumenti opzionali** per sviluppo e smoke te
 |----------|-------|------------------------|
 | **GitHub Pages** | ✅ OK | — |
 | **Supabase** | 📁 File in repo | Verifica progetto + migrazioni da dashboard/MCP |
-| **Fly.io** | 📁 File in repo | 2 app Fly; working dir `bridge-xmpp` / `bridge-matrix` (non root); secret `FLY_API_TOKEN` per CI |
+| **Fly.io** | 📁 File in repo | Secret `FLY_API_TOKEN` su GitHub → workflow crea app e deploya |
 
 _Il test non dipende dalla CLI locale installata sull'agente._
 

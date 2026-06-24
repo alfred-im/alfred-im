@@ -1,4 +1,3 @@
-# Rename `app` to match your Fly.io application name after `fly apps create`.
 app = "alfred-im-bridge-xmpp"
 primary_region = "fra"
 

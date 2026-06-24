@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-24 (scaffold deploy: supabase + bridge Fly.io; workflow Fly monorepo)  
+**Ultimo aggiornamento**: 2026-06-24 (deploy Fly: manifest + script, no dashboard)  
 **Versione**: 2.2.0 (per-account IndexedDB + XEP-0184 + XEP-0333)
 
 ---
@@ -178,10 +178,12 @@ Per ogni messaggio nell'array:
 ├── .cursor-rules.md          # Regole di sviluppo per AI assistant
 ├── .cursor/rules/            # Regole Cursor (main.mdc → punta a .cursor-rules.md)
 │   └── main.mdc
+├── deploy/                    # Manifest deploy (es. fly-bridges.json)
+├── scripts/                   # fly-bootstrap.sh, fly-deploy-all.sh
 ├── .github/                   # GitHub Actions per deployment
 │   └── workflows/
 │       ├── deploy-pages.yml   # Deploy automatico su GitHub Pages
-│       └── deploy-fly-bridges.yml  # Deploy bridge-xmpp + bridge-matrix (monorepo, non root)
+│       └── deploy-fly-bridges.yml  # Deploy bridge via manifest (no config dashboard)
 ├── docs/                      # Documentazione tecnica per AI (35 file)
 │   ├── architecture/          # Analisi architetturali
 │   ├── implementation/        # Dettagli implementativi

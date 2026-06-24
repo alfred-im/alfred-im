@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - '.github/workflows/deploy-fly-bridges.yml'
+      - 'deploy/fly-bridges.json'
+      - 'scripts/fly-*.sh'
       - 'bridge-xmpp/**'
       - 'bridge-matrix/**'
   workflow_dispatch:
@@ -17,15 +19,6 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - dir: bridge-xmpp
-            app: alfred-im-bridge-xmpp
-          - dir: bridge-matrix
-            app: alfred-im-bridge-matrix
-    concurrency: fly-${{ matrix.app }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,7 +26,7 @@ jobs:
       - name: Setup flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Deploy ${{ matrix.app }}
-        run: flyctl deploy ./${{ matrix.dir }} --remote-only -a ${{ matrix.app }}
+      - name: Deploy all Fly bridges
+        run: ./scripts/fly-deploy-all.sh
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

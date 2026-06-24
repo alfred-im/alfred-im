@@ -1,0 +1,14 @@
+{
+  "apps": [
+    {
+      "dir": "bridge-xmpp",
+      "app": "alfred-im-bridge-xmpp",
+      "region": "fra"
+    },
+    {
+      "dir": "bridge-matrix",
+      "app": "alfred-im-bridge-matrix",
+      "region": "fra"
+    }
+  ]
+}
