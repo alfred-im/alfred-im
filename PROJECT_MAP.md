@@ -179,7 +179,9 @@ Per ogni messaggio nell'array:
 ├── .cursor/rules/            # Regole Cursor (main.mdc → punta a .cursor-rules.md)
 │   └── main.mdc
 ├── deploy/                    # Manifest deploy (fly-bridges.json)
-├── fly.bridge-xmpp.toml       # Config Fly root — app bridge XMPP
+├── fly.toml                   # Config Fly root (nome standard — Launch pannello)
+├── Dockerfile                 # Build Fly root (nome standard — Launch pannello)
+├── fly.bridge-xmpp.toml       # Alias/config esplicita bridge XMPP
 ├── fly.bridge-matrix.toml     # Config Fly root — app bridge Matrix
 ├── Dockerfile.bridge-xmpp     # Build Fly da root (sorgente in bridge-xmpp/)
 ├── Dockerfile.bridge-matrix     # Build Fly da root (sorgente in bridge-matrix/)

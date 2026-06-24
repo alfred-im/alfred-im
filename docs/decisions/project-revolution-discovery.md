@@ -692,13 +692,17 @@ La CLI (e MCP per Supabase) sono **strumenti opzionali** per sviluppo e smoke te
 | `deploy/fly-bridges.json` | Indice app → config → dockerfile |
 | `scripts/fly-deploy-all.sh` | Helper deploy da root (opzionale agente) |
 
-**Modello**: Fly collegato a GitHub **legge il repository** — niente `FLY_API_TOKEN` su GitHub Actions. Config e Dockerfile devono stare in **root** perché Fly parte da lì.
+**Modello**: Fly collegato a GitHub legge la **root** e cerca i nomi **`fly.toml`** e **`Dockerfile`** (esatti). I file `fly.bridge-*.toml` servono per la seconda app (Matrix); il Launch del pannello passa `--copy-config` senza `--config`, quindi serve `fly.toml` in root.
 
-**Due app Fly** sullo stesso repo: `alfred-im-bridge-xmpp` e `alfred-im-bridge-matrix`, ciascuna con il proprio `fly.bridge-*.toml`.
+| File root (Launch pannello) | Ruolo |
+|-----------------------------|-------|
+| `fly.toml` | Config app XMPP — **nome obbligatorio** per `--copy-config` |
+| `Dockerfile` | Build XMPP — **nome obbligatorio** per scanner Fly |
+| `fly.bridge-matrix.toml` + `Dockerfile.bridge-matrix` | Seconda app Matrix (deploy con config esplicita) |
 
 | Check | Esito |
 |-------|-------|
-| Dockerfile in root | ✅ Fly Launch non fallisce più |
+| `fly.toml` / `Dockerfile` | ✅ Nomi standard Fly Launch (`--copy-config`) |
 | Due container separati | ✅ un’app Fly per bridge |
 | GitHub Actions custom Fly | ❌ rimosso — deploy via Fly |
 | App deployate su Fly | 🟡 dopo collegamento repo + deploy Fly |

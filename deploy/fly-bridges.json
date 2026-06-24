@@ -3,7 +3,7 @@
     {
       "dir": "bridge-xmpp",
       "app": "alfred-im-bridge-xmpp",
-      "config": "fly.bridge-xmpp.toml",
+      "config": "fly.toml",
       "dockerfile": "Dockerfile.bridge-xmpp",
       "region": "fra"
     },
