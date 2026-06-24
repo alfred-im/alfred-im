@@ -44,7 +44,7 @@ class ConversationsController extends ChangeNotifier {
 
   Future<void> load() async {
     try {
-      conversations = await _conversationService.fetchConversations(userId);
+      conversations = await _conversationService.fetchConversations();
       error = null;
     } catch (e) {
       error = e.toString();

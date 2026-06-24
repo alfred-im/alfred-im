@@ -23,6 +23,12 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Aggiunto (2026-06-24 — inbox performance)
+- **RPC `list_conversations()`**: inbox completa in un round-trip (display name risolto server-side)
+- Migrazione `20260624220000_list_conversations_rpc.sql` — applicata su progetto cloud
+- Client: `ConversationService` usa RPC; `Conversation.fromListRpcRow`
+- Test: `schema_smoke.sql` + unit test parsing payload RPC
+
 ### Aggiunto
 - **Isolamento storage per account XMPP** (v2.2):
   - Un IndexedDB per JID: `conversations-db-{account}`

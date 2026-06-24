@@ -76,7 +76,18 @@ client/lib/
 
 **Scelta**: refresh token in locale (web) — accettabile per Alpha; encryption pianificata post-Alpha.
 
-### 2.5 Realtime
+### 2.5 Caricamento inbox (lista chat)
+
+1. `ConversationsController.load()` → RPC `list_conversations()` (**un round-trip**)
+2. Payload completo per UI: `conversation_id`, `display_name`, `last_message_preview`, `last_message_at`, `unread_count`, `protocol`
+3. Risoluzione nome peer **lato server** (titolo conversazione → profilo/contatto altro partecipante)
+4. Realtime (`conversations-{userId}`) richiama `load()` su cambio tabelle — stessa RPC
+
+**Scelta**: niente query REST N+1 dal client; allineato al principio “il client chiede, la piattaforma manda tutto”.
+
+**Anti-pattern evitato**: loop client con `_resolveDisplayName` per ogni riga (lento su web).
+
+### 2.6 Realtime
 
 | Canale | Tabelle | Scopo |
 |--------|---------|-------|
@@ -85,7 +96,7 @@ client/lib/
 
 **Scelta**: canali separati per inbox e chat attiva — riduce traffico rispetto a un unico firehose.
 
-### 2.6 Invio messaggi
+### 2.7 Invio messaggi
 
 1. UI optimistic con `client_message_id` (UUID v4)
 2. RPC `send_message` (validazione server-side)
@@ -93,7 +104,7 @@ client/lib/
 4. Per protocollo `internal`: delivery immediata via Realtime
 5. Per `xmpp`/`matrix`: status `pending` + riga `outbox` (bridge futuro)
 
-### 2.7 Spunte lettura (Alpha interna)
+### 2.8 Spunte lettura (Alpha interna)
 
 - `mark_conversation_read` RPC apertura chat
 - Aggiorna `unread_count`, inserisce `message_read_receipts`, promuove `delivery_status` a `read` per messaggi propri
@@ -105,9 +116,13 @@ client/lib/
 
 ## 3. Layer piattaforma Supabase
 
-### 3.1 Migrazione
+### 3.1 Migrazioni
 
-File: `supabase/migrations/20260624200000_alfred_domain_schema.sql`
+| File | Contenuto |
+|------|-----------|
+| `20260624200000_alfred_domain_schema.sql` | Schema dominio, RLS, trigger, RPC base |
+| `20260624210000_rpc_grants_hardening.sql` | Grant EXECUTE RPC solo `authenticated` |
+| `20260624220000_list_conversations_rpc.sql` | RPC inbox un round-trip |
 
 ### 3.2 Modello dati
 
@@ -150,6 +165,7 @@ bridge_jobs (coda generica bridge)
 | RPC | Responsabilità |
 |-----|----------------|
 | `search_profiles` | Trova utenti Alfred per username/display_name |
+| `list_conversations` | Inbox completa in un round-trip (nome, preview, unread) |
 | `get_or_create_direct_conversation` | Chat 1:1 interna idempotente |
 | `get_or_create_conversation_from_contact` | Apre chat da rubrica (qualsiasi protocollo) |
 | `send_message` | Validazione partecipante + body non vuoto |

@@ -33,6 +33,9 @@ BEGIN
   IF to_regprocedure('public.mark_conversation_read(uuid)') IS NULL THEN
     RAISE EXCEPTION 'Missing RPC mark_conversation_read';
   END IF;
+  IF to_regprocedure('public.list_conversations()') IS NULL THEN
+    RAISE EXCEPTION 'Missing RPC list_conversations';
+  END IF;
 
   RAISE NOTICE 'alfred_schema_smoke_ok';
 END $$;

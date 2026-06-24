@@ -17,7 +17,7 @@ Migrazione verso **Flutter + Supabase + bridge Python** (`docs/decisions/project
 
 ### URL live
 
-**https://alfred-im.github.io/XmppTest/** — client Flutter (mock, nessun backend).
+**https://alfred-im.github.io/XmppTest/** — client Flutter collegato a Supabase (auth, chat, contatti).
 
 ### Client legacy React
 
@@ -66,5 +66,5 @@ MIT — `LICENSE`
 ---
 
 **Ultimo aggiornamento**: 2026-06-24  
-**Live**: Flutter mock @ GitHub Pages  
+**Live**: Flutter + Supabase @ GitHub Pages  
 **Legacy**: React @ `legacy/web-client-final`

@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-24 (Alpha full stack — client Supabase + schema dominio ✅)  
+**Ultimo aggiornamento**: 2026-06-24 (RPC `list_conversations` inbox — un round-trip)  
 **Versione repository**: 3.1.0-alpha (client Flutter live con piattaforma; bridge esclusi)
 
 ---
@@ -48,7 +48,7 @@ La documentazione sotto che cita `web-client/` descrive il **client React storic
 - **Auth Alfred**: login/registrazione Supabase GoTrue, profilo auto-creato
 - **Multi-account**: switch Thunderbird via `SharedPreferences` + `setSession`
 - **Contatti unificati**: interni Alfred + esterni XMPP/Matrix (protocollo solo routing)
-- **Conversazioni + chat realtime**: Supabase Postgres + Realtime
+- **Conversazioni + chat realtime**: Supabase Postgres + Realtime; inbox via RPC `list_conversations` (un round-trip)
 - **Messaggistica interna**: utente↔utente stessa istanza — completa
 - **Messaggistica federata**: outbox `queued` — attende bridge (non implementato)
 - **Profilo Alfred**: display name, bio, username
@@ -887,12 +887,12 @@ class ConversationRepository {
 
 ## 📊 Stato Corrente
 
-### Stack su `main` (2026-06-24, post-merge PR #108)
+### Stack su `main` (2026-06-24, post-merge PR #109/#110)
 
 | Componente | Stato |
 |------------|-------|
 | `client/` (Flutter) | 🟢 Auth, contatti, chat realtime, profilo, multi-account |
-| `supabase/` | 🟢 Schema dominio + RLS + RPC + outbox (bridge-ready) |
+| `supabase/` | 🟢 Schema dominio + RLS + RPC (`list_conversations` inbox) + outbox |
 | `bridge-xmpp/` · `bridge-matrix/` | 🟡 Stub Fly.io health — **esclusi da questa implementazione** |
 | `web-client/` (React) | ❌ Rimosso — tag `legacy/web-client-final` |
 

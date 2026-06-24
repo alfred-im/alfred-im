@@ -47,4 +47,23 @@ class Conversation {
       protocol: conversation['protocol'] as String? ?? 'internal',
     );
   }
+
+  /// Riga restituita da RPC `list_conversations`.
+  factory Conversation.fromListRpcRow(Map<String, dynamic> json) {
+    final displayName = json['display_name'] as String;
+    final lastAt = json['last_message_at'] != null
+        ? DateTime.parse(json['last_message_at'] as String)
+        : null;
+
+    return Conversation(
+      id: json['conversation_id'] as String,
+      name: displayName,
+      preview: (json['last_message_preview'] as String?) ?? '',
+      timeLabel: formatConversationTime(lastAt),
+      unreadCount: json['unread_count'] as int? ?? 0,
+      avatarColor: avatarColorForId(displayName),
+      lastMessageAt: lastAt,
+      protocol: json['protocol'] as String? ?? 'internal',
+    );
+  }
 }
