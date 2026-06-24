@@ -1,6 +1,6 @@
 # Rivoluzione Alfred — Discovery Q&A
 
-**Stato**: 🟡 In corso — Iterazione 6 (Alpha, federazione, principio XMPP)  
+**Stato**: 🟡 In corso — Iterazione 7 (revisione contraddizioni iter. 1–6)  
 **Creato**: 2026-06-24  
 **Fase**: **Documentazione strategica** — livello alto + roadmap **Alpha** incrementale.
 
@@ -128,7 +128,26 @@ Server federato esterno          Bridge XMPP Alfred          Piattaforma
 
 **L'utente pensa in termini di persone**, non di infrastruttura. I bridge e i server sotto sono trasparenti.
 
-### Ruoli componenti
+### UI: protocollo invisibile
+
+Il protocollo (XMPP / Matrix) esiste nel **modello dati** (routing, bridge) ma **non si mostra mai in UI** — lista contatti, inbox, conversazioni. Mostrarlo sarebbe inutile e "troppo nerdy". L'utente vede persone e chat, non protocolli.
+
+| Dove | Protocollo visibile? |
+|------|----------------------|
+| Lista contatti | ❌ No |
+| Inbox / conversazioni | ❌ No (coerente — stessa UX) |
+| Modello dati / bridge | ✅ Sì (interno) |
+
+### Client web — solo online
+
+**Flutter Web** richiede **internet** per funzionare — senza connessione non si accede al client. Non ha senso parlare di offline per il web.
+
+| Target | Offline |
+|--------|---------|
+| **Flutter Web** (ora) | ❌ Solo online |
+| App nativa compilata localmente (futuro) | Forse cache locale — **posticipato** |
+
+---
 
 | Componente | Tecnologia | Ruolo | Deploy |
 |------------|------------|-------|--------|
@@ -191,7 +210,7 @@ Focus: messaggistica base stile WhatsApp, **compatibile XMPP**.
 Oltre alla prima tappa messaggi, l'Alpha nel suo insieme include anche (definizione incrementale — ordine tra queste da pianificare dopo):
 
 - Login piattaforma
-- Lista contatti **unificata** (protocollo visibile per contatto)
+- Lista contatti **unificata** (nessun badge protocollo in UI)
 - Conversazioni + creazione
 - Pagina profilo
 - XMPP
@@ -203,7 +222,7 @@ Oltre alla prima tappa messaggi, l'Alpha nel suo insieme include anche (definizi
 | Area | Funzionalità |
 |------|--------------|
 | Auth | Login sulla **piattaforma** |
-| Contatti | Lista **unificata**; ogni contatto mostra il **protocollo** (XMPP / Matrix) |
+| Contatti | Lista **unificata** — come l'inbox; **senza** indicazione protocollo in UI |
 | Conversazioni | Vista conversazione + creazione |
 | Profilo | Pagina profilo **Alfred** (unico profilo utente — vedi Iterazione 6) |
 | Protocollo | XMPP in Alpha; Matrix in architettura — scope Alpha Matrix TBD |
@@ -238,7 +257,7 @@ Oltre alla prima tappa messaggi, l'Alpha nel suo insieme include anche (definizi
 | I. Legacy web-client | ✅ |
 | J. Metriche successo | ⏸️ posticipato |
 | K. Push | ❌ non per ora |
-| L. Offline | ⏸️ decisione posticipata |
+| L. Offline | ✅ Web solo online; cache nativa posticipata |
 
 ---
 
@@ -275,13 +294,17 @@ Oltre alla prima tappa messaggi, l'Alpha nel suo insieme include anche (definizi
 
 ### Contatti unificati
 
-**Risposta**: lista contatti **unificata** (come l'inbox). Ogni contatto mostra **chiaramente il protocollo** di provenienza (XMPP o Matrix).
+**Risposta (iter. 6)**: lista contatti **unificata** (come l'inbox).
 
-**Analogia email**: una rubrica con indirizzi `@gmail.com` e `@alfred.im` insieme — stessa lista, tipo indirizzo visibile.
+**Correzione (iter. 7)**: il protocollo **non** si mostra in UI — inutile e troppo tecnico. Il routing per protocollo resta **interno** (bridge/dati).
 
 ---
 
-### Federazione esterna — dominio unico
+### Offline
+
+**Risposta (iter. 7)**: Flutter **Web** = **solo online**; senza internet non si usa il client. Eventuale cache per app **nativa** futura → **posticipato**.
+
+---
 
 **Risposta**: mi presento fuori come **`me@alfred.im`** — **un solo dominio** `alfred.im`. Non due server o domini diversi per protocollo.
 
@@ -305,15 +328,7 @@ _(Vedi sezione "Identità verso il mondo esterno" in cima.)_
 
 ---
 
-### Offline — spiegazione
-
-**Cosa intendevo**: se senza internet puoi ancora **leggere messaggi vecchi** (cache sul dispositivo, come oggi con IndexedDB) oppure l'app **funziona solo online** collegata alla piattaforma.
-
-**Risposta utente**: non sapeva cosa significasse → **decisione posticipata**. Default probabile per nuovo Alfred: **online-first** via piattaforma; offline da definire in fase 2 documento.
-
----
-
-### Alpha vs "prototipo minimo" — correzione
+### Federazione esterna — dominio unico
 
 **Risposta**: quanto elencato prima era la **prima versione (Alpha)**, non un minimo. Si definisce **incrementalmente**.
 
@@ -326,12 +341,131 @@ _(Vedi sezione "Identità verso il mondo esterno" in cima.)_
 
 ---
 
+---
+
+## Contraddizioni iterazioni 1–6 — audit e risoluzioni
+
+> Revisione esplicita delle ambiguità nate nelle prime iterazioni, quando il modello Alfred non era ancora chiaro.
+
+### C1. "Aggiungi account XMPP/Matrix" vs identità solo Alfred
+
+| Iterazione | Diceva |
+|------------|--------|
+| 3 (L2, L3) | Dopo login piattaforma, utente **aggiunge account** protocollo; bridge attivi per account aggiunti |
+| 5 | **Nessuna** identità XMPP; login solo Alfred; XMPP = trasporto |
+
+**Contraddizione**: modello "client che collega JID" vs "servizio federato Alfred".
+
+**Risoluzione ✅**: vince **Iterazione 5**. Non esiste "collegare XMPP". Esiste identità **Alfred**; i bridge la federano verso l'esterno. Le formulazioni Iter. 3 su "aggiunta account protocollo" sono **obsolete**.
+
+---
+
+### C2. Bridge attivi solo se serve vs sempre attivi
+
+| Iterazione | Diceva |
+|------------|--------|
+| 3 (L3) | Se non aggiungi Matrix, Matrix non ti riguarda |
+| 4 | I **due bridge sono sempre attivi**; routing per contatto |
+
+**Contraddizione**: bridge come servizio permanente vs bridge legati all'utente.
+
+**Risoluzione ✅**: vince **Iterazione 4**. I bridge girano **sempre** su Fly.io. Il messaggio passa da uno o l'altro in base al **contatto**, non alla configurazione utente.
+
+---
+
+### C3. Protocollo visibile in UI vs invisibile
+
+| Iterazione | Diceva |
+|------------|--------|
+| 3 (L1) | Ogni conversazione ha `protocol` **visibile in UI** |
+| 6 (D-027) | Contatti mostrano **chiaramente il protocollo** |
+| 7 | Protocollo in lista contatti **inutile / troppo nerdy** — non mostrarlo |
+
+**Contraddizione**: esporre protocollo all'utente vs UX pulita.
+
+**Risoluzione ✅**: vince **Iterazione 7**. Protocollo solo nel **modello dati** (routing interno). **Mai** in UI (contatti, inbox, chat).
+
+---
+
+### C4. Due domini federati vs uno solo
+
+| Iterazione | Diceva |
+|------------|--------|
+| 6 (domanda) | Esempio `utente@alfred.im` **e** `@utente:alfred.matrix` |
+| 6 (risposta) | Un solo dominio **`alfred.im`** |
+
+**Contraddizione**: solo nella **domanda mal posta** (due domini), non nella risposta utente.
+
+**Risoluzione ✅**: già chiusa — **`@alfred.im`** unico.
+
+---
+
+### C5. "Prototipo minimo" vs Alpha incrementale
+
+| Iterazione | Diceva |
+|------------|--------|
+| 4 | Non definire prototipo minimo ora |
+| 6 | L'elenco funzionalità è **Alpha**, prima tappa incrementale |
+
+**Contraddizione apparente**: sembrava che non si definisse nulla, poi si è definita Alpha v1.
+
+**Risoluzione ✅**: non è contraddizione — **terminologia**. Non "minimo prototipo" ma **Alpha a tappe**. L'ordine tra tappe Alpha resta da pianificare.
+
+---
+
+### C6. Offline-first (Alfred legacy) vs online-only (nuovo web)
+
+| Contesto | Diceva |
+|----------|--------|
+| Alfred React attuale | Offline-first, IndexedDB, cache locale |
+| Iter. 6–7 | Flutter Web; offline non definito |
+| 7 | Web **senza internet non funziona**; cache solo eventuale app nativa futura |
+
+**Contraddizione**: il vecchio Alfred era offline-capable; il nuovo web no.
+
+**Risoluzione ✅**: **cambio architetturale deliberato**. Nuovo Alfred web = **online-only**. Non è regressione — il client parla solo con la piattaforma. Cache offline eventuale solo per target nativo → **posticipato**.
+
+---
+
+### C7. "Client supporta XEP" vs "Flutter non fa XMPP"
+
+| Iterazione | Diceva |
+|------------|--------|
+| 2 (C5) | Flutter parla **solo** con Supabase |
+| 6 (principio card) | Verso federati esterni si **dichiarano** capability XEP come un client |
+
+**Contraddizione apparente**: chi dichiara le XEP?
+
+**Risoluzione ✅**: **nessuna contraddizione**. Flutter **non** fa XMPP. Il **bridge XMPP** (facciata federata) dichiara le capability verso server esterni. La piattaforma implementa la logica. Coerente col principio card.
+
+---
+
+### C8. Matrix in architettura vs Matrix assente in Alpha
+
+| Iterazione | Diceva |
+|------------|--------|
+| 1+ | Due bridge (XMPP + Matrix) nell'architettura |
+| 6 (Alpha v1) | Solo XMPP; Matrix non definito |
+
+**Contraddizione apparente**: si costruisce Matrix o no?
+
+**Risoluzione ✅**: **architettura target** include entrambi i bridge; **Alpha v1** parte da XMPP. Matrix in Alpha → da definire quando l'utente sarà pronto. Non è incoerenza, è **roadmap**.
+
+---
+
+### Domande ancora aperte (non contraddizioni — da chiudere)
+
+1. **Multi-account Alfred**: come si presenta in UI il cambio account? (Thunderbird-like — confermato ma non dettagliato)
+2. **Matrix su `alfred.im`**: formato identità Matrix con dominio unico — da definire quando serve Matrix
+3. **Ordine tappe Alpha** dopo messaggi v1 — posticipato
+
+---
+
 ## Iterazione 7 — Prossimo livello alto (quando vuoi)
 
 1. **Alpha tappa 2+**: dopo messaggi XMPP, cosa viene? (contatti? login? profilo?)
 2. **Matrix**: quando sei pronto, stesso scope di XMPP o diverso?
-3. **Offline**: dopo la spiegazione, preferenza?
-4. **XEP in Alpha**: quali estensioni XMPP oltre messaggi base e read receipts? (MAM, presence, …)
+3. **XEP in Alpha**: quali estensioni XMPP oltre messaggi base e read receipts? (MAM, presence, …)
 
 ---
 
@@ -407,13 +541,14 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | D-024 | 2026-06-24 | **Multi-account Alfred** (Thunderbird) | ✅ |
 | D-025 | 2026-06-24 | Bridge XMPP: **slixmpp** | ✅ Accettata a livello alto |
 | D-026 | 2026-06-24 | Bridge Matrix: **matrix-nio** | ✅ Accettata a livello alto |
-| D-027 | 2026-06-24 | Contatti **unificati** con protocollo visibile | ✅ |
+| D-027 | 2026-06-24 | Contatti **unificati** | ✅ Corretto iter.7: protocollo **non** in UI |
 | D-028 | 2026-06-24 | Federazione esterna: **`@alfred.im`** dominio unico | ✅ |
 | D-029 | 2026-06-24 | Profilo = **solo profilo Alfred** | ✅ |
 | D-030 | 2026-06-24 | **Push** fuori scope per ora | ✅ |
-| D-031 | 2026-06-24 | **Offline** — decisione posticipata | ⏸️ |
+| D-031 | 2026-06-24 | **Web solo online**; cache nativa posticipata | ✅ |
 | D-032 | 2026-06-24 | **Alpha v1**: invio/ricezione/lettura messaggi, XMPP | ✅ |
 | D-033 | 2026-06-24 | **Principio card** federazione XMPP | ✅ Vincolante |
+| D-034 | 2026-06-24 | Protocollo **mai visibile in UI** | ✅ |
 
 ---
 
@@ -429,13 +564,14 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 - [x] Modello identità Alfred (no identità XMPP utente)
 - [x] Multi-account Alfred
 - [x] Librerie bridge Python (proposta)
-- [x] Contatti unificati + protocollo visibile
-- [x] Federazione `@alfred.im` unico dominio
+- [x] Contatti unificati (protocollo solo interno)
+- [x] Federazione `@alfred.im`
 - [x] Profilo Alfred unico
-- [x] Push escluso per ora
-- [x] Alpha v1 definita (messaggi XMPP)
+- [x] Push escluso
+- [x] Alpha v1 (messaggi XMPP)
 - [x] Principio card XMPP
-- [ ] Offline (posticipato)
+- [x] Web solo online
+- [x] Audit contraddizioni iter. 1–6
 - [ ] Alpha tappe successive / Matrix
 - [ ] Schema dati e flussi (fase 2 documento)
 - [ ] Brief alto livello approvato ("ok, il livello alto è completo")
@@ -452,4 +588,5 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | 4 | 2026-06-24 | Bridge sempre attivi; routing contatti; monorepo; brand |
 | 5 | 2026-06-24 | Identità Alfred federata; multi-account; no password XMPP; librerie slixmpp + matrix-nio |
 | 6 | 2026-06-24 | Contatti unificati; `@alfred.im`; Alpha v1 messaggi; principio card; push no; offline TBD |
-| 7 | _prossima_ | Alpha tappe 2+, Matrix, offline, XEP Alpha |
+| 7 | 2026-06-24 | Audit contraddizioni; protocollo invisibile in UI; web solo online |
+| 8 | _prossima_ | Alpha tappe 2+, Matrix, XEP Alpha |
