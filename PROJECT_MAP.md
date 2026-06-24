@@ -1,7 +1,7 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-24 (merge PR #108 — Flutter su Pages, pulizia branch ✅)  
-**Versione repository**: 3.0.0-alpha (client Flutter mock live; backend da collegare)
+**Ultimo aggiornamento**: 2026-06-24 (Alpha full stack — client Supabase + schema dominio ✅)  
+**Versione repository**: 3.1.0-alpha (client Flutter live con piattaforma; bridge esclusi)
 
 ---
 
@@ -24,9 +24,11 @@
 
 | Elemento | Dettaglio |
 |----------|-----------|
-| **Client attivo** | `client/` — Flutter, UI mock chat |
+| **Client attivo** | `client/` — Flutter, collegato a Supabase (auth, chat, contatti, profilo) |
 | **URL live** | https://alfred-im.github.io/XmppTest/ |
-| **Deploy** | `.github/workflows/deploy-pages.yml` — Flutter web, `base-href` `/XmppTest/` |
+| **Deploy** | `.github/workflows/deploy-pages.yml` — test + build Flutter web |
+| **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
+| **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — **stub** (health Fly.io only, non implementati) |
 | **Client legacy** | `web-client/` rimosso da `main` — tag `legacy/web-client-final` @ `6e792eb` |
 | **Recupero legacy** | `git checkout legacy/web-client-final -- web-client/` |
 | **Branch** | Solo `main` (feature branch PR #107/#108 mergiate e eliminate) |
@@ -41,12 +43,17 @@ La documentazione sotto che cita `web-client/` descrive il **client React storic
 
 **Alfred** è una piattaforma di messaggistica in migrazione verso **Flutter + Supabase + bridge Python**. Su `main` c’è il **primo client Flutter** (solo grafica mock); login, messaggi reali e sync arriveranno con la piattaforma.
 
-### Caratteristiche attuali (client Flutter)
+### Caratteristiche attuali (client Flutter + piattaforma)
 
-- **UI chat mock**: lista conversazioni + pannello messaggi, layout responsive (desktop/mobile)
-- **Brand Alfred**: `#2D2926`, bolle stile WhatsApp, spunte mock
-- **Multi-piattaforma**: scaffold web + Android + iOS + desktop (solo web deployato oggi)
-- **Dati**: statici in `MockData` — nessun Supabase, nessun bridge
+- **Auth Alfred**: login/registrazione Supabase GoTrue, profilo auto-creato
+- **Multi-account**: switch Thunderbird via `SharedPreferences` + `setSession`
+- **Contatti unificati**: interni Alfred + esterni XMPP/Matrix (protocollo solo routing)
+- **Conversazioni + chat realtime**: Supabase Postgres + Realtime
+- **Messaggistica interna**: utente↔utente stessa istanza — completa
+- **Messaggistica federata**: outbox `queued` — attende bridge (non implementato)
+- **Profilo Alfred**: display name, bio, username
+- **Spunte lettura**: `mark_conversation_read` + `delivery_status`
+- **Brand Alfred**: `#2D2926`, bolle WhatsApp, layout responsive
 - **Deploy web**: GitHub Pages automatico su push a `main`
 
 ### Tecnologie attive su `main`
@@ -84,7 +91,11 @@ Il client React aveva: offline-first IndexedDB per account, XMPP diretto (Stanza
 
 **Regola vincolante**: i bridge **non** tengono stato di business — vedi `docs/decisions/bridge-stateless.md`.
 
-**Stato implementazione**: solo il box Flutter ha codice UI (mock). Supabase e bridge sono bootstrap.
+**Stato implementazione**: client Flutter + schema Supabase dominio **implementati**. Bridge restano stub health.
+
+### Documentazione architettura Alpha
+
+Vedi `docs/architecture/alpha-full-stack.md` — scelte a tutti i livelli (client, RPC, RLS, outbox, test).
 
 ### Legacy — client React (tag `legacy/web-client-final`)
 
@@ -247,24 +258,27 @@ Per ogni messaggio nell'array:
 
 ### Client Flutter (`/workspace/client`)
 
-**Stato**: UI mock chat (dati fittizi) — **nessun backend** ancora collegato.
+**Stato**: client produzione Alpha collegato a Supabase — **non più mock**.
 
 | Elemento | Dettaglio |
 |----------|-----------|
-| **Entry** | `lib/main.dart` → `HomeScreen` |
-| **Layout** | Lista conversazioni + pannello chat (responsive, stile WhatsApp Web) |
-| **Brand** | `#2D2926`, header Alfred, bolle messaggio, spunte mock |
-| **Piattaforme** | Web, Android, iOS, Linux, macOS, Windows (scaffold `flutter create`) |
+| **Entry** | `lib/main.dart` → `AppShell` (auth gate) → `HomeScreen` |
+| **State** | Provider (`AuthController`, `ConversationsController`, `ContactsController`, `MessagesController`) |
+| **Backend** | `supabase_flutter` — REST + Realtime + RPC |
+| **Dipendenze** | `provider`, `intl`, `uuid`, `shared_preferences`, `supabase_flutter` |
+| **Config** | `lib/config/app_config.dart` — override `--dart-define=SUPABASE_URL` |
+| **Test** | `test/unit/`, `test/widget/` — CI esegue `flutter test` |
 | **Build web** | `flutter build web --release --base-href "/XmppTest/"` |
-| **Deploy** | GitHub Pages — https://alfred-im.github.io/XmppTest/ (workflow su `main`) |
 
 ```
 client/lib/
-├── main.dart
+├── config/          # AppConfig (Supabase URL/key)
+├── models/          # Conversation, ChatMessage, Contact, UserProfile, SavedAccount
+├── services/        # auth, contact, conversation, message, profile, account storage
+├── providers/       # ChangeNotifier controllers
+├── screens/         # AppShell, Auth, Home, Contacts, Profile
 ├── theme/           # AlfredColors, AlfredTheme
-├── models/          # Conversation, ChatMessage
-├── data/            # MockData
-├── screens/         # HomeScreen
+├── utils/           # date_format, avatar_color
 └── widgets/         # ConversationsPanel, ChatPanel, MessageBubble, …
 ```
 
@@ -877,9 +891,9 @@ class ConversationRepository {
 
 | Componente | Stato |
 |------------|-------|
-| `client/` (Flutter) | 🟡 UI mock chat live su GitHub Pages — no backend |
-| `supabase/` | 🟡 Bootstrap (pgcrypto + smoke test) |
-| `bridge-xmpp/` · `bridge-matrix/` | 🟡 Deploy Fly OK, logica bridge TODO |
+| `client/` (Flutter) | 🟢 Auth, contatti, chat realtime, profilo, multi-account |
+| `supabase/` | 🟢 Schema dominio + RLS + RPC + outbox (bridge-ready) |
+| `bridge-xmpp/` · `bridge-matrix/` | 🟡 Stub Fly.io health — **esclusi da questa implementazione** |
 | `web-client/` (React) | ❌ Rimosso — tag `legacy/web-client-final` |
 
 ### ✅ Client Flutter — implementato (mock)
@@ -890,13 +904,12 @@ class ConversationRepository {
 - Widget test base
 - Deploy automatico GitHub Pages
 
-### 🚧 Prossimi passi (Alpha)
+### 🚧 Prossimi passi (post-Alpha client+platform)
 
-- Login piattaforma Supabase
-- Schema dominio (utenti, contatti, conversazioni, messaggi)
-- Collegamento client ↔ Supabase Realtime
-- Bridge XMPP (slixmpp) ↔ piattaforma
-- Matrix (scope Alpha TBD)
+- Implementazione bridge XMPP (slixmpp) — consume `outbox`/`sync_cursors`
+- Bridge Matrix (matrix-nio)
+- Spunte XEP-0184/0333 via bridge
+- Encryption token multi-account
 
 Vedi `docs/decisions/project-revolution-discovery.md`.
 
@@ -957,7 +970,10 @@ Documentati in `docs/fixes/known-issues.md`:
 | Area | Copertura | Note |
 |------|-----------|------|
 | **E2E Tests** | ⚠️ Parziale | Playwright tests esistenti ma non completi |
-| **Unit Tests** | ❌ Nessuna | Pianificati per Q1 2026 |
+| **Unit Tests** | ✅ Base | `test/unit/` modelli, storage |
+| **Widget Tests** | ✅ Base | `test/widget/` bolle, logo |
+| **SQL Smoke** | ✅ | `supabase/tests/schema_smoke.sql` |
+| **CI** | ✅ | `flutter analyze` + `flutter test` in deploy-pages |
 | **Integration Tests** | ❌ Nessuna | Pianificati per Q1 2026 |
 | **Manual Testing** | ✅ Completo | Testing manuale su feature implementate |
 

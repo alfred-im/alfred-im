@@ -41,6 +41,12 @@ jobs:
         run: flutter pub get
         working-directory: client
 
+      - name: Analyze and test
+        run: |
+          flutter analyze
+          flutter test
+        working-directory: client
+
       - name: Build Flutter web (GitHub Pages base path)
         run: flutter build web --release --base-href "/XmppTest/"
         working-directory: client

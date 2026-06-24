@@ -10,9 +10,9 @@ Migrazione verso **Flutter + Supabase + bridge Python** (`docs/decisions/project
 
 | Componente | Stato |
 |------------|-------|
-| **`client/`** (Flutter) | UI mock chat — **live su GitHub Pages** |
-| **`supabase/`** | Piattaforma — bootstrap schema |
-| **`bridge-xmpp/`** · **`bridge-matrix/`** | Demoni Python su Fly.io (health OK) |
+| **`client/`** (Flutter) | App completa collegata a Supabase — live su GitHub Pages |
+| **`supabase/`** | Schema dominio Alfred (profiles, contacts, messages, outbox, …) |
+| **`bridge-xmpp/`** · **`bridge-matrix/`** | Stub health Fly.io — logica **non** implementata |
 | **`web-client/`** (React) | **Rimosso** — tag `legacy/web-client-final` |
 
 ### URL live

@@ -23,7 +23,7 @@ Recupero codice legacy: `git checkout legacy/web-client-final -- web-client/`
 
 ## Architettura
 
-- [architecture/README.md](./architecture/README.md) - Overview architetturale
+- [architecture/alpha-full-stack.md](./architecture/alpha-full-stack.md) - **🟢 Alpha completa** — client + Supabase, senza bridge (2026-06-24)
 - [architecture/conversations-analysis.md](./architecture/conversations-analysis.md) - Analisi conversazioni XMPP
 - [architecture/mam-global-strategy-explained.md](./architecture/mam-global-strategy-explained.md) - Strategia MAM globale
 - [architecture/mam-performance-long-term.md](./architecture/mam-performance-long-term.md) - Performance MAM

@@ -10,66 +10,61 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final isMine = message.isMine;
 
     return Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: ConstrainedBox(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.65,
+          maxWidth: MediaQuery.sizeOf(context).width * 0.75,
         ),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 4),
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-          decoration: BoxDecoration(
-            color: isMine ? AlfredColors.bubbleOutgoing : AlfredColors.bubbleIncoming,
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(8),
-              topRight: const Radius.circular(8),
-              bottomLeft: Radius.circular(isMine ? 8 : 2),
-              bottomRight: Radius.circular(isMine ? 2 : 8),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-              ),
-            ],
+        decoration: BoxDecoration(
+          color: isMine ? AlfredColors.bubbleOutgoing : AlfredColors.panel,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(12),
+            topRight: const Radius.circular(12),
+            bottomLeft: Radius.circular(isMine ? 12 : 2),
+            bottomRight: Radius.circular(isMine ? 2 : 12),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  message.body,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AlfredColors.textPrimary,
-                    height: 1.35,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              message.body,
+              style: const TextStyle(
+                color: AlfredColors.textPrimary,
+                fontSize: 14.5,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  message.timeLabel,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AlfredColors.textSecondary,
                   ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    message.timeLabel,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: AlfredColors.textSecondary,
-                      fontSize: 11,
-                    ),
-                  ),
-                  if (isMine) ...[
-                    const SizedBox(width: 4),
-                    _Checkmarks(status: message.status),
-                  ],
+                if (isMine) ...[
+                  const SizedBox(width: 4),
+                  _Checkmarks(status: message.status),
                 ],
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -87,8 +82,19 @@ class _Checkmarks extends StatelessWidget {
         ? AlfredColors.accentBlue
         : AlfredColors.textSecondary;
 
+    if (status == MessageStatus.failed) {
+      return Icon(Icons.error_outline, size: 14, color: Colors.red.shade400);
+    }
+
+    if (status == MessageStatus.pending) {
+      return Icon(Icons.schedule, size: 14, color: color);
+    }
+
+    final isDouble = status == MessageStatus.delivered ||
+        status == MessageStatus.read;
+
     return Icon(
-      status == MessageStatus.sent ? Icons.check : Icons.done_all,
+      isDouble ? Icons.done_all : Icons.done,
       size: 14,
       color: color,
     );

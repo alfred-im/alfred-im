@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../data/mock_data.dart';
 import '../models/conversation.dart';
+import '../providers/messages_controller.dart';
 import '../theme/alfred_colors.dart';
 import 'chat_input_bar.dart';
 import 'message_bubble.dart';
@@ -20,7 +21,8 @@ class ChatPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final messages = MockData.messagesFor(conversation.id);
+    final messagesController = context.watch<MessagesController>();
+    final messages = messagesController.messages;
 
     return ColoredBox(
       color: AlfredColors.surface,
@@ -31,14 +33,22 @@ class ChatPanel extends StatelessWidget {
             showBackButton: showBackButton,
             onBack: onBack,
           ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              itemCount: messages.length,
-              itemBuilder: (context, index) => MessageBubble(message: messages[index]),
+          if (messagesController.isLoading)
+            const Expanded(child: Center(child: CircularProgressIndicator()))
+          else
+            Expanded(
+              child: ListView.builder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                itemCount: messages.length,
+                itemBuilder: (context, index) =>
+                    MessageBubble(message: messages[index]),
+              ),
             ),
+          ChatInputBar(
+            enabled: !messagesController.isSending,
+            onSend: messagesController.send,
           ),
-          const ChatInputBar(),
         ],
       ),
     );
@@ -78,7 +88,10 @@ class _ChatHeader extends StatelessWidget {
                 backgroundColor: conversation.avatarColor,
                 child: Text(
                   conversation.name[0].toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -95,7 +108,9 @@ class _ChatHeader extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      conversation.isOnline ? 'online' : 'offline',
+                      conversation.protocol == 'internal'
+                          ? 'Alfred'
+                          : 'In attesa bridge',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AlfredColors.textSecondary,
@@ -104,7 +119,10 @@ class _ChatHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(onPressed: null, icon: const Icon(Icons.videocam_outlined)),
+              IconButton(
+                onPressed: null,
+                icon: const Icon(Icons.videocam_outlined),
+              ),
               IconButton(onPressed: null, icon: const Icon(Icons.call_outlined)),
               IconButton(onPressed: null, icon: const Icon(Icons.more_vert)),
             ],
@@ -126,7 +144,11 @@ class EmptyChatPlaceholder extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.forum_outlined, size: 72, color: AlfredColors.textSecondary.withValues(alpha: 0.4)),
+            Icon(
+              Icons.forum_outlined,
+              size: 72,
+              color: AlfredColors.textSecondary.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16),
             Text(
               'Alfred',
@@ -139,18 +161,6 @@ class EmptyChatPlaceholder extends StatelessWidget {
             const Text(
               'Seleziona una conversazione per iniziare',
               style: TextStyle(color: AlfredColors.textSecondary),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AlfredColors.charcoal.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Text(
-                'UI mock — nessuna connessione backend',
-                style: TextStyle(fontSize: 12, color: AlfredColors.textSecondary),
-              ),
             ),
           ],
         ),
