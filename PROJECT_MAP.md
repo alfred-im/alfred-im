@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-24 (scaffold deploy: supabase + bridge Fly.io)  
+**Ultimo aggiornamento**: 2026-06-24 (scaffold deploy: supabase + bridge Fly.io; workflow Fly monorepo)  
 **Versione**: 2.2.0 (per-account IndexedDB + XEP-0184 + XEP-0333)
 
 ---
@@ -180,7 +180,8 @@ Per ogni messaggio nell'array:
 │   └── main.mdc
 ├── .github/                   # GitHub Actions per deployment
 │   └── workflows/
-│       └── deploy-pages.yml   # Deploy automatico su GitHub Pages
+│       ├── deploy-pages.yml   # Deploy automatico su GitHub Pages
+│       └── deploy-fly-bridges.yml  # Deploy bridge-xmpp + bridge-matrix (monorepo, non root)
 ├── docs/                      # Documentazione tecnica per AI (35 file)
 │   ├── architecture/          # Analisi architetturali
 │   ├── implementation/        # Dettagli implementativi
