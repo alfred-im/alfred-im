@@ -2,6 +2,8 @@
 
 Analisi tecniche implementazioni completate per comprensione dettagli e decisioni. Documento per AI.
 
+> **Nota (2026-06-24)**: i documenti in questa cartella descrivono il **client React legacy** (`web-client/`, tag `legacy/web-client-final`). Il codice non è più su `main`; i contenuti restano riferimento per il client Flutter.
+
 ## Documenti Disponibili
 
 - **login-system.md** - Login popup glassmorphism

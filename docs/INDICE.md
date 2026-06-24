@@ -2,6 +2,12 @@
 
 Indice documenti tecnici per navigazione rapida. Questo documento è per AI, non per utenti.
 
+## ⚠️ Client legacy rimosso da `main`
+
+La cartella **`web-client/` non è più nel repository**. Molti documenti sotto citano ancora percorsi come `/workspace/web-client/...` — descrivono il client React **al tag `legacy/web-client-final`** (`6e792eb`). Conservati come riferimento per tradurre logica nel client Flutter.
+
+Recupero codice: `git checkout legacy/web-client-final -- web-client/`
+
 ## Documenti Root
 
 - **[.cursor/rules/main.mdc](../.cursor/rules/main.mdc)** - Vincolo Cursor: obbligo lettura `.cursor-rules.md` + puntatori documentazione
@@ -71,5 +77,6 @@ Indice documenti tecnici per navigazione rapida. Questo documento è per AI, non
 
 ---
 
-**Ultimo aggiornamento**: 2026-06-17  
-**Architettura corrente**: Virtual UI + MAM-only DB (v4.0) + IndexedDB per account (v2.2) + Spunte WhatsApp (XEP-0184 + XEP-0333)
+**Ultimo aggiornamento**: 2026-06-24  
+**Architettura attiva**: Flutter + Supabase + bridge (Alpha)  
+**Legacy (riferimento doc)**: React XMPP @ tag `legacy/web-client-final` — `web-client/` rimosso da `main`

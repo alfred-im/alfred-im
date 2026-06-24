@@ -2,6 +2,8 @@
 
 Analisi architetturali per comprensione sistema e decisioni implementative. Documento per AI.
 
+> **Nota (2026-06-24)**: documentazione relativa al **client React legacy** (`web-client/`, tag `legacy/web-client-final`). Riferimento per il nuovo stack Flutter/Supabase.
+
 ## Documenti Disponibili
 
 ### Analisi MAM e Sincronizzazione

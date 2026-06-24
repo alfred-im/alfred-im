@@ -1,5 +1,7 @@
 # Playwright Test Report - Alfred XMPP Client
 
+> **⚠️ Storico**: report relativo al client React in `web-client/`, **rimosso da `main`**. Codice e test al tag `legacy/web-client-final`. Workflow GitHub Pages deploy rimosso.
+
 **Data**: 2025-12-06  
 **Versione**: 0.9.0
 

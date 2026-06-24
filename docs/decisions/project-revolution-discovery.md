@@ -34,7 +34,7 @@ _Stato deploy: vedi sezione **Risultati test deploy** in fondo._
 
 ### Sintesi
 
-**Alfred viene riscritto da zero.** Il `web-client/` React **muore del tutto** (tag `legacy/web-client-final` @ `6e792eb`). Nuovo stack: **Flutter Web** + **Piattaforma (Supabase)** + **due bridge Python** (XMPP + Matrix) su **Fly.io**. Inbox unificata, chat separate per protocollo, brand grafico **identico** all'attuale.
+**Alfred viene riscritto da zero.** Il `web-client/` React è stato **rimosso da `main`** (tag `legacy/web-client-final` @ `6e792eb`). Nuovo stack: **Flutter** + **Piattaforma (Supabase)** + **due bridge Python** (XMPP + Matrix) su **Fly.io**. Inbox unificata, chat separate per protocollo, brand grafico **identico** all'attuale.
 
 **Alfred è software open source** — uno **stack completo** che si **installa** sulla propria infrastruttura. **Non** è un SaaS centralizzato tipo Gmail dove un solo operatore ospita tutti.
 
@@ -663,17 +663,16 @@ La CLI (e MCP per Supabase) sono **strumenti opzionali** per sviluppo e smoke te
 
 ## Risultati test deploy (2026-06-24)
 
-### GitHub Pages — ✅ OK
+### GitHub Pages — ⚠️ Legacy (client rimosso da `main`)
 
 | Check | Esito |
 |-------|-------|
-| URL live | https://alfred-im.github.io/XmppTest/ |
-| HTTP | **200** |
-| Workflow CI | Ultimo deploy **success** su `main` (2026-06-16) |
-| Build locale `web-client` | **OK** (`npm ci` + `npm run build`) |
-| Config repo | Pages attivo, `build_type: workflow`, branch `main` |
+| URL storico | https://alfred-im.github.io/XmppTest/ (ultimo deploy 2026-06-16) |
+| `web-client/` su `main` | **Rimosso** — tag `legacy/web-client-final` |
+| Workflow `deploy-pages.yml` | **Rimosso** |
+| Build locale legacy | Al tag: `git checkout legacy/web-client-final` poi `npm ci && npm run build` in `web-client/` |
 
-**Link funzionante** — requisito prototipo soddisfatto per il client React legacy.
+Il deploy Pages serviva il client React; il prossimo client Flutter avrà workflow dedicato.
 
 ---
 

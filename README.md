@@ -1,139 +1,79 @@
-# Alfred - XMPP Client Web
+# Alfred — Piattaforma messaggistica
 
 ## Scopo di questo documento
 
-Questo documento traccia lo stato del progetto Alfred per continuità del lavoro e comprensione architetturale. NON è documentazione per utenti esterni.
+Traccia lo stato del progetto Alfred per continuità del lavoro. NON è documentazione per utenti esterni.
 
-## Overview Tecnica
+## Stato attuale (2026-06-24)
 
-Alfred è un client XMPP web-based costruito con React 19 + TypeScript + Vite. Implementa protocollo XMPP tramite Stanza.js con architettura offline-first basata su IndexedDB.
+Il repository è in **migrazione** dalla rivoluzione documentata in `docs/decisions/project-revolution-discovery.md`.
 
-### Metriche Performance Chiave
+| Componente | Stato |
+|------------|-------|
+| **`client/`** (Flutter) | UI mock chat (web + scaffold multi-piattaforma) |
+| **`supabase/`** | Piattaforma — bootstrap schema |
+| **`bridge-xmpp/`** · **`bridge-matrix/`** | Demoni Python su Fly.io (health OK) |
+| **`web-client/`** (React) | **Rimosso da `main`** |
 
-- Apertura chat: < 100ms (cache hit)
-- Lista conversazioni: < 200ms (cache hit)
-- Sync iniziale (DB vuoto): ~5-10s per 100 conversazioni
-- Sync incrementale (DB popolato): ~2-5s per aggiornamenti
-- Avvii successivi: < 5s (solo delta dal marker)
-- Build production: ~15s (code splitting attivo)
+### Client legacy React
 
-## Feature Implementate (Riferimento Rapido)
-
-Vedi `PROJECT_MAP.md` per dettagli completi.
-
-**Core Funzionante**:
-- Login XMPP con auto-login
-- **Storage IndexedDB isolato per account** (storico conservato al logout)
-- Lista conversazioni con sync ottimizzata
-- Real-time messaging (campanello → virtual UI → MAM)
-- Spunte WhatsApp 3 livelli: ✓ inviato, ✓✓ grigie (XEP-0184), ✓✓ blu (XEP-0333)
-- vCard (avatar, profilo)
-- Sync iniziale intelligente (full/incremental)
-- MAM (XEP-0313) con marcatori RSM
-- Push Notifications (XEP-0357) - richiede server con supporto
-- Cache-first con IndexedDB per account
-- Virtual UI + MAM-only DB (nessun duplicato al reload)
-
-**In Roadmap** (non iniziato):
-- MUC (XEP-0045)
-- OMEMO (XEP-0384)
-- File upload (XEP-0363)
-- Voice/Video calls
-- Dark mode
-- Emoji picker
-
-## Build e Development
+L'ultimo snapshot completo del client XMPP React è sul tag git:
 
 ```bash
-cd web-client
-npm install
-npm run dev       # Dev server su http://localhost:5173/XmppTest/
-npm run build     # Build production in dist/
-npm run preview   # Preview build locale
+git checkout legacy/web-client-final
 ```
 
-**Note Tecniche**:
-- Base URL `/XmppTest/` per GitHub Pages
-- HashRouter per compatibility hosting statico
-- Hot reload funzionante con Vite
+- **Commit**: `6e792eb`
+- **Recupero parziale**: `git checkout legacy/web-client-final -- web-client/`
 
-## Accesso Produzione
+La documentazione in `docs/` descrive architettura, sync, spunte XEP, fix — da usare come riferimento per il nuovo software Flutter.
 
-**URL Live**: https://alfred-im.github.io/XmppTest/
+## Stack target
 
-**Credenziali Test**:
-- **Username**: `testardo@conversations.im`
-- **Password**: `FyqnD2YpGScNsuC`
+```
+Flutter (client/)  →  Supabase (piattaforma)  →  bridge XMPP + bridge Matrix (Fly.io)
+```
 
-Vedi `TEST_CREDENTIALS.md` per altri account di test disponibili.
+- Login solo con identità **Alfred** (non XMPP/Matrix diretto)
+- Federazione XMPP/Matrix invisibile all'utente (bridge)
+- Brand invariato (`#2D2926`, spunta, UI stile WhatsApp)
 
-**Note**:
-- Prima apertura: sync iniziale ~5-10 secondi
-- Aperture successive: ~2 secondi (sync incrementale)
-- Server XMPP: conversations.im
+## Documentazione
 
-## Architettura (Sintesi)
+| Priorità | File | Quando |
+|----------|------|--------|
+| Obbligatorio | `PROJECT_MAP.md` | Architettura e stato repository |
+| Visione nuova | `docs/decisions/project-revolution-discovery.md` | Stack target e Alpha |
+| Indice | `docs/INDICE.md` | Navigazione per area |
 
-Vedi `PROJECT_MAP.md` per architettura dettagliata completa.
+**Nota sui percorsi `web-client/` nei doc**: molti file in `docs/` citano ancora il client React — sono **riferimenti storici** validi al tag `legacy/web-client-final`.
 
-**Layer**:
-- UI Layer: Pages, Components
-- Initialization Layer: AppInitializer (sync all'avvio + boundary handoff)
-- Context Layer: ConnectionContext, AuthContext, VirtualMessagesContext, ConversationsContext, MessagingContext
-- Services Layer: sync-initializer.ts, mam-sync.ts, outbox-send.ts, messages.ts, conversations.ts, vcard.ts
-- Repository Layer: MessageRepository, OutboxRepository, ConversationRepository, VCardRepository, MetadataRepository
-- Data Layer: IndexedDB **per account** (`conversations-db-{jid}`) + XMPP Server
+## Build e preview locale (Flutter)
 
-**Principi (v4.0 / v2.2)**:
-1. **Virtual UI + MAM-only DB**: campanello aggiorna UI virtuale; solo MAM scrive messaggi nel DB
-2. **Un account = un database locale**: ogni JID ha il proprio IndexedDB; logout non cancella lo storico
-3. **Sync-Once all'avvio**: full o incremental MAM fino al boundary T
-3. **MAM incrementale su eventi**: dopo messaggio/receipt/displayed il campanello schedula MAM per conversazione
-4. **Spunte 3 livelli**: XMPP send (✓) + XEP-0184 (✓✓ grigie) + XEP-0333 (✓✓ blu)
-5. **Cache-First / Offline-First**
-6. **origin-id canonico** (XEP-0359) per dedup e correlazione marker
+```bash
+cd client
+flutter pub get
+flutter run -d chrome          # dev
+flutter build web --release --base-href "/XmppTest/"
+```
 
-## Documentazione (Struttura)
+**GitHub Pages**: https://alfred-im.github.io/XmppTest/ — deploy automatico su push a `main` (cartella `client/`).
 
-**Documenti Chiave per AI**:
-- `.cursor/rules/main.mdc` - Vincolo operativo Cursor (leggi `.cursor-rules.md` prima di tutto)
-- `PROJECT_MAP.md` - **LEGGERE ALL'INIZIO DI OGNI SESSIONE** (regola fondamentale)
-- `.cursor-rules.md` - Regole di sviluppo (fonte autoritativa)
-- `docs/architecture/` - Analisi architetturali (MAM strategy, conversazioni, performance)
-- `docs/implementation/` - Dettagli implementazioni (sync v4.0, spunte 0184/0333, login)
-- `docs/decisions/` - ADR (decisioni architetturali)
-- `docs/fixes/` - Analisi fix applicati
-- `docs/design/` - Principi design (brand identity, database architecture)
-- `docs/archive/` - Documentazione storica
+## Infrastruttura cloud (bootstrap)
 
-**Indice Navigabile**: `docs/INDICE.md`
+- **Supabase**: progetto `tvwpoxxcqwphryvuyqzu` (EU) — vedi `deploy/supabase.json`
+- **Fly.io**: app `xmpptest` — bridge XMPP (443) + Matrix (8081)
 
-## Known Issues e Limitazioni
+## Credenziali test (legacy XMPP)
 
-Vedi `docs/fixes/known-issues.md` per lista completa aggiornata.
-
-**Critici**:
-- Push Notifications richiedono server XMPP con XEP-0357 (jabber.hot-chilli.net e conversations.im NON supportano)
-- Password in plain text in localStorage (encryption pianificata)
-
-**Performance**:
-- MAM sync iniziale lenta con >5000 messaggi
-- Alcuni server XMPP non supportano vCard photo
-
-## Test Credentials
-
-Vedi `TEST_CREDENTIALS.md` per account di test configurati.
-
-**Quick reference**:
-- `testardo@conversations.im` / `FyqnD2YpGScNsuC`
-- `testarda@conversations.im` / `FyqnD2YpGScNsuC`
+Vedi `TEST_CREDENTIALS.md` — utili per testare il client al tag legacy o per sviluppo bridge.
 
 ## License
 
-MIT License - Vedi file `LICENSE`
+MIT — vedi `LICENSE`
 
 ---
 
-**Ultimo aggiornamento**: 2026-06-17  
-**Versione corrente**: 2.2.0  
-**Architettura**: Virtual UI + MAM-only DB v4.0 + IndexedDB per account v2.2 + Spunte WhatsApp (XEP-0184 + XEP-0333)
+**Ultimo aggiornamento**: 2026-06-24  
+**Architettura attiva**: Flutter + Supabase + bridge (Alpha)  
+**Legacy**: React XMPP @ `legacy/web-client-final`

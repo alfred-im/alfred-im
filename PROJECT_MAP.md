@@ -1,7 +1,7 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-24 (Supabase + Fly bridge documentati ✅)  
-**Versione**: 2.2.0 (per-account IndexedDB + XEP-0184 + XEP-0333)
+**Ultimo aggiornamento**: 2026-06-24 (client Flutter UI mock + deploy Pages ✅)  
+**Versione repository**: 3.0.0-alpha (migrazione Flutter/Supabase in corso)
 
 ---
 
@@ -16,12 +16,28 @@
 7. [Build e Testing](#build-e-testing)
 8. [Database e Storage](#database-e-storage)
 9. [Stato Corrente](#stato-corrente)
+10. [Client legacy React](#client-legacy-react-web-client--rimosso-da-main)
+
+---
+
+## ⚠️ Stato repository — client legacy rimosso
+
+La cartella **`web-client/` non è più presente su `main`**. È stata eliminata dopo la rivoluzione architetturale documentata in `docs/decisions/project-revolution-discovery.md`.
+
+| Elemento | Dettaglio |
+|----------|-----------|
+| **Ultimo snapshot con codice** | Tag git `legacy/web-client-final` @ commit `6e792eb` |
+| **Recupero** | `git checkout legacy/web-client-final -- web-client/` |
+| **Deploy legacy** | GitHub Pages (`alfred-im.github.io/XmppTest/`) — workflow rimosso |
+| **Documentazione sotto** | Sezioni su `web-client/` restano come **riferimento storico** per il nuovo client Flutter |
+
+**Stack attivo su `main`**: `client/` (Flutter — UI mock) · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
 ---
 
 ## 📌 Panoramica Progetto
 
-**Alfred** è un client web XMPP moderno per messaggistica istantanea, basato su React e TypeScript.
+**Alfred** è una piattaforma di messaggistica istantanea in migrazione verso **Flutter + Supabase + bridge Python**. Il client React XMPP (`web-client/`) è stato ritirato da `main`; la documentazione legacy descrive pattern e feature da riportare nel nuovo software.
 
 ### Caratteristiche Principali
 - **Offline-First**: Cache locale completa con IndexedDB **per account**
@@ -182,10 +198,7 @@ Per ogni messaggio nell'array:
 ├── fly.toml                   # Un’app Fly, due demoni bridge
 ├── Dockerfile                 # Build XMPP + Matrix
 ├── scripts/start-bridges.sh   # Avvio entrambi i demoni
-├── .github/                   # GitHub Actions per deployment
-│   └── workflows/
-│       └── deploy-pages.yml   # Deploy automatico su GitHub Pages (client legacy)
-├── docs/                      # Documentazione tecnica per AI (35 file)
+├── docs/                      # Documentazione tecnica per AI (riferimento legacy + nuova architettura)
 │   ├── architecture/          # Analisi architetturali
 │   ├── implementation/        # Dettagli implementativi
 │   ├── design/                # Principi design e brand identity
@@ -194,7 +207,9 @@ Per ogni messaggio nell'array:
 │   └── archive/               # Ricerca XMPP e documenti storici
 ├── bridge-matrix/             # Bridge Python Matrix (demone, no fly.toml locale)
 ├── bridge-xmpp/               # Bridge Python XMPP (demone, no fly.toml locale)
-├── client/                    # Flutter Web (placeholder Alpha)
+├── client/                    # Flutter (web + desktop/mobile scaffold) — UI chat mock
+├── .github/workflows/
+│   └── deploy-pages.yml       # Deploy Flutter web su GitHub Pages (/XmppTest/)
 ├── supabase/                  # Config + migrazioni piattaforma Alfred
 ├── README.md                  # Documentazione principale
 ├── CHANGELOG.md               # Change log del progetto
@@ -203,7 +218,34 @@ Per ogni messaggio nell'array:
 └── PROCEDURA_REVISIONE_GENERALE.md  # Procedura di revisione
 ```
 
-### Web Client (`/workspace/web-client`)
+### Client Flutter (`/workspace/client`)
+
+**Stato**: UI mock chat (dati fittizi) — **nessun backend** ancora collegato.
+
+| Elemento | Dettaglio |
+|----------|-----------|
+| **Entry** | `lib/main.dart` → `HomeScreen` |
+| **Layout** | Lista conversazioni + pannello chat (responsive, stile WhatsApp Web) |
+| **Brand** | `#2D2926`, header Alfred, bolle messaggio, spunte mock |
+| **Piattaforme** | Web, Android, iOS, Linux, macOS, Windows (scaffold `flutter create`) |
+| **Build web** | `flutter build web --release --base-href "/XmppTest/"` |
+| **Deploy** | GitHub Pages — https://alfred-im.github.io/XmppTest/ (workflow su `main`) |
+
+```
+client/lib/
+├── main.dart
+├── theme/           # AlfredColors, AlfredTheme
+├── models/          # Conversation, ChatMessage
+├── data/            # MockData
+├── screens/         # HomeScreen
+└── widgets/         # ConversationsPanel, ChatPanel, MessageBubble, …
+```
+
+### Client legacy React (`web-client/`) — RIMOSSO DA MAIN
+
+> **Nota**: il codice non è più nel repository. Percorsi e responsabilità sotto descrivono l'ultima versione taggata `legacy/web-client-final` — utile per tradurre logica nel client Flutter.
+
+#### Percorso storico (`/workspace/web-client` al tag `legacy/web-client-final`)
 
 #### **Configurazione e Setup**
 ```
@@ -522,7 +564,9 @@ Config deploy in root: `fly.toml` (due `[[services]]`), `Dockerfile`. Fly colleg
 
 ## 🔧 Build e Testing
 
-### Script NPM Disponibili
+> **Legacy**: comandi e configurazione sotto si riferiscono al client React rimosso. Recupero: `git checkout legacy/web-client-final`.
+
+### Script NPM (client legacy al tag `legacy/web-client-final`)
 
 ```bash
 # Development
@@ -778,7 +822,20 @@ class ConversationRepository {
 
 ## 📊 Stato Corrente
 
-### ✅ Funzionalità Implementate
+### Stack su `main` (2026-06-24)
+
+| Componente | Stato |
+|------------|-------|
+| `client/` (Flutter) | 🟡 UI mock chat — no backend |
+| `supabase/` | 🟡 Bootstrap (pgcrypto + smoke test) |
+| `bridge-xmpp/` · `bridge-matrix/` | 🟡 Deploy Fly OK, logica bridge TODO |
+| `web-client/` (React) | ❌ Rimosso — tag `legacy/web-client-final` |
+
+Vedi `docs/decisions/project-revolution-discovery.md` per roadmap Alpha.
+
+### ✅ Funzionalità implementate (client legacy — tag `legacy/web-client-final`)
+
+> Riferimento per il nuovo client Flutter. Codice non più su `main`.
 
 **Architettura v3.0 "Sync-Once + Listen" (15 dicembre 2025)**:
 - ✅ **Sync iniziale** (full o incremental) all'avvio
