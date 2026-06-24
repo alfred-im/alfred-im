@@ -192,8 +192,8 @@ Per ogni messaggio nell'array:
 │   ├── decisions/             # Architecture Decision Records
 │   ├── fixes/                 # Analisi bug fix
 │   └── archive/               # Ricerca XMPP e documenti storici
-├── bridge-matrix/             # Bridge Python Matrix (fly.toml, Dockerfile)
-├── bridge-xmpp/               # Bridge Python XMPP (fly.toml, Dockerfile)
+├── bridge-matrix/             # Bridge Python Matrix (demone, no fly.toml locale)
+├── bridge-xmpp/               # Bridge Python XMPP (demone, no fly.toml locale)
 ├── client/                    # Flutter Web (placeholder Alpha)
 ├── supabase/                  # Config + migrazioni piattaforma Alfred
 ├── README.md                  # Documentazione principale
