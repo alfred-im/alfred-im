@@ -1,5 +1,17 @@
 {
   "app": "xmpptest",
   "region": "fra",
-  "url": "https://xmpptest.fly.dev"
+  "services": {
+    "xmpp": {
+      "url": "https://xmpptest.fly.dev",
+      "health": "https://xmpptest.fly.dev/health",
+      "internal_port": 8080
+    },
+    "matrix": {
+      "url": "https://xmpptest.fly.dev:8082",
+      "health": "https://xmpptest.fly.dev:8082/health",
+      "internal_port": 8081,
+      "http_port": 8081
+    }
+  }
 }

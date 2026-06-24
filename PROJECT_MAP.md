@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-24 (Fly bridge live: xmpptest.fly.dev)  
+**Ultimo aggiornamento**: 2026-06-24 (Fly: due servizi, Matrix esposto :8082)  
 **Versione**: 2.2.0 (per-account IndexedDB + XEP-0184 + XEP-0333)
 
 ---
@@ -434,15 +434,16 @@ index.html
 
 ### 1. **Fly.io — Bridge Alfred (Alpha bootstrap)**
 
-**App Fly**: `xmpptest` (region `fra`)  
-**URL**: https://xmpptest.fly.dev  
-**Health XMPP**: `GET /health` → 200  
+**App Fly**: `xmpptest` (region `fra`)
 
-Un’app Fly, due demoni Python nello stesso container (`scripts/start-bridges.sh`):
-- XMPP bridge → porta 8080 (esposta su HTTPS)
-- Matrix bridge → porta 8081 (solo interno al container, Alpha)
+Un’app Fly, due demoni Python nello stesso container (`scripts/start-bridges.sh`), **due servizi Fly** in `fly.toml`:
 
-Config deploy in root: `fly.toml`, `Dockerfile`. Fly collegato a GitHub legge il repo — no GitHub Actions custom per bridge.
+| Bridge | Porta interna | Esposizione pubblica | Health test |
+|--------|---------------|----------------------|-------------|
+| XMPP | 8080 | `https://xmpptest.fly.dev` (443) | `/health` |
+| Matrix | 8081 | `https://xmpptest.fly.dev:8082` (TLS), `:8081` HTTP | `/health` |
+
+Config deploy in root: `fly.toml` (due `[[services]]`), `Dockerfile`. Fly collegato a GitHub legge il repo — no GitHub Actions custom per bridge.
 
 ### 2. **XMPP Server** (legacy web-client)
 
@@ -467,7 +468,7 @@ Config deploy in root: `fly.toml`, `Dockerfile`. Fly collegato a GitHub legge il
 | XEP-0077 | In-Band Registration | `xmpp.ts` |
 | XEP-0199 | XMPP Ping | Stanza.js built-in |
 
-### 2. **IndexedDB (Local)**
+### 3. **IndexedDB (Local)**
 
 **Database per account**: `conversations-db-{jid_normalizzato}` (es. `conversations-db-testardo_conversations_im`)  
 **Legacy (migrazione)**: `conversations-db` — DB condiviso pre-v2.2; copiato al primo login account se dedicato vuoto  
@@ -484,7 +485,7 @@ Config deploy in root: `fly.toml`, `Dockerfile`. Fly collegato a GitHub legge il
 **Gestione dati**: `repositories/` (tutte le query usano il DB dell'account corrente via `getDB()`)
 
 
-### 3. **Service Worker**
+### 4. **Service Worker**
 
 **Scope**: `/XmppTest/`
 **File**: `public/sw.js`
@@ -493,7 +494,7 @@ Config deploy in root: `fly.toml`, `Dockerfile`. Fly collegato a GitHub legge il
 - Push notifications receiver
 - Background sync (future)
 
-### 4. **Browser APIs Utilizzate**
+### 5. **Browser APIs Utilizzate**
 
 - **Notification API** - Push notifications
 - **Service Worker API** - Offline support
