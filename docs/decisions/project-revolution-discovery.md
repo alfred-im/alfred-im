@@ -1,10 +1,8 @@
 # Rivoluzione Alfred — Discovery Q&A
 
-**Stato**: 🟡 In corso — Iterazione 5 (modello identità Alfred; librerie bridge)  
+**Stato**: 🟡 In corso — Iterazione 6 (Alpha, federazione, principio XMPP)  
 **Creato**: 2026-06-24  
-**Fase**: **Prototipo / documentazione strategica** — solo livello alto per ora.  
-**Obiettivo**: Documentare l'applicazione **completa** top-down, prima di qualsiasi implementazione.  
-**Regola**: Nessun codice finché non lo dici tu. Piano pezzi e ordine sviluppo → **non in questa fase** (si parlerà tra qualche giorno).
+**Fase**: **Documentazione strategica** — livello alto + roadmap **Alpha** incrementale.
 
 **Glossario**: **Piattaforma** = Supabase.
 
@@ -12,7 +10,11 @@
 
 1. Tu rispondi in modo discorsivo → io formalizzo.
 2. Se una risposta **non è chiara**, la **riformulo e la ripresento** (non assumo).
-3. **Solo livello alto** adesso — niente prototipo minimo, niente ordine di sviluppo, niente dettagli che possono aspettare.
+3. **Solo livello alto** adesso — ordine implementazione dettagliato si pianifica più avanti.
+4. **Analogia email** usata dove aiuta (Thunderbird, caselle multiple, indirizzi separati).
+
+**Obiettivo**: Documentare l'app **completa** top-down + roadmap **Alpha** incrementale.  
+**Regola**: Nessun codice finché non lo dici tu.
 
 ---
 
@@ -49,6 +51,41 @@ Utente
 ### Multi-account (stile Thunderbird)
 
 L'app gestisce **multi-account Alfred**: l'utente può avere **quanti account Alfred vuole** e passare tra loro (come più caselle email in Thunderbird). Ogni account Alfred ha la propria identità e i propri dati sulla piattaforma.
+
+### Identità verso il mondo esterno — un solo dominio
+
+**Risposta utente**: fuori mi presento come **`me@alfred.im`** — un dominio, non due.
+
+| Concetto | Decisione |
+|----------|-----------|
+| Dominio federato | **`alfred.im`** — unico |
+| Identità esterna | es. `mario@alfred.im` (JID XMPP) — stesso concetto identità Alfred |
+| Due domini / due server distinti per protocollo | ❌ **No** — non ha senso nel modello Alfred |
+| Matrix fuori | Stesso principio identità Alfred su dominio unico — dettaglio Matrix **da definire** (utente non conosce ancora Matrix) |
+
+**Analogia email**: come avere `mario@alfred.im` come il tuo indirizzo — non due provider con due domini diversi per la stessa persona.
+
+### Principio card — federazione XMPP (fondamentale)
+
+> **Da ricordare sempre.** Principio architetturale vincolante per il bridge XMPP.
+
+Quando il server Alfred comunica con altri server XMPP federati:
+
+1. **Dichiara esplicitamente** tutte le estensioni/XEP che supporta — come farebbe un client XMPP completo verso l'esterno.
+2. **Pretende** che il client supporti quelle capability (handshake federato standard).
+3. **Internamente**, molte di quelle cose — nel mondo XMPP classico fatte dal **client** — in Alfred sono gestite dalla **piattaforma** (server Alfred).
+4. I **server federati esterni non devono sapere** questa divisione client/server. Per loro, Alfred si comporta come un partecipante XMPP normale e capace.
+
+```
+Server federato esterno          Bridge XMPP Alfred          Piattaforma
+        │                              │                        │
+        │  "Supporti XEP-0184?"        │                        │
+        │◄────────────────────────────►│  capability complete   │
+        │  (vede un peer "client-like")│───────────────────────►│
+        │                              │   logica reale qui     │
+```
+
+**In sintesi**: **facciata federata** = client XMPP pieno; **implementazione reale** = piattaforma Alfred.
 
 ### Architettura target
 
@@ -109,9 +146,7 @@ I daemon si scrivono in **Python** con librerie mature già disponibili:
 | **XMPP** | [**slixmpp**](https://slixmpp.readthedocs.io/) | Asyncio; attiva (2026); plugin XEP; adatta a processi long-running | aioxmpp |
 | **Matrix** | [**matrix-nio**](https://matrix-nio.readthedocs.io/) | SDK Matrix Python de facto; async; sync live; bot e bridge | mautrix-python |
 
-**Nota**: senza E2EE nel prototipo, non servono subito `matrix-nio[e2e]` né OMEMO su XMPP.
-
-I bridge ascoltano rete protocollo **e** piattaforma; normalizzano eventi; leggono/scrivono su Supabase. La logica Alfred resta sulla piattaforma.
+**Nota utente**: per ora **si fidano** le due librerie proposte, senza conoscenza approfondita — confermate a livello alto.
 
 ### Repository
 
@@ -133,17 +168,47 @@ Un solo repo — nessuna repo separata per ora.
 
 ---
 
-## Applicazione completa — funzionalità (livello alto)
+## Roadmap Alpha (incrementale)
 
-> **Nota**: questo è lo **scope dell'app intera**, non un "prototipo minimo". Lo sviluppo sarà a pezzi, ma il documento descrive il prodotto finito a livello strategico.
+> **Correzione terminologica**: quanto elencato prima non era un "prototipo minimo" ma la **prima versione — Alpha**. Si definisce **a tappe**, non tutta stasera.
+
+### Alpha — prima tappa (definita)
+
+Focus: messaggistica base stile WhatsApp, **compatibile XMPP**.
+
+| Capability | In Alpha v1 |
+|------------|-------------|
+| **Invio** messaggi | ✅ |
+| **Ricezione** messaggi | ✅ |
+| **Lettura** / stati lettura (come WhatsApp) | ✅ |
+| Compatibilità **XMPP** | ✅ obbligatoria |
+| Matrix | ❓ Non definito — utente non conosce ancora Matrix |
+
+**Fuori Alpha v1** (per ora): push, E2EE, dettaglio Matrix.
+
+### Alpha — scope funzionale complessivo (da iterazione precedente)
+
+Oltre alla prima tappa messaggi, l'Alpha nel suo insieme include anche (definizione incrementale — ordine tra queste da pianificare dopo):
+
+- Login piattaforma
+- Lista contatti **unificata** (protocollo visibile per contatto)
+- Conversazioni + creazione
+- Pagina profilo
+- XMPP
+
+---
+
+## Applicazione completa — funzionalità (livello alto)
 
 | Area | Funzionalità |
 |------|--------------|
 | Auth | Login sulla **piattaforma** |
-| Contatti | Lista contatti |
-| Conversazioni | Vista conversazione + **creazione** nuova conversazione |
-| Profilo | Pagina profilo |
-| Protocollo | **XMPP** (Matrix nell'architettura generale; dettaglio feature Matrix — da approfondire a livello alto) |
+| Contatti | Lista **unificata**; ogni contatto mostra il **protocollo** (XMPP / Matrix) |
+| Conversazioni | Vista conversazione + creazione |
+| Profilo | Pagina profilo **Alfred** (unico profilo utente — vedi Iterazione 6) |
+| Protocollo | XMPP in Alpha; Matrix in architettura — scope Alpha Matrix TBD |
+
+> Oltre Alpha: prodotto finito da continuare a documentare top-down.
 
 ---
 
@@ -166,12 +231,14 @@ Un solo repo — nessuna repo separata per ora.
 | B. Prodotto (Flutter Web) | ✅ |
 | C. Architettura macro | 🟡 — schema dati / API da documentare |
 | D. Infra (Fly bridge, GH Pages web, monorepo) | ✅ |
-| E. Protocolli (inbox unica, chat separate, routing per contatto) | 🟡 |
+| E. Protocolli (inbox, contatti, principio card XMPP) | 🟡 |
 | F. Brand | ✅ |
 | G. Sicurezza (no E2EE; password solo Alfred) | ✅ |
-| H. Scope funzionale alto livello | 🟡 |
+| H. Scope Alpha incrementale | 🟡 |
 | I. Legacy web-client | ✅ |
 | J. Metriche successo | ⏸️ posticipato |
+| K. Push | ❌ non per ora |
+| L. Offline | ⏸️ decisione posticipata |
 
 ---
 
@@ -204,15 +271,67 @@ Un solo repo — nessuna repo separata per ora.
 
 ---
 
-## Iterazione 6 — Prossimo livello alto (quando vuoi)
+## Iterazione 6 — Risposte formalizzate
 
-Domande **solo strategiche**:
+### Contatti unificati
 
-1. **Contatti**: lista contatti **unificata** (XMPP + Matrix insieme) come l'inbox?
-2. **Federazione Alfred**: come appare l'identità Alfred nel mondo esterno? (es. `utente@alfred.im` su XMPP, `@utente:alfred.matrix` su Matrix — da definire)
-3. **Profilo**: il profilo in UI è **solo profilo Alfred** (niente vCard XMPP separata per l'utente)?
-4. **Notifiche push**: servono nel nuovo Alfred o dopo?
-5. **Offline**: cache locale come oggi, o solo online via piattaforma?
+**Risposta**: lista contatti **unificata** (come l'inbox). Ogni contatto mostra **chiaramente il protocollo** di provenienza (XMPP o Matrix).
+
+**Analogia email**: una rubrica con indirizzi `@gmail.com` e `@alfred.im` insieme — stessa lista, tipo indirizzo visibile.
+
+---
+
+### Federazione esterna — dominio unico
+
+**Risposta**: mi presento fuori come **`me@alfred.im`** — **un solo dominio** `alfred.im`. Non due server o domini diversi per protocollo.
+
+_(Vedi sezione "Identità verso il mondo esterno" in cima.)_
+
+---
+
+### Profilo — domanda riformulata
+
+**La domanda mal posta era**: "profilo Alfred vs vCard XMPP separata?"
+
+**Risposta dedotta dal modello identità**: esiste **un solo profilo** — quello **Alfred**. L'utente non ha vCard XMPP da gestire separatamente; la piattaforma/bridge espone ciò che serve verso l'esterno se richiesto dal protocollo.
+
+**Risposta utente**: non aveva capito la domanda → **confermato implicitamente**: profilo = profilo Alfred.
+
+---
+
+### Push
+
+**Risposta**: **non per ora**.
+
+---
+
+### Offline — spiegazione
+
+**Cosa intendevo**: se senza internet puoi ancora **leggere messaggi vecchi** (cache sul dispositivo, come oggi con IndexedDB) oppure l'app **funziona solo online** collegata alla piattaforma.
+
+**Risposta utente**: non sapeva cosa significasse → **decisione posticipata**. Default probabile per nuovo Alfred: **online-first** via piattaforma; offline da definire in fase 2 documento.
+
+---
+
+### Alpha vs "prototipo minimo" — correzione
+
+**Risposta**: quanto elencato prima era la **prima versione (Alpha)**, non un minimo. Si definisce **incrementalmente**.
+
+**Alpha — prima tappa** (messaggistica):
+- Invio, ricezione, lettura messaggi (stile WhatsApp)
+- Compatibilità **XMPP** obbligatoria
+- **Matrix**: non definito — utente non conosce ancora Matrix
+
+**Principio card XMPP**: documentato in sezione dedicata — facciata federata completa verso fuori, logica reale sulla piattaforma.
+
+---
+
+## Iterazione 7 — Prossimo livello alto (quando vuoi)
+
+1. **Alpha tappa 2+**: dopo messaggi XMPP, cosa viene? (contatti? login? profilo?)
+2. **Matrix**: quando sei pronto, stesso scope di XMPP o diverso?
+3. **Offline**: dopo la spiegazione, preferenza?
+4. **XEP in Alpha**: quali estensioni XMPP oltre messaggi base e read receipts? (MAM, presence, …)
 
 ---
 
@@ -242,10 +361,9 @@ Domande **solo strategiche**:
 
 ### P1 / P2. Prototipo minimo e ordine pezzi
 
-**Risposta**: **Non si discute ora.** Non c'è un "prototipo minimo" da definire in questa fase. Si documenta l'app **intera** top-down; lo sviluppo a pezzi si pianifica **più avanti** (non stasera).
+**Risposta originale**: posticipato.
 
-- P1 → ⏸️ posticipato
-- P2 → ⏸️ posticipato
+**Aggiornamento Iterazione 6**: sostituito da **roadmap Alpha incrementale** (sezione dedicata). Ordine implementazione dettagliato ancora da pianificare tra qualche giorno.
 
 ---
 
@@ -282,13 +400,20 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | D-017 | 2026-06-24 | Fase prototipo — infra non bloccante | ✅ |
 | D-018 | 2026-06-24 | **Monorepo** con cartelle client / bridge-xmpp / bridge-matrix / supabase | ✅ |
 | D-019 | 2026-06-24 | Brand grafico **identico** all'Alfred attuale | ✅ |
-| D-020 | 2026-06-24 | Scope = **app completa** documentata; no "minimo prototipo" ora | ✅ |
-| D-021 | 2026-06-24 | Piano pezzi e ordine sviluppo **posticipati** | ✅ |
-| D-022 | 2026-06-24 | **Identità Alfred** unica; XMPP/Matrix = trasporto federato | ✅ |
-| D-023 | 2026-06-24 | Password **solo Alfred**; nessun login/collegamento protocollo utente | ✅ |
-| D-024 | 2026-06-24 | **Multi-account Alfred** (stile Thunderbird) | ✅ |
-| D-025 | 2026-06-24 | Bridge XMPP: libreria **slixmpp** | 🟡 Proposta alto livello |
-| D-026 | 2026-06-24 | Bridge Matrix: libreria **matrix-nio** | 🟡 Proposta alto livello |
+| D-020 | 2026-06-24 | Roadmap **Alpha** incrementale (non "minimo prototipo") | ✅ Aggiornato iter.6 |
+| D-021 | 2026-06-24 | Ordine sviluppo dettagliato **posticipato** | ✅ |
+| D-022 | 2026-06-24 | **Identità Alfred** unica; XMPP/Matrix = trasporto | ✅ |
+| D-023 | 2026-06-24 | Password **solo Alfred** | ✅ |
+| D-024 | 2026-06-24 | **Multi-account Alfred** (Thunderbird) | ✅ |
+| D-025 | 2026-06-24 | Bridge XMPP: **slixmpp** | ✅ Accettata a livello alto |
+| D-026 | 2026-06-24 | Bridge Matrix: **matrix-nio** | ✅ Accettata a livello alto |
+| D-027 | 2026-06-24 | Contatti **unificati** con protocollo visibile | ✅ |
+| D-028 | 2026-06-24 | Federazione esterna: **`@alfred.im`** dominio unico | ✅ |
+| D-029 | 2026-06-24 | Profilo = **solo profilo Alfred** | ✅ |
+| D-030 | 2026-06-24 | **Push** fuori scope per ora | ✅ |
+| D-031 | 2026-06-24 | **Offline** — decisione posticipata | ⏸️ |
+| D-032 | 2026-06-24 | **Alpha v1**: invio/ricezione/lettura messaggi, XMPP | ✅ |
+| D-033 | 2026-06-24 | **Principio card** federazione XMPP | ✅ Vincolante |
 
 ---
 
@@ -304,7 +429,14 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 - [x] Modello identità Alfred (no identità XMPP utente)
 - [x] Multi-account Alfred
 - [x] Librerie bridge Python (proposta)
-- [ ] Iterazione 6: contatti, federazione esterna, profilo, push, offline
+- [x] Contatti unificati + protocollo visibile
+- [x] Federazione `@alfred.im` unico dominio
+- [x] Profilo Alfred unico
+- [x] Push escluso per ora
+- [x] Alpha v1 definita (messaggi XMPP)
+- [x] Principio card XMPP
+- [ ] Offline (posticipato)
+- [ ] Alpha tappe successive / Matrix
 - [ ] Schema dati e flussi (fase 2 documento)
 - [ ] Brief alto livello approvato ("ok, il livello alto è completo")
 
@@ -319,4 +451,5 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | 3 | 2026-06-24 | Inbox; login piattaforma; no E2EE; hosting facile |
 | 4 | 2026-06-24 | Bridge sempre attivi; routing contatti; monorepo; brand |
 | 5 | 2026-06-24 | Identità Alfred federata; multi-account; no password XMPP; librerie slixmpp + matrix-nio |
-| 6 | _prossima_ | Federazione esterna, contatti, profilo, push, offline |
+| 6 | 2026-06-24 | Contatti unificati; `@alfred.im`; Alpha v1 messaggi; principio card; push no; offline TBD |
+| 7 | _prossima_ | Alpha tappe 2+, Matrix, offline, XEP Alpha |
