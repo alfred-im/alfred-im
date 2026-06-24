@@ -8,9 +8,11 @@
 
 | Servizio | Scopo | Test |
 |----------|-------|------|
-| **Supabase** | Piattaforma | Progetto, auth, DB, API |
-| **Fly.io** | Bridge Python | App, deploy, secrets |
+| **Supabase** | Piattaforma (cloud) | Progetto attivo, config in repo |
+| **Fly.io** | Bridge Python (cloud) | App attive, config in repo |
 | **GitHub Pages** | Flutter Web | Build + URL |
+
+**Modello deploy** (chiarimento utente): Supabase e Fly.io **non richiedono la CLI locale** per committare i file né per funzionare. La configurazione vive nel **repository**; i servizi girano **in cloud**. Deploy/gestione via CI, dashboard, MCP — la CLI è opzionale per sviluppo locale.
 
 _Stato deploy: vedi sezione **Risultati test deploy** in fondo._
 
@@ -633,7 +635,8 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | D-037 | 2026-06-24 | Daemon = **per istanza**, sempre attivo | ✅ |
 | D-038 | 2026-06-24 | **Priorità**: test deploy servizi dopo allineamento doc | 🟡 Prossimo step |
 | D-039 | 2026-06-24 | **N istanze** Alfred nel mondo, ognuna col proprio dominio | ✅ |
-| D-040 | 2026-06-24 | Prima iter. 10: **testare** deploy Supabase + Fly.io | 🟡 GH Pages ok; Supabase/Fly in attesa token |
+| D-040 | 2026-06-24 | Prima iter. 10: **testare** deploy Supabase + Fly.io | 🟡 GH Pages ok; Supabase/Fly in attesa |
+| D-041 | 2026-06-24 | Test Supabase anche via **MCP ufficiale** (non solo CLI) | 🟡 MCP da connettere in Cursor |
 
 ---
 
@@ -696,7 +699,7 @@ Poi verificare: `fly apps list`, creazione smoke app, deploy bridge placeholder.
 | Servizio | Stato | Azione richiesta |
 |----------|-------|------------------|
 | **GitHub Pages** | ✅ Funzionante | Nessuna |
-| **Supabase** | ⏸️ Bloccato | Fornire `SUPABASE_ACCESS_TOKEN` o login |
+| **Supabase** | ⏸️ Bloccato | Connettere **MCP Supabase** in Cursor e/o `SUPABASE_ACCESS_TOKEN` |
 | **Fly.io** | ⏸️ Bloccato | Fornire `FLY_API_TOKEN` o login |
 
 _Dopo i token, rieseguire smoke test su Supabase e Fly.io._
