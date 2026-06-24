@@ -10,7 +10,10 @@ import '../services/auth_service.dart';
 class AuthController extends ChangeNotifier {
   AuthController({AuthService? authService})
       : _authService = authService ?? AuthService() {
-    _subscription = _authService.authStateChanges.listen((_) {
+    _subscription = _authService.authStateChanges.listen((state) {
+      if (state.event == AuthChangeEvent.tokenRefreshed) {
+        unawaited(_authService.persistCurrentSession());
+      }
       _loadProfile();
     });
     _loadProfile();
@@ -33,6 +36,14 @@ class AuthController extends ChangeNotifier {
     await _loadProfile();
   }
 
+  /// Prima di aggiungere un altro account: salva la sessione corrente.
+  Future<void> prepareAddAccount() async {
+    await _authService.persistCurrentSession();
+    savedAccounts = await _authService.savedAccounts();
+    error = null;
+    notifyListeners();
+  }
+
   Future<void> signIn(String email, String password) async {
     error = null;
     isLoading = true;
@@ -41,7 +52,7 @@ class AuthController extends ChangeNotifier {
       await _authService.signIn(email: email, password: password);
       savedAccounts = await _authService.savedAccounts();
     } catch (e) {
-      error = e.toString();
+      error = _friendlyAuthError(e);
     } finally {
       isLoading = false;
       notifyListeners();
@@ -66,7 +77,7 @@ class AuthController extends ChangeNotifier {
       );
       savedAccounts = await _authService.savedAccounts();
     } catch (e) {
-      error = e.toString();
+      error = _friendlyAuthError(e);
     } finally {
       isLoading = false;
       notifyListeners();
@@ -76,15 +87,23 @@ class AuthController extends ChangeNotifier {
   Future<void> signOut() async {
     await _authService.signOut();
     profile = null;
+    savedAccounts = await _authService.savedAccounts();
     notifyListeners();
   }
 
-  Future<void> switchAccount(SavedAccount account) async {
+  Future<bool> switchAccount(SavedAccount account) async {
     isLoading = true;
+    error = null;
     notifyListeners();
     try {
       await _authService.switchAccount(account);
       savedAccounts = await _authService.savedAccounts();
+      await _loadProfile();
+      return true;
+    } catch (e) {
+      error = _friendlyAuthError(e);
+      await _loadProfile();
+      return false;
     } finally {
       isLoading = false;
       notifyListeners();
@@ -98,6 +117,17 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> refreshProfile() => _loadProfile();
+
+  String _friendlyAuthError(Object e) {
+    if (e is AuthException) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('refresh') || msg.contains('session')) {
+        return 'Sessione scaduta per questo account. Usa "Aggiungi account" e accedi di nuovo.';
+      }
+      return e.message;
+    }
+    return e.toString();
+  }
 
   Future<void> _loadProfile() async {
     if (!_authService.isAuthenticated) {

@@ -9,6 +9,7 @@ import '../theme/alfred_colors.dart';
 import '../widgets/chat_panel.dart';
 import '../widgets/conversations_panel.dart';
 import 'contacts_screen.dart';
+import 'auth_screen.dart';
 import 'profile_screen.dart';
 
 /// Layout principale stile WhatsApp Web: lista + chat.
@@ -76,14 +77,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? const Icon(Icons.check, color: AlfredColors.unreadBadge)
                       : null,
                   onTap: () async {
+                    final messenger = ScaffoldMessenger.of(context);
                     Navigator.pop(ctx);
                     if (auth.userId != account.userId) {
-                      await auth.switchAccount(account);
+                      final ok = await auth.switchAccount(account);
+                      if (!ok && auth.error != null) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text(auth.error!)),
+                        );
+                      }
                     }
                   },
                 ),
               ),
               const Divider(),
+              ListTile(
+                leading: const Icon(Icons.person_add_alt_1_outlined),
+                title: const Text('Aggiungi account'),
+                onTap: () async {
+                  final navigator = Navigator.of(context);
+                  Navigator.pop(ctx);
+                  await auth.prepareAddAccount();
+                  await navigator.push<void>(
+                    MaterialPageRoute(
+                      builder: (routeCtx) => AuthScreen(
+                        addingAccount: true,
+                        onCancel: () => Navigator.of(routeCtx).pop(),
+                      ),
+                    ),
+                  );
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.person_outline),
                 title: const Text('Profilo'),

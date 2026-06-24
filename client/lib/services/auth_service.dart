@@ -17,10 +17,18 @@ class AuthService {
 
   Stream<AuthState> get authStateChanges => supabase.auth.onAuthStateChange;
 
+  /// Salva il refresh token aggiornato dell'account attivo (rotazione token).
+  Future<void> persistCurrentSession() async {
+    await _persistSessionAccount(session);
+  }
+
   Future<AuthResponse> signIn({
     required String email,
     required String password,
   }) async {
+    // Aggiunta account: conserva il refresh token dell'account corrente.
+    await persistCurrentSession();
+
     final response = await supabase.auth.signInWithPassword(
       email: email,
       password: password,
@@ -35,6 +43,8 @@ class AuthService {
     required String username,
     required String displayName,
   }) async {
+    await persistCurrentSession();
+
     final response = await supabase.auth.signUp(
       email: email,
       password: password,
@@ -49,12 +59,38 @@ class AuthService {
     return response;
   }
 
+  /// Esci dall'account attivo (revoca sessione corrente su Supabase).
   Future<void> signOut() async {
+    final userId = currentUser?.id;
     await supabase.auth.signOut();
+    if (userId != null) {
+      await _accountStorage.removeAccount(userId);
+    }
   }
 
   Future<void> switchAccount(SavedAccount account) async {
-    await supabase.auth.setSession(account.refreshToken);
+    if (account.refreshToken.isEmpty) {
+      throw const AuthException('Sessione account non disponibile. Accedi di nuovo.');
+    }
+
+    final previousRefresh = session?.refreshToken;
+
+    // Salva il refresh token aggiornato prima di cambiare account.
+    await persistCurrentSession();
+
+    try {
+      final response = await supabase.auth.setSession(account.refreshToken);
+      await _persistSessionAccount(response.session);
+    } catch (error) {
+      if (previousRefresh != null && previousRefresh.isNotEmpty) {
+        try {
+          await supabase.auth.setSession(previousRefresh);
+        } catch (_) {
+          // Sessione precedente non recuperabile.
+        }
+      }
+      rethrow;
+    }
   }
 
   Future<List<SavedAccount>> savedAccounts() => _accountStorage.loadAccounts();
@@ -79,6 +115,9 @@ class AuthService {
   Future<void> _persistSessionAccount(Session? session) async {
     if (session == null || session.user.email == null) return;
 
+    final refresh = session.refreshToken;
+    if (refresh == null || refresh.isEmpty) return;
+
     final profile = await supabase
         .from('profiles')
         .select('display_name')
@@ -92,7 +131,7 @@ class AuthService {
       SavedAccount(
         userId: session.user.id,
         email: session.user.email!,
-        refreshToken: session.refreshToken ?? '',
+        refreshToken: refresh,
         displayName: displayName,
       ),
     );
