@@ -11,11 +11,13 @@ class ConversationsController extends ChangeNotifier {
   ConversationsController({
     required this.userId,
     ConversationService? conversationService,
+    this.enableRealtime = true,
   }) : _conversationService = conversationService ?? ConversationService() {
     unawaited(_bootstrap());
   }
 
   final String userId;
+  final bool enableRealtime;
   final ConversationService _conversationService;
   RealtimeChannel? _channel;
   int _loadGeneration = 0;
@@ -45,7 +47,7 @@ class ConversationsController extends ChangeNotifier {
 
   Future<void> _bootstrap() async {
     await load();
-    _attachRealtime();
+    if (enableRealtime) _attachRealtime();
   }
 
   void _attachRealtime() {
