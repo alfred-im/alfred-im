@@ -17,7 +17,7 @@ void main() {
       await storage.upsertAccount(
         const SavedAccount(
           userId: 'u1',
-          email: 'a@test.com',
+          username: 'alice',
           refreshToken: 'rt1',
           displayName: 'Alice',
         ),
@@ -25,7 +25,7 @@ void main() {
       await storage.upsertAccount(
         const SavedAccount(
           userId: 'u2',
-          email: 'b@test.com',
+          username: 'bob',
           refreshToken: 'rt2',
           displayName: 'Bob',
         ),
@@ -37,7 +37,7 @@ void main() {
       await storage.upsertAccount(
         const SavedAccount(
           userId: 'u1',
-          email: 'a@test.com',
+          username: 'alice',
           refreshToken: 'rt1-new',
           displayName: 'Alice Updated',
         ),
@@ -56,14 +56,24 @@ void main() {
     test('serializes roundtrip', () {
       const account = SavedAccount(
         userId: 'u1',
-        email: 'a@test.com',
+        username: 'alice',
         refreshToken: 'rt',
         displayName: 'Alice',
       );
       final decoded = SavedAccount.fromJson(
         jsonDecode(jsonEncode(account.toJson())) as Map<String, dynamic>,
       );
-      expect(decoded.email, account.email);
+      expect(decoded.username, account.username);
+    });
+
+    test('migrates legacy email field to username', () {
+      final decoded = SavedAccount.fromJson({
+        'userId': 'u1',
+        'email': 'alice@users.alfred.internal',
+        'refreshToken': 'rt',
+        'displayName': 'Alice',
+      });
+      expect(decoded.username, 'alice');
     });
   });
 }

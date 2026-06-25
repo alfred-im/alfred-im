@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/profile.dart';
 import '../models/saved_account.dart';
+import '../utils/auth_identity.dart';
 import 'account_storage_service.dart';
 import 'supabase_bootstrap.dart';
 
@@ -23,14 +24,14 @@ class AuthService {
   }
 
   Future<AuthResponse> signIn({
-    required String email,
+    required String username,
     required String password,
   }) async {
-    // Aggiunta account: conserva il refresh token dell'account corrente.
     await persistCurrentSession();
 
+    final normalized = AuthIdentity.normalizeUsername(username);
     final response = await supabase.auth.signInWithPassword(
-      email: email,
+      email: AuthIdentity.internalAuthEmail(normalized),
       password: password,
     );
     await _persistSessionAccount(response.session);
@@ -38,18 +39,18 @@ class AuthService {
   }
 
   Future<AuthResponse> signUp({
-    required String email,
     required String password,
     required String username,
     required String displayName,
   }) async {
     await persistCurrentSession();
 
+    final normalized = AuthIdentity.normalizeUsername(username);
     final response = await supabase.auth.signUp(
-      email: email,
+      email: AuthIdentity.internalAuthEmail(normalized),
       password: password,
       data: {
-        'username': username.toLowerCase(),
+        'username': normalized,
         'display_name': displayName,
       },
     );
@@ -75,7 +76,6 @@ class AuthService {
 
     final previousRefresh = session?.refreshToken;
 
-    // Salva il refresh token aggiornato prima di cambiare account.
     await persistCurrentSession();
 
     try {
@@ -113,24 +113,31 @@ class AuthService {
   }
 
   Future<void> _persistSessionAccount(Session? session) async {
-    if (session == null || session.user.email == null) return;
+    if (session == null) return;
 
     final refresh = session.refreshToken;
     if (refresh == null || refresh.isEmpty) return;
 
     final profile = await supabase
         .from('profiles')
-        .select('display_name')
+        .select('display_name, username')
         .eq('id', session.user.id)
         .maybeSingle();
 
+    final username = profile?['username'] as String? ??
+        AuthIdentity.usernameFromAuthEmail(session.user.email) ??
+        session.user.userMetadata?['username'] as String?;
+
+    if (username == null || username.isEmpty) return;
+
     final displayName = profile?['display_name'] as String? ??
-        session.user.email!.split('@').first;
+        session.user.userMetadata?['display_name'] as String? ??
+        username;
 
     await _accountStorage.upsertAccount(
       SavedAccount(
         userId: session.user.id,
-        email: session.user.email!,
+        username: username,
         refreshToken: refresh,
         displayName: displayName,
       ),

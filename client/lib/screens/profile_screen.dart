@@ -102,12 +102,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: const InputDecoration(labelText: 'Bio'),
             maxLines: 3,
           ),
-          const SizedBox(height: 24),
-          ListTile(
-            leading: const Icon(Icons.email_outlined),
-            title: Text(auth.email ?? ''),
-            subtitle: const Text('Email account Alfred'),
-          ),
         ],
       ),
     );

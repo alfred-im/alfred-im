@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/profile.dart';
 import '../models/saved_account.dart';
 import '../services/auth_service.dart';
+import '../utils/auth_identity.dart';
 
 class AuthController extends ChangeNotifier {
   AuthController({AuthService? authService})
@@ -30,7 +31,7 @@ class AuthController extends ChangeNotifier {
 
   bool get isAuthenticated => _authService.isAuthenticated;
   String? get userId => _authService.currentUser?.id;
-  String? get email => _authService.currentUser?.email;
+  String? get username => profile?.username;
 
   Future<void> initialize() async {
     savedAccounts = await _authService.savedAccounts();
@@ -47,12 +48,19 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signIn(String email, String password) async {
+  Future<void> signIn(String username, String password) async {
+    final validationError = AuthIdentity.validateUsername(username);
+    if (validationError != null) {
+      error = validationError;
+      notifyListeners();
+      return;
+    }
+
     error = null;
     isLoading = true;
     notifyListeners();
     try {
-      await _authService.signIn(email: email, password: password);
+      await _authService.signIn(username: username, password: password);
       savedAccounts = await _authService.savedAccounts();
     } catch (e) {
       error = _friendlyAuthError(e);
@@ -63,20 +71,31 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> signUp({
-    required String email,
     required String password,
     required String username,
     required String displayName,
   }) async {
+    final validationError = AuthIdentity.validateUsername(username);
+    if (validationError != null) {
+      error = validationError;
+      notifyListeners();
+      return;
+    }
+
+    if (displayName.trim().isEmpty) {
+      error = 'Inserisci un nome visualizzato';
+      notifyListeners();
+      return;
+    }
+
     error = null;
     isLoading = true;
     notifyListeners();
     try {
       await _authService.signUp(
-        email: email,
         password: password,
         username: username,
-        displayName: displayName,
+        displayName: displayName.trim(),
       );
       savedAccounts = await _authService.savedAccounts();
     } catch (e) {
@@ -126,6 +145,9 @@ class AuthController extends ChangeNotifier {
       final msg = e.message.toLowerCase();
       if (msg.contains('refresh') || msg.contains('session')) {
         return 'Sessione scaduta per questo account. Usa "Aggiungi account" e accedi di nuovo.';
+      }
+      if (msg.contains('invalid login credentials')) {
+        return 'Username o password non corretti.';
       }
       return e.message;
     }

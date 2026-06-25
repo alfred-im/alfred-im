@@ -21,9 +21,9 @@ test('lista conversazioni si carica senza digitare nella ricerca', async ({
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
 
-  const email =
-    process.env.ALFRED_TEST_EMAIL ??
-    `e2e-${Date.now()}@alfred-e2e.invalid`;
+  const username =
+    process.env.ALFRED_TEST_USERNAME ??
+    `e2e${Date.now().toString().slice(-8)}`;
   const password = process.env.ALFRED_TEST_PASSWORD ?? 'E2eTestPass123!';
 
   await page.goto(BASE_URL, {
@@ -37,13 +37,12 @@ test('lista conversazioni si carica senza digitare nella ricerca', async ({
 
   if (await registerLink.isVisible().catch(() => false)) {
     await registerLink.click();
-    await page.getByLabel('Username').fill(`user${Date.now()}`);
+    await page.getByLabel('Username').fill(username);
     await page.getByLabel('Nome visualizzato').fill('E2E User');
-    await page.getByLabel('Email').fill(email);
     await page.getByLabel('Password').fill(password);
     await page.getByRole('button', { name: 'Registrati' }).click();
   } else if (await loginHeading.isVisible().catch(() => false)) {
-    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Username').fill(username);
     await page.getByLabel('Password').fill(password);
     await page.getByRole('button', { name: 'Accedi' }).click();
   }
@@ -56,7 +55,6 @@ test('lista conversazioni si carica senza digitare nella ricerca', async ({
     page.getByText(/Nessuna conversazione|Cerca conversazione/),
   ).toBeVisible({ timeout: 45_000 });
 
-  // Attesa senza interazione: testo inbox ancora visibile
   await page.waitForTimeout(3_000);
   await expect(
     page.getByText(/Nessuna conversazione|Cerca conversazione/),

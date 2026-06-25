@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 (account) => ListTile(
                   leading: const Icon(Icons.account_circle_outlined),
                   title: Text(account.displayName),
-                  subtitle: Text(account.email),
+                  subtitle: Text('@${account.username}'),
                   trailing: auth.userId == account.userId
                       ? const Icon(Icons.check, color: AlfredColors.unreadBadge)
                       : null,

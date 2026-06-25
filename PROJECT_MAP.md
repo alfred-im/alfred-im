@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-24 (PR Alpha #108–#115: docs sync + GIF chat)  
+**Ultimo aggiornamento**: 2026-06-25 (auth solo username — nessuna email in UI)  
 **Versione repository**: 3.1.0-alpha (client Flutter live con piattaforma; bridge esclusi)
 
 ---
@@ -45,7 +45,7 @@ La documentazione sotto che cita `web-client/` descrive il **client React storic
 
 ### Caratteristiche attuali (client Flutter + piattaforma)
 
-- **Auth Alfred**: login/registrazione Supabase GoTrue, profilo auto-creato
+- **Auth Alfred**: login/registrazione con **username** (nessuna email in UI); GoTrue usa identificatore interno `@users.alfred.internal`
 - **Multi-account**: switch Thunderbird via `SharedPreferences` + `setSession`
 - **Contatti unificati**: interni Alfred + esterni XMPP/Matrix (protocollo solo routing)
 - **Conversazioni + chat realtime**: Supabase Postgres + Realtime; inbox via RPC `list_conversations` (un round-trip)
@@ -279,7 +279,7 @@ client/lib/
 ├── providers/       # ChangeNotifier controllers
 ├── screens/         # AppShell, Auth, Home, Contacts, Profile
 ├── theme/           # AlfredColors, AlfredTheme
-├── utils/           # date_format, avatar_color
+├── utils/           # date_format, avatar_color, auth_identity (username ↔ GoTrue interno)
 └── widgets/         # ConversationsPanel, ChatPanel, MessageBubble, …
 ```
 
@@ -899,7 +899,7 @@ class ConversationRepository {
 
 ### ✅ Client Flutter — implementato (Alpha produzione)
 
-- Auth Supabase (login/registrazione, profilo auto-creato)
+- Auth Supabase (login/registrazione **solo username**, profilo auto-creato; email GoTrue interna `@users.alfred.internal` mai in UI)
 - Multi-account Thunderbird (`SharedPreferences` + switch refresh token) — PR #111
 - Contatti unificati (interni + federati in rubrica)
 - Inbox via RPC `list_conversations` (un round-trip) — PR #112

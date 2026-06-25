@@ -15,7 +15,7 @@ void main() {
       await storage.upsertAccount(
         const SavedAccount(
           userId: 'a',
-          email: 'a@test.com',
+          username: 'alice',
           refreshToken: 'refresh-a-v1',
           displayName: 'Alice',
         ),
@@ -23,7 +23,7 @@ void main() {
       await storage.upsertAccount(
         const SavedAccount(
           userId: 'b',
-          email: 'b@test.com',
+          username: 'bob',
           refreshToken: 'refresh-b-v1',
           displayName: 'Bob',
         ),
@@ -32,7 +32,7 @@ void main() {
       await storage.upsertAccount(
         const SavedAccount(
           userId: 'a',
-          email: 'a@test.com',
+          username: 'alice',
           refreshToken: 'refresh-a-v2',
           displayName: 'Alice',
         ),

@@ -72,11 +72,14 @@ client/lib/
 
 | Componente | Ruolo |
 |------------|-------|
-| `AccountStorageService` | Persiste lista `{userId, email, refreshToken, displayName}` in `SharedPreferences` |
+| `AuthIdentity` | Username utente ↔ email interna GoTrue (`{username}@users.alfred.internal`) — **mai mostrata in UI** |
+| `AccountStorageService` | Persiste lista `{userId, username, refreshToken, displayName}` in `SharedPreferences` |
 | `AuthService.switchAccount()` | Salva sessione corrente → `setSession(refreshToken)` → aggiorna storage |
 | `AuthService.persistCurrentSession()` | Su `tokenRefreshed` e prima di switch/login add-account |
 | `AuthScreen` (`addingAccount: true`) | Login secondo account senza `signOut` sul primo |
 | Menu account in `HomeScreen` | Switch, **Aggiungi account**, Esci (solo account attivo) |
+
+**Scelta identità**: Alfred non usa email come identificatore utente (confusione con indirizzi federati tipo JID). L'utente si registra/accede con **username** + password; Supabase GoTrue richiede un campo email quindi il client mappa a `{username}@users.alfred.internal` — dominio riservato, invisibile in UI e distinto da `external_address` federati.
 
 **Scelta**: refresh token in locale (web) — accettabile per Alpha; encryption pianificata post-Alpha.
 
@@ -142,7 +145,7 @@ client/lib/
 | `20260624200000_alfred_domain_schema.sql` | Schema dominio, RLS, trigger, RPC base |
 | `20260624210000_rpc_grants_hardening.sql` | Grant EXECUTE RPC solo `authenticated` |
 | `20260624220000_list_conversations_rpc.sql` | RPC inbox un round-trip |
-| `20260624230000_message_gif_support.sql` | `content_type`, `media_url`, bucket `chat-media`, RPC media |
+| `20260625100000_username_only_auth.sql` | Trigger `handle_new_user` — username obbligatorio, no fallback da email reale |
 
 ### 3.2 Modello dati
 

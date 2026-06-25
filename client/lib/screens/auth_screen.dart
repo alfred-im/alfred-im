@@ -21,17 +21,15 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _displayNameController = TextEditingController();
   bool _isSignUp = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
     _usernameController.dispose();
+    _passwordController.dispose();
     _displayNameController.dispose();
     super.dispose();
   }
@@ -40,14 +38,13 @@ class _AuthScreenState extends State<AuthScreen> {
     final auth = context.read<AuthController>();
     if (_isSignUp) {
       await auth.signUp(
-        email: _emailController.text.trim(),
         password: _passwordController.text,
         username: _usernameController.text.trim(),
         displayName: _displayNameController.text.trim(),
       );
     } else {
       await auth.signIn(
-        _emailController.text.trim(),
+        _usernameController.text.trim(),
         _passwordController.text,
       );
     }
@@ -94,15 +91,17 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                     ),
                     const SizedBox(height: 24),
-                    if (_isSignUp) ...[
-                      TextField(
-                        controller: _usernameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Username',
-                          hintText: 'mario_rossi',
-                        ),
-                        textInputAction: TextInputAction.next,
+                    TextField(
+                      controller: _usernameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Username',
+                        hintText: 'mario_rossi',
                       ),
+                      textInputAction: TextInputAction.next,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                    ),
+                    if (_isSignUp) ...[
                       const SizedBox(height: 12),
                       TextField(
                         controller: _displayNameController,
@@ -111,14 +110,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                         textInputAction: TextInputAction.next,
                       ),
-                      const SizedBox(height: 12),
                     ],
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                    ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: _passwordController,
