@@ -149,6 +149,15 @@ class AuthController extends ChangeNotifier {
       if (msg.contains('invalid login credentials')) {
         return 'Username o password non corretti.';
       }
+      if (msg.contains('username già in uso')) {
+        return 'Username già in uso. Scegline un altro.';
+      }
+      if (msg.contains('database error saving new user')) {
+        return 'Username già in uso o non valido. Scegline un altro.';
+      }
+      if (msg.contains('user already registered')) {
+        return 'Username già registrato. Prova ad accedere.';
+      }
       return e.message;
     }
     return e.toString();

@@ -38,6 +38,17 @@ class AuthService {
     return response;
   }
 
+  Future<bool> isUsernameAvailable(String username) async {
+    final normalized = AuthIdentity.normalizeUsername(username);
+    if (!AuthIdentity.isValidUsername(normalized)) return false;
+
+    final available = await supabase.rpc(
+      'is_username_available',
+      params: {'p_username': normalized},
+    );
+    return available == true;
+  }
+
   Future<AuthResponse> signUp({
     required String password,
     required String username,
@@ -46,6 +57,11 @@ class AuthService {
     await persistCurrentSession();
 
     final normalized = AuthIdentity.normalizeUsername(username);
+    final available = await isUsernameAvailable(normalized);
+    if (!available) {
+      throw const AuthException('Username già in uso. Scegline un altro.');
+    }
+
     final response = await supabase.auth.signUp(
       email: AuthIdentity.internalAuthEmail(normalized),
       password: password,
