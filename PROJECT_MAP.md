@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-25 (auth email GoTrue; username identità IM — no email in profilo pubblico)  
+**Ultimo aggiornamento**: 2026-06-26 (sidebar profilo/account + layout inbox desktop)  
 **Versione repository**: 3.1.0-alpha (client Flutter live con piattaforma; bridge esclusi)
 
 ---
@@ -280,8 +280,10 @@ client/lib/
 ├── screens/         # AppShell, Auth, Home, Contacts, Profile
 ├── theme/           # AlfredColors, AlfredTheme
 ├── utils/           # date_format, avatar_color, auth_identity (validazione username/email)
-└── widgets/         # ConversationsPanel, ChatPanel, MessageBubble, …
+└── widgets/         # ConversationsPanel, ChatPanel, AccountSidebar, MessageBubble, …
 ```
+
+**Layout inbox (non deducibile)**: `HomeScreen` — mobile: drawer sinistro (hamburger) con `AccountSidebar` (profilo attivo, modifica, altri account, aggiungi, esci); lista conversazioni a schermo intero; chat con back + hamburger. Desktop (≥720px): colonna sinistra fissa = `AccountSidebar` + lista conversazioni (senza barra Alfred duplicata); area destra sempre chat/placeholder. Menu account bottom sheet rimosso.
 
 ### Client legacy React (`web-client/`) — RIMOSSO DA MAIN
 

@@ -14,11 +14,13 @@ class ChatPanel extends StatelessWidget {
     required this.conversation,
     this.showBackButton = false,
     this.onBack,
+    this.onDrawerTap,
   });
 
   final Conversation conversation;
   final bool showBackButton;
   final VoidCallback? onBack;
+  final VoidCallback? onDrawerTap;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +35,7 @@ class ChatPanel extends StatelessWidget {
             conversation: conversation,
             showBackButton: showBackButton,
             onBack: onBack,
+            onDrawerTap: onDrawerTap,
           ),
           if (messagesController.isLoading)
             const Expanded(child: Center(child: CircularProgressIndicator()))
@@ -62,11 +65,13 @@ class _ChatHeader extends StatelessWidget {
     required this.conversation,
     required this.showBackButton,
     this.onBack,
+    this.onDrawerTap,
   });
 
   final Conversation conversation;
   final bool showBackButton;
   final VoidCallback? onBack;
+  final VoidCallback? onDrawerTap;
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +90,11 @@ class _ChatHeader extends StatelessWidget {
                 IconButton(
                   onPressed: onBack,
                   icon: const Icon(Icons.arrow_back),
+                ),
+              if (onDrawerTap != null)
+                IconButton(
+                  onPressed: onDrawerTap,
+                  icon: const Icon(Icons.menu),
                 ),
               CircleAvatar(
                 backgroundColor: conversation.avatarColor,

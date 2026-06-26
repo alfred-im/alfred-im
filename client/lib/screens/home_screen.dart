@@ -6,13 +6,14 @@ import '../providers/auth_controller.dart';
 import '../providers/conversations_controller.dart';
 import '../providers/messages_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../widgets/account_sidebar.dart';
 import '../widgets/chat_panel.dart';
 import '../widgets/conversations_panel.dart';
 import 'contacts_screen.dart';
 import 'auth_screen.dart';
 import 'profile_screen.dart';
 
-/// Layout principale stile WhatsApp Web: lista + chat.
+/// Layout principale stile WhatsApp Web: sidebar (profilo + conversazioni) + chat.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -21,6 +22,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   String? _selectedId;
   bool _showListOnMobile = true;
 
@@ -35,7 +37,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return null;
   }
 
+  void _openDrawer() => _scaffoldKey.currentState?.openDrawer();
+
+  void _closeDrawer() => _scaffoldKey.currentState?.closeDrawer();
+
   Future<void> _openContacts() async {
+    _closeDrawer();
     final conversationId = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (_) => const ContactsScreen()),
@@ -51,85 +58,66 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openProfile() async {
+    _closeDrawer();
     await Navigator.push<void>(
       context,
       MaterialPageRoute(builder: (_) => const ProfileScreen()),
     );
   }
 
-  Future<void> _showAccountMenu() async {
+  Future<void> _openAddAccount() async {
+    _closeDrawer();
     final auth = context.read<AuthController>();
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const ListTile(
-                title: Text('Account Alfred',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-              ),
-              ...auth.savedAccounts.map(
-                (account) => ListTile(
-                  leading: const Icon(Icons.account_circle_outlined),
-                  title: Text(account.displayName),
-                  subtitle: Text('@${account.username}'),
-                  trailing: auth.userId == account.userId
-                      ? const Icon(Icons.check, color: AlfredColors.unreadBadge)
-                      : null,
-                  onTap: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    Navigator.pop(ctx);
-                    if (auth.userId != account.userId) {
-                      final ok = await auth.switchAccount(account);
-                      if (!ok && auth.error != null) {
-                        messenger.showSnackBar(
-                          SnackBar(content: Text(auth.error!)),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.person_add_alt_1_outlined),
-                title: const Text('Aggiungi account'),
-                onTap: () async {
-                  final navigator = Navigator.of(context);
-                  Navigator.pop(ctx);
-                  await auth.prepareAddAccount();
-                  await navigator.push<void>(
-                    MaterialPageRoute(
-                      builder: (routeCtx) => AuthScreen(
-                        addingAccount: true,
-                        onCancel: () => Navigator.of(routeCtx).pop(),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.person_outline),
-                title: const Text('Profilo'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _openProfile();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.logout),
-                title: const Text('Esci'),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  await auth.signOut();
-                },
-              ),
-            ],
-          ),
-        );
+    final navigator = Navigator.of(context);
+    await auth.prepareAddAccount();
+    await navigator.push<void>(
+      MaterialPageRoute(
+        builder: (routeCtx) => AuthScreen(
+          addingAccount: true,
+          onCancel: () => Navigator.of(routeCtx).pop(),
+        ),
+      ),
+    );
+  }
+
+  Widget _accountSidebar({bool compact = false}) {
+    return AccountSidebar(
+      compact: compact,
+      onEditProfile: _openProfile,
+      onAddAccount: _openAddAccount,
+      onAccountSwitched: () {
+        _closeDrawer();
+        setState(() {
+          _selectedId = null;
+          _showListOnMobile = true;
+        });
       },
+    );
+  }
+
+  Widget _conversationsPanel({
+    required ConversationsController conversations,
+    required bool showDrawerButton,
+    bool showBackButton = false,
+    bool showTopBar = true,
+    VoidCallback? onBack,
+  }) {
+    return ConversationsPanel(
+      selectedId: _selectedId,
+      conversations: conversations.filteredConversations,
+      isLoading: conversations.isLoading,
+      error: conversations.error,
+      onRetry: conversations.load,
+      onSelected: (id) => setState(() {
+        _selectedId = id;
+        _showListOnMobile = false;
+      }),
+      onSearchChanged: conversations.setSearchQuery,
+      onDrawerTap: showDrawerButton ? _openDrawer : null,
+      onContactsTap: _openContacts,
+      showBackButton: showBackButton,
+      onBack: onBack,
+      showTopBar: showTopBar,
     );
   }
 
@@ -145,23 +133,29 @@ class _HomeScreenState extends State<HomeScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= _breakpoint;
     final selected = _findSelected(conversations);
+    final sidebarWidth = width >= 1100 ? 380.0 : 320.0;
 
     if (isWide) {
       return Scaffold(
         body: Row(
           children: [
             SizedBox(
-              width: width >= 1100 ? 380 : 320,
-              child: ConversationsPanel(
-                selectedId: _selectedId,
-                conversations: conversations.filteredConversations,
-                isLoading: conversations.isLoading,
-                error: conversations.error,
-                onRetry: conversations.load,
-                onSelected: (id) => setState(() => _selectedId = id),
-                onSearchChanged: conversations.setSearchQuery,
-                onMenuTap: _showAccountMenu,
-                onContactsTap: _openContacts,
+              width: sidebarWidth,
+              child: ColoredBox(
+                color: AlfredColors.panel,
+                child: Column(
+                  children: [
+                    _accountSidebar(compact: true),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: _conversationsPanel(
+                        conversations: conversations,
+                        showDrawerButton: false,
+                        showTopBar: false,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const VerticalDivider(width: 1, color: AlfredColors.border),
@@ -178,32 +172,23 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    if (selected == null || _showListOnMobile) {
-      return Scaffold(
-        body: ConversationsPanel(
-          selectedId: _selectedId,
-          conversations: conversations.filteredConversations,
-          isLoading: conversations.isLoading,
-          error: conversations.error,
-          onRetry: conversations.load,
-          onSelected: (id) => setState(() {
-            _selectedId = id;
-            _showListOnMobile = false;
-          }),
-          onSearchChanged: conversations.setSearchQuery,
-          onMenuTap: _showAccountMenu,
-          onContactsTap: _openContacts,
-        ),
-      );
-    }
-
     return Scaffold(
-      body: _ChatWithMessages(
-        key: ValueKey(selected.id),
-        conversation: selected,
-        showBackButton: true,
-        onBack: () => setState(() => _showListOnMobile = true),
+      key: _scaffoldKey,
+      drawer: Drawer(
+        child: _accountSidebar(),
       ),
+      body: selected == null || _showListOnMobile
+          ? _conversationsPanel(
+              conversations: conversations,
+              showDrawerButton: true,
+            )
+          : _ChatWithMessages(
+              key: ValueKey(selected.id),
+              conversation: selected,
+              showBackButton: true,
+              onBack: () => setState(() => _showListOnMobile = true),
+              onDrawerTap: _openDrawer,
+            ),
     );
   }
 }
@@ -214,11 +199,13 @@ class _ChatWithMessages extends StatelessWidget {
     required this.conversation,
     this.showBackButton = false,
     this.onBack,
+    this.onDrawerTap,
   });
 
   final Conversation conversation;
   final bool showBackButton;
   final VoidCallback? onBack;
+  final VoidCallback? onDrawerTap;
 
   @override
   Widget build(BuildContext context) {
@@ -233,6 +220,7 @@ class _ChatWithMessages extends StatelessWidget {
         conversation: conversation,
         showBackButton: showBackButton,
         onBack: onBack,
+        onDrawerTap: onDrawerTap,
       ),
     );
   }
