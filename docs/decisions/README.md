@@ -91,6 +91,17 @@ Dettagli: [../fixes/account-storage-isolation.md](../fixes/account-storage-isola
 - Coerente con “piattaforma = fonte di verità” e principio card
 - Evita sync token e cursori solo in RAM
 
+### 9. Ricezione = ricezione sul server (2026-06-26)
+- **[server-as-reception.md](./server-as-reception.md)**
+- **Status**: ✅ Accettata — **concept vincolante** dell'applicazione
+- **Summary**: Client cloud multidispositivo; la ricezione coincide con la ricezione sul server (fonte di verità). Oggi invio/ricezione sembrano sincroni; col tempo saranno disaccoppiati come tra server diversi (federazione).
+
+**Perché**:
+- Coerente con Supabase come fonte di verità e accesso da più device
+- Spunta ✓✓ grigia = consegnato al server, non al singolo device del destinatario
+- Prepara il modello spunte per bridge/outbox senza cambiare semantica UI
+- Distingue il client Flutter Alpha dal legacy XMPP (XEP-0184 = device)
+
 ## Decisioni In Valutazione
 
 - **Virtual Scrolling**: Liste > 100 elementi (react-window vs react-virtualized)

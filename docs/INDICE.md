@@ -21,6 +21,10 @@ Recupero codice legacy: `git checkout legacy/web-client-final -- web-client/`
 
 ---
 
+## Decisioni (ADR)
+
+- [decisions/server-as-reception.md](./decisions/server-as-reception.md) - **🟢 Concept spunte cloud** — ricezione = ricezione sul server (2026-06-26)
+
 ## Architettura
 
 - [architecture/alpha-full-stack.md](./architecture/alpha-full-stack.md) - **🟢 Alpha completa** — client + Supabase, senza bridge (2026-06-24)

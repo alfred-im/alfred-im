@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-26 (sidebar profilo/account + layout inbox desktop)  
+**Ultimo aggiornamento**: 2026-06-26 (spunte delivered sul server per chat interna)  
 **Versione repository**: 3.1.0-alpha (client Flutter live con piattaforma; bridge esclusi)
 
 ---
@@ -53,7 +53,7 @@ La documentazione sotto che cita `web-client/` descrive il **client React storic
 - **Messaggistica interna**: utente↔utente stessa istanza — completa (testo + GIF)
 - **Messaggistica federata**: outbox `queued` — attende bridge (non implementato)
 - **Profilo Alfred**: display name, bio, username
-- **Spunte lettura**: `mark_conversation_read` + `delivery_status`
+- **Spunte lettura**: `on_message_inserted` → `delivered` (internal) · `mark_conversation_read` → `read` — concept: ricezione = server — `docs/decisions/server-as-reception.md`
 - **Brand Alfred**: `#2D2926`, bolle WhatsApp, layout responsive
 - **Deploy web**: GitHub Pages automatico su push a `main`
 
