@@ -29,6 +29,30 @@ void main() {
     expect(find.byIcon(Icons.done_all), findsOneWidget);
   });
 
+  testWidgets('MessageBubble renders delivered checkmarks as double grey', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: const Scaffold(
+          body: MessageBubble(
+            message: ChatMessage(
+              id: '3',
+              body: 'Consegnato',
+              timeLabel: '12:32',
+              isMine: true,
+              status: MessageStatus.delivered,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.done_all), findsOneWidget);
+    expect(find.byIcon(Icons.done), findsNothing);
+  });
+
   testWidgets('MessageBubble renders gif image', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
