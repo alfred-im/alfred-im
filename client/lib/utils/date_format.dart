@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+const _italianWeekdays = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
+
 String formatMessageTime(DateTime dateTime) {
   final local = dateTime.toLocal();
   final now = DateTime.now();
@@ -13,7 +15,7 @@ String formatMessageTime(DateTime dateTime) {
     return 'Ieri';
   }
   if (now.difference(local).inDays < 7) {
-    return DateFormat.E('it').format(local);
+    return _italianWeekdays[local.weekday - 1];
   }
   return DateFormat('d/M/yy').format(local);
 }

@@ -33,20 +33,13 @@ class MessageService {
     required String body,
     required String currentUserId,
     required String clientMessageId,
-  }) async {
-    final row = await supabase.rpc(
-      'send_message',
-      params: {
-        'p_conversation_id': conversationId,
-        'p_body': body,
-        'p_client_message_id': clientMessageId,
-        'p_content_type': 'text',
-      },
-    );
-
-    return ChatMessage.fromJson(
-      json: row as Map<String, dynamic>,
+  }) {
+    return _sendMessage(
+      conversationId: conversationId,
       currentUserId: currentUserId,
+      clientMessageId: clientMessageId,
+      contentType: 'text',
+      body: body,
     );
   }
 
@@ -55,17 +48,34 @@ class MessageService {
     required String mediaUrl,
     required String currentUserId,
     required String clientMessageId,
-  }) async {
-    final row = await supabase.rpc(
-      'send_message',
-      params: {
-        'p_conversation_id': conversationId,
-        'p_body': '',
-        'p_client_message_id': clientMessageId,
-        'p_content_type': 'gif',
-        'p_media_url': mediaUrl,
-      },
+  }) {
+    return _sendMessage(
+      conversationId: conversationId,
+      currentUserId: currentUserId,
+      clientMessageId: clientMessageId,
+      contentType: 'gif',
+      body: '',
+      mediaUrl: mediaUrl,
     );
+  }
+
+  Future<ChatMessage> _sendMessage({
+    required String conversationId,
+    required String currentUserId,
+    required String clientMessageId,
+    required String contentType,
+    required String body,
+    String? mediaUrl,
+  }) async {
+    final params = {
+      'p_conversation_id': conversationId,
+      'p_body': body,
+      'p_client_message_id': clientMessageId,
+      'p_content_type': contentType,
+      'p_media_url': ?mediaUrl,
+    };
+
+    final row = await supabase.rpc('send_message', params: params);
 
     return ChatMessage.fromJson(
       json: row as Map<String, dynamic>,

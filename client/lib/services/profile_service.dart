@@ -20,14 +20,4 @@ class ProfileService {
 
     return UserProfile.fromJson(row);
   }
-
-  Future<UserProfile?> getProfile(String userId) async {
-    final row = await supabase
-        .from('profiles')
-        .select()
-        .eq('id', userId)
-        .maybeSingle();
-    if (row == null) return null;
-    return UserProfile.fromJson(row);
-  }
 }

@@ -5,6 +5,7 @@ import '../models/contact.dart';
 import '../providers/contacts_controller.dart';
 import '../providers/conversations_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/avatar_color.dart';
 
 class ContactsScreen extends StatefulWidget {
   const ContactsScreen({super.key});
@@ -77,7 +78,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                       final contact = contacts.filteredContacts[index];
                       return ListTile(
                         leading: CircleAvatar(
-                          child: Text(contact.displayName[0].toUpperCase()),
+                          child: Text(avatarInitial(contact.displayName)),
                         ),
                         title: Text(contact.displayName),
                         subtitle: Text(

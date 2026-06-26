@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/conversation.dart';
 import '../services/conversation_service.dart';
 import '../services/supabase_bootstrap.dart';
+import '../utils/list_filter.dart';
 
 class ConversationsController extends ChangeNotifier {
   ConversationsController({
@@ -28,17 +29,11 @@ class ConversationsController extends ChangeNotifier {
   String? error;
   String _searchQuery = '';
 
-  List<Conversation> get filteredConversations {
-    if (_searchQuery.isEmpty) return conversations;
-    final q = _searchQuery.toLowerCase();
-    return conversations
-        .where(
-          (c) =>
-              c.name.toLowerCase().contains(q) ||
-              c.preview.toLowerCase().contains(q),
-        )
-        .toList();
-  }
+  List<Conversation> get filteredConversations => filterByQueryFields(
+        conversations,
+        _searchQuery,
+        (conversation) => [conversation.name, conversation.preview],
+      );
 
   void setSearchQuery(String value) {
     _searchQuery = value;
@@ -92,9 +87,7 @@ class ConversationsController extends ChangeNotifier {
 
   @override
   void dispose() {
-    if (_channel != null) {
-      supabase.removeChannel(_channel!);
-    }
+    disposeRealtimeChannel(_channel);
     super.dispose();
   }
 }

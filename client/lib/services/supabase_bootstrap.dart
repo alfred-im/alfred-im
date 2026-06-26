@@ -40,3 +40,9 @@ bool get _isFlutterTest =>
     !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
 
 SupabaseClient get supabase => Supabase.instance.client;
+
+void disposeRealtimeChannel(RealtimeChannel? channel) {
+  if (channel != null) {
+    supabase.removeChannel(channel);
+  }
+}

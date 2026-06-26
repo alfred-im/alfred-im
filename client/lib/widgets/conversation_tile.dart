@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/conversation.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/avatar_color.dart';
 
 class ConversationTile extends StatelessWidget {
   const ConversationTile({
@@ -96,9 +97,7 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial = conversation.name.isNotEmpty
-        ? conversation.name[0].toUpperCase()
-        : '?';
+    final initial = avatarInitial(conversation.name);
 
     return Stack(
       clipBehavior: Clip.none,

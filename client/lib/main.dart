@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../config/app_config.dart';
 import '../providers/auth_controller.dart';
 import '../providers/contacts_controller.dart';
 import '../providers/conversations_controller.dart';
@@ -68,10 +67,4 @@ class AlfredApp extends StatelessWidget {
       ),
     );
   }
-}
-
-// ignore: unused_element
-void _assertConfig() {
-  assert(AppConfig.supabaseUrl.isNotEmpty);
-  assert(AppConfig.supabaseAnonKey.isNotEmpty);
 }

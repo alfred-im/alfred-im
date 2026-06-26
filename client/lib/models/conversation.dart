@@ -26,28 +26,6 @@ class Conversation {
   final DateTime? lastMessageAt;
   final String protocol;
 
-  factory Conversation.fromJoinedRow({
-    required Map<String, dynamic> conversation,
-    required Map<String, dynamic> participant,
-    required String displayName,
-    String? avatarKey,
-  }) {
-    final lastAt = conversation['last_message_at'] != null
-        ? DateTime.parse(conversation['last_message_at'] as String)
-        : null;
-
-    return Conversation(
-      id: conversation['id'] as String,
-      name: displayName,
-      preview: (conversation['last_message_preview'] as String?) ?? '',
-      timeLabel: formatConversationTime(lastAt),
-      unreadCount: participant['unread_count'] as int? ?? 0,
-      avatarColor: avatarColorForId(avatarKey ?? displayName),
-      lastMessageAt: lastAt,
-      protocol: conversation['protocol'] as String? ?? 'internal',
-    );
-  }
-
   /// Riga restituita da RPC `list_conversations`.
   factory Conversation.fromListRpcRow(Map<String, dynamic> json) {
     final displayName = json['display_name'] as String;

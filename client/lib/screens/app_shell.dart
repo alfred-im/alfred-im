@@ -12,13 +12,7 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
 
-    if (auth.isLoading && !auth.isAuthenticated) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (!auth.sessionReady) {
+    if ((auth.isLoading && !auth.isAuthenticated) || !auth.sessionReady) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );

@@ -15,3 +15,8 @@ Color avatarColorForId(String id) {
   ];
   return palette[hash % palette.length];
 }
+
+String avatarInitial(String name, {String fallback = '?'}) {
+  if (name.isEmpty) return fallback;
+  return name[0].toUpperCase();
+}

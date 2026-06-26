@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_controller.dart';
 import '../providers/profile_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/avatar_color.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -79,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               radius: 48,
               backgroundColor: AlfredColors.charcoal,
               child: Text(
-                (profile?.displayName ?? '?')[0].toUpperCase(),
+                avatarInitial(profile?.displayName ?? ''),
                 style: const TextStyle(fontSize: 32, color: Colors.white),
               ),
             ),

@@ -56,18 +56,10 @@ class AuthController extends ChangeNotifier {
       return;
     }
 
-    error = null;
-    isLoading = true;
-    notifyListeners();
-    try {
+    await _withLoading(() async {
       await _authService.signIn(email: email, password: password);
       savedAccounts = await _authService.savedAccounts();
-    } catch (e) {
-      error = _friendlyAuthError(e);
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    });
   }
 
   Future<void> signUp({
@@ -96,10 +88,7 @@ class AuthController extends ChangeNotifier {
       return;
     }
 
-    error = null;
-    isLoading = true;
-    notifyListeners();
-    try {
+    await _withLoading(() async {
       await _authService.signUp(
         email: email,
         password: password,
@@ -107,12 +96,7 @@ class AuthController extends ChangeNotifier {
         displayName: displayName.trim(),
       );
       savedAccounts = await _authService.savedAccounts();
-    } catch (e) {
-      error = _friendlyAuthError(e);
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    });
   }
 
   Future<bool> resetPassword(String email) async {
@@ -164,13 +148,21 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> removeSavedAccount(String userId) async {
-    await _authService.removeSavedAccount(userId);
-    savedAccounts = await _authService.savedAccounts();
-    notifyListeners();
-  }
-
   Future<void> refreshProfile() => _loadProfile();
+
+  Future<void> _withLoading(Future<void> Function() action) async {
+    error = null;
+    isLoading = true;
+    notifyListeners();
+    try {
+      await action();
+    } catch (e) {
+      error = _friendlyAuthError(e);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 
   String _friendlyAuthError(Object e) {
     if (e is AuthException) {

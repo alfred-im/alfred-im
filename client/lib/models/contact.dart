@@ -41,16 +41,6 @@ class Contact {
     );
   }
 
-  Map<String, dynamic> toInsertJson(String ownerId) {
-    return {
-      'owner_id': ownerId,
-      'protocol': protocol.name,
-      if (linkedProfileId != null) 'linked_profile_id': linkedProfileId,
-      if (externalAddress != null) 'external_address': externalAddress,
-      'display_name': displayName,
-      if (avatarUrl != null) 'avatar_url': avatarUrl,
-    };
-  }
 }
 
 class ProfileSearchResult {

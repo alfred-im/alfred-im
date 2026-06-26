@@ -59,16 +59,9 @@ class MessagesController extends ChangeNotifier {
 
   ChatMessage _withTimeLabel(ChatMessage message) {
     final at = message.createdAt ?? DateTime.now();
-    return ChatMessage(
-      id: message.id,
-      body: message.body,
+    return message.copyWith(
       timeLabel: formatMessageTime(at),
-      isMine: message.isMine,
-      status: message.status,
       createdAt: at,
-      senderId: message.senderId,
-      contentType: message.contentType,
-      mediaUrl: message.mediaUrl,
     );
   }
 
@@ -160,17 +153,7 @@ class MessagesController extends ChangeNotifier {
       messages = messages
           .map(
             (m) => m.id == clientId
-                ? ChatMessage(
-                    id: m.id,
-                    body: m.body,
-                    timeLabel: m.timeLabel,
-                    isMine: true,
-                    status: MessageStatus.failed,
-                    createdAt: m.createdAt,
-                    senderId: userId,
-                    contentType: m.contentType,
-                    mediaUrl: m.mediaUrl,
-                  )
+                ? m.copyWith(status: MessageStatus.failed, isMine: true)
                 : m,
           )
           .toList();
@@ -183,9 +166,7 @@ class MessagesController extends ChangeNotifier {
 
   @override
   void dispose() {
-    if (_channel != null) {
-      supabase.removeChannel(_channel!);
-    }
+    disposeRealtimeChannel(_channel);
     super.dispose();
   }
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/conversation.dart';
 import '../providers/messages_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/avatar_color.dart';
 import 'chat_input_bar.dart';
 import 'message_bubble.dart';
 
@@ -88,7 +89,7 @@ class _ChatHeader extends StatelessWidget {
               CircleAvatar(
                 backgroundColor: conversation.avatarColor,
                 child: Text(
-                  conversation.name[0].toUpperCase(),
+                  avatarInitial(conversation.name),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,

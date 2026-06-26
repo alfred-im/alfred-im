@@ -6,6 +6,20 @@ import '../theme/alfred_colors.dart';
 const double _gifMaxWidth = 240;
 const double _gifMaxHeight = 240;
 
+Widget _gifLoadingPlaceholder() {
+  return const SizedBox(
+    width: _gifMaxWidth,
+    height: 120,
+    child: Center(
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+    ),
+  );
+}
+
 class MessageBubble extends StatelessWidget {
   const MessageBubble({super.key, required this.message});
 
@@ -86,17 +100,7 @@ class _GifContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (url.startsWith('pending://')) {
-      return const SizedBox(
-        width: _gifMaxWidth,
-        height: 120,
-        child: Center(
-          child: SizedBox(
-            width: 28,
-            height: 28,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
+      return _gifLoadingPlaceholder();
     }
 
     return ClipRRect(
@@ -108,17 +112,7 @@ class _GifContent extends StatelessWidget {
         fit: BoxFit.cover,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
-          return SizedBox(
-            width: _gifMaxWidth,
-            height: 120,
-            child: const Center(
-              child: SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          );
+          return _gifLoadingPlaceholder();
         },
         errorBuilder: (context, error, stackTrace) {
           return Container(

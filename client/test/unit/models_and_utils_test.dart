@@ -44,6 +44,12 @@ void main() {
       final label = formatMessageTime(now);
       expect(label, isNotEmpty);
     });
+
+    test('formats recent days as Italian weekday', () {
+      const weekdays = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
+      final recent = DateTime.now().subtract(const Duration(days: 3));
+      expect(formatMessageTime(recent), weekdays[recent.weekday - 1]);
+    });
   });
 
   group('Conversation.fromListRpcRow', () {

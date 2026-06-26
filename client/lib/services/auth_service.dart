@@ -118,9 +118,6 @@ class AuthService {
 
   Future<List<SavedAccount>> savedAccounts() => _accountStorage.loadAccounts();
 
-  Future<void> removeSavedAccount(String userId) =>
-      _accountStorage.removeAccount(userId);
-
   Future<UserProfile?> fetchCurrentProfile() async {
     final userId = currentUser?.id;
     if (userId == null) return null;

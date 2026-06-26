@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/contact.dart';
 import '../services/contact_service.dart';
+import '../utils/list_filter.dart';
 
 class ContactsController extends ChangeNotifier {
   ContactsController({
@@ -19,13 +20,11 @@ class ContactsController extends ChangeNotifier {
   String? error;
   String _searchQuery = '';
 
-  List<Contact> get filteredContacts {
-    if (_searchQuery.isEmpty) return contacts;
-    final q = _searchQuery.toLowerCase();
-    return contacts
-        .where((c) => c.displayName.toLowerCase().contains(q))
-        .toList();
-  }
+  List<Contact> get filteredContacts => filterByQuery(
+        contacts,
+        _searchQuery,
+        (contact) => contact.displayName,
+      );
 
   void setSearchQuery(String value) {
     _searchQuery = value;
@@ -70,10 +69,5 @@ class ContactsController extends ChangeNotifier {
     );
     await load();
     return contact;
-  }
-
-  Future<void> remove(String contactId) async {
-    await _contactService.deleteContact(contactId);
-    await load();
   }
 }

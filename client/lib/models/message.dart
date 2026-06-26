@@ -73,4 +73,28 @@ class ChatMessage {
       mediaUrl: json['media_url'] as String?,
     );
   }
+
+  ChatMessage copyWith({
+    String? id,
+    String? body,
+    String? timeLabel,
+    bool? isMine,
+    MessageStatus? status,
+    DateTime? createdAt,
+    String? senderId,
+    MessageContentType? contentType,
+    String? mediaUrl,
+  }) {
+    return ChatMessage(
+      id: id ?? this.id,
+      body: body ?? this.body,
+      timeLabel: timeLabel ?? this.timeLabel,
+      isMine: isMine ?? this.isMine,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      senderId: senderId ?? this.senderId,
+      contentType: contentType ?? this.contentType,
+      mediaUrl: mediaUrl ?? this.mediaUrl,
+    );
+  }
 }

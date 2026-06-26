@@ -29,25 +29,4 @@ class UserProfile {
     );
   }
 
-  Map<String, dynamic> toUpdateJson() => {
-        if (bio != null) 'bio': bio,
-        'display_name': displayName,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      };
-
-  UserProfile copyWith({
-    String? displayName,
-    String? bio,
-    String? avatarUrl,
-  }) {
-    return UserProfile(
-      id: id,
-      username: username,
-      displayName: displayName ?? this.displayName,
-      bio: bio ?? this.bio,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-    );
-  }
 }
