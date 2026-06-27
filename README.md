@@ -6,7 +6,7 @@ Traccia lo stato del progetto Alfred per continuità del lavoro. NON è document
 
 ## Stato attuale (2026-06-27)
 
-Migrazione verso **Flutter + Supabase + bridge Python** (`docs/decisions/project-revolution-discovery.md`). PR Alpha **#108–#127** mergiate su `main`; **#130** inbox solo messaggi in PR (registro: `docs/architecture/alpha-pr-registry.md`).
+Migrazione verso **Flutter + Supabase + bridge Python** (`docs/decisions/project-revolution-discovery.md`). PR Alpha **#108–#130** mergiate su `main` (registro: `docs/architecture/alpha-pr-registry.md`).
 
 | Componente | Stato |
 |------------|-------|

@@ -906,7 +906,7 @@ class ConversationRepository {
 
 ## 📊 Stato Corrente
 
-### Stack su `main` (2026-06-27, post-merge PR #108–#125; #126 voice in PR)
+### Stack su `main` (2026-06-27, post-merge PR #108–#130)
 
 | Componente | Stato |
 |------------|-------|
@@ -1086,8 +1086,8 @@ Documentati in `docs/fixes/known-issues.md`:
 - ✅ **PR #109**: app completa Flutter + schema dominio Supabase
 - ✅ **PR #110**: passkeys `bundle.js` — fix schermo bianco Pages
 - ✅ **PR #111**: multi-account switch senza logout forzato
-- ✅ **PR #112**: RPC inbox un round-trip (sostituito da `list_inbox` in PR #129)
-- ✅ **PR #130**: Inbox solo messaggi — drop `inbox_threads`, `ChatPeer`, RPC peer-based
+- ✅ **PR #112**: RPC inbox un round-trip (sostituito da `list_inbox` in #130)
+- ✅ **PR #130**: Inbox solo messaggi — drop `inbox_threads`, `ChatPeer`, aggregazione on-read
 - ✅ **PR #113**: fix race auth web (`waitForSupabaseSessionReady`)
 - ✅ **PR #115**: GIF in chat (`content_type`, `media_url`, bucket `chat-media`)
 - ✅ **PR #114**: `ChangeNotifierProxyProvider` — fix UI inbox bloccata

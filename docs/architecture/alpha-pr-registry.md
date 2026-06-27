@@ -1,6 +1,6 @@
 # Registro PR Alpha Flutter (main)
 
-**Ultimo aggiornamento**: 2026-06-27 (PR #130 messages-only inbox)  
+**Ultimo aggiornamento**: 2026-06-27 (PR #130 mergiata — inbox solo messaggi)  
 **Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
 
 Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/alpha-full-stack.md` (e fix dedicato se applicabile).
@@ -24,8 +24,6 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#126** | Note vocali in chat | WebM/Opus, `content_type=voice`, registrazione hold-to-send, player, `OutboundMessageQueue` | `alpha-full-stack.md` §2.11, `docs/implementation/voice-notes.md` |
 | **#127** | Processo `flutter analyze` | `client/scripts/verify.sh`, gate analyze in CI/doc | `.cursor-rules.md`, `alpha-full-stack.md` §5, `client/README.md` |
 | **#130** | Inbox solo messaggi | Drop `inbox_threads`; `ChatPeer`; `list_peer_messages`, `mark_peer_read`; fix HTTP 300 overload | `address-based-messaging.md`, `messages-only-inbox.md`, migrazioni `20260627200000`–`20260627230000` |
-
-**PR aperte (2026-06-27)**: #130 (sostituisce draft #129).
 
 ---
 
