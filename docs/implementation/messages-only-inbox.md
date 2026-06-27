@@ -18,7 +18,7 @@ Il refactor intermedio (`inbox_threads`) introduceva:
 - Distinzione bozza / thread con promozione al primo invio
 - Race: `_onFirstMessageSent` azzerava la bozza prima che esistesse il thread → chat che si chiudeva dopo il primo messaggio a un account sconosciuto
 
-**Soluzione**: inbox = query su `messages`; chat identificata da `peer_profile_id` (`ChatPeer`).
+**Soluzione**: inbox = aggregazione on-read su `messages` (RPC `list_inbox()`); chat identificata da `peer_profile_id` (`ChatPeer`). Niente tabella/cache inbox, niente FK verso derivati.
 
 ---
 

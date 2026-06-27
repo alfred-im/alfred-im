@@ -117,11 +117,11 @@ Dettagli: [../fixes/account-storage-isolation.md](../fixes/account-storage-isola
 ### 11. Messaggistica per indirizzo (2026-06-27)
 - **[address-based-messaging.md](./address-based-messaging.md)**
 - **Status**: ✅ Accettata — **regola vincolante**
-- **Summary**: Si scrive a un indirizzo (`username` / `user@server`); inbox = query su `messages`; chat = `peer_profile_id`; rubrica isolata e opzionale
+- **Summary**: Si scrive a un indirizzo (`username` / `user@server`); inbox = aggregazione on-read su `messages`; chat = `peer_profile_id`; rubrica isolata e opzionale
 
 **Perché**:
 - Rubrica non deve abilitare né bloccare la chat (errore legacy XMPP)
-- Niente metadati inbox duplicati (`inbox_threads`, `thread_id`, bozza)
+- Niente cache inbox duplicata (`inbox_threads`, FK verso aggregati, viste materializzate trattate come entità)
 - Stessa UI per chat vuota e con storico — un solo identificatore account
 
 ## Decisioni In Valutazione

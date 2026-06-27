@@ -25,7 +25,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Alpha Flutter — PR #130 (inbox solo messaggi)
 
-- **Drop `inbox_threads`**: inbox = `list_inbox()` query su `messages`
+- **Drop `inbox_threads`**: inbox = `list_inbox()` aggregazione on-read su `messages` (non vista materializzata, non cache con FK)
 - **RPC peer-based**: `list_peer_messages`, `mark_peer_read` (no `thread_id`)
 - **Client**: `ChatPeer` per account; niente bozza/ComposeTarget/InboxThread
 - Migrazione `20260627230000_messages_only_inbox.sql`

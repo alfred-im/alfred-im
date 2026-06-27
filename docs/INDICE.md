@@ -23,7 +23,7 @@ Recupero codice legacy: `git checkout legacy/web-client-final -- web-client/`
 
 ## Decisioni (ADR)
 
-- [decisions/address-based-messaging.md](./decisions/address-based-messaging.md) - **🟢 Regola vincolante** — messaggistica per indirizzo; inbox = query su messaggi; `ChatPeer`; rubrica isolata (2026-06-27)
+- [decisions/address-based-messaging.md](./decisions/address-based-messaging.md) - **🟢 Regola vincolante** — messaggistica per indirizzo; inbox = aggregazione on-read su `messages`; `ChatPeer`; rubrica isolata (2026-06-27)
 - [decisions/no-internal-external-chat-distinction.md](./decisions/no-internal-external-chat-distinction.md) - **🟢 Regola vincolante** — nessuna distinzione chat interna/esterna (client, piattaforma, bridge, test) (2026-06-27)
 - [decisions/server-as-reception.md](./decisions/server-as-reception.md) - **🟢 Concept spunte cloud** — ricezione = ricezione sul server (2026-06-26)
 

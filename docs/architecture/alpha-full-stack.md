@@ -87,7 +87,7 @@ client/lib/
 
 ### 2.5 Caricamento inbox (lista chat)
 
-**Regola vincolante**: [address-based-messaging.md](../decisions/address-based-messaging.md) — inbox = **query su `messages`** raggruppata per `peer_profile_id`; **nessuna tabella metadati inbox**.
+**Regola vincolante**: [address-based-messaging.md](../decisions/address-based-messaging.md) — inbox = **aggregazione derivata on-read** su `messages` (RPC `list_inbox()`), raggruppata per `peer_profile_id`; **nessuna tabella, vista materializzata o cache inbox**.
 
 1. `InboxController.load()` → RPC `list_inbox()` (**un round-trip**, derivato da messaggi)
 2. Payload UI: `peer_profile_id`, `display_name`, `last_message_preview`, `last_message_at`, `unread_count`, `protocol`
@@ -95,7 +95,7 @@ client/lib/
 
 **Nuova chat**: FAB o rubrica → indirizzo → `ChatPeer` → stessa chat per `profile_id` (vuota finché non ci sono messaggi).
 
-**Scelta**: niente `inbox_threads`, `thread_id`, bozza, né trigger che creano record inbox.
+**Scelta**: niente tabella/cache inbox, niente vista materializzata, niente FK verso aggregati inbox; indici su `messages` + `list_inbox()` on-read.
 
 ### 2.6 Realtime
 
@@ -234,7 +234,7 @@ storage.chat-media (GIF + voice WebM, path `{userId}/{uuid}.gif|.webm`)
 ### 3.5 Inbox (solo messaggi)
 
 - **`messages`**: unica fonte di verità
-- **`list_inbox()`**: GROUP BY `peer_profile_id` — preview, unread, ordine
+- **`list_inbox()`**: aggregazione on-read su `messages` — preview, unread, ordine per `peer_profile_id`
 - **Nessuna** tabella `inbox_threads`, `conversations`, `conversation_participants`
 
 ### 3.6 RPC (business logic server)

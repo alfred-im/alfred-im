@@ -10,7 +10,7 @@ Client ufficiale Alfred — multi-piattaforma (web, mobile, desktop).
 |---|---|
 | **Live (Alpha dev)** | https://alfred-im.github.io/XmppTest/ |
 | **Layout** | Lista inbox + chat (stile WhatsApp Web) |
-| **Inbox** | RPC `list_inbox()` — query su `messages`, nessuna tabella metadati |
+| **Inbox** | RPC `list_inbox()` — aggregazione on-read su `messages`; nessuna tabella/cache inbox |
 | **Chat** | Identificata da `peer_profile_id` (`ChatPeer`) |
 | **Nuovo messaggio** | FAB → username → stessa chat (vuota o con storico) |
 | **Invio** | `send_message_to_profile` |
