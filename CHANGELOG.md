@@ -23,6 +23,17 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Documentazione (2026-06-27)
+- **ADR** [no-internal-external-chat-distinction.md](docs/decisions/no-internal-external-chat-distinction.md) — vietata distinzione chat interna/esterna a tutti i livelli (PR #124)
+- **Design** [conversation-bottom-anchor.md](docs/design/conversation-bottom-anchor.md) — specifica aggancio al fondo conversazione
+
+### Alpha Flutter — PR #125 (aggancio al fondo)
+- **`AnchoredMessageList`**: `ListView` `reverse: true`, soglia aggancio 48 px, pulsante riaggancio + badge
+- **`ConversationScrollAnchor`**: logica pura in `utils/conversation_scroll_anchor.dart`
+- Integrato in `ChatPanel` — comportamento unico per tutte le conversazioni (ADR chat unificate)
+- Rimosso sottotitolo header dipendente da `protocol`
+- Test: `conversation_scroll_anchor_test.dart`, `anchored_message_list_test.dart`
+
 ### Documentazione (2026-06-24 — sync PR Alpha #108–#114)
 - **`docs/architecture/alpha-pr-registry.md`**: registro PR → feature → documenti da aggiornare
 - **`docs/fixes/flutter-inbox-stability.md`**: fix PR #113/#114 (race auth + ChangeNotifierProxyProvider)

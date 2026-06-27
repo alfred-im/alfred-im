@@ -2,7 +2,9 @@
 
 Analisi tecniche implementazioni completate per comprensione dettagli e decisioni. Documento per AI.
 
-> **Nota (2026-06-24)**: i documenti in questa cartella descrivono il **client React legacy** (`web-client/`, tag `legacy/web-client-final`). Il codice non è più su `main`; i contenuti restano riferimento per il client Flutter.
+> **Nota (2026-06-24)**: i documenti in questa cartella descrivono per lo più il **client React legacy** (`web-client/`, tag `legacy/web-client-final`). Il codice non è più su `main`; i contenuti restano riferimento per il client Flutter.
+
+> **Flutter (2026-06-27)**: aggancio al fondo chat → [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) (non legacy React).
 
 ## Documenti Disponibili
 
@@ -25,6 +27,7 @@ Analisi tecniche implementazioni completate per comprensione dettagli e decision
 | Spunte livello 2 XEP-0184 | ✅ | [delivery-receipts-xep-0184.md](./delivery-receipts-xep-0184.md) |
 | Spunte livello 3 XEP-0333 | ✅ | [chat-markers-xep-0333.md](./chat-markers-xep-0333.md) |
 | Scrollable Containers | ✅ | [scrollable-containers.md](./scrollable-containers.md) |
+| Aggancio al fondo (Flutter) | ✅ | [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md), `alpha-full-stack.md` §2.10 |
 
 ## Pattern (Riferimento Rapido)
 

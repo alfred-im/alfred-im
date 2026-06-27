@@ -10,7 +10,7 @@ Migrazione verso **Flutter + Supabase + bridge Python** (`docs/decisions/project
 
 | Componente | Stato |
 |------------|-------|
-| **`client/`** (Flutter) | App completa Supabase — auth, chat testo/GIF, contatti, multi-account |
+| **`client/`** (Flutter) | App completa Supabase — auth, chat testo/GIF, aggancio al fondo, contatti, multi-account |
 | **`supabase/`** | Schema dominio Alfred (profiles, contacts, messages, outbox, …) |
 | **`bridge-xmpp/`** · **`bridge-matrix/`** | Stub health Fly.io — logica **non** implementata |
 | **`web-client/`** (React) | **Rimosso** — tag `legacy/web-client-final` |

@@ -13,6 +13,7 @@ Client ufficiale Alfred — multi-piattaforma (web, mobile, desktop).
 | **Brand** | `#2D2926` |
 | **Inbox** | RPC `list_conversations` — un round-trip (PR #112) |
 | **Multi-account** | Switch Thunderbird via `SharedPreferences` (PR #111) |
+| **Chat scroll** | Aggancio al fondo — `AnchoredMessageList` (PR #125) |
 | **Pages** | Richiede script passkeys in `web/index.html` (PR #110) |
 
 ## Test
@@ -50,12 +51,14 @@ lib/
 ├── services/    # Auth, ConversationService (RPC), MessageService, …
 ├── providers/   # ChangeNotifier (Auth, Conversations, Messages, …)
 ├── screens/     # AppShell, Auth, Home, Contatti, Profilo
-└── widgets/     # ConversationsPanel, ChatPanel, …
+├── utils/       # ConversationScrollAnchor, date_format, …
+└── widgets/     # AnchoredMessageList, ChatPanel, ConversationsPanel, …
 ```
 
 ## Architettura client
 
-- `docs/architecture/alpha-full-stack.md` — flussi auth, inbox, realtime, multi-account
+- `docs/architecture/alpha-full-stack.md` — flussi auth, inbox, realtime, multi-account, aggancio al fondo (§2.10)
+- `docs/design/conversation-bottom-anchor.md` — specifica scroll ancorato in chat
 - `docs/architecture/alpha-pr-registry.md` — registro PR Alpha e checklist documentazione
 - `docs/fixes/flutter-inbox-stability.md` — fix stabilità inbox (PR #113/#114)
 

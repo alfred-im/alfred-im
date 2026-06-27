@@ -281,8 +281,8 @@ client/lib/
 ├── providers/       # ChangeNotifier controllers
 ├── screens/         # AppShell, Auth, Home, Contacts, Profile
 ├── theme/           # AlfredColors, AlfredTheme
-├── utils/           # date_format, avatar_color, auth_identity (validazione username/email)
-└── widgets/         # ConversationsPanel, ChatPanel, AccountSidebar, MessageBubble, …
+├── utils/           # date_format, avatar_color, auth_identity, conversation_scroll_anchor
+└── widgets/         # ConversationsPanel, ChatPanel, AnchoredMessageList, AccountSidebar, MessageBubble, …
 ```
 
 **Layout inbox (non deducibile)**: `HomeScreen` — mobile: drawer sinistro (hamburger solo nella lista conversazioni) con `AccountSidebar` (profilo attivo, modifica, altri account, aggiungi, esci); chat mobile con solo back. Desktop (≥720px): colonna sinistra fissa = `AccountSidebar` + lista conversazioni (senza barra Alfred duplicata); area destra sempre chat/placeholder. Menu account bottom sheet rimosso.

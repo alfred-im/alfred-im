@@ -51,8 +51,8 @@ client/lib/
 ├── services/         # Accesso API (thin layer, no business logic duplicata)
 ├── providers/        # ChangeNotifier + Provider (stato UI)
 ├── screens/          # Shell, auth, home, contatti, profilo
-├── widgets/          # Componenti presentazionali
-└── utils/            # Formattazione date, colori avatar
+├── widgets/          # Componenti presentazionali (AnchoredMessageList, ChatPanel, …)
+└── utils/            # Formattazione date, colori avatar, ConversationScrollAnchor
 ```
 
 ### 2.2 Perché Provider (e non Riverpod/BLoC)
@@ -141,6 +141,27 @@ client/lib/
 - Migrazione `20260626100000_internal_delivered_on_server.sql`: promozione a `delivered` — **debito tecnico** (nome/branch «internal»; da unificare)
 
 **Nota**: recapito via bridge (XEP-0184/0333) mappa su `delivered`/`read`; schema supporta `marker_type`/`marker_for`. La semantica ✓✓ grigia **non** è «arrivato sul device del destinatario» (legacy XMPP diretto) ma «arrivato nella fonte di verità».
+
+### 2.10 Aggancio al fondo conversazione
+
+**Specifica**: [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) — vincolante, identica per **tutte** le chat ([no-internal-external-chat-distinction.md](../decisions/no-internal-external-chat-distinction.md)).
+
+| Stato | Comportamento |
+|-------|---------------|
+| Agganciato (≤48 px dal fondo) | Nuovi messaggi → auto-scroll al fondo |
+| Staccato | Messaggi altrui non spostano la vista; badge + pulsante freccia |
+| Invio proprio | Riaggancio forzato |
+| Riaggancio | Tap pulsante o scroll manuale al fondo |
+
+| Componente | Ruolo |
+|------------|-------|
+| `AnchoredMessageList` | `ListView.builder(reverse: true)` + UI riaggancio |
+| `ConversationScrollAnchor` | Soglia e regole `shouldAutoScrollOnAppend` |
+| `ChatPanel` | Integra lista ancorata + `ChatInputBar` |
+
+**Scelta tecnica**: lista `reverse: true` (pattern chat Flutter); messaggi cronologici nel modello, indice invertito in build. Cambio conversazione: `ValueKey(conversation.id)` su `_ChatWithMessages` resetta lo scroll.
+
+**PR**: #125
 
 ---
 

@@ -100,4 +100,5 @@ Riferimenti esistenti che **violano** questa regola e non vanno replicati:
 
 - [project-revolution-discovery.md](./project-revolution-discovery.md) — protocollo invisibile in UI
 - [server-as-reception.md](./server-as-reception.md) — semantica spunte lato server (da mantenere **unificata** per tutte le chat)
+- [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) — aggancio al fondo (feature unificata)
 - [alpha-full-stack.md](../architecture/alpha-full-stack.md) — da riallineare dove cita tipi di chat distinti

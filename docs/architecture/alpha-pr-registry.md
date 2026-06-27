@@ -1,6 +1,6 @@
 # Registro PR Alpha Flutter (main)
 
-**Ultimo aggiornamento**: 2026-06-24  
+**Ultimo aggiornamento**: 2026-06-27  
 **Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
 
 Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/alpha-full-stack.md` (e fix dedicato se applicabile).
@@ -19,6 +19,8 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#113** | Fix race auth inbox | `waitForSupabaseSessionReady`, `sessionReady` gate, timeout load | `alpha-full-stack.md` §2.3, `fixes/flutter-inbox-stability.md` |
 | **#114** | Fix provider listen | `ChangeNotifierProxyProvider` per inbox/contatti/profilo | `alpha-full-stack.md` §2.2, `fixes/flutter-inbox-stability.md` |
 | **#115** | GIF in chat | `content_type`, `media_url`, bucket `chat-media` | `alpha-full-stack.md` §2.8, migrazione `20260624230000` |
+| **#124** | ADR chat unificate | Nessuna distinzione interna/esterna a tutti i livelli | `docs/decisions/no-internal-external-chat-distinction.md`, `PROJECT_MAP` |
+| **#125** | Aggancio al fondo | `AnchoredMessageList`, scroll ancorato, pulsante riaggancio | `alpha-full-stack.md` §2.10, `docs/design/conversation-bottom-anchor.md` |
 
 ---
 

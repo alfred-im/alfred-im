@@ -29,7 +29,7 @@ Recupero codice legacy: `git checkout legacy/web-client-final -- web-client/`
 ## Architettura
 
 - [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) - **📋 Proposta** — modello caselle, outbox unificata, flusso email (2026-06-26)
-- [architecture/alpha-full-stack.md](./architecture/alpha-full-stack.md) - **🟢 Alpha completa** — client + Supabase, senza bridge (2026-06-24)
+- [architecture/alpha-full-stack.md](./architecture/alpha-full-stack.md) - **🟢 Alpha completa** — client + Supabase, senza bridge (§2.10 aggancio al fondo, 2026-06-27)
 - [architecture/alpha-pr-registry.md](./architecture/alpha-pr-registry.md) - **Registro PR Alpha #108–#114** — cosa documentare dopo ogni merge
 - [architecture/conversations-analysis.md](./architecture/conversations-analysis.md) - Analisi conversazioni XMPP
 - [architecture/mam-global-strategy-explained.md](./architecture/mam-global-strategy-explained.md) - Strategia MAM globale
@@ -88,6 +88,6 @@ Recupero codice legacy: `git checkout legacy/web-client-final -- web-client/`
 
 ---
 
-**Ultimo aggiornamento**: 2026-06-27 (ADR nessuna distinzione chat interna/esterna)  
+**Ultimo aggiornamento**: 2026-06-27 (aggancio al fondo + ADR chat unificate)  
 **Client live**: Flutter + Supabase @ https://alfred-im.github.io/XmppTest/  
 **Legacy (riferimento doc)**: React @ `legacy/web-client-final`

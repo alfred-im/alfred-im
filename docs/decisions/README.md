@@ -112,6 +112,8 @@ Dettagli: [../fixes/account-storage-isolation.md](../fixes/account-storage-isola
 - Evita doppie implementazioni (scroll, aggancio al fondo, composer, ecc.)
 - L'utente vede chat, non tipi di chat
 
+**Implementazione aggancio**: [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) — PR #125
+
 ## Decisioni In Valutazione
 
 - **Virtual Scrolling**: Liste > 100 elementi (react-window vs react-virtualized)
