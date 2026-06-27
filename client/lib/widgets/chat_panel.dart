@@ -5,8 +5,8 @@ import '../models/conversation.dart';
 import '../providers/messages_controller.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/avatar_color.dart';
+import 'anchored_message_list.dart';
 import 'chat_input_bar.dart';
-import 'message_bubble.dart';
 
 class ChatPanel extends StatelessWidget {
   const ChatPanel({
@@ -38,12 +38,9 @@ class ChatPanel extends StatelessWidget {
             const Expanded(child: Center(child: CircularProgressIndicator()))
           else
             Expanded(
-              child: ListView.builder(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                itemCount: messages.length,
-                itemBuilder: (context, index) =>
-                    MessageBubble(message: messages[index]),
+              child: AnchoredMessageList(
+                messages: messages,
+                isLoading: messagesController.isLoading,
               ),
             ),
           ChatInputBar(
@@ -107,15 +104,6 @@ class _ChatHeader extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                         color: AlfredColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      conversation.protocol == 'internal'
-                          ? 'Alfred'
-                          : 'In attesa bridge',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AlfredColors.textSecondary,
                       ),
                     ),
                   ],

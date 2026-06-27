@@ -63,6 +63,7 @@ Recupero codice legacy: `git checkout legacy/web-client-final -- web-client/`
 ## Design
 
 - [design/README.md](./design/README.md) - Principi design (Note: brand identity e database architecture integrati in PROJECT_MAP.md)
+- [design/conversation-bottom-anchor.md](./design/conversation-bottom-anchor.md) - **🟢 Aggancio al fondo** — scroll ancorato, stacco, riaggancio, UI correlata (2026-06-27)
 
 ## Decisioni Architetturali (ADR)
 

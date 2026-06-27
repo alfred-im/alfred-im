@@ -17,3 +17,5 @@ Principi design e decisioni architetturali design-related. Documento per AI.
 **Components**: Radius 8-12px, shadow sottili, transitions 150-300ms
 
 **Breakpoints**: Mobile-first, tablet 768px, desktop 1024px, touch targets min 48px
+
+**Chat — aggancio al fondo**: vedi [conversation-bottom-anchor.md](./conversation-bottom-anchor.md) — comportamento unico per tutte le conversazioni

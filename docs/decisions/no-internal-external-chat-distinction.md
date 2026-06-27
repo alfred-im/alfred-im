@@ -84,7 +84,7 @@ L'aggancio al fondo della conversazione (scroll ancorato, stacco quando si legge
 Riferimenti esistenti che **violano** questa regola e non vanno replicati:
 
 **Client Flutter**
-- Ramificazioni su `conversation.protocol` (es. sottotitolo header «Alfred» / «In attesa bridge»)
+- ~~Ramificazioni su `conversation.protocol` (es. sottotitolo header)~~ — rimosso con aggancio al fondo (2026-06-27)
 
 **Piattaforma Supabase**
 - Trigger `on_message_inserted`: branch `v_protocol = 'internal'` vs `xmpp`/`matrix` con semantica chat distinta
