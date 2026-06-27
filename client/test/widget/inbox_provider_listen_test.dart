@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:alfred_client/models/inbox_thread.dart';
+import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/providers/inbox_controller.dart';
 import 'package:alfred_client/services/inbox_service.dart';
 
@@ -13,16 +13,15 @@ class _AuthModel extends ChangeNotifier {
 
 class _ImmediateInboxService extends InboxService {
   @override
-  Future<List<InboxThread>> fetchInbox() async {
+  Future<List<ChatPeer>> fetchInbox() async {
     return const [
-      InboxThread(
-        id: 't1',
-        name: 'Alice',
+      ChatPeer(
+        profileId: 'peer-1',
+        displayName: 'Alice',
         preview: 'Ciao',
         timeLabel: '12:00',
         unreadCount: 0,
         avatarColor: Color(0xFF000000),
-        peerProfileId: 'peer-1',
       ),
     ];
   }
@@ -54,7 +53,7 @@ void main() {
                   if (inbox == null || inbox.isLoading) {
                     return const Text('loading');
                   }
-                  return Text('ready:${inbox.threads.length}');
+                  return Text('ready:${inbox.peers.length}');
                 },
               ),
             ),

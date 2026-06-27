@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
-import '../models/inbox_thread.dart';
+import '../models/chat_peer.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/avatar_color.dart';
 
-class InboxThreadTile extends StatelessWidget {
-  const InboxThreadTile({
+class InboxPeerTile extends StatelessWidget {
+  const InboxPeerTile({
     super.key,
-    required this.thread,
+    required this.peer,
     required this.selected,
     required this.onTap,
   });
 
-  final InboxThread thread;
+  final ChatPeer peer;
   final bool selected;
   final VoidCallback onTap;
 
@@ -28,7 +28,7 @@ class InboxThreadTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              _Avatar(thread: thread),
+              _Avatar(peer: peer),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -38,7 +38,7 @@ class InboxThreadTile extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            thread.name,
+                            peer.displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleSmall?.copyWith(
@@ -48,12 +48,12 @@ class InboxThreadTile extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          thread.timeLabel,
+                          peer.timeLabel,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: thread.unreadCount > 0
+                            color: peer.unreadCount > 0
                                 ? AlfredColors.unreadBadge
                                 : AlfredColors.textSecondary,
-                            fontWeight: thread.unreadCount > 0
+                            fontWeight: peer.unreadCount > 0
                                 ? FontWeight.w600
                                 : FontWeight.w400,
                           ),
@@ -65,7 +65,7 @@ class InboxThreadTile extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            thread.preview,
+                            peer.preview,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -73,9 +73,9 @@ class InboxThreadTile extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (thread.unreadCount > 0) ...[
+                        if (peer.unreadCount > 0) ...[
                           const SizedBox(width: 8),
-                          _UnreadBadge(count: thread.unreadCount),
+                          _UnreadBadge(count: peer.unreadCount),
                         ],
                       ],
                     ),
@@ -91,44 +91,25 @@ class InboxThreadTile extends StatelessWidget {
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.thread});
+  const _Avatar({required this.peer});
 
-  final InboxThread thread;
+  final ChatPeer peer;
 
   @override
   Widget build(BuildContext context) {
-    final initial = avatarInitial(thread.name);
+    final initial = avatarInitial(peer.displayName);
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        CircleAvatar(
-          radius: 26,
-          backgroundColor: thread.avatarColor,
-          child: Text(
-            initial,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-            ),
-          ),
+    return CircleAvatar(
+      radius: 26,
+      backgroundColor: peer.resolvedAvatarColor,
+      child: Text(
+        initial,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          fontSize: 18,
         ),
-        if (thread.isOnline)
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: Container(
-              width: 14,
-              height: 14,
-              decoration: BoxDecoration(
-                color: AlfredColors.unreadBadge,
-                shape: BoxShape.circle,
-                border: Border.all(color: AlfredColors.panel, width: 2),
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }

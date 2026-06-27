@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../models/inbox_thread.dart';
+import '../models/chat_peer.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/compose_address.dart';
-import 'inbox_thread_tile.dart';
+import 'inbox_peer_tile.dart';
 
 class InboxPanel extends StatefulWidget {
   const InboxPanel({
     super.key,
-    required this.selectedId,
-    required this.threads,
+    required this.selectedPeerId,
+    required this.peers,
     required this.isLoading,
     required this.onSelected,
     required this.onSearchChanged,
@@ -23,10 +23,10 @@ class InboxPanel extends StatefulWidget {
     this.showTopBar = true,
   });
 
-  final String? selectedId;
-  final List<InboxThread> threads;
+  final String? selectedPeerId;
+  final List<ChatPeer> peers;
   final bool isLoading;
-  final ValueChanged<String> onSelected;
+  final ValueChanged<ChatPeer> onSelected;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback? onDrawerTap;
   final VoidCallback onContactsTap;
@@ -131,7 +131,7 @@ class _InboxPanelState extends State<InboxPanel> {
                               ),
                             ),
                           )
-                        : widget.threads.isEmpty
+                        : widget.peers.isEmpty
                             ? const Center(
                                 child: Text(
                                   'Nessun messaggio.\nUsa + per scrivere a un indirizzo.',
@@ -140,15 +140,15 @@ class _InboxPanelState extends State<InboxPanel> {
                                 ),
                               )
                             : ListView.separated(
-                                itemCount: widget.threads.length,
+                                itemCount: widget.peers.length,
                                 separatorBuilder: (_, _) =>
                                     const Divider(height: 1, indent: 76),
                                 itemBuilder: (context, index) {
-                                  final thread = widget.threads[index];
-                                  return InboxThreadTile(
-                                    thread: thread,
-                                    selected: thread.id == widget.selectedId,
-                                    onTap: () => widget.onSelected(thread.id),
+                                  final peer = widget.peers[index];
+                                  return InboxPeerTile(
+                                    peer: peer,
+                                    selected: peer.profileId == widget.selectedPeerId,
+                                    onTap: () => widget.onSelected(peer),
                                   );
                                 },
                               ),

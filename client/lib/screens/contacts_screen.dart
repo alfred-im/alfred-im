@@ -26,8 +26,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
   void _startChat(Contact contact) {
     try {
-      final target = _composeService.targetFromContact(contact);
-      Navigator.pop(context, target);
+      final peer = _composeService.peerFromContact(contact);
+      Navigator.pop(context, peer);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString().replaceFirst('StateError: ', ''))),

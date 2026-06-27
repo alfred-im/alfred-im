@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:alfred_client/models/contact.dart';
-import 'package:alfred_client/models/inbox_thread.dart';
+import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/utils/avatar_color.dart';
 import 'package:alfred_client/utils/date_format.dart';
@@ -54,11 +54,10 @@ void main() {
     });
   });
 
-  group('InboxThread.fromListRpcRow', () {
+  group('ChatPeer.fromInboxRow', () {
     test('maps inbox RPC payload', () {
       final at = DateTime.utc(2026, 6, 24, 14, 30);
-      final thread = InboxThread.fromListRpcRow({
-        'thread_id': 'thread-1',
+      final peer = ChatPeer.fromInboxRow({
         'protocol': 'internal',
         'display_name': 'Alice',
         'last_message_preview': 'Ciao!',
@@ -67,13 +66,12 @@ void main() {
         'peer_profile_id': 'peer-1',
       });
 
-      expect(thread.id, 'thread-1');
-      expect(thread.name, 'Alice');
-      expect(thread.preview, 'Ciao!');
-      expect(thread.unreadCount, 2);
-      expect(thread.protocol, 'internal');
-      expect(thread.lastMessageAt, at);
-      expect(thread.peerProfileId, 'peer-1');
+      expect(peer.profileId, 'peer-1');
+      expect(peer.displayName, 'Alice');
+      expect(peer.preview, 'Ciao!');
+      expect(peer.unreadCount, 2);
+      expect(peer.protocol, 'internal');
+      expect(peer.lastMessageAt, at);
     });
   });
 

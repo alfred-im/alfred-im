@@ -1,33 +1,31 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../models/inbox_thread.dart';
+import '../models/chat_peer.dart';
 import 'supabase_bootstrap.dart';
 
 class InboxService {
-  Future<List<InboxThread>> fetchInbox() async {
+  Future<List<ChatPeer>> fetchInbox() async {
     final rows = await supabase.rpc('list_inbox');
 
-    final threads = (rows as List<dynamic>)
+    final peers = (rows as List<dynamic>)
         .map(
-          (row) => InboxThread.fromListRpcRow(
-            row as Map<String, dynamic>,
-          ),
+          (row) => ChatPeer.fromInboxRow(row as Map<String, dynamic>),
         )
         .toList();
 
-    threads.sort((a, b) {
+    peers.sort((a, b) {
       final aTime = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
       final bTime = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
       return bTime.compareTo(aTime);
     });
 
-    return threads;
+    return peers;
   }
 
-  Future<void> markRead(String threadId) async {
+  Future<void> markRead(String peerProfileId) async {
     await supabase.rpc(
-      'mark_thread_read',
-      params: {'p_thread_id': threadId},
+      'mark_peer_read',
+      params: {'p_peer_profile_id': peerProfileId},
     );
   }
 
@@ -35,18 +33,31 @@ class InboxService {
     String userId,
     void Function() onChange,
   ) {
+    void handle(PostgresChangePayload _) => onChange();
+
     return supabase
-        .channel('inbox-$userId')
+        .channel('inbox-messages-$userId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
-          table: 'inbox_threads',
+          table: 'messages',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
+            column: 'sender_id',
             value: userId,
           ),
-          callback: (_) => onChange(),
+          callback: handle,
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'recipient_profile_id',
+            value: userId,
+          ),
+          callback: handle,
         )
         .subscribe();
   }

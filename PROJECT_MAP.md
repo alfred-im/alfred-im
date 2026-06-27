@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-27 (messaggistica centrata sui messaggi, niente conversazioni)  
+**Ultimo aggiornamento**: 2026-06-27 (solo messaggi — drop inbox_threads, ChatPeer)  
 **Versione repository**: 3.1.0-alpha (client Flutter live con piattaforma; bridge esclusi)
 
 ---
@@ -48,7 +48,7 @@ La documentazione sotto che cita `web-client/` descrive il **client React storic
 - **Auth Alfred**: login/registrazione con **email + password** (GoTrue); **username** obbligatorio in registrazione come identità IM pubblica — email **non** in profilo/rubrica/ricerca
 - **Multi-account**: switch Thunderbird via `SharedPreferences` + `setSession`
 - **Contatti unificati**: rubrica personale opzionale (interni + federati) — **isolata** dalla messaggistica; vedi ADR `docs/decisions/address-based-messaging.md`
-- **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); inbox solo thread con messaggi; bozza chat senza thread fino al primo invio; **nessuna entità conversazione** — messaggi `sender`/`recipient`, inbox `inbox_threads`
+- **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); **solo `messages` + `profiles`** — inbox = query `list_inbox()` sui messaggi; chat identificata da `peer_profile_id`; nessun thread, conversazione o tabella metadati inbox
 - **Inbox + chat realtime**: Supabase Postgres + Realtime; inbox via RPC `list_inbox` (un round-trip)
 - **GIF in chat**: upload su bucket Supabase `chat-media` → `messages.content_type=gif` + `media_url`; preview inbox `[GIF]`
 - **Note vocali in chat**: WebM/Opus canonico (`audio/webm`) → `content_type=voice` + `duration_seconds` + `media_mime` + `media_url`; preview inbox `🎤 m:ss`; registrazione hold-to-send in `ChatInputBar`; coda retry `OutboundMessageQueue` (testo/GIF/voice)
@@ -278,7 +278,7 @@ Per ogni messaggio nell'array:
 ```
 client/lib/
 ├── config/          # AppConfig, VoiceConfig
-├── models/          # InboxThread, ChatMessage, OutboundQueueItem, …
+├── models/          # ChatPeer, ChatMessage, OutboundQueueItem, …
 ├── services/        # auth, message, message_media, voice_recording, voice_encoding_*, outbound_message_queue, …
 ├── providers/       # ChangeNotifier controllers
 ├── screens/         # AppShell, Auth, Home, Contacts, Profile
@@ -291,7 +291,7 @@ client/lib/
 
 **Coda invio client (non deducibile)**: `OutboundMessageQueue` persiste fallimenti (testo/GIF/voice) per retry automatico e tap «Riprova invio» — non è l'outbox server federato.
 
-**Layout inbox (non deducibile)**: `HomeScreen` — mobile: drawer sinistro con `AccountSidebar`; desktop: colonna sinistra = account + inbox. `InboxPanel`: FAB → indirizzo → bozza (`ComposeTarget`); invio via `send_message_to_profile` → trigger crea `inbox_threads`; `list_inbox` solo thread con messaggi.
+**Layout inbox (non deducibile)**: `HomeScreen` — mobile: drawer sinistro con `AccountSidebar`; desktop: colonna sinistra = account + inbox. `InboxPanel`: FAB → indirizzo → `ChatPeer`; chat sempre per `profile_id`; `list_inbox()` = query su messaggi; `list_peer_messages(peer)`.
 
 **Aggancio al fondo (non deducibile)**: `AnchoredMessageList` in `chat_panel.dart` — `ListView` `reverse: true`, soglia 48 px, pulsante freccia + badge se staccato. Identico per tutte le conversazioni. Spec: `docs/design/conversation-bottom-anchor.md`.
 
@@ -1087,7 +1087,7 @@ Documentati in `docs/fixes/known-issues.md`:
 - ✅ **PR #110**: passkeys `bundle.js` — fix schermo bianco Pages
 - ✅ **PR #111**: multi-account switch senza logout forzato
 - ✅ **PR #112**: RPC inbox un round-trip (sostituito da `list_inbox` in PR #129)
-- ✅ **PR #129**: Messaggistica per indirizzo — `inbox_threads`, `send_message_to_profile`, niente `conversations`
+- ✅ **PR #129**: Messaggistica per indirizzo — solo messaggi, `list_inbox` query, `ChatPeer`, niente `inbox_threads`/`conversations`
 - ✅ **PR #113**: fix race auth web (`waitForSupabaseSessionReady`)
 - ✅ **PR #115**: GIF in chat (`content_type`, `media_url`, bucket `chat-media`)
 - ✅ **PR #114**: `ChangeNotifierProxyProvider` — fix UI inbox bloccata

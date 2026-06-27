@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/inbox_thread.dart';
+import '../models/chat_peer.dart';
 import '../providers/messages_controller.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/avatar_color.dart';
@@ -11,12 +11,12 @@ import 'chat_input_bar.dart';
 class ChatPanel extends StatelessWidget {
   const ChatPanel({
     super.key,
-    required this.thread,
+    required this.peer,
     this.showBackButton = false,
     this.onBack,
   });
 
-  final InboxThread thread;
+  final ChatPeer peer;
   final bool showBackButton;
   final VoidCallback? onBack;
 
@@ -30,7 +30,7 @@ class ChatPanel extends StatelessWidget {
       child: Column(
         children: [
           _ChatHeader(
-            thread: thread,
+            peer: peer,
             showBackButton: showBackButton,
             onBack: onBack,
           ),
@@ -61,12 +61,12 @@ class ChatPanel extends StatelessWidget {
 
 class _ChatHeader extends StatelessWidget {
   const _ChatHeader({
-    required this.thread,
+    required this.peer,
     required this.showBackButton,
     this.onBack,
   });
 
-  final InboxThread thread;
+  final ChatPeer peer;
   final bool showBackButton;
   final VoidCallback? onBack;
 
@@ -89,9 +89,9 @@ class _ChatHeader extends StatelessWidget {
                   icon: const Icon(Icons.arrow_back),
                 ),
               CircleAvatar(
-                backgroundColor: thread.avatarColor,
+                backgroundColor: peer.resolvedAvatarColor,
                 child: Text(
-                  avatarInitial(thread.name),
+                  avatarInitial(peer.displayName),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -104,7 +104,7 @@ class _ChatHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      thread.name,
+                      peer.displayName,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -122,42 +122,6 @@ class _ChatHeader extends StatelessWidget {
               IconButton(onPressed: null, icon: const Icon(Icons.more_vert)),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class EmptyChatPlaceholder extends StatelessWidget {
-  const EmptyChatPlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AlfredColors.surface,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.forum_outlined,
-              size: 72,
-              color: AlfredColors.textSecondary.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Alfred',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AlfredColors.textSecondary,
-                    fontWeight: FontWeight.w300,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Seleziona un contatto per leggere i messaggi',
-              style: TextStyle(color: AlfredColors.textSecondary),
-            ),
-          ],
         ),
       ),
     );

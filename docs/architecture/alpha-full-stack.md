@@ -87,36 +87,29 @@ client/lib/
 
 ### 2.5 Caricamento inbox (lista chat)
 
-**Regola vincolante**: [address-based-messaging.md](../decisions/address-based-messaging.md) — inbox = **solo thread con storico messaggi** (`last_message_at IS NOT NULL`); rubrica **non** abilita né blocca la messaggistica.
+**Regola vincolante**: [address-based-messaging.md](../decisions/address-based-messaging.md) — inbox = **query su `messages`** raggruppata per `peer_profile_id`; **nessuna tabella metadati inbox**.
 
-1. `InboxController.load()` → RPC `list_inbox()` (**un round-trip**)
-2. Payload completo per UI: `thread_id`, `display_name`, `last_message_preview`, `last_message_at`, `unread_count`, `protocol`, `peer_profile_id`
-3. Risoluzione nome peer **lato server** (profilo controparte o `peer_display_name`)
-4. Realtime (`inbox-{userId}`) su `inbox_threads` richiama `load()` — stessa RPC
+1. `InboxController.load()` → RPC `list_inbox()` (**un round-trip**, derivato da messaggi)
+2. Payload UI: `peer_profile_id`, `display_name`, `last_message_preview`, `last_message_at`, `unread_count`, `protocol`
+3. Realtime (`inbox-messages-{userId}`) su `messages` (sender o recipient = io) → `load()`
 
-**Nuova chat (bozza)**: FAB o rubrica → indirizzo `username` / `user@server` → UI chat **senza** `thread_id` finché non parte il primo messaggio → nessuna riga inbox.
+**Nuova chat**: FAB o rubrica → indirizzo → `ChatPeer` → stessa chat per `profile_id` (vuota finché non ci sono messaggi).
 
-**Scelta**: niente query REST N+1 dal client; **nessuna tabella `conversations`** — messaggi con `sender_id`/`recipient_profile_id`, inbox derivata da trigger.
-
-**Anti-pattern evitato**: loop client con `_resolveDisplayName` per ogni riga (lento su web); creare conversazione prima del primo messaggio; passare da `contact_id` per account Alfred interni.
+**Scelta**: niente `inbox_threads`, `thread_id`, bozza, né trigger che creano record inbox.
 
 ### 2.6 Realtime
 
 | Canale | Tabelle | Scopo |
 |--------|---------|-------|
-| `inbox-{userId}` | `inbox_threads` | Aggiorna lista inbox |
-| `messages-peer-{me}-{peer}` | `messages` INSERT/UPDATE | Chat live + spunte (filtro client su coppia sender/recipient) |
-
-**Scelta**: canali separati per inbox e chat attiva — riduce traffico rispetto a un unico firehose.
+| `inbox-messages-{userId}` | `messages` | Aggiorna lista inbox |
+| `messages-peer-{me}-{peer}` | `messages` INSERT/UPDATE | Chat live (coppia sender/recipient) |
 
 ### 2.7 Invio messaggi
 
-1. Bozza: nessun thread server; invio diretto → RPC `send_message_to_profile(recipient_profile_id, …)`
+1. RPC `send_message_to_profile(recipient_profile_id, …)` — unico punto invio
 2. UI optimistic con `client_message_id` (UUID v4)
-3. Trigger `on_message_inserted` crea/aggiorna `inbox_threads` per mittente e destinatario
-4. Per protocollo `internal`: `delivered` immediato in fonte di verità
-5. Per `xmpp`/`matrix`: status `pending` + riga `outbox` (bridge futuro); indirizzo `user@server` → `unsupported` in Alpha
-6. **Retry client**: `OutboundMessageQueue` persiste invii falliti (testo, GIF, voice)
+3. Trigger `on_message_inserted`: solo `delivered` (interno) o `outbox` (federato)
+4. **Retry client**: `OutboundMessageQueue` (testo, GIF, voice)
 
 ### 2.8 GIF in chat
 
@@ -139,9 +132,9 @@ client/lib/
 |---------|-----|------------------|
 | Inviato | ✓ grigia | `send_message_to_profile` → `delivery_status = 'sent'` |
 | Consegnato | ✓✓ grigie | `on_message_inserted` → `delivered` quando in fonte di verità |
-| Lettura | ✓✓ blu | `mark_thread_read` → `read` |
+| Lettura | ✓✓ blu | `mark_peer_read` → `read` |
 
-- `mark_thread_read` RPC all'apertura chat: aggiorna `unread_count`, inserisce `message_read_receipts`, promuove `delivery_status` a `read` per messaggi propri
+- `mark_peer_read(peer_profile_id)` all'apertura chat
 - UI: `MessageStatus` → ✓ / ✓✓ / ✓✓ blu (`message_bubble.dart`)
 - Migrazione `20260626100000_internal_delivered_on_server.sql`: promozione a `delivered` — **debito tecnico** (nome/branch «internal»; da unificare)
 
@@ -198,7 +191,8 @@ client/lib/
 | `20260624200000_alfred_domain_schema.sql` | Schema dominio, RLS, trigger, RPC base |
 | `20260624210000_rpc_grants_hardening.sql` | Grant EXECUTE RPC solo `authenticated` |
 | `20260624220000_list_conversations_rpc.sql` | RPC inbox un round-trip |
-| `20260627200000_address_based_messaging.sql` | Inbox solo con messaggi; `find_profile_by_username` |
+| `20260627220000_fix_send_message_to_profile_overload.sql` | Fix PostgREST HTTP 300 |
+| `20260627230000_messages_only_inbox.sql` | Drop `inbox_threads`; inbox query-only |
 | `20260624230000_message_gif_support.sql` | GIF — `content_type`, `media_url`, bucket `chat-media` |
 | `20260626100000_internal_delivered_on_server.sql` | Spunte — `delivered` su insert (debito nome «internal») |
 | `20260627120000_message_voice_support.sql` | Enum `voice` (step 1) |
@@ -237,41 +231,37 @@ storage.chat-media (GIF + voice WebM, path `{userId}/{uuid}.gif|.webm`)
 
 **Vincolo CHECK** in tabella — impossibile stato ibrido incoerente.
 
-### 3.5 Inbox threads (non «conversazioni»)
+### 3.5 Inbox (solo messaggi)
 
-- **`messages`**: fonte di verità con `sender_id` + `recipient_profile_id` (interno) o `recipient_external_address` (federato)
-- **`inbox_threads`**: metadati inbox per utente (preview, unread) — creati/aggiornati **solo** da trigger su insert messaggio
-- **Nessuna** tabella `conversations` / `conversation_participants`
+- **`messages`**: unica fonte di verità
+- **`list_inbox()`**: GROUP BY `peer_profile_id` — preview, unread, ordine
+- **Nessuna** tabella `inbox_threads`, `conversations`, `conversation_participants`
 
 ### 3.6 RPC (business logic server)
 
 | RPC | Responsabilità |
 |-----|----------------|
-| `search_profiles` | Trova utenti Alfred per username/display_name |
-| `list_inbox` | Inbox completa in un round-trip (nome, preview, unread, peer) |
-| `find_profile_by_username` | Risoluzione username → profilo per bozza chat |
-| `send_message_to_profile` | Invio a profilo Alfred; testo, GIF o voice — **unico punto di invio client** |
-| `list_thread_messages` | Storico messaggi con controparte di un thread inbox |
-| `mark_thread_read` | Unread + read receipts |
-
-**Scelta**: logica critica in RPC `SECURITY DEFINER` — il client non può bypassare RLS con insert diretti malformati.
+| `search_profiles` | Trova utenti Alfred |
+| `list_inbox` | Inbox da messaggi |
+| `find_profile_by_username` | Username → profilo |
+| `send_message_to_profile` | Invio testo, GIF, voice |
+| `list_peer_messages` | Storico con un account |
+| `mark_peer_read` | Lettura messaggi da peer |
 
 ### 3.7 Trigger
 
 | Trigger | Evento | Azione |
 |---------|--------|--------|
-| `on_auth_user_created` | INSERT `auth.users` | Crea `profiles` da metadata signup |
-| `messages_after_insert` | INSERT `messages` | Preview (`[GIF]`, `🎤 m:ss` se voice), unread, outbox se federato |
+| `messages_after_insert` | INSERT `messages` | `delivered` interno o `outbox` federato |
 
 ### 3.8 RLS
 
 | Tabella | Policy client |
 |---------|---------------|
-| `profiles` | SELECT tutti autenticati; UPDATE solo proprio |
-| `contacts` | CRUD solo `owner_id = auth.uid()` |
-| `inbox_threads` | SELECT/UPDATE solo `owner_id = auth.uid()` |
-| `messages` | SELECT se mittente o destinatario; INSERT solo come mittente (`sender_id = auth.uid()`) |
-| `outbox`, `sync_cursors`, `bridge_jobs` | **DENY** authenticated — solo `service_role` (bridge) |
+| `profiles` | SELECT tutti; UPDATE proprio |
+| `contacts` | CRUD `owner_id = auth.uid()` |
+| `messages` | SELECT/INSERT se parte del messaggio |
+| `outbox`, `sync_cursors`, `bridge_jobs` | DENY authenticated |
 
 ### 3.9 Punti integrazione bridge (non implementati)
 

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../models/inbox_thread.dart';
+import '../models/chat_peer.dart';
 import '../services/inbox_service.dart';
 import '../services/supabase_bootstrap.dart';
 import '../utils/list_filter.dart';
@@ -24,15 +24,15 @@ class InboxController extends ChangeNotifier {
   int _loadGeneration = 0;
   bool _realtimeAttached = false;
 
-  List<InboxThread> threads = [];
+  List<ChatPeer> peers = [];
   bool isLoading = true;
   String? error;
   String _searchQuery = '';
 
-  List<InboxThread> get filteredThreads => filterByQueryFields(
-        threads,
+  List<ChatPeer> get filteredPeers => filterByQueryFields(
+        peers,
         _searchQuery,
-        (thread) => [thread.name, thread.preview],
+        (peer) => [peer.displayName, peer.preview, peer.address ?? ''],
       );
 
   void setSearchQuery(String value) {
@@ -40,9 +40,9 @@ class InboxController extends ChangeNotifier {
     notifyListeners();
   }
 
-  InboxThread? findByPeerProfileId(String profileId) {
-    for (final thread in threads) {
-      if (thread.peerProfileId == profileId) return thread;
+  ChatPeer? findByProfileId(String profileId) {
+    for (final peer in peers) {
+      if (peer.profileId == profileId) return peer;
     }
     return null;
   }
@@ -69,7 +69,7 @@ class InboxController extends ChangeNotifier {
           .fetchInbox()
           .timeout(const Duration(seconds: 30));
       if (generation != _loadGeneration) return;
-      threads = loaded;
+      peers = loaded;
       error = null;
     } on TimeoutException {
       if (generation != _loadGeneration) return;

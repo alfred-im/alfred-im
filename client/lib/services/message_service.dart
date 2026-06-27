@@ -5,15 +5,15 @@ import '../models/message.dart';
 import 'supabase_bootstrap.dart';
 
 class MessageService {
-  Future<List<ChatMessage>> fetchThreadMessages({
-    required String threadId,
+  Future<List<ChatMessage>> fetchPeerMessages({
+    required String peerProfileId,
     required String currentUserId,
     int limit = 100,
   }) async {
     final rows = await supabase.rpc(
-      'list_thread_messages',
+      'list_peer_messages',
       params: {
-        'p_thread_id': threadId,
+        'p_peer_profile_id': peerProfileId,
         'p_limit': limit,
       },
     );

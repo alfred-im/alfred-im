@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/compose_target.dart';
-import '../models/inbox_thread.dart';
+import '../models/chat_peer.dart';
 import '../providers/auth_controller.dart';
 import '../providers/inbox_controller.dart';
 import '../providers/messages_controller.dart';
@@ -26,20 +25,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _composeService = ComposeService();
-  String? _selectedId;
-  ComposeTarget? _draftTarget;
+  ChatPeer? _activePeer;
   bool _showListOnMobile = true;
 
   static const _breakpoint = 720.0;
-
-  InboxThread? _findSelected(InboxController controller) {
-    final id = _selectedId;
-    if (id == null) return null;
-    for (final thread in controller.threads) {
-      if (thread.id == id) return thread;
-    }
-    return null;
-  }
 
   void _openDrawer() => _scaffoldKey.currentState?.openDrawer();
 
@@ -47,19 +36,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openContacts() async {
     _closeDrawer();
-    final target = await Navigator.push<ComposeTarget>(
+    final peer = await Navigator.push<ChatPeer>(
       context,
       MaterialPageRoute(builder: (_) => const ContactsScreen()),
     );
-    if (!mounted || target == null) return;
-    _openDraft(target);
+    if (!mounted || peer == null) return;
+    _openPeer(peer);
   }
 
   Future<void> _startMessageFromAddress(String address) async {
     try {
-      final target = await _composeService.resolveAddress(address);
+      final peer = await _composeService.resolveAddress(address);
       if (!mounted) return;
-      _openDraft(target);
+      _openPeer(peer);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,29 +57,34 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _openDraft(ComposeTarget target) {
+  void _openPeer(ChatPeer peer) {
     setState(() {
-      _draftTarget = target;
-      _selectedId = null;
+      _activePeer = peer;
       _showListOnMobile = false;
     });
   }
 
-  Future<void> _onFirstMessageSent() async {
+  void _selectInboxPeer(ChatPeer peer) {
+    setState(() {
+      _activePeer = peer;
+      _showListOnMobile = false;
+    });
+  }
+
+  Future<void> _onMessagesChanged() async {
     if (!mounted) return;
-    final draft = _draftTarget;
     final inbox = context.read<InboxController?>();
-    if (inbox == null || draft?.profileId == null) return;
+    if (inbox == null || _activePeer == null) return;
 
     await inbox.load();
     if (!mounted) return;
 
-    final thread = inbox.findByPeerProfileId(draft!.profileId!);
-    setState(() {
-      _draftTarget = null;
-      _selectedId = thread?.id;
-      _showListOnMobile = false;
-    });
+    final updated = inbox.findByProfileId(_activePeer!.profileId);
+    if (updated != null) {
+      setState(() {
+        _activePeer = _activePeer!.mergeFromInbox(updated);
+      });
+    }
   }
 
   Future<void> _openProfile() async {
@@ -124,8 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onAccountSwitched: () {
         _closeDrawer();
         setState(() {
-          _selectedId = null;
-          _draftTarget = null;
+          _activePeer = null;
           _showListOnMobile = true;
         });
       },
@@ -140,16 +133,12 @@ class _HomeScreenState extends State<HomeScreen> {
     VoidCallback? onBack,
   }) {
     return InboxPanel(
-      selectedId: _selectedId,
-      threads: inbox.filteredThreads,
+      selectedPeerId: _activePeer?.profileId,
+      peers: inbox.filteredPeers,
       isLoading: inbox.isLoading,
       error: inbox.error,
       onRetry: inbox.load,
-      onSelected: (id) => setState(() {
-        _selectedId = id;
-        _draftTarget = null;
-        _showListOnMobile = false;
-      }),
+      onSelected: _selectInboxPeer,
       onSearchChanged: inbox.setSearchQuery,
       onDrawerTap: showDrawerButton ? _openDrawer : null,
       onContactsTap: _openContacts,
@@ -161,31 +150,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _chatArea({
-    required InboxThread? selected,
     required bool showBackButton,
     VoidCallback? onBack,
   }) {
-    if (selected != null) {
-      return _ChatWithMessages(
-        key: ValueKey(selected.id),
-        thread: selected,
-        showBackButton: showBackButton,
-        onBack: onBack,
-      );
+    final peer = _activePeer;
+    if (peer == null) {
+      return const EmptyChatPlaceholder();
     }
 
-    final draft = _draftTarget;
-    if (draft != null) {
-      return _DraftChat(
-        key: ValueKey('draft:${draft.address}'),
-        target: draft,
-        showBackButton: showBackButton,
-        onBack: onBack,
-        onFirstMessageSent: _onFirstMessageSent,
-      );
-    }
-
-    return const EmptyChatPlaceholder();
+    return _ChatWithMessages(
+      key: ValueKey(peer.profileId),
+      peer: peer,
+      showBackButton: showBackButton,
+      onBack: onBack,
+      onMessagesChanged: _onMessagesChanged,
+    );
   }
 
   @override
@@ -199,8 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= _breakpoint;
-    final selected = _findSelected(inbox);
-    final showChatOnMobile = selected != null || _draftTarget != null;
+    final showChatOnMobile = _activePeer != null;
     final sidebarWidth = width >= 1100 ? 380.0 : 320.0;
 
     if (isWide) {
@@ -228,10 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const VerticalDivider(width: 1, color: AlfredColors.border),
             Expanded(
-              child: _chatArea(
-                selected: selected,
-                showBackButton: false,
-              ),
+              child: _chatArea(showBackButton: false),
             ),
           ],
         ),
@@ -249,7 +224,6 @@ class _HomeScreenState extends State<HomeScreen> {
               showDrawerButton: true,
             )
           : _chatArea(
-              selected: selected,
               showBackButton: true,
               onBack: () => setState(() => _showListOnMobile = true),
             ),
@@ -260,14 +234,16 @@ class _HomeScreenState extends State<HomeScreen> {
 class _ChatWithMessages extends StatelessWidget {
   const _ChatWithMessages({
     super.key,
-    required this.thread,
+    required this.peer,
     this.showBackButton = false,
     this.onBack,
+    required this.onMessagesChanged,
   });
 
-  final InboxThread thread;
+  final ChatPeer peer;
   final bool showBackButton;
   final VoidCallback? onBack;
+  final Future<void> Function() onMessagesChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -276,11 +252,11 @@ class _ChatWithMessages extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => MessagesController(
         userId: userId,
-        threadId: thread.id,
-        peerProfileId: thread.peerProfileId,
+        peerProfileId: peer.profileId,
+        onMessagesChanged: onMessagesChanged,
       ),
       child: ChatPanel(
-        thread: thread,
+        peer: peer,
         showBackButton: showBackButton,
         onBack: onBack,
       ),
@@ -288,34 +264,20 @@ class _ChatWithMessages extends StatelessWidget {
   }
 }
 
-class _DraftChat extends StatelessWidget {
-  const _DraftChat({
-    super.key,
-    required this.target,
-    required this.onFirstMessageSent,
-    this.showBackButton = false,
-    this.onBack,
-  });
-
-  final ComposeTarget target;
-  final Future<void> Function() onFirstMessageSent;
-  final bool showBackButton;
-  final VoidCallback? onBack;
+class EmptyChatPlaceholder extends StatelessWidget {
+  const EmptyChatPlaceholder({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final userId = context.read<AuthController>().userId!;
-
-    return ChangeNotifierProvider(
-      create: (_) => MessagesController(
-        userId: userId,
-        composeTarget: target,
-        onFirstMessageSent: onFirstMessageSent,
-      ),
-      child: ChatPanel(
-        thread: target.toPlaceholderThread(),
-        showBackButton: showBackButton,
-        onBack: onBack,
+    return ColoredBox(
+      color: AlfredColors.surface,
+      child: Center(
+        child: Text(
+          'Seleziona una chat o scrivi a un indirizzo',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AlfredColors.textSecondary,
+              ),
+        ),
       ),
     );
   }

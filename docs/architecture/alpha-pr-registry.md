@@ -23,9 +23,9 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#125** | Aggancio al fondo | `AnchoredMessageList`, scroll ancorato, pulsante riaggancio | `alpha-full-stack.md` §2.10, `docs/design/conversation-bottom-anchor.md` |
 | **#126** | Note vocali in chat | WebM/Opus, `content_type=voice`, registrazione hold-to-send, player, `OutboundMessageQueue` | `alpha-full-stack.md` §2.11, `docs/implementation/voice-notes.md` |
 | **#127** | Processo `flutter analyze` | `client/scripts/verify.sh`, gate analyze in CI/doc | `.cursor-rules.md`, `alpha-full-stack.md` §5, `client/README.md` |
-| **#129** | Messaggistica per indirizzo | `inbox_threads`, `list_inbox`, `send_message_to_profile`, bozza compose, drop `conversations` | `address-based-messaging.md`, `PROJECT_MAP`, migrazioni `20260627200000` + `20260627210000` + `20260627220000` |
+| **#129** | Solo messaggi (no metadati inbox) | Drop `inbox_threads`; `ChatPeer`; `list_peer_messages`, `mark_peer_read` | `address-based-messaging.md`, migrazioni `20260627200000`–`20260627230000` |
 
-**PR aperte (2026-06-27)**: #129 (message-centric + fix overload PostgREST HTTP 300 su invio).
+**PR aperte (2026-06-27)**: #129 (messages-only inbox, no thread_id).
 
 ---
 
@@ -58,7 +58,7 @@ Dopo ogni merge su `main`:
 | `20260627120100_message_voice_support.sql` | #126 | Voice — colonne media, RPC 8 arg, bucket `audio/webm` |
 | `20260627200000_address_based_messaging.sql` | #129 | `find_profile_by_username`, filtro inbox con messaggi |
 | `20260627210000_message_centric_messaging.sql` | #129 | `inbox_threads`, drop `conversations`, RPC `list_inbox` / `send_message_to_profile` |
-| `20260627220000_fix_send_message_to_profile_overload.sql` | #129 | Drop overload `(uuid,text,text)` — fix PostgREST HTTP 300 |
+| `20260627230000_messages_only_inbox.sql` | #129 | Drop `inbox_threads`; inbox query-only; `list_peer_messages`, `mark_peer_read` |
 
 ---
 

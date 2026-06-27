@@ -1,4 +1,4 @@
-import '../models/compose_target.dart';
+import '../models/chat_peer.dart';
 import '../models/contact.dart';
 import '../utils/compose_address.dart';
 import 'profile_service.dart';
@@ -9,7 +9,7 @@ class ComposeService {
 
   final ProfileService _profileService;
 
-  Future<ComposeTarget> resolveAddress(String raw) async {
+  Future<ChatPeer> resolveAddress(String raw) async {
     final parsed = parseComposeAddress(raw);
     switch (parsed.kind) {
       case ComposeAddressKind.invalid:
@@ -22,7 +22,7 @@ class ComposeService {
         if (profile == null) {
           throw StateError('Utente non trovato');
         }
-        return ComposeTarget.internal(
+        return ChatPeer.internal(
           address: profile.username,
           displayName: profile.displayName,
           profileId: profile.id,
@@ -30,13 +30,13 @@ class ComposeService {
     }
   }
 
-  ComposeTarget targetFromContact(Contact contact) {
+  ChatPeer peerFromContact(Contact contact) {
     if (contact.protocol == ContactProtocol.internal) {
       final profileId = contact.linkedProfileId;
       if (profileId == null) {
         throw StateError('Contatto interno non valido');
       }
-      return ComposeTarget.internal(
+      return ChatPeer.internal(
         address: contact.displayName,
         displayName: contact.displayName,
         profileId: profileId,
@@ -47,9 +47,6 @@ class ComposeService {
     if (externalAddress == null || externalAddress.trim().isEmpty) {
       throw StateError('Contatto esterno non valido');
     }
-    return ComposeTarget.external(
-      address: externalAddress.trim(),
-      displayName: contact.displayName,
-    );
+    throw StateError('Indirizzo esterno non ancora supportato');
   }
 }

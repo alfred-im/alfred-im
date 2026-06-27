@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../config/voice_config.dart';
-import '../models/compose_target.dart';
 import '../models/message.dart';
 import '../models/outbound_queue_item.dart';
 import '../services/inbox_service.dart';
@@ -17,22 +16,13 @@ import '../utils/date_format.dart';
 class MessagesController extends ChangeNotifier {
   MessagesController({
     required this.userId,
-    String? threadId,
-    String? peerProfileId,
-    ComposeTarget? composeTarget,
-    this.onFirstMessageSent,
+    required this.peerProfileId,
+    this.onMessagesChanged,
     MessageService? messageService,
     MessageMediaService? messageMediaService,
     InboxService? inboxService,
     OutboundMessageQueue? outboundQueue,
-  })  : assert(
-          (threadId != null && peerProfileId != null) || composeTarget != null,
-          'Serve threadId+peerProfileId o composeTarget',
-        ),
-        _threadId = threadId,
-        _peerProfileId = peerProfileId ?? composeTarget?.profileId,
-        _composeTarget = composeTarget,
-        _messageService = messageService ?? MessageService(),
+  })  : _messageService = messageService ?? MessageService(),
         _messageMediaService = messageMediaService ?? const MessageMediaService(),
         _inboxService = inboxService ?? InboxService(),
         _outboundQueue = outboundQueue ?? OutboundMessageQueue() {
@@ -40,11 +30,8 @@ class MessagesController extends ChangeNotifier {
   }
 
   final String userId;
-  final ComposeTarget? _composeTarget;
-  final Future<void> Function()? onFirstMessageSent;
-
-  final String? _threadId;
-  final String? _peerProfileId;
+  final String peerProfileId;
+  final Future<void> Function()? onMessagesChanged;
   final MessageService _messageService;
   final MessageMediaService _messageMediaService;
   final InboxService _inboxService;
@@ -58,28 +45,13 @@ class MessagesController extends ChangeNotifier {
   RealtimeChannel? _channel;
   Timer? _retryTimer;
 
-  bool get isDraft => _threadId == null;
-
-  String? get peerProfileId => _peerProfileId;
-
-  String get _queueKey {
-    final id = _threadId;
-    if (id != null) return id;
-    final peer = _peerProfileId;
-    if (peer != null) return 'draft:$peer';
-    return 'draft:unknown';
-  }
+  String get _queueKey => peerProfileId;
 
   Future<void> _init() async {
-    if (_threadId != null) {
-      await load();
-      await _restoreFailedFromQueue();
-      await _inboxService.markRead(_threadId);
-      _attachRealtime();
-    } else {
-      isLoading = false;
-      messages = [];
-    }
+    await load();
+    await _restoreFailedFromQueue();
+    await _inboxService.markRead(peerProfileId);
+    _attachRealtime();
     _retryTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       unawaited(_processRetries());
     });
@@ -87,11 +59,10 @@ class MessagesController extends ChangeNotifier {
   }
 
   void _attachRealtime() {
-    final peer = _peerProfileId;
-    if (_channel != null || peer == null) return;
+    if (_channel != null) return;
     _channel = _messageService.subscribeToPeerMessages(
       currentUserId: userId,
-      peerProfileId: peer,
+      peerProfileId: peerProfileId,
       onMessage: _handleRealtimeMessage,
     );
   }
@@ -115,16 +86,9 @@ class MessagesController extends ChangeNotifier {
   }
 
   Future<void> load() async {
-    final threadId = _threadId;
-    if (threadId == null) {
-      isLoading = false;
-      notifyListeners();
-      return;
-    }
-
     try {
-      final loaded = await _messageService.fetchThreadMessages(
-        threadId: threadId,
+      final loaded = await _messageService.fetchPeerMessages(
+        peerProfileId: peerProfileId,
         currentUserId: userId,
       );
       messages = loaded.map(_withTimeLabel).toList();
@@ -137,30 +101,9 @@ class MessagesController extends ChangeNotifier {
     }
   }
 
-  String _requireRecipientProfileId() {
-    final target = _composeTarget;
-    if (target != null) {
-      if (target.isExternal) {
-        throw StateError('Indirizzo esterno non ancora supportato');
-      }
-      final profileId = target.profileId;
-      if (profileId == null) {
-        throw StateError('Profilo destinatario mancante');
-      }
-      return profileId;
-    }
-
-    final peer = _peerProfileId;
-    if (peer == null) {
-      throw StateError('Destinatario mancante');
-    }
-    return peer;
-  }
-
   Future<void> send(String body) async {
     if (body.trim().isEmpty || isSending) return;
     final clientId = _uuid.v4();
-    final queueKey = _queueKey;
     await _sendOptimistic(
       optimistic: ChatMessage(
         id: clientId,
@@ -173,14 +116,14 @@ class MessagesController extends ChangeNotifier {
       ),
       queueItem: OutboundQueueItem(
         clientId: clientId,
-        queueKey: queueKey,
+        queueKey: _queueKey,
         kind: OutboundContentKind.text,
         attempts: 0,
         queuedAt: DateTime.now(),
         body: body.trim(),
       ),
       send: (id) => _messageService.sendToProfile(
-        recipientProfileId: _requireRecipientProfileId(),
+        recipientProfileId: peerProfileId,
         body: body.trim(),
         currentUserId: userId,
         clientMessageId: id,
@@ -191,7 +134,6 @@ class MessagesController extends ChangeNotifier {
   Future<void> sendGif(Uint8List bytes) async {
     if (bytes.isEmpty || isSending) return;
     final clientId = _uuid.v4();
-    final queueKey = _queueKey;
     final mediaPath = await _outboundQueue.persistMediaBytes(
       clientId: clientId,
       bytes: bytes,
@@ -213,7 +155,7 @@ class MessagesController extends ChangeNotifier {
       ),
       queueItem: OutboundQueueItem(
         clientId: clientId,
-        queueKey: queueKey,
+        queueKey: _queueKey,
         kind: OutboundContentKind.gif,
         attempts: 0,
         queuedAt: DateTime.now(),
@@ -225,7 +167,7 @@ class MessagesController extends ChangeNotifier {
           userId: userId,
         );
         return _messageService.sendGifToProfile(
-          recipientProfileId: _requireRecipientProfileId(),
+          recipientProfileId: peerProfileId,
           mediaUrl: mediaUrl,
           currentUserId: userId,
           clientMessageId: id,
@@ -243,7 +185,6 @@ class MessagesController extends ChangeNotifier {
     final durationSeconds =
         (durationMs / 1000).ceil().clamp(1, VoiceConfig.maxDurationSeconds);
     final clientId = _uuid.v4();
-    final queueKey = _queueKey;
     final mediaPath = await _outboundQueue.persistMediaBytes(
       clientId: clientId,
       bytes: bytes,
@@ -268,7 +209,7 @@ class MessagesController extends ChangeNotifier {
       ),
       queueItem: OutboundQueueItem(
         clientId: clientId,
-        queueKey: queueKey,
+        queueKey: _queueKey,
         kind: OutboundContentKind.voice,
         attempts: 0,
         queuedAt: DateTime.now(),
@@ -282,7 +223,7 @@ class MessagesController extends ChangeNotifier {
           userId: userId,
         );
         return _messageService.sendVoiceToProfile(
-          recipientProfileId: _requireRecipientProfileId(),
+          recipientProfileId: peerProfileId,
           mediaUrl: mediaUrl,
           durationSeconds: durationSeconds,
           mediaSizeBytes: bytes.length,
@@ -321,7 +262,6 @@ class MessagesController extends ChangeNotifier {
     notifyListeners();
 
     final clientId = optimistic.id;
-    final promotingDraft = isDraft;
     messages = [...messages, optimistic];
     notifyListeners();
 
@@ -336,8 +276,8 @@ class MessagesController extends ChangeNotifier {
         clientId: clientId,
       );
       error = null;
-      if (promotingDraft && onFirstMessageSent != null) {
-        await onFirstMessageSent!();
+      if (onMessagesChanged != null) {
+        await onMessagesChanged!();
       }
     } catch (e) {
       final failedItem = queueItem.copyWith(
@@ -423,12 +363,11 @@ class MessagesController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final recipient = _requireRecipientProfileId();
       final ChatMessage saved;
       switch (item.kind) {
         case OutboundContentKind.text:
           saved = await _messageService.sendToProfile(
-            recipientProfileId: recipient,
+            recipientProfileId: peerProfileId,
             body: item.body ?? '',
             currentUserId: userId,
             clientMessageId: item.clientId,
@@ -446,7 +385,7 @@ class MessagesController extends ChangeNotifier {
             userId: userId,
           );
           saved = await _messageService.sendGifToProfile(
-            recipientProfileId: recipient,
+            recipientProfileId: peerProfileId,
             mediaUrl: mediaUrl,
             currentUserId: userId,
             clientMessageId: item.clientId,
@@ -466,7 +405,7 @@ class MessagesController extends ChangeNotifier {
             userId: userId,
           );
           saved = await _messageService.sendVoiceToProfile(
-            recipientProfileId: recipient,
+            recipientProfileId: peerProfileId,
             mediaUrl: mediaUrl,
             durationSeconds: durationSeconds,
             mediaSizeBytes: bytes.length,
@@ -488,6 +427,9 @@ class MessagesController extends ChangeNotifier {
         clientId: item.clientId,
       );
       error = null;
+      if (onMessagesChanged != null) {
+        await onMessagesChanged!();
+      }
     } catch (e) {
       await _outboundQueue.update(
         item.copyWith(attempts: item.attempts + 1, lastError: e.toString()),

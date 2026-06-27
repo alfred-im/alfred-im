@@ -14,8 +14,8 @@
 | Concetto | Ruolo |
 |----------|--------|
 | **Indirizzo** | Destinatario del messaggio: `username` (Alfred) o `username@server` (esterno) |
-| **Messaggi** | Unica fonte di verità; inviati e ricevuti con `sender_id` + destinatario |
-| **Inbox** | Vista sullo storico raggruppato per controparte (`inbox_threads`); **solo se esiste almeno un messaggio** |
+| **Messaggi** | **Unica fonte di verità** — `sender_id` + `recipient_profile_id` (o indirizzo esterno) |
+| **Inbox** | **Vista query** sui messaggi raggruppati per controparte (`peer_profile_id`) — **nessuna tabella metadati** |
 | **Rubrica (`contacts`)** | Strumento personale opzionale; **isolata** dalle dinamiche di chat |
 
 ### Indirizzamento
@@ -24,9 +24,6 @@
 |------|---------|---------|-------------|
 | Alfred interno | `username` | `mario_rossi` | ✅ Supportato |
 | Esterno federato | `username@server` | `mario@dominio.it` | ⏸ `unsupported` fino ai bridge |
-| Matrix | `@user:server` o normalizzato | — | Da definire (doppio formato o sanitizzazione) |
-
-Validazione stretta dei formati: **non urgente**. Fase attuale: username Alfred + forma email-like per esterni.
 
 ---
 
@@ -34,72 +31,65 @@ Validazione stretta dei formati: **non urgente**. Fase attuale: username Alfred 
 
 ### ✅ Corretto
 
-- FAB / nuova chat: inserisci indirizzo → **bozza** (nessuna riga inbox, nessun contatto obbligatorio)
-- Primo messaggio inviato → thread inbox creato sul server → compare in inbox
-- Messaggio ricevuto da chiunque → thread in inbox **senza** essere in rubrica
-- «Non in rubrica» **≠** «sconosciuto» (dinamica legacy XMPP da non replicare)
-- Rubrica: scorciatoie personali; si rifinisce in futuro, non nel flusso di invio
+- FAB / nuova chat: inserisci indirizzo → apri chat con quel **account** (`profile_id`)
+- Chat vuota o con storico: **stessa UI**, stesso identificatore (`peer_profile_id`)
+- Primo messaggio: insert in `messages` — la riga compare in inbox via `list_inbox()` (query, non trigger su tabella inbox)
+- Messaggio ricevuto da chiunque → compare in inbox **senza** rubrica
+- Rubrica: scorciatoia; «Scrivi» apre chat per `profile_id` del contatto
 
 ### ❌ Vietato
 
-- Passare da `contact_id` / rubrica come prerequisito per scrivere (account interni)
-- Creare record conversazione / partecipanti **prima** del primo messaggio
-- Esporre al client RPC tipo `get_or_create_*_conversation`
-- Mostrare in inbox thread senza messaggi
-- Trattare la rubrica come gate di autorizzazione o classificazione «sconosciuti»
+- Tabella `inbox_threads`, `conversations`, `conversation_participants` o equivalenti metadati inbox
+- `thread_id` esposto al client — la chat è `(io, peer_profile_id)`
+- Concetti «bozza», «promozione thread», `get_or_create_*`
+- Passare da `contact_id` come prerequisito per scrivere (account interni)
+- Creare record inbox/conversazione **prima** del primo messaggio (nessun record inbox esiste; solo messaggi)
 
 ---
 
-## Modello tecnico (implementazione)
+## Modello tecnico
 
-### Nessuna «conversazione»
-
-Le tabelle `conversations` e `conversation_participants` **non esistono**.  
-Il dominio è:
+### Solo messaggi
 
 | Entità | Ruolo |
 |--------|--------|
-| `messages` | Fonte di verità: `sender_id`, `recipient_profile_id` (interno) o `recipient_external_address` (federato) |
-| `inbox_threads` | Metadati inbox per utente (preview, unread, last_message_at) — **nasce col primo messaggio** via trigger |
+| `messages` | Fonte di verità |
+| `profiles` | Account Alfred |
+| `contacts` | Rubrica opzionale |
 
-### Inbox (`list_inbox`)
+### RPC
 
-Solo thread con `last_message_at IS NOT NULL`.
+| RPC | Responsabilità |
+|-----|----------------|
+| `list_inbox()` | Righe inbox = `GROUP BY peer` su `messages` (preview, unread, ordine) |
+| `list_peer_messages(peer_profile_id)` | Storico con un account |
+| `mark_peer_read(peer_profile_id)` | Segna letti i messaggi ricevuti da quel peer |
+| `send_message_to_profile` | Invio (testo, GIF, voice) |
+| `find_profile_by_username` | Risoluzione indirizzo → profilo |
 
-### Apertura chat (bozza)
+### Trigger `on_message_inserted`
 
-1. Client risolve indirizzo interno → `profile_id` + nome visualizzato
-2. Indirizzo esterno → errore `unsupported` (fase attuale)
-3. UI chat senza `thread_id` finché l’utente non invia
+Solo: `delivery_status` interno → `delivered`; federato → `outbox`. **Nessun** upsert inbox.
 
-### Invio
+### Client
 
-1. RPC `send_message_to_profile(recipient_profile_id, …)` — **unico punto di invio** (testo, GIF, voice)
-2. Trigger `on_message_inserted` crea/aggiorna `inbox_threads` per mittente e destinatario
-3. Inbox si aggiorna via realtime su `inbox_threads`
-
-### Lettura thread
-
-- `list_thread_messages(thread_id)` — storico messaggi con la controparte
-- `mark_thread_read(thread_id)` — unread + spunte lettura
-
-### Rubrica
-
-Modulo separato. Il pulsante «Scrivi» da contatti apre una **bozza** per indirizzo/profile, non crea thread né richiede contatto per messaggi interni futuri.
+- `ChatPeer` — identificato da `profileId`
+- `MessagesController` — sempre `peerProfileId`; carica subito (lista vuota se nessun messaggio)
+- `HomeScreen` — `_activePeer`; nessuna distinzione bozza/thread
+- Realtime inbox: subscribe su `messages` (sender o recipient = io)
 
 ---
 
-## Ambito escluso (fase corrente)
+## Migrazioni
 
-- Chat di gruppo (in arrivo)
-- Federazione attiva (`username@server` oltre al parsing)
-- Validazione domini / Matrix canonico
+- `20260627200000_address_based_messaging.sql` — `find_profile_by_username`
+- `20260627210000_message_centric_messaging.sql` — messaggi peer-based (storico)
+- `20260627220000_fix_send_message_to_profile_overload.sql` — PostgREST overload
+- `20260627230000_messages_only_inbox.sql` — **drop `inbox_threads`**, RPC peer-only
 
 ---
 
 ## Riferimenti codice
 
-- ADR: questo file
-- Migrazioni: `20260627200000_address_based_messaging.sql`, `20260627210000_message_centric_messaging.sql`
-- Client: `ComposeTarget`, `InboxThread`, `InboxController`, `MessagesController` (bozza + `send_message_to_profile`)
-- Architettura: `docs/architecture/alpha-full-stack.md` § messaggistica
+- Client: `ChatPeer`, `InboxController`, `MessagesController`, `ComposeService`
+- Architettura: `docs/architecture/alpha-full-stack.md`
