@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../config/voice_config.dart';
-import 'voice_encoding_platform.dart';
 import 'voice_encoding_service.dart';
 
 class VoiceRecordingResult {
