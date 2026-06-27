@@ -94,7 +94,7 @@ Il client React aveva: offline-first IndexedDB per account, XMPP diretto (Stanza
 
 **Stato implementazione**: client Flutter + schema Supabase dominio **implementati**. Bridge restano stub health.
 
-**Chat unificate (vincolante, 2026-06-27)**: la distinzione chat interna/esterna **non esiste** nel prodotto — una sola esperienza per ogni conversazione (scroll, aggancio al fondo, UI correlata). Vietato branch client/UI su tipo di chat. Il campo `protocol` è solo routing invisibile verso i bridge. ADR: `docs/decisions/no-internal-external-chat-distinction.md`.
+**Chat unificate (vincolante, 2026-06-27)**: la distinzione chat interna/esterna **non esiste** a **nessun livello** (client, Supabase, bridge, test, documentazione). Una sola chat end-to-end per ogni conversazione. Il campo `protocol` indica solo il **percorso di recapito uscente**, non una tipologia di chat. ADR: `docs/decisions/no-internal-external-chat-distinction.md`.
 
 ### Documentazione architettura Alpha
 

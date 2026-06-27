@@ -44,9 +44,9 @@ Nel client cloud Alfred, il livello 2 segue il **server come fonte di verità**:
 
 ## Conseguenze implementative
 
-1. **`delivery_status = 'delivered'`** va impostato quando il messaggio è persistito/recapitato nella fonte di verità rilevante (trigger post-insert per chat interna; callback bridge per federato) — **non** quando il client del destinatario riceve un evento Realtime.
+1. **`delivery_status = 'delivered'`** va impostato quando il messaggio è persistito/recapitato nella fonte di verità rilevante — **non** quando il client del destinatario riceve un evento Realtime. Il meccanismo concreto (immediato in piattaforma vs ack bridge) è **pipeline di recapito**, non due tipi di chat — vedi [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md).
 2. **`delivery_status = 'read'`** resta legato all'azione esplicita di lettura (`mark_conversation_read`), indipendente dal disaccoppiamento invio/ricezione.
-3. **Outbox e bridge**: per `protocol in ('xmpp', 'matrix')` il messaggio può restare `pending`/`sent` fino a conferma bridge — il disaccoppiamento è già previsto nello schema (`outbox`, `bridge_jobs`).
+3. **Outbox e bridge**: messaggi il cui recapito passa da bridge possono restare `pending`/`sent` fino a conferma — il disaccoppiamento è previsto nello schema (`outbox`, `bridge_jobs`); non definisce una «chat federata» separata.
 4. **Non confondere** con WhatsApp mobile P2P: Alfred è cloud-first; la semantica delle spunte riflette il server, non la singola sessione WebSocket del peer.
 
 ---
@@ -55,4 +55,4 @@ Nel client cloud Alfred, il livello 2 segue il **server come fonte di verità**:
 
 - [alpha-full-stack.md](../architecture/alpha-full-stack.md) — §2.9 Spunte lettura
 - [message-states.md](../architecture/message-states.md) — policy legacy XMPP (livello 2 = device); **non** applicare tale semantica al client Flutter Alpha senza adattamento
-- `supabase/migrations/*` — enum `message_delivery_status`, RPC `send_message`, `mark_conversation_read`
+- [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md) — regola vincolante: nessuna distinzione chat interna/esterna a nessun livello
