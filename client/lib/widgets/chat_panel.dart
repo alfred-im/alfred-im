@@ -41,12 +41,17 @@ class ChatPanel extends StatelessWidget {
               child: AnchoredMessageList(
                 messages: messages,
                 isLoading: messagesController.isLoading,
+                onRetryMessage: messagesController.retryMessage,
               ),
             ),
           ChatInputBar(
             enabled: !messagesController.isSending,
             onSend: messagesController.send,
             onSendGif: messagesController.sendGif,
+            onSendVoice: (bytes, durationMs) => messagesController.sendVoice(
+              bytes: bytes,
+              durationMs: durationMs,
+            ),
           ),
         ],
       ),

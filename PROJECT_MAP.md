@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-27 (gate `scripts/verify.sh` — flutter analyze)  
+**Ultimo aggiornamento**: 2026-06-27 (note vocali PR #126, gate `scripts/verify.sh`, deploy-alpha)  
 **Versione repository**: 3.1.0-alpha (client Flutter live con piattaforma; bridge esclusi)
 
 ---
@@ -20,18 +20,18 @@
 
 ---
 
-## ⚠️ Stato repository (2026-06-24)
+## ⚠️ Stato repository (2026-06-27)
 
 | Elemento | Dettaglio |
 |----------|-----------|
 | **Client attivo** | `client/` — Flutter, collegato a Supabase (auth, chat, contatti, profilo) |
 | **URL live** | https://alfred-im.github.io/XmppTest/ |
-| **Deploy** | `.github/workflows/deploy-pages.yml` — test + build Flutter web |
+| **Deploy** | `.github/workflows/deploy-pages.yml` — analyze + test + build; job `deploy-alpha` (PR e `main`) |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — **stub** (health Fly.io only, non implementati) |
 | **Client legacy** | `web-client/` rimosso da `main` — tag `legacy/web-client-final` @ `6e792eb` |
 | **Recupero legacy** | `git checkout legacy/web-client-final -- web-client/` |
-| **Branch** | `main` — PR Alpha #108–#115 mergiate (registro: `docs/architecture/alpha-pr-registry.md`) |
+| **Branch** | `main` — PR Alpha #108–#125 mergiate; #126 (voice) e #127 (verify) aperte — `docs/architecture/alpha-pr-registry.md` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -50,12 +50,13 @@ La documentazione sotto che cita `web-client/` descrive il **client React storic
 - **Contatti unificati**: interni Alfred + esterni XMPP/Matrix (protocollo solo routing)
 - **Conversazioni + chat realtime**: Supabase Postgres + Realtime; inbox via RPC `list_conversations` (un round-trip)
 - **GIF in chat**: upload su bucket Supabase `chat-media` → `messages.content_type=gif` + `media_url`; preview inbox `[GIF]`
-- **Messaggistica interna**: utente↔utente stessa istanza — completa (testo + GIF)
+- **Note vocali in chat**: WebM/Opus canonico (`audio/webm`) → `content_type=voice` + `duration_seconds` + `media_mime` + `media_url`; preview inbox `🎤 m:ss`; registrazione hold-to-send in `ChatInputBar`; coda retry `OutboundMessageQueue` (testo/GIF/voice)
+- **Messaggistica interna**: utente↔utente stessa istanza — completa (testo + GIF + voice)
 - **Messaggistica federata**: outbox `queued` — attende bridge (non implementato)
 - **Profilo Alfred**: display name, bio, username
 - **Spunte lettura**: `on_message_inserted` → `delivered` (internal) · `mark_conversation_read` → `read` — concept: ricezione = server — `docs/decisions/server-as-reception.md`
 - **Brand Alfred**: `#2D2926`, bolle WhatsApp, layout responsive
-- **Deploy web**: GitHub Pages automatico su push a `main`
+- **Deploy web**: GitHub Pages — ambiente **Alpha/sviluppo**; ogni build PR o `main` aggiorna https://alfred-im.github.io/XmppTest/ (`deploy-alpha`)
 
 ### Tecnologie attive su `main`
 
@@ -64,7 +65,7 @@ La documentazione sotto che cita `web-client/` descrive il **client React storic
 | Client | Flutter 3.44.x / Dart 3.12 | `client/` |
 | Piattaforma | Supabase (Postgres, Auth, Realtime, Storage) | Schema dominio + RLS + RPC implementati |
 | Bridge | Python 3.12 + aiohttp | Fly.io — health OK, federazione non implementata |
-| CI | GitHub Actions | Deploy Pages da `client/` |
+| CI | GitHub Actions | `deploy-alpha` — analyze + test + build + Pages |
 
 ### Riferimento legacy (tag `legacy/web-client-final`)
 
@@ -261,29 +262,33 @@ Per ogni messaggio nell'array:
 
 ### Client Flutter (`/workspace/client`)
 
-**Stato**: client produzione Alpha collegato a Supabase — **non più mock**.
+**Stato**: client Alpha collegato a Supabase — **non più mock**.
 
 | Elemento | Dettaglio |
 |----------|-----------|
 | **Entry** | `lib/main.dart` → `AppShell` (auth gate) → `HomeScreen` |
 | **State** | Provider (`AuthController`, `ConversationsController`, `ContactsController`, `MessagesController`) |
 | **Backend** | `supabase_flutter` — REST + Realtime + RPC |
-| **Dipendenze** | `provider`, `intl`, `uuid`, `shared_preferences`, `file_picker`, `supabase_flutter` |
+| **Dipendenze** | `provider`, `intl`, `uuid`, `shared_preferences`, `file_picker`, `record`, `just_audio`, `path_provider`, `ffmpeg_kit_flutter_new_min` (transcode IO→WebM), `supabase_flutter` |
 | **Config** | `lib/config/app_config.dart` — override `--dart-define=SUPABASE_URL` |
 | **Test** | `test/unit/`, `test/widget/` — CI esegue `flutter test` |
 | **Build web** | `flutter build web --release --base-href "/XmppTest/"` |
 
 ```
 client/lib/
-├── config/          # AppConfig (Supabase URL/key)
-├── models/          # Conversation, ChatMessage, Contact, UserProfile, SavedAccount
-├── services/        # auth, contact, conversation, message, message_media, profile, account storage
+├── config/          # AppConfig, VoiceConfig
+├── models/          # Conversation, ChatMessage, OutboundQueueItem, …
+├── services/        # auth, message, message_media, voice_recording, voice_encoding_*, outbound_message_queue, …
 ├── providers/       # ChangeNotifier controllers
 ├── screens/         # AppShell, Auth, Home, Contacts, Profile
 ├── theme/           # AlfredColors, AlfredTheme
-├── utils/           # date_format, avatar_color, auth_identity, conversation_scroll_anchor
-└── widgets/         # ConversationsPanel, ChatPanel, AnchoredMessageList, AccountSidebar, MessageBubble, …
+├── utils/           # date_format, duration_format, conversation_scroll_anchor, …
+└── widgets/         # ChatPanel, ChatInputBar, MessageBubble, VoiceMessageContent, …
 ```
+
+**Note vocali (non deducibile)**: microfono visibile solo a campo messaggio vuoto; overlay registrazione sopra input; bolle voice con player inline. Spec: `docs/implementation/voice-notes.md`.
+
+**Coda invio client (non deducibile)**: `OutboundMessageQueue` persiste fallimenti (testo/GIF/voice) per retry automatico e tap «Riprova invio» — non è l'outbox server federato.
 
 **Layout inbox (non deducibile)**: `HomeScreen` — mobile: drawer sinistro (hamburger solo nella lista conversazioni) con `AccountSidebar` (profilo attivo, modifica, altri account, aggiungi, esci); chat mobile con solo back. Desktop (≥720px): colonna sinistra fissa = `AccountSidebar` + lista conversazioni (senza barra Alfred duplicata); area destra sempre chat/placeholder. Menu account bottom sheet rimosso.
 
@@ -618,11 +623,8 @@ Config deploy in root: `fly.toml` (due `[[services]]`), `Dockerfile`. Fly colleg
 
 ```bash
 cd client
-bash scripts/verify.sh           # pub get + analyze + test
+bash scripts/verify.sh           # pub get + analyze + test (gate CI)
 bash scripts/verify.sh --build   # + build web release
-```
-
-```bash
 flutter run -d chrome
 ```
 
@@ -630,12 +632,14 @@ flutter run -d chrome
 |------|------|--------|
 | **Verifica** | `scripts/verify.sh` | `flutter analyze` (zero issue obbligatorio) + `flutter test` |
 | Dev | `flutter run -d chrome` | Hot reload locale |
-| Prod web | `flutter build web --base-href "/XmppTest/"` | `client/build/web/` |
-| Deploy | GitHub Actions `deploy-pages.yml` | https://alfred-im.github.io/XmppTest/ |
+| Artefatto web | `flutter build web --base-href "/XmppTest/"` | `client/build/web/` |
+| Deploy Alpha | CI job `deploy-alpha` | https://alfred-im.github.io/XmppTest/ — **PR e `main`** |
 
-**`flutter analyze`**: in CI e nello script `verify.sh` qualsiasi issue (anche `info`, es. `unnecessary_import`) fa fallire il gate — allineare il codice prima del push.
+**`flutter analyze`**: in CI e in `verify.sh` qualsiasi issue (anche `info`, es. `unnecessary_import`) fa fallire il gate.
 
-Workflow CI: `verify.sh` → build web → copia `index.html` → `404.html` (SPA su Pages).
+Workflow CI (`.github/workflows/deploy-pages.yml`): `verify.sh` → build web → `deploy-alpha` → copia `index.html` → `404.html`.
+
+**Vincolo GitHub (non deducibile)**: Settings → Environments → `github-pages` → *Deployment branches: All branches*. Con solo `main` selezionato, il deploy da PR fallisce (`environment protection rules`). `deployment_branch_policy: null` via API = nessun vincolo.
 
 ---
 
@@ -899,11 +903,11 @@ class ConversationRepository {
 
 ## 📊 Stato Corrente
 
-### Stack su `main` (2026-06-24, post-merge PR #108–#115)
+### Stack su `main` (2026-06-27, post-merge PR #108–#125; #126 voice in PR)
 
 | Componente | Stato |
 |------------|-------|
-| `client/` (Flutter) | 🟢 Auth, contatti, chat realtime (testo + GIF), profilo, multi-account |
+| `client/` (Flutter) | 🟢 Auth, contatti, chat realtime (testo + GIF + voice), profilo, multi-account |
 | `supabase/` | 🟢 Schema dominio + RLS + RPC + storage `chat-media` + outbox |
 | `bridge-xmpp/` · `bridge-matrix/` | 🟡 Stub Fly.io health — federazione non implementata |
 | `web-client/` (React) | ❌ Rimosso — tag `legacy/web-client-final` |
@@ -914,11 +918,11 @@ class ConversationRepository {
 - Multi-account Thunderbird (`SharedPreferences` + switch refresh token) — PR #111
 - Contatti unificati (interni + federati in rubrica)
 - Inbox via RPC `list_conversations` (un round-trip) — PR #112
-- Chat realtime testo + GIF (Supabase Postgres + Realtime + Storage) — PR #109/#115
+- Chat realtime testo + GIF + voice (Supabase Postgres + Realtime + Storage) — PR #109/#115/#126
 - Stabilità inbox web: `waitForSupabaseSessionReady` + `ChangeNotifierProxyProvider` — PR #113/#114
 - Deploy GitHub Pages con passkeys bundle — PR #110
 - Layout conversazioni + chat responsive, tema `#2D2926`
-- Test: unit, widget, e2e Playwright inbox, SQL smoke, CI analyze+test+build
+- Test: unit, widget (voice incluso), e2e Playwright inbox, SQL smoke, CI analyze+test+build
 
 **Architettura dettagliata**: `docs/architecture/alpha-full-stack.md`  
 **Registro PR**: `docs/architecture/alpha-pr-registry.md`
@@ -1063,8 +1067,15 @@ Documentati in `docs/fixes/known-issues.md`:
 
 ## 🔄 Ultima Revisione
 
-**Data**: 2026-06-24  
-**Versione**: 3.1.0-alpha — Client Flutter + Supabase su `main`
+**Data**: 2026-06-27  
+**Versione**: 3.1.0-alpha — Client Flutter + Supabase; PR #126 voice (aperta)
+
+**Modifiche Recenti** (2026-06-27):
+- ✅ **PR #126** (aperta): note vocali WebM/Opus, `OutboundMessageQueue`, migrazioni voice
+- ✅ **Deploy Alpha**: job unificato `deploy-alpha` — PR e `main` → stesso URL Pages; Environment `github-pages` *All branches*
+- ✅ **PR #125**: aggancio al fondo (`AnchoredMessageList`)
+- ✅ **PR #124**: ADR chat unificate (nessuna distinzione interna/esterna)
+- ✅ Documentazione: `voice-notes.md`, sync INDICE/CHANGELOG/alpha-pr-registry/README
 
 **Modifiche Recenti** (v3.1.0-alpha — 24 giugno 2026):
 - ✅ **PR #109**: app completa Flutter + schema dominio Supabase

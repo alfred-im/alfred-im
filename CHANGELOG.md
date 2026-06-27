@@ -23,6 +23,23 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### CI / deploy Alpha (2026-06-27)
+- **Workflow unificato `deploy-alpha`**: ogni PR su `main` (path `client/**`) e ogni push a `main` pubblicano su https://alfred-im.github.io/XmppTest/ — ambiente **sviluppo**, non produzione
+- Rimossi job `deploy-preview` / `deploy-prod`; concurrency `pages-alpha`
+- **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (default solo `main` → errore `environment protection rules` su PR)
+
+### Alpha Flutter — PR #126 (note vocali in chat)
+- **`content_type=voice`**: `duration_seconds`, `media_mime`, `media_size_bytes`, `media_url` — formato canonico **WebM/Opus** (`audio/webm`)
+- Migrazioni `20260627120000` + `20260627120100` — applicate su progetto cloud
+- Client: `VoiceRecordingService`, transcode IO (FFmpeg), `VoiceMessageContent` (waveform + `just_audio`), gesti hold/swipe in `ChatInputBar`
+- **`OutboundMessageQueue`**: retry client unificato per testo, GIF e voice (persistenza + «Riprova invio»)
+- Bucket `chat-media`: esteso a `audio/webm`, limite 15 MB
+- Preview inbox: `🎤 m:ss`
+
+### Alpha Flutter — PR #127 (processo analyze, branch separata)
+- **`client/scripts/verify.sh`**: `pub get` → `analyze` → `test` (opzionale `--build`)
+- Allineamento `.cursor-rules.md` e CI al gate `flutter analyze` (zero issue, incluso livello `info`)
+
 ### Documentazione (2026-06-27)
 - **ADR** [no-internal-external-chat-distinction.md](docs/decisions/no-internal-external-chat-distinction.md) — vietata distinzione chat interna/esterna a tutti i livelli (PR #124)
 - **Design** [conversation-bottom-anchor.md](docs/design/conversation-bottom-anchor.md) — specifica aggancio al fondo conversazione

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/message.dart';
 import '../theme/alfred_colors.dart';
+import 'voice_message_content.dart';
 
 const double _gifMaxWidth = 240;
 const double _gifMaxHeight = 240;
@@ -21,19 +22,23 @@ Widget _gifLoadingPlaceholder() {
 }
 
 class MessageBubble extends StatelessWidget {
-  const MessageBubble({super.key, required this.message});
+  const MessageBubble({
+    super.key,
+    required this.message,
+    this.onRetry,
+  });
 
   final ChatMessage message;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
     final isMine = message.isMine;
-
-    return Align(
+    final bubble = Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 6),
-        padding: message.isGif
+        padding: message.isMedia
             ? const EdgeInsets.all(4)
             : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         constraints: BoxConstraints(
@@ -59,6 +64,8 @@ class MessageBubble extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (message.isGif) _GifContent(url: message.mediaUrl!),
+            if (message.isVoice)
+              VoiceMessageContent(message: message, isMine: isMine),
             if (message.body.isNotEmpty)
               Text(
                 message.body,
@@ -85,10 +92,24 @@ class MessageBubble extends StatelessWidget {
                 ],
               ],
             ),
+            if (message.canRetry && onRetry != null) ...[
+              const SizedBox(height: 6),
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('Riprova invio'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AlfredColors.charcoal,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
+
+    return bubble;
   }
 }
 
@@ -150,8 +171,8 @@ class _Checkmarks extends StatelessWidget {
       return Icon(Icons.schedule, size: 14, color: color);
     }
 
-    final isDouble = status == MessageStatus.delivered ||
-        status == MessageStatus.read;
+    final isDouble =
+        status == MessageStatus.delivered || status == MessageStatus.read;
 
     return Icon(
       isDouble ? Icons.done_all : Icons.done,

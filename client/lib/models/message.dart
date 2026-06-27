@@ -1,6 +1,6 @@
 enum MessageStatus { sent, delivered, read, pending, failed }
 
-enum MessageContentType { text, gif }
+enum MessageContentType { text, gif, voice }
 
 MessageStatus messageStatusFromDelivery(String? value) {
   switch (value) {
@@ -21,6 +21,8 @@ MessageContentType messageContentTypeFromString(String? value) {
   switch (value) {
     case 'gif':
       return MessageContentType.gif;
+    case 'voice':
+      return MessageContentType.voice;
     default:
       return MessageContentType.text;
   }
@@ -37,6 +39,10 @@ class ChatMessage {
     this.senderId,
     this.contentType = MessageContentType.text,
     this.mediaUrl,
+    this.durationSeconds,
+    this.mediaMime,
+    this.mediaSizeBytes,
+    this.retryPayloadPath,
   });
 
   final String id;
@@ -48,13 +54,26 @@ class ChatMessage {
   final String? senderId;
   final MessageContentType contentType;
   final String? mediaUrl;
+  final int? durationSeconds;
+  final String? mediaMime;
+  final int? mediaSizeBytes;
+  final String? retryPayloadPath;
 
   bool get isGif =>
       contentType == MessageContentType.gif &&
       mediaUrl != null &&
       mediaUrl!.isNotEmpty;
 
-  bool get hasRenderableContent => body.isNotEmpty || isGif;
+  bool get isVoice =>
+      contentType == MessageContentType.voice &&
+      mediaUrl != null &&
+      mediaUrl!.isNotEmpty;
+
+  bool get isMedia => isGif || isVoice;
+
+  bool get hasRenderableContent => body.isNotEmpty || isGif || isVoice;
+
+  bool get canRetry => isMine && status == MessageStatus.failed;
 
   factory ChatMessage.fromJson({
     required Map<String, dynamic> json,
@@ -71,6 +90,9 @@ class ChatMessage {
       senderId: json['sender_id'] as String?,
       contentType: messageContentTypeFromString(json['content_type'] as String?),
       mediaUrl: json['media_url'] as String?,
+      durationSeconds: json['duration_seconds'] as int?,
+      mediaMime: json['media_mime'] as String?,
+      mediaSizeBytes: json['media_size_bytes'] as int?,
     );
   }
 
@@ -84,6 +106,10 @@ class ChatMessage {
     String? senderId,
     MessageContentType? contentType,
     String? mediaUrl,
+    int? durationSeconds,
+    String? mediaMime,
+    int? mediaSizeBytes,
+    String? retryPayloadPath,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -95,6 +121,10 @@ class ChatMessage {
       senderId: senderId ?? this.senderId,
       contentType: contentType ?? this.contentType,
       mediaUrl: mediaUrl ?? this.mediaUrl,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      mediaMime: mediaMime ?? this.mediaMime,
+      mediaSizeBytes: mediaSizeBytes ?? this.mediaSizeBytes,
+      retryPayloadPath: retryPayloadPath ?? this.retryPayloadPath,
     );
   }
 }

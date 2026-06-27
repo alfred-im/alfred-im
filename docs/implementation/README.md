@@ -4,7 +4,7 @@ Analisi tecniche implementazioni completate per comprensione dettagli e decision
 
 > **Nota (2026-06-24)**: i documenti in questa cartella descrivono per lo più il **client React legacy** (`web-client/`, tag `legacy/web-client-final`). Il codice non è più su `main`; i contenuti restano riferimento per il client Flutter.
 
-> **Flutter (2026-06-27)**: aggancio al fondo chat → [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) (non legacy React).
+> **Flutter (2026-06-27)**: aggancio al fondo chat → [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md); note vocali → [voice-notes.md](./voice-notes.md) (non legacy React).
 
 ## Documenti Disponibili
 
@@ -13,6 +13,7 @@ Analisi tecniche implementazioni completate per comprensione dettagli e decision
 - **delivery-receipts-xep-0184.md** - XEP-0184 livello 2 spunte (✓✓ grigie)
 - **chat-markers-xep-0333.md** - XEP-0333 livello 3 spunte (✓✓ blu)
 - **scrollable-containers.md** + **scrollable-containers-implementation.md** - Utility scroll
+- **voice-notes.md** - Note vocali WebM/Opus, registrazione, player, coda retry client (Flutter Alpha)
 
 **Policy spunte**: [message-states.md](../architecture/message-states.md) (v2.1)
 
@@ -28,6 +29,8 @@ Analisi tecniche implementazioni completate per comprensione dettagli e decision
 | Spunte livello 3 XEP-0333 | ✅ | [chat-markers-xep-0333.md](./chat-markers-xep-0333.md) |
 | Scrollable Containers | ✅ | [scrollable-containers.md](./scrollable-containers.md) |
 | Aggancio al fondo (Flutter) | ✅ | [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md), `alpha-full-stack.md` §2.10 |
+| Note vocali (Flutter) | ✅ | [voice-notes.md](./voice-notes.md), `alpha-full-stack.md` §2.11 |
+| Coda retry invio client (Flutter) | ✅ | `OutboundMessageQueue` — `alpha-full-stack.md` §2.7, [voice-notes.md](./voice-notes.md) |
 
 ## Pattern (Riferimento Rapido)
 

@@ -46,6 +46,7 @@ Recupero codice legacy: `git checkout legacy/web-client-final -- web-client/`
 - [implementation/scrollable-containers-implementation.md](./implementation/scrollable-containers-implementation.md) - Dettagli tecnici
 - [implementation/delivery-receipts-xep-0184.md](./implementation/delivery-receipts-xep-0184.md) - **XEP-0184** livello 2 (✓✓ grigie consegnato)
 - [implementation/chat-markers-xep-0333.md](./implementation/chat-markers-xep-0333.md) - **XEP-0333** livello 3 (✓✓ blu lettura)
+- [implementation/voice-notes.md](./implementation/voice-notes.md) - **Note vocali** — WebM/Opus, hold-to-send, coda retry client (PR #126, 2026-06-27)
 
 ## Fixes
 
@@ -88,6 +89,6 @@ Recupero codice legacy: `git checkout legacy/web-client-final -- web-client/`
 
 ---
 
-**Ultimo aggiornamento**: 2026-06-27 (aggancio al fondo + ADR chat unificate)  
+**Ultimo aggiornamento**: 2026-06-27 (note vocali PR #126, deploy-alpha da PR, aggancio al fondo, ADR chat unificate)  
 **Client live**: Flutter + Supabase @ https://alfred-im.github.io/XmppTest/  
 **Legacy (riferimento doc)**: React @ `legacy/web-client-final`

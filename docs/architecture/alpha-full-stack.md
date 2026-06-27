@@ -1,8 +1,8 @@
 # Alfred Alpha — Architettura completa (client + piattaforma)
 
-**Data**: 2026-06-24  
+**Data**: 2026-06-27  
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
-**Stato**: Implementato e mergiato su `main` (PR #109–#114)  
+**Stato**: PR #109–#125 su `main`; #126 (voice + deploy-alpha) aperta  
 **Registro PR**: [alpha-pr-registry.md](./alpha-pr-registry.md)
 
 ---
@@ -12,7 +12,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Flutter Web (`client/`)                                   │
-│  Auth · Contatti · Conversazioni · Chat · Profilo · Multi-account │
+│  Auth · Contatti · Conversazioni · Chat (testo/GIF/voice) · Profilo · Multi-account │
 └───────────────────────────┬─────────────────────────────────┘
                             │ HTTPS (REST + Realtime + Auth)
                             ▼
@@ -112,6 +112,7 @@ client/lib/
 3. Trigger `on_message_inserted` aggiorna preview/unread
 4. Per protocollo `internal`: delivery immediata via Realtime
 5. Per `xmpp`/`matrix`: status `pending` + riga `outbox` (bridge futuro)
+6. **Retry client**: `OutboundMessageQueue` persiste invii falliti (testo, GIF, voice) — retry periodico + tap «Riprova invio» (`MessagesController`)
 
 ### 2.8 GIF in chat
 
@@ -163,6 +164,25 @@ client/lib/
 
 **PR**: #125
 
+### 2.11 Note vocali (WebM/Opus)
+
+**Dettaglio**: [voice-notes.md](../implementation/voice-notes.md)
+
+1. Campo messaggio vuoto → pulsante microfono (`ChatInputBar`)
+2. Registrazione hold-to-send; swipe ↑ blocca, ↓ annulla; blocco → anteprima
+3. Web: WebM/Opus nativo; IO: transcode FFmpeg → unico formato in upload
+4. `MessageMediaService.uploadVoice` → bucket `chat-media` (max 15 MB)
+5. RPC `send_message` con `content_type=voice`, `duration_seconds`, `media_mime`, `media_size_bytes`
+6. `VoiceMessageContent` in bolla — play/pausa, waveform (`just_audio`)
+7. Preview inbox: `🎤 m:ss` (`format_voice_preview`)
+
+**Scelte**:
+- Formato canonico unico (`audio/webm`) — bridge futuri ricevono sempre lo stesso blob
+- Coda retry client unificata con testo/GIF (`OutboundMessageQueue`)
+- Migrazioni enum in due file (commit enum prima del CHECK/RPC)
+
+**PR**: #126 (aperta al 2026-06-27)
+
 ---
 
 ## 3. Layer piattaforma Supabase
@@ -174,7 +194,10 @@ client/lib/
 | `20260624200000_alfred_domain_schema.sql` | Schema dominio, RLS, trigger, RPC base |
 | `20260624210000_rpc_grants_hardening.sql` | Grant EXECUTE RPC solo `authenticated` |
 | `20260624220000_list_conversations_rpc.sql` | RPC inbox un round-trip |
-| `20260625150000_real_email_auth.sql` | Trigger `handle_new_user` — username da metadata, email reale in GoTrue |
+| `20260624230000_message_gif_support.sql` | GIF — `content_type`, `media_url`, bucket `chat-media` |
+| `20260626100000_internal_delivered_on_server.sql` | Spunte — `delivered` su insert (debito nome «internal») |
+| `20260627120000_message_voice_support.sql` | Enum `voice` (step 1) |
+| `20260627120100_message_voice_support.sql` | Voice — colonne media, RPC 8 arg, bucket `audio/webm` |
 
 ### 3.2 Modello dati
 
@@ -182,12 +205,12 @@ client/lib/
 auth.users 1──1 profiles
 profiles 1──* contacts (owner)
 profiles *──* conversations (via conversation_participants)
-conversations 1──* messages (content_type, media_url opzionale)
+conversations 1──* messages (content_type, media_url, duration_seconds, media_mime opzionali)
 messages 1──* message_read_receipts
-messages 1──0..1 outbox (se federato; payload include content_type/media_url)
+messages 1──0..1 outbox (se federato; payload include content_type/media_url/duration per voice)
 profiles 1──* sync_cursors
 bridge_jobs (coda generica bridge)
-storage.chat-media (GIF upload, path `{userId}/{uuid}.gif`)
+storage.chat-media (GIF + voice WebM, path `{userId}/{uuid}.gif|.webm`)
 ```
 
 ### 3.3 Enum
@@ -195,7 +218,7 @@ storage.chat-media (GIF upload, path `{userId}/{uuid}.gif`)
 | Tipo | Valori | Uso |
 |------|--------|-----|
 | `contact_protocol` | internal, xmpp, matrix | Routing interno (invisibile UI) |
-| `message_content_type` | text, gif | Tipo contenuto messaggio |
+| `message_content_type` | text, gif, voice | Tipo contenuto messaggio |
 | `message_delivery_status` | pending…failed | Spunte + outbox |
 | `queue_status` | queued…failed | Outbox / bridge_jobs |
 
@@ -222,7 +245,7 @@ storage.chat-media (GIF upload, path `{userId}/{uuid}.gif`)
 | `list_conversations` | Inbox completa in un round-trip (nome, preview, unread) |
 | `get_or_create_direct_conversation` | Chat 1:1 interna idempotente |
 | `get_or_create_conversation_from_contact` | Apre chat da rubrica (qualsiasi protocollo) |
-| `send_message` | Validazione partecipante; testo (`body` non vuoto) o GIF (`media_url`) |
+| `send_message` | Validazione partecipante; testo (`body` non vuoto), GIF (`media_url`), o voice (`media_url` + `duration_seconds` + `media_mime`) |
 | `mark_conversation_read` | Unread + read receipts |
 
 **Scelta**: logica critica in RPC `SECURITY DEFINER` — il client non può bypassare RLS con insert diretti malformati.
@@ -232,7 +255,7 @@ storage.chat-media (GIF upload, path `{userId}/{uuid}.gif`)
 | Trigger | Evento | Azione |
 |---------|--------|--------|
 | `on_auth_user_created` | INSERT `auth.users` | Crea `profiles` da metadata signup |
-| `messages_after_insert` | INSERT `messages` | Preview (`[GIF]` se gif), unread, outbox se federato |
+| `messages_after_insert` | INSERT `messages` | Preview (`[GIF]`, `🎤 m:ss` se voice), unread, outbox se federato |
 
 ### 3.8 RLS
 
@@ -272,11 +295,12 @@ Vedi `docs/decisions/bridge-stateless.md`.
 | Livello | Path | Cosa verifica |
 |---------|------|---------------|
 | Unit | `client/test/unit/` | Modelli, utils, account storage, parsing RPC |
-| Widget | `client/test/widget/` | MessageBubble, AlfredLogo, `ChangeNotifierProxyProvider` listen |
+| Widget | `client/test/widget/` | MessageBubble, AlfredLogo, provider listen, voice UI |
 | E2E | `client/e2e/` | Playwright — inbox load senza interazione (`inbox-load.spec.ts`) |
 | SQL smoke | `supabase/tests/schema_smoke.sql` | Tabelle + RPC presenti |
 | Build | `flutter build web` | Compilazione release GitHub Pages |
-| CI | `.github/workflows/deploy-pages.yml` | `client/scripts/verify.sh` (analyze + test, zero issue) + build su PR/main |
+| CI | `.github/workflows/deploy-pages.yml` | `client/scripts/verify.sh` (analyze + test, zero issue) + build; job `deploy-alpha` |
+| Analyze | `flutter analyze` | Fallisce su qualsiasi issue, incluso livello `info` |
 
 ---
 
@@ -284,9 +308,20 @@ Vedi `docs/decisions/bridge-stateless.md`.
 
 | Target | Meccanismo |
 |--------|------------|
-| Web | GitHub Pages `/XmppTest/` |
+| Web Alpha (sviluppo) | GitHub Pages `/XmppTest/` — **non è produzione** |
 | Supabase | Migrazioni in repo → MCP/dashboard |
 | Bridge | **Non toccati** — health Fly.io invariato |
+
+### CI `deploy-alpha`
+
+| Evento | Job | URL aggiornato |
+|--------|-----|----------------|
+| Pull request su `main` (path `client/**`) | `build` → `deploy-alpha` | https://alfred-im.github.io/XmppTest/ |
+| Push su `main` | idem | idem |
+
+**Non deducibile**: ambiente GitHub `github-pages` deve permettere *All branches* per il deploy da PR. Default (solo `main`) → errore `environment protection rules`. Rimosso `deploy-preview` / `deploy-prod` — un solo job `deploy-alpha` per ambiente sviluppo condiviso.
+
+Concurrency: `pages-alpha` (ultimo build vince).
 
 ### Override config build
 
@@ -312,7 +347,7 @@ Vedi README ufficiale `supabase_flutter`. Test E2E: `client/e2e/pages-smoke.spec
 
 | Funzionalità | Stato |
 |--------------|-------|
-| Chat tra utenti Alfred stessa istanza | ✅ Completa |
+| Chat tra utenti Alfred stessa istanza | ✅ Testo + GIF + **voice** (PR #126) |
 | Aggiunta contatti XMPP/Matrix in rubrica | ✅ |
 | Invio verso contatti federati | ⏸ Messaggio in `outbox`, status `pending` |
 | Ricezione da XMPP/Matrix | ❌ Richiede bridge |

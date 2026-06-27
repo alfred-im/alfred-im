@@ -30,8 +30,8 @@ BEGIN
   IF to_regprocedure('public.send_message(uuid,text,text)') IS NULL THEN
     RAISE EXCEPTION 'Missing RPC send_message (text overload)';
   END IF;
-  IF to_regprocedure('public.send_message(uuid,text,text,public.message_content_type,text)') IS NULL THEN
-    RAISE EXCEPTION 'Missing RPC send_message (media overload)';
+  IF to_regprocedure('public.send_message(uuid,text,text,public.message_content_type,text,integer,text,bigint)') IS NULL THEN
+    RAISE EXCEPTION 'Missing RPC send_message (voice/media metadata overload)';
   END IF;
   IF to_regprocedure('public.mark_conversation_read(uuid)') IS NULL THEN
     RAISE EXCEPTION 'Missing RPC mark_conversation_read';

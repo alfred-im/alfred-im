@@ -11,10 +11,12 @@ class AnchoredMessageList extends StatefulWidget {
     super.key,
     required this.messages,
     required this.isLoading,
+    this.onRetryMessage,
   });
 
   final List<ChatMessage> messages;
   final bool isLoading;
+  final void Function(String messageId)? onRetryMessage;
 
   @override
   State<AnchoredMessageList> createState() => _AnchoredMessageListState();
@@ -143,7 +145,12 @@ class _AnchoredMessageListState extends State<AnchoredMessageList> {
           itemCount: widget.messages.length,
           itemBuilder: (context, index) {
             final message = widget.messages[widget.messages.length - 1 - index];
-            return MessageBubble(message: message);
+            return MessageBubble(
+              message: message,
+              onRetry: message.canRetry && widget.onRetryMessage != null
+                  ? () => widget.onRetryMessage!(message.id)
+                  : null,
+            );
           },
         ),
         if (!_isAttached)

@@ -681,14 +681,14 @@ La CLI (e MCP per Supabase) sono **strumenti opzionali** per sviluppo e smoke te
 | Check | Esito |
 |-------|-------|
 | URL live | https://alfred-im.github.io/XmppTest/ |
-| Client | **Flutter** (`client/`) — Alpha Supabase (auth, chat, contatti, multi-account) |
-| Workflow | `.github/workflows/deploy-pages.yml` |
+| Client | **Flutter** (`client/`) — Alpha Supabase (auth, chat testo/GIF/voice, contatti, multi-account) |
+| Workflow | `.github/workflows/deploy-pages.yml` — job `deploy-alpha` |
 | Build | `flutter build web --release --base-href "/XmppTest/"` |
 | Passkeys | `bundle.js` obbligatorio in `index.html` (PR #110) |
 | SPA fallback | `index.html` copiato come `404.html` |
 | `web-client/` React | Rimosso — tag `legacy/web-client-final` |
 
-Deploy produzione su ogni push a `main` che tocca `client/` o il workflow.
+Deploy ambiente **Alpha** (GitHub Pages, sviluppo — non produzione): ogni **PR** su `main` e ogni **push** a `main` che tocca `client/` o il workflow aggiornano https://alfred-im.github.io/XmppTest/. Richiede Environment `github-pages` con *All branches* (vedi `alpha-full-stack.md` §6).
 
 ---
 
@@ -699,7 +699,7 @@ Deploy produzione su ogni push a `main` che tocca `client/` o il workflow.
 | Progetto cloud | `tvwpoxxcqwphryvuyqzu` — **ACTIVE_HEALTHY** (region `eu-west-1`) |
 | URL API | https://tvwpoxxcqwphryvuyqzu.supabase.co |
 | Auth health | ✅ **200** (GoTrue) |
-| Migrazioni cloud | `20260624000000` … `20260624220000` (dominio + `list_conversations`) — vedi `alpha-pr-registry.md` |
+| Migrazioni cloud | `20260624000000` … `20260627120100` (dominio, GIF, voice) — vedi `alpha-pr-registry.md` |
 | `pgcrypto` | ✅ installato (v1.3) |
 | MCP Supabase (agente) | ✅ `execute_sql`, `apply_migration`, `list_tables` |
 | REST API (anon) | ✅ **200** — lettura tabella smoke |

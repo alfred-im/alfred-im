@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../config/voice_config.dart';
 import '../models/message.dart';
 import 'supabase_bootstrap.dart';
 
@@ -59,6 +60,27 @@ class MessageService {
     );
   }
 
+  Future<ChatMessage> sendVoice({
+    required String conversationId,
+    required String mediaUrl,
+    required int durationSeconds,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+  }) {
+    return _sendMessage(
+      conversationId: conversationId,
+      currentUserId: currentUserId,
+      clientMessageId: clientMessageId,
+      contentType: 'voice',
+      body: '',
+      mediaUrl: mediaUrl,
+      durationSeconds: durationSeconds,
+      mediaMime: VoiceConfig.canonicalMime,
+      mediaSizeBytes: mediaSizeBytes,
+    );
+  }
+
   Future<ChatMessage> _sendMessage({
     required String conversationId,
     required String currentUserId,
@@ -66,6 +88,9 @@ class MessageService {
     required String contentType,
     required String body,
     String? mediaUrl,
+    int? durationSeconds,
+    String? mediaMime,
+    int? mediaSizeBytes,
   }) async {
     final params = {
       'p_conversation_id': conversationId,
@@ -73,6 +98,9 @@ class MessageService {
       'p_client_message_id': clientMessageId,
       'p_content_type': contentType,
       'p_media_url': ?mediaUrl,
+      'p_duration_seconds': ?durationSeconds,
+      'p_media_mime': ?mediaMime,
+      'p_media_size_bytes': ?mediaSizeBytes,
     };
 
     final row = await supabase.rpc('send_message', params: params);

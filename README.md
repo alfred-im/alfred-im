@@ -4,20 +4,20 @@
 
 Traccia lo stato del progetto Alfred per continuità del lavoro. NON è documentazione per utenti esterni.
 
-## Stato attuale (2026-06-24)
+## Stato attuale (2026-06-27)
 
-Migrazione verso **Flutter + Supabase + bridge Python** (`docs/decisions/project-revolution-discovery.md`). PR Alpha **#108–#115** mergiate su `main` (registro: `docs/architecture/alpha-pr-registry.md`).
+Migrazione verso **Flutter + Supabase + bridge Python** (`docs/decisions/project-revolution-discovery.md`). PR Alpha **#108–#125** mergiate su `main`; **#126** (note vocali + deploy-alpha) e **#127** (verify script) aperte (registro: `docs/architecture/alpha-pr-registry.md`).
 
 | Componente | Stato |
 |------------|-------|
-| **`client/`** (Flutter) | App completa Supabase — auth, chat testo/GIF, aggancio al fondo, contatti, multi-account |
+| **`client/`** (Flutter) | App completa Supabase — auth, chat testo/GIF/**voice**, aggancio al fondo, contatti, multi-account, coda retry invio |
 | **`supabase/`** | Schema dominio Alfred (profiles, contacts, messages, outbox, …) |
 | **`bridge-xmpp/`** · **`bridge-matrix/`** | Stub health Fly.io — logica **non** implementata |
 | **`web-client/`** (React) | **Rimosso** — tag `legacy/web-client-final` |
 
 ### URL live
 
-**https://alfred-im.github.io/XmppTest/** — client Flutter + Supabase (auth, chat testo/GIF, contatti, multi-account).
+**https://alfred-im.github.io/XmppTest/** — ambiente **Alpha/sviluppo** (non produzione): client Flutter + Supabase (auth, chat testo/GIF/voice, contatti, multi-account). Ogni build CI da PR o `main` aggiorna lo stesso URL (`deploy-alpha`).
 
 ### Client legacy React
 
@@ -38,11 +38,13 @@ Flutter (client/)  →  Supabase (piattaforma)  →  bridge XMPP + bridge Matrix
 ```bash
 cd client
 flutter pub get
+flutter analyze    # zero issue obbligatorio (CI fallisce anche su info)
+flutter test
 flutter run -d chrome
 flutter build web --release --base-href "/XmppTest/"
 ```
 
-Deploy automatico su push a `main` via `.github/workflows/deploy-pages.yml`.
+Deploy automatico Alpha via `.github/workflows/deploy-pages.yml` — **PR e push su `main`** (path `client/**`).
 
 ## Documentazione
 
@@ -67,6 +69,6 @@ MIT — `LICENSE`
 
 ---
 
-**Ultimo aggiornamento**: 2026-06-24  
-**Live**: Flutter + Supabase @ GitHub Pages  
+**Ultimo aggiornamento**: 2026-06-27  
+**Live**: Flutter + Supabase @ GitHub Pages (Alpha dev)  
 **Legacy**: React @ `legacy/web-client-final`

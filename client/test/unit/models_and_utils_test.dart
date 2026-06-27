@@ -5,6 +5,7 @@ import 'package:alfred_client/models/conversation.dart';
 import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/utils/avatar_color.dart';
 import 'package:alfred_client/utils/date_format.dart';
+import 'package:alfred_client/utils/duration_format.dart';
 
 void main() {
   group('MessageStatus', () {
@@ -19,6 +20,7 @@ void main() {
   group('MessageContentType', () {
     test('maps content type strings', () {
       expect(messageContentTypeFromString('gif'), MessageContentType.gif);
+      expect(messageContentTypeFromString('voice'), MessageContentType.voice);
       expect(messageContentTypeFromString('text'), MessageContentType.text);
       expect(messageContentTypeFromString(null), MessageContentType.text);
     });
@@ -116,6 +118,34 @@ void main() {
       );
       expect(gif.isGif, isTrue);
       expect(gif.hasRenderableContent, isTrue);
+    });
+
+    test('parses voice messages', () {
+      final voice = ChatMessage.fromJson(
+        json: {
+          'id': '4',
+          'body': '',
+          'content_type': 'voice',
+          'media_url': 'https://example.com/note.webm',
+          'duration_seconds': 42,
+          'media_mime': 'audio/webm',
+          'media_size_bytes': 12000,
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+          'sender_id': 'user-b',
+          'delivery_status': 'sent',
+        },
+        currentUserId: 'user-a',
+      );
+      expect(voice.isVoice, isTrue);
+      expect(voice.durationSeconds, 42);
+      expect(voice.hasRenderableContent, isTrue);
+    });
+  });
+
+  group('formatVoiceDuration', () {
+    test('formats mm:ss', () {
+      expect(formatVoiceDuration(42), '0:42');
+      expect(formatVoiceDuration(125), '2:05');
     });
   });
 }

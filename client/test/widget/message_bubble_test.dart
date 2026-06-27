@@ -75,4 +75,28 @@ void main() {
     expect(find.byType(Image), findsOneWidget);
     expect(find.text('12:31'), findsOneWidget);
   });
+
+  testWidgets('MessageBubble renders voice player', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: const Scaffold(
+          body: MessageBubble(
+            message: ChatMessage(
+              id: '4',
+              body: '',
+              timeLabel: '12:33',
+              isMine: true,
+              contentType: MessageContentType.voice,
+              mediaUrl: 'https://example.com/note.webm',
+              durationSeconds: 15,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+    expect(find.text('0:15'), findsOneWidget);
+  });
 }

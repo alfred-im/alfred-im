@@ -21,7 +21,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || 'pages-prod' }}
+  group: pages-alpha
   cancel-in-progress: true
 
 jobs:
@@ -57,29 +57,16 @@ jobs:
         with:
           path: client/build/web
 
-  deploy-preview:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: preview/pr-${{ github.event.pull_request.number }}
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy preview to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-        with:
-          preview: true
-          preview_id: pr-${{ github.event.pull_request.number }}
-
-  deploy-prod:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+  # Alpha / sviluppo: ogni build (PR o main) pubblica su https://alfred-im.github.io/XmppTest/
+  # Richiede ambiente github-pages con «Deployment branches: All branches»
+  # (Settings → Environments → github-pages). Default repo: solo main → PR falliscono.
+  deploy-alpha:
     runs-on: ubuntu-latest
     needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy Alpha dev (GitHub Pages)
         id: deployment
         uses: actions/deploy-pages@v4
