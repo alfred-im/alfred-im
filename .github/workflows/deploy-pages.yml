@@ -21,7 +21,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || 'pages-prod' }}
+  group: pages-deploy
   cancel-in-progress: true
 
 jobs:
@@ -37,12 +37,9 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
-        working-directory: client
-
       - name: Analyze and test
         run: |
+          flutter pub get
           flutter analyze
           flutter test
         working-directory: client
@@ -63,23 +60,7 @@ jobs:
         with:
           path: client/build/web
 
-  deploy-preview:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: preview/pr-${{ github.event.pull_request.number }}
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy preview to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-        with:
-          preview: true
-          preview_id: pr-${{ github.event.pull_request.number }}
-
-  deploy-prod:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+  deploy:
     runs-on: ubuntu-latest
     needs: build
     environment:
