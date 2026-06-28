@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/models/saved_account.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
 
@@ -13,28 +14,34 @@ void main() {
       final storage = AccountStorageService();
 
       await storage.upsertAccount(
-        const SavedAccount(
-          userId: 'a',
-          username: 'alice',
+        SavedAccount(
+          profile: const ProfileSummary(
+            id: 'a',
+            username: 'alice',
+            displayName: 'Alice',
+          ),
           refreshToken: 'refresh-a-v1',
-          displayName: 'Alice',
         ),
       );
       await storage.upsertAccount(
-        const SavedAccount(
-          userId: 'b',
-          username: 'bob',
+        SavedAccount(
+          profile: const ProfileSummary(
+            id: 'b',
+            username: 'bob',
+            displayName: 'Bob',
+          ),
           refreshToken: 'refresh-b-v1',
-          displayName: 'Bob',
         ),
       );
 
       await storage.upsertAccount(
-        const SavedAccount(
-          userId: 'a',
-          username: 'alice',
+        SavedAccount(
+          profile: const ProfileSummary(
+            id: 'a',
+            username: 'alice',
+            displayName: 'Alice',
+          ),
           refreshToken: 'refresh-a-v2',
-          displayName: 'Alice',
         ),
       );
 

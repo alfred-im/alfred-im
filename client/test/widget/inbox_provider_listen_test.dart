@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:alfred_client/models/chat_peer.dart';
+import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/inbox_controller.dart';
 import 'package:alfred_client/services/inbox_service.dart';
 
@@ -16,8 +17,7 @@ class _ImmediateInboxService extends InboxService {
   Future<List<ChatPeer>> fetchInbox() async {
     return const [
       ChatPeer(
-        profileId: 'peer-1',
-        displayName: 'Alice',
+        profile: ProfileSummary(id: 'peer-1', displayName: 'Alice'),
         preview: 'Ciao',
         timeLabel: '12:00',
         unreadCount: 0,

@@ -1,35 +1,30 @@
+import 'profile_summary.dart';
+
 class UserProfile {
   const UserProfile({
-    required this.id,
-    required this.username,
-    required this.displayName,
+    required this.summary,
     this.bio,
-    this.pronouns,
-    this.avatarUrl,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  final String id;
-  final String username;
-  final String displayName;
+  final ProfileSummary summary;
   final String? bio;
-  final String? pronouns;
-  final String? avatarUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  String get id => summary.id;
+  String get username => summary.username ?? '';
+  String get displayName => summary.displayName;
+  String? get pronouns => summary.pronouns;
+  String? get avatarUrl => summary.avatarUrl;
+
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
-      id: json['id'] as String,
-      username: json['username'] as String,
-      displayName: json['display_name'] as String,
+      summary: ProfileSummary.fromProfilesRow(json),
       bio: json['bio'] as String?,
-      pronouns: json['pronouns'] as String?,
-      avatarUrl: json['avatar_url'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
-
 }

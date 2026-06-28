@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/profile_summary.dart';
 import '../models/saved_account.dart';
 import '../providers/auth_controller.dart';
 import '../theme/alfred_colors.dart';
-import '../utils/avatar_color.dart';
+import 'profile_identity.dart';
 
 /// Sezione profilo e account nella sidebar / drawer.
 class AccountSidebar extends StatelessWidget {
@@ -24,7 +25,7 @@ class AccountSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
-    final profile = auth.profile;
+    final profile = auth.profile?.summary;
     final activeUserId = auth.userId;
     final otherAccounts = auth.savedAccounts
         .where((a) => a.userId != activeUserId)
@@ -37,13 +38,7 @@ class AccountSidebar extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(12, compact ? 8 : 16, 12, 16),
           children: [
             if (profile != null && activeUserId != null)
-              _ActiveProfileCard(
-                displayName: profile.displayName,
-                username: profile.username,
-                pronouns: profile.pronouns,
-                avatarUrl: profile.avatarUrl,
-                userId: activeUserId,
-              )
+              _ActiveProfileCard(profile: profile)
             else
               const ListTile(
                 leading: CircularProgressIndicator(strokeWidth: 2),
@@ -101,78 +96,24 @@ class AccountSidebar extends StatelessWidget {
 }
 
 class _ActiveProfileCard extends StatelessWidget {
-  const _ActiveProfileCard({
-    required this.displayName,
-    required this.username,
-    required this.userId,
-    this.pronouns,
-    this.avatarUrl,
-  });
+  const _ActiveProfileCard({required this.profile});
 
-  final String displayName;
-  final String username;
-  final String userId;
-  final String? pronouns;
-  final String? avatarUrl;
+  final ProfileSummary profile;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: avatarColorForId(userId),
-          backgroundImage:
-              avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-          child: avatarUrl == null
-              ? Text(
-                  avatarInitial(displayName),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                )
-              : null,
-        ),
+        ProfileAvatar(profile: profile, radius: 28, fontSize: 22),
         const SizedBox(width: 12),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                displayName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 17,
-                  color: AlfredColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '@$username',
-                style: const TextStyle(
-                  color: AlfredColors.textSecondary,
-                  fontSize: 13,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (pronouns != null && pronouns!.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  pronouns!,
-                  style: const TextStyle(
-                    color: AlfredColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ],
+          child: ProfileIdentityLines(
+            profile: profile,
+            nameStyle: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 17,
+              color: AlfredColors.textPrimary,
+            ),
           ),
         ),
         IconButton(
@@ -198,34 +139,20 @@ class _AccountTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: avatarColorForId(account.userId),
-        backgroundImage:
-            account.avatarUrl != null ? NetworkImage(account.avatarUrl!) : null,
-        child: account.avatarUrl == null
-            ? Text(
-                avatarInitial(account.displayName),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            : null,
-      ),
+      leading: ProfileAvatar(profile: account.profile, radius: 20, fontSize: 16),
       title: Text(account.displayName),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('@${account.username}'),
-          if (account.pronouns != null && account.pronouns!.isNotEmpty)
+          if (account.profile.hasUsername) Text(account.profile.handle),
+          if (account.profile.hasPronouns)
             Text(
-              account.pronouns!,
+              account.profile.pronouns!,
               style: const TextStyle(fontSize: 12),
             ),
         ],
       ),
-      isThreeLine:
-          account.pronouns != null && account.pronouns!.isNotEmpty,
+      isThreeLine: account.profile.hasPronouns,
       contentPadding: EdgeInsets.zero,
       onTap: onTap,
     );

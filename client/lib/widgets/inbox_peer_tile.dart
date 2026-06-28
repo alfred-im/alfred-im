@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/chat_peer.dart';
 import '../theme/alfred_colors.dart';
-import 'peer_avatar.dart';
+import 'profile_identity.dart';
 
 class InboxPeerTile extends StatelessWidget {
   const InboxPeerTile({
@@ -28,7 +28,7 @@ class InboxPeerTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              PeerAvatar(peer: peer),
+              ProfileAvatar(profile: peer.profile),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -60,10 +60,10 @@ class InboxPeerTile extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (peer.pronouns != null && peer.pronouns!.isNotEmpty) ...[
+                    if (peer.profile.hasPronouns) ...[
                       const SizedBox(height: 2),
                       Text(
-                        peer.pronouns!,
+                        peer.profile.pronouns!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.labelSmall?.copyWith(

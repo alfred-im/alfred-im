@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../utils/avatar_color.dart';
 import '../utils/date_format.dart';
+import 'profile_summary.dart';
 
-/// Controparte di una chat — identificata solo da account (profile_id).
+/// Controparte di una chat — identificata da [ProfileSummary] + metadati inbox.
 class ChatPeer {
   const ChatPeer({
-    required this.profileId,
-    required this.displayName,
+    required this.profile,
     this.address,
     this.preview = '',
     this.timeLabel = '',
@@ -15,13 +15,10 @@ class ChatPeer {
     this.lastMessageAt,
     this.protocol = 'internal',
     this.peerExternalAddress,
-    this.avatarUrl,
-    this.pronouns,
     this.avatarColor,
   });
 
-  final String profileId;
-  final String displayName;
+  final ProfileSummary profile;
   final String? address;
   final String preview;
   final String timeLabel;
@@ -29,55 +26,44 @@ class ChatPeer {
   final DateTime? lastMessageAt;
   final String protocol;
   final String? peerExternalAddress;
-  final String? avatarUrl;
-  final String? pronouns;
   final Color? avatarColor;
 
+  String get profileId => profile.id;
+  String get displayName => profile.displayName;
+  String? get avatarUrl => profile.avatarUrl;
+  String? get pronouns => profile.pronouns;
+
   Color get resolvedAvatarColor =>
-      avatarColor ?? avatarColorForId(profileId);
+      avatarColor ?? avatarColorForId(profile.id);
 
   bool get hasInboxHistory => lastMessageAt != null;
 
   factory ChatPeer.fromInboxRow(Map<String, dynamic> json) {
-    final displayName = json['display_name'] as String;
     final lastAt = json['last_message_at'] != null
         ? DateTime.parse(json['last_message_at'] as String)
         : null;
 
     return ChatPeer(
-      profileId: json['peer_profile_id'] as String,
-      displayName: displayName,
+      profile: ProfileSummary.fromInboxRow(json),
       preview: (json['last_message_preview'] as String?) ?? '',
       timeLabel: formatConversationTime(lastAt),
       unreadCount: json['unread_count'] as int? ?? 0,
       lastMessageAt: lastAt,
       protocol: json['protocol'] as String? ?? 'internal',
       peerExternalAddress: json['peer_external_address'] as String?,
-      avatarUrl: json['peer_avatar_url'] as String?,
-      pronouns: json['peer_pronouns'] as String?,
     );
   }
 
-  factory ChatPeer.internal({
-    required String profileId,
-    required String displayName,
-    required String address,
-    String? avatarUrl,
-    String? pronouns,
+  factory ChatPeer.fromProfile({
+    required ProfileSummary profile,
+    String? address,
   }) {
-    return ChatPeer(
-      profileId: profileId,
-      displayName: displayName,
-      address: address,
-      avatarUrl: avatarUrl,
-      pronouns: pronouns,
-    );
+    return ChatPeer(profile: profile, address: address);
   }
 
   ChatPeer mergeFromInbox(ChatPeer inboxRow) {
     return ChatPeer(
-      profileId: profileId,
-      displayName: displayName,
+      profile: profile.mergeDisplay(inboxRow.profile),
       address: address,
       preview: inboxRow.preview,
       timeLabel: inboxRow.timeLabel,
@@ -85,8 +71,7 @@ class ChatPeer {
       lastMessageAt: inboxRow.lastMessageAt,
       protocol: inboxRow.protocol,
       peerExternalAddress: inboxRow.peerExternalAddress,
-      avatarUrl: inboxRow.avatarUrl ?? avatarUrl,
-      pronouns: inboxRow.pronouns ?? pronouns,
+      avatarColor: avatarColor,
     );
   }
 }

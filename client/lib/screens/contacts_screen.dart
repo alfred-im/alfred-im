@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/contact.dart';
+import '../models/profile_summary.dart';
 import '../providers/contacts_controller.dart';
 import '../services/compose_service.dart';
 import '../theme/alfred_colors.dart';
@@ -119,7 +120,7 @@ class _AddContactSheetState extends State<_AddContactSheet>
   final _addressController = TextEditingController();
   final _nameController = TextEditingController();
   ContactProtocol _externalProtocol = ContactProtocol.xmpp;
-  List<ProfileSearchResult> _results = [];
+  List<ProfileSummary> _results = [];
   bool _searching = false;
 
   @override
@@ -194,7 +195,7 @@ class _AddContactSheetState extends State<_AddContactSheet>
                           final profile = _results[index];
                           return ListTile(
                             title: Text(profile.displayName),
-                            subtitle: Text('@${profile.username}'),
+                            subtitle: Text(profile.handle),
                             onTap: () async {
                               await contacts.addInternal(profile);
                               if (context.mounted) Navigator.pop(context);

@@ -1,16 +1,22 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/profile.dart';
+import '../models/profile_summary.dart';
 import '../models/saved_account.dart';
 import '../utils/auth_identity.dart';
 import 'account_storage_service.dart';
+import 'profile_service.dart';
 import 'supabase_bootstrap.dart';
 
 class AuthService {
-  AuthService({AccountStorageService? accountStorage})
-      : _accountStorage = accountStorage ?? AccountStorageService();
+  AuthService({
+    AccountStorageService? accountStorage,
+    ProfileService? profileService,
+  })  : _accountStorage = accountStorage ?? AccountStorageService(),
+        _profileService = profileService ?? ProfileService();
 
   final AccountStorageService _accountStorage;
+  final ProfileService _profileService;
 
   Session? get session => supabase.auth.currentSession;
   User? get currentUser => supabase.auth.currentUser;
@@ -118,37 +124,27 @@ class AuthService {
 
   Future<List<SavedAccount>> savedAccounts() => _accountStorage.loadAccounts();
 
-  /// Aggiorna avatar/pronomi/nome degli account salvati da `profiles` (RLS: lettura autenticata).
+  /// Aggiorna metadati profilo degli account salvati via [ProfileService].
   Future<List<SavedAccount>> syncSavedAccountsFromProfiles() async {
     final accounts = await _accountStorage.loadAccounts();
     if (accounts.isEmpty) return accounts;
 
-    final rows = await supabase
-        .from('profiles')
-        .select('id, display_name, username, avatar_url, pronouns')
-        .inFilter('id', accounts.map((a) => a.userId).toList());
-
-    if (rows.isEmpty) return accounts;
-
-    final byId = <String, Map<String, dynamic>>{
-      for (final row in rows) row['id'] as String: row,
-    };
+    final summaries = await _profileService.fetchSummariesByIds(
+      accounts.map((a) => a.userId).toList(),
+    );
+    final byId = {for (final summary in summaries) summary.id: summary};
 
     final synced = <SavedAccount>[];
     for (final account in accounts) {
-      final row = byId[account.userId];
-      if (row == null) {
+      final summary = byId[account.userId];
+      if (summary == null) {
         synced.add(account);
         continue;
       }
 
-      final updated = account.copyWith(
-        displayName: row['display_name'] as String? ?? account.displayName,
-        username: row['username'] as String? ?? account.username,
-        avatarUrl: row['avatar_url'] as String?,
-        pronouns: row['pronouns'] as String?,
-        clearAvatarUrl: row['avatar_url'] == null,
-        clearPronouns: row['pronouns'] == null,
+      final updated = SavedAccount(
+        profile: summary,
+        refreshToken: account.refreshToken,
       );
       await _accountStorage.upsertAccount(updated);
       synced.add(updated);
@@ -177,30 +173,28 @@ class AuthService {
     final refresh = session.refreshToken;
     if (refresh == null || refresh.isEmpty) return;
 
-    final profile = await supabase
+    final row = await supabase
         .from('profiles')
-        .select('display_name, username, avatar_url, pronouns')
+        .select('id, display_name, username, avatar_url, pronouns')
         .eq('id', session.user.id)
         .maybeSingle();
 
-    final username = profile?['username'] as String? ??
+    final username = row?['username'] as String? ??
         session.user.userMetadata?['username'] as String?;
 
     if (username == null || username.isEmpty) return;
 
-    final displayName = profile?['display_name'] as String? ??
-        session.user.userMetadata?['display_name'] as String? ??
-        username;
+    final summary = row != null
+        ? ProfileSummary.fromProfilesRow(row)
+        : ProfileSummary(
+            id: session.user.id,
+            username: username,
+            displayName: session.user.userMetadata?['display_name'] as String? ??
+                username,
+          );
 
     await _accountStorage.upsertAccount(
-      SavedAccount(
-        userId: session.user.id,
-        username: username,
-        refreshToken: refresh,
-        displayName: displayName,
-        avatarUrl: profile?['avatar_url'] as String?,
-        pronouns: profile?['pronouns'] as String?,
-      ),
+      SavedAccount(profile: summary, refreshToken: refresh),
     );
   }
 }

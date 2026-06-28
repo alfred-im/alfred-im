@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/contact.dart';
+import '../models/profile_summary.dart';
 import '../services/contact_service.dart';
 import '../utils/list_filter.dart';
 
@@ -43,11 +44,11 @@ class ContactsController extends ChangeNotifier {
     }
   }
 
-  Future<List<ProfileSearchResult>> searchProfiles(String query) {
+  Future<List<ProfileSummary>> searchProfiles(String query) {
     return _contactService.searchProfiles(query);
   }
 
-  Future<Contact> addInternal(ProfileSearchResult profile) async {
+  Future<Contact> addInternal(ProfileSummary profile) async {
     final contact = await _contactService.addInternalContact(
       ownerId: ownerId,
       profile: profile,

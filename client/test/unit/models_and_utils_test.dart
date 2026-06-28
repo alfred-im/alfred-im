@@ -4,6 +4,7 @@ import 'package:alfred_client/models/contact.dart';
 import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/models/profile.dart';
+import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/utils/avatar_color.dart';
 import 'package:alfred_client/utils/date_format.dart';
 import 'package:alfred_client/utils/duration_format.dart';
@@ -34,8 +35,26 @@ void main() {
     });
   });
 
+  group('ProfileSummary.fromProfilesRow', () {
+    test('parses public profile fields', () {
+      final summary = ProfileSummary.fromProfilesRow({
+        'id': 'u1',
+        'username': 'alice',
+        'display_name': 'Alice',
+        'avatar_url': 'https://example.com/a.jpg',
+        'pronouns': 'lei/ella',
+      });
+
+      expect(summary.id, 'u1');
+      expect(summary.handle, '@alice');
+      expect(summary.displayName, 'Alice');
+      expect(summary.avatarUrl, 'https://example.com/a.jpg');
+      expect(summary.pronouns, 'lei/ella');
+    });
+  });
+
   group('UserProfile.fromJson', () {
-    test('parses pronouns and avatar', () {
+    test('parses pronouns and avatar via summary', () {
       final profile = UserProfile.fromJson({
         'id': 'u1',
         'username': 'alice',
@@ -47,8 +66,9 @@ void main() {
         'updated_at': '2026-06-28T12:00:00Z',
       });
 
+      expect(profile.summary.pronouns, 'lei/ella');
+      expect(profile.summary.avatarUrl, 'https://example.com/a.jpg');
       expect(profile.pronouns, 'lei/ella');
-      expect(profile.avatarUrl, 'https://example.com/a.jpg');
     });
   });
 
@@ -88,13 +108,14 @@ void main() {
       });
 
       expect(peer.profileId, 'peer-1');
+      expect(peer.profile.displayName, 'Alice');
       expect(peer.displayName, 'Alice');
       expect(peer.preview, 'Ciao!');
       expect(peer.unreadCount, 2);
       expect(peer.protocol, 'internal');
       expect(peer.lastMessageAt, at);
-      expect(peer.avatarUrl, 'https://example.com/a.jpg');
-      expect(peer.pronouns, 'lei/ella');
+      expect(peer.profile.avatarUrl, 'https://example.com/a.jpg');
+      expect(peer.profile.pronouns, 'lei/ella');
     });
   });
 

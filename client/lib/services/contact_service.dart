@@ -1,4 +1,5 @@
 import '../models/contact.dart';
+import '../models/profile_summary.dart';
 import 'supabase_bootstrap.dart';
 
 class ContactService {
@@ -12,7 +13,7 @@ class ContactService {
     return rows.map((r) => Contact.fromJson(r)).toList();
   }
 
-  Future<List<ProfileSearchResult>> searchProfiles(String query) async {
+  Future<List<ProfileSummary>> searchProfiles(String query) async {
     if (query.trim().length < 2) return [];
 
     final rows = await supabase.rpc(
@@ -21,13 +22,13 @@ class ContactService {
     );
 
     return (rows as List<dynamic>)
-        .map((r) => ProfileSearchResult.fromJson(r as Map<String, dynamic>))
+        .map((r) => ProfileSummary.fromProfilesRow(r as Map<String, dynamic>))
         .toList();
   }
 
   Future<Contact> addInternalContact({
     required String ownerId,
-    required ProfileSearchResult profile,
+    required ProfileSummary profile,
   }) async {
     final row = await supabase
         .from('contacts')
@@ -36,7 +37,7 @@ class ContactService {
           'protocol': 'internal',
           'linked_profile_id': profile.id,
           'display_name': profile.displayName,
-          if (profile.avatarUrl != null) 'avatar_url': profile.avatarUrl,
+          'avatar_url': ?profile.avatarUrl,
         })
         .select()
         .single();

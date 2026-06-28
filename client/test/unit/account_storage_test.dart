@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/models/saved_account.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,19 +16,23 @@ void main() {
       final storage = AccountStorageService();
 
       await storage.upsertAccount(
-        const SavedAccount(
-          userId: 'u1',
-          username: 'alice',
+        SavedAccount(
+          profile: const ProfileSummary(
+            id: 'u1',
+            username: 'alice',
+            displayName: 'Alice',
+          ),
           refreshToken: 'rt1',
-          displayName: 'Alice',
         ),
       );
       await storage.upsertAccount(
-        const SavedAccount(
-          userId: 'u2',
-          username: 'bob',
+        SavedAccount(
+          profile: const ProfileSummary(
+            id: 'u2',
+            username: 'bob',
+            displayName: 'Bob',
+          ),
           refreshToken: 'rt2',
-          displayName: 'Bob',
         ),
       );
 
@@ -35,11 +40,13 @@ void main() {
       expect(accounts.length, 2);
 
       await storage.upsertAccount(
-        const SavedAccount(
-          userId: 'u1',
-          username: 'alice',
+        SavedAccount(
+          profile: const ProfileSummary(
+            id: 'u1',
+            username: 'alice',
+            displayName: 'Alice Updated',
+          ),
           refreshToken: 'rt1-new',
-          displayName: 'Alice Updated',
         ),
       );
       accounts = await storage.loadAccounts();
@@ -55,12 +62,14 @@ void main() {
 
     test('serializes roundtrip', () {
       const account = SavedAccount(
-        userId: 'u1',
-        username: 'alice',
+        profile: ProfileSummary(
+          id: 'u1',
+          username: 'alice',
+          displayName: 'Alice',
+          avatarUrl: 'https://example.com/a.jpg',
+          pronouns: 'lei/ella',
+        ),
         refreshToken: 'rt',
-        displayName: 'Alice',
-        avatarUrl: 'https://example.com/a.jpg',
-        pronouns: 'lei/ella',
       );
       final decoded = SavedAccount.fromJson(
         jsonDecode(jsonEncode(account.toJson())) as Map<String, dynamic>,
