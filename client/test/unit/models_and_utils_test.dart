@@ -83,6 +83,8 @@ void main() {
         'last_message_at': at.toIso8601String(),
         'unread_count': 2,
         'peer_profile_id': 'peer-1',
+        'peer_avatar_url': 'https://example.com/a.jpg',
+        'peer_pronouns': 'lei/ella',
       });
 
       expect(peer.profileId, 'peer-1');
@@ -91,6 +93,8 @@ void main() {
       expect(peer.unreadCount, 2);
       expect(peer.protocol, 'internal');
       expect(peer.lastMessageAt, at);
+      expect(peer.avatarUrl, 'https://example.com/a.jpg');
+      expect(peer.pronouns, 'lei/ella');
     });
   });
 

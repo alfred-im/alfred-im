@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/chat_peer.dart';
 import '../theme/alfred_colors.dart';
-import '../utils/avatar_color.dart';
+import 'peer_avatar.dart';
 
 class InboxPeerTile extends StatelessWidget {
   const InboxPeerTile({
@@ -28,7 +28,7 @@ class InboxPeerTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              _Avatar(peer: peer),
+              PeerAvatar(peer: peer),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -60,6 +60,17 @@ class InboxPeerTile extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (peer.pronouns != null && peer.pronouns!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        peer.pronouns!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AlfredColors.textSecondary,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -84,30 +95,6 @@ class InboxPeerTile extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.peer});
-
-  final ChatPeer peer;
-
-  @override
-  Widget build(BuildContext context) {
-    final initial = avatarInitial(peer.displayName);
-
-    return CircleAvatar(
-      radius: 26,
-      backgroundColor: peer.resolvedAvatarColor,
-      child: Text(
-        initial,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          fontSize: 18,
         ),
       ),
     );

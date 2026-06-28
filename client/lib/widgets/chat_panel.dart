@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/chat_peer.dart';
 import '../providers/messages_controller.dart';
 import '../theme/alfred_colors.dart';
-import '../utils/avatar_color.dart';
+import 'peer_avatar.dart';
 import 'anchored_message_list.dart';
 import 'chat_input_bar.dart';
 
@@ -88,16 +88,7 @@ class _ChatHeader extends StatelessWidget {
                   onPressed: onBack,
                   icon: const Icon(Icons.arrow_back),
                 ),
-              CircleAvatar(
-                backgroundColor: peer.resolvedAvatarColor,
-                child: Text(
-                  avatarInitial(peer.displayName),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              PeerAvatar(peer: peer, radius: 20, fontSize: 16),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -111,6 +102,14 @@ class _ChatHeader extends StatelessWidget {
                         color: AlfredColors.textPrimary,
                       ),
                     ),
+                    if (peer.pronouns != null && peer.pronouns!.isNotEmpty)
+                      Text(
+                        peer.pronouns!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AlfredColors.textSecondary,
+                        ),
+                      ),
                   ],
                 ),
               ),

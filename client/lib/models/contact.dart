@@ -49,12 +49,14 @@ class ProfileSearchResult {
     required this.username,
     required this.displayName,
     this.avatarUrl,
+    this.pronouns,
   });
 
   final String id;
   final String username;
   final String displayName;
   final String? avatarUrl;
+  final String? pronouns;
 
   factory ProfileSearchResult.fromJson(Map<String, dynamic> json) {
     return ProfileSearchResult(
@@ -62,6 +64,7 @@ class ProfileSearchResult {
       username: json['username'] as String,
       displayName: json['display_name'] as String,
       avatarUrl: json['avatar_url'] as String?,
+      pronouns: json['pronouns'] as String?,
     );
   }
 }

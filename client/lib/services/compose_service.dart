@@ -26,6 +26,8 @@ class ComposeService {
           address: profile.username,
           displayName: profile.displayName,
           profileId: profile.id,
+          avatarUrl: profile.avatarUrl,
+          pronouns: profile.pronouns,
         );
     }
   }
@@ -40,6 +42,7 @@ class ComposeService {
         address: contact.displayName,
         displayName: contact.displayName,
         profileId: profileId,
+        avatarUrl: contact.avatarUrl,
       );
     }
 

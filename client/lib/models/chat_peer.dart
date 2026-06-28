@@ -15,6 +15,8 @@ class ChatPeer {
     this.lastMessageAt,
     this.protocol = 'internal',
     this.peerExternalAddress,
+    this.avatarUrl,
+    this.pronouns,
     this.avatarColor,
   });
 
@@ -27,10 +29,12 @@ class ChatPeer {
   final DateTime? lastMessageAt;
   final String protocol;
   final String? peerExternalAddress;
+  final String? avatarUrl;
+  final String? pronouns;
   final Color? avatarColor;
 
   Color get resolvedAvatarColor =>
-      avatarColor ?? avatarColorForId(displayName);
+      avatarColor ?? avatarColorForId(profileId);
 
   bool get hasInboxHistory => lastMessageAt != null;
 
@@ -49,6 +53,8 @@ class ChatPeer {
       lastMessageAt: lastAt,
       protocol: json['protocol'] as String? ?? 'internal',
       peerExternalAddress: json['peer_external_address'] as String?,
+      avatarUrl: json['peer_avatar_url'] as String?,
+      pronouns: json['peer_pronouns'] as String?,
     );
   }
 
@@ -56,11 +62,15 @@ class ChatPeer {
     required String profileId,
     required String displayName,
     required String address,
+    String? avatarUrl,
+    String? pronouns,
   }) {
     return ChatPeer(
       profileId: profileId,
       displayName: displayName,
       address: address,
+      avatarUrl: avatarUrl,
+      pronouns: pronouns,
     );
   }
 
@@ -75,6 +85,8 @@ class ChatPeer {
       lastMessageAt: inboxRow.lastMessageAt,
       protocol: inboxRow.protocol,
       peerExternalAddress: inboxRow.peerExternalAddress,
+      avatarUrl: inboxRow.avatarUrl ?? avatarUrl,
+      pronouns: inboxRow.pronouns ?? pronouns,
     );
   }
 }
