@@ -74,6 +74,15 @@ class AccountManager {
     _testOnlyAccountIds.add(userId);
   }
 
+  @visibleForTesting
+  void injectTestSession(AccountSession session) {
+    _sessions[session.userId] = session;
+    _wireSession(session);
+  }
+
+  @visibleForTesting
+  Future<void> persistAllOpenAccountsForTesting() => _persistAllOpenAccounts();
+
   Future<void> initialize() async {
     final stored = await _storage.loadAccounts();
     final savedFocus = await _storage.loadFocusUserId();

@@ -15,7 +15,7 @@ backend out of the box.
 ### Lint / test / build
 - Standard gate is `cd client && bash scripts/verify.sh` (= `flutter pub get` → `flutter analyze` → `flutter test`). See `scripts/verify.sh` / `README.md`. `flutter analyze` must be zero-issue (even `info`), matching CI.
 - Web build: `bash scripts/verify.sh --build` (or `flutter build web --release --base-href "/XmppTest/"`).
-- **Prima di qualsiasi test GUI**: `bash scripts/diagnose-test-env.sh` — se fallisce, non usare computerUse (CDP morto = hang).
+- **Prima di qualsiasi test GUI**: `bash scripts/diagnose-test-env.sh` — se fallisce su CDP: `bash scripts/reset-chrome-cdp.sh` (kill Chrome + profilo pulito `/tmp/chrome-cdp-profile`).
 - **Integrazione multi-account senza browser** (affidabile per agenti): `bash scripts/integration-multi-account.sh` — login agent1/agent2 + RPC inbox/messaggi su Supabase live.
 
 ### Running the app (dev)
@@ -35,7 +35,7 @@ backend out of the box.
 - **Account debug agente:** usare **solo** `alfredagent1` / `alfredagent2` (credenziali in `docs/AGENT_DEBUG_ACCOUNTS.md`). **Non modificare mai** password o dati di `test1`/`test2`/`test3` — vedi incidente documentato in quel file (2026-06-29).
 
 ### Browser (computerUse) testing of Flutter web
-- **Eseguire sempre `bash scripts/diagnose-test-env.sh` prima.** Se Chrome CDP `:9222` non risponde, computerUse si blocca (processo Chrome zombie dopo crash Flutter / schermata rossa).
+- **Eseguire sempre `bash scripts/diagnose-test-env.sh` prima.** Se Chrome CDP `:9222` non risponde: `bash scripts/reset-chrome-cdp.sh` poi ritestare. Non usare computerUse con CDP morto.
 - **Preferire** `scripts/integration-multi-account.sh` per auth + messaggistica multi-account; Playwright/`verify.sh` per il client Dart.
 - **Non** riavviare flutter in loop per "sbloccare" i test GUI — peggiora lo stato (port conflict, CDP morto).
 - Inputs are typeable: **click directly into a field to focus it, then type** (don't assume canvas blocks input).

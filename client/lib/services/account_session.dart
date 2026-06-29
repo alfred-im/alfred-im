@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/app_config.dart';
@@ -50,7 +51,12 @@ class AccountSession {
   StreamSubscription<AuthState>? _authSubscription;
   Future<void> Function()? onPersistRequested;
 
-  String? get refreshToken => client.auth.currentSession?.refreshToken;
+  /// Solo test: refresh token senza setSession (evita rete GoTrue).
+  @visibleForTesting
+  String? testRefreshTokenOverride;
+
+  String? get refreshToken =>
+      testRefreshTokenOverride ?? client.auth.currentSession?.refreshToken;
 
   /// Chiave storage GoTrue per questo account (`SharedPreferencesLocalStorage`).
   static String authStorageKey(String userId) => 'alfred_auth_$userId';
@@ -187,6 +193,7 @@ class AccountSession {
   static Future<AccountSession> _fromClient({
     required SupabaseClient client,
     required ProfileSummary initialProfile,
+    bool skipHydrate = false,
   }) async {
     final userId = client.auth.currentUser?.id;
     if (userId == null) {
@@ -212,7 +219,7 @@ class AccountSession {
       profile: initialProfile,
     );
 
-    await session._hydrateProfile();
+    await session._hydrateProfile(skipNetwork: skipHydrate);
     session._listenAuth();
     return session;
   }
@@ -225,7 +232,8 @@ class AccountSession {
     });
   }
 
-  Future<void> _hydrateProfile() async {
+  Future<void> _hydrateProfile({bool skipNetwork = false}) async {
+    if (skipNetwork) return;
     fullProfile = await fetchFullProfile();
     if (fullProfile != null) {
       profile = fullProfile!.summary;
@@ -291,6 +299,35 @@ class AccountSession {
     );
     await storage.initialize();
     await storage.removePersistedSession();
+  }
+
+  /// Sessione in-memory per test (nessuna rete).
+  @visibleForTesting
+  static Future<AccountSession> createForTest({
+    required ProfileSummary profile,
+    String refreshToken = 'test-refresh-token',
+  }) async {
+    final client = createClient(profile.id);
+    final inboxService = InboxService(client);
+    final profileService = ProfileService(client);
+    final session = AccountSession._(
+      userId: profile.id,
+      client: client,
+      inboxService: inboxService,
+      messageService: MessageService(client),
+      profileService: profileService,
+      contactService: ContactService(client),
+      profileAvatarService: ProfileAvatarService(client),
+      messageMediaService: MessageMediaService(client),
+      composeService: ComposeService(profileService: profileService),
+      inboxController: InboxController(
+        userId: profile.id,
+        inboxService: inboxService,
+        enableRealtime: false,
+      ),
+      profile: profile,
+    )..testRefreshTokenOverride = refreshToken;
+    return session;
   }
 
   static ProfileSummary _profileFromUser(User user) {

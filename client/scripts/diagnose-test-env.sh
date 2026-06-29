@@ -56,8 +56,8 @@ if curl -sf -m 3 http://127.0.0.1:9222/json/version >/dev/null 2>&1; then
   ok "Chrome CDP :9222 risponde (computerUse può automatizzare)"
 else
   fail "Chrome CDP :9222 NON risponde — computerUse si blocca o va in timeout"
-  echo "      → Chrome spesso resta in zombie dopo crash Flutter (schermata rossa)." >&2
-  echo "      → Non riavviare flutter in loop: prima verificare CDP con questo script." >&2
+  echo "      → Esegui: bash scripts/reset-chrome-cdp.sh" >&2
+  echo "      → Profilo ~/.config/google-chrome spesso resta zombie dopo crash Flutter." >&2
 fi
 
 RENDERERS="$(pgrep -fc 'chrome --type=renderer' || true)"
