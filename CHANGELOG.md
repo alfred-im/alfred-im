@@ -23,6 +23,17 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Alpha Flutter — PR #143 (multi-account: logout locale, chat, persistenza)
+
+- **Logout locale**: `AccountSession.close()` senza `signOut` GoTrue — solo `alfred_auth_{userId}`
+- **View per account**: `Map<userId, AccountViewState>`; `sanitizedForAccount()`; niente reset globale su `setFocus`
+- **Inbox lifecycle**: `ListenableProxyProvider` con dispose noop — `InboxController` owned da `AccountSession`
+- **Persistenza**: `_persistAllOpenAccounts()` + `saveAllAccounts` atomico; write lock storage; restore solo errori auth definitivi
+- **Test**: 9 casi regressione multi-account (mock) — `verify.sh` 59 test
+- **Harness**: `integration-multi-account.sh`, `diagnose-test-env.sh`, `reset-chrome-cdp.sh`
+- **Doc**: `docs/fixes/multi-account-chat-persistence-pr143.md`, `SESSION_HANDOFF.md` aggiornato
+- **Nota**: validazione browser utente ancora negativa al handoff — gap e2e documentato
+
 ### Alpha Flutter — PR #142 (auth bootstrap + PKCE)
 
 - **Rimosso** `bootstrap.auth.signOut()` dopo login/signup — non revoca più il refresh token condiviso con il client dedicato

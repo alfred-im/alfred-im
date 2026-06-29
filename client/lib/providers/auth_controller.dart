@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/open_account.dart';
+import '../models/account_view_state.dart';
+import '../models/chat_peer.dart';
 import '../models/profile.dart';
 import '../services/account_manager.dart';
 import '../services/account_session.dart';
@@ -27,6 +29,9 @@ class AuthController extends ChangeNotifier {
   List<OpenAccount> get openAccounts => _manager.openAccounts;
   AccountSession? get focusedSession => _manager.focusedSession;
   String? get userId => _manager.focusUserId;
+  AccountViewState get viewState => _manager.viewState;
+  ChatPeer? get activePeer => _manager.viewState.activePeer;
+  bool get showInboxOnMobile => _manager.viewState.showInboxOnMobile;
   bool get hasOpenAccounts => _manager.hasOpenAccounts;
 
   UserProfile? get profile => focusedSession?.fullProfile;
@@ -66,6 +71,21 @@ class AuthController extends ChangeNotifier {
 
   Future<void> setFocus(String userId) async {
     await _manager.setFocus(userId);
+    notifyListeners();
+  }
+
+  void openConversation(ChatPeer peer) {
+    _manager.openConversation(peer);
+    notifyListeners();
+  }
+
+  void backToInboxOnMobile() {
+    _manager.showInboxOnMobile();
+    notifyListeners();
+  }
+
+  void mergeActivePeerFromInbox(ChatPeer inboxRow) {
+    _manager.mergeActivePeerFromInbox(inboxRow);
     notifyListeners();
   }
 

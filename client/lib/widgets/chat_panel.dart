@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -36,6 +38,13 @@ class ChatPanel extends StatelessWidget {
           ),
           if (messagesController.isLoading)
             const Expanded(child: Center(child: CircularProgressIndicator()))
+          else if (messagesController.error != null)
+            Expanded(
+              child: _ChatLoadError(
+                message: messagesController.error!,
+                onRetry: () => unawaited(messagesController.reload()),
+              ),
+            )
           else
             Expanded(
               child: AnchoredMessageList(
@@ -113,6 +122,49 @@ class _ChatHeader extends StatelessWidget {
               IconButton(onPressed: null, icon: const Icon(Icons.more_vert)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatLoadError extends StatelessWidget {
+  const _ChatLoadError({
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.chat_bubble_outline,
+              size: 40,
+              color: AlfredColors.textSecondary,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AlfredColors.textSecondary,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Riprova'),
+            ),
+          ],
         ),
       ),
     );

@@ -60,7 +60,7 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 
 - [fixes/flutter-inbox-stability.md](./fixes/flutter-inbox-stability.md) — Race auth + provider inbox (#113/#114); evoluzione post #140
 - [fixes/auth-bootstrap-gotrue-revoke.md](./fixes/auth-bootstrap-gotrue-revoke.md) — Bootstrap signOut revoca refresh; PKCE (#141/#142)
-- [fixes/conversations-empty-diagnosis.md](./fixes/conversations-empty-diagnosis.md) — Diagnosi chat vuota / RPC silenziosa
+- [fixes/multi-account-chat-persistence-pr143.md](./fixes/multi-account-chat-persistence-pr143.md) — **PR #143** — logout locale, chat multi-account, persistenza F5
 - [fixes/README.md](./fixes/README.md) — Indice fix
 
 ---
@@ -74,4 +74,4 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 
 ---
 
-**Ultimo aggiornamento**: 2026-06-29 — multi-account sessioni parallele; stack Flutter attivo
+**Ultimo aggiornamento**: 2026-06-29 — PR #143 multi-account fix + handoff

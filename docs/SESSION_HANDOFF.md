@@ -1,65 +1,81 @@
-# Handoff sessione — 2026-06-29
+# Handoff sessione — 2026-06-29 (multi-account PR #143)
 
-Documento per AI — stato al passaggio a nuova chat. **Leggere prima di qualsiasi task.**
+Documento per AI — **leggere prima di qualsiasi task**. Stato dopo merge #143 su `main`.
 
 ---
 
-## Branch e PR
+## Stato repository
 
-| Item | Stato |
+| Item | Valore |
 |------|--------|
-| Branch lavoro | `cursor/debug-add-account-session-bb4e` |
-| PR | #142 (draft) — auth bootstrap + PKCE + doc |
-| `main` | Ha PR #140 (multi-account), #141 (fast path parziale, **ancora con `signOut` bootstrap**) |
-| Alpha live | https://alfred-im.github.io/XmppTest/ — ultimo `deploy-alpha` riuscito, **non** necessariamente `main` |
-
-**Prossimo passo operativo**: merge #142 su `main`, push, attendere deploy-alpha.
+| Branch `main` | Include #140, #142, **#143** (logout locale + multi-account fix + test regressione) |
+| Alpha live | https://alfred-im.github.io/XmppTest/ — **ultimo `deploy-alpha` riuscito**, non necessariamente ultimo push `main` finché CI non completa |
+| `verify.sh` | 59 test (esclusi tag `live`) — verde al merge |
 
 ---
 
-## Fix in PR #142 (da mergiare)
+## Recap conversazione utente (critico)
 
-1. **Rimosso** `bootstrap.auth.signOut()` dopo login/signup → non revoca refresh token condiviso.
-2. **`EphemeralPkceStorage`** su bootstrap → recupero password PKCE senza crash null.
-3. Test live `password_reset_live_test.dart` (tag `live`).
-4. Doc: account agente, regole debug, deploy Alpha, handoff.
+L'utente ha segnalato tre bug multi-account. Il branch #143 contiene fix **plausibili** ma l'utente ha confermato che **in browser l'app resta rotta**:
+
+1. **Logout globale** — voleva solo locale → fix `close()` senza `signOut`
+2. **Chat vuota** nel pannello (inbox ok) → fix view per account + inbox lifecycle + error surfacing parziale
+3. **F5 perde account** / chat reciproca rotta → fix persistenza atomica + view per account
+
+**Lezione**: test unitari con mock **non** equivalgono a validazione app. L'utente ha rifiutato l'interpretazione «test verdi = fix ok».
+
+Punti **4–5** review architetturale: **non** implementati per richiesta esplicita.
 
 ---
 
-## Topic aperti (nessun fix senza accordo utente)
+## PR #143 — contenuto merge
 
-| Topic | Doc |
-|-------|-----|
-| Logout solo dispositivo corrente | `docs/decisions/single-device-logout-open.md` |
-| Chat vuota / illeggibile | `docs/fixes/conversations-empty-diagnosis.md` — non riprodotto; checklist utente |
-| Rate limit email Supabase (~2/h SMTP integrato) | Config dashboard / SMTP custom — non fatto |
+Vedi `docs/fixes/multi-account-chat-persistence-pr143.md` (causa, fix, gap test, checklist).
+
+Commit principali:
+
+- `fix(auth): logout locale senza revoca GoTrue`
+- `fix(multi-account): scope chat, outbound queue e sync profili`
+- `fix(multi-account): per-account view state for mutual conversations`
+- `fix(multi-account): stop Provider disposing session InboxController`
+- `fix(multi-account): persist all open accounts across refresh`
+- `test: regression suite for multi-account chat and persistence`
 
 ---
 
 ## Regole operative agente
 
-- **Non toccare** password/dati `test1`/`test2`/`test3` — solo `alfredagent1`/`alfredagent2`.
-- **Non fare** `POST /auth/v1/logout` su account utente (revoca globale).
-- Debug = trovare causa; fix strutturali solo se utente dice esplicitamente procedere.
-- `.cursor-rules.md`: NON sviluppare senza comando esplicito; eccezione documentazione/handoff su richiesta merge.
+| Regola | Dettaglio |
+|--------|-----------|
+| Account debug | **Solo** `alfredagent1` / `alfredagent2` — `docs/AGENT_DEBUG_ACCOUNTS.md` |
+| Non toccare | `test1`/`test2`/`test3` — incidente password 2026-06-29 |
+| Non fare | `POST /auth/v1/logout` su account utente |
+| Sviluppo | `.cursor-rules.md` — comando esplicito prima di codice |
+| Debug browser | CDP `:9222` spesso morto — `scripts/diagnose-test-env.sh`, `reset-chrome-cdp.sh` |
+| Non riavviare Flutter | Senza motivo — preferire kill Chrome |
 
 ---
 
-## Incidenti sessione
-
-1. Password test1/test2 sovrascritte per errore → ripristinate dall'utente a `FyqnD2YpGScNsuC` (2026-06-29).
-2. Test curl logout test1 → logout globale utente (spiegato: revoca refresh GoTrue).
-
----
-
-## Verifica pre-merge
+## Verifica pre-task
 
 ```bash
 cd client && bash scripts/verify.sh
+bash client/scripts/integration-multi-account.sh   # API live, no browser
 ```
 
 ---
 
-## Indice doc aggiornato
+## Topic ancora aperti
 
-Vedi `docs/INDICE.md` — voci fix auth, handoff, single-device logout.
+| Topic | Doc / nota |
+|-------|------------|
+| Validazione UI post-#143 | Utente — F5, 2 account, chat reciproca |
+| E2E multi-account | Non implementato |
+| Rate limit email GoTrue | Dashboard Supabase |
+| Architettura punti 4–5 | Non in scope #143 |
+
+---
+
+## Indice doc
+
+`docs/INDICE.md` — fix #143, handoff, multi-account implementation.

@@ -64,12 +64,13 @@ Il **focus** determina quale `inboxController` e quali servizi espone la UI via 
 
 1. `AuthController.setFocus(userId)` → `AccountManager.setFocus`
 2. Aggiorna `focusUserId` in storage
-3. `notifyListeners()` — i `ChangeNotifierProxyProvider` puntano al `inboxController` del nuovo focus
+3. `notifyListeners()` — `ListenableProxyProvider` espone `inboxController` del focus (**dispose noop** — lifecycle in `AccountSession.close()`)
 4. **Nessuna** chiamata `setSession` tra sessioni esistenti
+5. **`AccountViewState` per `userId`** — `activePeer` e mobile inbox/chat **non** si azzerano al switch
 
 ### 3.4 Chiusura account
 
-1. `removeAccount(userId)` → `session.close()` (signOut client, dispose inbox realtime)
+1. `removeAccount(userId)` → `session.close()` — **logout locale** (clear storage, no `signOut` GoTrue)
 2. Rimuove da storage e mappa
 3. Se era focus: focus sul primo rimasto o `null`
 4. Se 0 account: overlay obbligatorio
@@ -84,9 +85,10 @@ Il **focus** determina quale `inboxController` e quali servizi espone la UI via 
 ## 4. Provider (`main.dart`)
 
 ```dart
-// Inbox: non ricrea controller — usa quello già vivo nella sessione
-ChangeNotifierProxyProvider<AuthController, InboxController?>(
+// Inbox: ListenableProxyProvider — dispose noop (PR #143)
+ListenableProxyProvider<AuthController, InboxController?>(
   update: (_, auth, _) => auth.focusedSession?.inboxController,
+  dispose: (context, inbox) { /* AccountSession.close() */ },
 )
 
 // Contatti / profilo: ricreati al cambio focus (servizi del client in focus)
@@ -118,9 +120,23 @@ Storage `alfred_saved_accounts` **non** cambia chiave — upgrade trasparente al
 
 | Test | Cosa verifica |
 |------|----------------|
-| `test/unit/account_storage_test.dart` | Round-trip `OpenAccount`, focus |
+| `test/unit/account_storage_test.dart` | Round-trip `OpenAccount`, focus, `saveAllAccounts` atomico |
 | `test/unit/auth_service_multi_account_test.dart` | Upsert multi-account storage |
+| `test/unit/account_manager_view_state_test.dart` | View per account, `setFocus` non resetta altri |
+| `test/unit/multi_account_chat_scenario_test.dart` | Focus switch + chat reciproca (mock) |
+| `test/unit/messages_controller_multi_account_test.dart` | Scope `userId+peer`, errori RPC |
+| `test/unit/account_manager_persistence_test.dart` | Persistenza 2 account |
+| `test/widget/inbox_provider_lifecycle_test.dart` | Inbox non disposed al focus switch |
 | `test/widget/inbox_provider_listen_test.dart` | ProxyProvider + InboxController notify |
+
+**Gap noto (PR #143)**: nessun e2e browser / F5 / GoTrue reale. Vedi `docs/fixes/multi-account-chat-persistence-pr143.md` § validazione.
+
+### Harness integrazione (no browser)
+
+```bash
+bash client/scripts/integration-multi-account.sh   # API agent1↔agent2
+bash client/scripts/diagnose-test-env.sh           # Chrome CDP per computerUse
+```
 
 ---
 

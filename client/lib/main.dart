@@ -24,11 +24,17 @@ class AlfredApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => AuthController()..initialize(),
         ),
-        ChangeNotifierProxyProvider<AuthController, InboxController?>(
+        ListenableProxyProvider<AuthController, InboxController?>(
           create: (_) => null,
           update: (_, auth, _) {
             if (!auth.sessionReady) return null;
             return auth.focusedSession?.inboxController;
+          },
+          // InboxController è di proprietà di AccountSession (dispose in close()).
+          // Non farlo smaltire dal Provider al cambio focus — altrimenti crash
+          // multi-account ("used after being disposed").
+          dispose: (context, inbox) {
+            // Lifecycle gestito da AccountSession.close().
           },
         ),
         ChangeNotifierProxyProvider<AuthController, ContactsController?>(

@@ -6,7 +6,7 @@ Traccia lo stato del progetto per continuità del lavoro. Non è documentazione 
 
 ## Stato attuale (2026-06-29)
 
-**Flutter + Supabase + bridge Python** (`docs/decisions/project-revolution-discovery.md`). PR Alpha **#108–#132** mergiate su `main`; **#140** multi-account sessioni parallele (draft).
+**Flutter + Supabase + bridge Python** (`docs/decisions/project-revolution-discovery.md`). PR Alpha **#108–#143** su `main` (multi-account sessioni parallele + fix logout/chat/persistenza #143).
 
 | Componente | Stato |
 |------------|-------|

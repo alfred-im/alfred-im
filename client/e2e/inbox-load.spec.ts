@@ -4,9 +4,15 @@ const BASE_URL =
   process.env.ALFRED_BASE_URL ?? 'https://alfred-im.github.io/XmppTest/';
 
 async function enableFlutterAccessibility(page: import('@playwright/test').Page) {
-  const a11y = page.getByRole('button', { name: 'Enable accessibility' });
-  if (await a11y.isVisible().catch(() => false)) {
-    await a11y.click({ force: true });
+  const enabled = await page.evaluate(() => {
+    const btn = document.querySelector(
+      '[aria-label="Enable accessibility"]',
+    ) as HTMLElement | null;
+    if (!btn) return false;
+    btn.click();
+    return true;
+  });
+  if (enabled) {
     await page.waitForTimeout(500);
   }
 }

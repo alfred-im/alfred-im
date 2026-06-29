@@ -1,8 +1,12 @@
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/open_account.dart';
+import '../models/account_view_state.dart';
+import '../models/chat_peer.dart';
 import '../utils/auth_redirect_url.dart';
 import 'account_session.dart';
 import 'account_storage_service.dart';
-import 'profile_service.dart';
 
 /// Gestisce account messaggistica aperti in parallelo e il focus UI.
 class AccountManager {
@@ -11,6 +15,8 @@ class AccountManager {
 
   final AccountStorageService _storage;
   final Map<String, AccountSession> _sessions = {};
+  final Map<String, AccountViewState> _viewsByAccount = {};
+  final Set<String> _testOnlyAccountIds = {};
   String? _focusUserId;
 
   List<OpenAccount> get openAccounts =>
@@ -23,7 +29,59 @@ class AccountManager {
 
   String? get focusUserId => _focusUserId;
 
+  AccountViewState get viewState => _viewFor(_focusUserId);
+
   bool get hasOpenAccounts => _sessions.isNotEmpty;
+
+  void openConversation(ChatPeer peer) {
+    final userId = _focusUserId;
+    if (userId == null || peer.profileId == userId) return;
+    _setViewFor(userId, _storedViewFor(userId).openChat(peer));
+  }
+
+  void showInboxOnMobile() {
+    final userId = _focusUserId;
+    if (userId == null) return;
+    _setViewFor(userId, _storedViewFor(userId).backToInboxOnMobile());
+  }
+
+  void mergeActivePeerFromInbox(ChatPeer inboxRow) {
+    final userId = _focusUserId;
+    if (userId == null) return;
+    _setViewFor(userId, _storedViewFor(userId).mergeActivePeer(inboxRow));
+  }
+
+  AccountViewState _viewFor(String? userId) {
+    if (userId == null) return const AccountViewState();
+    return _sanitizeView(userId, _storedViewFor(userId));
+  }
+
+  AccountViewState _storedViewFor(String userId) =>
+      _viewsByAccount[userId] ?? const AccountViewState();
+
+  AccountViewState _sanitizeView(String userId, AccountViewState view) =>
+      view.sanitizedForAccount(userId);
+
+  void _setViewFor(String userId, AccountViewState view) {
+    _viewsByAccount[userId] = _sanitizeView(userId, view);
+  }
+
+  bool _hasAccount(String userId) =>
+      _sessions.containsKey(userId) || _testOnlyAccountIds.contains(userId);
+
+  @visibleForTesting
+  void seedTestAccount(String userId) {
+    _testOnlyAccountIds.add(userId);
+  }
+
+  @visibleForTesting
+  void injectTestSession(AccountSession session) {
+    _sessions[session.userId] = session;
+    _wireSession(session);
+  }
+
+  @visibleForTesting
+  Future<void> persistAllOpenAccountsForTesting() => _persistAllOpenAccounts();
 
   Future<void> initialize() async {
     final stored = await _storage.loadAccounts();
@@ -35,8 +93,10 @@ class AccountManager {
         final session = await AccountSession.restore(account);
         _wireSession(session);
         _sessions[session.userId] = session;
-      } catch (_) {
-        await _storage.removeAccount(account.userId);
+      } catch (e) {
+        if (_isPermanentAuthFailure(e)) {
+          await _storage.removeAccount(account.userId);
+        }
       }
     }
 
@@ -84,16 +144,17 @@ class AccountManager {
   }) async {
     final existing = _sessions[session.userId];
     if (existing != null) {
-      await session.close();
+      await session.disposeResources(clearAuthStorage: false);
       if (focus) {
         await setFocus(session.userId);
       }
+      await _persistAllOpenAccounts();
       return existing;
     }
 
     _sessions[session.userId] = session;
     _wireSession(session);
-    await _persistSession(session);
+    await _persistAllOpenAccounts();
     if (focus) {
       await setFocus(session.userId);
     }
@@ -101,15 +162,21 @@ class AccountManager {
   }
 
   Future<void> setFocus(String userId) async {
-    if (!_sessions.containsKey(userId)) return;
+    if (!_hasAccount(userId)) return;
     _focusUserId = userId;
     await _storage.saveFocusUserId(userId);
   }
 
   Future<void> removeAccount(String userId) async {
     final session = _sessions.remove(userId);
+    _testOnlyAccountIds.remove(userId);
+    _viewsByAccount.remove(userId);
     await session?.close();
-    await _storage.removeAccount(userId);
+    if (_sessions.isEmpty) {
+      await _storage.saveAllAccounts([]);
+    } else {
+      await _persistAllOpenAccounts();
+    }
 
     if (_focusUserId == userId) {
       _focusUserId = _sessions.keys.isEmpty ? null : _sessions.keys.first;
@@ -117,40 +184,43 @@ class AccountManager {
     }
   }
 
-  Future<void> persistSession(AccountSession session) => _persistSession(session);
+  Future<void> persistSession(AccountSession session) => _persistAllOpenAccounts();
 
-  Future<void> _persistSession(AccountSession session) async {
-    final refresh = session.refreshToken;
-    if (refresh == null || refresh.isEmpty) return;
-    if (session.profile.username == null || session.profile.username!.isEmpty) {
-      return;
+  Future<void> _persistAllOpenAccounts() async {
+    final accounts = <OpenAccount>[];
+    for (final session in _sessions.values) {
+      final refresh = session.refreshToken;
+      if (refresh == null || refresh.isEmpty) continue;
+      accounts.add(
+        OpenAccount(profile: session.profile, refreshToken: refresh),
+      );
     }
-    await _storage.upsertAccount(
-      OpenAccount(profile: session.profile, refreshToken: refresh),
-    );
+    if (accounts.isEmpty) return;
+    await _storage.saveAllAccounts(accounts);
+  }
+
+  bool _isPermanentAuthFailure(Object e) {
+    if (e is AuthException) {
+      final msg = e.message.toLowerCase();
+      return msg.contains('invalid refresh') ||
+          msg.contains('refresh token not found') ||
+          msg.contains('session expired') ||
+          msg.contains('token has expired');
+    }
+    return false;
   }
 
   Future<void> _syncAllProfiles() async {
-    if (_sessions.isEmpty) return;
-
-    final summaries = await ProfileService(
-      _sessions.values.first.client,
-    ).fetchSummariesByIds(_sessions.keys.toList());
-
-    final byId = {for (final s in summaries) s.id: s};
     for (final session in _sessions.values) {
-      final summary = byId[session.userId];
-      if (summary != null) {
-        session.profile = summary;
-        await _persistSession(session);
-      }
+      await session.syncProfileSummary();
     }
+    await _persistAllOpenAccounts();
   }
 
   Future<void> refreshOpenAccountProfiles() => _syncAllProfiles();
 
   void _wireSession(AccountSession session) {
-    session.onPersistRequested = () => _persistSession(session);
+    session.onPersistRequested = _persistAllOpenAccounts;
   }
 
   Future<bool> isUsernameAvailable(String username) async {
@@ -179,6 +249,8 @@ class AccountManager {
       await session.close();
     }
     _sessions.clear();
+    _viewsByAccount.clear();
+    _testOnlyAccountIds.clear();
     _focusUserId = null;
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +9,8 @@ import '../models/open_account.dart';
 class AccountStorageService {
   static const _accountsKey = 'alfred_saved_accounts';
   static const _focusUserIdKey = 'alfred_focus_user_id';
+
+  Future<void>? _writeChain;
 
   Future<List<OpenAccount>> loadAccounts() async {
     final prefs = await SharedPreferences.getInstance();
@@ -33,23 +36,50 @@ class AccountStorageService {
     await prefs.setString(_focusUserIdKey, userId);
   }
 
+  /// Sostituisce l'intera lista (scrittura atomica, niente race multi-account).
+  Future<void> saveAllAccounts(List<OpenAccount> accounts) async {
+    await _serializedWrite(() async {
+      await _saveAccounts(accounts);
+    });
+  }
+
   Future<void> upsertAccount(OpenAccount account) async {
-    final accounts = await loadAccounts();
-    final updated = [
-      account,
-      ...accounts.where((a) => a.userId != account.userId),
-    ];
-    await _saveAccounts(updated);
+    await _serializedWrite(() async {
+      final accounts = await loadAccounts();
+      final updated = [
+        account,
+        ...accounts.where((a) => a.userId != account.userId),
+      ];
+      await _saveAccounts(updated);
+    });
   }
 
   Future<void> removeAccount(String userId) async {
-    final accounts = await loadAccounts();
-    await _saveAccounts(accounts.where((a) => a.userId != userId).toList());
+    await _serializedWrite(() async {
+      final accounts = await loadAccounts();
+      await _saveAccounts(accounts.where((a) => a.userId != userId).toList());
+    });
   }
 
   Future<void> _saveAccounts(List<OpenAccount> accounts) async {
     final prefs = await SharedPreferences.getInstance();
+    if (accounts.isEmpty) {
+      await prefs.remove(_accountsKey);
+      return;
+    }
     final encoded = jsonEncode(accounts.map((a) => a.toJson()).toList());
     await prefs.setString(_accountsKey, encoded);
+  }
+
+  Future<void> _serializedWrite(Future<void> Function() action) async {
+    final waitFor = _writeChain ?? Future<void>.value();
+    final done = Completer<void>();
+    _writeChain = done.future;
+    await waitFor;
+    try {
+      await action();
+    } finally {
+      done.complete();
+    }
   }
 }
