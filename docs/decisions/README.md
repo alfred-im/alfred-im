@@ -19,4 +19,4 @@ Architecture Decision Records. Documento per AI.
 | [no-message-deletion.md](./no-message-deletion.md) | No cancellazione messaggi lato protocollo |
 | [no-modify-source-data.md](./no-modify-source-data.md) | Non alterare la fonte dati; filtrare in lettura/UI |
 
-Proposta schema futuro (non implementata): [../architecture/mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md).
+Idea futura modello caselle (non adottata, solo delta): [../architecture/mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md).

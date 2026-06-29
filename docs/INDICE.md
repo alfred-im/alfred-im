@@ -38,7 +38,7 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 
 - [architecture/alpha-full-stack.md](./architecture/alpha-full-stack.md) — **🟢 Alpha** — client + Supabase
 - [architecture/alpha-pr-registry.md](./architecture/alpha-pr-registry.md) — Registro PR #108–#132
-- [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) — **📋 Proposta** — modello caselle (futuro)
+- [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) — **📋 Idea** — delta modello caselle (non adottata; dettagli da dedurre da Alpha)
 - [architecture/README.md](./architecture/README.md) — Indice architettura
 
 ---

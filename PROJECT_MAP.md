@@ -81,7 +81,7 @@
 - **Bridge stateless**: `docs/decisions/bridge-stateless.md`
 - **Chat unificate** (nessuna distinzione interna/esterna): `docs/decisions/no-internal-external-chat-distinction.md`
 - **Dettaglio completo**: `docs/architecture/alpha-full-stack.md`
-- **Proposta futura caselle**: `docs/architecture/mailbox-inbox-outbox-spec.md` (non implementata)
+- **Idea futura caselle** (non adottata): `docs/architecture/mailbox-inbox-outbox-spec.md` — solo delta concettuale; implementazione da `address-based-messaging.md`
 
 ---
 
