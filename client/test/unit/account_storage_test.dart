@@ -39,5 +39,47 @@ void main() {
       await storage.saveFocusUserId(null);
       expect(await storage.loadFocusUserId(), isNull);
     });
+
+    test('saveAllAccounts replaces list atomically', () async {
+      SharedPreferences.setMockInitialValues({});
+      final storage = AccountStorageService();
+
+      await storage.saveAllAccounts([
+        const OpenAccount(
+          profile: ProfileSummary(id: 'a', username: 'alice', displayName: 'A'),
+          refreshToken: 'rt-a',
+        ),
+        const OpenAccount(
+          profile: ProfileSummary(id: 'b', username: 'bob', displayName: 'B'),
+          refreshToken: 'rt-b',
+        ),
+      ]);
+
+      final loaded = await storage.loadAccounts();
+      expect(loaded.map((a) => a.userId).toSet(), {'a', 'b'});
+    });
+
+    test('concurrent upserts keep all accounts', () async {
+      SharedPreferences.setMockInitialValues({});
+      final storage = AccountStorageService();
+
+      await Future.wait([
+        storage.upsertAccount(
+          const OpenAccount(
+            profile: ProfileSummary(id: 'a', username: 'alice', displayName: 'A'),
+            refreshToken: 'rt-a',
+          ),
+        ),
+        storage.upsertAccount(
+          const OpenAccount(
+            profile: ProfileSummary(id: 'b', username: 'bob', displayName: 'B'),
+            refreshToken: 'rt-b',
+          ),
+        ),
+      ]);
+
+      final loaded = await storage.loadAccounts();
+      expect(loaded.length, 2);
+    });
   });
 }

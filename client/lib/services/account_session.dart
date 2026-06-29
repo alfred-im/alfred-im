@@ -268,17 +268,22 @@ class AccountSession {
     await _hydrateProfile();
   }
 
+  /// Rilascia risorse in RAM; opzionalmente cancella storage GoTrue locale.
+  Future<void> disposeResources({bool clearAuthStorage = true}) async {
+    await _authSubscription?.cancel();
+    _authSubscription = null;
+    inboxController.dispose();
+    if (clearAuthStorage) {
+      await _clearLocalAuthOnly();
+    }
+  }
+
   /// Chiude la sessione **solo su questo dispositivo** — nessuna revoca GoTrue.
   ///
   /// Non usare [GoTrueClient.signOut]: anche con `scope=local` il server invalida
   /// il refresh token di questa sessione; Alfred deve solo smettere di usare
   /// l'account in locale (altri dispositivi restano connessi).
-  Future<void> close() async {
-    await _authSubscription?.cancel();
-    _authSubscription = null;
-    inboxController.dispose();
-    await _clearLocalAuthOnly();
-  }
+  Future<void> close() => disposeResources(clearAuthStorage: true);
 
   Future<void> _clearLocalAuthOnly() async {
     final storage = SharedPreferencesLocalStorage(
