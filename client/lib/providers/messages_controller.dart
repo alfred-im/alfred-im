@@ -5,7 +5,6 @@ import 'package:uuid/uuid.dart';
 
 import '../config/voice_config.dart';
 import '../models/message.dart';
-import '../models/chat_peer.dart';
 import '../models/outbound_queue_item.dart';
 import '../services/inbox_service.dart';
 import '../services/message_media_service.dart';
@@ -20,9 +19,7 @@ class MessagesController extends ChangeNotifier {
     required this.messageService,
     required this.messageMediaService,
     required this.inboxService,
-    this.expectInboxHistory = false,
     this.onMessagesChanged,
-    this.onInboxResync,
     OutboundMessageQueue? outboundQueue,
   }) : _outboundQueue = outboundQueue ?? OutboundMessageQueue() {
     unawaited(_init());
@@ -30,9 +27,7 @@ class MessagesController extends ChangeNotifier {
 
   final String userId;
   final String peerProfileId;
-  final bool expectInboxHistory;
   final Future<void> Function()? onMessagesChanged;
-  final Future<void> Function()? onInboxResync;
   final MessageService messageService;
   final MessageMediaService messageMediaService;
   final InboxService inboxService;
@@ -59,9 +54,7 @@ class MessagesController extends ChangeNotifier {
   Future<void> _init() async {
     await load();
     await _restoreFailedFromQueue();
-    if (messageService.hasActiveSession) {
-      await inboxService.markRead(peerProfileId);
-    }
+    await inboxService.markRead(peerProfileId);
     _attachRealtime();
     _retryTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       unawaited(_processRetries());
@@ -105,66 +98,18 @@ class MessagesController extends ChangeNotifier {
 
   Future<void> load() async {
     try {
-      if (!messageService.hasActiveSession) {
-        messages = [];
-        error =
-            'Sessione scaduta per questo account. Chiudi l\'account e accedi di nuovo.';
-        return;
-      }
-
       final loaded = await messageService.fetchPeerMessages(
         peerProfileId: peerProfileId,
         currentUserId: userId,
       );
       messages = loaded.map(_withTimeLabel).toList();
-
-      if (messages.isEmpty && expectInboxHistory) {
-        error = await _diagnoseEmptyHistory();
-      } else {
-        error = null;
-      }
+      error = null;
     } catch (e) {
       error = e.toString();
     } finally {
       isLoading = false;
       notifyListeners();
     }
-  }
-
-  Future<String?> _diagnoseEmptyHistory() async {
-    if (!messageService.hasActiveSession) {
-      return 'Sessione scaduta per questo account. Chiudi l\'account e accedi di nuovo.';
-    }
-
-    final inboxPeers = await inboxService.fetchInbox();
-    ChatPeer? row;
-    for (final peer in inboxPeers) {
-      if (peer.profileId == peerProfileId) {
-        row = peer;
-        break;
-      }
-    }
-
-    if (row == null || row.preview.isEmpty) {
-      return null;
-    }
-
-    await onInboxResync?.call();
-
-    final retry = await messageService.fetchPeerMessages(
-      peerProfileId: peerProfileId,
-      currentUserId: userId,
-    );
-    if (retry.isNotEmpty) {
-      messages = retry.map(_withTimeLabel).toList();
-      return null;
-    }
-
-    if (!messageService.hasActiveSession) {
-      return 'Sessione scaduta per questo account. Chiudi l\'account e accedi di nuovo.';
-    }
-
-    return 'Impossibile caricare i messaggi. Tocca per riprovare.';
   }
 
   Future<void> send(String body) async {

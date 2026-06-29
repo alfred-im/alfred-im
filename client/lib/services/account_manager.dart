@@ -1,4 +1,6 @@
 import '../models/open_account.dart';
+import '../models/account_view_state.dart';
+import '../models/chat_peer.dart';
 import '../utils/auth_redirect_url.dart';
 import 'account_session.dart';
 import 'account_storage_service.dart';
@@ -11,6 +13,7 @@ class AccountManager {
   final AccountStorageService _storage;
   final Map<String, AccountSession> _sessions = {};
   String? _focusUserId;
+  AccountViewState _view = const AccountViewState();
 
   List<OpenAccount> get openAccounts =>
       _sessions.values.map((s) => s.toOpenAccount()).toList();
@@ -22,7 +25,25 @@ class AccountManager {
 
   String? get focusUserId => _focusUserId;
 
+  AccountViewState get viewState => _view;
+
   bool get hasOpenAccounts => _sessions.isNotEmpty;
+
+  void openConversation(ChatPeer peer) {
+    _view = _view.openChat(peer);
+  }
+
+  void showInboxOnMobile() {
+    _view = _view.backToInboxOnMobile();
+  }
+
+  void mergeActivePeerFromInbox(ChatPeer inboxRow) {
+    _view = _view.mergeActivePeer(inboxRow);
+  }
+
+  void _resetView() {
+    _view = const AccountViewState();
+  }
 
   Future<void> initialize() async {
     final stored = await _storage.loadAccounts();
@@ -101,6 +122,9 @@ class AccountManager {
 
   Future<void> setFocus(String userId) async {
     if (!_sessions.containsKey(userId)) return;
+    if (_focusUserId != userId) {
+      _resetView();
+    }
     _focusUserId = userId;
     await _storage.saveFocusUserId(userId);
   }
@@ -111,6 +135,7 @@ class AccountManager {
     await _storage.removeAccount(userId);
 
     if (_focusUserId == userId) {
+      _resetView();
       _focusUserId = _sessions.keys.isEmpty ? null : _sessions.keys.first;
       await _storage.saveFocusUserId(_focusUserId);
     }
@@ -169,5 +194,6 @@ class AccountManager {
     }
     _sessions.clear();
     _focusUserId = null;
+    _resetView();
   }
 }

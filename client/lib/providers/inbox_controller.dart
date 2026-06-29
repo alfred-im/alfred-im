@@ -46,14 +46,6 @@ class InboxController extends ChangeNotifier {
     return null;
   }
 
-  /// Sessione GoTrue terminata (refresh fallito o sign-out interno).
-  void onSessionEnded() {
-    peers = [];
-    isLoading = false;
-    error = 'Sessione scaduta per questo account. Accedi di nuovo.';
-    notifyListeners();
-  }
-
   Future<void> _bootstrap() async {
     await load();
     if (enableRealtime) _attachRealtime();

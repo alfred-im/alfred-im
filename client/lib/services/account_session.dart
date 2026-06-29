@@ -219,13 +219,8 @@ class AccountSession {
 
   void _listenAuth() {
     _authSubscription = client.auth.onAuthStateChange.listen((state) {
-      switch (state.event) {
-        case AuthChangeEvent.tokenRefreshed:
-          unawaited(onPersistRequested?.call());
-        case AuthChangeEvent.signedOut:
-          inboxController.onSessionEnded();
-        default:
-          break;
+      if (state.event == AuthChangeEvent.tokenRefreshed) {
+        unawaited(onPersistRequested?.call());
       }
     });
   }

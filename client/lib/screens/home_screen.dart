@@ -25,27 +25,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  ChatPeer? _activePeer;
-  bool _showListOnMobile = true;
-  String? _boundFocusUserId;
 
   static const _breakpoint = 720.0;
-
-  /// Chat aperta deve appartenere all'account in focus (ADR multi-account).
-  void _bindChatToFocus(String? focusUserId) {
-    if (_boundFocusUserId == focusUserId) return;
-    _boundFocusUserId = focusUserId;
-
-    if (_activePeer == null && _showListOnMobile) return;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() {
-        _activePeer = null;
-        _showListOnMobile = true;
-      });
-    });
-  }
 
   void _openDrawer() => _scaffoldKey.currentState?.openDrawer();
 
@@ -53,22 +34,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openContacts() async {
     _closeDrawer();
+    final auth = context.read<AuthController>();
     final peer = await Navigator.push<ChatPeer>(
       context,
       MaterialPageRoute(builder: (_) => const ContactsScreen()),
     );
     if (!mounted || peer == null) return;
-    _openPeer(peer);
+    auth.openConversation(peer);
   }
 
   Future<void> _startMessageFromAddress(String address) async {
-    final session = context.read<AuthController>().focusedSession;
+    final auth = context.read<AuthController>();
+    final session = auth.focusedSession;
     if (session == null) return;
 
     try {
       final peer = await session.composeService.resolveAddress(address);
       if (!mounted) return;
-      _openPeer(peer);
+      auth.openConversation(peer);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -77,33 +60,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _openPeer(ChatPeer peer) {
-    setState(() {
-      _activePeer = peer;
-      _showListOnMobile = false;
-    });
-  }
-
-  void _selectInboxPeer(ChatPeer peer) {
-    setState(() {
-      _activePeer = peer;
-      _showListOnMobile = false;
-    });
-  }
-
   Future<void> _onMessagesChanged() async {
     if (!mounted) return;
+    final auth = context.read<AuthController>();
     final inbox = context.read<InboxController?>();
-    if (inbox == null || _activePeer == null) return;
+    final activePeer = auth.activePeer;
+    if (inbox == null || activePeer == null) return;
 
     await inbox.load();
     if (!mounted) return;
 
-    final updated = inbox.findByProfileId(_activePeer!.profileId);
+    final updated = inbox.findByProfileId(activePeer.profileId);
     if (updated != null) {
-      setState(() {
-        _activePeer = _activePeer!.mergeFromInbox(updated);
-      });
+      auth.mergeActivePeerFromInbox(updated);
     }
   }
 
@@ -115,21 +84,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _openAddAccount() {
+  void _openAddAccount(BuildContext context) {
     _closeDrawer();
     context.read<AuthController>().openAuthOverlay(dismissible: true);
   }
 
-  Widget _accountSidebar({bool compact = false}) {
+  Widget _accountSidebar(BuildContext context, {bool compact = false}) {
     return AccountSidebar(
       compact: compact,
       onEditProfile: _openProfile,
-      onAddAccount: _openAddAccount,
+      onAddAccount: () => _openAddAccount(context),
       onAccountSwitched: _closeDrawer,
     );
   }
 
   Widget _inboxPanel({
+    required BuildContext context,
+    required AuthController auth,
     required InboxController inbox,
     required String accountUserId,
     required bool showDrawerButton,
@@ -139,12 +110,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     return InboxPanel(
       key: ValueKey(accountUserId),
-      selectedPeerId: _activePeer?.profileId,
+      selectedPeerId: auth.activePeer?.profileId,
       peers: inbox.filteredPeers,
       isLoading: inbox.isLoading,
       error: inbox.error,
       onRetry: inbox.load,
-      onSelected: _selectInboxPeer,
+      onSelected: auth.openConversation,
       onSearchChanged: inbox.setSearchQuery,
       onDrawerTap: showDrawerButton ? _openDrawer : null,
       onContactsTap: _openContacts,
@@ -156,11 +127,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _chatArea({
+    required AuthController auth,
     required AccountSession? session,
     required bool showBackButton,
     VoidCallback? onBack,
   }) {
-    final peer = _activePeer;
+    final peer = auth.activePeer;
     if (peer == null || session == null) {
       return const EmptyChatPlaceholder();
     }
@@ -175,20 +147,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _mainContent() {
+  Widget _mainContent(BuildContext context) {
     final auth = context.watch<AuthController>();
     final inbox = context.watch<InboxController?>();
     final session = auth.focusedSession;
     final accountUserId = session?.userId;
-    _bindChatToFocus(accountUserId);
 
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= _breakpoint;
-    final showChatOnMobile = _activePeer != null;
+    final showChatOnMobile = auth.activePeer != null;
     final sidebarWidth = width >= 1100 ? 380.0 : 320.0;
 
     final inboxArea = accountUserId != null && inbox != null
         ? _inboxPanel(
+            context: context,
+            auth: auth,
             inbox: inbox,
             accountUserId: accountUserId,
             showDrawerButton: !isWide,
@@ -206,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: AlfredColors.panel,
                 child: Column(
                   children: [
-                    _accountSidebar(compact: true),
+                    _accountSidebar(context, compact: true),
                     const Divider(height: 1),
                     Expanded(child: inboxArea),
                   ],
@@ -215,7 +188,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const VerticalDivider(width: 1, color: AlfredColors.border),
             Expanded(
-              child: _chatArea(session: session, showBackButton: false),
+              child: _chatArea(
+                auth: auth,
+                session: session,
+                showBackButton: false,
+              ),
             ),
           ],
         ),
@@ -225,14 +202,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: Drawer(
-        child: _accountSidebar(),
+        child: _accountSidebar(context),
       ),
-      body: !showChatOnMobile || _showListOnMobile
+      body: !showChatOnMobile || auth.showInboxOnMobile
           ? inboxArea
           : _chatArea(
+              auth: auth,
               session: session,
               showBackButton: true,
-              onBack: () => setState(() => _showListOnMobile = true),
+              onBack: auth.backToInboxOnMobile,
             ),
     );
   }
@@ -243,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Stack(
       children: [
-        _mainContent(),
+        _mainContent(context),
         if (auth.showAuthOverlay) const AuthOverlay(),
       ],
     );
@@ -272,14 +250,10 @@ class _ChatWithMessages extends StatelessWidget {
       create: (_) => MessagesController(
         userId: session.userId,
         peerProfileId: peer.profileId,
-        expectInboxHistory: peer.hasInboxHistory,
         messageService: session.messageService,
         messageMediaService: session.messageMediaService,
         inboxService: session.inboxService,
         onMessagesChanged: onMessagesChanged,
-        onInboxResync: () async {
-          await session.inboxController.load();
-        },
       ),
       child: ChatPanel(
         peer: peer,
