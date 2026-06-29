@@ -260,10 +260,14 @@ class _ChatWithMessages extends StatelessWidget {
       create: (_) => MessagesController(
         userId: session.userId,
         peerProfileId: peer.profileId,
+        expectInboxHistory: peer.hasInboxHistory,
         messageService: session.messageService,
         messageMediaService: session.messageMediaService,
         inboxService: session.inboxService,
         onMessagesChanged: onMessagesChanged,
+        onInboxResync: () async {
+          await session.inboxController.load();
+        },
       ),
       child: ChatPanel(
         peer: peer,

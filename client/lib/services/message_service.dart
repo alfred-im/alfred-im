@@ -8,6 +8,8 @@ class MessageService {
 
   final SupabaseClient _client;
 
+  bool get hasActiveSession => _client.auth.currentSession != null;
+
   Future<List<ChatMessage>> fetchPeerMessages({
     required String peerProfileId,
     required String currentUserId,

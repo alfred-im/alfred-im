@@ -52,6 +52,9 @@ class AccountSession {
 
   String? get refreshToken => client.auth.currentSession?.refreshToken;
 
+  /// Chiave storage GoTrue per questo account (`SharedPreferencesLocalStorage`).
+  static String authStorageKey(String userId) => 'alfred_auth_$userId';
+
   OpenAccount toOpenAccount() => OpenAccount(
         profile: profile,
         refreshToken: refreshToken ?? '',
@@ -63,7 +66,7 @@ class AccountSession {
       AppConfig.supabaseAnonKey,
       authOptions: FlutterAuthClientOptions(
         localStorage: SharedPreferencesLocalStorage(
-          persistSessionKey: 'alfred_auth_$storageScope',
+          persistSessionKey: authStorageKey(storageScope),
         ),
         detectSessionInUri: false,
       ),
@@ -216,8 +219,13 @@ class AccountSession {
 
   void _listenAuth() {
     _authSubscription = client.auth.onAuthStateChange.listen((state) {
-      if (state.event == AuthChangeEvent.tokenRefreshed) {
-        unawaited(onPersistRequested?.call());
+      switch (state.event) {
+        case AuthChangeEvent.tokenRefreshed:
+          unawaited(onPersistRequested?.call());
+        case AuthChangeEvent.signedOut:
+          inboxController.onSessionEnded();
+        default:
+          break;
       }
     });
   }
@@ -265,10 +273,24 @@ class AccountSession {
     await _hydrateProfile();
   }
 
+  /// Chiude la sessione **solo su questo dispositivo** — nessuna revoca GoTrue.
+  ///
+  /// Non usare [GoTrueClient.signOut]: anche con `scope=local` il server invalida
+  /// il refresh token di questa sessione; Alfred deve solo smettere di usare
+  /// l'account in locale (altri dispositivi restano connessi).
   Future<void> close() async {
     await _authSubscription?.cancel();
+    _authSubscription = null;
     inboxController.dispose();
-    await client.auth.signOut();
+    await _clearLocalAuthOnly();
+  }
+
+  Future<void> _clearLocalAuthOnly() async {
+    final storage = SharedPreferencesLocalStorage(
+      persistSessionKey: authStorageKey(userId),
+    );
+    await storage.initialize();
+    await storage.removePersistedSession();
   }
 
   static ProfileSummary _profileFromUser(User user) {

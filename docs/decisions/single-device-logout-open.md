@@ -1,14 +1,26 @@
 # Topic aperto: logout su un solo dispositivo
 
 **Data**: 2026-06-29  
-**Status**: 🟡 Aperto — nessuna decisione architetturale chiusa  
+**Status**: ✅ Implementato — logout locale in `AccountSession.close()` (nessuna revoca GoTrue)  
 **Categoria**: Auth / multi-account
 
 Documento per AI. L'utente ha chiesto esplicitamente un sistema per fare logout **solo sul dispositivo corrente**, senza buttare fuori gli altri client.
 
 ---
 
-## Problema
+## Decisione (2026-06-29)
+
+**Chiudi account** = logout **solo su questo dispositivo**:
+
+- `AccountSession.close()` → dispose inbox/realtime + `removePersistedSession` su `alfred_auth_{userId}`
+- **Nessuna** chiamata `GoTrueClient.signOut` / `POST /auth/v1/logout`
+- Altri dispositivi con refresh token propri restano connessi
+
+Futuro opzionale: azione separata «Disconnetti ovunque» (`signOut(scope: global)`).
+
+---
+
+## Problema (storico)
 
 Oggi (GoTrue / Supabase Auth):
 
