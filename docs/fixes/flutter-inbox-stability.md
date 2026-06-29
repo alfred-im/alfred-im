@@ -47,3 +47,26 @@
 ---
 
 **Riferimenti**: PR #113, #114; `docs/architecture/alpha-full-stack.md` §2.2–2.3; `docs/architecture/alpha-pr-registry.md`
+
+---
+
+## Evoluzione post PR #140 (multi-account sessioni parallele)
+
+**Data**: 2026-06-29
+
+Il bootstrap **non** usa più `Supabase.initialize` + sessione globale unica. Ogni account aperto ha il proprio client e idratazione auth.
+
+| Aspetto | Prima (#113) | Dopo (#140) |
+|---------|--------------|-------------|
+| Sessione | Singleton `Supabase.instance` | `AccountSession.client` per account |
+| Gate UI | `AuthScreen` se `!isAuthenticated` | `HomeScreen` + `AuthOverlay` |
+| `sessionReady` | Attende auth globale | Attende restore di tutte le sessioni aperte |
+| Inbox al switch | Ricrea controller + possibile race | Riusa `inboxController` già in ascolto |
+
+**Lezione #114 resta valida**: usare `ChangeNotifierProxyProvider` quando il figlio è `ChangeNotifier`.
+
+**Fix race #113**: il problema della prima RPC su sessione non idratata si applica **per account** al `restore()` — ogni `AccountSession.restore` fa `setSession` prima di avviare `InboxController`.
+
+**File attuali**: `account_manager.dart`, `account_session.dart`, `supabase_bootstrap.dart` (`bootstrapApp`), `auth_controller.dart`, `main.dart`
+
+**Riferimenti**: PR #140; `docs/implementation/multi-account-client.md`; `docs/decisions/multi-account-parallel-sessions.md`

@@ -29,7 +29,7 @@
 | **Deploy** | `.github/workflows/deploy-pages.yml` — `verify.sh` + build; job `deploy-alpha` (PR e `main`) |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
-| **PR Alpha** | **#108–#132** mergiate su `main` — `docs/architecture/alpha-pr-registry.md` |
+| **PR Alpha** | **#108–#132** mergiate su `main` — **#140** draft (multi-account parallelo) — `docs/architecture/alpha-pr-registry.md` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -113,7 +113,7 @@
 | **Gate** | `scripts/verify.sh` — pub get + analyze (zero issue) + test |
 | **Build web** | `flutter build web --base-href "/XmppTest/"` |
 
-**Non deducibile — multi-account client**: `AccountManager` / `AccountSession` — ogni account aperto ha client Supabase dedicato (`SharedPreferencesLocalStorage` per `userId`), `InboxController` sempre attivo con realtime. Lista `OpenAccount` in storage = account autenticati (non bookmark). Switch = `setFocus` senza `setSession`. Overlay credenziali semi-trasparente su `HomeScreen`. ADR: `docs/decisions/multi-account-parallel-sessions.md`.
+**Non deducibile — multi-account client**: `AccountManager` / `AccountSession` — ogni account aperto ha client Supabase dedicato (`SharedPreferencesLocalStorage` per `userId`), `InboxController` sempre attivo con realtime. Lista `OpenAccount` in storage = account autenticati (non bookmark). Switch = `setFocus` senza `setSession`. Overlay credenziali semi-trasparente su `HomeScreen`. Doc: `docs/decisions/multi-account-parallel-sessions.md`, `docs/design/auth-overlay-shell.md`, `docs/implementation/multi-account-client.md`.
 
 **Non deducibile — layout inbox**: `HomeScreen` — mobile drawer `AccountSidebar`; desktop colonna sinistra account + inbox. `AccountSidebar`: chiusura account in card profilo. `InboxPanel`: ricerca on-demand, `ValueKey(userId)` al cambio focus. Spec: `docs/design/inbox-search-toggle.md`.
 
@@ -208,7 +208,7 @@ bash scripts/verify.sh --build   # + build web
 
 **Data**: 2026-06-29
 
-- Multi-account: sessioni Supabase parallele (`AccountManager`); shell sempre visibile; overlay auth; focus UI-only
+- Multi-account: sessioni parallele (`AccountManager`); shell + overlay auth; doc ADR + design + implementation
 - Redirect conferma email auth (`AuthRedirectUrl`)
 
 **Riferimenti**: `docs/INDICE.md`, `docs/architecture/alpha-pr-registry.md`, `CHANGELOG.md`

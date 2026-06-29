@@ -1,50 +1,139 @@
 # Multi-account: sessioni Supabase parallele
 
 **Stato**: 🟢 Vincolante (client Alpha)  
-**Data**: 2026-06-29
+**Data**: 2026-06-29  
+**Sostituisce**: modello client «un account attivo + token salvati + `setSession` al cambio» (PR #111–#131)
 
-## Contesto
+---
 
-Il client trattava il multi-account come **un account attivo** + **token salvati** (`setSession` al cambio). Il modello prodotto è diverso: l’app è un **client di messaggistica**; gli account Alfred sono **credenziali aperte in parallelo**, non «entrate nell’applicazione».
+## 1. Problema
 
-## Decisione
+Il client Alpha (fino a PR #131) implementava il multi-account così:
 
-### Modello mentale
+- **Un solo** `SupabaseClient` globale (`Supabase.instance`)
+- Lista `SavedAccount` in `SharedPreferences` = refresh token **in attesa**
+- Cambio account = `setSession(refreshToken)` → spegnere una identità, accendere l’altra
+- Gate app: `AppShell` mostrava `AuthScreen` **a tutto schermo** se `!isAuthenticated`
+
+Questo modello è **incompatibile** con il prodotto concordato:
+
+| Vecchio paradigma | Paradigma corretto |
+|-------------------|-------------------|
+| «Entri in Alfred» (auth = identità app) | «Usi Alfred» con N credenziali messaggistica |
+| Account «salvato» ≠ account «loggato» | Account in lista = **sempre** autenticato e in ascolto |
+| Switch = ri-autenticazione | Switch = **solo focus UI** |
+| Auth sostituisce l’app | Auth è **overlay** sulla shell |
+
+---
+
+## 2. Decisione
+
+### 2.1 Modello mentale
 
 | Concetto | Significato |
 |----------|-------------|
-| **Sezione app** | Shell Alfred (layout inbox/chat). Nessun `auth.uid()` «utente app». |
-| **Account aperto** | Identità messaggistica con sessione Supabase **viva** + realtime inbox |
-| **Focus** | Quale account mostra inbox/chat — **solo UI** |
-| **Lista account** | Elenco account **autenticati** (non «salvati» in attesa) |
+| **Sezione app** | Shell Alfred (`HomeScreen`: sidebar + inbox + chat). Nessun `auth.uid()` «utente dell’applicazione». |
+| **Account aperto** | Identità messaggistica Alfred con sessione Supabase **viva**, servizi dedicati, `InboxController` + realtime inbox **sempre attivi**. |
+| **Focus** | Quale account mostra inbox/chat in UI. Cambio istantaneo, **nessuna** chiamata auth. |
+| **Lista account** | Solo account **aperti** (= autenticati). Non esiste «in lista ma disconnesso». |
 
-Stati ammessi:
+**Analogia**: client email (Thunderbird). Le caselle restano connesse; cambi quale guardi.
 
-- **0 account aperti** → shell + overlay credenziali (obbligatorio, non chiudibile)
-- **≥1 account aperti** → shell piena; tutti in ascolto realtime inbox; uno in focus
-- **Mai** «account in lista ma non autenticato»
+### 2.2 Stati ammessi
 
-### Implementazione client
+```
+┌─────────────────────────────────────────────────────────┐
+│ 0 account aperti                                        │
+│   → HomeScreen (placeholder inbox)                      │
+│   → AuthOverlay obbligatorio (login + registrazione)    │
+└─────────────────────────────────────────────────────────┘
 
-- `AccountManager`: N `AccountSession`, ciascuna con `SupabaseClient` dedicato (`SharedPreferencesLocalStorage` con chiave per `userId`)
-- `AccountSession`: client + servizi + `InboxController` sempre attivo
-- Cambio focus: **nessun** `setSession` tra account
-- Aggiungi account / primo avvio: overlay semi-trasparente su shell (login + registrazione insieme)
-- Rimuovi account: chiude sessione di quell’identità; se lista vuota → overlay auto
+┌─────────────────────────────────────────────────────────┐
+│ ≥1 account aperti                                       │
+│   → HomeScreen con dati dell’account in focus           │
+│   → Tutti gli account: sessione + realtime inbox attivi │
+│   → AuthOverlay solo da «Aggiungi account» (chiudibile) │
+└─────────────────────────────────────────────────────────┘
+```
 
-### Backend
+**Stati NON ammessi** (il codice non deve più crearli):
 
-Invariato: ogni account Alfred = utente GoTrue + `profiles`. Nessun nuovo livello identità server.
+- `savedAccounts` non vuota ma nessuna sessione attiva
+- Schermata auth che **sostituisce** la shell (eccetto overlay)
+- Switch account che invoca `setSession` tra account già aperti
 
-## Conseguenze
+### 2.3 Implementazione client (PR #140)
 
-- Refactor servizi: RPC/realtime/storage passano `SupabaseClient` per account
-- `SavedAccount` → `OpenAccount` (stesso payload storage, semantica «aperto»)
-- Rimosso gate `AppShell` auth vs home
-- Badge / notifiche su account non in focus: possibile perché ogni sessione ha realtime inbox
+| Componente | Ruolo |
+|------------|-------|
+| `AccountManager` | Registro account aperti, focus UI, persistenza `OpenAccount` + `focusUserId` |
+| `AccountSession` | Un `SupabaseClient` per account (`SharedPreferencesLocalStorage` con chiave `alfred_auth_{userId}`); servizi + `InboxController` dedicati |
+| `OpenAccount` | Modello persistito (ex `SavedAccount`, stesso JSON su disco) |
+| `AuthController` | Stato UI: overlay, loading auth, delega a `AccountManager` |
+| `AuthOverlay` | Barriera semi-trasparente + `AuthScreen` (card) sopra `HomeScreen` |
+| `NoAccountPlaceholder` | Area inbox vuota quando nessun focus / nessun account |
 
-## Riferimenti
+**Bootstrap app** (`bootstrapApp`): solo `WidgetsFlutterBinding` — **nessuna** sessione utente globale.
 
-- `client/lib/services/account_manager.dart`
-- `client/lib/services/account_session.dart`
-- `PROJECT_MAP.md` § multi-account
+**Apertura nuovo account** (login/registrazione): client bootstrap temporaneo → credenziali → `AccountSession.restore` con client dedicato → chiusura bootstrap.
+
+**Rimozione account** (`removeAccount`): `signOut` su quel client, dispose `InboxController`, rimozione da storage; se lista vuota → overlay obbligatorio.
+
+**Refresh token**: ogni `AccountSession` ascolta `tokenRefreshed` e aggiorna `OpenAccount` in storage.
+
+### 2.4 Backend
+
+**Invariato**: ogni account Alfred = utente GoTrue + riga `profiles`. Nessun nuovo livello identità server.
+
+Ogni sessione client usa JWT proprio → RLS e Realtime rispettano `auth.uid()` di quell’account.
+
+### 2.5 Storage locale
+
+| Chiave | Contenuto |
+|--------|-----------|
+| `alfred_saved_accounts` | JSON array `OpenAccount` (compatibile con ex `SavedAccount`) |
+| `alfred_focus_user_id` | `userId` account in focus |
+| `alfred_auth_{userId}` | Sessione GoTrue per client dedicato (Supabase Flutter local storage) |
+
+---
+
+## 3. Conseguenze
+
+### 3.1 Architettura
+
+- Tutti i servizi dati (`InboxService`, `MessageService`, `ProfileService`, `ContactService`, storage media/avatar) ricevono `SupabaseClient` **per account**, non singleton globale.
+- `InboxController` **per sessione**, creato in `AccountSession`, non ricreato al cambio focus.
+- `ChangeNotifierProxyProvider` in `main.dart`: `InboxController` = `focusedSession.inboxController` (cambia puntatore al focus, non ricrea sessioni).
+- Rimossi: `AuthService`, gate `AppShell` auth vs home, `prepareAddAccount`, `switchAccount` con `setSession`.
+
+### 3.2 UX
+
+- Switch account **istantaneo** (nessun round-trip auth).
+- Primo avvio e aggiunta account: **stesso** pattern visivo (overlay su shell).
+- Login e registrazione **sempre insieme** (toggle sulla stessa card).
+- «Chiudi account» (ex logout) = rimuove identità dall’app, non «esci da Alfred».
+
+### 3.3 Abilitazioni future
+
+- Badge / anteprima messaggi su account **non** in focus (ogni sessione riceve realtime inbox).
+- Notifiche per account in background (client-side).
+
+### 3.4 Costi
+
+- N account aperti ≈ N WebSocket realtime (inbox) + N refresh token attivi.
+- Accettabile per uso tipico (pochi account); da monitorare su mobile.
+
+---
+
+## 4. Riferimenti incrociati
+
+| Documento | Contenuto |
+|-----------|-----------|
+| [auth-overlay-shell.md](../design/auth-overlay-shell.md) | Regole UX overlay + placeholder |
+| [multi-account-client.md](../implementation/multi-account-client.md) | Dettaglio file e flussi codice |
+| [alpha-full-stack.md](../architecture/alpha-full-stack.md) §2.3–2.4 | Architettura client aggiornata |
+| `PROJECT_MAP.md` | Mappa sintetica non deducibile |
+
+**Codice**: `client/lib/services/account_manager.dart`, `account_session.dart`, `client/lib/widgets/auth_overlay.dart`
+
+**PR**: #140
