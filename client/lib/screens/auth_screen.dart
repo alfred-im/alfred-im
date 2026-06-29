@@ -12,7 +12,7 @@ class AuthScreen extends StatefulWidget {
     this.onCancel,
   });
 
-  /// Login per aggiungere un account senza fare logout del precedente.
+  /// Credenziali per aggiungere un altro account (account già aperti sotto).
   final bool addingAccount;
   final VoidCallback? onCancel;
 
@@ -53,10 +53,6 @@ class _AuthScreenState extends State<AuthScreen> {
     }
 
     if (!mounted || auth.error != null) return;
-
-    if (widget.addingAccount) {
-      Navigator.of(context).pop();
-    }
   }
 
   Future<void> _forgotPassword() async {
@@ -115,132 +111,121 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
 
-    return Scaffold(
-      backgroundColor: AlfredColors.surface,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: AlfredColors.border),
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AlfredColors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AlfredLogo(size: 56),
+            const SizedBox(height: 16),
+            Text(
+              widget.addingAccount
+                  ? 'Aggiungi account Alfred'
+                  : _isSignUp
+                      ? 'Crea account Alfred'
+                      : 'Accedi ad Alfred',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _emailController,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                hintText: 'mario@esempio.it',
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const AlfredLogo(size: 56),
-                    const SizedBox(height: 16),
-                    Text(
-                      widget.addingAccount
-                          ? 'Aggiungi account Alfred'
-                          : _isSignUp
-                              ? 'Crea account Alfred'
-                              : 'Accedi ad Alfred',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'mario@esempio.it',
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                    ),
-                    if (_isSignUp) ...[
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _usernameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Username',
-                          hintText: 'mario_rossi',
-                        ),
-                        textInputAction: TextInputAction.next,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _displayNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Nome visualizzato',
-                        ),
-                        textInputAction: TextInputAction.next,
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _passwordController,
-                      decoration: const InputDecoration(labelText: 'Password'),
-                      obscureText: true,
-                      onSubmitted: (_) => _submit(),
-                    ),
-                    if (!_isSignUp) ...[
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: auth.isLoading ? null : _forgotPassword,
-                          child: const Text('Password dimenticata?'),
-                        ),
-                      ),
-                    ],
-                    if (auth.error != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        auth.error!,
-                        style: const TextStyle(color: Colors.red, fontSize: 13),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: auth.isLoading ? null : _submit,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AlfredColors.charcoal,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        child: auth.isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(_isSignUp ? 'Registrati' : 'Accedi'),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => setState(() => _isSignUp = !_isSignUp),
-                      child: Text(
-                        _isSignUp
-                            ? 'Hai già un account? Accedi'
-                            : 'Non hai un account? Registrati',
-                      ),
-                    ),
-                    if (widget.addingAccount && widget.onCancel != null)
-                      TextButton(
-                        onPressed: widget.onCancel,
-                        child: const Text('Annulla'),
-                      ),
-                  ],
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              autocorrect: false,
+              enableSuggestions: false,
+            ),
+            if (_isSignUp) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  hintText: 'mario_rossi',
+                ),
+                textInputAction: TextInputAction.next,
+                autocorrect: false,
+                enableSuggestions: false,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _displayNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nome visualizzato',
+                ),
+                textInputAction: TextInputAction.next,
+              ),
+            ],
+            const SizedBox(height: 12),
+            TextField(
+              controller: _passwordController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+              onSubmitted: (_) => _submit(),
+            ),
+            if (!_isSignUp) ...[
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: auth.isLoading ? null : _forgotPassword,
+                  child: const Text('Password dimenticata?'),
                 ),
               ),
+            ],
+            if (auth.error != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                auth.error!,
+                style: const TextStyle(color: Colors.red, fontSize: 13),
+              ),
+            ],
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: auth.isLoading ? null : _submit,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AlfredColors.charcoal,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: auth.isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(_isSignUp ? 'Registrati' : 'Accedi'),
+              ),
             ),
-          ),
+            TextButton(
+              onPressed: () => setState(() => _isSignUp = !_isSignUp),
+              child: Text(
+                _isSignUp
+                    ? 'Hai già un account? Accedi'
+                    : 'Non hai un account? Registrati',
+              ),
+            ),
+            if (widget.addingAccount && widget.onCancel != null)
+              TextButton(
+                onPressed: widget.onCancel,
+                child: const Text('Annulla'),
+              ),
+          ],
         ),
       ),
     );

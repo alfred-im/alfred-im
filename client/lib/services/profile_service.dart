@@ -1,8 +1,13 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/profile.dart';
 import '../models/profile_summary.dart';
-import 'supabase_bootstrap.dart';
 
 class ProfileService {
+  ProfileService(this._client);
+
+  final SupabaseClient _client;
+
   static const _publicProfileColumns =
       'id, username, display_name, avatar_url, pronouns';
 
@@ -13,7 +18,7 @@ class ProfileService {
     String? pronouns,
     String? avatarUrl,
   }) async {
-    final row = await supabase
+    final row = await _client
         .from('profiles')
         .update({
           'display_name': displayName,
@@ -33,7 +38,7 @@ class ProfileService {
     final normalized = username.trim().toLowerCase();
     if (normalized.length < 3) return null;
 
-    final row = await supabase.rpc(
+    final row = await _client.rpc(
       'find_profile_by_username',
       params: {'p_username': normalized},
     );
@@ -49,7 +54,7 @@ class ProfileService {
   Future<List<ProfileSummary>> fetchSummariesByIds(List<String> ids) async {
     if (ids.isEmpty) return [];
 
-    final rows = await supabase
+    final rows = await _client
         .from('profiles')
         .select(_publicProfileColumns)
         .inFilter('id', ids);

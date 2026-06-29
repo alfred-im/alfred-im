@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:alfred_client/models/profile_summary.dart';
-import 'package:alfred_client/models/saved_account.dart';
+import 'package:alfred_client/models/open_account.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
 
 void main() {
@@ -14,7 +14,7 @@ void main() {
       final storage = AccountStorageService();
 
       await storage.upsertAccount(
-        SavedAccount(
+        OpenAccount(
           profile: const ProfileSummary(
             id: 'a',
             username: 'alice',
@@ -24,7 +24,7 @@ void main() {
         ),
       );
       await storage.upsertAccount(
-        SavedAccount(
+        OpenAccount(
           profile: const ProfileSummary(
             id: 'b',
             username: 'bob',
@@ -35,7 +35,7 @@ void main() {
       );
 
       await storage.upsertAccount(
-        SavedAccount(
+        OpenAccount(
           profile: const ProfileSummary(
             id: 'a',
             username: 'alice',

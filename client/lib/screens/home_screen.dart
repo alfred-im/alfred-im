@@ -5,13 +5,14 @@ import '../models/chat_peer.dart';
 import '../providers/auth_controller.dart';
 import '../providers/inbox_controller.dart';
 import '../providers/messages_controller.dart';
-import '../services/compose_service.dart';
+import '../services/account_session.dart';
 import '../theme/alfred_colors.dart';
 import '../widgets/account_sidebar.dart';
+import '../widgets/auth_overlay.dart';
 import '../widgets/chat_panel.dart';
+import '../widgets/no_account_placeholder.dart';
 import '../widgets/inbox_panel.dart';
 import 'contacts_screen.dart';
-import 'auth_screen.dart';
 import 'profile_screen.dart';
 
 /// Layout principale stile WhatsApp Web: sidebar (profilo + inbox) + chat.
@@ -24,7 +25,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _composeService = ComposeService();
   ChatPeer? _activePeer;
   bool _showListOnMobile = true;
 
@@ -45,8 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _startMessageFromAddress(String address) async {
+    final session = context.read<AuthController>().focusedSession;
+    if (session == null) return;
+
     try {
-      final peer = await _composeService.resolveAddress(address);
+      final peer = await session.composeService.resolveAddress(address);
       if (!mounted) return;
       _openPeer(peer);
     } catch (e) {
@@ -95,19 +98,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openAddAccount() async {
+  void _openAddAccount() {
     _closeDrawer();
-    final auth = context.read<AuthController>();
-    final navigator = Navigator.of(context);
-    await auth.prepareAddAccount();
-    await navigator.push<void>(
-      MaterialPageRoute(
-        builder: (routeCtx) => AuthScreen(
-          addingAccount: true,
-          onCancel: () => Navigator.of(routeCtx).pop(),
-        ),
-      ),
-    );
+    context.read<AuthController>().openAuthOverlay(dismissible: true);
   }
 
   Widget _accountSidebar({bool compact = false}) {
@@ -152,16 +145,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _chatArea({
+    required AccountSession? session,
     required bool showBackButton,
     VoidCallback? onBack,
   }) {
     final peer = _activePeer;
-    if (peer == null) {
+    if (peer == null || session == null) {
       return const EmptyChatPlaceholder();
     }
 
     return _ChatWithMessages(
-      key: ValueKey(peer.profileId),
+      key: ValueKey('${session.userId}-${peer.profileId}'),
+      session: session,
       peer: peer,
       showBackButton: showBackButton,
       onBack: onBack,
@@ -169,20 +164,25 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _mainContent() {
+    final auth = context.watch<AuthController>();
     final inbox = context.watch<InboxController?>();
-    final accountUserId = context.read<AuthController>().userId;
-    if (inbox == null || accountUserId == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    final session = auth.focusedSession;
+    final accountUserId = session?.userId;
 
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= _breakpoint;
     final showChatOnMobile = _activePeer != null;
     final sidebarWidth = width >= 1100 ? 380.0 : 320.0;
+
+    final inboxArea = accountUserId != null && inbox != null
+        ? _inboxPanel(
+            inbox: inbox,
+            accountUserId: accountUserId,
+            showDrawerButton: !isWide,
+            showTopBar: !isWide,
+          )
+        : const NoAccountPlaceholder();
 
     if (isWide) {
       return Scaffold(
@@ -196,21 +196,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     _accountSidebar(compact: true),
                     const Divider(height: 1),
-                    Expanded(
-                      child: _inboxPanel(
-                        inbox: inbox,
-                        accountUserId: accountUserId,
-                        showDrawerButton: false,
-                        showTopBar: false,
-                      ),
-                    ),
+                    Expanded(child: inboxArea),
                   ],
                 ),
               ),
             ),
             const VerticalDivider(width: 1, color: AlfredColors.border),
             Expanded(
-              child: _chatArea(showBackButton: false),
+              child: _chatArea(session: session, showBackButton: false),
             ),
           ],
         ),
@@ -223,15 +216,24 @@ class _HomeScreenState extends State<HomeScreen> {
         child: _accountSidebar(),
       ),
       body: !showChatOnMobile || _showListOnMobile
-          ? _inboxPanel(
-              inbox: inbox,
-              accountUserId: accountUserId,
-              showDrawerButton: true,
-            )
+          ? inboxArea
           : _chatArea(
+              session: session,
               showBackButton: true,
               onBack: () => setState(() => _showListOnMobile = true),
             ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthController>();
+
+    return Stack(
+      children: [
+        _mainContent(),
+        if (auth.showAuthOverlay) const AuthOverlay(),
+      ],
     );
   }
 }
@@ -239,12 +241,14 @@ class _HomeScreenState extends State<HomeScreen> {
 class _ChatWithMessages extends StatelessWidget {
   const _ChatWithMessages({
     super.key,
+    required this.session,
     required this.peer,
     this.showBackButton = false,
     this.onBack,
     required this.onMessagesChanged,
   });
 
+  final AccountSession session;
   final ChatPeer peer;
   final bool showBackButton;
   final VoidCallback? onBack;
@@ -252,12 +256,13 @@ class _ChatWithMessages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userId = context.read<AuthController>().userId!;
-
     return ChangeNotifierProvider(
       create: (_) => MessagesController(
-        userId: userId,
+        userId: session.userId,
         peerProfileId: peer.profileId,
+        messageService: session.messageService,
+        messageMediaService: session.messageMediaService,
+        inboxService: session.inboxService,
         onMessagesChanged: onMessagesChanged,
       ),
       child: ChatPanel(

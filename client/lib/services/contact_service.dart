@@ -1,10 +1,15 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/contact.dart';
 import '../models/profile_summary.dart';
-import 'supabase_bootstrap.dart';
 
 class ContactService {
+  ContactService(this._client);
+
+  final SupabaseClient _client;
+
   Future<List<Contact>> fetchContacts(String ownerId) async {
-    final rows = await supabase
+    final rows = await _client
         .from('contacts')
         .select()
         .eq('owner_id', ownerId)
@@ -16,7 +21,7 @@ class ContactService {
   Future<List<ProfileSummary>> searchProfiles(String query) async {
     if (query.trim().length < 2) return [];
 
-    final rows = await supabase.rpc(
+    final rows = await _client.rpc(
       'search_profiles',
       params: {'p_query': query.trim(), 'p_limit': 20},
     );
@@ -30,7 +35,7 @@ class ContactService {
     required String ownerId,
     required ProfileSummary profile,
   }) async {
-    final row = await supabase
+    final row = await _client
         .from('contacts')
         .insert({
           'owner_id': ownerId,
@@ -51,7 +56,7 @@ class ContactService {
     required String externalAddress,
     required String displayName,
   }) async {
-    final row = await supabase
+    final row = await _client
         .from('contacts')
         .insert({
           'owner_id': ownerId,
@@ -66,6 +71,6 @@ class ContactService {
   }
 
   Future<void> deleteContact(String contactId) async {
-    await supabase.from('contacts').delete().eq('id', contactId);
+    await _client.from('contacts').delete().eq('id', contactId);
   }
 }

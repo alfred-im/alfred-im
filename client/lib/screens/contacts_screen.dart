@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/contact.dart';
 import '../models/profile_summary.dart';
+import '../providers/auth_controller.dart';
 import '../providers/contacts_controller.dart';
 import '../services/compose_service.dart';
 import '../theme/alfred_colors.dart';
@@ -17,7 +18,9 @@ class ContactsScreen extends StatefulWidget {
 
 class _ContactsScreenState extends State<ContactsScreen> {
   final _searchController = TextEditingController();
-  final _composeService = ComposeService();
+
+  ComposeService? get _composeService =>
+      context.read<AuthController>().focusedSession?.composeService;
 
   @override
   void dispose() {
@@ -26,8 +29,10 @@ class _ContactsScreenState extends State<ContactsScreen> {
   }
 
   void _startChat(Contact contact) {
+    final composeService = _composeService;
+    if (composeService == null) return;
     try {
-      final peer = _composeService.peerFromContact(contact);
+      final peer = composeService.peerFromContact(contact);
       Navigator.pop(context, peer);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

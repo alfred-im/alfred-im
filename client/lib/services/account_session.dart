@@ -1,0 +1,263 @@
+import 'dart:async';
+
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../config/app_config.dart';
+import '../models/open_account.dart';
+import '../models/profile.dart';
+import '../models/profile_summary.dart';
+import '../providers/inbox_controller.dart';
+import '../utils/auth_identity.dart';
+import '../utils/auth_redirect_url.dart';
+import 'compose_service.dart';
+import 'contact_service.dart';
+import 'inbox_service.dart';
+import 'message_media_service.dart';
+import 'message_service.dart';
+import 'profile_avatar_service.dart';
+import 'profile_service.dart';
+
+/// Sessione Supabase dedicata a un account messaggistica aperto.
+class AccountSession {
+  AccountSession._({
+    required this.userId,
+    required this.client,
+    required this.inboxService,
+    required this.messageService,
+    required this.profileService,
+    required this.contactService,
+    required this.profileAvatarService,
+    required this.messageMediaService,
+    required this.composeService,
+    required this.inboxController,
+    required this.profile,
+  });
+
+  final String userId;
+  final SupabaseClient client;
+  final InboxService inboxService;
+  final MessageService messageService;
+  final ProfileService profileService;
+  final ContactService contactService;
+  final ProfileAvatarService profileAvatarService;
+  final MessageMediaService messageMediaService;
+  final ComposeService composeService;
+  final InboxController inboxController;
+
+  ProfileSummary profile;
+  UserProfile? fullProfile;
+  StreamSubscription<AuthState>? _authSubscription;
+  Future<void> Function()? onPersistRequested;
+
+  String? get refreshToken => client.auth.currentSession?.refreshToken;
+
+  OpenAccount toOpenAccount() => OpenAccount(
+        profile: profile,
+        refreshToken: refreshToken ?? '',
+      );
+
+  static SupabaseClient createClient(String storageScope) {
+    return SupabaseClient(
+      AppConfig.supabaseUrl,
+      AppConfig.supabaseAnonKey,
+      authOptions: FlutterAuthClientOptions(
+        localStorage: SharedPreferencesLocalStorage(
+          persistSessionKey: 'alfred_auth_$storageScope',
+        ),
+        detectSessionInUri: false,
+      ),
+    );
+  }
+
+  static Future<AccountSession> restore(OpenAccount stored) async {
+    final client = createClient(stored.userId);
+    await client.auth.setSession(stored.refreshToken);
+    return _fromClient(
+      client: client,
+      initialProfile: stored.profile,
+    );
+  }
+
+  static Future<AccountSession> signInWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    final bootstrap = createClient('_sign_in');
+    try {
+      final normalizedEmail = AuthIdentity.normalizeEmail(email);
+      final response = await bootstrap.auth.signInWithPassword(
+        email: normalizedEmail,
+        password: password,
+      );
+      final session = response.session;
+      if (session == null) {
+        throw const AuthException('Accesso non riuscito.');
+      }
+      final refresh = session.refreshToken;
+      if (refresh == null || refresh.isEmpty) {
+        throw const AuthException('Sessione non disponibile.');
+      }
+      return restore(
+        OpenAccount(
+          profile: _profileFromUser(session.user),
+          refreshToken: refresh,
+        ),
+      );
+    } finally {
+      await bootstrap.auth.signOut();
+    }
+  }
+
+  static Future<AccountSession> signUp({
+    required String email,
+    required String password,
+    required String username,
+    required String displayName,
+  }) async {
+    final bootstrap = createClient('_sign_up');
+    try {
+      final normalizedEmail = AuthIdentity.normalizeEmail(email);
+      final normalized = AuthIdentity.normalizeUsername(username);
+      final available = await bootstrap.rpc(
+        'is_username_available',
+        params: {'p_username': normalized},
+      );
+      if (available != true) {
+        throw const AuthException('Username già in uso. Scegline un altro.');
+      }
+
+      final response = await bootstrap.auth.signUp(
+        email: normalizedEmail,
+        password: password,
+        emailRedirectTo: AuthRedirectUrl.resolve(),
+        data: {
+          'username': normalized,
+          'display_name': displayName,
+        },
+      );
+      final session = response.session;
+      if (session == null) {
+        throw const AuthException(
+          'Registrazione inviata. Conferma l\'email prima di accedere.',
+        );
+      }
+      final refresh = session.refreshToken;
+      if (refresh == null || refresh.isEmpty) {
+        throw const AuthException('Sessione non disponibile.');
+      }
+      return restore(
+        OpenAccount(
+          profile: ProfileSummary(
+            id: session.user.id,
+            username: normalized,
+            displayName: displayName,
+          ),
+          refreshToken: refresh,
+        ),
+      );
+    } finally {
+      await bootstrap.auth.signOut();
+    }
+  }
+
+  static Future<AccountSession> _fromClient({
+    required SupabaseClient client,
+    required ProfileSummary initialProfile,
+  }) async {
+    final userId = client.auth.currentUser?.id;
+    if (userId == null) {
+      throw const AuthException('Sessione account non disponibile.');
+    }
+
+    final inboxService = InboxService(client);
+    final profileService = ProfileService(client);
+    final session = AccountSession._(
+      userId: userId,
+      client: client,
+      inboxService: inboxService,
+      messageService: MessageService(client),
+      profileService: profileService,
+      contactService: ContactService(client),
+      profileAvatarService: ProfileAvatarService(client),
+      messageMediaService: MessageMediaService(client),
+      composeService: ComposeService(profileService: profileService),
+      inboxController: InboxController(
+        userId: userId,
+        inboxService: inboxService,
+      ),
+      profile: initialProfile,
+    );
+
+    await session._hydrateProfile();
+    session._listenAuth();
+    return session;
+  }
+
+  void _listenAuth() {
+    _authSubscription = client.auth.onAuthStateChange.listen((state) {
+      if (state.event == AuthChangeEvent.tokenRefreshed) {
+        unawaited(onPersistRequested?.call());
+      }
+    });
+  }
+
+  Future<void> _hydrateProfile() async {
+    fullProfile = await fetchFullProfile();
+    if (fullProfile != null) {
+      profile = fullProfile!.summary;
+      return;
+    }
+
+    final row = await client
+        .from('profiles')
+        .select('id, display_name, username, avatar_url, pronouns')
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (row != null) {
+      profile = ProfileSummary.fromProfilesRow(row);
+      return;
+    }
+
+    final user = client.auth.currentUser;
+    final username = user?.userMetadata?['username'] as String?;
+    if (username != null && username.isNotEmpty) {
+      profile = ProfileSummary(
+        id: userId,
+        username: username,
+        displayName: user?.userMetadata?['display_name'] as String? ?? username,
+      );
+    }
+  }
+
+  Future<UserProfile?> fetchFullProfile() async {
+    final row = await client
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
+    if (row == null) return null;
+    return UserProfile.fromJson(row);
+  }
+
+  Future<void> syncProfileSummary() async {
+    await _hydrateProfile();
+  }
+
+  Future<void> close() async {
+    await _authSubscription?.cancel();
+    inboxController.dispose();
+    await client.auth.signOut();
+  }
+
+  static ProfileSummary _profileFromUser(User user) {
+    final username = user.userMetadata?['username'] as String? ?? '';
+    final displayName =
+        user.userMetadata?['display_name'] as String? ?? username;
+    return ProfileSummary(
+      id: user.id,
+      username: username.isEmpty ? null : username,
+      displayName: displayName.isEmpty ? user.email ?? user.id : displayName,
+    );
+  }
+}

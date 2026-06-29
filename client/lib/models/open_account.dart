@@ -1,7 +1,8 @@
 import 'profile_summary.dart';
 
-class SavedAccount {
-  const SavedAccount({
+/// Account messaggistica Alfred **aperto** nell'app (sessione viva, non bookmark).
+class OpenAccount {
+  const OpenAccount({
     required this.profile,
     required this.refreshToken,
   });
@@ -15,11 +16,11 @@ class SavedAccount {
   String? get avatarUrl => profile.avatarUrl;
   String? get pronouns => profile.pronouns;
 
-  SavedAccount copyWith({
+  OpenAccount copyWith({
     ProfileSummary? profile,
     String? refreshToken,
   }) {
-    return SavedAccount(
+    return OpenAccount(
       profile: profile ?? this.profile,
       refreshToken: refreshToken ?? this.refreshToken,
     );
@@ -30,8 +31,8 @@ class SavedAccount {
         'refreshToken': refreshToken,
       };
 
-  factory SavedAccount.fromJson(Map<String, dynamic> json) {
-    return SavedAccount(
+  factory OpenAccount.fromJson(Map<String, dynamic> json) {
+    return OpenAccount(
       profile: ProfileSummary.fromSavedAccountJson(json),
       refreshToken: json['refreshToken'] as String,
     );

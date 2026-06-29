@@ -1,11 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/chat_peer.dart';
-import 'supabase_bootstrap.dart';
 
 class InboxService {
+  InboxService(this._client);
+
+  final SupabaseClient _client;
+
   Future<List<ChatPeer>> fetchInbox() async {
-    final rows = await supabase.rpc('list_inbox');
+    final rows = await _client.rpc('list_inbox');
 
     final peers = (rows as List<dynamic>)
         .map(
@@ -23,7 +26,7 @@ class InboxService {
   }
 
   Future<void> markRead(String peerProfileId) async {
-    await supabase.rpc(
+    await _client.rpc(
       'mark_peer_read',
       params: {'p_peer_profile_id': peerProfileId},
     );
@@ -35,7 +38,7 @@ class InboxService {
   ) {
     void handle(PostgresChangePayload _) => onChange();
 
-    return supabase
+    return _client
         .channel('inbox-messages-$userId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
@@ -60,5 +63,11 @@ class InboxService {
           callback: handle,
         )
         .subscribe();
+  }
+
+  void disposeChannel(RealtimeChannel? channel) {
+    if (channel != null) {
+      _client.removeChannel(channel);
+    }
   }
 }

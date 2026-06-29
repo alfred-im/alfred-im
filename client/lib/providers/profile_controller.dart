@@ -7,14 +7,13 @@ import '../services/profile_service.dart';
 class ProfileController extends ChangeNotifier {
   ProfileController({
     required this.userId,
-    ProfileService? profileService,
-    ProfileAvatarService? avatarService,
-  })  : _profileService = profileService ?? ProfileService(),
-        _avatarService = avatarService ?? const ProfileAvatarService();
+    required this.profileService,
+    required this.avatarService,
+  });
 
   final String userId;
-  final ProfileService _profileService;
-  final ProfileAvatarService _avatarService;
+  final ProfileService profileService;
+  final ProfileAvatarService avatarService;
 
   bool isSaving = false;
   bool isUploadingAvatar = false;
@@ -30,7 +29,7 @@ class ProfileController extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      return await _profileService.updateProfile(
+      return await profileService.updateProfile(
         userId: userId,
         displayName: displayName,
         bio: bio,
@@ -55,7 +54,7 @@ class ProfileController extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      return await _avatarService.uploadAvatar(
+      return await avatarService.uploadAvatar(
         bytes: bytes,
         userId: userId,
         extension: extension,

@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-29 (redirect conferma email auth)  
+**Ultimo aggiornamento**: 2026-06-29 (multi-account sessioni parallele)  
 **Versione repository**: 3.1.0-alpha (client Flutter + piattaforma Supabase; bridge stub)
 
 ---
@@ -29,7 +29,7 @@
 | **Deploy** | `.github/workflows/deploy-pages.yml` — `verify.sh` + build; job `deploy-alpha` (PR e `main`) |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
-| **PR Alpha** | **#108–#132** mergiate su `main` — `docs/architecture/alpha-pr-registry.md` |
+| **PR Alpha** | **#108–#132** mergiate su `main` — **#140** draft (multi-account parallelo) — `docs/architecture/alpha-pr-registry.md` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -42,7 +42,7 @@
 ### Caratteristiche attuali
 
 - **Auth**: email + password (GoTrue); **username** obbligatorio in registrazione — identità IM pubblica; email non in rubrica/ricerca
-- **Multi-account**: switch via `SharedPreferences` + `setSession`
+- **Multi-account**: N sessioni Supabase parallele (`AccountManager` + `AccountSession`); account aperto = autenticato + realtime inbox; **focus** = solo UI — ADR `docs/decisions/multi-account-parallel-sessions.md`
 - **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — ADR `docs/decisions/address-based-messaging.md`
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); solo `messages` + `profiles`; inbox = `list_inbox()` on-read; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca conversazioni on-demand (PR #132)
@@ -106,20 +106,22 @@
 
 | Elemento | Dettaglio |
 |----------|-----------|
-| **Entry** | `lib/main.dart` → `AppShell` → `HomeScreen` |
-| **State** | Provider: `AuthController`, `InboxController`, `ContactsController`, `MessagesController` |
-| **Backend** | `supabase_flutter` — REST + Realtime + RPC |
+| **Entry** | `lib/main.dart` → `AppShell` → `HomeScreen` (sempre shell; overlay auth se 0 account o «Aggiungi account») |
+| **State** | Provider: `AuthController` (→ `AccountManager`), `InboxController` per account in focus, `ContactsController`, `MessagesController` |
+| **Backend** | N × `SupabaseClient` (uno per account aperto) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
 | **Gate** | `scripts/verify.sh` — pub get + analyze (zero issue) + test |
 | **Build web** | `flutter build web --base-href "/XmppTest/"` |
 
-**Non deducibile — layout inbox**: `HomeScreen` — mobile drawer `AccountSidebar`; desktop colonna sinistra account + inbox. `AccountSidebar`: logout in card profilo (icona a destra del nome). `InboxPanel`: ricerca on-demand, `ValueKey(userId)` al cambio account. Spec: `docs/design/inbox-search-toggle.md`.
+**Non deducibile — multi-account client**: `AccountManager` / `AccountSession` — ogni account aperto ha client Supabase dedicato (`SharedPreferencesLocalStorage` per `userId`), `InboxController` sempre attivo con realtime. Lista `OpenAccount` in storage = account autenticati (non bookmark). Switch = `setFocus` senza `setSession`. Overlay credenziali semi-trasparente su `HomeScreen`. Doc: `docs/decisions/multi-account-parallel-sessions.md`, `docs/design/auth-overlay-shell.md`, `docs/implementation/multi-account-client.md`.
+
+**Non deducibile — layout inbox**: `HomeScreen` — mobile drawer `AccountSidebar`; desktop colonna sinistra account + inbox. `AccountSidebar`: chiusura account in card profilo. `InboxPanel`: ricerca on-demand, `ValueKey(userId)` al cambio focus. Spec: `docs/design/inbox-search-toggle.md`.
 
 **Non deducibile — chat**: `AnchoredMessageList` (`ListView` reverse, soglia 48 px). Spec: `docs/design/conversation-bottom-anchor.md`.
 
 **Non deducibile — voice**: hold-to-send, WebM/Opus canonico. Spec: `docs/implementation/voice-notes.md`.
 
-**Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi; usato da `UserProfile.summary`, `SavedAccount.profile`, `ChatPeer.profile`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`).
+**Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi; usato da `UserProfile.summary`, `OpenAccount.profile`, `ChatPeer.profile`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`).
 
 **Non deducibile — coda invio client**: `OutboundMessageQueue` ≠ outbox server federato.
 
@@ -153,7 +155,7 @@ Avvio container: `scripts/start-bridges.sh`.
 | Postgres | `profiles` (+ `pronouns`), `contacts`, `messages`, `outbox`, `sync_cursors`, `bridge_jobs` |
 | Storage `chat-media` | GIF + voice WebM (`{userId}/{uuid}.…`) |
 | Storage `avatars` | Foto profilo (`{userId}/avatar.{jpg|png|webp}`, max 2 MB) |
-| Client `SharedPreferences` | Multi-account (refresh token) |
+| Client `SharedPreferences` | Account aperti (`OpenAccount` + refresh token) e `focusUserId` |
 
 RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_profile`, `list_peer_messages`, `mark_peer_read`.
 
@@ -204,10 +206,9 @@ bash scripts/verify.sh --build   # + build web
 
 ## 🔄 Ultima Revisione
 
-**Data**: 2026-06-28
+**Data**: 2026-06-29
 
-- Profilo arricchito: email in sola lettura (GoTrue), upload avatar bucket `avatars`, campo `pronouns` su `profiles`
-- Sync stato PR #108–#132 mergiate
-- PR #132 ricerca inbox · #131 logout sidebar · #130 inbox solo messaggi · #127 verify.sh · #126 voice
+- Multi-account: sessioni parallele (`AccountManager`); shell + overlay auth; doc ADR + design + implementation
+- Redirect conferma email auth (`AuthRedirectUrl`)
 
 **Riferimenti**: `docs/INDICE.md`, `docs/architecture/alpha-pr-registry.md`, `CHANGELOG.md`

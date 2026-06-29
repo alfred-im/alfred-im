@@ -8,13 +8,13 @@ import '../utils/list_filter.dart';
 class ContactsController extends ChangeNotifier {
   ContactsController({
     required this.ownerId,
-    ContactService? contactService,
-  }) : _contactService = contactService ?? ContactService() {
+    required this.contactService,
+  }) {
     load();
   }
 
   final String ownerId;
-  final ContactService _contactService;
+  final ContactService contactService;
 
   List<Contact> contacts = [];
   bool isLoading = true;
@@ -34,7 +34,7 @@ class ContactsController extends ChangeNotifier {
 
   Future<void> load() async {
     try {
-      contacts = await _contactService.fetchContacts(ownerId);
+      contacts = await contactService.fetchContacts(ownerId);
       error = null;
     } catch (e) {
       error = e.toString();
@@ -45,11 +45,11 @@ class ContactsController extends ChangeNotifier {
   }
 
   Future<List<ProfileSummary>> searchProfiles(String query) {
-    return _contactService.searchProfiles(query);
+    return contactService.searchProfiles(query);
   }
 
   Future<Contact> addInternal(ProfileSummary profile) async {
-    final contact = await _contactService.addInternalContact(
+    final contact = await contactService.addInternalContact(
       ownerId: ownerId,
       profile: profile,
     );
@@ -62,7 +62,7 @@ class ContactsController extends ChangeNotifier {
     required String address,
     required String displayName,
   }) async {
-    final contact = await _contactService.addExternalContact(
+    final contact = await contactService.addExternalContact(
       ownerId: ownerId,
       protocol: protocol,
       externalAddress: address,

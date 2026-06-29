@@ -2,15 +2,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/voice_config.dart';
 import '../models/message.dart';
-import 'supabase_bootstrap.dart';
 
 class MessageService {
+  MessageService(this._client);
+
+  final SupabaseClient _client;
+
   Future<List<ChatMessage>> fetchPeerMessages({
     required String peerProfileId,
     required String currentUserId,
     int limit = 100,
   }) async {
-    final rows = await supabase.rpc(
+    final rows = await _client.rpc(
       'list_peer_messages',
       params: {
         'p_peer_profile_id': peerProfileId,
@@ -93,7 +96,7 @@ class MessageService {
     int? mediaSizeBytes,
   }) async {
     if (contentType == 'text') {
-      final row = await supabase.rpc(
+      final row = await _client.rpc(
         'send_message_to_profile',
         params: {
           'p_recipient_profile_id': recipientProfileId,
@@ -119,7 +122,7 @@ class MessageService {
       'p_media_size_bytes': ?mediaSizeBytes,
     };
 
-    final row = await supabase.rpc('send_message_to_profile', params: params);
+    final row = await _client.rpc('send_message_to_profile', params: params);
 
     return ChatMessage.fromJson(
       json: row as Map<String, dynamic>,
@@ -150,7 +153,7 @@ class MessageService {
       onMessage(message);
     }
 
-    return supabase
+    return _client
         .channel('messages-peer-$currentUserId-$peerProfileId')
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
@@ -165,5 +168,11 @@ class MessageService {
           callback: handle,
         )
         .subscribe();
+  }
+
+  void disposeChannel(RealtimeChannel? channel) {
+    if (channel != null) {
+      _client.removeChannel(channel);
+    }
   }
 }

@@ -5,10 +5,9 @@ import '../utils/compose_address.dart';
 import 'profile_service.dart';
 
 class ComposeService {
-  ComposeService({ProfileService? profileService})
-      : _profileService = profileService ?? ProfileService();
+  ComposeService({required this.profileService});
 
-  final ProfileService _profileService;
+  final ProfileService profileService;
 
   Future<ChatPeer> resolveAddress(String raw) async {
     final parsed = parseComposeAddress(raw);
@@ -19,7 +18,7 @@ class ComposeService {
         throw StateError('Indirizzo esterno non ancora supportato');
       case ComposeAddressKind.internalUsername:
         final profile =
-            await _profileService.findByUsername(parsed.normalized);
+            await profileService.findByUsername(parsed.normalized);
         if (profile == null) {
           throw StateError('Utente non trovato');
         }

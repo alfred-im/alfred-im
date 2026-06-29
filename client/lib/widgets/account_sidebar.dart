@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/open_account.dart';
 import '../models/profile_summary.dart';
-import '../models/saved_account.dart';
 import '../providers/auth_controller.dart';
 import '../theme/alfred_colors.dart';
 import 'profile_identity.dart';
@@ -27,7 +27,7 @@ class AccountSidebar extends StatelessWidget {
     final auth = context.watch<AuthController>();
     final profile = auth.profile?.summary;
     final activeUserId = auth.userId;
-    final otherAccounts = auth.savedAccounts
+    final otherAccounts = auth.openAccounts
         .where((a) => a.userId != activeUserId)
         .toList();
 
@@ -38,21 +38,24 @@ class AccountSidebar extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(12, compact ? 8 : 16, 12, 16),
           children: [
             if (profile != null && activeUserId != null)
-              _ActiveProfileCard(profile: profile)
+              _ActiveProfileCard(profile: profile, userId: activeUserId)
             else
               const ListTile(
-                leading: CircularProgressIndicator(strokeWidth: 2),
-                title: Text('Caricamento profilo…'),
+                leading: Icon(Icons.person_outline),
+                title: Text('Nessun account in primo piano'),
+                subtitle: Text('Apri un account per iniziare'),
               ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: onEditProfile,
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: const Text('Modifica profilo'),
+            if (activeUserId != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: onEditProfile,
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: const Text('Modifica profilo'),
+                ),
               ),
-            ),
+            ],
             if (otherAccounts.isNotEmpty) ...[
               const SizedBox(height: 20),
               Text(
@@ -66,7 +69,7 @@ class AccountSidebar extends StatelessWidget {
               ...otherAccounts.map(
                 (account) => _AccountTile(
                   account: account,
-                  onTap: () => _switchAccount(context, account),
+                  onTap: () => _switchFocus(context, account),
                 ),
               ),
             ],
@@ -83,22 +86,20 @@ class AccountSidebar extends StatelessWidget {
     );
   }
 
-  Future<void> _switchAccount(BuildContext context, SavedAccount account) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final auth = context.read<AuthController>();
-    final ok = await auth.switchAccount(account);
-    if (!ok && auth.error != null) {
-      messenger.showSnackBar(SnackBar(content: Text(auth.error!)));
-      return;
-    }
+  Future<void> _switchFocus(BuildContext context, OpenAccount account) async {
+    await context.read<AuthController>().setFocus(account.userId);
     onAccountSwitched?.call();
   }
 }
 
 class _ActiveProfileCard extends StatelessWidget {
-  const _ActiveProfileCard({required this.profile});
+  const _ActiveProfileCard({
+    required this.profile,
+    required this.userId,
+  });
 
   final ProfileSummary profile;
+  final String userId;
 
   @override
   Widget build(BuildContext context) {
@@ -119,8 +120,8 @@ class _ActiveProfileCard extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.logout_outlined, size: 22),
           color: AlfredColors.textSecondary,
-          tooltip: 'Esci',
-          onPressed: () => context.read<AuthController>().signOut(),
+          tooltip: 'Chiudi account',
+          onPressed: () => context.read<AuthController>().removeAccount(userId),
         ),
       ],
     );
@@ -133,13 +134,17 @@ class _AccountTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final SavedAccount account;
+  final OpenAccount account;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: ProfileAvatar(profile: account.profile, radius: 20, fontSize: 16),
+      leading: ProfileAvatar(
+        profile: account.profile,
+        radius: 20,
+        fontSize: 16,
+      ),
       title: Text(account.displayName),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

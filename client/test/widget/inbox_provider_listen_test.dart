@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/inbox_controller.dart';
@@ -13,6 +15,18 @@ class _AuthModel extends ChangeNotifier {
 }
 
 class _ImmediateInboxService extends InboxService {
+  _ImmediateInboxService()
+      : super(
+          SupabaseClient(
+            'http://127.0.0.1',
+            'test-anon-key',
+            authOptions: const FlutterAuthClientOptions(
+              localStorage: EmptyLocalStorage(),
+              autoRefreshToken: false,
+            ),
+          ),
+        );
+
   @override
   Future<List<ChatPeer>> fetchInbox() async {
     return const [

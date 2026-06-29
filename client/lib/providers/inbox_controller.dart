@@ -5,21 +5,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/chat_peer.dart';
 import '../services/inbox_service.dart';
-import '../services/supabase_bootstrap.dart';
 import '../utils/list_filter.dart';
 
 class InboxController extends ChangeNotifier {
   InboxController({
     required this.userId,
-    InboxService? inboxService,
+    required this.inboxService,
     this.enableRealtime = true,
-  }) : _inboxService = inboxService ?? InboxService() {
+  }) {
     unawaited(_bootstrap());
   }
 
   final String userId;
   final bool enableRealtime;
-  final InboxService _inboxService;
+  final InboxService inboxService;
   RealtimeChannel? _channel;
   int _loadGeneration = 0;
   bool _realtimeAttached = false;
@@ -55,7 +54,7 @@ class InboxController extends ChangeNotifier {
   void _attachRealtime() {
     if (_realtimeAttached) return;
     _realtimeAttached = true;
-    _channel = _inboxService.subscribeToInbox(userId, load);
+    _channel = inboxService.subscribeToInbox(userId, load);
   }
 
   Future<void> load() async {
@@ -65,7 +64,7 @@ class InboxController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final loaded = await _inboxService
+      final loaded = await inboxService
           .fetchInbox()
           .timeout(const Duration(seconds: 30));
       if (generation != _loadGeneration) return;
@@ -87,7 +86,7 @@ class InboxController extends ChangeNotifier {
 
   @override
   void dispose() {
-    disposeRealtimeChannel(_channel);
+    inboxService.disposeChannel(_channel);
     super.dispose();
   }
 }

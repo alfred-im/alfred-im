@@ -3,50 +3,69 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/open_account.dart';
 import '../models/profile.dart';
-import '../models/saved_account.dart';
-import '../services/auth_service.dart';
+import '../services/account_manager.dart';
+import '../services/account_session.dart';
 import '../utils/auth_identity.dart';
 
 class AuthController extends ChangeNotifier {
-  AuthController({AuthService? authService})
-      : _authService = authService ?? AuthService() {
-    _subscription = _authService.authStateChanges.listen((state) {
-      if (state.event == AuthChangeEvent.tokenRefreshed) {
-        unawaited(_authService.persistCurrentSession());
-      }
-      _loadProfile();
-    });
-    _loadProfile();
-  }
+  AuthController({AccountManager? accountManager})
+      : _manager = accountManager ?? AccountManager();
 
-  final AuthService _authService;
-  late final StreamSubscription<AuthState> _subscription;
+  final AccountManager _manager;
 
-  UserProfile? profile;
-  List<SavedAccount> savedAccounts = [];
   bool isLoading = true;
   bool sessionReady = false;
   String? error;
 
-  bool get isAuthenticated => _authService.isAuthenticated;
-  String? get userId => _authService.currentUser?.id;
-  String? get email => _authService.currentUser?.email;
-  String? get username => profile?.username;
+  bool showAuthOverlay = false;
+  bool authOverlayDismissible = false;
+
+  AccountManager get accountManager => _manager;
+
+  List<OpenAccount> get openAccounts => _manager.openAccounts;
+  AccountSession? get focusedSession => _manager.focusedSession;
+  String? get userId => _manager.focusUserId;
+  bool get hasOpenAccounts => _manager.hasOpenAccounts;
+
+  UserProfile? get profile => focusedSession?.fullProfile;
+
+  String? get email => focusedSession?.client.auth.currentUser?.email;
+  String? get username => focusedSession?.profile.username;
 
   Future<void> initialize() async {
-    savedAccounts = await _authService.savedAccounts();
-    savedAccounts = await _authService.syncSavedAccountsFromProfiles();
-    await _loadProfile();
-    sessionReady = true;
+    isLoading = true;
+    notifyListeners();
+    try {
+      await _manager.initialize();
+      if (!_manager.hasOpenAccounts) {
+        showAuthOverlay = true;
+        authOverlayDismissible = false;
+      }
+    } finally {
+      isLoading = false;
+      sessionReady = true;
+      notifyListeners();
+    }
+  }
+
+  void openAuthOverlay({required bool dismissible}) {
+    showAuthOverlay = true;
+    authOverlayDismissible = dismissible;
+    error = null;
     notifyListeners();
   }
 
-  /// Prima di aggiungere un altro account: salva la sessione corrente.
-  Future<void> prepareAddAccount() async {
-    await _authService.persistCurrentSession();
-    savedAccounts = await _authService.syncSavedAccountsFromProfiles();
+  void closeAuthOverlay() {
+    if (!authOverlayDismissible && !_manager.hasOpenAccounts) return;
+    showAuthOverlay = false;
     error = null;
+    notifyListeners();
+  }
+
+  Future<void> setFocus(String userId) async {
+    await _manager.setFocus(userId);
     notifyListeners();
   }
 
@@ -59,8 +78,9 @@ class AuthController extends ChangeNotifier {
     }
 
     await _withLoading(() async {
-      await _authService.signIn(email: email, password: password);
-      savedAccounts = await _authService.syncSavedAccountsFromProfiles();
+      await _manager.openWithPassword(email: email, password: password);
+      await _manager.refreshOpenAccountProfiles();
+      showAuthOverlay = false;
     });
   }
 
@@ -91,13 +111,18 @@ class AuthController extends ChangeNotifier {
     }
 
     await _withLoading(() async {
-      await _authService.signUp(
+      final available = await _manager.isUsernameAvailable(username);
+      if (!available) {
+        throw const AuthException('Username già in uso. Scegline un altro.');
+      }
+      await _manager.openWithSignUp(
         email: email,
         password: password,
         username: username,
         displayName: displayName.trim(),
       );
-      savedAccounts = await _authService.syncSavedAccountsFromProfiles();
+      await _manager.refreshOpenAccountProfiles();
+      showAuthOverlay = false;
     });
   }
 
@@ -113,7 +138,7 @@ class AuthController extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      await _authService.resetPassword(email);
+      await _manager.resetPassword(email);
       return true;
     } catch (e) {
       error = _friendlyAuthError(e);
@@ -124,35 +149,19 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> signOut() async {
-    await _authService.signOut();
-    profile = null;
-    savedAccounts = await _authService.savedAccounts();
-    notifyListeners();
-  }
-
-  Future<bool> switchAccount(SavedAccount account) async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
-    try {
-      await _authService.switchAccount(account);
-      savedAccounts = await _authService.syncSavedAccountsFromProfiles();
-      await _loadProfile();
-      return true;
-    } catch (e) {
-      error = _friendlyAuthError(e);
-      await _loadProfile();
-      return false;
-    } finally {
-      isLoading = false;
-      notifyListeners();
+  Future<void> removeAccount(String userId) async {
+    await _manager.removeAccount(userId);
+    if (!_manager.hasOpenAccounts) {
+      showAuthOverlay = true;
+      authOverlayDismissible = false;
     }
+    notifyListeners();
   }
 
   Future<void> refreshProfile() async {
-    await _loadProfile();
-    savedAccounts = await _authService.syncSavedAccountsFromProfiles();
+    await focusedSession?.syncProfileSummary();
+    focusedSession?.fullProfile = await focusedSession?.fetchFullProfile();
+    await _manager.refreshOpenAccountProfiles();
     notifyListeners();
   }
 
@@ -174,7 +183,7 @@ class AuthController extends ChangeNotifier {
     if (e is AuthException) {
       final msg = e.message.toLowerCase();
       if (msg.contains('refresh') || msg.contains('session')) {
-        return 'Sessione scaduta per questo account. Usa "Aggiungi account" e accedi di nuovo.';
+        return 'Sessione scaduta per questo account. Accedi di nuovo.';
       }
       if (msg.contains('invalid login credentials')) {
         return 'Email o password non corretti.';
@@ -188,26 +197,17 @@ class AuthController extends ChangeNotifier {
       if (msg.contains('user already registered')) {
         return 'Email già registrata. Prova ad accedere.';
       }
+      if (msg.contains('conferma l\'email')) {
+        return e.message;
+      }
       return e.message;
     }
     return e.toString();
   }
 
-  Future<void> _loadProfile() async {
-    if (!_authService.isAuthenticated) {
-      profile = null;
-      isLoading = false;
-      notifyListeners();
-      return;
-    }
-    profile = await _authService.fetchCurrentProfile();
-    isLoading = false;
-    notifyListeners();
-  }
-
   @override
   void dispose() {
-    _subscription.cancel();
+    unawaited(_manager.dispose());
     super.dispose();
   }
 }

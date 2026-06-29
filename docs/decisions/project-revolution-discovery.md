@@ -119,9 +119,13 @@ Utente
 
 > Le domande precedenti su "collegare XMPP" e "password XMPP" erano **mal poste** — basate su un modello client-classico che **non** è Alfred. Ritirate.
 
-### Multi-account (stile Thunderbird)
+### Multi-account (client messaggistica)
 
 L'app gestisce **multi-account Alfred**: l'utente può avere **quanti account Alfred vuole** e passare tra loro (come più caselle email in Thunderbird). Ogni account Alfred ha la propria identità e i propri dati sulla piattaforma.
+
+**Implementazione client (2026-06-29, PR #140)**: ogni account **aperto** ha una **sessione Supabase dedicata** con realtime inbox sempre attivo; il cambio account è **solo focus UI** (nessun `setSession` tra account già aperti). L'auth è overlay sulla shell, non «ingresso nell'app». Vedi [multi-account-parallel-sessions.md](./multi-account-parallel-sessions.md).
+
+> **Storico PR #111**: switch via singolo client + `setSession` — **superato** da sessioni parallele.
 
 ### Dominio federato — per istanza, uno solo
 
@@ -545,7 +549,7 @@ Il daemon è del **servizio**, non dell'utente. **Chiuso** — non era ambiguit�
 
 ### Domande ancora aperte (non contraddizioni — da chiudere)
 
-1. **Multi-account Alfred**: come si presenta in UI il cambio account? (Thunderbird-like — confermato ma non dettagliato)
+1. ~~**Multi-account Alfred**: come si presenta in UI il cambio account?~~ → **Chiusa 2026-06-29**: shell sempre visibile, overlay credenziali, focus istantaneo — `docs/design/auth-overlay-shell.md`
 2. **Matrix per istanza**: formato identità Matrix sul dominio dell'istanza — da definire
 3. **Ordine tappe Alpha** dopo messaggi v1 — posticipato
 
@@ -632,7 +636,7 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | D-021 | 2026-06-24 | Ordine sviluppo dettagliato **posticipato** | ✅ |
 | D-022 | 2026-06-24 | **Identità Alfred** unica; XMPP/Matrix = trasporto | ✅ |
 | D-023 | 2026-06-24 | Password **solo Alfred** | ✅ |
-| D-024 | 2026-06-24 | **Multi-account Alfred** (Thunderbird) | ✅ |
+| D-024 | 2026-06-24 | **Multi-account Alfred** (Thunderbird) — **evoluto 2026-06-29**: sessioni parallele (ADR dedicato) | ✅ |
 | D-025 | 2026-06-24 | Bridge XMPP: **slixmpp** | ✅ Accettata a livello alto |
 | D-026 | 2026-06-24 | Bridge Matrix: **matrix-nio** | ✅ Accettata a livello alto |
 | D-027 | 2026-06-24 | Contatti **unificati** | ✅ Corretto iter.7: protocollo **non** in UI |

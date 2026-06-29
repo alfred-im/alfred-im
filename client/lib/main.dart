@@ -10,8 +10,7 @@ import 'screens/app_shell.dart';
 import 'theme/alfred_theme.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await bootstrapSupabase();
+  await bootstrapApp();
   runApp(const AlfredApp());
 }
 
@@ -25,37 +24,38 @@ class AlfredApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => AuthController()..initialize(),
         ),
-        // ChangeNotifierProxyProvider (non ProxyProvider): ascolta notifyListeners
-        // del controller — altrimenti la UI resta sulla rotella finché un altro
-        // evento (ricerca, navigazione) non forza un rebuild.
         ChangeNotifierProxyProvider<AuthController, InboxController?>(
           create: (_) => null,
-          update: (_, auth, previous) {
+          update: (_, auth, _) {
             if (!auth.sessionReady) return null;
-            final userId = auth.userId;
-            if (userId == null) return null;
-            if (previous?.userId == userId) return previous;
-            return InboxController(userId: userId);
+            return auth.focusedSession?.inboxController;
           },
         ),
         ChangeNotifierProxyProvider<AuthController, ContactsController?>(
           create: (_) => null,
           update: (_, auth, previous) {
             if (!auth.sessionReady) return null;
-            final userId = auth.userId;
-            if (userId == null) return null;
-            if (previous?.ownerId == userId) return previous;
-            return ContactsController(ownerId: userId);
+            final session = auth.focusedSession;
+            if (session == null) return null;
+            if (previous?.ownerId == session.userId) return previous;
+            return ContactsController(
+              ownerId: session.userId,
+              contactService: session.contactService,
+            );
           },
         ),
         ChangeNotifierProxyProvider<AuthController, ProfileController?>(
           create: (_) => null,
           update: (_, auth, previous) {
             if (!auth.sessionReady) return null;
-            final userId = auth.userId;
-            if (userId == null) return null;
-            if (previous?.userId == userId) return previous;
-            return ProfileController(userId: userId);
+            final session = auth.focusedSession;
+            if (session == null) return null;
+            if (previous?.userId == session.userId) return previous;
+            return ProfileController(
+              userId: session.userId,
+              profileService: session.profileService,
+              avatarService: session.profileAvatarService,
+            );
           },
         ),
       ],

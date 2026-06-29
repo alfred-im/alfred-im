@@ -10,6 +10,7 @@ Architecture Decision Records. Documento per AI.
 | [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md) | Nessuna distinzione chat interna/esterna a tutti i livelli |
 | [bridge-stateless.md](./bridge-stateless.md) | Bridge senza stato di business; verità su Supabase |
 | [server-as-reception.md](./server-as-reception.md) | Ricezione = ricezione sul server (spunte cloud) |
+| [multi-account-parallel-sessions.md](./multi-account-parallel-sessions.md) | Multi-account: N sessioni Supabase parallele; focus solo UI |
 
 ## Visione e proposte
 

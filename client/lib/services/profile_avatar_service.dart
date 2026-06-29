@@ -2,10 +2,10 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'supabase_bootstrap.dart';
-
 class ProfileAvatarService {
-  const ProfileAvatarService();
+  ProfileAvatarService(this._client);
+
+  final SupabaseClient _client;
 
   static const maxBytes = 2 * 1024 * 1024;
 
@@ -21,7 +21,7 @@ class ProfileAvatarService {
 
     final normalizedExt = extension.toLowerCase();
     final path = '$userId/avatar.$normalizedExt';
-    await supabase.storage.from('avatars').uploadBinary(
+    await _client.storage.from('avatars').uploadBinary(
           path,
           bytes,
           fileOptions: FileOptions(
@@ -29,6 +29,6 @@ class ProfileAvatarService {
             upsert: true,
           ),
         );
-    return supabase.storage.from('avatars').getPublicUrl(path);
+    return _client.storage.from('avatars').getPublicUrl(path);
   }
 }

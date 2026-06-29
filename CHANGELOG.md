@@ -23,6 +23,18 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Alpha Flutter — PR #140 (multi-account sessioni parallele)
+
+- **Modello**: account aperto = sessione Supabase viva + realtime inbox; non bookmark + `setSession`
+- **`AccountManager` / `AccountSession`**: un `SupabaseClient` per account; servizi dati per-client
+- **`OpenAccount`**: sostituisce `SavedAccount` (stesso payload storage)
+- **Shell**: `HomeScreen` sempre visibile; `AuthOverlay` semi-trasparente (0 account = obbligatorio; aggiungi = chiudibile)
+- **Focus**: `setFocus` — switch istantaneo, nessuna ri-autenticazione
+- **Rimossi**: `AuthService`, gate `AppShell` auth vs home, `switchAccount` con `setSession`
+- **ADR**: `docs/decisions/multi-account-parallel-sessions.md`
+- **Design**: `docs/design/auth-overlay-shell.md`
+- **Implementazione**: `docs/implementation/multi-account-client.md`
+
 ### Documentazione (2026-06-28 — rimozione legacy React/XMPP)
 
 - Eliminati doc architettura/implementazione/fix relativi al client React rimosso da `main`
