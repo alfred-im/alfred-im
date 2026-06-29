@@ -30,5 +30,27 @@ void main() {
       expect(cleared.activePeer, isNull);
       expect(cleared.showInboxOnMobile, isTrue);
     });
+
+    test('sanitizedForAccount clears peer when it matches account id', () {
+      const accountId = 'self-id';
+      final peer = _peer(accountId);
+      final opened = const AccountViewState().openChat(peer);
+
+      final sanitized = opened.sanitizedForAccount(accountId);
+
+      expect(sanitized.activePeer, isNull);
+      expect(sanitized.showInboxOnMobile, isTrue);
+    });
+
+    test('sanitizedForAccount keeps peer for other accounts', () {
+      const accountId = 'account-a';
+      final peer = _peer('account-b');
+      final opened = const AccountViewState().openChat(peer);
+
+      final sanitized = opened.sanitizedForAccount(accountId);
+
+      expect(sanitized.activePeer, peer);
+      expect(sanitized.showInboxOnMobile, isFalse);
+    });
   });
 }

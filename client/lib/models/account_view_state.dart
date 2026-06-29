@@ -29,4 +29,12 @@ class AccountViewState {
       showInboxOnMobile: showInboxOnMobile,
     );
   }
+
+  /// Evita chat aperte verso sé stessi (stato incoerente dopo switch account).
+  AccountViewState sanitizedForAccount(String accountUserId) {
+    if (activePeer?.profileId == accountUserId) {
+      return const AccountViewState();
+    }
+    return this;
+  }
 }

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/open_account.dart';
 import '../models/account_view_state.dart';
 import '../models/chat_peer.dart';
@@ -12,8 +14,9 @@ class AccountManager {
 
   final AccountStorageService _storage;
   final Map<String, AccountSession> _sessions = {};
+  final Map<String, AccountViewState> _viewsByAccount = {};
+  final Set<String> _testOnlyAccountIds = {};
   String? _focusUserId;
-  AccountViewState _view = const AccountViewState();
 
   List<OpenAccount> get openAccounts =>
       _sessions.values.map((s) => s.toOpenAccount()).toList();
@@ -25,24 +28,49 @@ class AccountManager {
 
   String? get focusUserId => _focusUserId;
 
-  AccountViewState get viewState => _view;
+  AccountViewState get viewState => _viewFor(_focusUserId);
 
   bool get hasOpenAccounts => _sessions.isNotEmpty;
 
   void openConversation(ChatPeer peer) {
-    _view = _view.openChat(peer);
+    final userId = _focusUserId;
+    if (userId == null || peer.profileId == userId) return;
+    _setViewFor(userId, _storedViewFor(userId).openChat(peer));
   }
 
   void showInboxOnMobile() {
-    _view = _view.backToInboxOnMobile();
+    final userId = _focusUserId;
+    if (userId == null) return;
+    _setViewFor(userId, _storedViewFor(userId).backToInboxOnMobile());
   }
 
   void mergeActivePeerFromInbox(ChatPeer inboxRow) {
-    _view = _view.mergeActivePeer(inboxRow);
+    final userId = _focusUserId;
+    if (userId == null) return;
+    _setViewFor(userId, _storedViewFor(userId).mergeActivePeer(inboxRow));
   }
 
-  void _resetView() {
-    _view = const AccountViewState();
+  AccountViewState _viewFor(String? userId) {
+    if (userId == null) return const AccountViewState();
+    return _sanitizeView(userId, _storedViewFor(userId));
+  }
+
+  AccountViewState _storedViewFor(String userId) =>
+      _viewsByAccount[userId] ?? const AccountViewState();
+
+  AccountViewState _sanitizeView(String userId, AccountViewState view) =>
+      view.sanitizedForAccount(userId);
+
+  void _setViewFor(String userId, AccountViewState view) {
+    _viewsByAccount[userId] = _sanitizeView(userId, view);
+  }
+
+  bool _hasAccount(String userId) =>
+      _sessions.containsKey(userId) || _testOnlyAccountIds.contains(userId);
+
+  @visibleForTesting
+  void seedTestAccount(String userId) {
+    _testOnlyAccountIds.add(userId);
   }
 
   Future<void> initialize() async {
@@ -121,21 +149,19 @@ class AccountManager {
   }
 
   Future<void> setFocus(String userId) async {
-    if (!_sessions.containsKey(userId)) return;
-    if (_focusUserId != userId) {
-      _resetView();
-    }
+    if (!_hasAccount(userId)) return;
     _focusUserId = userId;
     await _storage.saveFocusUserId(userId);
   }
 
   Future<void> removeAccount(String userId) async {
     final session = _sessions.remove(userId);
+    _testOnlyAccountIds.remove(userId);
+    _viewsByAccount.remove(userId);
     await session?.close();
     await _storage.removeAccount(userId);
 
     if (_focusUserId == userId) {
-      _resetView();
       _focusUserId = _sessions.keys.isEmpty ? null : _sessions.keys.first;
       await _storage.saveFocusUserId(_focusUserId);
     }
@@ -193,7 +219,8 @@ class AccountManager {
       await session.close();
     }
     _sessions.clear();
+    _viewsByAccount.clear();
+    _testOnlyAccountIds.clear();
     _focusUserId = null;
-    _resetView();
   }
 }
