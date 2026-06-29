@@ -21,6 +21,27 @@ Tutto il resto (UI, realtime, spunte, tipi messaggio, rubrica) si deduce dall’
 
 ---
 
+## Media (GIF, voice) — file condiviso
+
+Il flusso client resta quello Alpha: **un upload** nel bucket `chat-media` → **un** `media_url` → metadati sul messaggio.
+
+Con il modello caselle le **copie d’archivio** (mittente e destinatario) puntano allo **stesso blob** — il file **non** si duplica in storage. È una scelta deliberata (come un allegato referenziato in due caselle), non un dettaglio trascurabile.
+
+### Implicazioni
+
+| Aspetto | Conseguenza |
+|---------|-------------|
+| **Riferimento** | Più righe `mailbox_messages` possono condividere lo stesso `media_url` |
+| **Garbage collection** | Eliminare un messaggio o una casella **non** implica che il file sia orfano: va verificato se **altre** copie (o altri owner) referenziano ancora quell’URL prima di cancellare da `chat-media` |
+| **Delete locale** (futuro) | Cancello la chat dal mio lato → la mia riga sparisce, ma il peer può ancora referenziare lo stesso file |
+| **Rimozione lato mittente** | Cancellare il file in storage mentre il destinatario ha ancora il messaggio → **link rotto** per il peer, salvo policy esplicita |
+| **Retry / invio fallito** | Upload riuscito ma consegna non materializzata → blob in storage senza (o con) riga archivio — edge case da contare nel GC |
+| **Bridge** (futuro) | Il bridge può aver scaricato/cachato dal URL; delete storage non equivale a «revocato» fuori da Alfred |
+
+**Regola:** trattare i media come **risorsa condivisa con refcount logico** (o audit delle referenze), non come proprietà della singola riga archivio. La strategia GC (quando contare le referenze, job async, soft-delete) va definita **prima** di implementare delete messaggi/casella o purge storage — fuori scope Alpha ma **non** ignorabile nel design.
+
+---
+
 ## Identità chat (vincolante)
 
 **Non serve altro** oltre a:
