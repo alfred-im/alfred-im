@@ -200,6 +200,10 @@ class AuthController extends ChangeNotifier {
       if (msg.contains('user already registered')) {
         return 'Email già registrata. Prova ad accedere.';
       }
+      if (msg.contains('email rate limit exceeded') ||
+          msg.contains('over_email_send_rate_limit')) {
+        return 'Troppi tentativi email. Riprova tra qualche minuto.';
+      }
       if (msg.contains('conferma l\'email')) {
         return e.message;
       }

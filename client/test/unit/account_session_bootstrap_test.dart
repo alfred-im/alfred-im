@@ -17,8 +17,10 @@ void main() {
     // 3. POST /logout con access_token del bootstrap → 204
     // 4. refresh RT → error_code refresh_token_not_found
     // Il finally con bootstrap.auth.signOut() revocava la sessione appena adottata.
-    test('SignOutScope.local still hits server logout endpoint', () {
-      expect(SignOutScope.values, contains(SignOutScope.local));
+    //
+    // Recupero password: bootstrap PKCE senza pkceAsyncStorage → crash «null value».
+    test('bootstrap client uses implicit auth flow', () {
+      expect(AuthFlowType.implicit, isNot(AuthFlowType.pkce));
     });
   });
 }

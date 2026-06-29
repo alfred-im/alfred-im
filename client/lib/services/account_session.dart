@@ -71,6 +71,9 @@ class AccountSession {
 
   /// Client effimero per login/registrazione — niente persistenza né auto-refresh.
   ///
+  /// Usa [AuthFlowType.implicit]: il default PKCE richiede [GotrueAsyncStorage]
+  /// per `resetPasswordForEmail` (altrimenti crash «null value» lato client).
+  ///
   /// Non chiamare mai [GoTrueClient.signOut] sul bootstrap dopo
   /// [_sessionFromAuthResponse]: bootstrap e client dedicato condividono la
   /// stessa sessione GoTrue; il logout server-side revoca il refresh token appena
@@ -83,6 +86,7 @@ class AccountSession {
         localStorage: EmptyLocalStorage(),
         detectSessionInUri: false,
         autoRefreshToken: false,
+        authFlowType: AuthFlowType.implicit,
       ),
     );
   }

@@ -54,6 +54,12 @@ curl -sS -X POST "$SUPABASE_URL/auth/v1/token?grant_type=password" \
   -d '{"email":"agadriel.sexpositive+alfredagent1@gmail.com","password":"AlfredAgentDbg1!"}'
 ```
 
+### Recupero password dall'app
+
+Il client bootstrap per `resetPasswordForEmail` deve usare `AuthFlowType.implicit`
+(non PKCE senza storage) — vedi fix PR #142. Se compare «null value» o rate limit,
+usare dashboard Supabase → Authentication → Users per reimpostare password account utente.
+
 ---
 
 ## Account utente (non modificare)
