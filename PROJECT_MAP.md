@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-28 (target caselle confermato; doc mailbox-inbox-outbox-spec)  
+**Ultimo aggiornamento**: 2026-06-29 (redirect conferma email auth)  
 **Versione repository**: 3.1.0-alpha (client Flutter + piattaforma Supabase; bridge stub)
 
 ---
@@ -131,6 +131,7 @@
 
 - Config: `supabase/config.toml`, `supabase/migrations/`, `deploy/supabase.json`
 - MCP agente: `execute_sql`, `apply_migration`, `list_migrations`
+- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web = origine corrente; default produzione `https://alfred-im.github.io/XmppTest/`. Dashboard Supabase → Auth → URL Configuration: `site_url` e `uri_allow_list` devono includere lo stesso URL (vedi `supabase/config.toml`).
 
 ### Fly.io (`xmpptest`, `fra`)
 

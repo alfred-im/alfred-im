@@ -4,6 +4,7 @@ import '../models/profile.dart';
 import '../models/profile_summary.dart';
 import '../models/saved_account.dart';
 import '../utils/auth_identity.dart';
+import '../utils/auth_redirect_url.dart';
 import 'account_storage_service.dart';
 import 'profile_service.dart';
 import 'supabase_bootstrap.dart';
@@ -73,6 +74,7 @@ class AuthService {
     final response = await supabase.auth.signUp(
       email: normalizedEmail,
       password: password,
+      emailRedirectTo: AuthRedirectUrl.resolve(),
       data: {
         'username': normalized,
         'display_name': displayName,
@@ -86,7 +88,10 @@ class AuthService {
 
   Future<void> resetPassword(String email) async {
     final normalizedEmail = AuthIdentity.normalizeEmail(email);
-    await supabase.auth.resetPasswordForEmail(normalizedEmail);
+    await supabase.auth.resetPasswordForEmail(
+      normalizedEmail,
+      redirectTo: AuthRedirectUrl.resolve(),
+    );
   }
 
   /// Esci dall'account attivo (revoca sessione corrente su Supabase).
