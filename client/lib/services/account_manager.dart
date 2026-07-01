@@ -187,27 +187,33 @@ class AccountManager {
   Future<void> persistSession(AccountSession session) => _persistAllOpenAccounts();
 
   Future<void> _persistAllOpenAccounts() async {
-    if (_sessions.isEmpty) return;
+    if (_sessions.isEmpty) {
+      await _storage.saveAllAccounts([]);
+      return;
+    }
 
-    // Merge con storage: non riscrivere la lista con soli account il cui refresh
-    // è momentaneamente assente in RAM (multi-client web dopo add-account).
+    // Upsert per account: non sovrascrivere l'intera lista con una parziale.
+    // Su web il refresh in RAM può mancare mentre GoTrue lo ha in alfred_auth_{userId}.
     final storedByUserId = {
       for (final account in await _storage.loadAccounts()) account.userId: account,
     };
+    final openIds = _sessions.keys.toSet();
 
-    final accounts = <OpenAccount>[];
     for (final session in _sessions.values) {
-      final inMemoryRefresh = session.refreshToken;
-      final refresh = (inMemoryRefresh != null && inMemoryRefresh.isNotEmpty)
-          ? inMemoryRefresh
-          : storedByUserId[session.userId]?.refreshToken;
+      final refresh = await session.resolvePersistableRefreshToken(
+        fallbackRefresh: storedByUserId[session.userId]?.refreshToken,
+      );
       if (refresh == null || refresh.isEmpty) continue;
-      accounts.add(
+      await _storage.upsertAccount(
         OpenAccount(profile: session.profile, refreshToken: refresh),
       );
     }
-    if (accounts.isEmpty) return;
-    await _storage.saveAllAccounts(accounts);
+
+    final stored = await _storage.loadAccounts();
+    final pruned = stored.where((a) => openIds.contains(a.userId)).toList();
+    if (pruned.length != stored.length) {
+      await _storage.saveAllAccounts(pruned);
+    }
   }
 
   bool _isPermanentAuthFailure(Object e) {

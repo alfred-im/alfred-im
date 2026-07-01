@@ -136,6 +136,44 @@ void main() {
       },
     );
 
+    test(
+      'persist reads refresh from GoTrue storage when RAM and saved list are empty',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          AccountSession.authStorageKey('agent-a'):
+              '{"refresh_token":"refresh-from-gotrue"}',
+        });
+
+        final sessionA = await AccountSession.createForTest(
+          profile: const ProfileSummary(
+            id: 'agent-a',
+            username: 'alfredagent1',
+            displayName: 'Agent 1',
+          ),
+        )..testRefreshTokenOverride = null;
+
+        final sessionB = await AccountSession.createForTest(
+          profile: const ProfileSummary(
+            id: 'agent-b',
+            username: 'alfredagent2',
+            displayName: 'Agent 2',
+          ),
+          refreshToken: 'refresh-agent-b',
+        );
+
+        manager.injectTestSession(sessionA);
+        manager.injectTestSession(sessionB);
+        await manager.persistAllOpenAccountsForTesting();
+
+        final stored = await storage.loadAccounts();
+        expect(stored.length, 2);
+        expect(
+          stored.firstWhere((a) => a.userId == 'agent-a').refreshToken,
+          'refresh-from-gotrue',
+        );
+      },
+    );
+
     test('adding second account does not drop first from storage', () async {
       final sessionA = await AccountSession.createForTest(
         profile: const ProfileSummary(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -57,6 +58,41 @@ class AccountSession {
 
   String? get refreshToken =>
       testRefreshTokenOverride ?? client.auth.currentSession?.refreshToken;
+
+  /// Refresh token per persistenza: RAM → storage GoTrue → fallback esplicito.
+  Future<String?> resolvePersistableRefreshToken({
+    String? fallbackRefresh,
+  }) async {
+    final inMemory = refreshToken;
+    if (inMemory != null && inMemory.isNotEmpty) return inMemory;
+
+    final fromGoTrue = await _refreshTokenFromGoTrueStorage();
+    if (fromGoTrue != null && fromGoTrue.isNotEmpty) return fromGoTrue;
+
+    if (fallbackRefresh != null && fallbackRefresh.isNotEmpty) {
+      return fallbackRefresh;
+    }
+    return null;
+  }
+
+  Future<String?> _refreshTokenFromGoTrueStorage() async {
+    final storage = SharedPreferencesLocalStorage(
+      persistSessionKey: authStorageKey(userId),
+    );
+    await storage.initialize();
+    final raw = await storage.accessToken();
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        final token = decoded['refresh_token'] as String?;
+        if (token != null && token.isNotEmpty) return token;
+      }
+    } catch (_) {
+      // Sessione GoTrue malformata in storage — ignora.
+    }
+    return null;
+  }
 
   /// Chiave storage GoTrue per questo account (`SharedPreferencesLocalStorage`).
   static String authStorageKey(String userId) => 'alfred_auth_$userId';
