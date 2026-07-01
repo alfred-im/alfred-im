@@ -140,7 +140,7 @@ L'app gestisce **multi-account Alfred**: l'utente può avere **quanti account Al
 
 **Analogia Mastodon**: su `mastodon.social` sei `@user@mastodon.social`; su un'altra istanza hai `@user@altro.dom` — domini diversi, stesso software.
 
-### Principio card — federazione XMPP (fondamentale)
+### Principio cardine — federazione XMPP (fondamentale)
 
 > **Da ricordare sempre.** Principio architetturale vincolante per il bridge XMPP.
 
@@ -335,7 +335,7 @@ Oltre alla prima tappa messaggi, l'Alpha nel suo insieme include anche (definizi
 | B. Prodotto (Flutter Web) | ✅ |
 | C. Architettura macro | 🟡 — schema dati / API da documentare |
 | D. Infra (Fly bridge, GH Pages web, monorepo) | ✅ |
-| E. Protocolli (inbox, contatti, principio card XMPP) | 🟡 |
+| E. Protocolli (inbox, contatti, principio cardine XMPP) | 🟡 |
 | F. Brand | ✅ |
 | G. Sicurezza (no E2EE; password solo Alfred) | ✅ |
 | H. Scope Alpha incrementale | 🟡 |
@@ -424,7 +424,7 @@ _(Vedi sezione "Identità verso il mondo esterno" in cima.)_
 - Compatibilità **XMPP** obbligatoria
 - **Matrix**: non definito — utente non conosce ancora Matrix
 
-**Principio card XMPP**: facciata federata completa verso fuori, logica reale sulla piattaforma.
+**Principio cardine XMPP**: facciata federata completa verso fuori, logica reale sulla piattaforma.
 
 ---
 
@@ -526,11 +526,11 @@ Il daemon è del **servizio**, non dell'utente. **Chiuso** — non era ambiguit�
 | Iterazione | Diceva |
 |------------|--------|
 | 2 (C5) | Flutter parla **solo** con Supabase |
-| 6 (principio card) | Verso federati esterni si **dichiarano** capability XEP come un client |
+| 6 (principio cardine) | Verso federati esterni si **dichiarano** capability XEP come un client |
 
 **Contraddizione apparente**: chi dichiara le XEP?
 
-**Risoluzione ✅**: **nessuna contraddizione**. Flutter **non** fa XMPP. Il **bridge XMPP** (facciata federata) dichiara le capability verso server esterni. La piattaforma implementa la logica. Coerente col principio card.
+**Risoluzione ✅**: **nessuna contraddizione**. Flutter **non** fa XMPP. Il **bridge XMPP** (facciata federata) dichiara le capability verso server esterni. La piattaforma implementa la logica. Coerente col principio cardine.
 
 ---
 
@@ -645,7 +645,7 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | D-030 | 2026-06-24 | **Push** fuori scope per ora | ✅ |
 | D-031 | 2026-06-24 | **Web solo online**; cache nativa posticipata | ✅ |
 | D-032 | 2026-06-24 | **Alpha v1**: invio/ricezione/lettura messaggi, XMPP | ✅ |
-| D-033 | 2026-06-24 | **Principio card** federazione XMPP | ✅ Vincolante |
+| D-033 | 2026-06-24 | **Principio cardine** federazione XMPP | ✅ Vincolante |
 | D-034 | 2026-06-24 | Protocollo **mai visibile in UI** | ✅ |
 | D-035 | 2026-06-24 | ~~Gmail~~ → **stack OSS self-hosted** (analogia **Mastodon**) | ✅ Corretto iter.9 |
 | D-036 | 2026-06-24 | **Account Alfred** (login) ≠ **Contatti** (interni + XMPP + Matrix) | ✅ |
@@ -830,7 +830,7 @@ _Fly legge config e Dockerfile dalla root del repo — nessun secret GitHub Acti
 - [x] Profilo Alfred unico
 - [x] Push escluso
 - [x] Alpha v1 (messaggi XMPP)
-- [x] Principio card XMPP
+- [x] Principio cardine XMPP
 - [x] Web solo online
 - [x] Audit contraddizioni iter. 1–6
 - [ ] Alpha tappe successive / Matrix
@@ -848,7 +848,7 @@ _Fly legge config e Dockerfile dalla root del repo — nessun secret GitHub Acti
 | 3 | 2026-06-24 | Inbox; login piattaforma; no E2EE; hosting facile |
 | 4 | 2026-06-24 | Bridge sempre attivi; routing contatti; monorepo; brand |
 | 5 | 2026-06-24 | Identità Alfred federata; multi-account; no password XMPP; librerie slixmpp + matrix-nio |
-| 6 | 2026-06-24 | Contatti unificati; `@alfred.im`; Alpha v1 messaggi; principio card; push no; offline TBD |
+| 6 | 2026-06-24 | Contatti unificati; `@alfred.im`; Alpha v1 messaggi; principio cardine; push no; offline TBD |
 | 7 | 2026-06-24 | Audit contraddizioni; protocollo invisibile; web online |
 | 8 | 2026-06-24 | Servizio ≠ client; account ≠ contatti; daemon servizio; priorità deploy |
 | 9 | 2026-06-24 | Stack OSS self-hosted; analogia Mastodon |
