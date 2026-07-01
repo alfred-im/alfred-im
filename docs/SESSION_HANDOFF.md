@@ -1,6 +1,17 @@
-# Handoff sessione — 2026-06-29 (multi-account PR #143)
+# Handoff sessione — 2026-07-01 (redesign persistenza multi-account)
 
-Documento per AI — **leggere prima di qualsiasi task**. Stato dopo merge #143 su `main`.
+Documento per AI — **leggere prima di qualsiasi task**.
+
+---
+
+## ⚠️ Priorità assoluta per implementazione
+
+**Leggere e seguire**: [`docs/implementation/multi-account-persistence-redesign.md`](./implementation/multi-account-persistence-redesign.md)
+
+- Analisi design: persistenza **derivata** (rotta su web) vs **dichiarativa** (target)
+- **Non** mergiare PR #144 così com’è — pezze su design rotto
+- **Non** aggiungere fallback RAM/cache/GoTrue
+- Single source of truth: `flutter.alfred_saved_accounts`, scritto da `AccountSession` al login
 
 ---
 
@@ -8,38 +19,27 @@ Documento per AI — **leggere prima di qualsiasi task**. Stato dopo merge #143 
 
 | Item | Valore |
 |------|--------|
-| Branch `main` | Include #140, #142, **#143** (logout locale + multi-account fix + test regressione) |
-| Alpha live | https://alfred-im.github.io/XmppTest/ — **ultimo `deploy-alpha` riuscito**, non necessariamente ultimo push `main` finché CI non completa |
-| `verify.sh` | 59 test (esclusi tag `live`) — verde al merge |
+| Branch `main` | #140, #142, #143 — persistenza F5 **ancora rotta su web** |
+| PR #144 | Draft — **non mergiare**; sostituita dal redesign doc sopra |
+| Alpha live | https://alfred-im.github.io/XmppTest/ — ultimo deploy-alpha riuscito |
 
 ---
 
 ## Recap conversazione utente (critico)
 
-L'utente ha segnalato tre bug multi-account. Il branch #143 contiene fix **plausibili** ma l'utente ha confermato che **in browser l'app resta rotta**:
+L'utente ha segnalato tre bug multi-account. Fix #143/#144 **non** risolvono il design:
 
-1. **Logout globale** — voleva solo locale → fix `close()` senza `signOut`
-2. **Chat vuota** nel pannello (inbox ok) → fix view per account + inbox lifecycle + error surfacing parziale
-3. **F5 perde account** / chat reciproca rotta → fix persistenza atomica + view per account
+1. **Logout globale** — fix `close()` senza `signOut` (ok su main)
+2. **Chat vuota** — parziale; `onSessionEnded` documentato ma non implementato
+3. **F5 perde account** — **problema di design persistenza**, non bug puntuale
 
-**Lezione**: test unitari con mock **non** equivalgono a validazione app. L'utente ha rifiutato l'interpretazione «test verdi = fix ok».
-
-Punti **4–5** review architetturale: **non** implementati per richiesta esplicita.
+**Lezione**: test unitari/mock **≠** web mobile. L'utente vuole **refactor pulito**, non altra patch.
 
 ---
 
-## PR #143 — contenuto merge
+## PR #143 — cosa tenere
 
-Vedi `docs/fixes/multi-account-chat-persistence-pr143.md` (causa, fix, gap test, checklist).
-
-Commit principali:
-
-- `fix(auth): logout locale senza revoca GoTrue`
-- `fix(multi-account): scope chat, outbound queue e sync profili`
-- `fix(multi-account): per-account view state for mutual conversations`
-- `fix(multi-account): stop Provider disposing session InboxController`
-- `fix(multi-account): persist all open accounts across refresh`
-- `test: regression suite for multi-account chat and persistence`
+Vedi `docs/fixes/multi-account-chat-persistence-pr143.md`. Tenere fix **runtime** (view per account, inbox lifecycle, logout locale). **Sostituire** logica `_persistAllOpenAccounts`.
 
 ---
 
@@ -48,11 +48,9 @@ Commit principali:
 | Regola | Dettaglio |
 |--------|-----------|
 | Account debug | **Solo** `alfredagent1` / `alfredagent2` — `docs/AGENT_DEBUG_ACCOUNTS.md` |
-| Non toccare | `test1`/`test2`/`test3` — incidente password 2026-06-29 |
-| Non fare | `POST /auth/v1/logout` su account utente |
+| Non toccare | `test1`/`test2`/`test3` |
 | Sviluppo | `.cursor-rules.md` — comando esplicito prima di codice |
-| Debug browser | CDP `:9222` spesso morto — `scripts/diagnose-test-env.sh`, `reset-chrome-cdp.sh` |
-| Non riavviare Flutter | Senza motivo — preferire kill Chrome |
+| Persistenza | Solo secondo `multi-account-persistence-redesign.md` |
 
 ---
 
@@ -60,22 +58,22 @@ Commit principali:
 
 ```bash
 cd client && bash scripts/verify.sh
-bash client/scripts/integration-multi-account.sh   # API live, no browser
+flutter test test/live/multi_account_persist_live_test.dart --tags live
+bash client/scripts/integration-multi-account.sh
 ```
 
 ---
 
 ## Topic ancora aperti
 
-| Topic | Doc / nota |
-|-------|------------|
-| Validazione UI post-#143 | Utente — F5, 2 account, chat reciproca |
-| E2E multi-account | Non implementato |
-| Rate limit email GoTrue | Dashboard Supabase |
-| Architettura punti 4–5 | Non in scope #143 |
+| Topic | Doc |
+|-------|-----|
+| Implementazione redesign persistenza | `implementation/multi-account-persistence-redesign.md` |
+| Chat vuota / sessione morta | `fixes/conversations-empty-diagnosis.md` + §7 redesign |
+| E2E multi-account F5 | Da fare post-redesign |
 
 ---
 
 ## Indice doc
 
-`docs/INDICE.md` — fix #143, handoff, multi-account implementation.
+`docs/INDICE.md`
