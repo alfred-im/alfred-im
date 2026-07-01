@@ -90,9 +90,10 @@ class AccountManager {
         continue;
       }
       try {
-        final session = await AccountSession.restore(account);
+        final session = await _restoreWithRetry(account);
         _wireSession(session);
         _sessions[session.userId] = session;
+        await _syncManifestRefreshToken(session);
       } catch (e) {
         if (_isPermanentAuthFailure(e)) {
           await _storage.removeAccount(account.userId);
@@ -110,6 +111,28 @@ class AccountManager {
     }
 
     await _syncAllProfiles();
+  }
+
+  Future<AccountSession> _restoreWithRetry(OpenAccount account) async {
+    Object? lastError;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await AccountSession.restore(account);
+      } catch (e) {
+        lastError = e;
+        if (_isPermanentAuthFailure(e)) rethrow;
+        if (attempt < 2) {
+          await Future<void>.delayed(Duration(milliseconds: 300 * (attempt + 1)));
+        }
+      }
+    }
+    throw lastError ?? const AuthException('Ripristino account non riuscito.');
+  }
+
+  Future<void> _syncManifestRefreshToken(AccountSession session) async {
+    final token = session.client.auth.currentSession?.refreshToken;
+    if (token == null || token.isEmpty) return;
+    await session.updateStoredRefresh(token);
   }
 
   Future<AccountSession> openWithPassword({
@@ -163,7 +186,10 @@ class AccountManager {
     _wireSession(session);
     final token = session.lastKnownRefreshToken;
     if (token != null && token.isNotEmpty) {
-      await session.persistOpenAccount(refreshToken: token);
+      await session.persistOpenAccount(
+        refreshToken: token,
+        profile: session.profile,
+      );
     }
     if (focus) {
       await setFocus(session.userId);
@@ -204,8 +230,12 @@ class AccountManager {
 
   Future<void> _syncAllProfiles() async {
     for (final session in _sessions.values) {
-      await session.syncProfileSummary();
-      await session.updateStoredProfile(session.profile);
+      try {
+        await session.syncProfileSummary();
+        await session.updateStoredProfile(session.profile);
+      } catch (_) {
+        // Mantieni la sessione ripristinata anche se il sync profilo fallisce.
+      }
     }
   }
 

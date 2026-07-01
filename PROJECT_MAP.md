@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-06-29 (PR #143 merge — multi-account fix; validazione UI aperta)  
+**Ultimo aggiornamento**: 2026-07-01 (redesign persistenza multi-account — persistenza dichiarativa)  
 **Versione repository**: 3.1.0-alpha (client Flutter + piattaforma Supabase; bridge stub)
 
 ---

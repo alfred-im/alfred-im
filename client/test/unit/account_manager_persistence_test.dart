@@ -130,6 +130,19 @@ void main() {
       );
     });
 
+    test('wireStorage enables token refresh persistence', () async {
+      final session = await sessionFor(
+        id: 'agent-a',
+        username: 'alfredagent1',
+        refreshToken: 'refresh-agent-a-v1',
+      );
+      await session.persistOpenAccount(refreshToken: 'refresh-agent-a-v1');
+      await session.updateStoredRefresh('refresh-agent-a-v2');
+
+      final stored = await storage.loadAccounts();
+      expect(stored.single.refreshToken, 'refresh-agent-a-v2');
+    });
+
     test('initialize removes entries with empty refresh token', () async {
       await storage.upsertAccount(
         (await sessionFor(

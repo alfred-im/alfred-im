@@ -70,6 +70,7 @@ class AccountSession {
 
   void wireStorage(AccountStorageService storage) {
     _storage = storage;
+    _ensureAuthListener();
   }
 
   AccountStorageService _requireStorage() {
@@ -178,15 +179,60 @@ class AccountSession {
     return accountSession;
   }
 
-  static Future<AccountSession> restore(OpenAccount stored) async {
+  /// Ripristina sessione da manifest + storage GoTrue locale.
+  ///
+  /// Su F5 web prova prima [recoverSession] da `alfred_auth_{userId}` (senza
+  /// rete se la sessione locale è ancora valida), poi fallback su refresh token
+  /// del manifest.
+  static Future<AccountSession> restore(
+    OpenAccount stored, {
+    bool skipHydrate = true,
+  }) async {
     final client = createClient(stored.userId);
-    await client.auth.setSession(stored.refreshToken);
+    var refreshToken = stored.refreshToken;
+
+    final recoveredLocally = await _tryRecoverFromLocalAuth(client, stored.userId);
+    if (!recoveredLocally) {
+      final response = await client.auth.setSession(stored.refreshToken);
+      refreshToken =
+          response.session?.refreshToken ?? stored.refreshToken;
+    } else {
+      refreshToken =
+          client.auth.currentSession?.refreshToken ?? stored.refreshToken;
+    }
+
+    if (client.auth.currentUser == null) {
+      throw const AuthException('Sessione account non disponibile.');
+    }
+
     final accountSession = await _fromClient(
       client: client,
       initialProfile: stored.profile,
+      skipHydrate: skipHydrate,
     );
-    accountSession._lastKnownRefreshToken = stored.refreshToken;
+    accountSession._lastKnownRefreshToken = refreshToken;
     return accountSession;
+  }
+
+  static Future<bool> _tryRecoverFromLocalAuth(
+    SupabaseClient client,
+    String userId,
+  ) async {
+    final storage = SharedPreferencesLocalStorage(
+      persistSessionKey: authStorageKey(userId),
+    );
+    await storage.initialize();
+    if (!await storage.hasAccessToken()) return false;
+
+    final persisted = await storage.accessToken();
+    if (persisted == null || persisted.isEmpty) return false;
+
+    try {
+      await client.auth.recoverSession(persisted);
+      return client.auth.currentSession != null;
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<AccountSession> signInWithPassword({
@@ -274,8 +320,12 @@ class AccountSession {
     );
 
     await session._hydrateProfile(skipNetwork: skipHydrate);
-    session._listenAuth();
     return session;
+  }
+
+  void _ensureAuthListener() {
+    if (_authSubscription != null) return;
+    _listenAuth();
   }
 
   void _listenAuth() {

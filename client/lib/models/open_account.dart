@@ -34,7 +34,7 @@ class OpenAccount {
   factory OpenAccount.fromJson(Map<String, dynamic> json) {
     return OpenAccount(
       profile: ProfileSummary.fromSavedAccountJson(json),
-      refreshToken: json['refreshToken'] as String,
+      refreshToken: json['refreshToken'] as String? ?? '',
     );
   }
 }
