@@ -52,14 +52,35 @@ class AccountSession {
   StreamSubscription<AuthState>? _authSubscription;
   Future<void> Function()? onPersistRequested;
 
+  /// Refresh noto al login/restore — su web [currentSession] può essere null
+  /// subito dopo o al cambio account, ma il token va comunque persistito.
+  String? _cachedRefreshToken;
+
   /// Solo test: refresh token senza setSession (evita rete GoTrue).
   @visibleForTesting
   String? testRefreshTokenOverride;
 
   String? get refreshToken =>
-      testRefreshTokenOverride ?? client.auth.currentSession?.refreshToken;
+      testRefreshTokenOverride ??
+      client.auth.currentSession?.refreshToken ??
+      _cachedRefreshToken;
 
-  /// Refresh token per persistenza: RAM → storage GoTrue → fallback esplicito.
+  void _rememberRefreshToken(String? token) {
+    if (token != null && token.isNotEmpty) {
+      _cachedRefreshToken = token;
+    }
+  }
+
+  @visibleForTesting
+  void cacheRefreshTokenForTest(String token) => _rememberRefreshToken(token);
+
+  @visibleForTesting
+  void clearPersistedRefreshForTest() {
+    testRefreshTokenOverride = null;
+    _cachedRefreshToken = null;
+  }
+
+  /// Refresh token per persistenza: RAM → cache login → storage GoTrue → fallback.
   Future<String?> resolvePersistableRefreshToken({
     String? fallbackRefresh,
   }) async {
@@ -159,6 +180,7 @@ class AccountSession {
     return _fromClient(
       client: client,
       initialProfile: profileOverride ?? _profileFromUser(session.user),
+      cachedRefreshToken: refresh,
     );
   }
 
@@ -168,6 +190,7 @@ class AccountSession {
     return _fromClient(
       client: client,
       initialProfile: stored.profile,
+      cachedRefreshToken: stored.refreshToken,
     );
   }
 
@@ -230,6 +253,7 @@ class AccountSession {
     required SupabaseClient client,
     required ProfileSummary initialProfile,
     bool skipHydrate = false,
+    String? cachedRefreshToken,
   }) async {
     final userId = client.auth.currentUser?.id;
     if (userId == null) {
@@ -253,7 +277,7 @@ class AccountSession {
         inboxService: inboxService,
       ),
       profile: initialProfile,
-    );
+    ).._rememberRefreshToken(cachedRefreshToken);
 
     await session._hydrateProfile(skipNetwork: skipHydrate);
     session._listenAuth();
@@ -262,6 +286,7 @@ class AccountSession {
 
   void _listenAuth() {
     _authSubscription = client.auth.onAuthStateChange.listen((state) {
+      _rememberRefreshToken(state.session?.refreshToken);
       if (state.event == AuthChangeEvent.tokenRefreshed) {
         unawaited(onPersistRequested?.call());
       }
@@ -362,7 +387,8 @@ class AccountSession {
         enableRealtime: false,
       ),
       profile: profile,
-    )..testRefreshTokenOverride = refreshToken;
+    )..testRefreshTokenOverride = refreshToken
+      .._rememberRefreshToken(refreshToken);
     return session;
   }
 

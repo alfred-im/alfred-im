@@ -108,7 +108,7 @@ void main() {
             username: 'alfredagent1',
             displayName: 'Agent 1',
           ),
-        )..testRefreshTokenOverride = null;
+        )..clearPersistedRefreshForTest();
 
         final sessionB = await AccountSession.createForTest(
           profile: const ProfileSummary(
@@ -150,7 +150,7 @@ void main() {
             username: 'alfredagent1',
             displayName: 'Agent 1',
           ),
-        )..testRefreshTokenOverride = null;
+        )..clearPersistedRefreshForTest();
 
         final sessionB = await AccountSession.createForTest(
           profile: const ProfileSummary(
@@ -170,6 +170,41 @@ void main() {
         expect(
           stored.firstWhere((a) => a.userId == 'agent-a').refreshToken,
           'refresh-from-gotrue',
+        );
+      },
+    );
+
+    test(
+      'persist uses refresh cached at login when RAM token is missing',
+      () async {
+        final sessionA = await AccountSession.createForTest(
+          profile: const ProfileSummary(
+            id: 'agent-a',
+            username: 'alfredagent1',
+            displayName: 'Agent 1',
+          ),
+        )
+          ..testRefreshTokenOverride = null
+          ..cacheRefreshTokenForTest('refresh-cached-at-login');
+
+        final sessionB = await AccountSession.createForTest(
+          profile: const ProfileSummary(
+            id: 'agent-b',
+            username: 'alfredagent2',
+            displayName: 'Agent 2',
+          ),
+          refreshToken: 'refresh-agent-b',
+        );
+
+        manager.injectTestSession(sessionA);
+        manager.injectTestSession(sessionB);
+        await manager.persistAllOpenAccountsForTesting();
+
+        final stored = await storage.loadAccounts();
+        expect(stored.length, 2);
+        expect(
+          stored.firstWhere((a) => a.userId == 'agent-a').refreshToken,
+          'refresh-cached-at-login',
         );
       },
     );
