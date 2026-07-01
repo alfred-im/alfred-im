@@ -187,9 +187,20 @@ class AccountManager {
   Future<void> persistSession(AccountSession session) => _persistAllOpenAccounts();
 
   Future<void> _persistAllOpenAccounts() async {
+    if (_sessions.isEmpty) return;
+
+    // Merge con storage: non riscrivere la lista con soli account il cui refresh
+    // è momentaneamente assente in RAM (multi-client web dopo add-account).
+    final storedByUserId = {
+      for (final account in await _storage.loadAccounts()) account.userId: account,
+    };
+
     final accounts = <OpenAccount>[];
     for (final session in _sessions.values) {
-      final refresh = session.refreshToken;
+      final inMemoryRefresh = session.refreshToken;
+      final refresh = (inMemoryRefresh != null && inMemoryRefresh.isNotEmpty)
+          ? inMemoryRefresh
+          : storedByUserId[session.userId]?.refreshToken;
       if (refresh == null || refresh.isEmpty) continue;
       accounts.add(
         OpenAccount(profile: session.profile, refreshToken: refresh),

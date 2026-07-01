@@ -88,6 +88,54 @@ void main() {
       expect(stored.length, 2);
     });
 
+    test(
+      'persist keeps stored refresh when in-memory token is temporarily missing',
+      () async {
+        await storage.saveAllAccounts([
+          OpenAccount(
+            profile: const ProfileSummary(
+              id: 'agent-a',
+              username: 'alfredagent1',
+              displayName: 'Agent 1',
+            ),
+            refreshToken: 'refresh-agent-a-stored',
+          ),
+        ]);
+
+        final sessionA = await AccountSession.createForTest(
+          profile: const ProfileSummary(
+            id: 'agent-a',
+            username: 'alfredagent1',
+            displayName: 'Agent 1',
+          ),
+        )..testRefreshTokenOverride = null;
+
+        final sessionB = await AccountSession.createForTest(
+          profile: const ProfileSummary(
+            id: 'agent-b',
+            username: 'alfredagent2',
+            displayName: 'Agent 2',
+          ),
+          refreshToken: 'refresh-agent-b',
+        );
+
+        manager.injectTestSession(sessionA);
+        manager.injectTestSession(sessionB);
+        await manager.persistAllOpenAccountsForTesting();
+
+        final stored = await storage.loadAccounts();
+        expect(stored.length, 2);
+        expect(
+          stored.firstWhere((a) => a.userId == 'agent-a').refreshToken,
+          'refresh-agent-a-stored',
+        );
+        expect(
+          stored.firstWhere((a) => a.userId == 'agent-b').refreshToken,
+          'refresh-agent-b',
+        );
+      },
+    );
+
     test('adding second account does not drop first from storage', () async {
       final sessionA = await AccountSession.createForTest(
         profile: const ProfileSummary(
