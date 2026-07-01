@@ -52,7 +52,7 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 - [implementation/messages-only-inbox.md](./implementation/messages-only-inbox.md) — Inbox solo messaggi (PR #130)
 - [implementation/voice-notes.md](./implementation/voice-notes.md) — Note vocali WebM/Opus (PR #126)
 - [implementation/multi-account-client.md](./implementation/multi-account-client.md) — **🟢** Sessioni Supabase parallele (PR #140)
-- [implementation/multi-account-persistence-redesign.md](./implementation/multi-account-persistence-redesign.md) — **🟡 Prossima implementazione** — redesign persistenza, single source of truth (2026-07-01)
+- [implementation/multi-account-persistence-redesign.md](./implementation/multi-account-persistence-redesign.md) — **🟡 Prossima implementazione** — redesign persistenza completo: §0 premessa + decisioni D1–D15 + codice verificato (2026-07-01 rev.)
 - [implementation/README.md](./implementation/README.md) — Indice implementazione
 
 ---

@@ -1,207 +1,263 @@
 # Multi-account: redesign persistenza (single source of truth)
 
-**Data**: 2026-07-01  
-**Stato**: 🟢 **Documento su `main`** — implementazione codice **non ancora fatta** (vedi §10)  
+**Data**: 2026-07-01 (revisione design completa)  
+**Stato**: 🟢 **Documento su `main`** — implementazione codice **non ancora fatta**  
 **Audience**: AI in sessioni future — implementare **solo** secondo questo documento  
-**Non implementare**: catene di fallback RAM → cache → GoTrue → storage; `saveAllAccounts` ricostruito da sessioni
+**Obiettivo PR**: far **funzionare** il flusso normale multi-account (login → aggiungi → F5 → switch). Non coprire tutti i casi limite.
 
 ---
 
-## 1. Perché questo documento
+## 0. Premessa — tutto ciò che è in discussione
 
-Dopo PR #140 (sessioni parallele) e PR #143/#144 (tentativi di fix persistenza F5), il codice **funziona a metà**: test unitari/live verdi, utente su web mobile perde il primo account al F5.
+Questa sezione riassume **in un unico posto** il contesto, lo stato del codice verificato, le decisioni di design e le risposte del product owner. Leggerla per intero prima di implementare.
 
-**Causa**: non un bug puntuale, ma **design della persistenza** — tre verità non coordinate, salvataggio **derivato** invece che **al momento del login**.
+### 0.1 Problema da risolvere
 
-Questo file documenta:
-- cosa del refactor PR #140 è **solido** e va tenuto
-- cosa **non** ha funzionato e va **rimosso/sostituito**
-- come funziona **oggi** (per non confondersi)
-- come deve funzionare **dopo** il redesign (contratto implementativo)
+Dopo PR #140 (sessioni parallele) e PR #143 (fix runtime), il multi-account **a runtime funziona** ma su **web mobile** spesso **si perde il primo account al F5**.
+
+**Causa**: design della persistenza — il manifest `alfred_saved_accounts` viene **ricostruito** dal manager leggendo `currentSession?.refreshToken` invece di essere scritto al login con il token già noto dalla risposta HTTP.
+
+**Non è il bug da debuggare ora**: restore fallito per token revocato/scaduto (caso raro). Quello si gestisce in modo semplice (vedi §0.4 D1).
+
+### 0.2 Cosa resta valido (non rifare)
+
+| Area | Dettaglio |
+|------|-----------|
+| N sessioni `SupabaseClient` in parallelo | PR #140 |
+| Focus = solo UI, nessun `setSession` tra account aperti | PR #140 |
+| `InboxController` per sessione, realtime sempre ON | PR #140 |
+| `Map<userId, AccountViewState>` | PR #143 |
+| Overlay auth su shell | PR #140 |
+| Bootstrap senza `signOut` post-login | PR #142 |
+| Logout locale (no revoca GoTrue) | PR #143 |
+| Write lock `_serializedWrite` in storage | PR #143 |
+
+Il problema è **solo il confine persistenza** tra RAM e `alfred_saved_accounts`.
+
+### 0.3 Stato codice su `main` (verificato 2026-07-01)
+
+**Architettura persistenza attuale** — tutto passa da qui:
+
+```
+_trigger (login, remove, sync profili, tokenRefreshed)
+    → AccountManager._persistAllOpenAccounts()
+        → per ogni sessione: session.refreshToken (= currentSession?.refreshToken)
+        → AccountStorageService.saveAllAccounts(lista)   // sostituisce TUTTA la lista
+```
+
+**Fatti verificati nel codice:**
+
+| Fatto | File / dettaglio |
+|-------|------------------|
+| Il token è **noto** in `_sessionFromAuthResponse` ma **non** passato allo storage | `account_session.dart` |
+| `upsertAccount` esiste ma **non è usato** in `lib/` | `account_storage_service.dart` |
+| `removeAccount` storage usato **solo** in `initialize()` su auth failure | `account_manager.dart` |
+| `removeAccount` manager **non** chiama `storage.removeAccount` — ricostruisce la lista | `account_manager.dart` |
+| `onPersistRequested` collega ogni sessione al persist **globale** | `account_manager.dart` |
+| Test persistenza usano `testRefreshTokenOverride` — mascherano il gap web | `account_manager_persistence_test.dart` |
+| Live test citato in versioni precedenti del doc | **non esiste ancora** nel repo |
+
+**Bug collaterale attuale:** se `_persistAllOpenAccounts` non trova token leggibili, fa `return` senza scrivere → storage può restare **stale** dopo remove.
+
+### 0.4 Decisioni product owner (risposte D1–D15)
+
+| ID | Domanda | Decisione |
+|----|---------|-----------|
+| **D1** | Restore fallito (token revocato — caso raro) | **Non è il focus.** Va bene **rimuovere** l’entry come fa oggi, oppure mostrare di nuovo il login. Scegliere la via **più veloce** da implementare — equivalente per il product. |
+| **D2** | Entry con `refreshToken` vuoto | **Stesso trattamento di D1** — rimuovere o richiedere login. |
+| **D3** | Focus su account con restore fallito | **Non importante.** |
+| **D4** | UX tap su account da riconnettere | **Non importante** — niente stato `needsReauth` dedicato. |
+| **D5–D8** | Sidebar, inbox stale, sync profilo, campo token su refresh | **Non importanti** per questa PR — default implementativi in §5. |
+| **D9** | Scope PR | **Fix completo in un PR** (persistenza + chat vuota), salvo che l’implementatore chieda split per dimensione eccessiva. |
+| **D10** | `saveAllAccounts` | Vedi §0.5 — metodo oggi usato per **sostituire l’intera lista JSON**; nel nuovo design **non** va usato nel flusso normale. |
+| **D11** | Ordine account in lista | **Non importante.** |
+| **D12** | Due tab stesso browser | **Non importante** — last-write-wins accettabile, limite noto. |
+| **D13** | Live test in CI | **Rimandato** — si discute al massimo in seguito. |
+| **D14** | `testRefreshTokenOverride` | **Mantenere** con avvertenza esplicita: **vietato** come unica prova di persistenza; ok per test che non toccano storage. |
+| **D15** | ADR «account in lista = autenticato e in ascolto» | Significa lo **stato normale** dopo login: salvi, sono loggati, ascoltano. Se serve ri-autenticare, **rimuoverli dalla lista va bene**. Coerente con D1. |
+
+### 0.5 Cos’è `saveAllAccounts` (risposta D10)
+
+Metodo in `AccountStorageService` che **sovrascrive l’intero array** `alfred_saved_accounts` in una scrittura atomica.
+
+**Perché è pericoloso nel flusso attuale:** se la lista ricostruita contiene solo l’ultimo account (perché gli altri hanno `currentSession == null`), **cancella** tutti gli altri dal disco.
+
+**Nel nuovo design:**
+
+| Operazione | Metodo |
+|------------|--------|
+| Login / aggiungi account | `upsertAccount` (una entry) |
+| Token refreshed | `upsertAccount` (stessa entry, nuovo token) |
+| Sync profilo | `upsertAccount` (stessa entry, profilo aggiornato) |
+| Chiudi un account | `removeAccount(userId)` |
+| Chiudi **ultimo** account | `removeAccount` o equivalente che svuota la chiave — **non** serve ricostruire la lista |
+| `saveAllAccounts` | **Vietato** nel runtime; ammesso solo in **test** che verificano il round-trip del metodo stesso |
+
+### 0.6 Obiettivo e non-obiettivi
+
+**Obiettivo:** login A → aggiungi B → F5 → **A e B** ancora presenti; switch A↔B funziona; chat non vuota silenziosa con sessione morta.
+
+**Non-obiettivo:** gestione elegante di ogni caso limite (token revocato, dati corrotti, multi-tab, ordine sidebar). Per quelli: comportamento semplice (rimuovi / overlay login) senza investire in stati intermedi.
 
 ---
 
-## 2. Step zero — RAM vs localStorage (domanda fondamentale)
+## 1. Modello mentale — RAM vs disco
 
 ### Cosa l’utente si aspetta (corretto)
 
-> «Salvo profilo + refresh token nella lista JSON in localStorage. F5 → rileggo la lista e ripristino. Aggiungo account → append/upsert nella lista.»
+> Salvo profilo + refresh token nella lista JSON. F5 → rileggo la lista e ripristino. Aggiungo account → upsert nella lista.
 
-Questo è il modello giusto per la **parte che sopravvive al refresh della pagina**.
+### Cosa vive in RAM (non serializzabile)
 
-### Cosa c’è in RAM e perché non può stare su disco
+| In RAM | Perché non va su disco |
+|--------|------------------------|
+| `SupabaseClient` | Oggetto runtime |
+| `InboxController` + Realtime | WebSocket attivo |
+| `StreamSubscription` auth | Listener in memoria |
+| Servizi messaggistica/profilo | Legati al client |
 
-In RAM (`AccountManager._sessions`) vivono oggetti **`AccountSession`** — non dati serializzabili:
+**Analogia:** la lista JSON è la **rubrica con le chiavi**; la RAM è **essere in casa con le luci accese**. Al F5 esci, rileggi la rubrica, rientri con `restore`.
 
-| In RAM | Perché non va in localStorage |
-|--------|-------------------------------|
-| `SupabaseClient` (connessione HTTP + auth) | Oggetto runtime |
-| `InboxController` + subscription Realtime | WebSocket attivo |
-| `StreamSubscription` auth (`tokenRefreshed`) | Listener in memoria |
-| `MessageService`, cache profilo, ecc. | Servizi legati al client |
-
-**Analogia**: la lista JSON è la **rubrica con le chiavi di casa**; la RAM è **essere dentro casa con le luci accese**. Al F5 esci di casa (RAM si azzera); rileggi la rubrica (JSON) e rientri (`restore`).
-
-Il refactor PR #140 su questo punto è **corretto**: N sessioni vive in parallelo in RAM; il focus UI sceglie quale mostrare.
-
-### Cosa c’è su disco oggi (tre posti)
+### Tre posti su disco oggi
 
 | Chiave | Prefisso web | Contenuto |
 |--------|--------------|-----------|
-| `alfred_saved_accounts` | `flutter.` | JSON array `OpenAccount[]`: profilo + `refreshToken` |
-| `alfred_focus_user_id` | `flutter.` | `userId` account in focus |
-| `alfred_auth_{userId}` | **nessuno** | Sessione GoTrue (JSON con `refresh_token`, `access_token`, …) scritta dalla libreria `supabase_flutter` |
+| `alfred_saved_accounts` | `flutter.` | JSON `OpenAccount[]` |
+| `alfred_focus_user_id` | `flutter.` | `userId` in focus |
+| `alfred_auth_{userId}` | **nessuno** | Sessione GoTrue (lib `supabase_flutter`) |
 
-Su web: SharedPreferences → `localStorage` con prefisso `flutter.`; GoTrue usa `localStorage` **diretto** senza prefisso.
+### Dove si rompe oggi
 
-### Come funziona oggi (flusso reale) — e dove si rompe
+Al login il token è noto da `AuthResponse`, ma il passo 4 del flusso attuale è:
 
-**Login / aggiungi account** (intenzione documentata in ADR):
-
-1. Login → token noto da `AuthResponse`
-2. `setSession` sul client dedicato → GoTrue scrive `alfred_auth_{userId}`
-3. `_adoptSession` → sessione in RAM
-4. `_persistAllOpenAccounts()` → **riscrive** `alfred_saved_accounts`
-
-Il passo 4 **non** usa il token della risposta HTTP. Su `main` legge:
-
-```dart
-session.refreshToken  // = currentSession?.refreshToken
+```
+_persistAllOpenAccounts() → session.refreshToken (= currentSession?.refreshToken)
 ```
 
-Su Flutter web, per l’account **non in focus**, `currentSession` è spesso `null` → account **saltato** → su `main` `saveAllAccounts([solo l’ultimo])` **cancella** gli altri.
+Su web, per account **non in focus**, `currentSession` è spesso `null` → account saltato → `saveAllAccounts([solo ultimo])` **cancella** gli altri.
 
-**Quindi**: la lista JSON esiste e il modello mentale dell’utente è giusto, ma l’implementazione **non scrive al login** — **ricostruisce dopo** leggendo dalla sessione, e quella lettura fallisce su web.
+### Regola del redesign
 
-### Cosa deve fare il redesign (allineato all’aspettativa utente)
-
-La lista JSON resta il **manifest degli account aperti** per il F5. La regola:
-
-> **Scrivi in `alfred_saved_accounts` nel momento esatto in cui conosci il `refreshToken` (risposta login o `tokenRefreshed`), non quando riesci a leggerlo indietro dalla sessione.**
-
-La RAM resta per tutto ciò che è vivo; il disco solo per **sopravvivenza** e **metadati profilo**.
+> **Scrivi in `alfred_saved_accounts` quando conosci il `refreshToken` (risposta login o `tokenRefreshed`), mai rileggendolo da `currentSession` per persistere.**
 
 ---
 
-## 3. Cosa ha funzionato bene (tenere)
+## 2. Cosa abbandonare
 
-| Area | Dettaglio | PR / file |
-|------|-----------|-----------|
-| Sessioni parallele | N × `SupabaseClient`, una per account | #140, `account_session.dart` |
-| Focus = solo UI | `setFocus` senza `setSession` tra account aperti | `account_manager.dart` |
-| Inbox per sessione | `InboxController` in `AccountSession`, realtime sempre ON | `account_session.dart` |
-| Lifecycle inbox | Provider con dispose noop; close in `AccountSession.close()` | #143, `main.dart` |
-| Vista per account | `Map<userId, AccountViewState>` | #143, `account_manager.dart` |
-| Overlay auth | Shell sempre visibile; credenziali in overlay | #140, `auth_overlay.dart` |
-| Bootstrap login | Client effimero; **no** `signOut` post-login | #142, `account_session.dart` |
-| Logout locale | `close()` cancella solo storage locale, no revoca GoTrue | #143 |
-| Messaggistica server | Isolata per JWT; nessun mixing tra account | invariato |
-| Coda invio | Chiave `userId\|peerProfileId` | `messages_controller.dart` |
-| Write lock storage | `_serializedWrite` in `AccountStorageService` | `account_storage_service.dart` |
+| Approccio | Motivo |
+|-----------|--------|
+| `_persistAllOpenAccounts()` che ricostruisce da `_sessions` | Dipende da `currentSession` inaffidabile su web |
+| `saveAllAccounts()` nel flusso login/add/remove/refresh | Replace totale; un salvataggio parziale cancella account |
+| Catene fallback RAM → cache → GoTrue storage → entry vecchia | Nessuna verità unica |
+| PR #144 e patch incrementali | Non mergiare |
+| `onPersistRequested` → persist globale | Sostituire con scrittura per-entry nella sessione |
+| Stato `needsReauth` / sezioni UI dedicate | Fuori scope (D4, D15) |
+| Test persistenza che dipendono solo da `testRefreshTokenOverride` | Non riproducono il bug web |
 
-**Non rifare**: il refactor PR #140 sul runtime. Il problema è **solo il confine persistenza**.
+**Nota:** `initialize()` che **rimuove** account su restore fallito **resta accettabile** (D1, D15) — non è il bug da fixare.
 
 ---
 
-## 4. Cosa non ha funzionato (abbandonare)
+## 3. Design target
 
-| Approccio | Perché fallisce |
-|-----------|-----------------|
-| `_persistAllOpenAccounts()` che scorre tutte le sessioni e **ricostruisce** la lista | Dipende da `currentSession` inaffidabile su web |
-| `saveAllAccounts(lista)` come operazione normale | Sovrascrive l’intera lista; un salvataggio parziale cancella account |
-| Catena fallback RAM → `_cachedRefreshToken` → GoTrue storage → entry vecchia | Quattro fonti, nessuna verità unica; ogni fix aggiunge un ramo |
-| PR #144 come modello | Pezze incrementali su design rotto — **non mergiare così** |
-| `initialize()` che **cancella** account su restore fallito | L’utente non ha chiesto di chiudere l’account; confonde errore tecnico con intento |
-| Test come prova assoluta | Mock/VM non riproducono `currentSession == null` su web per account in background |
-| Doc fix senza codice | Es. `onSessionEnded` in `conversations-empty-diagnosis.md` — non implementato |
-
----
-
-## 5. Design target — single source of truth
-
-### 5.1 Principio
-
-**Un solo contratto di persistenza account:**
+### 3.1 Principio
 
 ```
 AccountSession è l’unico componente che scrive/aggiorna/rimuove la propria entry in alfred_saved_accounts.
 AccountManager NON ricostruisce mai la lista leggendo token dalle sessioni.
 ```
 
-### 5.2 Ruoli chiari
+### 3.2 Diagramma responsabilità
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ AccountManager                                                  │
-│   • registro RAM: Map<userId, AccountSession>                 │
-│   • focus UI                                                    │
-│   • orchestrazione: initialize, adopt, remove                     │
-│   • NON legge refreshToken dalle sessioni per persistere        │
+│   • Map<userId, AccountSession>  (RAM)                          │
+│   • focus UI, view state per account                            │
+│   • orchestrazione: initialize, adopt, remove                   │
+│   • NON legge refreshToken per persistere                         │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
 ┌───────────────────────────▼─────────────────────────────────────┐
-│ AccountSession (un “contenitore” per account)                   │
+│ AccountSession                                                  │
 │   • SupabaseClient + servizi + InboxController                  │
-│   • persistOpenAccount(refreshToken)  ← scrittura manifest        │
-│   • updateStoredRefresh(token)        ← su tokenRefreshed       │
-│   • clearStoredAccount()              ← su remove               │
+│   • persistOpenAccount(refreshToken, profile)  ← login/signup    │
+│   • updateStoredRefresh(token)                 ← tokenRefreshed │
+│   • updateStoredProfile(profile)               ← sync profilo   │
+│   • clearStoredAccount()                       ← remove         │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
 ┌───────────────────────────▼─────────────────────────────────────┐
 │ AccountStorageService                                           │
-│   • upsertAccount(OpenAccount)   — una entry alla volta           │
-│   • removeAccount(userId)                                         │
-│   • loadAccounts() / loadFocusUserId()                            │
-│   • VIETATO saveAllAccounts() nel flusso normale multi-account    │
+│   • upsertAccount / removeAccount  (per entry)                  │
+│   • loadAccounts / loadFocusUserId / saveFocusUserId            │
 └───────────────────────────┬─────────────────────────────────────┘
-                            │
-┌───────────────────────────▼─────────────────────────────────────┐
-│ flutter.alfred_saved_accounts  ← UNICA verità per F5            │
-│   [{ profile, refreshToken }, ...]                              │
-└─────────────────────────────────────────────────────────────────┘
+                            ▼
+              flutter.alfred_saved_accounts  ← UNICA verità F5
 
-┌─────────────────────────────────────────────────────────────────┐
-│ alfred_auth_{userId}  ← dettaglio GoTrue (gestito dalla lib)   │
-│   Usato da SupabaseClient per refresh automatico in sessione     │
-│   NON usato come fonte per ricostruire alfred_saved_accounts     │
-└─────────────────────────────────────────────────────────────────┘
+              alfred_auth_{userId}  ← GoTrue only; NON fonte per il manifest
 ```
 
-**Single source of truth per «quali account sono aperti e come ripristinarli al F5»**: `alfred_saved_accounts`.
+### 3.3 API `AccountSession` (nuove / modificate)
 
-`alfred_auth_{userId}` resta come implementazione interna GoTrue (refresh automatico in RAM), non come backup da cui il manager «indovina» i token.
+| Metodo | Quando | Azione |
+|--------|--------|--------|
+| `persistOpenAccount({required String refreshToken, required ProfileSummary profile})` | Subito dopo login/signup riuscito | `storage.upsertAccount` — token dalla **risposta HTTP** |
+| `updateStoredRefresh(String refreshToken)` | `AuthChangeEvent.tokenRefreshed` | `upsertAccount` — token dall’**evento** (`state.session?.refreshToken`) |
+| `updateStoredProfile(ProfileSummary profile)` | Dopo `syncProfileSummary` | `upsertAccount` — stesso token, profilo aggiornato |
+| `clearStoredAccount()` | `close()` / remove | `storage.removeAccount` + clear `alfred_auth_{userId}` |
+| `hasValidJwt()` | Prima di fetch messaggi | `currentSession?.accessToken != null` (o equivalente) |
 
-### 5.3 Contratto operativo (implementazione futura)
+**Rimuovere:**
+
+- `onPersistRequested` e wiring verso persist globale
+- Uso di `refreshToken` getter (`currentSession`) per **persistere**
+- `toOpenAccount()` che legge token da `currentSession` per esporre la lista UI — usare `_lastKnownRefreshToken` (copia RAM del token scritto su disco)
+
+**`testRefreshTokenOverride`:** mantenere solo per test che **non** verificano persistenza; commento/avvertenza nel codice e nel doc test (D14).
+
+### 3.4 API `AccountManager` (modifiche)
+
+| Metodo | Cambiamento |
+|--------|-------------|
+| `_adoptSession` | Dopo wiring RAM: `await session.persistOpenAccount(...)` con token noto — **eliminare** `_persistAllOpenAccounts` |
+| `initialize` | Restore per entry; su fallimento o token vuoto: **`storage.removeAccount`** (come oggi, D1/D2) |
+| `removeAccount` | `await session.clearStoredAccount()` — **non** ricostruire lista |
+| `_syncAllProfiles` | Per sessione active: sync → `session.updateStoredProfile` — **non** persist globale |
+| `_persistAllOpenAccounts` | **Eliminato** |
+| `persistSession` / `persistAllOpenAccountsForTesting` | **Eliminati** o sostituiti da test su `upsertAccount` |
+
+### 3.5 Contratto operativo
 
 #### A. Login / sign-up / aggiungi account
 
 ```
-1. bootstrap.auth.signIn* → AuthResponse con refreshToken noto
-2. client dedicato = createClient(userId)
+1. bootstrap.auth.signIn* → AuthResponse (refreshToken NOTO)
+2. createClient(userId)
 3. await client.auth.setSession(refresh, accessToken: ...)
-4. session = AccountSession.fromClient(...)
-5. await session.persistOpenAccount(
-     refreshToken: refresh,   // dalla risposta HTTP — MAI da currentSession
-     profile: ...
-   )
-   → storage.upsertAccount(OpenAccount(...))
-6. manager.adopt(session)     // solo RAM + focus — nessun persist globale
+4. session = AccountSession da client
+5. await session.persistOpenAccount(refreshToken: refresh, profile: ...)
+6. manager: registra in RAM, setFocus se richiesto
+   — NESSUN saveAllAccounts / _persistAllOpenAccounts
 ```
 
-#### B. Token refreshed (evento GoTrue)
+**Account già aperto (re-login):** `disposeResources(clearAuthStorage: false)` sulla sessione duplicata; `persistOpenAccount` con nuovo token; focus se richiesto.
+
+#### B. Token refreshed
 
 ```
-onAuthStateChange(tokenRefreshed):
-  await session.updateStoredRefresh(newRefreshToken)
-  → storage.upsertAccount con stesso profile, nuovo token
+_listenAuth: tokenRefreshed →
+  token = state.session?.refreshToken
+  if (token != null && token.isNotEmpty)
+    await updateStoredRefresh(token)
 ```
 
 #### C. Remove account
 
 ```
-1. await session.close()           // clear alfred_auth_{userId}
-2. await storage.removeAccount(userId)
-3. manager rimuove da RAM
+1. await session.clearStoredAccount()   // removeAccount storage + clear alfred_auth_{userId}
+2. dispose RAM, rimuovi da mappe
+3. ricalcola focus; se 0 account → overlay obbligatorio
 ```
 
 #### D. Initialize (F5)
@@ -209,141 +265,184 @@ onAuthStateChange(tokenRefreshed):
 ```
 1. accounts = storage.loadAccounts()
 2. for each account:
-     try session = await AccountSession.restore(account)
-     manager.register(session)
-   catch auth error:
-     → NON cancellare da storage
-     → segnare sessione come needsReauth (stato UI: «Riconnetti»)
-3. focus da alfred_focus_user_id
+     if refreshToken.isEmpty → storage.removeAccount(userId); continue   // D2
+     try AccountSession.restore(account) → registra in RAM
+     catch permanent auth failure → storage.removeAccount(userId)         // D1
+3. focus da alfred_focus_user_id (o primo account rimasto)
+4. sync profili per sessioni ripristinate → updateStoredProfile ciascuna
 ```
 
-#### E. Operazioni vietate nel nuovo design
+Se dopo il loop **0 account** → overlay login obbligatorio (comportamento attuale).
 
-- `_persistAllOpenAccounts()` che itera `_sessions` e legge `refreshToken`
-- `resolvePersistableRefreshToken()` con catena di fallback
-- `_cachedRefreshToken` come pezza web
-- `saveAllAccounts()` se non per migrazione una tantum o test
-- `storage.removeAccount` automatico in `initialize()` su errore restore
+#### E. Switch focus
 
-### 5.4 Modello dati `OpenAccount` (invariato)
+Invariato. Solo `saveFocusUserId`. Nessuna scrittura token.
+
+#### F. Operazioni vietate
+
+- `_persistAllOpenAccounts` / lettura `session.refreshToken` per persistere
+- `saveAllAccounts` nel flusso runtime (salvo test del metodo stesso)
+- Catene fallback token
+- Lettura `alfred_auth_{userId}` per ricostruire il manifest
+
+### 3.6 Modello dati `OpenAccount` (invariato)
 
 ```json
-[
-  {
-    "id": "uuid",
-    "username": "alfredagent1",
-    "display_name": "Agent 1",
-    "avatar_url": null,
-    "pronouns": null,
-    "refreshToken": "..."
-  }
-]
+{
+  "id": "uuid",
+  "username": "alfredagent1",
+  "display_name": "Agent 1",
+  "avatar_url": null,
+  "pronouns": null,
+  "refreshToken": "..."
+}
 ```
 
-Chiave: `flutter.alfred_saved_accounts` (SharedPreferences).
+Chiave: `flutter.alfred_saved_accounts`.
 
 ---
 
-## 6. Flussi utente — prima e dopo
+## 4. Fix chat vuota (stesso PR — D9)
 
-### Scenario: login A → aggiungi B → F5
+**Sintomo:** inbox con anteprime, pannello chat vuoto; o lista messaggi `[]` senza errore con JWT assente.
 
-| Step | Oggi (`main`) | Dopo redesign |
-|------|---------------|---------------|
-| Login A | RAM: A. Disco: forse A (se currentSession leggibile) | RAM: A. Disco: **A subito** (token da AuthResponse) |
-| Aggiungi B | `_persistAllOpenAccounts`: A saltato su web, disco = [B] | `persistOpenAccount` B. Disco: **[A, B]** |
+**Causa:** `list_peer_messages` ritorna `[]` silenzioso; `MessagesController.load()` non distingue «nessun messaggio» da «sessione invalida».
+
+**Fix minimo (obiettivo: sistema funzionante, non tutti i edge case):**
+
+```
+Prima di fetchPeerMessages / send:
+  if (!session.hasValidJwt())
+    → error esplicito in UI («Sessione scaduta — accedi di nuovo»)
+    → mai [] silenzioso interpretato come «chat vuota»
+```
+
+**File coinvolti:** `account_session.dart` (`hasValidJwt`), `messages_controller.dart` (check in `load`/`send`), `chat_panel.dart` (mostrare `error` se presente).
+
+**Non implementare:** `onSessionEnded` come nome API; stati `needsReauth` in sidebar.
+
+Se restore fallisce al F5, l’account viene rimosso (D1) — l’utente rifà login dall’overlay. Non serve UI intermedia.
+
+---
+
+## 5. Flussi — prima e dopo
+
+### Login A → aggiungi B → F5
+
+| Step | Oggi (`main`) | Dopo |
+|------|---------------|------|
+| Login A | Disco: forse A | Disco: **A subito** (`persistOpenAccount`) |
+| Aggiungi B | Disco spesso solo [B] | Disco: **[A, B]** |
 | F5 | Restore solo B | Restore **A e B** |
 
-### Scenario: switch A ↔ B senza F5
+### Switch A ↔ B (senza F5)
 
-| | Oggi | Dopo |
-|---|------|------|
-| Comportamento atteso | Solo cambio focus | Invariato — **nessun** persist al switch |
+Invariato — solo cambio focus.
 
 ---
 
-## 7. Chat vuota (problema correlato, scope separato ma documentato)
+## 6. Migrazione e limiti noti
 
-**Sintomo**: inbox con anteprime, chat vuota; o sessione morta dopo switch.
-
-**Causa design**: `list_peer_messages` ritorna `[]` senza errore se JWT assente; UI non distingue «nessun messaggio» da «sessione invalida»; inbox può avere cache RAM vecchia.
-
-**Regola da aggiungere nel redesign (fase 2 o stesso PR se piccolo):**
-
-```
-Prima di fetch messaggi/inbox:
-  if (!session.hasValidJwt()) → UI errore «Sessione scaduta — riconnetti»
-  mai lista vuota silenziosa
-```
-
-Non implementare `onSessionEnded` come nome — usare `session.hasValidJwt()` o equivalente esplicito.
+| Caso | Comportamento |
+|------|---------------|
+| Manifest già corrotto (solo 1 account per bug passato) | Nessuna migrazione automatica; utente ri-aggiunge account |
+| Manifest integro post-deploy | Trasparente |
+| Token revocato al F5 | Entry rimossa; overlay login (D1) |
+| Due tab stesso origin | Last-write-wins sul manifest — limite accettato (D12) |
+| Ordine in sidebar | Irrilevante (D11) |
 
 ---
 
-## 8. File da modificare (checklist implementazione)
+## 7. Test
+
+### 7.1 Unit — da riscrivere
+
+| Test | Assert chiave |
+|------|---------------|
+| Login solo A (mock con token esplicito in `persistOpenAccount`) | `loadAccounts().length == 1`, token corretto |
+| Adopt A poi B | `length == 2`, entrambi i token |
+| Remove B | `length == 1`, A intatto |
+| `tokenRefreshed` simulato | solo entry interessata aggiornata |
+
+**Vietato** come unica prova persistenza: `testRefreshTokenOverride` + `persistAllOpenAccounts` (D14).
+
+### 7.2 Live
+
+File proposto: `test/live/multi_account_persist_live_test.dart` — **da definire** se entra in CI (D13 rimandato). Gate manuale o script agenti fino a decisione.
+
+### 7.3 Manuale web mobile (obbligatorio pre-merge)
+
+1. Svuota dati sito
+2. Login account 1 — non aprire chat
+3. DevTools → `flutter.alfred_saved_accounts` → **1 entry** con refresh
+4. Aggiungi account 2
+5. DevTools → **2 entry**
+6. F5 → sidebar **2 account**
+7. Switch A↔B → inbox carica
+8. Apri chat con storico → messaggi visibili (non lista vuota silenziosa)
+
+---
+
+## 8. Checklist implementazione
 
 | File | Azione |
 |------|--------|
-| `account_session.dart` | Aggiungere `persistOpenAccount`, `updateStoredRefresh`; rimuovere catena fallback/cache; restore non dipende da re-lettura token |
-| `account_manager.dart` | Rimuovere `_persistAllOpenAccounts` / `resolvePersistableRefreshToken`; `adoptSession` senza persist globale; `initialize` non cancella account su errore |
-| `account_storage_service.dart` | Tenere `upsertAccount` / `removeAccount`; deprecare `saveAllAccounts` per uso runtime (solo test/migrazione) |
-| `auth_controller.dart` | Invariato se API manager stabile |
-| `account_manager_persistence_test.dart` | Riscrivere: scenario login A → add B → loadAccounts == 2 senza mock token override |
-| `test/live/multi_account_persist_live_test.dart` | Tenere come gate; aggiungere assert su storage dopo **solo** login A (prima di B) |
-| `docs/implementation/multi-account-client.md` | Aggiornare §3.5 Refresh token con questo contratto |
-| `docs/decisions/multi-account-parallel-sessions.md` | Aggiungere nota §2.5 persistenza dichiarativa |
+| `account_session.dart` | `persistOpenAccount`, `updateStoredRefresh`, `updateStoredProfile`, `clearStoredAccount`, `hasValidJwt`, `_lastKnownRefreshToken`; rimuovere `onPersistRequested` |
+| `account_manager.dart` | Eliminare persist globale; adopt/initialize/remove/sync come §3.5 |
+| `account_storage_service.dart` | Runtime solo `upsertAccount`/`removeAccount`; documentare `saveAllAccounts` = solo test |
+| `messages_controller.dart` | Check JWT prima di load/send |
+| `chat_panel.dart` | Mostrare errore sessione |
+| `account_manager_persistence_test.dart` | Riscrittura completa |
+| `docs/implementation/multi-account-client.md` | Aggiornare §3.5 |
+| `docs/decisions/multi-account-parallel-sessions.md` | Nota §2.5 persistenza dichiarativa + chiarimento D15 |
 
-**Non toccare** (salvo bug evidenti): `home_screen.dart`, `InboxController`, overlay, layout.
+**Non toccare** salvo bug evidenti: `home_screen.dart`, `InboxController`, overlay shell, layout sidebar.
 
 ---
 
 ## 9. Criteri di accettazione
 
-### Automatici
+### Must (merge)
 
-```bash
-cd client && bash scripts/verify.sh
-flutter test test/live/multi_account_persist_live_test.dart --tags live
-```
+- [ ] Login A → `loadAccounts().length == 1` con token non vuoto **prima** di aggiungere B
+- [ ] Login A + B → `length == 2`
+- [ ] F5 → 2 account in sidebar
+- [ ] Remove B → `length == 1`
+- [ ] Nessuna chiamata `_persistAllOpenAccounts` / `saveAllAccounts` nel flusso login/add/remove/refresh
+- [ ] Chat: sessione invalida → errore esplicito, non `[]` silenzioso
+- [ ] `cd client && bash scripts/verify.sh` verde (zero issue `analyze`)
 
-Test obbligatorio da aggiungere/rafforzare:
+### Should (manuale)
 
-- Dopo **solo** login account A: `loadAccounts().length == 1` con `refreshToken` non vuoto **senza** `testRefreshTokenOverride`
-- Dopo login A + B: `length == 2`
-- Nuovo `AccountManager` + `initialize()`: `openAccounts.length == 2`
+- [ ] Checklist §7.3 su web mobile
 
-### Manuali (web mobile)
+### Out of scope
 
-1. Svuota dati sito
-2. Login account 1 — **non aprire chat**
-3. DevTools → `flutter.alfred_saved_accounts` → **1 entry** con refresh
-4. Aggiungi account 2
-5. DevTools → **2 entry**
-6. F5 → sidebar mostra 2 account
-7. Switch tra account senza F5 → inbox carica (o errore esplicito se sessione morta)
+- [ ] UX `needsReauth` / badge sidebar
+- [ ] Multi-tab coordination
+- [ ] Live test in CI (finché D13 non deciso)
 
 ---
 
-## 10. Stato PR e pulizia (2026-07-01)
+## 10. Stato PR e cronaca
 
 | PR / branch | Esito |
 |-------------|--------|
-| #143 (mergiata su `main`) | Tenere fix runtime (view per account, logout locale, inbox lifecycle) |
-| #144 + `cursor/fix-multi-account-persist-merge-c1ed` | **Chiusa / rimossa** — patch persistenza abbandonate; non mergiate |
-| Questo documento | **Mergiato su `main`** — unica base per la prossima implementazione |
-
-Il redesign **sostituisce** la logica persistenza delle patch #144, non la affianca.
+| #140 | Sessioni parallele — **tenere** |
+| #143 | Fix runtime — **tenere** |
+| #144 | **Chiusa** — patch persistenza abbandonate |
+| Questo documento | Base unica per la prossima implementazione |
 
 ---
 
 ## 11. Riferimenti
 
 - ADR sessioni parallele: `docs/decisions/multi-account-parallel-sessions.md`
-- Implementazione attuale: `docs/implementation/multi-account-client.md`
-- Cronaca tentativi falliti: `docs/fixes/multi-account-chat-persistence-pr143.md`
+- Implementazione runtime: `docs/implementation/multi-account-client.md`
+- Cronaca PR #143: `docs/fixes/multi-account-chat-persistence-pr143.md`
 - Bootstrap auth: `docs/fixes/auth-bootstrap-gotrue-revoke.md`
 - Chat vuota: `docs/fixes/conversations-empty-diagnosis.md`
 
 ---
 
-**Istruzione per la prossima sessione AI**: leggere questo file **prima** di qualsiasi modifica a `account_manager.dart` / `account_session.dart`. Implementare il contratto §5.3. Non aggiungere fallback.
+**Istruzione per la prossima sessione AI:** leggere **§0 per intero**, poi implementare §3–§8. Non aggiungere fallback token. Non implementare stati `needsReauth`. Obiettivo: flusso normale funzionante, non ogni caso limite.
