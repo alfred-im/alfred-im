@@ -99,4 +99,29 @@ void main() {
     expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
     expect(find.text('0:15'), findsOneWidget);
   });
+
+  testWidgets('MessageBubble renders location map', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: const Scaffold(
+          body: MessageBubble(
+            message: ChatMessage(
+              id: '5',
+              body: '',
+              timeLabel: '12:34',
+              isMine: false,
+              contentType: MessageContentType.location,
+              latitude: 45.4642,
+              longitude: 9.19,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.location_on_outlined), findsWidgets);
+    expect(find.textContaining('45.46420°N'), findsOneWidget);
+    expect(find.text('Tocca per aprire la mappa'), findsOneWidget);
+  });
 }

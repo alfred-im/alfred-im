@@ -32,7 +32,7 @@ BEGIN
   END IF;
 
   -- Funzioni RPC
-  IF to_regprocedure('public.send_message_to_profile(uuid,text,text,public.message_content_type,text,integer,text,bigint)') IS NULL THEN
+  IF to_regprocedure('public.send_message_to_profile(uuid,text,text,public.message_content_type,text,integer,text,bigint,double precision,double precision)') IS NULL THEN
     RAISE EXCEPTION 'Missing RPC send_message_to_profile';
   END IF;
   IF (

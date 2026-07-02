@@ -12,7 +12,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Flutter Web (`client/`)                                   │
-│  Auth · Contatti · Conversazioni · Chat (testo/GIF/voice) · Profilo · Multi-account │
+│  Auth · Contatti · Conversazioni · Chat (testo/GIF/voice/location) · Profilo · Multi-account │
 └───────────────────────────┬─────────────────────────────────┘
                             │ HTTPS (REST + Realtime + Auth)
                             ▼
@@ -206,6 +206,22 @@ client/lib/
 **Non coperto (follow-up)**: Back Android, Escape web.
 
 **PR**: #132
+
+### 2.13 Condivisione posizione statica
+
+**Dettaglio**: [location-sharing.md](../implementation/location-sharing.md)
+
+1. Pulsante pin in `ChatInputBar` (accanto a GIF)
+2. `LocationService.getCurrentPosition` → `geolocator` (permesso browser/dispositivo)
+3. RPC `send_message_to_profile` con `content_type=location`, `latitude`, `longitude`
+4. `LocationMessageContent` in bolla — mappa statica OSM + coordinate + tap apre OpenStreetMap
+5. Preview inbox: `📍 Posizione` (`format_location_preview`)
+6. Coda retry client unificata (`OutboundContentKind.location`)
+
+**Scelte**:
+- Coordinate arrotondate a 5 decimali lato client
+- Nessun bucket storage — solo Postgres
+- Posizione live e reverse geocoding: fuori scope Alpha
 
 ---
 

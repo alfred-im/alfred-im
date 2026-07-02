@@ -10,7 +10,7 @@ Traccia lo stato del progetto per continuità del lavoro. Non è documentazione 
 
 | Componente | Stato |
 |------------|-------|
-| **`client/`** | App Supabase — shell messaggistica, multi-account (manifest + focus), overlay auth, chat testo/GIF/voice, `verify.sh` |
+| **`client/`** | App Supabase — shell messaggistica, multi-account (manifest + focus), overlay auth, chat testo/GIF/voice/location, `verify.sh` |
 | **`supabase/`** | Schema dominio (profiles, contacts, messages, outbox, …) |
 | **`bridge-xmpp/`** · **`bridge-matrix/`** | Stub health Fly.io |
 

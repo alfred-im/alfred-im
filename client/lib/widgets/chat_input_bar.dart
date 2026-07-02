@@ -20,12 +20,14 @@ class ChatInputBar extends StatefulWidget {
     this.onSend,
     this.onSendGif,
     this.onSendVoice,
+    this.onSendLocation,
   });
 
   final bool enabled;
   final Future<void> Function(String body)? onSend;
   final Future<void> Function(Uint8List bytes)? onSendGif;
   final VoiceSendCallback? onSendVoice;
+  final Future<void> Function()? onSendLocation;
 
   @override
   State<ChatInputBar> createState() => _ChatInputBarState();
@@ -78,6 +80,11 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final bytes = result?.files.single.bytes;
     if (bytes == null || bytes.isEmpty) return;
     await widget.onSendGif!(Uint8List.fromList(bytes));
+  }
+
+  Future<void> _shareLocation() async {
+    if (!widget.enabled || widget.onSendLocation == null) return;
+    await widget.onSendLocation!();
   }
 
   void _stopUiTracking() {
@@ -411,6 +418,16 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     tooltip: 'Invia GIF',
                     icon: Icon(
                       Icons.gif_box_outlined,
+                      color: widget.enabled
+                          ? AlfredColors.textPrimary
+                          : AlfredColors.textSecondary,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: widget.enabled ? () => unawaited(_shareLocation()) : null,
+                    tooltip: 'Condividi posizione',
+                    icon: Icon(
+                      Icons.location_on_outlined,
                       color: widget.enabled
                           ? AlfredColors.textPrimary
                           : AlfredColors.textSecondary,

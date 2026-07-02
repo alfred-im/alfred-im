@@ -23,6 +23,7 @@ void main() {
     test('maps content type strings', () {
       expect(messageContentTypeFromString('gif'), MessageContentType.gif);
       expect(messageContentTypeFromString('voice'), MessageContentType.voice);
+      expect(messageContentTypeFromString('location'), MessageContentType.location);
       expect(messageContentTypeFromString('text'), MessageContentType.text);
       expect(messageContentTypeFromString(null), MessageContentType.text);
     });

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-enum OutboundContentKind { text, gif, voice }
+enum OutboundContentKind { text, gif, voice, location }
 
 OutboundContentKind outboundContentKindFromString(String value) {
   switch (value) {
@@ -8,6 +8,8 @@ OutboundContentKind outboundContentKindFromString(String value) {
       return OutboundContentKind.gif;
     case 'voice':
       return OutboundContentKind.voice;
+    case 'location':
+      return OutboundContentKind.location;
     default:
       return OutboundContentKind.text;
   }
@@ -25,6 +27,8 @@ class OutboundQueueItem {
     this.localMediaPath,
     this.durationSeconds,
     this.mediaMime,
+    this.latitude,
+    this.longitude,
     this.lastError,
   });
 
@@ -37,6 +41,8 @@ class OutboundQueueItem {
   final String? localMediaPath;
   final int? durationSeconds;
   final String? mediaMime;
+  final double? latitude;
+  final double? longitude;
   final String? lastError;
 
   Map<String, dynamic> toJson() => {
@@ -49,6 +55,8 @@ class OutboundQueueItem {
         'localMediaPath': localMediaPath,
         'durationSeconds': durationSeconds,
         'mediaMime': mediaMime,
+        'latitude': latitude,
+        'longitude': longitude,
         'lastError': lastError,
       };
 
@@ -63,6 +71,8 @@ class OutboundQueueItem {
       localMediaPath: json['localMediaPath'] as String?,
       durationSeconds: json['durationSeconds'] as int?,
       mediaMime: json['mediaMime'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
       lastError: json['lastError'] as String?,
     );
   }
@@ -81,6 +91,8 @@ class OutboundQueueItem {
       localMediaPath: localMediaPath,
       durationSeconds: durationSeconds,
       mediaMime: mediaMime,
+      latitude: latitude,
+      longitude: longitude,
       lastError: lastError ?? this.lastError,
     );
   }

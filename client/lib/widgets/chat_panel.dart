@@ -61,6 +61,7 @@ class ChatPanel extends StatelessWidget {
               bytes: bytes,
               durationMs: durationMs,
             ),
+            onSendLocation: messagesController.sendLocation,
           ),
         ],
       ),
