@@ -4,13 +4,13 @@
 
 Traccia lo stato del progetto per continuità del lavoro. Non è documentazione per utenti esterni.
 
-## Stato attuale (2026-06-29)
+## Stato attuale (2026-07-02)
 
-**Flutter + Supabase + bridge Python** (`docs/decisions/project-revolution-discovery.md`). PR Alpha **#108–#143** su `main` (multi-account sessioni parallele + fix logout/chat/persistenza #143).
+**Flutter + Supabase + bridge Python** (`docs/decisions/project-revolution-discovery.md`). PR Alpha **#108–#152** su `main` (multi-account: persistenza dichiarativa #147, una GoTrue attiva #152).
 
 | Componente | Stato |
 |------------|-------|
-| **`client/`** | App Supabase — shell messaggistica, N sessioni account parallele, overlay auth, chat testo/GIF/voice, `verify.sh` |
+| **`client/`** | App Supabase — shell messaggistica, multi-account (manifest + focus), overlay auth, chat testo/GIF/voice, `verify.sh` |
 | **`supabase/`** | Schema dominio (profiles, contacts, messages, outbox, …) |
 | **`bridge-xmpp/`** · **`bridge-matrix/`** | Stub health Fly.io |
 

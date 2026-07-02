@@ -4,11 +4,11 @@ Client ufficiale Alfred — multi-piattaforma (web, mobile, desktop).
 
 ## Stato
 
-**Alpha** — collegato a Supabase (contatti, inbox, chat realtime, profilo, **multi-account con sessioni parallele**).
+**Alpha** — collegato a Supabase (contatti, inbox, chat realtime, profilo, **multi-account**).
 
 | | |
 |---|---|
-| **Multi-account** | `AccountManager` — un client Supabase per account aperto; switch = focus UI |
+| **Multi-account** | Manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore |
 | **Auth** | Overlay su shell (`AuthOverlay`), non schermata piena |
 | **Live (Alpha dev)** | https://alfred-im.github.io/XmppTest/ |
 | **Layout** | Lista inbox + chat (stile WhatsApp Web) |
@@ -39,7 +39,7 @@ Gate CI (equivale a `test.sh gate`): `bash scripts/verify.sh`
 lib/
 ├── models/      # ChatPeer, ChatMessage, OpenAccount, …
 ├── services/    # AccountManager, AccountSession, InboxService, …
-├── providers/   # AuthController, InboxController (per sessione), …
+├── providers/   # AuthController, InboxController (sessione in focus), …
 ├── screens/     # HomeScreen (shell), AppShell, …
 └── widgets/     # AuthOverlay, InboxPanel, ChatPanel, …
 ```

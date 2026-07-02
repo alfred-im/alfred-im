@@ -123,9 +123,9 @@ Utente
 
 L'app gestisce **multi-account Alfred**: l'utente può avere **quanti account Alfred vuole** e passare tra loro (come più caselle email in Thunderbird). Ogni account Alfred ha la propria identità e i propri dati sulla piattaforma.
 
-**Implementazione client (2026-06-29, PR #140)**: ogni account **aperto** ha una **sessione Supabase dedicata** con realtime inbox sempre attivo; il cambio account è **solo focus UI** (nessun `setSession` tra account già aperti). L'auth è overlay sulla shell, non «ingresso nell'app». Vedi [multi-account-parallel-sessions.md](./multi-account-parallel-sessions.md).
+**Implementazione client (aggiornato 2026-07-02)**: manifest con tutti gli account aperti; **una** sessione GoTrue attiva in RAM (account in focus); switch = focus UI + restore connessione. Auth overlay sulla shell. Vedi [multi-account-parallel-sessions.md](./multi-account-parallel-sessions.md) e [multi-account-single-active-gotrue-pr152.md](../fixes/multi-account-single-active-gotrue-pr152.md).
 
-> **Storico PR #111**: switch via singolo client + `setSession` — **superato** da sessioni parallele.
+> **Storico**: PR #111 `setSession` singolo client; PR #140 N sessioni parallele (superato su web da #152).
 
 ### Dominio federato — per istanza, uno solo
 
@@ -636,7 +636,7 @@ Le seguenti domande erano basate sull'assunzione "client XMPP classico" e sono *
 | D-021 | 2026-06-24 | Ordine sviluppo dettagliato **posticipato** | ✅ |
 | D-022 | 2026-06-24 | **Identità Alfred** unica; XMPP/Matrix = trasporto | ✅ |
 | D-023 | 2026-06-24 | Password **solo Alfred** | ✅ |
-| D-024 | 2026-06-24 | **Multi-account Alfred** (Thunderbird) — **evoluto 2026-06-29**: sessioni parallele (ADR dedicato) | ✅ |
+| D-024 | 2026-06-24 | **Multi-account Alfred** (Thunderbird) — **evoluto 2026-07-02**: manifest + focus UI; una GoTrue attiva (#152) | ✅ |
 | D-025 | 2026-06-24 | Bridge XMPP: **slixmpp** | ✅ Accettata a livello alto |
 | D-026 | 2026-06-24 | Bridge Matrix: **matrix-nio** | ✅ Accettata a livello alto |
 | D-027 | 2026-06-24 | Contatti **unificati** | ✅ Corretto iter.7: protocollo **non** in UI |

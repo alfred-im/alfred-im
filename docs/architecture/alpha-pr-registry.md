@@ -1,6 +1,6 @@
 # Registro PR Alpha Flutter (main)
 
-**Ultimo aggiornamento**: 2026-06-29 (PR #143 — multi-account logout/chat/persistenza)  
+**Ultimo aggiornamento**: 2026-07-02 (PR #147–#152 — persistenza + single-active GoTrue)  
 **Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
 
 Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/alpha-full-stack.md` (e fix dedicato se applicabile).
@@ -29,7 +29,10 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#140** | Multi-account sessioni parallele | `AccountManager` / `AccountSession`; N×`SupabaseClient`; focus UI-only; overlay auth su shell; `OpenAccount` | `multi-account-parallel-sessions.md`, `multi-account-client.md`, `auth-overlay-shell.md`, `alpha-full-stack.md` §2.3–2.4 |
 | **#141** | Fix add-account (parziale) | `_sessionFromAuthResponse` fast path access+refresh; bootstrap ancora con `signOut` nel `finally` | `auth-bootstrap-gotrue-revoke.md` § stato main |
 | **#142** | Auth bootstrap completo | Rimosso `signOut` post-login; `EphemeralPkceStorage`; test live password reset; doc agente/handoff | `auth-bootstrap-gotrue-revoke.md`, `AGENT_DEBUG_ACCOUNTS.md`, `SESSION_HANDOFF.md` |
-| **#143** | Multi-account fix + test | Logout locale; view per account; persistenza atomica F5; inbox provider lifecycle; test regressione mock | `multi-account-chat-persistence-pr143.md`, `multi-account-client.md` §6, `SESSION_HANDOFF.md` |
+| **#143** | Multi-account fix + test | Logout locale; view per account; test regressione mock | `multi-account-chat-persistence-pr143.md`, `multi-account-client.md` §6 |
+| **#147** | Persistenza dichiarativa multi-account | `persistOpenAccount`; manifest = unica verità F5; no `_persistAllOpenAccounts` | `multi-account-persistence-redesign.md`, `multi-account-client.md` §3.5 |
+| **#150** | Regole conferma agente | Conferma scrittura solo dopo domanda esplicita | `.cursor-rules.md` |
+| **#152** | Una GoTrue attiva | Fix BroadcastChannel web; `setFocus` dispose+restore; `openAccounts` da manifest | `multi-account-single-active-gotrue-pr152.md`, ADR §2.6 |
 
 ---
 

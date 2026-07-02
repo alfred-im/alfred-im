@@ -50,23 +50,25 @@
 
 ---
 
-## Evoluzione post PR #140 (multi-account sessioni parallele)
+## Evoluzione post PR #140 (multi-account)
 
-**Data**: 2026-06-29
+**Data**: 2026-06-29 (PR #140) · **aggiornato** 2026-07-02 (PR #152)
 
-Il bootstrap **non** usa più `Supabase.initialize` + sessione globale unica. Ogni account aperto ha il proprio client e idratazione auth.
+Il bootstrap **non** usa più `Supabase.initialize` + sessione globale unica.
 
-| Aspetto | Prima (#113) | Dopo (#140) |
-|---------|--------------|-------------|
-| Sessione | Singleton `Supabase.instance` | `AccountSession.client` per account |
-| Gate UI | `AuthScreen` se `!isAuthenticated` | `HomeScreen` + `AuthOverlay` |
-| `sessionReady` | Attende auth globale | Attende restore di tutte le sessioni aperte |
-| Inbox al switch | Ricrea controller + possibile race | Riusa `inboxController` già in ascolto |
+| Aspetto | Prima (#113) | PR #140 | PR #152 (attuale) |
+|---------|--------------|---------|-------------------|
+| Sessione | Singleton `Supabase.instance` | N client in RAM | **Una** GoTrue in RAM (focus) |
+| Gate UI | `AuthScreen` se `!isAuthenticated` | `HomeScreen` + `AuthOverlay` | Invariato |
+| `sessionReady` | Attende auth globale | Restore sessioni | Restore **solo focus** |
+| Inbox al switch | Ricrea controller + race | Riusa controller per account | `ListenableBuilder` + restore + `load()` |
 
-**Lezione #114 resta valida**: usare `ChangeNotifierProxyProvider` quando il figlio è `ChangeNotifier`.
+**Lezione #114**: `ChangeNotifierProxyProvider` per contatti/profilo; inbox legata in `HomeScreen` con `ListenableBuilder`.
 
-**Fix race #113**: il problema della prima RPC su sessione non idratata si applica **per account** al `restore()` — ogni `AccountSession.restore` fa `setSession` prima di avviare `InboxController`.
+**Fix race #113**: ogni `AccountSession.restore` idrata auth prima di `InboxController.load()`.
 
-**File attuali**: `account_manager.dart`, `account_session.dart`, `supabase_bootstrap.dart` (`bootstrapApp`), `auth_controller.dart`, `main.dart`
+**PR #152**: N client GoTrue paralleli su web corrompevano JWT via `BroadcastChannel` — vedi `multi-account-single-active-gotrue-pr152.md`.
 
-**Riferimenti**: PR #140; `docs/implementation/multi-account-client.md`; `docs/decisions/multi-account-parallel-sessions.md`
+**File attuali**: `account_manager.dart`, `account_session.dart`, `home_screen.dart`, `auth_controller.dart`
+
+**Riferimenti**: PR #140, #152; `docs/implementation/multi-account-client.md`; `docs/decisions/multi-account-parallel-sessions.md`

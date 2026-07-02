@@ -3,7 +3,9 @@
 **Data**: 2026-06-29  
 **PR**: #143  
 **Branch**: `cursor/local-logout-chat-empty-fix-422b`  
-**Status**: 🟡 Mergiato su `main` — **validazione UI utente ancora negativa** al momento del handoff
+**Status**: ✅ Fix runtime **tenuti** su `main` — persistenza `_persistAllOpenAccounts` **sostituita** da PR #147; inbox switch web **PR #152**
+
+> **Aggiornamento 2026-07-02**: persistenza dichiarativa (#147) e una GoTrue attiva (#152) risolvono i bug #3 (F5) e inbox JWT al switch. Questo doc resta valido per view per account, logout locale, test regressione mock.
 
 Documento per AI — recap sessione, cause, fix, gap test.
 
@@ -54,14 +56,13 @@ Documento per AI — recap sessione, cause, fix, gap test.
 - `Map<userId, AccountViewState>` in `AccountManager` — vista **per account**, non globale
 - `sanitizedForAccount()` — ignora peer = proprio `userId`
 - `MessagesController.outboundQueueKey` = `userId|peerProfileId`
-- `ListenableProxyProvider` in `main.dart` con **dispose noop** per `InboxController`
+- `ListenableBuilder` in `home_screen.dart` su `focusedSession?.inboxController` (post #152; storico: `ListenableProxyProvider` noop in `main.dart`)
 
 ### Persistenza refresh
 
-- `_persistAllOpenAccounts()` — salva **tutte** le sessioni aperte in un'unica `saveAllAccounts`
-- `AccountStorageService._serializedWrite` — write lock
+- ~~`_persistAllOpenAccounts()`~~ — **rimosso** in PR #147 (persistenza dichiarativa per entry)
+- `AccountStorageService._serializedWrite` — write lock (ancora valido)
 - `initialize()` — rimuove account solo su errori auth **definitivi** (`_isPermanentAuthFailure`)
-- `_adoptSession` duplicato — `disposeResources(clearAuthStorage: false)` sulla sessione nuova
 
 ### Test aggiunti (59 totali in `verify.sh`, esclusi `live`)
 
@@ -83,14 +84,14 @@ Documento per AI — recap sessione, cause, fix, gap test.
 
 ---
 
-## Stato validazione
+## Stato validazione (aggiornato 2026-07-02)
 
-| Layer | Esito handoff |
-|-------|----------------|
+| Layer | Esito |
+|-------|-------|
 | `verify.sh` (analyze + unit/widget) | ✅ Verde |
 | `integration-multi-account.sh` | ✅ Messaggi bidirezionali su Supabase |
-| Browser Alpha / localhost (utente) | ❌ Bug ancora percepiti |
-| E2E Playwright multi-account + F5 | ❌ Non implementato |
+| Multi-account web (utente) | ✅ Confermato post #152 |
+| E2E `multi-account-messages.spec.ts` | ✅ Gate DB + `expectReceivedMessageOnAccount` |
 
 ### Checklist diagnosi manuale (se bug persistono post-deploy)
 
@@ -111,8 +112,8 @@ Account debug: **solo** `alfredagent1` / `alfredagent2` — `docs/AGENT_DEBUG_AC
 | `lib/services/account_manager.dart` | View per account, persistenza atomica, test hooks |
 | `lib/services/account_storage_service.dart` | `saveAllAccounts`, write lock |
 | `lib/models/account_view_state.dart` | `sanitizedForAccount` |
-| `lib/main.dart` | `ListenableProxyProvider` inbox |
-| `lib/screens/home_screen.dart` | `ValueKey` chat per `userId-peer` |
+| `lib/main.dart` | Provider auth/contatti/profilo (no inbox globale) |
+| `lib/screens/home_screen.dart` | `ListenableBuilder` inbox; `ValueKey` chat per `userId-peer` |
 
 ---
 

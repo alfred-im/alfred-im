@@ -29,7 +29,7 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 - [decisions/no-internal-external-chat-distinction.md](./decisions/no-internal-external-chat-distinction.md) — **🟢 Vincolante** — chat unificate
 - [decisions/server-as-reception.md](./decisions/server-as-reception.md) — Concept spunte cloud
 - [decisions/bridge-stateless.md](./decisions/bridge-stateless.md) — Bridge senza stato di business
-- [decisions/multi-account-parallel-sessions.md](./decisions/multi-account-parallel-sessions.md) — **🟢 Vincolante** — sessioni Supabase parallele per account aperti
+- [decisions/multi-account-parallel-sessions.md](./decisions/multi-account-parallel-sessions.md) — **🟢 Vincolante** — multi-account client Alpha (UX #140, una GoTrue attiva #152)
 - [decisions/single-device-logout-open.md](./decisions/single-device-logout-open.md) — **🟡 Aperto** — logout per dispositivo vs revoca globale
 - [decisions/project-revolution-discovery.md](./decisions/project-revolution-discovery.md) — Visione e discovery Alpha
 - [decisions/no-message-deletion.md](./decisions/no-message-deletion.md) — No cancellazione messaggi
@@ -41,7 +41,7 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 ## Architettura
 
 - [architecture/alpha-full-stack.md](./architecture/alpha-full-stack.md) — **🟢 Alpha** — client + Supabase
-- [architecture/alpha-pr-registry.md](./architecture/alpha-pr-registry.md) — Registro PR #108–#140
+- [architecture/alpha-pr-registry.md](./architecture/alpha-pr-registry.md) — Registro PR #108–#152
 - [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) — **🟡 Target** — modello caselle (direzione confermata; non su `main`)
 - [architecture/README.md](./architecture/README.md) — Indice architettura
 
@@ -51,17 +51,18 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 
 - [implementation/messages-only-inbox.md](./implementation/messages-only-inbox.md) — Inbox solo messaggi (PR #130)
 - [implementation/voice-notes.md](./implementation/voice-notes.md) — Note vocali WebM/Opus (PR #126)
-- [implementation/multi-account-client.md](./implementation/multi-account-client.md) — **🟢** Sessioni Supabase parallele (PR #140)
-- [implementation/multi-account-persistence-redesign.md](./implementation/multi-account-persistence-redesign.md) — **🟡 Prossima implementazione** — redesign persistenza completo: §0 premessa + decisioni D1–D15 + codice verificato (2026-07-01 rev.)
+- [implementation/multi-account-client.md](./implementation/multi-account-client.md) — **🟢** Multi-account client (#140 UX, #147 persistenza, #152 GoTrue)
+- [implementation/multi-account-persistence-redesign.md](./implementation/multi-account-persistence-redesign.md) — **✅ Implementato** (#147) — persistenza dichiarativa F5
 - [implementation/README.md](./implementation/README.md) — Indice implementazione
 
 ---
 
 ## Fix
 
-- [fixes/flutter-inbox-stability.md](./fixes/flutter-inbox-stability.md) — Race auth + provider inbox (#113/#114); evoluzione post #140
+- [fixes/flutter-inbox-stability.md](./fixes/flutter-inbox-stability.md) — Race auth + provider inbox (#113/#114); evoluzione multi-account
 - [fixes/auth-bootstrap-gotrue-revoke.md](./fixes/auth-bootstrap-gotrue-revoke.md) — Bootstrap signOut revoca refresh; PKCE (#141/#142)
-- [fixes/multi-account-chat-persistence-pr143.md](./fixes/multi-account-chat-persistence-pr143.md) — **PR #143** — logout locale, chat multi-account, persistenza F5
+- [fixes/multi-account-chat-persistence-pr143.md](./fixes/multi-account-chat-persistence-pr143.md) — **PR #143** — logout locale, view per account
+- [fixes/multi-account-single-active-gotrue-pr152.md](./fixes/multi-account-single-active-gotrue-pr152.md) — **PR #152** — una GoTrue attiva; fix inbox al switch web
 - [fixes/README.md](./fixes/README.md) — Indice fix
 
 ---
@@ -75,4 +76,4 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-01 — redesign persistenza multi-account (doc implementazione)
+**Ultimo aggiornamento**: 2026-07-02 — multi-account: persistenza #147 + single-active GoTrue #152

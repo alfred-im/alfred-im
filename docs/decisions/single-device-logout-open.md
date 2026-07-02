@@ -38,9 +38,9 @@ Il client Alfred oggi ha due “logout” concettuali non distinti in UX:
 
 ## Vincoli noti
 
-- Un `SupabaseClient` per account con `SharedPreferencesLocalStorage` scope `alfred_auth_{userId}`.
+- Storage auth per account: `alfred_auth_{userId}` (solo sessione in RAM quando in focus — PR #152).
 - `OpenAccount` persiste solo `refreshToken` (non access token).
-- Multi-account parallelo: N sessioni vive, un focus UI.
+- Multi-account: manifest con N account; **una** sessione GoTrue viva (focus UI).
 
 ---
 

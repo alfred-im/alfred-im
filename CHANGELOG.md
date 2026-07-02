@@ -23,6 +23,21 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Alpha Flutter — PR #152 (multi-account: una GoTrue attiva)
+
+- **Runtime**: al massimo una `AccountSession` GoTrue in RAM (account in focus); manifest elenca tutti gli account aperti
+- **`setFocus`**: dispose sessione corrente (conserva `alfred_auth_{userId}`), restore nuovo account da manifest, `inbox.load()`
+- **Fix web**: evita collisioni `BroadcastChannel` auth tra client GoTrue paralleli (inbox JWT sbagliato al switch)
+- **Doc**: `docs/fixes/multi-account-single-active-gotrue-pr152.md`; ADR e implementation multi-account aggiornati
+- **E2E**: `multi-account-messages.spec.ts` — gate DB + ricezione UI dopo switch
+
+### Alpha Flutter — PR #147 (persistenza dichiarativa multi-account)
+
+- **`AccountSession.persistOpenAccount`**: token dalla risposta HTTP / evento auth, non da `currentSession` globale
+- **`AccountManager`**: niente `_persistAllOpenAccounts`; `upsertAccount` / `removeAccount` per entry
+- **F5**: manifest = unica verità; restore solo account in focus (completato con #152 per runtime)
+- **Doc**: `docs/implementation/multi-account-persistence-redesign.md` — implementato
+
 ### Alpha Flutter — PR #143 (multi-account: logout locale, chat, persistenza)
 
 - **Logout locale**: `AccountSession.close()` senza `signOut` GoTrue — solo `alfred_auth_{userId}`

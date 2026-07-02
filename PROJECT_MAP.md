@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-01 (redesign persistenza multi-account — persistenza dichiarativa)  
+**Ultimo aggiornamento**: 2026-07-02 (multi-account: persistenza dichiarativa #147 + una GoTrue attiva #152)  
 **Versione repository**: 3.1.0-alpha (client Flutter + piattaforma Supabase; bridge stub)
 
 ---
@@ -31,7 +31,7 @@
 **Non deducibile — URL Alpha ≠ branch `main`**: https://alfred-im.github.io/XmppTest/ pubblica l’**ultimo** `deploy-alpha` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-alpha` → ultimo vince).
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
-| **PR Alpha** | **#108–#143** su `main` — registro `docs/architecture/alpha-pr-registry.md` |
+| **PR Alpha** | **#108–#152** su `main` — registro `docs/architecture/alpha-pr-registry.md` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -44,7 +44,7 @@
 ### Caratteristiche attuali
 
 - **Auth**: email + password (GoTrue); **username** obbligatorio in registrazione — identità IM pubblica; email non in rubrica/ricerca
-- **Multi-account**: N sessioni Supabase parallele (`AccountManager` + `AccountSession`); account aperto = autenticato + realtime inbox; **focus** = solo UI — ADR `docs/decisions/multi-account-parallel-sessions.md`
+- **Multi-account**: manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore connessione — ADR `docs/decisions/multi-account-parallel-sessions.md` · fix web PR #152
 - **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — ADR `docs/decisions/address-based-messaging.md`
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); solo `messages` + `profiles`; inbox = `list_inbox()` on-read; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca conversazioni on-demand (PR #132)
@@ -110,12 +110,12 @@
 |----------|-----------|
 | **Entry** | `lib/main.dart` → `AppShell` → `HomeScreen` (sempre shell; overlay auth se 0 account o «Aggiungi account») |
 | **State** | Provider: `AuthController` (→ `AccountManager`), `InboxController` per account in focus, `ContactsController`, `MessagesController` |
-| **Backend** | N × `SupabaseClient` (uno per account aperto) — REST + Realtime + RPC |
+| **Backend** | `SupabaseClient` della sessione in **focus** (una GoTrue attiva) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
 | **Gate** | `scripts/verify.sh` — pub get + analyze (zero issue) + test |
 | **Build web** | `flutter build web --base-href "/XmppTest/"` |
 
-**Non deducibile — multi-account client**: `AccountManager` / `AccountSession` — ogni account aperto ha client Supabase dedicato (`SharedPreferencesLocalStorage` per `userId`), `InboxController` sempre attivo con realtime (**lifecycle in `AccountSession.close()`**, non dispose Provider al cambio focus). Lista `OpenAccount` in storage = account autenticati (non bookmark); persistenza **dichiarativa** per entry (`AccountSession.persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). Switch = `setFocus` senza `setSession`. **Vista UI** (`AccountViewState` per `userId` in `AccountManager`): chat aperta + inbox/chat su mobile **indipendenti per account**; rimosse su chiusura account; sanitizzate se il peer coincide con l'account in focus. Coda invio: chiave `userId|peerProfileId`. Overlay credenziali semi-trasparente su `HomeScreen`. Doc: `docs/decisions/multi-account-parallel-sessions.md`, `docs/design/auth-overlay-shell.md`, `docs/implementation/multi-account-client.md`, `docs/implementation/multi-account-persistence-redesign.md`.
+**Non deducibile — multi-account client**: `AccountManager` / `AccountSession` — manifest `alfred_saved_accounts` elenca **tutti** gli account aperti; in RAM **al massimo una** `AccountSession` GoTrue (quella in focus). Al `setFocus`: dispose sessione corrente (`clearAuthStorage: false`), `AccountSession.restore()` dal manifest, `inboxController.load()`. Storage auth per account: `SharedPreferencesLocalStorage` → `alfred_auth_{userId}`. Persistenza **dichiarativa** per entry (`persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). `openAccounts` legge dal manifest. **Vista UI** (`AccountViewState` per `userId`): chat aperta + inbox/chat su mobile **indipendenti per account**. Inbox UI: `HomeScreen` + `ListenableBuilder` su `focusedSession?.inboxController`. Coda invio: `userId|peerProfileId`. Overlay credenziali su `HomeScreen`. Doc: `docs/decisions/multi-account-parallel-sessions.md`, `docs/implementation/multi-account-client.md`, `docs/fixes/multi-account-single-active-gotrue-pr152.md`.
 
 **Non deducibile — auth bootstrap**: login/add-account usa client effimero; **non** chiamare `signOut` sul bootstrap dopo adozione sessione dedicata (revoca refresh GoTrue). PKCE: `EphemeralPkceStorage`. Fix: PR #142 — `docs/fixes/auth-bootstrap-gotrue-revoke.md`. **Chiudi account** = logout **solo locale** (`close()` cancella storage, nessuna `POST /auth/v1/logout`). Fix multi-account PR #143: `docs/fixes/multi-account-chat-persistence-pr143.md`. Handoff: `docs/SESSION_HANDOFF.md`.
 
@@ -210,9 +210,9 @@ bash scripts/verify.sh --build   # + build web
 
 ## 🔄 Ultima Revisione
 
-**Data**: 2026-06-29
+**Data**: 2026-07-02
 
-- Multi-account: sessioni parallele (`AccountManager`); shell + overlay auth; doc ADR + design + implementation
-- Redirect conferma email auth (`AuthRedirectUrl`)
+- Multi-account: una GoTrue attiva in RAM (PR #152); persistenza dichiarativa (PR #147); e2e multi-account messaggi
+- UX multi-account invariata: shell + overlay auth; doc ADR + implementation aggiornati
 
 **Riferimenti**: `docs/INDICE.md`, `docs/architecture/alpha-pr-registry.md`, `CHANGELOG.md`

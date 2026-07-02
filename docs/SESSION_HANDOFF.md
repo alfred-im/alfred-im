@@ -1,17 +1,6 @@
-# Handoff sessione — 2026-07-01 (redesign persistenza multi-account)
+# Handoff sessione — 2026-07-02 (multi-account completo)
 
-Documento per AI — **leggere prima di qualsiasi task**.
-
----
-
-## ⚠️ Priorità assoluta per implementazione
-
-**Leggere e seguire**: [`docs/implementation/multi-account-persistence-redesign.md`](./implementation/multi-account-persistence-redesign.md)
-
-- Analisi design: persistenza **derivata** (rotta su web) vs **dichiarativa** (target)
-- **Non** mergiare PR #144 così com’è — pezze su design rotto
-- **Non** aggiungere fallback RAM/cache/GoTrue
-- Single source of truth: `flutter.alfred_saved_accounts`, scritto da `AccountSession` al login
+Documento per AI — **leggere prima di qualsiasi task multi-account**.
 
 ---
 
@@ -19,27 +8,30 @@ Documento per AI — **leggere prima di qualsiasi task**.
 
 | Item | Valore |
 |------|--------|
-| Branch `main` | #140, #142, #143 — persistenza F5 **ancora rotta su web** |
-| PR #144 | Draft — **non mergiare**; sostituita dal redesign doc sopra |
+| Branch `main` | #140–#152 — multi-account **funzionante** su web (persistenza + switch inbox) |
 | Alpha live | https://alfred-im.github.io/XmppTest/ — ultimo deploy-alpha riuscito |
+| Multi-account runtime | **Una** sessione GoTrue in RAM (focus); manifest con tutti gli account |
 
 ---
 
-## Recap conversazione utente (critico)
+## Architettura multi-account (sintesi)
 
-L'utente ha segnalato tre bug multi-account. Fix #143/#144 **non** risolvono il design:
+| Layer | Comportamento |
+|-------|---------------|
+| **UX** (PR #140) | Shell sempre visibile; overlay auth; switch = focus UI; `AccountViewState` per account |
+| **Persistenza** (PR #147) | `alfred_saved_accounts` scritto dichiarativamente da `AccountSession`; no `saveAllAccounts` runtime |
+| **Connessione** (PR #152) | Una GoTrue attiva; `setFocus` = dispose + restore; fix BroadcastChannel web |
 
-1. **Logout globale** — fix `close()` senza `signOut` (ok su main)
-2. **Chat vuota** — parziale; `onSessionEnded` documentato ma non implementato
-3. **F5 perde account** — **problema di design persistenza**, non bug puntuale
-
-**Lezione**: test unitari/mock **≠** web mobile. L'utente vuole **refactor pulito**, non altra patch.
+**Non reintrodurre** N client GoTrue paralleli su web senza fix upstream ([#1085](https://github.com/supabase/supabase-flutter/issues/1085)).
 
 ---
 
-## PR #143 — cosa tenere
+## Doc di riferimento (ordine lettura)
 
-Vedi `docs/fixes/multi-account-chat-persistence-pr143.md`. Tenere fix **runtime** (view per account, inbox lifecycle, logout locale). **Sostituire** logica `_persistAllOpenAccounts`.
+1. `docs/decisions/multi-account-parallel-sessions.md` — ADR vincolante (§2.6 runtime)
+2. `docs/implementation/multi-account-client.md` — flussi codice
+3. `docs/fixes/multi-account-single-active-gotrue-pr152.md` — fix web switch inbox
+4. `docs/implementation/multi-account-persistence-redesign.md` — storico persistenza (implementato)
 
 ---
 
@@ -49,28 +41,28 @@ Vedi `docs/fixes/multi-account-chat-persistence-pr143.md`. Tenere fix **runtime*
 |--------|-----------|
 | Account debug | **Solo** `alfredagent1` / `alfredagent2` — `docs/AGENT_DEBUG_ACCOUNTS.md` |
 | Non toccare | `test1`/`test2`/`test3` |
-| Sviluppo | `.cursor-rules.md` — analisi sì; **modifiche ai file solo con conferma** (`AGENTS.md`) |
-| Persistenza | Solo secondo `multi-account-persistence-redesign.md` |
+| Sviluppo | `.cursor-rules.md` — analisi sì; **modifiche solo con conferma** |
+| Verifica | `bash scripts/verify.sh` prima di push |
 
 ---
 
-## Verifica pre-task
+## Verifica multi-account
 
 ```bash
 cd client && bash scripts/verify.sh
-flutter test test/live/multi_account_persist_live_test.dart --tags live
-bash client/scripts/integration-multi-account.sh
+bash scripts/integration-multi-account.sh
+bash scripts/test.sh e2e-multi    # Playwright — Alpha o localhost
 ```
 
 ---
 
-## Topic ancora aperti
+## Topic aperti
 
 | Topic | Doc |
 |-------|-----|
-| Implementazione redesign persistenza | `implementation/multi-account-persistence-redesign.md` |
-| Chat vuota / sessione morta | `fixes/conversations-empty-diagnosis.md` + §7 redesign |
-| E2E multi-account F5 | Da fare post-redesign |
+| Badge / realtime account in background | Rinviato — serve fix BroadcastChannel o upstream |
+| Multi-tab stesso browser | Last-write-wins (limite noto) |
+| Logout solo dispositivo | `decisions/single-device-logout-open.md` |
 
 ---
 

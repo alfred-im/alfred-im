@@ -2,7 +2,7 @@
 
 **Data**: 2026-06-29  
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
-**Stato**: PR Alpha **#108–#140** ( #140 multi-account sessioni parallele — draft)  
+**Stato**: PR Alpha **#108–#152** su `main`  
 **Registro PR**: [alpha-pr-registry.md](./alpha-pr-registry.md)
 
 ---
@@ -35,7 +35,7 @@
 | D-008 | Flutter parla **solo** con Supabase |
 | D-051 | Stato bridge in piattaforma (`outbox`, `sync_cursors`, `bridge_jobs`) |
 | D-034 | Protocollo **mai** visibile in UI contatti/inbox |
-| D-024 | Multi-account Alfred — **sessioni Supabase parallele** (ex Thunderbird + `setSession`; vedi ADR #140) |
+| D-024 | Multi-account Alfred — manifest + focus UI; **una GoTrue attiva** in RAM (PR #152; ex sessioni parallele PR #140) |
 | D-031 | Web **online-only** (no cache offline) |
 
 ---
@@ -59,36 +59,37 @@ client/lib/
 
 - Scope Alpha: pochi controller globali (`Auth`, `Inbox`, `Contacts`, `Profile`)
 - `ChangeNotifierProxyProvider` per inbox/contatti/profilo — altrimenti `notifyListeners()` del controller non aggiorna la UI (fix PR #114; vedi `docs/fixes/flutter-inbox-stability.md`)
-- **Inbox (PR #140)**: il proxy **non ricrea** `InboxController` al cambio focus — restituisce `focusedSession.inboxController` già attivo sulla sessione account
+- **Inbox (PR #140 + #152)**: `HomeScreen` usa `ListenableBuilder` su `focusedSession?.inboxController` — una sessione GoTrue attiva; inbox del focus
 
 ### 2.3 Flusso bootstrap
 
 1. `main()` → `bootstrapApp()` (`WidgetsFlutterBinding` only — **nessuna** sessione utente globale)
-2. `MultiProvider` registra controller; `AuthController.initialize()` → `AccountManager` ripristina tutte le sessioni aperte → `sessionReady = true`
+2. `MultiProvider` registra controller; `AuthController.initialize()` → `AccountManager` ripristina manifest + sessione del focus → `sessionReady = true`
 3. `AppShell` → sempre `HomeScreen`; se 0 account → `AuthOverlay` obbligatorio
-4. `ChangeNotifierProxyProvider`: `InboxController` = inbox della sessione in **focus**; contatti/profilo ricreati al cambio focus con i servizi del client dedicato
+4. Contatti/profilo: `ChangeNotifierProxyProvider` ricreati al cambio focus; inbox: binding diretto in `HomeScreen`
 
 **Nota storica**: PR #113 usava `waitForSupabaseSessionReady()` dopo `Supabase.initialize` globale — superato da sessioni per-account (vedi `fixes/flutter-inbox-stability.md` §3).
 
-### 2.4 Multi-account (sessioni parallele — PR #140)
+### 2.4 Multi-account (PR #140 UX, #147 persistenza, #152 GoTrue)
 
 **ADR vincolante**: [multi-account-parallel-sessions.md](../decisions/multi-account-parallel-sessions.md)
 
 | Componente | Ruolo |
 |------------|-------|
-| `AccountManager` | Registro `AccountSession` aperte; focus UI; persistenza `OpenAccount` + `focusUserId` |
-| `AccountSession` | `SupabaseClient` dedicato per account; servizi; `InboxController` + realtime sempre attivo |
+| `AccountManager` | Cache manifest; **una** `AccountSession` in RAM; focus UI; swap GoTrue al `setFocus` |
+| `AccountSession` | `SupabaseClient` quando attiva; servizi; `InboxController` + realtime sul focus |
 | `OpenAccount` | Modello persistito (`profile` + `refreshToken`) — ex `SavedAccount`, stesso JSON |
 | `AccountStorageService` | `alfred_saved_accounts`, `alfred_focus_user_id` |
 | `AuthOverlay` + `AuthScreen` | Credenziali su shell semi-trasparente (non schermata piena) |
-| `AccountSidebar` | Cambio **focus** istantaneo; Aggiungi account; Chiudi account |
+| `AccountSidebar` | Cambio **focus**; Aggiungi account; Chiudi account |
 
 **Regole**:
 
-- Account in lista = autenticato + realtime inbox — **non** bookmark
-- `setFocus(userId)` — **solo UI**, nessun `setSession` tra account già aperti
-- Login/registrazione: client bootstrap temporaneo → nuova `AccountSession` dedicata
+- Account in lista = aperti nel manifest — **non** bookmark
+- `setFocus(userId)` — focus UI + restore GoTrue da manifest (nessun overlay login)
+- Login/registrazione: client bootstrap → manifest + sessione focus
 - 0 account → overlay obbligatorio; ≥1 account → overlay solo da «Aggiungi account»
+- Realtime inbox **solo** sull’account in focus (trade-off PR #152)
 
 **Scelta identità**: login e recupero via **email reale** (GoTrue). L’**username** è l’identità pubblica (profilo, ricerca, `@username` in sidebar).
 

@@ -87,7 +87,8 @@ La **sidebar** resta visibile (desktop) o apribile (drawer mobile) con voce «Ag
 
 ## Riferimenti
 
-- `client/lib/screens/home_screen.dart` — `Stack` + `_mainContent()`
+- `client/lib/screens/home_screen.dart` — `Stack` + `_mainContent()` + `ListenableBuilder` inbox
 - `client/lib/widgets/auth_overlay.dart`
 - `client/lib/widgets/no_account_placeholder.dart`
 - `client/lib/screens/auth_screen.dart`
+- `docs/fixes/multi-account-single-active-gotrue-pr152.md` — runtime connessione (invariato UX overlay)

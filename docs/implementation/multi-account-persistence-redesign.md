@@ -1,7 +1,7 @@
 # Multi-account: redesign persistenza (single source of truth)
 
 **Data**: 2026-07-01 (revisione design completa)  
-**Stato**: ✅ **Implementato** (branch `cursor/multi-account-persistence-redesign-fed3`) — validazione manuale web mobile §7.3 ancora da fare pre-merge  
+**Stato**: ✅ **Implementato** (PR #147, merge `fceecbb`) — runtime GoTrue: **una sessione attiva** (PR #152, vedi §0.6)  
 **Audience**: AI in sessioni future — implementare **solo** secondo questo documento  
 **Obiettivo PR**: far **funzionare** il flusso normale multi-account (login → aggiungi → F5 → switch). Non coprire tutti i casi limite.
 
@@ -13,7 +13,7 @@ Questa sezione riassume **in un unico posto** il contesto, lo stato del codice v
 
 ### 0.1 Problema da risolvere
 
-Dopo PR #140 (sessioni parallele) e PR #143 (fix runtime), il multi-account **a runtime funziona** ma su **web mobile** spesso **si perde il primo account al F5**.
+Dopo PR #140 (UX multi-account) e PR #143 (fix runtime), su **web mobile** si perdeva il primo account al F5 (persistenza derivata) e, post-#147, l'inbox mostrava dati dell'account sbagliato al switch (N GoTrue paralleli — risolto in #152).
 
 **Causa**: design della persistenza — il manifest `alfred_saved_accounts` viene **ricostruito** dal manager leggendo `currentSession?.refreshToken` invece di essere scritto al login con il token già noto dalla risposta HTTP.
 
@@ -23,41 +23,40 @@ Dopo PR #140 (sessioni parallele) e PR #143 (fix runtime), il multi-account **a 
 
 | Area | Dettaglio |
 |------|-----------|
-| N sessioni `SupabaseClient` in parallelo | PR #140 |
-| Focus = solo UI, nessun `setSession` tra account aperti | PR #140 |
-| `InboxController` per sessione, realtime sempre ON | PR #140 |
+| UX multi-account (shell, overlay, focus UI) | PR #140 |
+| Focus = solo UI lato navigazione | PR #140 |
+| `InboxController` per `AccountSession` attiva; realtime sul focus | PR #140 + **PR #152** (una GoTrue in RAM) |
 | `Map<userId, AccountViewState>` | PR #143 |
 | Overlay auth su shell | PR #140 |
 | Bootstrap senza `signOut` post-login | PR #142 |
 | Logout locale (no revoca GoTrue) | PR #143 |
 | Write lock `_serializedWrite` in storage | PR #143 |
 
-Il problema è **solo il confine persistenza** tra RAM e `alfred_saved_accounts`.
+Il problema era **solo il confine persistenza** tra RAM e `alfred_saved_accounts` — **risolto in PR #147**. Il bug inbox al switch web (BroadcastChannel) è **PR #152** (§0.6).
 
-### 0.3 Stato codice su `main` (verificato 2026-07-01)
+### 0.3 Stato codice su `main` (aggiornato 2026-07-02)
 
-**Architettura persistenza attuale** — tutto passa da qui:
+**Persistenza dichiarativa (PR #147)** — implementata:
 
 ```
-_trigger (login, remove, sync profili, tokenRefreshed)
-    → AccountManager._persistAllOpenAccounts()
-        → per ogni sessione: session.refreshToken (= currentSession?.refreshToken)
-        → AccountStorageService.saveAllAccounts(lista)   // sostituisce TUTTA la lista
+login / tokenRefreshed / updateStoredProfile
+    → AccountSession.persistOpenAccount / upsertAccount
+        → alfred_saved_accounts (solo la propria entry)
+
+initialize / setFocus
+    → AccountManager._manifestAccounts (cache manifest)
+    → _activateFocusedSession() — restore solo focus
 ```
 
-**Fatti verificati nel codice:**
+**Non più presente**: `_persistAllOpenAccounts`, `saveAllAccounts` nel runtime, `onPersistRequested`.
 
-| Fatto | File / dettaglio |
-|-------|------------------|
-| Il token è **noto** in `_sessionFromAuthResponse` ma **non** passato allo storage | `account_session.dart` |
-| `upsertAccount` esiste ma **non è usato** in `lib/` | `account_storage_service.dart` |
-| `removeAccount` storage usato **solo** in `initialize()` su auth failure | `account_manager.dart` |
-| `removeAccount` manager **non** chiama `storage.removeAccount` — ricostruisce la lista | `account_manager.dart` |
-| `onPersistRequested` collega ogni sessione al persist **globale** | `account_manager.dart` |
-| Test persistenza usano `testRefreshTokenOverride` — mascherano il gap web | `account_manager_persistence_test.dart` |
-| Live test citato in versioni precedenti del doc | **non esiste ancora** nel repo |
+### 0.6 Runtime GoTrue — PR #152
 
-**Bug collaterale attuale:** se `_persistAllOpenAccounts` non trova token leggibili, fa `return` senza scrivere → storage può restare **stale** dopo remove.
+La persistenza dichiarativa **non** risolve il bug web «inbox dell’account sbagliato al switch» causato da N client GoTrue + `BroadcastChannel`.
+
+In RAM **una sola** `AccountSession` GoTrue (account in focus); al `setFocus` dispose (`clearAuthStorage: false`) + restore da manifest.
+
+Dettaglio: `docs/fixes/multi-account-single-active-gotrue-pr152.md` · ADR §2.6.
 
 ### 0.4 Decisioni product owner (risposte D1–D15)
 
@@ -400,25 +399,26 @@ File proposto: `test/live/multi_account_persist_live_test.dart` — **da definir
 | `docs/implementation/multi-account-client.md` | Aggiornare §3.5 |
 | `docs/decisions/multi-account-parallel-sessions.md` | Nota §2.5 persistenza dichiarativa + chiarimento D15 |
 
-**Non toccare** salvo bug evidenti: `home_screen.dart`, `InboxController`, overlay shell, layout sidebar.
+**Non toccare** salvo bug evidenti: layout sidebar, overlay shell (binding inbox: `ListenableBuilder` in `home_screen.dart`).
 
 ---
 
 ## 9. Criteri di accettazione
 
-### Must (merge)
+### Must (merge) — ✅ completati con PR #147 + #152
 
-- [ ] Login A → `loadAccounts().length == 1` con token non vuoto **prima** di aggiungere B
-- [ ] Login A + B → `length == 2`
-- [ ] F5 → 2 account in sidebar
-- [ ] Remove B → `length == 1`
-- [ ] Nessuna chiamata `_persistAllOpenAccounts` / `saveAllAccounts` nel flusso login/add/remove/refresh
-- [ ] Chat: sessione invalida → errore esplicito, non `[]` silenzioso
-- [ ] `cd client && bash scripts/verify.sh` verde (zero issue `analyze`)
+- [x] Login A → `loadAccounts().length == 1` con token non vuoto **prima** di aggiungere B
+- [x] Login A + B → `length == 2`
+- [x] F5 → 2 account in sidebar
+- [x] Remove B → `length == 1`
+- [x] Nessuna chiamata `_persistAllOpenAccounts` / `saveAllAccounts` nel flusso login/add/remove/refresh
+- [x] Switch focus → inbox dell’account corretto (PR #152)
+- [x] `cd client && bash scripts/verify.sh` verde (zero issue `analyze`)
 
 ### Should (manuale)
 
-- [ ] Checklist §7.3 su web mobile
+- [x] Multi-account web mobile — validato utente 2026-07-02
+- [x] E2E `multi-account-messages.spec.ts` (gate DB + `expectReceivedMessageOnAccount`)
 
 ### Out of scope
 
@@ -432,10 +432,12 @@ File proposto: `test/live/multi_account_persist_live_test.dart` — **da definir
 
 | PR / branch | Esito |
 |-------------|--------|
-| #140 | Sessioni parallele — **tenere** |
+| #140 | UX multi-account (shell, overlay, focus UI) — **tenere** |
+| #147 | Persistenza dichiarativa — **implementato** |
+| #152 | Una GoTrue attiva in RAM (fix web BroadcastChannel) — **implementato** |
 | #143 | Fix runtime — **tenere** |
 | #144 | **Chiusa** — patch persistenza abbandonate |
-| Questo documento | Base unica per la prossima implementazione |
+| Questo documento | Storico design + criteri accettazione — **implementato** |
 
 ---
 
