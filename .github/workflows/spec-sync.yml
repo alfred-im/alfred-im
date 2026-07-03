@@ -1,0 +1,32 @@
+name: Spec sync (SDD)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/specs/**'
+      - 'supabase/migrations/**'
+      - 'scripts/check-spec-sync.sh'
+      - '.github/workflows/spec-sync.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docs/specs/**'
+      - 'supabase/migrations/**'
+      - 'scripts/check-spec-sync.sh'
+      - '.github/workflows/spec-sync.yml'
+  workflow_dispatch:
+
+jobs:
+  spec-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SDD catalog and contract checks
+        run: bash scripts/check-spec-sync.sh

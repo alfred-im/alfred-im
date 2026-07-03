@@ -23,6 +23,12 @@ for spec in "$SPECS_DIR"/*.spec.md; do
     echo "ERROR: $base senza campo Spec ID" >&2
     ERR=1
   fi
+  if ! grep -q 'Tracciabilità' "$spec"; then
+    echo "WARN: $base senza sezione Tracciabilità (SDD v1)" >&2
+  fi
+  if ! grep -qE '\*\*[A-Z0-9-]+-REQ-[0-9]+\*\*' "$spec"; then
+    echo "WARN: $base senza REQ-ID (SDD v1)" >&2
+  fi
 done
 
 echo "==> SDD: contratti obbligatori"

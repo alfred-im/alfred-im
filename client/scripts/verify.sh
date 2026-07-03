@@ -8,6 +8,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+echo "==> check-spec-sync (SDD)"
+bash "$ROOT/../scripts/check-spec-sync.sh"
+
 RUN_BUILD=0
 for arg in "$@"; do
   case "$arg" in

@@ -23,6 +23,11 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Documentazione (2026-07-03 — REQ-ID MSG-INBOX + MSG-READ)
+
+- Tabella REQ-ID + tracciabilità in `MSG-INBOX.spec.md`, `MSG-READ.spec.md`
+- `check-spec-sync` in `verify.sh`; workflow CI `.github/workflows/spec-sync.yml`
+
 ### Documentazione (2026-07-03 — SDD v1 canonico)
 
 - **REQ-ID** nel template + pilota `MSG-SEND.spec.md` (tabella tracciabilità)
