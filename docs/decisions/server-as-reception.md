@@ -1,5 +1,7 @@
 # Ricezione = ricezione sul server (client cloud)
 
+> **Contratto capability**: [MSG-READ.spec.md](../specs/capabilities/MSG-READ.spec.md) — questo ADR resta vincolante (semantica cloud); la spec consolidano il contratto operativo.
+
 **Data**: 2026-06-26  
 **Status**: ✅ Accettata — **concept vincolante** dell'applicazione  
 **Categoria**: Messaggistica, spunte, modello cloud  

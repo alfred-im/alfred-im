@@ -31,7 +31,7 @@ L’utente deve vedere l’elenco delle conversazioni (preview, ordine, unread) 
 - Chat identificata da `ChatPeer.profileId` — stessa UI con storico vuoto o pieno.
 - Nuova chat: indirizzo `username` → risoluzione profilo → pannello chat → primo invio crea riga in inbox al prossimo `list_inbox()`.
 - Storico chat: RPC `list_peer_messages(peer_profile_id)`.
-- Segna letti: RPC `mark_peer_read(peer_profile_id)` all’apertura chat.
+- Segna letti: vedi [MSG-READ](./MSG-READ.spec.md) — RPC `mark_peer_read` all’apertura chat.
 - Realtime inbox: subscribe su `messages` dove `sender_id` o `recipient_profile_id` = utente corrente → `InboxController.load()`.
 - Realtime chat: canale `messages-peer-{me}-{peer}` su INSERT/UPDATE.
 

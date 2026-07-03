@@ -23,6 +23,11 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Documentazione (2026-07-03 — MSG-READ spec)
+
+- **`MSG-READ.spec.md`**: spunte delivered/read, `mark_peer_read`, semantica cloud
+- Header ADR `server-as-reception.md`; colonna Spec registro PR (#122, #130)
+
 ### Documentazione (2026-07-03 — Spec-Driven Development)
 
 - **`docs/specs/`**: metodo SDD (`README.md`, `_template.md`, `index.md`)

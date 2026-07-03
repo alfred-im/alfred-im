@@ -82,7 +82,16 @@ Storico bidirezionale tra utente corrente e `p_peer_profile_id`, ordinato per `c
 mark_peer_read(p_peer_profile_id uuid) → void
 ```
 
-Aggiorna `delivery_status = 'read'` su messaggi **ricevuti** da quel peer (tutti i `content_type` supportati).
+Chiamata dal **destinatario** all’apertura chat con un peer.
+
+Effetti:
+
+1. `INSERT` in `message_read_receipts` per messaggi ricevuti da quel peer (body non vuoto o media/location), `on conflict do nothing`.
+2. `UPDATE messages SET delivery_status = 'read'` dove `sender_id = peer`, `recipient_profile_id = auth.uid()`, status in (`sent`, `delivered`).
+
+Esclude messaggi con `marker_type` non null.
+
+**Spec**: [MSG-READ.spec.md](../capabilities/MSG-READ.spec.md).
 
 ---
 

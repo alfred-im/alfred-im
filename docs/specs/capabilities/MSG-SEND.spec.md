@@ -26,7 +26,7 @@ L’utente invia messaggi a un account Alfred per `recipient_profile_id` (risolt
 
 - **Unico punto invio server**: RPC `send_message_to_profile` — vedi [contracts/rpc.md](../contracts/rpc.md).
 - Idempotenza client: `client_message_id` (UUID v4) su ogni invio.
-- Stati consegna UI: `sent` → `delivered` (trigger `on_message_inserted` su internal) → `read` (`mark_peer_read` lato destinatario).
+- Stati consegna post-invio: vedi [MSG-READ](./MSG-READ.spec.md) (`sent` → `delivered` → `read`).
 - Tipi `content_type` supportati su `main`: `text`, `gif`, `voice`, `location`.
 - Upload media (GIF, voice) in bucket `chat-media` sotto `{auth.uid()}/{uuid}.*` prima dell’RPC.
 - Coda retry client `OutboundMessageQueue` per testo, GIF, voice, location — retry periodico + «Riprova invio» su bolle `failed`.

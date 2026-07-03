@@ -24,13 +24,13 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#118** | Login email reale | Auth GoTrue con email; username come identità pubblica | — | migrazioni auth `202606251*` |
 | **#119** | Review refactoring | Ciclo revisione codice client | — | — |
 | **#120** | Sidebar profilo | Layout card profilo in sidebar | — | `PROJECT_MAP` § layout |
-| **#122** | Spunte `delivered` | Promozione `delivered` su insert server | MSG-SEND | `server-as-reception.md`, migrazione `20260626100000` |
+| **#122** | Spunte `delivered` | Promozione `delivered` su insert server | MSG-READ | `server-as-reception.md`, migrazione `20260626100000` |
 | **#123** | Spec caselle (bozza) | Prima stesura `mailbox-inbox-outbox-spec.md` | (target) | `mailbox-inbox-outbox-spec.md` storico |
 | **#124** | ADR chat unificate | Nessuna distinzione interna/esterna | MSG-INBOX | `no-internal-external-chat-distinction.md` |
 | **#125** | Aggancio al fondo | `AnchoredMessageList`, scroll ancorato | — | `conversation-bottom-anchor.md`, `alpha-full-stack.md` §2.10 |
 | **#126** | Note vocali | WebM/Opus, `OutboundMessageQueue` | MSG-SEND | `voice-notes.md`, `alpha-full-stack.md` §2.11 |
 | **#127** | Gate `flutter analyze` | `client/scripts/verify.sh` | — | `.cursor-rules.md`, `client/scripts/test/README.md` |
-| **#130** | Inbox solo messaggi | Drop `inbox_threads`; `ChatPeer`; RPC peer-based | MSG-INBOX | `messages-only-inbox.md`, `address-based-messaging.md` |
+| **#130** | Inbox solo messaggi | Drop `inbox_threads`; `ChatPeer`; RPC peer-based | MSG-INBOX, MSG-READ | `messages-only-inbox.md`, `address-based-messaging.md` |
 | **#131** | Sidebar logout | Logout in card profilo | AUTH-MULTI | `PROJECT_MAP` § layout |
 | **#132** | Ricerca on-demand inbox | Barra ricerca toggle + `TapRegion` | — | `inbox-search-toggle.md` |
 | **#133** | Sync doc post-merge | Allineamento doc dopo #126–#132 | — | `CHANGELOG`, `INDICE` |
