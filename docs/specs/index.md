@@ -15,6 +15,7 @@ Indice capability con stato e tracciabilità PR. Per contratti RPC condivisi: [c
 | **MSG-SEND** | Invio messaggi (testo, media, location) | `implemented` | #115, #126, #153 | [MSG-SEND.spec.md](./capabilities/MSG-SEND.spec.md) |
 | **MSG-READ** | Spunte delivered/read | `implemented` | #122, #130 | [MSG-READ.spec.md](./capabilities/MSG-READ.spec.md) |
 | **INBOX-SEARCH** | Ricerca on-demand inbox | `implemented` | #132 | [INBOX-SEARCH.spec.md](./capabilities/INBOX-SEARCH.spec.md) |
+| **PROFILE** | Profilo utente (avatar, pronomi) | `implemented` | #118, #134 | [PROFILE.spec.md](./capabilities/PROFILE.spec.md) |
 | **AUTH-MULTI** | Multi-account client | `implemented` | #140, #147, #152 | [AUTH-MULTI.spec.md](./capabilities/AUTH-MULTI.spec.md) |
 
 ---
@@ -38,6 +39,7 @@ Indice capability con stato e tracciabilità PR. Per contratti RPC condivisi: [c
 | `decisions/multi-account-parallel-sessions.md` | AUTH-MULTI (ADR) |
 | `implementation/multi-account-client.md`, `design/auth-overlay-shell.md` | AUTH-MULTI |
 | `design/inbox-search-toggle.md` | INBOX-SEARCH |
+| `PROJECT_MAP.md` § profilo | PROFILE |
 
 ---
 
@@ -46,4 +48,3 @@ Indice capability con stato e tracciabilità PR. Per contratti RPC condivisi: [c
 | ID proposto | Contenuto | Priorità |
 |-------------|-----------|----------|
 | CONTACTS | Rubrica opzionale | bassa |
-| PROFILE | Profilo arricchito (#134) | bassa |

@@ -19,6 +19,7 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 | [MSG-SEND](./specs/capabilities/MSG-SEND.spec.md) | `implemented` | Invio testo/GIF/voice/location, coda retry |
 | [MSG-READ](./specs/capabilities/MSG-READ.spec.md) | `implemented` | Spunte delivered/read, `mark_peer_read` |
 | [INBOX-SEARCH](./specs/capabilities/INBOX-SEARCH.spec.md) | `implemented` | Ricerca conversazioni on-demand |
+| [PROFILE](./specs/capabilities/PROFILE.spec.md) | `implemented` | Profilo, avatar, pronomi, `ProfileSummary` |
 | [AUTH-MULTI](./specs/capabilities/AUTH-MULTI.spec.md) | `implemented` | Multi-account, focus, overlay shell |
 | [contracts/rpc.md](./specs/contracts/rpc.md) | `implemented` | Firme RPC messaggistica |
 
@@ -95,4 +96,4 @@ Target futuro caselle: [architecture/mailbox-inbox-outbox-spec.md](./architectur
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-03 — INBOX-SEARCH spec + MSG-READ + SDD
+**Ultimo aggiornamento**: 2026-07-03 — PROFILE spec + SDD catalogo

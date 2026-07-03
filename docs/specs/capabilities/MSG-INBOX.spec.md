@@ -27,7 +27,7 @@ L’utente deve vedere l’elenco delle conversazioni (preview, ordine, unread) 
 
 - Inbox = risultato di aggregazione **on-read** su `messages` via RPC `list_inbox()` — nessuna tabella, vista materializzata o cache inbox dedicata.
 - Ogni riga inbox raggruppa per `peer_profile_id` (account Alfred interno).
-- Payload riga: `peer_profile_id`, `display_name`, `last_message_preview`, `last_message_at`, `unread_count`, `protocol` (+ campi profilo da #134 dove applicabile).
+- Payload riga: `peer_profile_id`, `display_name`, `last_message_preview`, `last_message_at`, `unread_count`, `protocol` (+ `peer_avatar_url`, `peer_pronouns` — [PROFILE](./PROFILE.spec.md) #134).
 - Chat identificata da `ChatPeer.profileId` — stessa UI con storico vuoto o pieno.
 - Nuova chat: indirizzo `username` → risoluzione profilo → pannello chat → primo invio crea riga in inbox al prossimo `list_inbox()`.
 - Storico chat: RPC `list_peer_messages(peer_profile_id)`.

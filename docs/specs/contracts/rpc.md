@@ -98,12 +98,14 @@ Esclude messaggi con `marker_type` non null.
 ## `find_profile_by_username`
 
 ```sql
-find_profile_by_username(p_username text) → profiles
+find_profile_by_username(p_username text) → table (
+  id uuid, username text, display_name text, avatar_url text, pronouns text
+)
 ```
 
-Risoluzione indirizzo Alfred interno → profilo. Usato da nuova chat / compose.
+Risoluzione indirizzo Alfred interno → profilo pubblico (#134: avatar e pronomi).
 
-**Migrazione**: `20260627200000_address_based_messaging.sql`.
+**Spec**: [PROFILE.spec.md](../capabilities/PROFILE.spec.md).
 
 ---
 

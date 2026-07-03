@@ -21,7 +21,7 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#113** | Fix race auth inbox | `waitForSupabaseSessionReady`, `sessionReady` | — | `fixes/flutter-inbox-stability.md` |
 | **#114** | Fix provider listen | `ChangeNotifierProxyProvider` contatti/profilo | — | `fixes/flutter-inbox-stability.md` |
 | **#115** | GIF in chat | `content_type`, `media_url`, bucket `chat-media` | MSG-SEND | `alpha-full-stack.md` §2.8 |
-| **#118** | Login email reale | Auth GoTrue con email; username come identità pubblica | — | migrazioni auth `202606251*` |
+| **#118** | Login email reale | Auth GoTrue con email; username come identità pubblica | PROFILE | migrazioni auth `202606251*` |
 | **#119** | Review refactoring | Ciclo revisione codice client | — | — |
 | **#120** | Sidebar profilo | Layout card profilo in sidebar | — | `PROJECT_MAP` § layout |
 | **#122** | Spunte `delivered` | Promozione `delivered` su insert server | MSG-READ | `server-as-reception.md`, migrazione `20260626100000` |
@@ -34,7 +34,7 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#131** | Sidebar logout | Logout in card profilo | AUTH-MULTI | `PROJECT_MAP` § layout |
 | **#132** | Ricerca on-demand inbox | Barra ricerca toggle + `TapRegion` | INBOX-SEARCH | `inbox-search-toggle.md` |
 | **#133** | Sync doc post-merge | Allineamento doc dopo #126–#132 | — | `CHANGELOG`, `INDICE` |
-| **#134** | Profilo arricchito | Avatar, pronomi, `ProfileSummary`, inbox peer fields | MSG-INBOX | `PROJECT_MAP` § profilo, migrazioni `202606280*` |
+| **#134** | Profilo arricchito | Avatar, pronomi, `ProfileSummary`, inbox peer fields | PROFILE, MSG-INBOX | `PROJECT_MAP` § profilo, migrazioni `202606280*` |
 | **#135** | `AGENTS.md` | Istruzioni Cloud Agent / toolchain | — | `AGENTS.md` |
 | **#136** | Spec caselle (aggiorn.) | Target mailbox — direzione confermata | (target) | `mailbox-inbox-outbox-spec.md` |
 | **#139** | Redirect email confirm | `AuthRedirectUrl` → GitHub Pages | AUTH-MULTI | `PROJECT_MAP` § redirect auth |

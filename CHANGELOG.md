@@ -23,6 +23,11 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Documentazione (2026-07-03 — PROFILE spec)
+
+- **`PROFILE.spec.md`**: profilo utente, avatar, pronomi, `ProfileSummary`, esposizione inbox
+- `PROJECT_MAP`, `contracts/rpc.md` (`find_profile_by_username`); registro PR #118, #134
+
 ### Documentazione (2026-07-03 — INBOX-SEARCH spec)
 
 - **`INBOX-SEARCH.spec.md`**: ricerca on-demand inbox, filtro client-side, `_dismissSearch`
