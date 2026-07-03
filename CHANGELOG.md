@@ -23,6 +23,12 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Documentazione (2026-07-03 — CONTACTS spec)
+
+- **`CONTACTS.spec.md`**: rubrica personale, `search_profiles`, isolamento da messaggistica
+- Header ADR `address-based-messaging.md`; `contracts/rpc.md`; registro PR #109
+- **Catalogo SDD message-centric completo** (8 capability + rpc)
+
 ### Documentazione (2026-07-03 — PROFILE spec)
 
 - **`PROFILE.spec.md`**: profilo utente, avatar, pronomi, `ProfileSummary`, esposizione inbox

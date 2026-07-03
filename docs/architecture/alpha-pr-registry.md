@@ -14,7 +14,7 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | PR | Titolo / commit | Cosa introduce | Spec | Dove documentato |
 |----|-----------------|----------------|------|------------------|
 | **#108** | UI chat Flutter | Layout conversazioni + chat, tema Alfred, deploy Pages | — | `CHANGELOG` [3.0.0-alpha], `PROJECT_MAP` |
-| **#109** | App completa senza bridge | Auth, contatti, chat realtime Supabase, profilo, schema dominio | — | `alpha-full-stack.md`, `PROJECT_MAP` |
+| **#109** | App completa senza bridge | Auth, contatti, chat realtime Supabase, profilo, schema dominio | CONTACTS, AUTH-MULTI | `alpha-full-stack.md`, `PROJECT_MAP` |
 | **#110** | Passkeys bundle.js | Fix schermo bianco GitHub Pages | — | `alpha-full-stack.md` §6 |
 | **#111** | Multi-account switch (legacy) | `AccountStorageService`, `setSession` — **sostituito da #140** | — | storico `CHANGELOG` |
 | **#112** | `list_conversations` RPC | Inbox un round-trip — **sostituito da `list_inbox` #130** | — | migrazione `20260624220000` |

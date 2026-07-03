@@ -38,7 +38,7 @@
 | D-024 | Multi-account Alfred — manifest + focus UI; **una GoTrue attiva** in RAM (PR #152; ex sessioni parallele PR #140) |
 | D-031 | Web **online-only** (no cache offline) |
 
-**Spec capability (contratti)**: [docs/specs/index.md](../specs/index.md) — MSG-INBOX, MSG-SEND, AUTH-MULTI su `main`.
+**Spec capability (contratti)**: [docs/specs/index.md](../specs/index.md) — catalogo completo su `main` (MSG-*, INBOX-SEARCH, PROFILE, CONTACTS, AUTH-MULTI).
 
 ---
 

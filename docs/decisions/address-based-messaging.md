@@ -1,6 +1,6 @@
 # Messaggistica per indirizzo (username / username@server)
 
-> **Contratto capability**: [MSG-INBOX.spec.md](../specs/capabilities/MSG-INBOX.spec.md), [MSG-SEND.spec.md](../specs/capabilities/MSG-SEND.spec.md) — questo ADR resta vincolante; le spec consolidano il contratto operativo.
+> **Contratto capability**: [MSG-INBOX.spec.md](../specs/capabilities/MSG-INBOX.spec.md), [MSG-SEND.spec.md](../specs/capabilities/MSG-SEND.spec.md), [CONTACTS.spec.md](../specs/capabilities/CONTACTS.spec.md) — questo ADR resta vincolante; le spec consolidano il contratto operativo.
 
 **Data**: 2026-06-27  
 **Status**: ✅ Accettata — **regola vincolante**  

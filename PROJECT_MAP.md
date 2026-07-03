@@ -32,7 +32,7 @@
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
 | **PR Alpha** | **#108–#153** su `main` — registro `docs/architecture/alpha-pr-registry.md` |
-| **Spec (SDD)** | Contratti capability: `docs/specs/index.md` — MSG-INBOX, MSG-SEND, MSG-READ, INBOX-SEARCH, PROFILE, AUTH-MULTI |
+| **Spec (SDD)** | Contratti capability: `docs/specs/index.md` — catalogo completo message-centric (8 spec + rpc) |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -46,7 +46,7 @@
 
 - **Auth**: email + password (GoTrue); **username** obbligatorio in registrazione — identità IM pubblica; email non in rubrica/ricerca
 - **Multi-account**: manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore connessione — ADR `docs/decisions/multi-account-parallel-sessions.md` · fix web PR #152
-- **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — ADR `docs/decisions/address-based-messaging.md`
+- **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — spec `docs/specs/capabilities/CONTACTS.spec.md` · ADR `docs/decisions/address-based-messaging.md`
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); solo `messages` + `profiles`; inbox = `list_inbox()` on-read; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca conversazioni on-demand (PR #132)
 - **GIF / voice / location**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client

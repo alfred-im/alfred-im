@@ -2,7 +2,7 @@
 
 **Ultima revisione**: 2026-07-03  
 **Status**: `implemented` (allineato a `main`, migrazioni fino a `20260702120100`)  
-**Spec**: [MSG-INBOX](../capabilities/MSG-INBOX.spec.md), [MSG-SEND](../capabilities/MSG-SEND.spec.md)
+**Spec**: [MSG-INBOX](../capabilities/MSG-INBOX.spec.md), [MSG-SEND](../capabilities/MSG-SEND.spec.md), [CONTACTS](../capabilities/CONTACTS.spec.md)
 
 Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
 
@@ -109,6 +109,20 @@ Risoluzione indirizzo Alfred interno → profilo pubblico (#134: avatar e pronom
 
 ---
 
+## `search_profiles`
+
+```sql
+search_profiles(p_query text, p_limit integer default 20) → table (
+  id uuid, username text, display_name text, avatar_url text
+)
+```
+
+Ricerca utenti Alfred per aggiunta contatto internal (min 2 caratteri client). Esclude `auth.uid()`.
+
+**Spec**: [CONTACTS.spec.md](../capabilities/CONTACTS.spec.md).
+
+---
+
 ## Enum `message_content_type`
 
 Valori su `main`: `text`, `gif`, `voice`, `location`.
@@ -135,6 +149,7 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 | `list_peer_messages` | `MessageService.fetchPeerMessages` |
 | `mark_peer_read` | `InboxService.markPeerRead` |
 | `find_profile_by_username` | `ComposeService` / profile lookup |
+| `search_profiles` | `ContactService.searchProfiles` |
 
 ---
 
