@@ -1,6 +1,6 @@
 # Registro PR Alpha Flutter (main)
 
-**Ultimo aggiornamento**: 2026-07-02 (PR #147–#152 — persistenza + single-active GoTrue)  
+**Ultimo aggiornamento**: 2026-07-03 (PR #153 — posizione statica in chat)  
 **Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
 
 Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/alpha-full-stack.md` (e fix dedicato se applicabile).
@@ -33,6 +33,7 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#147** | Persistenza dichiarativa multi-account | `persistOpenAccount`; manifest = unica verità F5; no `_persistAllOpenAccounts` | `multi-account-persistence-redesign.md`, `multi-account-client.md` §3.5 |
 | **#150** | Regole conferma agente | Conferma scrittura solo dopo domanda esplicita | `.cursor-rules.md` |
 | **#152** | Una GoTrue attiva | Fix BroadcastChannel web; `setFocus` dispose+restore; `openAccounts` da manifest | `multi-account-single-active-gotrue-pr152.md`, ADR §2.6 |
+| **#153** | Posizione statica in chat | `content_type=location`; anteprima GPS + overlay; mappa OSM in bolla; migrazioni `20260702120000`–`20260702120100` | `location-sharing.md`, `alpha-full-stack.md` §2.13 |
 
 ---
 
@@ -67,6 +68,8 @@ Dopo ogni merge su `main`:
 | `20260627210000_message_centric_messaging.sql` | #130 | (storico) `inbox_threads` — rimosso in `20260627230000` |
 | `20260627220000_fix_send_message_to_profile_overload.sql` | #130 | Fix PostgREST HTTP 300 — drop overload 3-arg |
 | `20260627230000_messages_only_inbox.sql` | #130 | Drop `inbox_threads`; inbox query-only; `list_peer_messages`, `mark_peer_read` |
+| `20260702120000_message_location_support.sql` | #153 | Enum `location` (step 1) |
+| `20260702120100_message_location_support.sql` | #153 | Colonne lat/lng, CHECK, RPC 10 arg, inbox preview, outbox payload |
 
 ---
 

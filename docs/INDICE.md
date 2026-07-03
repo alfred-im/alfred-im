@@ -51,6 +51,7 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 
 - [implementation/messages-only-inbox.md](./implementation/messages-only-inbox.md) — Inbox solo messaggi (PR #130)
 - [implementation/voice-notes.md](./implementation/voice-notes.md) — Note vocali WebM/Opus (PR #126)
+- [implementation/location-sharing.md](./implementation/location-sharing.md) — Posizione statica in chat
 - [implementation/multi-account-client.md](./implementation/multi-account-client.md) — **🟢** Multi-account client (#140 UX, #147 persistenza, #152 GoTrue)
 - [implementation/multi-account-persistence-redesign.md](./implementation/multi-account-persistence-redesign.md) — **✅ Implementato** (#147) — persistenza dichiarativa F5
 - [implementation/README.md](./implementation/README.md) — Indice implementazione
@@ -76,4 +77,4 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-02 — multi-account: persistenza #147 + single-active GoTrue #152
+**Ultimo aggiornamento**: 2026-07-03 — posizione statica in chat #153

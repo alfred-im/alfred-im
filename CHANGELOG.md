@@ -23,6 +23,17 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Alpha Flutter — PR #153 (condivisione posizione statica)
+
+- **`content_type=location`**: colonne `latitude`/`longitude` in `messages`; RPC `send_message_to_profile` a 10 parametri
+- **Invio**: pin in `ChatInputBar` → overlay full-screen → stream GPS → anteprima mappa OSM (`flutter_map`) → conferma **Invia posizione**
+- **Ricezione**: `LocationMessageContent` — tile OSM in bolla, tap apre OpenStreetMap
+- **Inbox**: preview `📍 Posizione` (`format_location_preview`)
+- **Coda**: `OutboundContentKind.location` con coordinate in retry
+- **CI**: retry deploy GitHub Pages (fino a 3 tentativi su errori transitori)
+- **Doc**: `docs/implementation/location-sharing.md`; `alpha-full-stack.md` §2.13
+- **Migrazioni**: `20260702120000`, `20260702120100`
+
 ### Alpha Flutter — PR #152 (multi-account: una GoTrue attiva)
 
 - **Runtime**: al massimo una `AccountSession` GoTrue in RAM (account in focus); manifest elenca tutti gli account aperti

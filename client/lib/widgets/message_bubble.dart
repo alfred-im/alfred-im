@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/message.dart';
 import '../theme/alfred_colors.dart';
+import 'location_message_content.dart';
 import 'voice_message_content.dart';
 
 const double _gifMaxWidth = 240;
@@ -66,6 +67,11 @@ class MessageBubble extends StatelessWidget {
             if (message.isGif) _GifContent(url: message.mediaUrl!),
             if (message.isVoice)
               VoiceMessageContent(message: message, isMine: isMine),
+            if (message.isLocation)
+              LocationMessageContent(
+                latitude: message.latitude!,
+                longitude: message.longitude!,
+              ),
             if (message.body.isNotEmpty)
               Text(
                 message.body,

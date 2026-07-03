@@ -1,6 +1,6 @@
 enum MessageStatus { sent, delivered, read, pending, failed }
 
-enum MessageContentType { text, gif, voice }
+enum MessageContentType { text, gif, voice, location }
 
 MessageStatus messageStatusFromDelivery(String? value) {
   switch (value) {
@@ -23,6 +23,8 @@ MessageContentType messageContentTypeFromString(String? value) {
       return MessageContentType.gif;
     case 'voice':
       return MessageContentType.voice;
+    case 'location':
+      return MessageContentType.location;
     default:
       return MessageContentType.text;
   }
@@ -42,6 +44,8 @@ class ChatMessage {
     this.durationSeconds,
     this.mediaMime,
     this.mediaSizeBytes,
+    this.latitude,
+    this.longitude,
     this.retryPayloadPath,
   });
 
@@ -57,6 +61,8 @@ class ChatMessage {
   final int? durationSeconds;
   final String? mediaMime;
   final int? mediaSizeBytes;
+  final double? latitude;
+  final double? longitude;
   final String? retryPayloadPath;
 
   bool get isGif =>
@@ -69,9 +75,15 @@ class ChatMessage {
       mediaUrl != null &&
       mediaUrl!.isNotEmpty;
 
-  bool get isMedia => isGif || isVoice;
+  bool get isLocation =>
+      contentType == MessageContentType.location &&
+      latitude != null &&
+      longitude != null;
 
-  bool get hasRenderableContent => body.isNotEmpty || isGif || isVoice;
+  bool get isMedia => isGif || isVoice || isLocation;
+
+  bool get hasRenderableContent =>
+      body.isNotEmpty || isGif || isVoice || isLocation;
 
   bool get canRetry => isMine && status == MessageStatus.failed;
 
@@ -93,6 +105,8 @@ class ChatMessage {
       durationSeconds: json['duration_seconds'] as int?,
       mediaMime: json['media_mime'] as String?,
       mediaSizeBytes: json['media_size_bytes'] as int?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 
@@ -109,6 +123,8 @@ class ChatMessage {
     int? durationSeconds,
     String? mediaMime,
     int? mediaSizeBytes,
+    double? latitude,
+    double? longitude,
     String? retryPayloadPath,
   }) {
     return ChatMessage(
@@ -124,6 +140,8 @@ class ChatMessage {
       durationSeconds: durationSeconds ?? this.durationSeconds,
       mediaMime: mediaMime ?? this.mediaMime,
       mediaSizeBytes: mediaSizeBytes ?? this.mediaSizeBytes,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       retryPayloadPath: retryPayloadPath ?? this.retryPayloadPath,
     );
   }

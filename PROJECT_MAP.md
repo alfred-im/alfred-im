@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-02 (multi-account: persistenza dichiarativa #147 + una GoTrue attiva #152)  
+**Ultimo aggiornamento**: 2026-07-03 (condivisione posizione statica #153)  
 **Versione repository**: 3.1.0-alpha (client Flutter + piattaforma Supabase; bridge stub)
 
 ---
@@ -48,7 +48,7 @@
 - **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — ADR `docs/decisions/address-based-messaging.md`
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); solo `messages` + `profiles`; inbox = `list_inbox()` on-read; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca conversazioni on-demand (PR #132)
-- **GIF / voice**: bucket `chat-media`; `OutboundMessageQueue` per retry client
+- **GIF / voice / location**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client
 - **Federazione**: outbox `queued` — attende bridge
 - **Spunte**: `delivered` su insert server · `mark_peer_read` → `read` — `docs/decisions/server-as-reception.md`
 - **Brand**: `#2D2926`, layout responsive stile WhatsApp Web
@@ -125,6 +125,8 @@
 
 **Non deducibile — voice**: hold-to-send, WebM/Opus canonico. Spec: `docs/implementation/voice-notes.md`.
 
+**Non deducibile — posizione statica**: tap pin → anteprima mappa OSM (`flutter_map`) con affinamento GPS → conferma invio; bolle ricevute stesso widget tile OSM. Spec: `docs/implementation/location-sharing.md`.
+
 **Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi; usato da `UserProfile.summary`, `OpenAccount.profile`, `ChatPeer.profile`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`).
 
 **Non deducibile — coda invio client**: `OutboundMessageQueue` ≠ outbox server federato.
@@ -189,7 +191,7 @@ bash scripts/verify.sh --build   # + build web
 | Area | Stato |
 |------|-------|
 | Auth, profilo, multi-account | ✅ |
-| Contatti, inbox, chat testo/GIF/voice | ✅ |
+| Contatti, inbox, chat testo/GIF/voice/location | ✅ |
 | Ricerca inbox on-demand, aggancio al fondo | ✅ |
 | Schema Supabase + RLS + RPC | ✅ |
 | Deploy Pages + gate `verify.sh` | ✅ |
@@ -212,6 +214,7 @@ bash scripts/verify.sh --build   # + build web
 
 **Data**: 2026-07-02
 
+- Condivisione posizione statica (`content_type=location`, coordinate in Postgres, mappa OSM in bolla)
 - Multi-account: una GoTrue attiva in RAM (PR #152); persistenza dichiarativa (PR #147); e2e multi-account messaggi
 - UX multi-account invariata: shell + overlay auth; doc ADR + implementation aggiornati
 

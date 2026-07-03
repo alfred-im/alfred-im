@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../config/location_config.dart';
 import '../config/voice_config.dart';
 import '../models/message.dart';
 import '../models/outbound_queue_item.dart';
@@ -263,6 +264,49 @@ class MessagesController extends ChangeNotifier {
     );
   }
 
+  Future<void> sendLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    if (isSending) return;
+    if (!_ensureValidSession()) return;
+
+    final lat = LocationConfig.roundCoordinate(latitude);
+    final lng = LocationConfig.roundCoordinate(longitude);
+    final clientId = _uuid.v4();
+
+    await _sendOptimistic(
+      optimistic: ChatMessage(
+        id: clientId,
+        body: '',
+        timeLabel: formatMessageTime(DateTime.now()),
+        isMine: true,
+        status: MessageStatus.pending,
+        createdAt: DateTime.now(),
+        senderId: userId,
+        contentType: MessageContentType.location,
+        latitude: lat,
+        longitude: lng,
+      ),
+      queueItem: OutboundQueueItem(
+        clientId: clientId,
+        queueKey: _queueKey,
+        kind: OutboundContentKind.location,
+        attempts: 0,
+        queuedAt: DateTime.now(),
+        latitude: lat,
+        longitude: lng,
+      ),
+      send: (id) => messageService.sendLocationToProfile(
+        recipientProfileId: peerProfileId,
+        latitude: lat,
+        longitude: lng,
+        currentUserId: userId,
+        clientMessageId: id,
+      ),
+    );
+  }
+
   Future<void> retryMessage(String clientId) async {
     final item = (await _outboundQueue.loadForQueueKey(_queueKey))
         .where((entry) => entry.clientId == clientId)
@@ -357,6 +401,8 @@ class MessagesController extends ChangeNotifier {
                 : 'pending://${item.clientId}',
             durationSeconds: item.durationSeconds,
             mediaMime: item.mediaMime,
+            latitude: item.latitude,
+            longitude: item.longitude,
             retryPayloadPath: item.localMediaPath,
           ),
         ),
@@ -371,6 +417,8 @@ class MessagesController extends ChangeNotifier {
         return MessageContentType.gif;
       case OutboundContentKind.voice:
         return MessageContentType.voice;
+      case OutboundContentKind.location:
+        return MessageContentType.location;
       case OutboundContentKind.text:
         return MessageContentType.text;
     }
@@ -438,6 +486,19 @@ class MessagesController extends ChangeNotifier {
             mediaUrl: mediaUrl,
             durationSeconds: durationSeconds,
             mediaSizeBytes: bytes.length,
+            currentUserId: userId,
+            clientMessageId: item.clientId,
+          );
+        case OutboundContentKind.location:
+          final latitude = item.latitude;
+          final longitude = item.longitude;
+          if (latitude == null || longitude == null) {
+            throw StateError('Location retry payload missing');
+          }
+          saved = await messageService.sendLocationToProfile(
+            recipientProfileId: peerProfileId,
+            latitude: latitude,
+            longitude: longitude,
             currentUserId: userId,
             clientMessageId: item.clientId,
           );

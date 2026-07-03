@@ -1,8 +1,8 @@
 # Alfred Alpha — Architettura completa (client + piattaforma)
 
-**Data**: 2026-06-29  
+**Data**: 2026-07-03  
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
-**Stato**: PR Alpha **#108–#152** su `main`  
+**Stato**: PR Alpha **#108–#153** su `main`  
 **Registro PR**: [alpha-pr-registry.md](./alpha-pr-registry.md)
 
 ---
@@ -12,7 +12,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Flutter Web (`client/`)                                   │
-│  Auth · Contatti · Conversazioni · Chat (testo/GIF/voice) · Profilo · Multi-account │
+│  Auth · Contatti · Conversazioni · Chat (testo/GIF/voice/location) · Profilo · Multi-account │
 └───────────────────────────┬─────────────────────────────────┘
                             │ HTTPS (REST + Realtime + Auth)
                             ▼
@@ -207,6 +207,26 @@ client/lib/
 
 **PR**: #132
 
+### 2.13 Condivisione posizione statica
+
+**Dettaglio**: [location-sharing.md](../implementation/location-sharing.md)
+
+1. Pulsante pin in `ChatInputBar` (accanto a GIF)
+2. Stream GPS (`LocationService.watchCurrentPosition`) — anteprima alla **prima** coordinata, affinamento fino a conferma
+3. Overlay full-screen: mappa OSM (`LocationMapPreview` / `flutter_map`), precisione, **Annulla** o tap sul velo / **Invia posizione**
+4. RPC `send_message_to_profile` con `content_type=location`, `latitude`, `longitude` (solo dopo conferma)
+5. `LocationMessageContent` in bolla — stesse tile OSM + tap apre OpenStreetMap
+6. Preview inbox: `📍 Posizione` (`format_location_preview`)
+7. Coda retry client unificata (`OutboundContentKind.location`)
+
+**Scelte**:
+- Tile `tile.openstreetmap.org` in client — **non** `staticmap.openstreetmap.de` (defunto)
+- Coordinate arrotondate a 5 decimali al momento dell'invio
+- Nessun bucket storage — solo Postgres
+- Posizione live e reverse geocoding: fuori scope Alpha
+
+**PR**: #153
+
 ---
 
 ## 3. Layer piattaforma Supabase
@@ -224,6 +244,8 @@ client/lib/
 | `20260626100000_internal_delivered_on_server.sql` | Spunte — `delivered` su insert (debito nome «internal») |
 | `20260627120000_message_voice_support.sql` | Enum `voice` (step 1) |
 | `20260627120100_message_voice_support.sql` | Voice — colonne media, RPC 8 arg, bucket `audio/webm` |
+| `20260702120000_message_location_support.sql` | Enum `location` (step 1) |
+| `20260702120100_message_location_support.sql` | Colonne `latitude`/`longitude`, RPC 10 arg, inbox preview |
 
 ### 3.2 Modello dati (su `main`, PR #130)
 
@@ -245,7 +267,7 @@ Inbox: **nessuna tabella dedicata** — `list_inbox()` aggrega da `messages`.
 | Tipo | Valori | Uso |
 |------|--------|-----|
 | `contact_protocol` | internal, xmpp, matrix | Routing interno (invisibile UI) |
-| `message_content_type` | text, gif, voice | Tipo contenuto messaggio |
+| `message_content_type` | text, gif, voice, location | Tipo contenuto messaggio |
 | `message_delivery_status` | pending…failed | Spunte + outbox |
 | `queue_status` | queued…failed | Outbox / bridge_jobs |
 
@@ -272,7 +294,7 @@ Inbox: **nessuna tabella dedicata** — `list_inbox()` aggrega da `messages`.
 | `search_profiles` | Trova utenti Alfred |
 | `list_inbox` | Inbox da messaggi |
 | `find_profile_by_username` | Username → profilo |
-| `send_message_to_profile` | Invio testo, GIF, voice |
+| `send_message_to_profile` | Invio testo, GIF, voice, location |
 | `list_peer_messages` | Storico con un account |
 | `mark_peer_read` | Lettura messaggi da peer |
 

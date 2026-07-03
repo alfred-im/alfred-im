@@ -84,6 +84,24 @@ class MessageService {
     );
   }
 
+  Future<ChatMessage> sendLocationToProfile({
+    required String recipientProfileId,
+    required double latitude,
+    required double longitude,
+    required String currentUserId,
+    required String clientMessageId,
+  }) {
+    return _sendToProfile(
+      recipientProfileId: recipientProfileId,
+      currentUserId: currentUserId,
+      clientMessageId: clientMessageId,
+      contentType: 'location',
+      body: '',
+      latitude: latitude,
+      longitude: longitude,
+    );
+  }
+
   Future<ChatMessage> _sendToProfile({
     required String recipientProfileId,
     required String currentUserId,
@@ -94,6 +112,8 @@ class MessageService {
     int? durationSeconds,
     String? mediaMime,
     int? mediaSizeBytes,
+    double? latitude,
+    double? longitude,
   }) async {
     if (contentType == 'text') {
       final row = await _client.rpc(
@@ -120,6 +140,8 @@ class MessageService {
       'p_duration_seconds': ?durationSeconds,
       'p_media_mime': ?mediaMime,
       'p_media_size_bytes': ?mediaSizeBytes,
+      'p_latitude': ?latitude,
+      'p_longitude': ?longitude,
     };
 
     final row = await _client.rpc('send_message_to_profile', params: params);

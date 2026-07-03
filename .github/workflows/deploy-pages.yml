@@ -65,8 +65,29 @@ jobs:
     needs: build
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry1.outputs.page_url || steps.deployment_retry2.outputs.page_url }}
     steps:
       - name: Deploy Alpha dev (GitHub Pages)
         id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Deploy Alpha dev (retry 1)
+        if: steps.deployment.outcome == 'failure'
+        id: deployment_retry1
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Deploy Alpha dev (retry 2)
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry1.outcome == 'failure'
+        id: deployment_retry2
+        uses: actions/deploy-pages@v4
+
+      - name: Verify Pages deployment
+        if: >-
+          steps.deployment.outcome == 'failure'
+          && steps.deployment_retry1.outcome == 'failure'
+          && steps.deployment_retry2.outcome == 'failure'
+        run: |
+          echo "GitHub Pages deployment failed after 3 attempts."
+          exit 1

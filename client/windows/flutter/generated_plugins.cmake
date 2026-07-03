@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
+  geolocator_windows
   passkeys_windows
   record_windows
   url_launcher_windows
