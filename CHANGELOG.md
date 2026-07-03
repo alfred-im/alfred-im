@@ -23,6 +23,13 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Documentazione (2026-07-03 — Spec-Driven Development)
+
+- **`docs/specs/`**: metodo SDD (`README.md`, `_template.md`, `index.md`)
+- **Capability specs** `implemented`: MSG-INBOX (#130), MSG-SEND (#115/#126/#153), AUTH-MULTI (#140/#147/#152)
+- **Contratto RPC**: `docs/specs/contracts/rpc.md`
+- `INDICE.md`, `AGENTS.md`, `alpha-pr-registry.md` (colonna Spec); header verso spec su doc implementation/design
+
 ### Documentazione (2026-07-03 — revisione sync)
 
 - Allineamento PR **#108–#153** in `PROJECT_MAP`, `README`, `INDICE`, `alpha-pr-registry`

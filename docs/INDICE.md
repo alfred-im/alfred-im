@@ -9,6 +9,21 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 
 ---
 
+## Spec (SDD) — contratti capability
+
+**Metodo**: [specs/README.md](./specs/README.md) · **Catalogo**: [specs/index.md](./specs/index.md)
+
+| Spec | Stato | Contenuto |
+|------|-------|-----------|
+| [MSG-INBOX](./specs/capabilities/MSG-INBOX.spec.md) | `implemented` | Inbox on-read, `ChatPeer`, realtime |
+| [MSG-SEND](./specs/capabilities/MSG-SEND.spec.md) | `implemented` | Invio testo/GIF/voice/location, coda retry |
+| [AUTH-MULTI](./specs/capabilities/AUTH-MULTI.spec.md) | `implemented` | Multi-account, focus, overlay shell |
+| [contracts/rpc.md](./specs/contracts/rpc.md) | `implemented` | Firme RPC messaggistica |
+
+Target futuro caselle: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) (non ancora spec capability).
+
+---
+
 ## Documenti root
 
 - **[.cursor/rules/main.mdc](../.cursor/rules/main.mdc)** — Vincolo Cursor → `.cursor-rules.md`
@@ -78,4 +93,4 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-03 — revisione documentazione (sync PR #108–#153, rimozione doc legacy React)
+**Ultimo aggiornamento**: 2026-07-03 — SDD Phase 0+1 (MSG-INBOX, MSG-SEND, AUTH-MULTI) + revisione sync #108–#153

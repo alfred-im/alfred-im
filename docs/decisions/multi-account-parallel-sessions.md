@@ -1,5 +1,7 @@
 # Multi-account client Alpha
 
+> **Contratto capability**: [AUTH-MULTI.spec.md](../specs/capabilities/AUTH-MULTI.spec.md) — questo ADR resta vincolante; la spec consolidano il contratto operativo.
+
 **Stato**: 🟢 Vincolante (client Alpha)  
 **Data**: 2026-06-29 (PR #140) · **runtime aggiornato** 2026-07-02 (PR #152)  
 **Sostituisce**: modello client «un account attivo + token salvati + `setSession` al cambio» (PR #111–#131)

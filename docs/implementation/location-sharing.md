@@ -1,6 +1,8 @@
 # Condivisione posizione statica
 
-**Stato**: implementato — client Flutter + migrazioni Supabase (`20260702120000`, `20260702120100`).
+> **Superseded by spec**: [MSG-SEND.spec.md](../specs/capabilities/MSG-SEND.spec.md) — evidenza implementativa PR #153.
+
+**Stato**: implementato — client Flutter + migrazioni Supabase
 
 ## Contratto
 

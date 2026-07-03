@@ -13,6 +13,17 @@ Prima di **qualsiasi modifica persistente**, chiedere **sempre**: **«Vuoi che p
 
 Un turno con solo analisi o risposta è un task **completato con successo** se le regole sono state rispettate.
 
+### Spec-Driven Development (SDD)
+
+Per capability nuove o modifiche al contratto messaggistica/auth:
+
+1. Leggere o creare la spec in `docs/specs/capabilities/` (template: `docs/specs/_template.md`).
+2. Stato `approved` prima dell'implementazione; `implemented` dopo merge su `main`.
+3. Aggiornare `docs/specs/index.md` e colonna **Spec** in `docs/architecture/alpha-pr-registry.md`.
+4. Contratti RPC condivisi: `docs/specs/contracts/rpc.md` — allineare a `supabase/migrations/`.
+
+Catalogo: [docs/specs/index.md](docs/specs/index.md). Metodo: [docs/specs/README.md](docs/specs/README.md).
+
 ---
 
 ## Cursor Cloud specific instructions

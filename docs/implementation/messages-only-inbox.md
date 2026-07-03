@@ -1,5 +1,7 @@
 # Inbox solo messaggi (messages-only)
 
+> **Superseded by spec**: [MSG-INBOX.spec.md](../specs/capabilities/MSG-INBOX.spec.md) — evidenza implementativa PR #130; per contratto usare la spec.
+
 **Data**: 2026-06-27  
 **PR**: #130  
 **ADR**: [address-based-messaging.md](../decisions/address-based-messaging.md)  

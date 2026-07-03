@@ -1,6 +1,6 @@
 # Registro PR Alpha Flutter (main)
 
-**Ultimo aggiornamento**: 2026-07-03 (revisione sync #108–#153)  
+**Ultimo aggiornamento**: 2026-07-03 (SDD + revisione sync #108–#153)  
 **Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
 
 Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/alpha-full-stack.md` (e fix dedicato se applicabile).
@@ -11,45 +11,45 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 
 ## Tabella PR → feature → documentazione
 
-| PR | Titolo / commit | Cosa introduce | Dove documentato |
-|----|-----------------|----------------|------------------|
-| **#108** | UI chat Flutter | Layout conversazioni + chat, tema Alfred, deploy Pages | `CHANGELOG` [3.0.0-alpha], `PROJECT_MAP` |
-| **#109** | App completa senza bridge | Auth, contatti, chat realtime Supabase, profilo, schema dominio | `alpha-full-stack.md`, `PROJECT_MAP` |
-| **#110** | Passkeys bundle.js | Fix schermo bianco GitHub Pages | `alpha-full-stack.md` §6 |
-| **#111** | Multi-account switch (legacy) | `AccountStorageService`, `setSession` — **sostituito da #140** | storico `CHANGELOG` |
-| **#112** | `list_conversations` RPC | Inbox un round-trip — **sostituito da `list_inbox` #130** | migrazione `20260624220000` |
-| **#113** | Fix race auth inbox | `waitForSupabaseSessionReady`, `sessionReady` | `fixes/flutter-inbox-stability.md` |
-| **#114** | Fix provider listen | `ChangeNotifierProxyProvider` contatti/profilo | `fixes/flutter-inbox-stability.md` |
-| **#115** | GIF in chat | `content_type`, `media_url`, bucket `chat-media` | `alpha-full-stack.md` §2.8 |
-| **#118** | Login email reale | Auth GoTrue con email; username come identità pubblica | migrazioni auth `202606251*` |
-| **#119** | Review refactoring | Ciclo revisione codice client | — |
-| **#120** | Sidebar profilo | Layout card profilo in sidebar | `PROJECT_MAP` § layout |
-| **#122** | Spunte `delivered` | Promozione `delivered` su insert server | `server-as-reception.md`, migrazione `20260626100000` |
-| **#123** | Spec caselle (bozza) | Prima stesura `mailbox-inbox-outbox-spec.md` | `mailbox-inbox-outbox-spec.md` storico |
-| **#124** | ADR chat unificate | Nessuna distinzione interna/esterna | `no-internal-external-chat-distinction.md` |
-| **#125** | Aggancio al fondo | `AnchoredMessageList`, scroll ancorato | `conversation-bottom-anchor.md`, `alpha-full-stack.md` §2.10 |
-| **#126** | Note vocali | WebM/Opus, `OutboundMessageQueue` | `voice-notes.md`, `alpha-full-stack.md` §2.11 |
-| **#127** | Gate `flutter analyze` | `client/scripts/verify.sh` | `.cursor-rules.md`, `client/scripts/test/README.md` |
-| **#130** | Inbox solo messaggi | Drop `inbox_threads`; `ChatPeer`; RPC peer-based | `messages-only-inbox.md`, `address-based-messaging.md` |
-| **#131** | Sidebar logout | Logout in card profilo | `PROJECT_MAP` § layout |
-| **#132** | Ricerca on-demand inbox | Barra ricerca toggle + `TapRegion` | `inbox-search-toggle.md` |
-| **#133** | Sync doc post-merge | Allineamento doc dopo #126–#132 | `CHANGELOG`, `INDICE` |
-| **#134** | Profilo arricchito | Avatar, pronomi, `ProfileSummary`, inbox peer fields | `PROJECT_MAP` § profilo, migrazioni `202606280*` |
-| **#135** | `AGENTS.md` | Istruzioni Cloud Agent / toolchain | `AGENTS.md` |
-| **#136** | Spec caselle (aggiorn.) | Target mailbox — direzione confermata | `mailbox-inbox-outbox-spec.md` |
-| **#139** | Redirect email confirm | `AuthRedirectUrl` → GitHub Pages | `PROJECT_MAP` § redirect auth |
-| **#140** | Multi-account UX | `AccountManager`, overlay shell, focus UI | `multi-account-parallel-sessions.md`, `auth-overlay-shell.md` |
-| **#141** | Fix add-account (parziale) | `_sessionFromAuthResponse` — **completato #142** | `auth-bootstrap-gotrue-revoke.md` |
-| **#142** | Auth bootstrap | No `signOut` post-login; `EphemeralPkceStorage` | `auth-bootstrap-gotrue-revoke.md`, `AGENT_DEBUG_ACCOUNTS.md` |
-| **#143** | Multi-account fix | Logout locale; view per account; test mock | `multi-account-chat-persistence-pr143.md` |
-| **#145** | Pulizia doc | Merge documentazione legacy | `INDICE` |
-| **#146** | Design persistenza | Doc `multi-account-persistence-redesign.md` | implementazione #147 |
-| **#147** | Persistenza dichiarativa | `persistOpenAccount`; manifest = verità F5 | `multi-account-persistence-redesign.md` |
-| **#148** | Fix typo discovery | «principio cardine» in doc | `project-revolution-discovery.md` |
-| **#149** | Regole DRY/KISS | Sezione in `.cursor-rules.md` | `.cursor-rules.md` |
-| **#150** | Regole conferma agente | Conferma scrittura solo dopo domanda esplicita | `.cursor-rules.md` |
-| **#152** | Una GoTrue attiva | Fix BroadcastChannel web; `setFocus` swap | `multi-account-single-active-gotrue-pr152.md` |
-| **#153** | Posizione statica | `content_type=location`; mappa OSM in bolla | `location-sharing.md`, `alpha-full-stack.md` §2.13 |
+| PR | Titolo / commit | Cosa introduce | Spec | Dove documentato |
+|----|-----------------|----------------|------|------------------|
+| **#108** | UI chat Flutter | Layout conversazioni + chat, tema Alfred, deploy Pages | — | `CHANGELOG` [3.0.0-alpha], `PROJECT_MAP` |
+| **#109** | App completa senza bridge | Auth, contatti, chat realtime Supabase, profilo, schema dominio | — | `alpha-full-stack.md`, `PROJECT_MAP` |
+| **#110** | Passkeys bundle.js | Fix schermo bianco GitHub Pages | — | `alpha-full-stack.md` §6 |
+| **#111** | Multi-account switch (legacy) | `AccountStorageService`, `setSession` — **sostituito da #140** | — | storico `CHANGELOG` |
+| **#112** | `list_conversations` RPC | Inbox un round-trip — **sostituito da `list_inbox` #130** | — | migrazione `20260624220000` |
+| **#113** | Fix race auth inbox | `waitForSupabaseSessionReady`, `sessionReady` | — | `fixes/flutter-inbox-stability.md` |
+| **#114** | Fix provider listen | `ChangeNotifierProxyProvider` contatti/profilo | — | `fixes/flutter-inbox-stability.md` |
+| **#115** | GIF in chat | `content_type`, `media_url`, bucket `chat-media` | MSG-SEND | `alpha-full-stack.md` §2.8 |
+| **#118** | Login email reale | Auth GoTrue con email; username come identità pubblica | — | migrazioni auth `202606251*` |
+| **#119** | Review refactoring | Ciclo revisione codice client | — | — |
+| **#120** | Sidebar profilo | Layout card profilo in sidebar | — | `PROJECT_MAP` § layout |
+| **#122** | Spunte `delivered` | Promozione `delivered` su insert server | MSG-SEND | `server-as-reception.md`, migrazione `20260626100000` |
+| **#123** | Spec caselle (bozza) | Prima stesura `mailbox-inbox-outbox-spec.md` | (target) | `mailbox-inbox-outbox-spec.md` storico |
+| **#124** | ADR chat unificate | Nessuna distinzione interna/esterna | MSG-INBOX | `no-internal-external-chat-distinction.md` |
+| **#125** | Aggancio al fondo | `AnchoredMessageList`, scroll ancorato | — | `conversation-bottom-anchor.md`, `alpha-full-stack.md` §2.10 |
+| **#126** | Note vocali | WebM/Opus, `OutboundMessageQueue` | MSG-SEND | `voice-notes.md`, `alpha-full-stack.md` §2.11 |
+| **#127** | Gate `flutter analyze` | `client/scripts/verify.sh` | — | `.cursor-rules.md`, `client/scripts/test/README.md` |
+| **#130** | Inbox solo messaggi | Drop `inbox_threads`; `ChatPeer`; RPC peer-based | MSG-INBOX | `messages-only-inbox.md`, `address-based-messaging.md` |
+| **#131** | Sidebar logout | Logout in card profilo | AUTH-MULTI | `PROJECT_MAP` § layout |
+| **#132** | Ricerca on-demand inbox | Barra ricerca toggle + `TapRegion` | — | `inbox-search-toggle.md` |
+| **#133** | Sync doc post-merge | Allineamento doc dopo #126–#132 | — | `CHANGELOG`, `INDICE` |
+| **#134** | Profilo arricchito | Avatar, pronomi, `ProfileSummary`, inbox peer fields | MSG-INBOX | `PROJECT_MAP` § profilo, migrazioni `202606280*` |
+| **#135** | `AGENTS.md` | Istruzioni Cloud Agent / toolchain | — | `AGENTS.md` |
+| **#136** | Spec caselle (aggiorn.) | Target mailbox — direzione confermata | (target) | `mailbox-inbox-outbox-spec.md` |
+| **#139** | Redirect email confirm | `AuthRedirectUrl` → GitHub Pages | AUTH-MULTI | `PROJECT_MAP` § redirect auth |
+| **#140** | Multi-account UX | `AccountManager`, overlay shell, focus UI | AUTH-MULTI | `multi-account-parallel-sessions.md`, `auth-overlay-shell.md` |
+| **#141** | Fix add-account (parziale) | `_sessionFromAuthResponse` — **completato #142** | AUTH-MULTI | `auth-bootstrap-gotrue-revoke.md` |
+| **#142** | Auth bootstrap | No `signOut` post-login; `EphemeralPkceStorage` | AUTH-MULTI | `auth-bootstrap-gotrue-revoke.md`, `AGENT_DEBUG_ACCOUNTS.md` |
+| **#143** | Multi-account fix | Logout locale; view per account; test mock | AUTH-MULTI | `multi-account-chat-persistence-pr143.md` |
+| **#145** | Pulizia doc | Merge documentazione legacy | — | `INDICE` |
+| **#146** | Design persistenza | Doc `multi-account-persistence-redesign.md` | AUTH-MULTI | implementazione #147 |
+| **#147** | Persistenza dichiarativa | `persistOpenAccount`; manifest = verità F5 | AUTH-MULTI | `multi-account-persistence-redesign.md` |
+| **#148** | Fix typo discovery | «principio cardine» in doc | — | `project-revolution-discovery.md` |
+| **#149** | Regole DRY/KISS | Sezione in `.cursor-rules.md` | — | `.cursor-rules.md` |
+| **#150** | Regole conferma agente | Conferma scrittura solo dopo domanda esplicita | — | `.cursor-rules.md` |
+| **#152** | Una GoTrue attiva | Fix BroadcastChannel web; `setFocus` swap | AUTH-MULTI | `multi-account-single-active-gotrue-pr152.md` |
+| **#153** | Posizione statica | `content_type=location`; mappa OSM in bolla | MSG-SEND | `location-sharing.md`, `alpha-full-stack.md` §2.13 |
 
 ---
 
@@ -59,11 +59,12 @@ Dopo ogni merge su `main`:
 
 1. **`PROJECT_MAP.md`** — stato corrente, caratteristiche
 2. **`CHANGELOG.md`** — voce in `[Unreleased]` con numero PR
-3. **`docs/architecture/alpha-full-stack.md`** — sezione client o piattaforma interessata
-4. **`docs/INDICE.md`** — data ultimo aggiornamento
-5. **`README.md`** / **`client/README.md`** — se cambia stato dev
-6. **Fix dedicato** (`docs/fixes/`) — solo per bug/regressioni non ovvie
-7. **Questo registro** — nuova riga in tabella
+3. **`docs/specs/`** — spec capability (`approved` → `implemented`) se cambia contratto
+4. **`docs/architecture/alpha-full-stack.md`** — sezione client o piattaforma interessata
+5. **`docs/INDICE.md`** — data ultimo aggiornamento
+6. **`README.md`** / **`client/README.md`** — se cambia stato dev
+7. **Fix dedicato** (`docs/fixes/`) — solo per bug/regressioni non ovvie
+8. **Questo registro** — nuova riga in tabella (colonna Spec)
 
 ---
 

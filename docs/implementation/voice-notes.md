@@ -1,6 +1,8 @@
 # Voice notes (WebM/Opus)
 
-**Stato**: implementato in PR **#126** (mergiata su `main`) — client Flutter + migrazioni Supabase applicate al cloud.
+> **Superseded by spec**: [MSG-SEND.spec.md](../specs/capabilities/MSG-SEND.spec.md) — evidenza implementativa PR #126.
+
+**Stato**: implementato in PR **#126**
 
 ## Contratto canonico
 

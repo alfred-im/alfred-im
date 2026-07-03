@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-03 (condivisione posizione statica #153)  
+**Ultimo aggiornamento**: 2026-07-03 (SDD specs + posizione statica #153)  
 **Versione repository**: 3.1.0-alpha (client Flutter + piattaforma Supabase; bridge stub)
 
 ---
@@ -32,6 +32,7 @@
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
 | **PR Alpha** | **#108–#153** su `main` — registro `docs/architecture/alpha-pr-registry.md` |
+| **Spec (SDD)** | Contratti capability: `docs/specs/index.md` — MSG-INBOX, MSG-SEND, AUTH-MULTI |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 

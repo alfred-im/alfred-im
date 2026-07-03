@@ -1,6 +1,8 @@
 # Implementazione client multi-account
 
-**Data**: 2026-06-29 (PR #140) · **aggiornato** 2026-07-02 (PR #147 persistenza, PR #152 single-active GoTrue)  
+> **Superseded by spec**: [AUTH-MULTI.spec.md](../specs/capabilities/AUTH-MULTI.spec.md) — guida implementativa dettagliata; per contratto usare la spec.
+
+**Data**: 2026-06-29 (PR #140)  
 **ADR**: [multi-account-parallel-sessions.md](../decisions/multi-account-parallel-sessions.md)  
 **PR**: #140, #147, #152
 

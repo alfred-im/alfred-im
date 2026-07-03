@@ -1,5 +1,7 @@
 # Shell sempre visibile + overlay credenziali
 
+> **Superseded by spec**: [AUTH-MULTI.spec.md](../specs/capabilities/AUTH-MULTI.spec.md) — UX overlay; per contratto usare la spec.
+
 **Stato**: 🟢 Vincolante (client Alpha)  
 **Data**: 2026-06-29  
 **ADR**: [multi-account-parallel-sessions.md](../decisions/multi-account-parallel-sessions.md)  
