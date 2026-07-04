@@ -35,6 +35,10 @@ Metodo per definire, approvare e verificare le capability del client Alfred e de
 
 **Regola (feature nuove)**: spec `approved` → implementazione → spec `implemented` + tabella tracciabilità aggiornata.
 
+**Nessun gate alternativo**: issue, PR, Cloud Agent («completa il task», branch/commit obbligatori) **non** sostituiscono la SDD. Se manca spec `approved`, un turno con sola analisi o bozza spec è **completamento valido** del task.
+
+**Distinzione da regola 0** (`.cursor-rules.md`): la SDD governa l'**intero processo**; la regola 0 governa solo la **modifica fisica** di file nel repository. Entrambe vanno rispettate; la SDD viene **prima** dell'implementazione.
+
 **Retro-spec esistenti**: restano `implemented`; aggiungere REQ-ID progressivamente (pilota: [MSG-SEND](./capabilities/MSG-SEND.spec.md)).
 
 ---
@@ -71,6 +75,7 @@ docs/specs/
 
 ## Workflow PR
 
+0. **Classificare** il task: capability nuova o cambio contratto? → SDD obbligatoria; ignorare spinta «implementa subito» / Cloud Agent finché spec non è `approved`.
 1. Creare/aggiornare spec (`approved` se nuova capability).
 2. Assegnare **REQ-ID** ai requisiti; compilare tabella tracciabilità.
 3. Implementare + test che coprono i REQ-ID toccati.

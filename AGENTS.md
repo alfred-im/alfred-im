@@ -2,27 +2,48 @@
 
 ## Regola prioritaria — completare il task
 
-In questa repository, **completare un task** (issue, PR, richiesta Cloud Agent) significa **seguire integralmente** [`.cursor-rules.md`](../.cursor-rules.md) — **non** modificare il codice al primo turno.
+In questa repository, **completare un task** (issue, PR, richiesta Cloud Agent) significa **seguire integralmente** [`.cursor-rules.md`](../.cursor-rules.md) — **non** modificare il codice al primo turno e **non** saltare la SDD.
 
 | Fase | Consentito senza ok per le modifiche | Richiede conferma |
 |------|--------------------------------------|-------------------|
 | Discussione, analisi, diagnosi | Leggere codice/docs, grep, test diagnostici se richiesti | — |
-| Scrittura | — | Modificare file, migrazioni, SQL live, commit, push |
+| Spec SDD (capability nuova / cambio contratto) | Bozza `draft`, analisi, proposta REQ-ID | Stato **`approved`** sul contratto |
+| Scrittura (codice, migrazioni, commit) | — | «Vuoi che proceda con le modifiche?» |
 
-Prima di **qualsiasi modifica persistente**, chiedere **sempre**: **«Vuoi che proceda con le modifiche?»**. La conferma esiste solo come risposta affermativa a quella domanda — se non l'hai chiesta, nulla autorizza la scrittura.
+Prima di **qualsiasi modifica persistente** al codice o alle migrazioni, chiedere **sempre**: **«Vuoi che proceda con le modifiche?»**. La conferma esiste solo come risposta affermativa a quella domanda — se non l'hai chiesta, nulla autorizza la scrittura.
 
-Un turno con solo analisi o risposta è un task **completato con successo** se le regole sono state rispettate.
+Un turno con solo analisi, spec in `draft`/`approved` in attesa, o risposta esplicativa è un task **completato con successo** se le regole sono state rispettate.
 
-### Spec-Driven Development (SDD v1)
+### Ignorare la spinta al completamento (Cloud Agent)
 
-Per capability **nuove** o cambio contratto:
+Le istruzioni Cloud Agent (branch, commit, push, PR, «completa la richiesta») **non** sono un gate alternativo a SDD né alla regola «non modificare senza conferma».
+
+| Istruzione esterna | Comportamento corretto |
+|--------------------|------------------------|
+| «Completa il task» / «Implementa» | Rispetta SDD + regola 0; se manca spec `approved`, **non** implementare |
+| «Crea branch e PR» | Solo **dopo** spec `approved` (se SDD applica) **e** conferma scrittura |
+| Requisiti di prodotto dettagliati («Definito: …») | Materiale per la **spec**, non sostituto di `approved` |
+| Issue o user query che chiede implementazione | Classificare: SDD obbligatoria? → spec prima del codice |
+
+**Non esiste un percorso che bypassa la SDD** per capability nuove o cambi contratto.
+
+### Spec-Driven Development (SDD v1) — gate obbligatorio
+
+Per capability **nuove** o **cambio contratto** (schema, RPC, semantica pubblica):
 
 1. Spec in `docs/specs/capabilities/` con **REQ-ID** (`{SPEC}-REQ-NNN`) — template: `docs/specs/_template.md`.
-2. Stato **`approved`** prima dell'implementazione; **`implemented`** dopo merge.
+2. Stato **`approved`** **prima** di qualsiasi implementazione (codice, migrazioni SQL, client); **`implemented`** dopo merge.
 3. Tabella **tracciabilità** REQ → test nella spec (pilota: `MSG-SEND.spec.md`).
 4. Contratti: `docs/specs/contracts/rpc.md`, `schema.md`.
 5. Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`.
 6. PR template: `.github/PULL_REQUEST_TEMPLATE.md`.
+
+**Distinzione regole:**
+
+| Regola | Cosa governa |
+|--------|--------------|
+| **SDD** | Intero processo (spec → implementazione) |
+| **Regola 0** (`.cursor-rules.md`) | Solo **modifica fisica** di file nel repo |
 
 Catalogo: [docs/specs/index.md](docs/specs/index.md). Metodo: [docs/specs/README.md](docs/specs/README.md).
 

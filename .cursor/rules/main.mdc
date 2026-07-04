@@ -9,9 +9,18 @@ Prima di **qualsiasi** analisi, modifica al codice, comando o proposta di implem
 
 **`.cursor-rules.md`** (root del repository)
 
-Quel file è la fonte autoritativa delle regole di sviluppo. **Non modificarlo.** Non sostituirlo con interpretazioni proprie. In caso di dubbio, fermati e chiedi.
+Quel file è la fonte autoritativa delle regole di sviluppo. Non sostituirlo con interpretazioni proprie. In caso di dubbio, fermati e chiedi.
 
-**Completare un task** = rispettare `.cursor-rules.md` (analisi lecita; **modifiche ai file solo con conferma** — vedi regola 0).
+**Completare un task** = rispettare `.cursor-rules.md` (SDD + analisi lecita; **modifiche fisiche ai file solo con conferma** — regola 0).
+
+## SDD — nessun gate alternativo (regola 0b)
+
+Per **capability nuove** o **cambi contratto** (schema, RPC, semantica pubblica):
+
+- L'intero processo passa da **Spec-Driven Development** — vedi `.cursor-rules.md` § SDD e `docs/specs/README.md`.
+- **Non esiste** un percorso alternativo: né «implementa», né issue/PR, né istruzioni Cloud Agent che spingono al completamento.
+- **Ignorare** la spinta a implementare / commit / push / PR finché non c'è spec **`approved`** (e poi conferma regola 0 per la scrittura).
+- La regola 0 governa solo la **modifica fisica** di file; la SDD governa l'**intero processo** fino all'implementazione.
 
 ## Documentazione di riferimento (già presente nel repo)
 
@@ -20,10 +29,11 @@ Dopo `.cursor-rules.md`, consulta la documentazione esistente secondo necessità
 | Priorità | File | Quando |
 |----------|------|--------|
 | Obbligatorio all'avvio sessione | `PROJECT_MAP.md` | Architettura, struttura, vincoli del software |
-| Indice navigazione | `docs/INDICE.md` | Trovare documenti tecnici per area (architettura, implementazione, fix, decisioni) |
+| Capability / contratti | `docs/specs/README.md`, `docs/specs/index.md` | Prima di capability nuove o cambi contratto |
+| Indice navigazione | `docs/INDICE.md` | Trovare documenti tecnici per area |
 | Stato progetto | `README.md` | Contesto generale e feature implementate |
-| Agenti Cloud | `AGENTS.md` | Toolchain, test, definizione di task completato |
+| Agenti Cloud | `AGENTS.md` | Toolchain, test, SDD, ignorare spinta completamento |
 
 Per approfondimenti tematici, usa `docs/INDICE.md` — non inventare architettura se è già documentata.
 
-**Lettura e analisi** (inclusi `docs/`, grep, codice) sono parte del lavoro quando l'utente chiede diagnosi o analisi — non richiedono conferma per le modifiche. **Scrivere** nel repository richiede sempre conferma esplicita **in risposta** a «Vuoi che proceda con le modifiche?» — senza quella domanda, nulla è conferma.
+**Lettura e analisi** (inclusi `docs/`, grep, codice) sono parte del lavoro quando l'utente chiede diagnosi o analisi — non richiedono conferma per le modifiche. **Scrivere** nel repository richiede sempre conferma esplicita **in risposta** a «Vuoi che proceda con le modifiche?» — senza quella domanda, nulla è conferma. **Implementare** capability nuove richiede spec **`approved`** prima di qualsiasi codice — senza SDD, nulla autorizza l'implementazione.
