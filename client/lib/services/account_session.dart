@@ -19,6 +19,7 @@ import 'message_media_service.dart';
 import 'message_service.dart';
 import 'profile_avatar_service.dart';
 import 'profile_service.dart';
+import 'reception_allowlist_service.dart';
 
 /// Sessione Supabase dedicata a un account messaggistica aperto.
 class AccountSession {
@@ -29,6 +30,7 @@ class AccountSession {
     required this.messageService,
     required this.profileService,
     required this.contactService,
+    required this.receptionAllowlistService,
     required this.profileAvatarService,
     required this.messageMediaService,
     required this.composeService,
@@ -42,6 +44,7 @@ class AccountSession {
   final MessageService messageService;
   final ProfileService profileService;
   final ContactService contactService;
+  final ReceptionAllowlistService receptionAllowlistService;
   final ProfileAvatarService profileAvatarService;
   final MessageMediaService messageMediaService;
   final ComposeService composeService;
@@ -307,6 +310,7 @@ class AccountSession {
       messageService: MessageService(client),
       profileService: profileService,
       contactService: ContactService(client),
+      receptionAllowlistService: ReceptionAllowlistService(client),
       profileAvatarService: ProfileAvatarService(client),
       messageMediaService: MessageMediaService(client),
       composeService: ComposeService(profileService: profileService),
@@ -437,6 +441,7 @@ class AccountSession {
       messageService: MessageService(client),
       profileService: profileService,
       contactService: ContactService(client),
+      receptionAllowlistService: ReceptionAllowlistService(client),
       profileAvatarService: ProfileAvatarService(client),
       messageMediaService: MessageMediaService(client),
       composeService: ComposeService(profileService: profileService),

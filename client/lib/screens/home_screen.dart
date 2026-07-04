@@ -12,6 +12,7 @@ import '../widgets/auth_overlay.dart';
 import '../widgets/chat_panel.dart';
 import '../widgets/no_account_placeholder.dart';
 import '../widgets/inbox_panel.dart';
+import 'allowed_people_screen.dart';
 import 'contacts_screen.dart';
 import 'profile_screen.dart';
 
@@ -31,6 +32,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openDrawer() => _scaffoldKey.currentState?.openDrawer();
 
   void _closeDrawer() => _scaffoldKey.currentState?.closeDrawer();
+
+  Future<void> _openAllowedPeople() async {
+    _closeDrawer();
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => const AllowedPeopleScreen()),
+    );
+  }
 
   Future<void> _openContacts() async {
     _closeDrawer();
@@ -119,6 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onSearchChanged: inbox.setSearchQuery,
       onDrawerTap: showDrawerButton ? _openDrawer : null,
       onContactsTap: _openContacts,
+      onAllowedPeopleTap: _openAllowedPeople,
       onNewMessage: _startMessageFromAddress,
       showBackButton: showBackButton,
       onBack: onBack,

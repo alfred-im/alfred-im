@@ -45,6 +45,7 @@
 - **Auth**: email + password (GoTrue); **username** obbligatorio in registrazione — identità IM pubblica; email non in rubrica/ricerca
 - **Multi-account**: manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore connessione — ADR `docs/decisions/multi-account-parallel-sessions.md` · fix web PR #152
 - **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — spec `docs/specs/capabilities/CONTACTS.spec.md` · ADR `docs/decisions/address-based-messaging.md`
+- **Ricezione filtrata**: allow list personale `reception_allowlist` — sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ singola) — spec `docs/specs/capabilities/RECEPTION-ALLOWLIST.spec.md`
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); archivio **per owner** in `messages` (`owner_id`, `author_id`, `peer_profile_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca conversazioni on-demand (PR #132)
 - **GIF / voice / location**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client

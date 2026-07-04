@@ -4,10 +4,10 @@
 |-------|--------|
 | **Spec ID** | `RECEPTION-ALLOWLIST` |
 | **Layer** | capability |
-| **Status** | `approved` |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-04 |
 | **ADR** | [server-as-reception.md](../../decisions/server-as-reception.md), [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md), [bridge-stateless.md](../../decisions/bridge-stateless.md) |
-| **PR** | — |
+| **PR** | #161 |
 | **Correlata** | [MAILBOX-SEND](./MAILBOX-SEND.spec.md), [MAILBOX-READ](./MAILBOX-READ.spec.md), [CONTACTS](./CONTACTS.spec.md), [AUTH-MULTI](./AUTH-MULTI.spec.md) |
 
 Documento per AI — allow list personale di ricezione: chi non è in lista non ha messaggi materializzati nel mio archivio; rifiuto silenzioso stile blocco XMPP.
@@ -139,12 +139,12 @@ Stesso gate nel consumer bridge **prima** di INSERT copia ingresso su archivio A
 
 | REQ-ID | Verifica |
 |--------|----------|
-| RECEPTION-ALLOWLIST-REQ-001–004 | `supabase/tests/reception_allowlist_schema_smoke.sql` (da creare) |
-| RECEPTION-ALLOWLIST-REQ-005–010 | `supabase/tests/reception_allowlist_gate_smoke.sql` (da creare) |
-| RECEPTION-ALLOWLIST-REQ-007 | stesso gate smoke — lista vuota |
-| RECEPTION-ALLOWLIST-REQ-011–012 | gate smoke — rimozione / aggiunta senza retro-consegna |
-| RECEPTION-ALLOWLIST-REQ-015–017 | `client/test/reception_allowlist_controller_test.dart` (da creare) |
-| RECEPTION-ALLOWLIST-REQ-005–009 | `bash scripts/test.sh integration` (scenario allow / deny) |
+| RECEPTION-ALLOWLIST-REQ-001–004 | `supabase/tests/reception_allowlist_schema_smoke.sql` |
+| RECEPTION-ALLOWLIST-REQ-005–010 | `supabase/tests/reception_allowlist_gate_smoke.sql` |
+| RECEPTION-ALLOWLIST-REQ-007 | `reception_allowlist_gate_smoke.sql` — lista vuota |
+| RECEPTION-ALLOWLIST-REQ-011–012 | `reception_allowlist_gate_smoke.sql` |
+| RECEPTION-ALLOWLIST-REQ-015–017 | `client/test/unit/reception_allowlist_controller_test.dart` |
+| RECEPTION-ALLOWLIST-REQ-005–009 | `bash scripts/test.sh integration` |
 | MAILBOX-SEND-REQ-004 (aggiornato) | `mailbox_delivery_smoke.sql` + gate smoke |
 
 Gate implementazione: `check-spec-sync.sh` + `verify.sh` + smoke SQL + `integration`.

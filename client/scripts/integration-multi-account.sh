@@ -89,6 +89,15 @@ A2_PEER_COUNT="$(rpc "$A2_JWT" list_peer_messages "$(peer_body "$AGENT1_ID")" | 
 echo "    messages=$A2_PEER_COUNT"
 
 if [[ "$A1_PEER_COUNT" -lt 1 || "$A2_PEER_COUNT" -lt 1 ]]; then
+  echo "==> reception_allowlist: agent2 consente agent1"
+  ALLOW_BODY="$(python3 -c "import json; print(json.dumps({'owner_id':'${AGENT2_ID}','allowed_profile_id':'${AGENT1_ID}'}))")"
+  curl -sf -m 30 -X POST "${SUPABASE_URL}/rest/v1/reception_allowlist" \
+    -H "apikey: ${ANON_KEY}" \
+    -H "Authorization: Bearer ${A2_JWT}" \
+    -H "Content-Type: application/json" \
+    -H "Prefer: resolution=ignore-duplicates" \
+    -d "$ALLOW_BODY" > /dev/null || true
+
   echo "==> mailbox: agent1 send_message_to_profile → agent2"
   SEND_BODY="$(python3 -c "import json,uuid; print(json.dumps({'p_recipient_profile_id':'${AGENT2_ID}','p_body':'integration mailbox','p_client_message_id':str(uuid.uuid4()),'p_content_type':'text'}))")"
   SEND_JSON="$(rpc "$A1_JWT" send_message_to_profile "$SEND_BODY")"

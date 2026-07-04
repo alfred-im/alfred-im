@@ -16,6 +16,10 @@ BEGIN
     true
   );
 
+  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  VALUES (v_recipient, v_sender)
+  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
+
   SELECT * INTO v_msg FROM public.send_message_to_profile(
     v_recipient,
     'smoke peer-only inbox',

@@ -18,6 +18,10 @@ BEGIN
     true
   );
 
+  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  VALUES (v_agent2, v_agent1)
+  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
+
   PERFORM public.send_message_to_profile(
     v_agent2,
     'inbox smoke',

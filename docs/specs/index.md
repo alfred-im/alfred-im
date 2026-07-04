@@ -28,6 +28,7 @@ Indice capability con stato e tracciabilità PR. Contratti: [rpc.md](./contracts
 | **PROFILE** | Profilo utente (avatar, pronomi) | `implemented` | #118, #134 | [PROFILE.spec.md](./capabilities/PROFILE.spec.md) |
 | **CONTACTS** | Rubrica personale | `implemented` | #109 | [CONTACTS.spec.md](./capabilities/CONTACTS.spec.md) |
 | **AUTH-MULTI** | Multi-account client | `implemented` | #140, #147, #152 | [AUTH-MULTI.spec.md](./capabilities/AUTH-MULTI.spec.md) |
+| **RECEPTION-ALLOWLIST** | Filtro ricezione personale (allow list) | `implemented` | #161 | [RECEPTION-ALLOWLIST.spec.md](./capabilities/RECEPTION-ALLOWLIST.spec.md) |
 
 ---
 
@@ -44,14 +45,6 @@ Indice capability con stato e tracciabilità PR. Contratti: [rpc.md](./contracts
 | `PROJECT_MAP.md` § profilo | PROFILE |
 | `architecture/mailbox-inbox-outbox-spec.md` | MAILBOX-CORE, MAILBOX-SEND, MAILBOX-INBOX, MAILBOX-READ |
 | Ricezione filtrata / blocco silenzioso | RECEPTION-ALLOWLIST |
-
----
-
-## In approvazione / implementazione
-
-| Spec ID | Titolo | Status | File |
-|---------|--------|--------|------|
-| **RECEPTION-ALLOWLIST** | Filtro ricezione personale (allow list) | `approved` | [RECEPTION-ALLOWLIST.spec.md](./capabilities/RECEPTION-ALLOWLIST.spec.md) |
 
 ---
 

@@ -1,8 +1,8 @@
 # Contratto RPC — messaggistica Alpha
 
 **Ultima revisione**: 2026-07-04  
-**Status**: `implemented` (allineato a `main`, migrazioni fino a `20260704120000`)  
-**Spec**: [MAILBOX-SEND](../capabilities/MAILBOX-SEND.spec.md), [MAILBOX-INBOX](../capabilities/MAILBOX-INBOX.spec.md), [MAILBOX-READ](../capabilities/MAILBOX-READ.spec.md), [CONTACTS](../capabilities/CONTACTS.spec.md), [PROFILE](../capabilities/PROFILE.spec.md), [RECEPTION-ALLOWLIST](../capabilities/RECEPTION-ALLOWLIST.spec.md) (delta `approved`)
+**Status**: `implemented` (allineato a `main`, migrazioni fino a `20260704130000`)  
+**Spec**: [MAILBOX-SEND](../capabilities/MAILBOX-SEND.spec.md), [MAILBOX-INBOX](../capabilities/MAILBOX-INBOX.spec.md), [MAILBOX-READ](../capabilities/MAILBOX-READ.spec.md), [CONTACTS](../capabilities/CONTACTS.spec.md), [PROFILE](../capabilities/PROFILE.spec.md), [RECEPTION-ALLOWLIST](../capabilities/RECEPTION-ALLOWLIST.spec.md)
 
 Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
 
@@ -55,7 +55,7 @@ Idempotenza: stesso `p_client_message_id` → stessa riga mittente (no duplicati
 
 **Helper** (da implementare): `is_sender_allowed_for_reception(owner_id, sender_profile_id) → boolean`.
 
-**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox); **pending** allow list gate.
+**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate).
 
 ---
 
@@ -157,6 +157,8 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 | `supabase/tests/mailbox_inbox_smoke.sql` | `list_inbox` + unread |
 | `supabase/tests/mailbox_send_media_smoke.sql` | Validazione `gif`/`location` |
 | `supabase/tests/send_message_to_profile_smoke.sql` | Invio a profilo non in rubrica |
+| `supabase/tests/reception_allowlist_schema_smoke.sql` | Tabella + helper gate |
+| `supabase/tests/reception_allowlist_gate_smoke.sql` | Rifiuto silenzioso vs recapito allowed |
 
 Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/test.sh e2e-multi`
 
@@ -172,7 +174,7 @@ Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/te
 | `mark_peer_read` | `InboxService.markPeerRead` |
 | `find_profile_by_username` | `ComposeService` / profile lookup |
 | `search_profiles` | `ContactService.searchProfiles` |
-| `reception_allowlist` (PostgREST) | `ReceptionAllowlistService` (da implementare) |
+| `reception_allowlist` (PostgREST) | `ReceptionAllowlistService` |
 
 ---
 

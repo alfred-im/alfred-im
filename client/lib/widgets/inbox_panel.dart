@@ -14,6 +14,7 @@ class InboxPanel extends StatefulWidget {
     required this.onSelected,
     required this.onSearchChanged,
     required this.onContactsTap,
+    this.onAllowedPeopleTap,
     this.onNewMessage,
     this.onDrawerTap,
     this.error,
@@ -30,6 +31,7 @@ class InboxPanel extends StatefulWidget {
   final ValueChanged<String> onSearchChanged;
   final VoidCallback? onDrawerTap;
   final VoidCallback onContactsTap;
+  final VoidCallback? onAllowedPeopleTap;
   final Future<void> Function(String address)? onNewMessage;
   final String? error;
   final VoidCallback? onRetry;
@@ -129,6 +131,7 @@ class _InboxPanelState extends State<InboxPanel> {
                   onBack: widget.onBack,
                   onDrawerTap: widget.onDrawerTap,
                   onContactsTap: widget.onContactsTap,
+                  onAllowedPeopleTap: widget.onAllowedPeopleTap,
                   searchLens: _searchLensButton(
                     iconColor: AlfredColors.textOnDark,
                   ),
@@ -149,6 +152,12 @@ class _InboxPanelState extends State<InboxPanel> {
                         ),
                       ),
                       _searchLensButton(),
+                      if (widget.onAllowedPeopleTap != null)
+                        IconButton(
+                          onPressed: widget.onAllowedPeopleTap,
+                          icon: const Icon(Icons.verified_user_outlined),
+                          tooltip: 'Persone consentite',
+                        ),
                       IconButton(
                         onPressed: widget.onContactsTap,
                         icon: const Icon(Icons.people_outline),
@@ -304,6 +313,7 @@ class _Header extends StatelessWidget {
     this.onBack,
     this.onDrawerTap,
     required this.onContactsTap,
+    this.onAllowedPeopleTap,
     required this.searchLens,
   });
 
@@ -311,6 +321,7 @@ class _Header extends StatelessWidget {
   final VoidCallback? onBack;
   final VoidCallback? onDrawerTap;
   final VoidCallback onContactsTap;
+  final VoidCallback? onAllowedPeopleTap;
   final Widget searchLens;
 
   @override
@@ -344,6 +355,12 @@ class _Header extends StatelessWidget {
               ),
             ),
             searchLens,
+            if (onAllowedPeopleTap != null)
+              IconButton(
+                onPressed: onAllowedPeopleTap,
+                icon: const Icon(Icons.verified_user_outlined, color: AlfredColors.textOnDark),
+                tooltip: 'Persone consentite',
+              ),
             IconButton(
               onPressed: onContactsTap,
               icon: const Icon(Icons.people_outline, color: AlfredColors.textOnDark),

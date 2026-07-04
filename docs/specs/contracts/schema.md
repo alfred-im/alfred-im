@@ -1,7 +1,7 @@
 # Contratto schema — dominio Alpha (mailbox)
 
 **Ultima revisione**: 2026-07-04  
-**Status**: `implemented` + delta `approved` [RECEPTION-ALLOWLIST](../capabilities/RECEPTION-ALLOWLIST.spec.md) (migrazione da applicare)  
+**Status**: `implemented` (allineato a `main`, migrazioni fino a `20260704130000`)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle capability spec. Per RPC: [rpc.md](./rpc.md). Per capability: [index.md](../index.md).
@@ -75,7 +75,7 @@ storage: chat-media, avatars
 
 ---
 
-## `reception_allowlist` (delta `approved`)
+## `reception_allowlist`
 
 | Colonna | Tipo | Note |
 |---------|------|------|
