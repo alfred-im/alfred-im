@@ -46,7 +46,7 @@ Documento per AI — **leggere prima di task multi-account o messaggistica**.
 | Account debug | **Solo** `alfredagent1` / `alfredagent2` — `docs/AGENT_DEBUG_ACCOUNTS.md` |
 | Non toccare | `test1`/`test2`/`test3` |
 | Sviluppo | `.cursor-rules.md` — analisi sì; **modifiche solo con conferma** |
-| Verifica | `bash scripts/verify.sh` prima di push (70 test gate) |
+| Verifica | `bash scripts/verify.sh` prima di push (82 test gate) |
 
 ---
 

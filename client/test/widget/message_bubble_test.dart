@@ -124,4 +124,58 @@ void main() {
     expect(find.textContaining('45.46420°N'), findsOneWidget);
     expect(find.text('Tocca per aprire la mappa'), findsOneWidget);
   });
+
+  testWidgets('MessageBubble renders read checkmarks from mailbox readAt', (
+    tester,
+  ) async {
+    final readAt = DateTime.utc(2026, 7, 4, 12);
+    final message = ChatMessage(
+      id: '6',
+      body: 'Letto',
+      timeLabel: '12:35',
+      isMine: true,
+      status: MessageStatus.read,
+      readAt: readAt,
+      deliveredAt: readAt,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: Scaffold(
+          body: MessageBubble(message: message),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.done_all), findsOneWidget);
+  });
+
+  testWidgets('MessageBubble maps deliveredAt to double grey checkmarks', (
+    tester,
+  ) async {
+    final deliveredAt = DateTime.utc(2026, 7, 4, 12);
+    final message = ChatMessage.fromJson(
+      json: {
+        'id': '7',
+        'body': 'Consegnato mailbox',
+        'created_at': deliveredAt.toIso8601String(),
+        'author_id': 'me',
+        'delivered_at': deliveredAt.toIso8601String(),
+      },
+      currentUserId: 'me',
+    ).copyWith(timeLabel: '12:36');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: Scaffold(
+          body: MessageBubble(message: message),
+        ),
+      ),
+    );
+
+    expect(message.status, MessageStatus.delivered);
+    expect(find.byIcon(Icons.done_all), findsOneWidget);
+  });
 }

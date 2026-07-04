@@ -17,7 +17,7 @@ Client ufficiale Alfred — multi-piattaforma (web, mobile, desktop).
 | **Media** | Testo, GIF, voice (WebM/Opus), location (mappa OSM) |
 | **Nuovo messaggio** | FAB → username → stessa chat (vuota o con storico) |
 | **Invio** | `send_message_to_profile` |
-| **Gate test** | `verify.sh` — 70 test unit/widget (zero issue analyze) |
+| **Gate test** | `verify.sh` — 82 test unit/widget (zero issue analyze) |
 
 ## Test
 

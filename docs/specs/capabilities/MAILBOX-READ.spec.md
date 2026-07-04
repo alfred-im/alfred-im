@@ -100,9 +100,9 @@ Paolo apre chat con Mario
 
 | REQ-ID | Verifica |
 |--------|----------|
-| MAILBOX-READ-REQ-001 | `message_bubble_test.dart` (adattare a date) |
+| MAILBOX-READ-REQ-001 | `message_bubble_test.dart`, `models_and_utils_test.dart` |
 | MAILBOX-READ-REQ-002 | `mailbox_delivery_smoke.sql` |
-| MAILBOX-READ-REQ-003–005 | `mailbox_read_smoke.sql` **(da creare)** |
+| MAILBOX-READ-REQ-003–005 | `mailbox_read_smoke.sql` |
 | MAILBOX-READ-REQ-006 | smoke filtri content_type |
 | MAILBOX-READ-REQ-007 | `messages_controller_multi_account_test.dart` |
 | MAILBOX-READ-REQ-008 | `mailbox_inbox_smoke.sql` unread |

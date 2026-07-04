@@ -181,7 +181,7 @@ bash scripts/verify.sh --build   # + build web
 - CI: `.github/workflows/deploy-pages.yml` → `deploy-alpha` → GitHub Pages
 - **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (deploy da PR)
 - E2E: `client/e2e/` (Playwright)
-- SQL smoke: `supabase/tests/schema_smoke.sql`, `mailbox_schema_smoke.sql`, `mailbox_send_smoke.sql`, `send_message_to_profile_smoke.sql`
+- SQL smoke: `schema_smoke.sql`, `mailbox_schema_smoke.sql`, `mailbox_send_smoke.sql`, `mailbox_idempotency_smoke.sql`, `mailbox_delivery_smoke.sql`, `mailbox_read_smoke.sql`, `mailbox_inbox_smoke.sql`, `mailbox_send_media_smoke.sql`, `send_message_to_profile_smoke.sql`
 
 ---
 

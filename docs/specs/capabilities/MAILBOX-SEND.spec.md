@@ -104,10 +104,10 @@ send_message_to_profile
 | REQ-ID | Verifica |
 |--------|----------|
 | MAILBOX-SEND-REQ-001 | `schema_smoke.sql` + `mailbox_send_smoke.sql` |
-| MAILBOX-SEND-REQ-003, REQ-004 | `mailbox_delivery_smoke.sql` **(da creare)** — copia destinatario + `delivered_at` |
-| MAILBOX-SEND-REQ-005 | `mailbox_idempotency_smoke.sql` **(da creare)** |
-| MAILBOX-SEND-REQ-006 | `mailbox_send_media_smoke.sql` **(da creare)** — text/gif/voice/location |
-| MAILBOX-SEND-REQ-008 | `messages_controller_multi_account_test.dart` (adattare) |
+| MAILBOX-SEND-REQ-003, REQ-004 | `mailbox_delivery_smoke.sql` |
+| MAILBOX-SEND-REQ-005 | `mailbox_idempotency_smoke.sql` |
+| MAILBOX-SEND-REQ-006 | `mailbox_send_media_smoke.sql` |
+| MAILBOX-SEND-REQ-008 | `messages_controller_multi_account_test.dart`, `multi_account_scope_test.dart` |
 | MAILBOX-SEND-REQ-013 | assenza trigger `on_message_inserted` legacy internal delivered |
 | MAILBOX-SEND-REQ-015 | `ComposeService` → errore esterno |
 | MAILBOX-SEND-REQ-001–008 | `bash scripts/test.sh integration` |

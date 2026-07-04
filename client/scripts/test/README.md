@@ -23,7 +23,7 @@ Eseguito da `verify.sh` e da GitHub Actions (`deploy-pages.yml`) su ogni PR/push
 Equivalente diretto: `bash scripts/verify.sh`  
 Opzione build web: `bash scripts/verify.sh --build`
 
-**Dart:** `client/test/unit/`, `client/test/widget/` (**70** test gate, esclusi tag `live`)
+**Dart:** `client/test/unit/`, `client/test/widget/` (**82** test gate, esclusi tag `live`)
 
 ---
 

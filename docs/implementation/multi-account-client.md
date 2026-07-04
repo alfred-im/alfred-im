@@ -152,8 +152,12 @@ Storage `alfred_saved_accounts` **non** cambia chiave — upgrade trasparente.
 | `test/unit/account_manager_view_state_test.dart` | View per account, `setFocus` non resetta altri |
 | `test/unit/multi_account_chat_scenario_test.dart` | Focus switch + chat reciproca (mock) |
 | `test/unit/messages_controller_multi_account_test.dart` | Scope `userId+peer`, errori RPC |
+| `test/unit/multi_account_scope_test.dart` | Chiave coda `userId\|peerProfileId` |
+| `test/unit/mailbox_message_filter_test.dart` | Filtro realtime `owner_id` + `peer_profile_id` |
+| `test/unit/local_logout_and_messages_load_test.dart` | Storage auth per account (`authStorageKey`) |
 | `test/unit/account_manager_persistence_test.dart` | Persistenza 2 account |
 | `test/widget/inbox_provider_lifecycle_test.dart` | Pattern lifecycle inbox (storico PR #143) |
+| `test/widget/inbox_realtime_owner_filter_test.dart` | Subscribe inbox su `owner_id` archive |
 | `e2e/multi-account-messages.spec.ts` | UI + DB: invio, switch, ricezione senza reload |
 
 ### Harness integrazione (no browser)

@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/voice_config.dart';
 import '../models/message.dart';
+import '../utils/mailbox_message_filter.dart';
 
 class MessageService {
   MessageService(this._client);
@@ -157,11 +158,12 @@ class MessageService {
     required String peerProfileId,
     required void Function(ChatMessage message) onMessage,
   }) {
-    bool isRelevant(Map<String, dynamic> record) {
-      final owner = record['owner_id'] as String?;
-      final peer = record['peer_profile_id'] as String?;
-      return owner == currentUserId && peer == peerProfileId;
-    }
+    bool isRelevant(Map<String, dynamic> record) =>
+        isMailboxPeerMessageRelevant(
+          record: record,
+          currentUserId: currentUserId,
+          peerProfileId: peerProfileId,
+        );
 
     void handle(PostgresChangePayload payload) {
       final record = payload.newRecord;

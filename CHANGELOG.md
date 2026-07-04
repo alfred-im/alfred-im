@@ -23,6 +23,13 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Aggiunto (2026-07-04 — tracciabilità MAILBOX test)
+
+- **Smoke SQL**: `mailbox_idempotency`, `mailbox_delivery`, `mailbox_read`, `mailbox_inbox`, `mailbox_send_media`; `mailbox_send_smoke` e `send_message_to_profile_smoke` allineati al modello mailbox
+- **Client**: `mailbox_message_filter.dart`; test `mailbox_message_filter_test`, `inbox_realtime_owner_filter_test`; estensioni `message_bubble_test`
+- **Gate**: `check-spec-sync.sh` esteso (contratti mailbox, smoke SQL tracciati)
+- **Doc**: tracciabilità MAILBOX-* senza «da creare»; `multi-account-client.md` test table
+
 ### Documentazione (2026-07-04 — revisione sync post-mailbox)
 
 - Allineamento post-#159: `INDICE`, `README`, `SESSION_HANDOFF`, `architecture/README`, `decisions/README`

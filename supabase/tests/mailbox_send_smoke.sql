@@ -1,22 +1,37 @@
--- Mailbox send + delivery + inbox smoke (run as authenticated test users via service role setup).
+-- Mailbox send smoke: RPC round-trip agent1 → agent2 (MAILBOX-SEND-REQ-001).
 
 DO $$
 DECLARE
-  v_a uuid;
-  v_b uuid;
+  v_agent1 uuid := 'efd885fe-b36e-48fc-a796-0e3f153e40d6';
+  v_agent2 uuid := '0a81f785-173c-4f1c-b5df-3937086a2482';
+  v_client_id text := 'smoke-send-' || floor(random() * 1000000)::text;
   v_msg public.messages;
-  v_inbox_count integer;
 BEGIN
-  SELECT id INTO v_a FROM public.profiles WHERE username = 'alfredagent1' LIMIT 1;
-  SELECT id INTO v_b FROM public.profiles WHERE username = 'alfredagent2' LIMIT 1;
-
-  IF v_a IS NULL OR v_b IS NULL THEN
+  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_agent1) THEN
     RAISE NOTICE 'mailbox_send_smoke_skip missing agent profiles';
     RETURN;
   END IF;
 
-  -- Simulate auth as agent1 via JWT claims is not available in raw SQL;
-  -- This file documents expected behavior; integration script covers live RPC.
+  PERFORM set_config(
+    'request.jwt.claims',
+    json_build_object('sub', v_agent1::text, 'role', 'authenticated')::text,
+    true
+  );
 
-  RAISE NOTICE 'mailbox_send_smoke_ok profiles agent1=% agent2=%', v_a, v_b;
+  SELECT * INTO v_msg FROM public.send_message_to_profile(
+    v_agent2,
+    'mailbox send smoke',
+    v_client_id,
+    'text'::public.message_content_type
+  );
+
+  IF v_msg.owner_id <> v_agent1 OR v_msg.peer_profile_id <> v_agent2 THEN
+    RAISE EXCEPTION 'unexpected sender archive row';
+  END IF;
+
+  IF v_msg.delivered_at IS NULL THEN
+    RAISE EXCEPTION 'sender copy missing delivered_at';
+  END IF;
+
+  RAISE NOTICE 'mailbox_send_smoke_ok message_id=% lambda=%', v_msg.id, v_msg.logical_message_id;
 END $$;

@@ -95,10 +95,10 @@ L’inbox è **organizzazione UI** della chat: un posto dove convivono messaggi 
 
 | REQ-ID | Verifica |
 |--------|----------|
-| MAILBOX-INBOX-REQ-001, REQ-002 | `mailbox_inbox_smoke.sql` **(da creare)** |
+| MAILBOX-INBOX-REQ-001, REQ-002 | `mailbox_inbox_smoke.sql` |
 | MAILBOX-INBOX-REQ-004 | stesso + `list_peer_messages` |
 | MAILBOX-INBOX-REQ-006 | invio senza rubrica — smoke |
-| MAILBOX-INBOX-REQ-007 | `inbox_provider_listen_test.dart` (adattare filtro) |
+| MAILBOX-INBOX-REQ-007 | `inbox_provider_listen_test.dart`, `inbox_realtime_owner_filter_test.dart` |
 | MAILBOX-INBOX-REQ-009 | smoke unread dopo messaggio in entrata non letto |
 | MAILBOX-INBOX-REQ-010 | `multi_account_chat_scenario_test.dart` |
 | MAILBOX-INBOX-REQ-011 | `INBOX-SEARCH.spec.md` |

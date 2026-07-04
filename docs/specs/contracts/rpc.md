@@ -145,10 +145,13 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 |------|----------|
 | `supabase/tests/schema_smoke.sql` | Assenza `inbox_threads`, `message_read_receipts`; schema mailbox |
 | `supabase/tests/mailbox_schema_smoke.sql` | `owner_id`, assenza `delivery_status` su `messages` |
-| `supabase/tests/mailbox_send_smoke.sql` | Invio + `delivered_at` (placeholder) |
+| `supabase/tests/mailbox_send_smoke.sql` | Invio + `delivered_at` |
+| `supabase/tests/mailbox_idempotency_smoke.sql` | Idempotenza `client_message_id` |
+| `supabase/tests/mailbox_delivery_smoke.sql` | Copia destinatario + outbox `completed` |
+| `supabase/tests/mailbox_read_smoke.sql` | `mark_peer_read` → `read_at` mittente |
+| `supabase/tests/mailbox_inbox_smoke.sql` | `list_inbox` + unread |
+| `supabase/tests/mailbox_send_media_smoke.sql` | Validazione `gif`/`location` |
 | `supabase/tests/send_message_to_profile_smoke.sql` | Invio a profilo non in rubrica |
-
-Smoke **da creare** (tracciabilità MAILBOX-*): `mailbox_read_smoke.sql`, `mailbox_inbox_smoke.sql`, `mailbox_idempotency_smoke.sql`, `mailbox_delivery_smoke.sql`, `mailbox_send_media_smoke.sql`.
 
 Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/test.sh e2e-multi`
 
