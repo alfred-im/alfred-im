@@ -4,7 +4,7 @@
 **Status**: ✅ **Implementato su `main`** (PR #159) — spec SDD `MAILBOX-*` `implemented`  
 **Audience**: AI / implementazione
 
-**Su `main`** vale il modello caselle descritto qui e nelle spec `MAILBOX-*`. L’ADR storico [address-based-messaging.md](../decisions/address-based-messaging.md) resta riferimento per indirizzamento e rubrica isolata; le spec `MSG-*` sono `superseded`.
+**Su `main`** vale il modello caselle descritto qui e nelle spec `MAILBOX-*`. L’ADR [address-based-messaging.md](../decisions/address-based-messaging.md) resta riferimento per indirizzamento e rubrica isolata.
 
 ---
 
@@ -201,8 +201,7 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 
 | Documento | Ruolo |
 |-----------|--------|
-| [address-based-messaging.md](../decisions/address-based-messaging.md) | Indirizzamento e rubrica isolata (vincolante); modello messaggi → MAILBOX-* |
-| [messages-only-inbox.md](../implementation/messages-only-inbox.md) | Storico pre-mailbox (inbox query-only, PR #130) |
+| [address-based-messaging.md](../decisions/address-based-messaging.md) | Indirizzamento e rubrica isolata (vincolante) |
 | [alpha-full-stack.md](./alpha-full-stack.md) | Flussi Alpha da riusare |
 | [server-as-reception.md](../decisions/server-as-reception.md) | Spunte |
 | [bridge-stateless.md](../decisions/bridge-stateless.md) | Outbox / bridge (se/un quando) |

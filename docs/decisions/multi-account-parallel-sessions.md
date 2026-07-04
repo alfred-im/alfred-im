@@ -156,8 +156,7 @@ Dettaglio: `docs/fixes/multi-account-single-active-gotrue-pr152.md`
 | Documento | Contenuto |
 |-----------|-----------|
 | [auth-overlay-shell.md](../design/auth-overlay-shell.md) | Regole UX overlay + placeholder |
-| [multi-account-client.md](../implementation/multi-account-client.md) | Dettaglio file e flussi codice |
-| [multi-account-persistence-redesign.md](../implementation/multi-account-persistence-redesign.md) | Persistenza dichiarativa (PR #147) |
+| [multi-account-client.md](../implementation/multi-account-client.md) | Dettaglio file e flussi codice (§3.5 persistenza PR #147) |
 | [multi-account-single-active-gotrue-pr152.md](../fixes/multi-account-single-active-gotrue-pr152.md) | Fix BroadcastChannel web |
 | [alpha-full-stack.md](../architecture/alpha-full-stack.md) §2.3–2.4 | Architettura client aggiornata |
 | `PROJECT_MAP.md` | Mappa sintetica non deducibile |

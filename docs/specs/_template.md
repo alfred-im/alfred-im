@@ -23,7 +23,7 @@ Breve descrizione del bisogno e del perimetro.
 
 ## 2. Requisiti
 
-Ogni requisito vincolante ha un **REQ-ID** stabile: `{SPEC-ID}-REQ-NNN` (es. `MSG-SEND-REQ-001`).
+Ogni requisito vincolante ha un **REQ-ID** stabile: `{SPEC-ID}-REQ-NNN` (es. `MAILBOX-SEND-REQ-001`).
 
 ### MUST
 

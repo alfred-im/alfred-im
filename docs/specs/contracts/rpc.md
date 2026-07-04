@@ -174,18 +174,3 @@ Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/te
 
 - [alpha-full-stack.md](../../architecture/alpha-full-stack.md) §3
 - Migrazioni in [alpha-pr-registry.md](../../architecture/alpha-pr-registry.md) § migrazioni
-
----
-
-## Storico pre-mailbox (message-centric, superseded)
-
-Modello sostituito da PR #159 (`20260704120000`). Spec: `MSG-*` → `superseded`.
-
-| Aspetto | Comportamento storico (pre-#159) |
-|---------|----------------------------------|
-| `send_message_to_profile` | Insert con `delivery_status = 'sent'`; trigger `on_message_inserted` promuoveva a `delivered` (internal) o scriveva `outbox` (federato) |
-| `list_inbox` | Aggregazione su `messages` per `sender_id` OR `recipient_profile_id` = `auth.uid()` |
-| `list_peer_messages` | Storico bidirezionale su tabella condivisa |
-| `mark_peer_read` | INSERT in `message_read_receipts` + UPDATE `delivery_status = 'read'` |
-
-Non usare per implementazioni nuove.

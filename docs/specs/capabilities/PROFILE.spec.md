@@ -8,7 +8,7 @@
 | **Ultima revisione** | 2026-07-03 |
 | **ADR** | — (identità pubblica username: PR #118) |
 | **PR** | #118 (username/email), #134 (avatar, pronomi, `ProfileSummary`) |
-| **Correlata** | [MSG-INBOX](./MSG-INBOX.spec.md), [AUTH-MULTI](./AUTH-MULTI.spec.md) |
+| **Correlata** | [MAILBOX-INBOX](./MAILBOX-INBOX.spec.md), [AUTH-MULTI](./AUTH-MULTI.spec.md) |
 
 Documento per AI — contratto profilo Alfred: dati pubblici, modifica self-service, avatar, esposizione in UI.
 
@@ -126,7 +126,7 @@ Nessuna RPC dedicata `update_profile` — client usa PostgREST `.from('profiles'
 | PROFILE-REQ-007 | `models_and_utils_test.dart` — `ProfileSummary.fromProfilesRow` |
 | PROFILE-REQ-008, REQ-013 | `models_and_utils_test.dart` — `avatarColorForId`; `widgets/profile_identity.dart` |
 | PROFILE-REQ-009 | `account_storage_test.dart` — `OpenAccount.profile` round-trip; `auth_controller.dart` `refreshProfile` |
-| PROFILE-REQ-010 | `20260628100000_inbox_peer_profile_fields.sql`; `MSG-INBOX.spec.md` REQ-003 |
+| PROFILE-REQ-010 | `20260628100000_inbox_peer_profile_fields.sql`; `MAILBOX-INBOX.spec.md` REQ-003 |
 | PROFILE-REQ-011 | `schema_smoke.sql` — `find_profile_by_username`; migrazione inbox peer fields |
 | PROFILE-REQ-012 | `models_and_utils_test.dart` — `UserProfile.fromJson` (pronouns opzionali) |
 | PROFILE-REQ-015 | `CONTACTS.spec.md`; RPC `search_profiles` / `list_inbox` — nessun campo email |
@@ -140,7 +140,7 @@ Gate: `cd client && bash scripts/verify.sh` · Manuale: modifica nome/pronomi/bi
 | Documento | Ruolo |
 |-----------|--------|
 | [alpha-full-stack.md](../../architecture/alpha-full-stack.md) | Panoramica |
-| [MSG-INBOX](./MSG-INBOX.spec.md) | Campi peer in `list_inbox` |
+| [MAILBOX-INBOX](./MAILBOX-INBOX.spec.md) | Campi peer in `list_inbox` |
 | [AUTH-MULTI](./AUTH-MULTI.spec.md) | Manifest `OpenAccount.profile` |
 
 **Codice**: `client/lib/models/profile_summary.dart`, `services/profile_service.dart`, `services/profile_avatar_service.dart`, `screens/profile_screen.dart`, `widgets/profile_identity.dart`

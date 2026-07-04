@@ -153,11 +153,3 @@ Verifica: `supabase/tests/schema_smoke.sql`, `mailbox_schema_smoke.sql`.
 ## Migrazioni
 
 Elenco completo: [alpha-pr-registry.md](../../architecture/alpha-pr-registry.md) § migrazioni.
-
----
-
-## Storico pre-mailbox (message-centric, superseded)
-
-Modello sostituito da PR #159. Tabella `messages` condivisa tra peer con `sender_id` / `recipient_profile_id`, `delivery_status` enum, `message_read_receipts` per spunte. Outbox solo per federato via trigger.
-
-Non usare per implementazioni nuove. Spec storiche: `MSG-INBOX`, `MSG-SEND`, `MSG-READ` (`superseded`).

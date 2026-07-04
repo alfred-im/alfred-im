@@ -127,7 +127,6 @@ Account debug: **solo** `alfredagent1` / `alfredagent2` — `docs/AGENT_DEBUG_AC
 
 ## Riferimenti
 
-- `docs/fixes/conversations-empty-diagnosis.md`
 - `docs/fixes/auth-bootstrap-gotrue-revoke.md` (PR #142)
 - `docs/fixes/multi-account-single-active-gotrue-pr152.md` (PR #152)
 - `docs/implementation/multi-account-client.md`

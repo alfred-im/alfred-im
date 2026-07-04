@@ -78,14 +78,12 @@ client/lib/
 |------|------|------|
 | Multi-account, overlay auth | [AUTH-MULTI](../specs/capabilities/AUTH-MULTI.spec.md) | PR #140, #147, #152 |
 | Archivio per owner, outbox sempre | [MAILBOX-CORE](../specs/capabilities/MAILBOX-CORE.spec.md) | PR #159 |
-| Inbox on-read, `ChatPeer` | [MAILBOX-INBOX](../specs/capabilities/MAILBOX-INBOX.spec.md) | PR #159 (ex MSG-INBOX) |
-| Invio testo/GIF/voice/location | [MAILBOX-SEND](../specs/capabilities/MAILBOX-SEND.spec.md) | PR #159 (ex MSG-SEND) |
-| Spunte delivered/read (`delivered_at`/`read_at`) | [MAILBOX-READ](../specs/capabilities/MAILBOX-READ.spec.md) | PR #159 (ex MSG-READ) |
+| Inbox on-read, `ChatPeer` | [MAILBOX-INBOX](../specs/capabilities/MAILBOX-INBOX.spec.md) | PR #159 |
+| Invio testo/GIF/voice/location | [MAILBOX-SEND](../specs/capabilities/MAILBOX-SEND.spec.md) | PR #159 |
+| Spunte delivered/read (`delivered_at`/`read_at`) | [MAILBOX-READ](../specs/capabilities/MAILBOX-READ.spec.md) | PR #159 |
 | Ricerca conversazioni | [INBOX-SEARCH](../specs/capabilities/INBOX-SEARCH.spec.md) | PR #132 |
 | Profilo, avatar, pronomi | [PROFILE](../specs/capabilities/PROFILE.spec.md) | PR #118, #134 |
 | Rubrica | [CONTACTS](../specs/capabilities/CONTACTS.spec.md) | PR #109 |
-
-Spec `MSG-INBOX` / `MSG-SEND` / `MSG-READ`: **`superseded`** da `MAILBOX-*` (storico PR #115–#153).
 
 ### UI cross-cutting (senza spec capability dedicata)
 

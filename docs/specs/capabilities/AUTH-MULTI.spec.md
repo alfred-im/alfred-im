@@ -34,7 +34,7 @@ L’utente opera Alfred con una o più identità messaggistica sulla stessa shel
 | **AUTH-MULTI-REQ-006** | **Una** `AccountSession` / connessione GoTrue attiva in RAM (PR #152); al `setFocus`: dispose sessione corrente (`clearAuthStorage: false`), restore nuovo account da manifest |
 | **AUTH-MULTI-REQ-007** | Bootstrap app: `bootstrapApp()` — nessun `Supabase.initialize` globale per utente |
 | **AUTH-MULTI-REQ-008** | Servizi dati usano `session.client` della sessione in focus, non singleton globale |
-| **AUTH-MULTI-REQ-009** | `InboxController` + realtime inbox solo sul focus — [MSG-INBOX](./MSG-INBOX.spec.md) REQ-011 |
+| **AUTH-MULTI-REQ-009** | `InboxController` + realtime inbox solo sul focus — [MAILBOX-INBOX](./MAILBOX-INBOX.spec.md) REQ-010 |
 | **AUTH-MULTI-REQ-010** | `AccountViewState` per `userId`: `activePeer` e stato mobile inbox/chat **persistono** al cambio focus |
 | **AUTH-MULTI-REQ-011** | 0 account → `AuthOverlay` obbligatorio, non dismissibile |
 | **AUTH-MULTI-REQ-012** | ≥1 account → overlay solo da «Aggiungi account», dismissibile |
@@ -151,7 +151,6 @@ Gate: `cd client && bash scripts/verify.sh` · Integrazione: `bash scripts/test.
 | [multi-account-client.md](../../implementation/multi-account-client.md) | Dettaglio file/flussi |
 | [auth-overlay-shell.md](../../design/auth-overlay-shell.md) | UX overlay |
 | [multi-account-single-active-gotrue-pr152.md](../../fixes/multi-account-single-active-gotrue-pr152.md) | Fix BroadcastChannel |
-| [multi-account-persistence-redesign.md](../../implementation/multi-account-persistence-redesign.md) | Design PR #147 (storico) |
-| [MSG-INBOX](./MSG-INBOX.spec.md) | Inbox scoped al focus |
+| [MAILBOX-INBOX](./MAILBOX-INBOX.spec.md) | Inbox scoped al focus |
 
 **Codice**: `client/lib/services/account_manager.dart`, `account_session.dart`, `providers/auth_controller.dart`

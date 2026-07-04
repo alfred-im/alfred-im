@@ -8,7 +8,7 @@
 | **Ultima revisione** | 2026-07-04 |
 | **ADR** | [server-as-reception.md](../../decisions/server-as-reception.md), [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md) |
 | **PR** | #159 |
-| **Supersedes** | [MSG-READ.spec.md](./MSG-READ.spec.md) (al merge) |
+| **Supersedes** | — |
 | **Superseded by** | — |
 
 Documento per AI — spunte da **date nullable** su copia mittente; lettura locale su copia destinatario; segnali via λ senza modificare archivio altrui.
@@ -117,7 +117,6 @@ Gate: `verify.sh` + `integration` + `e2e-multi`
 
 | Documento | Ruolo |
 |-----------|--------|
-| [MSG-READ](./MSG-READ.spec.md) | Baseline fino a merge |
 | [MAILBOX-SEND](./MAILBOX-SEND.spec.md) | `delivered_at` |
 
 **Codice target**: migrazioni `mark_peer_read`, `message.dart`, `message_bubble.dart`

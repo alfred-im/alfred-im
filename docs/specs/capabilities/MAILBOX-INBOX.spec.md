@@ -8,7 +8,7 @@
 | **Ultima revisione** | 2026-07-04 |
 | **ADR** | [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md), [no-internal-external-chat-distinction.md](../../decisions/no-internal-external-chat-distinction.md) |
 | **PR** | #159 |
-| **Supersedes** | [MSG-INBOX.spec.md](./MSG-INBOX.spec.md) (al merge) |
+| **Supersedes** | — |
 | **Superseded by** | — |
 
 Documento per AI — elenco conversazioni = aggregazione on-read sul **mio** archivio (`owner_id = auth.uid()`). L’inbox non è tabella né entità.
@@ -112,7 +112,6 @@ Gate: `verify.sh` + `integration` + `e2e-multi`
 
 | Documento | Ruolo |
 |-----------|--------|
-| [MSG-INBOX](./MSG-INBOX.spec.md) | Baseline fino a merge |
 | [MAILBOX-CORE](./MAILBOX-CORE.spec.md) | `owner_id` |
 
 **Codice target**: `inbox_service.dart`, `message_service.dart`, `inbox_controller.dart`

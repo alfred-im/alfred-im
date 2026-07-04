@@ -1,7 +1,6 @@
 # Messaggistica per indirizzo (username / username@server)
 
-> **Contratto capability (storico)**: [MSG-INBOX.spec.md](../specs/capabilities/MSG-INBOX.spec.md), [MSG-SEND.spec.md](../specs/capabilities/MSG-SEND.spec.md) — **`superseded`** da [MAILBOX-INBOX](../specs/capabilities/MAILBOX-INBOX.spec.md), [MAILBOX-SEND](../specs/capabilities/MAILBOX-SEND.spec.md) (PR #159).  
-> **Rubrica**: [CONTACTS.spec.md](../specs/capabilities/CONTACTS.spec.md). Questo ADR resta vincolante per **indirizzamento** e **isolamento rubrica**; l’archivio messaggi è per-owner (vedi [mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md)).
+> **Contratto capability**: [MAILBOX-INBOX.spec.md](../specs/capabilities/MAILBOX-INBOX.spec.md), [MAILBOX-SEND.spec.md](../specs/capabilities/MAILBOX-SEND.spec.md) — [CONTACTS.spec.md](../specs/capabilities/CONTACTS.spec.md). Questo ADR resta vincolante per **indirizzamento** e **isolamento rubrica**; l’archivio messaggi è per-owner (vedi [mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md)).
 
 **Data**: 2026-06-27  
 **Status**: ✅ Accettata — **regola vincolante** (indirizzo + rubrica); schema messaggi → MAILBOX-*  
@@ -100,12 +99,6 @@ Equivalente concettuale: una `VIEW` SQL normale (non `MATERIALIZED`). L’RPC è
 
 ---
 
-## Storico pre-mailbox (message-centric)
-
-Prima di PR #159: tabella `messages` condivisa, `sender_id`/`recipient_profile_id`, trigger `on_message_inserted` per `delivery_status` e outbox federato, `message_read_receipts` per spunte. Vedi spec `MSG-*` (`superseded`).
-
----
-
 ## Migrazioni
 
 - `20260627200000_address_based_messaging.sql` — `find_profile_by_username`
@@ -120,4 +113,3 @@ Prima di PR #159: tabella `messages` condivisa, `sender_id`/`recipient_profile_i
 
 - Client: `ChatPeer`, `InboxController`, `MessagesController`, `ComposeService`
 - Architettura: `docs/architecture/alpha-full-stack.md`
-- Implementazione: `docs/implementation/messages-only-inbox.md`

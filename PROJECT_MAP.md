@@ -30,7 +30,7 @@
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
 | **PR Alpha** | **#108–#160** su `main` — registro `docs/architecture/alpha-pr-registry.md` |
-| **Spec (SDD)** | Contratti capability: `docs/specs/index.md` — `MAILBOX-*` `implemented`; `MSG-*` `superseded` |
+| **Spec (SDD)** | Contratti capability: `docs/specs/index.md` — `MAILBOX-*` e capability correlate `implemented` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 

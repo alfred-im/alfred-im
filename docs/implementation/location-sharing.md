@@ -1,6 +1,6 @@
 # Condivisione posizione statica
 
-> **Superseded by spec**: [MSG-SEND.spec.md](../specs/capabilities/MSG-SEND.spec.md) — evidenza implementativa PR #153.
+> **Contratto canonico**: [MAILBOX-SEND.spec.md](../specs/capabilities/MAILBOX-SEND.spec.md) — evidenza implementativa PR #153.
 
 **Stato**: implementato — client Flutter + migrazioni Supabase
 

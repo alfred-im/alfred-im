@@ -1,6 +1,6 @@
 # Voice notes (WebM/Opus)
 
-> **Superseded by spec**: [MSG-SEND.spec.md](../specs/capabilities/MSG-SEND.spec.md) — evidenza implementativa PR #126.
+> **Contratto canonico**: [MAILBOX-SEND.spec.md](../specs/capabilities/MAILBOX-SEND.spec.md) — evidenza implementativa PR #126.
 
 **Stato**: implementato in PR **#126**
 

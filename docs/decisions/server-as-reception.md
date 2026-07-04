@@ -1,6 +1,6 @@
 # Ricezione = ricezione sul server (client cloud)
 
-> **Contratto capability**: [MAILBOX-READ.spec.md](../specs/capabilities/MAILBOX-READ.spec.md) (operativo); [MSG-READ.spec.md](../specs/capabilities/MSG-READ.spec.md) (`superseded`) — questo ADR resta vincolante (semantica cloud).
+> **Contratto capability**: [MAILBOX-READ.spec.md](../specs/capabilities/MAILBOX-READ.spec.md) — questo ADR resta vincolante (semantica cloud).
 
 **Data**: 2026-06-26  
 **Status**: ✅ Accettata — **concept vincolante** dell'applicazione  

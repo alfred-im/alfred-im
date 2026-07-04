@@ -1,7 +1,7 @@
 # Spec-Driven Development (SDD) — Alfred Alpha
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-03  
+**Ultima revisione**: 2026-07-04  
 **Versione metodo**: **SDD v1** (tracciabilità REQ-ID + contratti schema/RPC + gate leggero)
 
 Metodo per definire, approvare e verificare le capability del client Alfred e della piattaforma Supabase.
@@ -12,7 +12,7 @@ Metodo per definire, approvare e verificare le capability del client Alfred e de
 
 | Elemento | SDD v0 (catalogo) | SDD v1 (canonico) |
 |----------|-------------------|-------------------|
-| Requisiti | Bullet MUST/SHOULD | **REQ-ID** stabili (`MSG-SEND-REQ-001`) |
+| Requisiti | Bullet MUST/SHOULD | **REQ-ID** stabili (`MAILBOX-SEND-REQ-001`) |
 | Tracciabilità | Solo PR | Tabella **REQ → test** in ogni spec |
 | Contratto DB | Sparso in `alpha-full-stack.md` | [contracts/schema.md](./contracts/schema.md) |
 | Contratto RPC | `contracts/rpc.md` | invariato, referenziato dalle spec |
@@ -39,7 +39,7 @@ Metodo per definire, approvare e verificare le capability del client Alfred e de
 
 **Distinzione da regola 0** (`.cursor-rules.md`): la SDD governa l'**intero processo**; la regola 0 governa solo la **modifica fisica** di file nel repository. Entrambe vanno rispettate; la SDD viene **prima** dell'implementazione.
 
-**Retro-spec esistenti**: restano `implemented`; aggiungere REQ-ID progressivamente (pilota: [MSG-SEND](./capabilities/MSG-SEND.spec.md)).
+**Retro-spec esistenti**: restano `implemented`; aggiungere REQ-ID progressivamente (pilota: [MAILBOX-SEND](./capabilities/MAILBOX-SEND.spec.md)).
 
 ---
 

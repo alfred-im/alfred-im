@@ -93,7 +93,7 @@ Switch account → nuovo InboxPanel → ricerca chiusa
 | REQ-ID | Verifica |
 |--------|----------|
 | INBOX-SEARCH-REQ-001, REQ-002, REQ-004, REQ-005 | `inbox_panel.dart` — `_searchVisible`, `_toggleSearch`, `_dismissSearch`, `TapRegion` |
-| INBOX-SEARCH-REQ-003 | `list_filter_test.dart` — `filterByQueryFields`; `inbox_controller.dart` `filteredPeers`; `MSG-INBOX.spec.md` REQ-010 |
+| INBOX-SEARCH-REQ-003 | `list_filter_test.dart` — `filterByQueryFields`; `inbox_controller.dart` `filteredPeers`; `MAILBOX-INBOX.spec.md` REQ-011 |
 | INBOX-SEARCH-REQ-006 | `home_screen.dart` — `key: ValueKey(accountUserId)` su `_inboxPanel` |
 | INBOX-SEARCH-REQ-007, REQ-008 | `inbox_panel.dart` — layout `showTopBar`; `design/inbox-search-toggle.md` |
 | INBOX-SEARCH-REQ-009, REQ-010 | `inbox_panel.dart` — hint e tooltip «Cerca messaggi» |
@@ -110,6 +110,6 @@ Gate: `cd client && bash scripts/verify.sh` · Manuale: apri/chiudi ricerca mobi
 |-----------|--------|
 | [inbox-search-toggle.md](../../design/inbox-search-toggle.md) | Design originale PR #132 |
 | [alpha-full-stack.md](../../architecture/alpha-full-stack.md) §2.12 | Panoramica |
-| [MSG-INBOX](./MSG-INBOX.spec.md) | Sorgente dati `peers` |
+| [MAILBOX-INBOX](./MAILBOX-INBOX.spec.md) | Sorgente dati `peers` |
 
 **Codice**: `client/lib/widgets/inbox_panel.dart`, `providers/inbox_controller.dart`, `utils/list_filter.dart`, `screens/home_screen.dart`

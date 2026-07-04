@@ -33,7 +33,7 @@ Per capability **nuove** o **cambio contratto** (schema, RPC, semantica pubblica
 
 1. Spec in `docs/specs/capabilities/` con **REQ-ID** (`{SPEC}-REQ-NNN`) — template: `docs/specs/_template.md`.
 2. Stato **`approved`** **prima** di qualsiasi implementazione (codice, migrazioni SQL, client); **`implemented`** dopo merge.
-3. Tabella **tracciabilità** REQ → test nella spec (pilota: `MSG-SEND.spec.md`).
+3. Tabella **tracciabilità** REQ → test nella spec (pilota: `MAILBOX-SEND.spec.md`).
 4. Contratti: `docs/specs/contracts/rpc.md`, `schema.md`.
 5. Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`.
 6. PR template: `.github/PULL_REQUEST_TEMPLATE.md`.

@@ -72,5 +72,5 @@ Test manuale multi-account su Alpha: confermato OK (2026-07-02).
 
 - ADR (modello UX + runtime aggiornato): `docs/decisions/multi-account-parallel-sessions.md` §2.6
 - Implementazione: `docs/implementation/multi-account-client.md`
-- Persistenza dichiarativa (invariata): `docs/implementation/multi-account-persistence-redesign.md`
+- Persistenza dichiarativa (invariata): `docs/implementation/multi-account-client.md` §3.5
 - E2E: `client/e2e/multi-account-messages.spec.ts`

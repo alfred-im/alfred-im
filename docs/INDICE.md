@@ -19,9 +19,6 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 | [MAILBOX-INBOX](./specs/capabilities/MAILBOX-INBOX.spec.md) | `implemented` | Inbox on-read sul mio archivio, `ChatPeer`, realtime |
 | [MAILBOX-SEND](./specs/capabilities/MAILBOX-SEND.spec.md) | `implemented` | Invio testo/GIF/voice/location, pipeline outbox |
 | [MAILBOX-READ](./specs/capabilities/MAILBOX-READ.spec.md) | `implemented` | Spunte `delivered_at`/`read_at`, `mark_peer_read` |
-| [MSG-INBOX](./specs/capabilities/MSG-INBOX.spec.md) | `superseded` | → MAILBOX-INBOX |
-| [MSG-SEND](./specs/capabilities/MSG-SEND.spec.md) | `superseded` | → MAILBOX-SEND |
-| [MSG-READ](./specs/capabilities/MSG-READ.spec.md) | `superseded` | → MAILBOX-READ |
 | [INBOX-SEARCH](./specs/capabilities/INBOX-SEARCH.spec.md) | `implemented` | Ricerca conversazioni on-demand |
 | [PROFILE](./specs/capabilities/PROFILE.spec.md) | `implemented` | Profilo, avatar, pronomi, `ProfileSummary` |
 | [CONTACTS](./specs/capabilities/CONTACTS.spec.md) | `implemented` | Rubrica personale (isolata da chat) |
@@ -70,11 +67,9 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 
 ## Implementazione
 
-- [implementation/messages-only-inbox.md](./implementation/messages-only-inbox.md) — Inbox solo messaggi (PR #130)
 - [implementation/voice-notes.md](./implementation/voice-notes.md) — Note vocali WebM/Opus (PR #126)
 - [implementation/location-sharing.md](./implementation/location-sharing.md) — Posizione statica in chat (PR #153)
 - [implementation/multi-account-client.md](./implementation/multi-account-client.md) — **🟢** Multi-account (#140, #147, #152)
-- [implementation/multi-account-persistence-redesign.md](./implementation/multi-account-persistence-redesign.md) — **✅ Storico design** (#147 implementato)
 - [implementation/README.md](./implementation/README.md) — Indice implementazione
 
 ---
@@ -83,7 +78,6 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 
 - [fixes/flutter-inbox-stability.md](./fixes/flutter-inbox-stability.md) — Race auth + provider (#113/#114); evoluzione multi-account
 - [fixes/auth-bootstrap-gotrue-revoke.md](./fixes/auth-bootstrap-gotrue-revoke.md) — Bootstrap signOut / PKCE (#142)
-- [fixes/conversations-empty-diagnosis.md](./fixes/conversations-empty-diagnosis.md) — Chat vuota vs sessione morta (risolto #143/#147/#152)
 - [fixes/multi-account-chat-persistence-pr143.md](./fixes/multi-account-chat-persistence-pr143.md) — PR #143 — logout locale, view per account
 - [fixes/multi-account-single-active-gotrue-pr152.md](./fixes/multi-account-single-active-gotrue-pr152.md) — PR #152 — una GoTrue attiva
 - [fixes/README.md](./fixes/README.md) — Indice fix
@@ -99,4 +93,4 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-04 — revisione sync post-mailbox #159; contratti promossi; INDICE/README allineati
+**Ultimo aggiornamento**: 2026-07-04 — pulizia contenuto obsoleto; solo spec e doc operativi

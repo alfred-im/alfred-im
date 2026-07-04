@@ -6,9 +6,9 @@
 
 - [ ] **Nessun cambio di contratto** (bug fix / refactor interno)
 - [ ] **Contratto aggiornato**: spec in `docs/specs/capabilities/` o `docs/specs/contracts/`
-  - Spec ID: <!-- es. MSG-SEND -->
+  - Spec ID: <!-- es. MAILBOX-SEND -->
   - Stato spec: `draft` | `approved` | `implemented`
-  - REQ-ID toccati: <!-- es. MSG-SEND-REQ-003, oppure N/A -->
+  - REQ-ID toccati: <!-- es. MAILBOX-SEND-REQ-003, oppure N/A -->
 
 ## Verifica
 

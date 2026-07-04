@@ -8,7 +8,7 @@
 | **Ultima revisione** | 2026-07-03 |
 | **ADR** | [address-based-messaging.md](../../decisions/address-based-messaging.md), [no-internal-external-chat-distinction.md](../../decisions/no-internal-external-chat-distinction.md) |
 | **PR** | #109 (schema + CRUD), #134 (profili in ricerca) |
-| **Correlata** | [MSG-INBOX](./MSG-INBOX.spec.md), [PROFILE](./PROFILE.spec.md), [AUTH-MULTI](./AUTH-MULTI.spec.md) |
+| **Correlata** | [MAILBOX-INBOX](./MAILBOX-INBOX.spec.md), [PROFILE](./PROFILE.spec.md), [AUTH-MULTI](./AUTH-MULTI.spec.md) |
 
 Documento per AI — contratto rubrica opzionale: scorciatoie personali, **isolata** dalla messaggistica.
 
@@ -16,7 +16,7 @@ Documento per AI — contratto rubrica opzionale: scorciatoie personali, **isola
 
 ## 1. Problema / obiettivo
 
-L’utente può salvare contatti (utenti Alfred interni o indirizzi federati futuri) come rubrica personale. La rubrica **non** abilita né blocca l’invio messaggi: si scrive sempre per indirizzo ([MSG-INBOX](./MSG-INBOX.spec.md)). «Scrivi» da rubrica apre la chat come scorciatoia verso `profile_id` o indirizzo esterno.
+L’utente può salvare contatti (utenti Alfred interni o indirizzi federati futuri) come rubrica personale. La rubrica **non** abilita né blocca l’invio messaggi: si scrive sempre per indirizzo ([MAILBOX-INBOX](./MAILBOX-INBOX.spec.md)). «Scrivi» da rubrica apre la chat come scorciatoia verso `profile_id` o indirizzo esterno.
 
 ---
 
@@ -54,7 +54,7 @@ L’utente può salvare contatti (utenti Alfred interni o indirizzi federati fut
 | **CONTACTS-REQ-016** | Prerequisito `contact_id` per inviare messaggi a utenti Alfred |
 | **CONTACTS-REQ-017** | Creare conversazione/thread al salvataggio contatto |
 | **CONTACTS-REQ-018** | Mostrare protocollo in inbox o come tipo chat separato |
-| **CONTACTS-REQ-019** | `contacts` come fonte di verità inbox (inbox deriva da `messages` only) — [MSG-INBOX](./MSG-INBOX.spec.md) |
+| **CONTACTS-REQ-019** | `contacts` come fonte di verità inbox (inbox deriva da `messages` only) — [MAILBOX-INBOX](./MAILBOX-INBOX.spec.md) |
 | **CONTACTS-REQ-020** | Messaggistica verso esterni da rubrica in Alpha (solo salvataggio rubrica) |
 
 ---
@@ -120,7 +120,7 @@ Migrazione base: `20260624200000_alfred_domain_schema.sql`.
 | CONTACTS-REQ-012 | `main.dart` — `ChangeNotifierProxyProvider<AuthController, ContactsController?>` |
 | CONTACTS-REQ-013 | `list_filter_test.dart` — `filterByQuery`; `contacts_controller.dart` `filteredContacts` |
 | CONTACTS-REQ-015 | `contacts_controller.dart` — `addInternal` / `addExternal` → `load()` |
-| CONTACTS-REQ-016, REQ-019 | `send_message_to_profile_smoke.sql` — invio senza contatto in rubrica; `MSG-INBOX-REQ-018` |
+| CONTACTS-REQ-016, REQ-019 | `send_message_to_profile_smoke.sql` — invio senza contatto in rubrica; `MAILBOX-INBOX-REQ-018` |
 | CONTACTS-REQ-020 | `compose_service.dart` — `peerFromContact` errore esterno Alpha |
 
 Gate: `cd client && bash scripts/verify.sh` · Manuale: aggiungi contatto Alfred; «Scrivi»; aggiungi XMPP in rubrica (no chat federata)

@@ -84,8 +84,6 @@ Il **focus** determina quale `AccountSession` è in RAM e quindi inbox/chat/serv
 
 ### 3.5 Persistenza dichiarativa (PR #147)
 
-**Implementazione**: `docs/implementation/multi-account-persistence-redesign.md` — ✅ completata.
-
 - `AccountSession` scrive **solo la propria** entry in `alfred_saved_accounts` (`upsertAccount` / `removeAccount`)
 - Login/sign-up: `persistOpenAccount` con token dalla **risposta HTTP**
 - `tokenRefreshed`: aggiorna manifest (solo sessione attiva)
@@ -181,7 +179,6 @@ cd client && bash scripts/verify.sh
 ## Riferimenti
 
 - [auth-overlay-shell.md](../design/auth-overlay-shell.md)
-- [multi-account-persistence-redesign.md](./multi-account-persistence-redesign.md)
 - [multi-account-single-active-gotrue-pr152.md](../fixes/multi-account-single-active-gotrue-pr152.md)
 - [alpha-full-stack.md](../architecture/alpha-full-stack.md) §2.3–2.4
 - [flutter-inbox-stability.md](../fixes/flutter-inbox-stability.md) §3

@@ -33,7 +33,7 @@ Documento per AI — **leggere prima di task multi-account o messaggistica**.
 1. `docs/decisions/multi-account-parallel-sessions.md` — ADR vincolante (§2.6 runtime)
 2. `docs/implementation/multi-account-client.md` — flussi codice
 3. `docs/fixes/multi-account-single-active-gotrue-pr152.md` — fix web switch inbox
-4. `docs/implementation/multi-account-persistence-redesign.md` — persistenza (implementato)
+4. `docs/implementation/multi-account-client.md` §3.5 — persistenza dichiarativa (PR #147)
 5. `docs/architecture/alpha-pr-registry.md` — registro PR → doc
 6. `docs/architecture/mailbox-inbox-outbox-spec.md` + `docs/specs/capabilities/MAILBOX-*.spec.md` — messaggistica caselle (PR #159)
 

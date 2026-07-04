@@ -8,7 +8,7 @@
 | **Ultima revisione** | 2026-07-04 |
 | **ADR** | [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../decisions/server-as-reception.md), [no-internal-external-chat-distinction.md](../../decisions/no-internal-external-chat-distinction.md) |
 | **PR** | #159 |
-| **Supersedes** | Modello message-centric condiviso (`MSG-INBOX` / `MSG-SEND` / `MSG-READ` al merge) |
+| **Supersedes** | — |
 | **Superseded by** | — |
 
 Documento per AI — contratto fondazione modello caselle: archivio per owner, identificatori, RLS, migrazione greenfield prototipo.

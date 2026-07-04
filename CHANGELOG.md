@@ -19,6 +19,12 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Documentazione (2026-07-04 — rimozione contenuto obsoleto)
+
+- Eliminati spec superseded `MSG-INBOX`/`MSG-SEND`/`MSG-READ` e doc storici (`messages-only-inbox`, `multi-account-persistence-redesign`, `conversations-empty-diagnosis`)
+- Rimosso «Storico pre-mailbox» da contratti operativi (`rpc.md`, `schema.md`) e ADR
+- Pulizia riferimenti in `INDICE`, `specs/index.md`, spec `MAILBOX-*`, ADR, registro PR, implementazione/fix README
+
 ### Documentazione (2026-07-04 — rimozione riferimenti pre-Flutter)
 
 - Eliminato `docs/decisions/project-revolution-discovery.md` e tutti i link al client React/tag legacy
@@ -34,7 +40,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 ### Documentazione (2026-07-04 — revisione sync post-mailbox)
 
 - Allineamento post-#159: `INDICE`, `README`, `SESSION_HANDOFF`, `architecture/README`, `decisions/README`
-- Contratti `contracts/rpc.md` e `contracts/schema.md` promossi a modello mailbox; storico pre-#159 in sezione dedicata
+- Contratti `contracts/rpc.md` e `contracts/schema.md` promossi a modello mailbox
 - ADR `address-based-messaging`, `no-internal-external-chat-distinction`, `server-as-reception` aggiornati
 - Spec MAILBOX-*: PR #159, tracciabilità smoke; `INBOX-SEARCH` → `MAILBOX-INBOX`
 - Registro PR: #154, #155, #160; fix riferimenti sezioni `alpha-full-stack` slim

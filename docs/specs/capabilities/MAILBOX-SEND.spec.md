@@ -8,7 +8,7 @@
 | **Ultima revisione** | 2026-07-04 |
 | **ADR** | [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md), [bridge-stateless.md](../../decisions/bridge-stateless.md) |
 | **PR** | #159 |
-| **Supersedes** | [MSG-SEND.spec.md](./MSG-SEND.spec.md) (al merge) |
+| **Supersedes** | — |
 | **Superseded by** | — |
 
 Documento per AI — invio unificato: copia mittente, outbox sempre (anche internal), driver sincrono in transazione RPC.
@@ -32,7 +32,7 @@ L’utente invia a un account Alfred (`peer_profile_id`). Il server crea la copi
 | **MAILBOX-SEND-REQ-003** | **Outbox sempre**: INSERT `outbox` per ogni invio, incluso `protocol = internal` |
 | **MAILBOX-SEND-REQ-004** | Driver internal (stessa transazione RPC): materializza copia destinatario + valorizza `delivered_at` su copia mittente (match λ) |
 | **MAILBOX-SEND-REQ-005** | Idempotenza: retry stesso `(owner_id, client_message_id)` → stessa riga mittente, no duplicati |
-| **MAILBOX-SEND-REQ-006** | Tipi `content_type`: `text`, `gif`, `voice`, `location` — validazione invariata da MSG-SEND |
+| **MAILBOX-SEND-REQ-006** | Tipi `content_type`: `text`, `gif`, `voice`, `location` — validazione invariata da Alpha pre-#159 |
 | **MAILBOX-SEND-REQ-007** | Upload media prima RPC: bucket `chat-media` `{auth.uid()}/{uuid}.*` |
 | **MAILBOX-SEND-REQ-008** | Coda client `OutboundMessageQueue` + merge optimistic su `client_message_id` |
 | **MAILBOX-SEND-REQ-009** | Outbox retry: `attempts`, `last_error`, `status` → `failed` dopo soglia (default 5 tentativi worker/cron futuro; internal sincrono non fallisce salvo errore transazione) |
@@ -120,7 +120,6 @@ Gate: `verify.sh` + `integration` + `e2e-multi`
 
 | Documento | Ruolo |
 |-----------|--------|
-| [MSG-SEND](./MSG-SEND.spec.md) | Baseline tipi media (fino a merge) |
 | [MAILBOX-CORE](./MAILBOX-CORE.spec.md) | Schema e λ |
 | [MAILBOX-READ](./MAILBOX-READ.spec.md) | `read_at` |
 
