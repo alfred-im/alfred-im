@@ -13,11 +13,3 @@ Architecture Decision Records. Documento per AI.
 | [multi-account-parallel-sessions.md](./multi-account-parallel-sessions.md) | Multi-account client Alpha: UX #140, una GoTrue attiva #152 |
 | [single-device-logout-open.md](./single-device-logout-open.md) | ✅ Logout locale (`close()` senza revoca GoTrue); futuro: «Disconnetti ovunque» |
 | [mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md) | ✅ Modello caselle — archivio per owner, outbox sempre (PR #159) |
-
-## Visione e storico
-
-| ADR | Summary |
-|-----|---------|
-| [project-revolution-discovery.md](./project-revolution-discovery.md) | Discovery completata — visione stack Flutter + Supabase + bridge (storico) |
-
-**Storico client React / XMPP**: tag `legacy/web-client-final` — non documentato su `main`.

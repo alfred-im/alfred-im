@@ -3,7 +3,7 @@
 **Data**: 2026-06-24  
 **Status**: ✅ Accettata — **regola vincolante**  
 **Categoria**: Architettura bridge  
-**Correlata**: [project-revolution-discovery.md](./project-revolution-discovery.md) (principio cardine)
+**Correlata**: [alpha-full-stack.md](../architecture/alpha-full-stack.md)
 
 ---
 
@@ -109,5 +109,4 @@ Connessioni lunghe XMPP/Matrix sono ammesse solo come **ottimizzazione effimera*
 ## Riferimenti
 
 - `bridge-xmpp/main.py`, `bridge-matrix/main.py` — oggi stub; implementazione futura deve rispettare questa ADR
-- `PROJECT_MAP.md` — architettura target
-- `docs/decisions/project-revolution-discovery.md` — D-051
+- `PROJECT_MAP.md` — architettura bridge

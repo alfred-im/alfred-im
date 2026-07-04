@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Brand Alfred — allineato a PROJECT_MAP / discovery doc.
+/// Brand Alfred — allineato a PROJECT_MAP.
 abstract final class AlfredColors {
   static const charcoal = Color(0xFF2D2926);
   static const charcoalHover = Color(0xFF3D3632);

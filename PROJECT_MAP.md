@@ -16,8 +16,6 @@
 7. [Build e testing](#-build-e-testing)
 8. [Stato corrente](#-stato-corrente)
 
-> Codice del client React storico: **non su `main`**. Recupero solo via tag git `legacy/web-client-final` — non documentato in questo repository.
-
 ---
 
 ## ⚠️ Stato repository (2026-07-04)
@@ -201,9 +199,8 @@ bash scripts/verify.sh --build   # + build web
 
 ### Prossimi passi
 
-- Bridge XMPP/Matrix (consume `outbox`, `sync_cursors`)
+- Bridge XMPP/Matrix (consume `outbox`, `sync_cursors`) — `docs/architecture/alpha-full-stack.md`
 - Spunte federate via bridge
-- Vedi `docs/decisions/project-revolution-discovery.md`
 
 ### Design system
 

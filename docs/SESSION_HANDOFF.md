@@ -67,7 +67,7 @@ cd client && bash scripts/test.sh e2e-multi    # Playwright — Alpha o localhos
 | Badge / realtime account in background | Rinviato — serve fix BroadcastChannel o upstream |
 | Multi-tab stesso browser | Last-write-wins (limite noto) |
 | «Disconnetti ovunque» (revoca globale) | Futuro opzionale — logout locale già in `AccountSession.close()` (`single-device-logout-open.md`) |
-| Bridge federazione (consumer outbox) | Stub health only — vedi `docs/decisions/project-revolution-discovery.md` |
+| Bridge federazione (consumer outbox) | Stub health only — vedi `docs/architecture/alpha-full-stack.md` |
 
 ---
 

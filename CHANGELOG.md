@@ -7,21 +7,22 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 ## [3.0.0-alpha] - 2026-06-24
 
 ### Aggiunto
-- **ADR bridge stateless** (D-051): bridge senza stato di business; verità su Supabase — `docs/decisions/bridge-stateless.md`
+- **ADR bridge stateless**: bridge senza stato di business; verità su Supabase — `docs/decisions/bridge-stateless.md`
 - **Client Flutter** (`client/`): UI mock chat, tema Alfred, layout responsive
 - **Deploy GitHub Pages**: workflow Flutter, URL https://alfred-im.github.io/XmppTest/
 - **Scaffold multi-piattaforma**: web, Android, iOS, Linux, macOS, Windows
 
-### Rimosso
-- **`web-client/`** React da `main` (recuperabile: tag `legacy/web-client-final` @ `6e792eb`)
-- Workflow Pages per build React (sostituito da Flutter)
-
 ### Documentazione
-- Aggiornati PROJECT_MAP, README, INDICE, discovery doc, client/README
+- Aggiornati PROJECT_MAP, README, INDICE, client/README
 
 ---
 
 ## [Unreleased]
+
+### Documentazione (2026-07-04 — rimozione riferimenti pre-Flutter)
+
+- Eliminato `docs/decisions/project-revolution-discovery.md` e tutti i link al client React/tag legacy
+- Pulizia `CHANGELOG`, `INDICE`, `PROJECT_MAP`, `.cursor-rules.md`
 
 ### Aggiunto (2026-07-04 — tracciabilità MAILBOX test)
 
@@ -93,7 +94,6 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - Allineamento PR **#108–#153** in `PROJECT_MAP`, `README`, `INDICE`, `alpha-pr-registry`
 - Fix stato obsoleto: `auth-bootstrap-gotrue-revoke`, `conversations-empty-diagnosis`, `SESSION_HANDOFF`
 - RPC canonica `send_message_to_profile` in doc voice/spunte; location in ADR messaging
-- Rimossi ADR legacy React/XMPP: `no-message-deletion`, `no-modify-source-data`, `TEST_CREDENTIALS.md`
 - Gate test: **70** test unit/widget in `verify.sh`
 
 ### Alpha Flutter — PR #153 (condivisione posizione statica)
@@ -158,12 +158,6 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **Design**: `docs/design/auth-overlay-shell.md`
 - **Implementazione**: `docs/implementation/multi-account-client.md`
 
-### Documentazione (2026-06-28 — rimozione legacy React/XMPP)
-
-- Eliminati doc architettura/implementazione/fix relativi al client React rimosso da `main`
-- `PROJECT_MAP.md` riscritto — solo stack Flutter + Supabase attivo
-- Codice storico recuperabile solo via tag git `legacy/web-client-final` (non documentato nel repo)
-
 ### Documentazione (2026-06-28 — sync post-merge #126–#132)
 
 - Allineati `PROJECT_MAP.md`, `README.md`, `docs/INDICE.md`, `alpha-full-stack.md` — stato PR e date (tutto mergiato su `main`)
@@ -225,7 +219,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 ### Documentazione (2026-06-24 — sync PR Alpha #108–#114)
 - **`docs/architecture/alpha-pr-registry.md`**: registro PR → feature → documenti da aggiornare
 - **`docs/fixes/flutter-inbox-stability.md`**: fix PR #113/#114 (race auth + ChangeNotifierProxyProvider)
-- Allineati PROJECT_MAP, CHANGELOG, INDICE, README, `alpha-full-stack.md`, discovery doc
+- Allineati PROJECT_MAP, CHANGELOG, INDICE, README, `alpha-full-stack.md`
 
 ### Alpha Flutter — PR #115 (GIF in chat)
 - **Messaggi GIF**: `messages.content_type` (`text`|`gif`), `messages.media_url`
@@ -262,15 +256,6 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 ### Alpha Flutter — PR #108 (UI chat base)
 - Layout conversazioni + chat, tema Alfred, workflow deploy Pages
 
----
-
-## Storico pre-Flutter (tag `legacy/web-client-final`)
-
-Il client **React + XMPP** (IndexedDB, Stanza.js, MAM) è stato rimosso da `main` con **3.0.0-alpha** (2026-06-24).
-
-- **Codice e documentazione completa**: tag git `legacy/web-client-final` @ `6e792eb`
-- **Non documentato su `main`**: ADR/fix/architettura del vecchio stack non vanno replicati qui
-- **Changelog dettagliato 0.1.0–2.x**: disponibile nella history git del tag legacy, non mantenuto in questo file
 
 ---
 

@@ -45,8 +45,6 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 - **[SESSION_HANDOFF.md](./SESSION_HANDOFF.md)** — **Handoff sessione** — stato corrente per nuova chat AI
 - **[WISHLIST.md](./WISHLIST.md)** — Funzionalità future (riferimenti XEP)
 
-> Storico client React/XMPP: tag `legacy/web-client-final` — non su `main`.
-
 ---
 
 ## Decisioni (ADR)
@@ -57,7 +55,6 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 - [decisions/bridge-stateless.md](./decisions/bridge-stateless.md) — **🟢 Vincolante** — bridge senza stato di business
 - [decisions/multi-account-parallel-sessions.md](./decisions/multi-account-parallel-sessions.md) — **🟢 Vincolante** — multi-account (UX #140, una GoTrue #152)
 - [decisions/single-device-logout-open.md](./decisions/single-device-logout-open.md) — **🟢** Logout locale; futuro «Disconnetti ovunque»
-- [decisions/project-revolution-discovery.md](./decisions/project-revolution-discovery.md) — Visione stack (discovery completata, storico)
 - [decisions/README.md](./decisions/README.md) — Indice ADR
 
 ---

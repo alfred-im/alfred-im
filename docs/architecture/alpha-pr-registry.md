@@ -45,7 +45,7 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#145** | Pulizia doc | Merge documentazione legacy | — | `INDICE` |
 | **#146** | Design persistenza | Doc `multi-account-persistence-redesign.md` | AUTH-MULTI | implementazione #147 |
 | **#147** | Persistenza dichiarativa | `persistOpenAccount`; manifest = verità F5 | AUTH-MULTI | `multi-account-persistence-redesign.md` |
-| **#148** | Fix typo discovery | «principio cardine» in doc | — | `project-revolution-discovery.md` |
+| **#148** | Fix typo doc | «principio cardine» in doc architettura | — | — |
 | **#149** | Regole DRY/KISS | Sezione in `.cursor-rules.md` | — | `.cursor-rules.md` |
 | **#150** | Regole conferma agente | Conferma scrittura solo dopo domanda esplicita | — | `.cursor-rules.md` |
 | **#152** | Una GoTrue attiva | Fix BroadcastChannel web; `setFocus` swap | AUTH-MULTI | `multi-account-single-active-gotrue-pr152.md` |

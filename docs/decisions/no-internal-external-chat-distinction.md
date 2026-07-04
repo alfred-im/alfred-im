@@ -3,7 +3,7 @@
 **Data**: 2026-06-27  
 **Status**: ✅ Accettata — **regola vincolante**  
 **Categoria**: Chat, UX, client, piattaforma, bridge  
-**Correlata**: [project-revolution-discovery.md](./project-revolution-discovery.md) (protocollo invisibile in UI), [bridge-stateless.md](./bridge-stateless.md), [server-as-reception.md](./server-as-reception.md)
+**Correlata**: [bridge-stateless.md](./bridge-stateless.md), [server-as-reception.md](./server-as-reception.md)
 
 ---
 
@@ -57,7 +57,7 @@ Il campo `protocol` su contatto/conversazione/outbox indica **solo il percorso d
 - bridge XMPP
 - bridge Matrix
 
-Non classifica la conversazione come entità diversa. Coerente con [project-revolution-discovery.md](./project-revolution-discovery.md): l'utente vede persone e chat, non protocolli.
+Non classifica la conversazione come entità diversa: l'utente vede persone e chat, non protocolli.
 
 **Il routing di recapito non giustifica due chat diverse** — né in UI, né in RPC, né in trigger, né nei bridge.
 
@@ -98,7 +98,7 @@ Riferimenti che **violavano** questa regola; stato dopo `20260704120000`:
 
 ## Riferimenti
 
-- [project-revolution-discovery.md](./project-revolution-discovery.md) — protocollo invisibile in UI
-- [server-as-reception.md](./server-as-reception.md) — semantica spunte lato server (da mantenere **unificata** per tutte le chat)
+- [bridge-stateless.md](./bridge-stateless.md) — handler recapito uscente
+- [server-as-reception.md](./server-as-reception.md) — semantica spunte lato server (unificata per tutte le chat)
 - [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) — aggancio al fondo (feature unificata)
 - [alpha-full-stack.md](../architecture/alpha-full-stack.md) — da riallineare dove cita tipi di chat distinti
