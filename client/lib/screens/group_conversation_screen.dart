@@ -20,6 +20,7 @@ class GroupConversationScreen extends StatelessWidget {
     required this.onAllowedPeopleTap,
     required this.onProfileTap,
     this.onMessagesChanged,
+    this.onDrawerTap,
   });
 
   final AccountSession session;
@@ -27,6 +28,7 @@ class GroupConversationScreen extends StatelessWidget {
   final VoidCallback onAllowedPeopleTap;
   final VoidCallback onProfileTap;
   final Future<void> Function()? onMessagesChanged;
+  final VoidCallback? onDrawerTap;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +47,7 @@ class GroupConversationScreen extends StatelessWidget {
               profile: profile,
               onProfileTap: onProfileTap,
               onAllowedPeopleTap: onAllowedPeopleTap,
+              onDrawerTap: onDrawerTap,
             ),
             const Divider(height: 1),
             Expanded(
@@ -98,25 +101,37 @@ class _GroupTopBar extends StatelessWidget {
     required this.profile,
     required this.onProfileTap,
     required this.onAllowedPeopleTap,
+    this.onDrawerTap,
   });
 
   final ProfileSummary profile;
   final VoidCallback onProfileTap;
   final VoidCallback onAllowedPeopleTap;
+  final VoidCallback? onDrawerTap;
+
+  static const _compactBreakpoint = 720.0;
 
   @override
   Widget build(BuildContext context) {
+    final isCompact = MediaQuery.sizeOf(context).width < _compactBreakpoint;
+
     return Material(
       color: AlfredColors.panel,
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+          padding: const EdgeInsets.fromLTRB(4, 8, 8, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 children: [
+                  if (onDrawerTap != null)
+                    IconButton(
+                      onPressed: onDrawerTap,
+                      icon: const Icon(Icons.menu),
+                      tooltip: 'Account',
+                    ),
                   Expanded(
                     child: ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -136,12 +151,14 @@ class _GroupTopBar extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
-              OutlinedButton.icon(
-                onPressed: onAllowedPeopleTap,
-                icon: const Icon(Icons.verified_user_outlined, size: 18),
-                label: const Text('Persone consentite'),
-              ),
+              if (!isCompact) ...[
+                const SizedBox(height: 4),
+                OutlinedButton.icon(
+                  onPressed: onAllowedPeopleTap,
+                  icon: const Icon(Icons.verified_user_outlined, size: 18),
+                  label: const Text('Persone consentite'),
+                ),
+              ],
             ],
           ),
         ),
