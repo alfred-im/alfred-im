@@ -4,7 +4,7 @@
 |-------|--------|
 | **Spec ID** | `GROUP-CORE` |
 | **Layer** | capability |
-| **Status** | `approved` |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-06 |
 | **ADR** | [address-based-messaging.md](../../decisions/address-based-messaging.md), [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md) |
 | **PR** | — |
@@ -130,11 +130,11 @@ Rimozione da una delle due liste → recapito bloccato verso la direzione corris
 
 | REQ-ID | Verifica |
 |--------|----------|
-| GROUP-CORE-REQ-001–003 | `supabase/tests/group_schema_smoke.sql` (da creare) |
-| GROUP-CORE-REQ-004–007 | `client/test/unit/group_shell_test.dart` (da creare) |
-| GROUP-CORE-REQ-008–009 | `supabase/tests/group_allowlist_participation_smoke.sql` (da creare) |
-| GROUP-CORE-REQ-014 | `find_profile_by_username` smoke |
-| GROUP-CORE-REQ-005 | `auth_multi` / manifest test esistenti estesi |
+| GROUP-CORE-REQ-001–003 | `supabase/tests/group_schema_smoke.sql` |
+| GROUP-CORE-REQ-004–007, 016 | `client/test/unit/group_shell_test.dart` |
+| GROUP-CORE-REQ-008–009 | `supabase/tests/group_delivery_smoke.sql` (gate bidirezionale) |
+| GROUP-CORE-REQ-014 | `group_schema_smoke.sql` + `find_profile_by_username` client |
+| GROUP-CORE-REQ-005 | `account_manager_persistence_test.dart` (`profileKind` manifest) |
 
 Gate implementazione: `check-spec-sync.sh` + `verify.sh` + smoke SQL gruppo.
 

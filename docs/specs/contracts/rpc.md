@@ -1,7 +1,7 @@
 # Contratto RPC — messaggistica Alpha
 
 **Ultima revisione**: 2026-07-06  
-**Status**: `implemented` su `main` (migrazioni fino a `20260704130000`); § gruppi = target [GROUP-DELIVERY](../capabilities/GROUP-DELIVERY.spec.md) `approved`  
+**Status**: `implemented` su `main` (migrazioni fino a `20260706120000`, incl. GROUP-DELIVERY)  
 **Spec**: [MAILBOX-SEND](../capabilities/MAILBOX-SEND.spec.md), [MAILBOX-INBOX](../capabilities/MAILBOX-INBOX.spec.md), [MAILBOX-READ](../capabilities/MAILBOX-READ.spec.md), [CONTACTS](../capabilities/CONTACTS.spec.md), [PROFILE](../capabilities/PROFILE.spec.md), [RECEPTION-ALLOWLIST](../capabilities/RECEPTION-ALLOWLIST.spec.md), [GROUP-DELIVERY](../capabilities/GROUP-DELIVERY.spec.md)
 
 Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.

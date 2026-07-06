@@ -26,10 +26,12 @@ class MessageBubble extends StatelessWidget {
   const MessageBubble({
     super.key,
     required this.message,
+    this.showAuthorLabel = false,
     this.onRetry,
   });
 
   final ChatMessage message;
+  final bool showAuthorLabel;
   final VoidCallback? onRetry;
 
   @override
@@ -64,6 +66,24 @@ class MessageBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+            if (showAuthorLabel &&
+                !isMine &&
+                message.authorDisplayName != null &&
+                message.authorDisplayName!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2, left: 4, right: 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    message.authorDisplayName!,
+                    style: const TextStyle(
+                      color: AlfredColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
             if (message.isGif) _GifContent(url: message.mediaUrl!),
             if (message.isVoice)
               VoiceMessageContent(message: message, isMine: isMine),

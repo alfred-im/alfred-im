@@ -108,13 +108,30 @@ class _ActiveProfileCard extends StatelessWidget {
         ProfileAvatar(profile: profile, radius: 28, fontSize: 22),
         const SizedBox(width: 12),
         Expanded(
-          child: ProfileIdentityLines(
-            profile: profile,
-            nameStyle: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 17,
-              color: AlfredColors.textPrimary,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ProfileIdentityLines(
+                profile: profile,
+                nameStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 17,
+                  color: AlfredColors.textPrimary,
+                ),
+              ),
+              if (profile.isGroup)
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Text(
+                    'Gruppo',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AlfredColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         IconButton(
@@ -149,6 +166,15 @@ class _AccountTile extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (account.profile.isGroup)
+            const Text(
+              'Gruppo',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AlfredColors.textSecondary,
+              ),
+            ),
           if (account.profile.hasUsername) Text(account.profile.handle),
           if (account.profile.hasPronouns)
             Text(

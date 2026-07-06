@@ -1,3 +1,16 @@
+/// Tipo account Alfred (`profiles.profile_kind`).
+enum ProfileKind {
+  user,
+  group;
+
+  static ProfileKind fromString(String? value) {
+    if (value == 'group') return ProfileKind.group;
+    return ProfileKind.user;
+  }
+
+  String get wireValue => name;
+}
+
 /// Identità profilo Alfred visibile in UI (sidebar, inbox, chat, rubrica).
 ///
 /// Unico modello per nome, username, avatar e pronomi — indipendente dal contesto
@@ -9,6 +22,7 @@ class ProfileSummary {
     this.username,
     this.avatarUrl,
     this.pronouns,
+    this.profileKind = ProfileKind.user,
   });
 
   final String id;
@@ -16,6 +30,9 @@ class ProfileSummary {
   final String? username;
   final String? avatarUrl;
   final String? pronouns;
+  final ProfileKind profileKind;
+
+  bool get isGroup => profileKind == ProfileKind.group;
 
   bool get hasUsername => username != null && username!.isNotEmpty;
 
@@ -28,6 +45,7 @@ class ProfileSummary {
     String? username,
     String? avatarUrl,
     String? pronouns,
+    ProfileKind? profileKind,
     bool clearAvatarUrl = false,
     bool clearPronouns = false,
     bool clearUsername = false,
@@ -38,6 +56,7 @@ class ProfileSummary {
       username: clearUsername ? null : username ?? this.username,
       avatarUrl: clearAvatarUrl ? null : avatarUrl ?? this.avatarUrl,
       pronouns: clearPronouns ? null : pronouns ?? this.pronouns,
+      profileKind: profileKind ?? this.profileKind,
     );
   }
 
@@ -58,6 +77,7 @@ class ProfileSummary {
       displayName: json['display_name'] as String,
       avatarUrl: json['avatar_url'] as String?,
       pronouns: json['pronouns'] as String?,
+      profileKind: ProfileKind.fromString(json['profile_kind'] as String?),
     );
   }
 
@@ -78,6 +98,7 @@ class ProfileSummary {
       displayName: json['displayName'] as String,
       avatarUrl: json['avatarUrl'] as String?,
       pronouns: json['pronouns'] as String?,
+      profileKind: ProfileKind.fromString(json['profileKind'] as String?),
     );
   }
 
@@ -87,5 +108,6 @@ class ProfileSummary {
         'displayName': displayName,
         'avatarUrl': avatarUrl,
         'pronouns': pronouns,
+        'profileKind': profileKind.wireValue,
       };
 }

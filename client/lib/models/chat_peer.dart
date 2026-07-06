@@ -38,6 +38,8 @@ class ChatPeer {
 
   bool get hasInboxHistory => lastMessageAt != null;
 
+  bool get isGroup => profile.isGroup;
+
   factory ChatPeer.fromInboxRow(Map<String, dynamic> json) {
     final lastAt = json['last_message_at'] != null
         ? DateTime.parse(json['last_message_at'] as String)

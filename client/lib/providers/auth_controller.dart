@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/open_account.dart';
+import '../models/profile_summary.dart';
 import '../models/account_view_state.dart';
 import '../models/chat_peer.dart';
 import '../models/profile.dart';
@@ -108,6 +109,7 @@ class AuthController extends ChangeNotifier {
     required String password,
     required String username,
     required String displayName,
+    ProfileKind profileKind = ProfileKind.user,
   }) async {
     final emailError = AuthIdentity.validateEmail(email);
     if (emailError != null) {
@@ -139,6 +141,7 @@ class AuthController extends ChangeNotifier {
         password: password,
         username: username,
         displayName: displayName.trim(),
+        profileKind: profileKind,
       );
       showAuthOverlay = false;
     });

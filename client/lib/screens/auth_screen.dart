@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
 import '../theme/alfred_colors.dart';
 import '../widgets/alfred_logo.dart';
@@ -26,6 +27,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _passwordController = TextEditingController();
   final _displayNameController = TextEditingController();
   bool _isSignUp = false;
+  ProfileKind _profileKind = ProfileKind.user;
 
   @override
   void dispose() {
@@ -44,6 +46,7 @@ class _AuthScreenState extends State<AuthScreen> {
         password: _passwordController.text,
         username: _usernameController.text.trim(),
         displayName: _displayNameController.text.trim(),
+        profileKind: _profileKind,
       );
     } else {
       await auth.signIn(
@@ -165,6 +168,25 @@ class _AuthScreenState extends State<AuthScreen> {
                   labelText: 'Nome visualizzato',
                 ),
                 textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 16),
+              SegmentedButton<ProfileKind>(
+                segments: const [
+                  ButtonSegment(
+                    value: ProfileKind.user,
+                    label: Text('Account personale'),
+                    icon: Icon(Icons.person_outline, size: 18),
+                  ),
+                  ButtonSegment(
+                    value: ProfileKind.group,
+                    label: Text('Account gruppo'),
+                    icon: Icon(Icons.groups_outlined, size: 18),
+                  ),
+                ],
+                selected: {_profileKind},
+                onSelectionChanged: (selection) {
+                  setState(() => _profileKind = selection.first);
+                },
               ),
             ],
             const SizedBox(height: 12),

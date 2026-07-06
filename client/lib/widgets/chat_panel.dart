@@ -16,11 +16,13 @@ class ChatPanel extends StatelessWidget {
     required this.peer,
     this.showBackButton = false,
     this.onBack,
+    this.showAuthorLabels = false,
   });
 
   final ChatPeer peer;
   final bool showBackButton;
   final VoidCallback? onBack;
+  final bool showAuthorLabels;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,7 @@ class ChatPanel extends StatelessWidget {
               child: AnchoredMessageList(
                 messages: messages,
                 isLoading: messagesController.isLoading,
+                showAuthorLabels: showAuthorLabels,
                 onRetryMessage: messagesController.retryMessage,
               ),
             ),

@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/account_view_state.dart';
 import '../models/chat_peer.dart';
 import '../models/open_account.dart';
+import '../models/profile_summary.dart';
 import '../utils/auth_redirect_url.dart';
 import 'account_session.dart';
 import 'account_storage_service.dart';
@@ -129,6 +130,7 @@ class AccountManager {
     required String password,
     required String username,
     required String displayName,
+    ProfileKind profileKind = ProfileKind.user,
   }) async {
     await _pauseAuthListeners();
     try {
@@ -137,6 +139,7 @@ class AccountManager {
         password: password,
         username: username,
         displayName: displayName,
+        profileKind: profileKind,
       );
       await _storage.upsertAccount(account);
       final session = await _rebuildFromManifest(

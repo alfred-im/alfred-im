@@ -12,11 +12,13 @@ class AnchoredMessageList extends StatefulWidget {
     required this.messages,
     required this.isLoading,
     this.onRetryMessage,
+    this.showAuthorLabels = false,
   });
 
   final List<ChatMessage> messages;
   final bool isLoading;
   final void Function(String messageId)? onRetryMessage;
+  final bool showAuthorLabels;
 
   @override
   State<AnchoredMessageList> createState() => _AnchoredMessageListState();
@@ -147,6 +149,7 @@ class _AnchoredMessageListState extends State<AnchoredMessageList> {
             final message = widget.messages[widget.messages.length - 1 - index];
             return MessageBubble(
               message: message,
+              showAuthorLabel: widget.showAuthorLabels,
               onRetry: message.canRetry && widget.onRetryMessage != null
                   ? () => widget.onRetryMessage!(message.id)
                   : null,

@@ -9,6 +9,45 @@ class MessageService {
 
   final SupabaseClient _client;
 
+  Future<List<ChatMessage>> fetchOwnerMessages({
+    required String currentUserId,
+    int limit = 200,
+  }) async {
+    final rows = await _client.rpc(
+      'list_owner_messages',
+      params: {'p_limit': limit},
+    );
+
+    return (rows as List<dynamic>)
+        .map(
+          (r) => ChatMessage.fromJson(
+            json: r as Map<String, dynamic>,
+            currentUserId: currentUserId,
+          ),
+        )
+        .where((m) => m.hasRenderableContent)
+        .toList();
+  }
+
+  Future<ChatMessage> broadcastToAllowlist({
+    required String body,
+    required String currentUserId,
+    required String clientMessageId,
+  }) async {
+    final row = await _client.rpc(
+      'broadcast_message_to_allowlist',
+      params: {
+        'p_body': body,
+        'p_client_message_id': clientMessageId,
+        'p_content_type': 'text',
+      },
+    );
+    return ChatMessage.fromJson(
+      json: row as Map<String, dynamic>,
+      currentUserId: currentUserId,
+    );
+  }
+
   Future<List<ChatMessage>> fetchPeerMessages({
     required String peerProfileId,
     required String currentUserId,
@@ -151,6 +190,49 @@ class MessageService {
       json: row as Map<String, dynamic>,
       currentUserId: currentUserId,
     );
+  }
+
+  RealtimeChannel subscribeToOwnerMessages({
+    required String currentUserId,
+    required void Function(ChatMessage message) onMessage,
+  }) {
+    void handle(PostgresChangePayload payload) {
+      final record = payload.newRecord;
+      if (record.isEmpty) return;
+      if (record['owner_id'] != currentUserId) return;
+      final message = ChatMessage.fromJson(
+        json: record,
+        currentUserId: currentUserId,
+      );
+      if (!message.hasRenderableContent) return;
+      onMessage(message);
+    }
+
+    return _client
+        .channel('messages-owner-$currentUserId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'owner_id',
+            value: currentUserId,
+          ),
+          callback: handle,
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'owner_id',
+            value: currentUserId,
+          ),
+          callback: handle,
+        )
+        .subscribe();
   }
 
   RealtimeChannel subscribeToPeerMessages({

@@ -4,7 +4,7 @@
 |-------|--------|
 | **Spec ID** | `GROUP-DELIVERY` |
 | **Layer** | capability |
-| **Status** | `approved` |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-06 |
 | **ADR** | [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../decisions/server-as-reception.md) |
 | **PR** | — |
@@ -138,13 +138,11 @@ send_message_to_profile(destinatario = P) con auth.uid() = G
 
 | REQ-ID | Verifica |
 |--------|----------|
-| GROUP-DELIVERY-REQ-001–005 | `supabase/tests/group_delivery_smoke.sql` (da creare) |
-| GROUP-DELIVERY-REQ-006–008 | stesso smoke + `group_erogation_smoke.sql` |
-| GROUP-DELIVERY-REQ-010 | `group_compose_smoke.sql` |
-| GROUP-DELIVERY-REQ-011–012 | `group_erogation_smoke.sql` — spunte mittente |
-| GROUP-DELIVERY-REQ-014 | `reception_allowlist_gate_smoke.sql` esteso |
-| GROUP-DELIVERY-REQ-015 | `group_schema_smoke.sql` |
-| GROUP-DELIVERY-REQ-009 | `client/test/unit/group_message_display_test.dart` (da creare) |
+| GROUP-DELIVERY-REQ-001–008, 011–012 | `supabase/tests/group_delivery_smoke.sql` |
+| GROUP-DELIVERY-REQ-010 | `broadcast_message_to_allowlist` in migrazione + shell gruppo |
+| GROUP-DELIVERY-REQ-014 | gate in `send_message_to_profile` (stesso smoke) |
+| GROUP-DELIVERY-REQ-015 | `supabase/tests/group_schema_smoke.sql` |
+| GROUP-DELIVERY-REQ-009 | `client/test/unit/group_message_display_test.dart` |
 
 Gate implementazione: `check-spec-sync.sh` + `verify.sh` + smoke SQL + `integration` esteso.
 

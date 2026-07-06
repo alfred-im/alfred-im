@@ -9,7 +9,7 @@ class ProfileService {
   final SupabaseClient _client;
 
   static const _publicProfileColumns =
-      'id, username, display_name, avatar_url, pronouns';
+      'id, username, display_name, avatar_url, pronouns, profile_kind';
 
   Future<UserProfile> updateProfile({
     required String userId,

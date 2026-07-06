@@ -25,6 +25,7 @@ class ChatInputBar extends StatefulWidget {
   const ChatInputBar({
     super.key,
     this.enabled = true,
+    this.hintText = 'Scrivi un messaggio',
     this.onSend,
     this.onSendGif,
     this.onSendVoice,
@@ -32,6 +33,7 @@ class ChatInputBar extends StatefulWidget {
   });
 
   final bool enabled;
+  final String hintText;
   final Future<void> Function(String body)? onSend;
   final Future<void> Function(Uint8List bytes)? onSendGif;
   final VoiceSendCallback? onSendVoice;
@@ -692,10 +694,10 @@ class _ChatInputBarState extends State<ChatInputBar> {
                       controller: _controller,
                       enabled: widget.enabled && !_isComposerLocked,
                       onChanged: (_) => setState(() {}),
-                      decoration: const InputDecoration(
-                        hintText: 'Scrivi un messaggio',
+                      decoration: InputDecoration(
+                        hintText: widget.hintText,
                         contentPadding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       ),
                       textInputAction: TextInputAction.send,
                       onSubmitted: widget.enabled ? (_) => _submit() : null,

@@ -49,12 +49,12 @@ Indice capability con stato e tracciabilità PR. Contratti: [rpc.md](./contracts
 
 ---
 
-## Capability gruppi (approved — da implementare)
+## Capability gruppi (implemented)
 
 | Spec ID | Titolo | Status | File |
 |---------|--------|--------|------|
-| **GROUP-CORE** | Account gruppo, shell, partecipazione allow list | `approved` | [GROUP-CORE.spec.md](./capabilities/GROUP-CORE.spec.md) |
-| **GROUP-DELIVERY** | Invio, erogazione automatica, autori, spunte | `approved` | [GROUP-DELIVERY.spec.md](./capabilities/GROUP-DELIVERY.spec.md) |
+| **GROUP-CORE** | Account gruppo, shell, partecipazione allow list | `implemented` | [GROUP-CORE.spec.md](./capabilities/GROUP-CORE.spec.md) |
+| **GROUP-DELIVERY** | Invio, erogazione automatica, autori, spunte | `implemented` | [GROUP-DELIVERY.spec.md](./capabilities/GROUP-DELIVERY.spec.md) |
 
 ---
 

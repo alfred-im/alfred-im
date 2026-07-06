@@ -6,11 +6,13 @@ import 'package:uuid/uuid.dart';
 import '../config/location_config.dart';
 import '../config/voice_config.dart';
 import '../models/message.dart';
+import '../models/profile_summary.dart';
 import '../models/outbound_queue_item.dart';
 import '../services/inbox_service.dart';
 import '../services/message_media_service.dart';
 import '../services/message_service.dart';
 import '../services/outbound_message_queue.dart';
+import '../services/profile_service.dart';
 import '../utils/date_format.dart';
 
 class MessagesController extends ChangeNotifier {
@@ -20,6 +22,8 @@ class MessagesController extends ChangeNotifier {
     required this.messageService,
     required this.messageMediaService,
     required this.inboxService,
+    this.profileService,
+    this.peerIsGroup = false,
     this.onMessagesChanged,
     this.hasValidSession,
     OutboundMessageQueue? outboundQueue,
@@ -36,6 +40,8 @@ class MessagesController extends ChangeNotifier {
   final MessageService messageService;
   final MessageMediaService messageMediaService;
   final InboxService inboxService;
+  final ProfileService? profileService;
+  final bool peerIsGroup;
   final OutboundMessageQueue _outboundQueue;
   final _uuid = const Uuid();
 
@@ -83,7 +89,11 @@ class MessagesController extends ChangeNotifier {
     } else {
       messages = [...messages, _withTimeLabel(message)];
     }
-    notifyListeners();
+    if (peerIsGroup) {
+      unawaited(_enrichAuthorNames());
+    } else {
+      notifyListeners();
+    }
   }
 
   ChatMessage _withTimeLabel(ChatMessage message) {
@@ -118,7 +128,7 @@ class MessagesController extends ChangeNotifier {
         peerProfileId: peerProfileId,
         currentUserId: userId,
       );
-      messages = loaded.map(_withTimeLabel).toList();
+      messages = await _enrichMessages(loaded.map(_withTimeLabel).toList());
       error = null;
     } catch (e) {
       error = e.toString();
@@ -126,6 +136,43 @@ class MessagesController extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<List<ChatMessage>> _enrichMessages(List<ChatMessage> source) async {
+    if (!peerIsGroup || profileService == null) return source;
+
+    final authorIds = source
+        .map((m) => m.displayAuthorId)
+        .whereType<String>()
+        .where((id) => id != userId)
+        .toSet()
+        .toList();
+    if (authorIds.isEmpty) return source;
+
+    final profiles = await profileService!.fetchSummariesByIds(authorIds);
+    final byId = {for (final p in profiles) p.id: p};
+
+    return source
+        .map(
+          (m) => m.copyWith(
+            authorDisplayName: _authorLabelFor(m, byId),
+          ),
+        )
+        .toList();
+  }
+
+  Future<void> _enrichAuthorNames() async {
+    messages = await _enrichMessages(messages);
+    notifyListeners();
+  }
+
+  String? _authorLabelFor(ChatMessage message, Map<String, ProfileSummary> byId) {
+    final id = message.displayAuthorId;
+    if (id == null) return null;
+    if (id == userId) return 'Tu';
+    final profile = byId[id];
+    if (profile == null) return null;
+    return profile.hasUsername ? '@${profile.username}' : profile.displayName;
   }
 
   Future<void> send(String body) async {
