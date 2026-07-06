@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../theme/alfred_colors.dart';
 import 'location_message_content.dart';
+import 'message_author_header.dart';
 import 'voice_message_content.dart';
 
 const double _gifMaxWidth = 240;
@@ -37,9 +38,12 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMine = message.isMine;
-    final bubble = Align(
-      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
+    final showHeader = showAuthorLabel &&
+        !isMine &&
+        message.authorDisplayName != null &&
+        message.authorDisplayName!.isNotEmpty;
+
+    final bubble = Container(
         margin: const EdgeInsets.only(bottom: 6),
         padding: message.isMedia
             ? const EdgeInsets.all(4)
@@ -66,24 +70,6 @@ class MessageBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (showAuthorLabel &&
-                !isMine &&
-                message.authorDisplayName != null &&
-                message.authorDisplayName!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 2, left: 4, right: 4),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    message.authorDisplayName!,
-                    style: const TextStyle(
-                      color: AlfredColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
             if (message.isGif) _GifContent(url: message.mediaUrl!),
             if (message.isVoice)
               VoiceMessageContent(message: message, isMine: isMine),
@@ -132,10 +118,19 @@ class MessageBubble extends StatelessWidget {
             ],
           ],
         ),
+      );
+
+    return Align(
+      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment:
+            isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          if (showHeader) MessageAuthorHeader(message: message),
+          bubble,
+        ],
       ),
     );
-
-    return bubble;
   }
 }
 

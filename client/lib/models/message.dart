@@ -64,6 +64,8 @@ class ChatMessage {
     String? senderId,
     this.originalAuthorId,
     this.authorDisplayName,
+    this.authorAvatarUrl,
+    this.authorProfileId,
     this.contentType = MessageContentType.text,
     this.mediaUrl,
     this.durationSeconds,
@@ -86,6 +88,8 @@ class ChatMessage {
   final String? authorId;
   final String? originalAuthorId;
   final String? authorDisplayName;
+  final String? authorAvatarUrl;
+  final String? authorProfileId;
   final MessageContentType contentType;
   final String? mediaUrl;
   final int? durationSeconds;
@@ -184,6 +188,9 @@ class ChatMessage {
     String? authorId,
     String? originalAuthorId,
     String? authorDisplayName,
+    String? authorAvatarUrl,
+    String? authorProfileId,
+    bool clearAuthorAvatarUrl = false,
     MessageContentType? contentType,
     String? mediaUrl,
     int? durationSeconds,
@@ -206,6 +213,9 @@ class ChatMessage {
       authorId: authorId ?? this.authorId,
       originalAuthorId: originalAuthorId ?? this.originalAuthorId,
       authorDisplayName: authorDisplayName ?? this.authorDisplayName,
+      authorAvatarUrl:
+          clearAuthorAvatarUrl ? null : authorAvatarUrl ?? this.authorAvatarUrl,
+      authorProfileId: authorProfileId ?? this.authorProfileId,
       contentType: contentType ?? this.contentType,
       mediaUrl: mediaUrl ?? this.mediaUrl,
       durationSeconds: durationSeconds ?? this.durationSeconds,

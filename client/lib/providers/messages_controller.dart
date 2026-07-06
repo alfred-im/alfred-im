@@ -13,6 +13,7 @@ import '../services/message_media_service.dart';
 import '../services/message_service.dart';
 import '../services/outbound_message_queue.dart';
 import '../services/profile_service.dart';
+import '../utils/author_display.dart' show enrichMessageAuthor;
 import '../utils/date_format.dart';
 
 class MessagesController extends ChangeNotifier {
@@ -147,15 +148,19 @@ class MessagesController extends ChangeNotifier {
         .where((id) => id != userId)
         .toSet()
         .toList();
-    if (authorIds.isEmpty) return source;
 
-    final profiles = await profileService!.fetchSummariesByIds(authorIds);
-    final byId = {for (final p in profiles) p.id: p};
+    var profilesById = <String, ProfileSummary>{};
+    if (authorIds.isNotEmpty) {
+      final profiles = await profileService!.fetchSummariesByIds(authorIds);
+      profilesById = {for (final p in profiles) p.id: p};
+    }
 
     return source
         .map(
-          (m) => m.copyWith(
-            authorDisplayName: _authorLabelFor(m, byId),
+          (m) => enrichMessageAuthor(
+            message: m,
+            profilesById: profilesById,
+            currentUserId: userId,
           ),
         )
         .toList();
@@ -164,15 +169,6 @@ class MessagesController extends ChangeNotifier {
   Future<void> _enrichAuthorNames() async {
     messages = await _enrichMessages(messages);
     notifyListeners();
-  }
-
-  String? _authorLabelFor(ChatMessage message, Map<String, ProfileSummary> byId) {
-    final id = message.contentAuthorId ?? message.authorId;
-    if (id == null) return null;
-    if (id == userId) return 'Tu';
-    final profile = byId[id];
-    if (profile == null) return null;
-    return profile.hasUsername ? '@${profile.username}' : profile.displayName;
   }
 
   Future<void> send(String body) async {

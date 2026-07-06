@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/models/profile_summary.dart';
+import 'package:alfred_client/utils/author_display.dart';
 
 // spec: GROUP-DELIVERY-REQ-009
 void main() {
@@ -112,6 +113,74 @@ void main() {
         profileKind: ProfileKind.group,
       );
       expect(group.isGroup, isTrue);
+    });
+  });
+
+  group('author display', () {
+    test('authorLabelForProfile prefers display name over username', () {
+      const profile = ProfileSummary(
+        id: 'u1',
+        displayName: 'Marco Rossi',
+        username: 'marco',
+      );
+
+      expect(authorLabelForProfile(profile), 'Marco Rossi');
+    });
+
+    test('authorLabelForProfile falls back to username without @', () {
+      const profile = ProfileSummary(
+        id: 'u2',
+        displayName: '',
+        username: 'marco',
+      );
+
+      expect(authorLabelForProfile(profile), 'marco');
+    });
+
+    test('enrichMessageAuthor sets avatar and readable name', () {
+      const message = ChatMessage(
+        id: '1',
+        body: 'ciao',
+        timeLabel: '12:00',
+        isMine: false,
+        authorId: 'group-1',
+        originalAuthorId: 'human-1',
+      );
+      const profile = ProfileSummary(
+        id: 'human-1',
+        displayName: 'Giulia',
+        username: 'giulia',
+        avatarUrl: 'https://example.com/a.png',
+      );
+
+      final enriched = enrichMessageAuthor(
+        message: message,
+        profilesById: {'human-1': profile},
+        currentUserId: 'me',
+      );
+
+      expect(enriched.authorDisplayName, 'Giulia');
+      expect(enriched.authorAvatarUrl, 'https://example.com/a.png');
+      expect(enriched.authorProfileId, 'human-1');
+    });
+
+    test('enrichMessageAuthor labels own messages as Tu', () {
+      const message = ChatMessage(
+        id: '2',
+        body: 'mio',
+        timeLabel: '12:01',
+        isMine: true,
+        authorId: 'group-1',
+        originalAuthorId: 'me',
+      );
+
+      final enriched = enrichMessageAuthor(
+        message: message,
+        profilesById: const {},
+        currentUserId: 'me',
+      );
+
+      expect(enriched.authorDisplayName, 'Tu');
     });
   });
 }

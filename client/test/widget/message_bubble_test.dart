@@ -178,4 +178,56 @@ void main() {
     expect(message.status, MessageStatus.delivered);
     expect(find.byIcon(Icons.done_all), findsOneWidget);
   });
+
+  testWidgets('MessageBubble shows author header with readable name', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: const Scaffold(
+          body: MessageBubble(
+            showAuthorLabel: true,
+            message: ChatMessage(
+              id: '8',
+              body: 'Messaggio di gruppo',
+              timeLabel: '12:37',
+              isMine: false,
+              authorDisplayName: 'Giulia Bianchi',
+              authorProfileId: 'user-g',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Giulia Bianchi'), findsOneWidget);
+    expect(find.text('@giulia'), findsNothing);
+    expect(find.text('Messaggio di gruppo'), findsOneWidget);
+  });
+
+  testWidgets('MessageBubble hides author header for own messages', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: const Scaffold(
+          body: MessageBubble(
+            showAuthorLabel: true,
+            message: ChatMessage(
+              id: '9',
+              body: 'Mio messaggio',
+              timeLabel: '12:38',
+              isMine: true,
+              authorDisplayName: 'Tu',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Tu'), findsNothing);
+    expect(find.text('Mio messaggio'), findsOneWidget);
+  });
 }

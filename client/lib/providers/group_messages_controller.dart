@@ -8,6 +8,7 @@ import '../models/message.dart';
 import '../models/profile_summary.dart';
 import '../services/message_service.dart';
 import '../services/profile_service.dart';
+import '../utils/author_display.dart' show enrichMessageAuthor;
 import '../utils/date_format.dart';
 
 /// Messaggistica account gruppo — storico unico + broadcast allow list.
@@ -113,15 +114,20 @@ class GroupMessagesController extends ChangeNotifier {
         .where((id) => id != userId)
         .toSet()
         .toList();
-    if (authorIds.isEmpty) return source;
 
-    final profiles = await profileService.fetchSummariesByIds(authorIds);
-    final byId = {for (final p in profiles) p.id: p};
+    var profilesById = <String, ProfileSummary>{};
+    if (authorIds.isNotEmpty) {
+      final profiles = await profileService.fetchSummariesByIds(authorIds);
+      profilesById = {for (final p in profiles) p.id: p};
+    }
 
     return source
         .map(
-          (m) => m.copyWith(
-            authorDisplayName: _labelFor(m, byId),
+          (m) => enrichMessageAuthor(
+            message: m,
+            profilesById: profilesById,
+            currentUserId: userId,
+          ).copyWith(
             timeLabel: formatMessageTime(m.createdAt ?? DateTime.now()),
           ),
         )
@@ -130,15 +136,6 @@ class GroupMessagesController extends ChangeNotifier {
 
   Future<void> _enrichAuthorNames() async {
     messages = await _enrichMessages(messages);
-  }
-
-  String? _labelFor(ChatMessage message, Map<String, ProfileSummary> byId) {
-    final id = message.contentAuthorId ?? message.authorId;
-    if (id == null) return null;
-    if (id == userId) return 'Tu';
-    final profile = byId[id];
-    if (profile == null) return null;
-    return profile.hasUsername ? '@${profile.username}' : profile.displayName;
   }
 
   @override
