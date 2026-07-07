@@ -4,10 +4,10 @@
 |-------|--------|
 | **Spec ID** | `PEER-PROFILE` |
 | **Layer** | capability |
-| **Status** | `approved` |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-07 |
 | **ADR** | — |
-| **PR** | — |
+| **PR** | #163 |
 | **Correlata** | [PROFILE](./PROFILE.spec.md), [CONTACTS](./CONTACTS.spec.md), [RECEPTION-ALLOWLIST](./RECEPTION-ALLOWLIST.spec.md), [AUTH-MULTI](./AUTH-MULTI.spec.md) |
 
 Documento per AI — overlay fullscreen al tap avatar di un account Alfred altrui: identità pubblica, toggle allow list, azione rubrica.

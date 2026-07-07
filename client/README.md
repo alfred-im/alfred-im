@@ -16,10 +16,11 @@ Client ufficiale Alfred — multi-piattaforma (web, mobile, desktop).
 | **Chat** | Identificata da `peer_profile_id` (`ChatPeer`) |
 | **Media** | Testo, GIF, voice (WebM/Opus), location (mappa OSM) |
 | **Nuovo messaggio** | FAB → username → stessa chat (vuota o con storico) |
-| **Ricezione** | Allow list personale (`reception_allowlist`) — UI «Persone consentite»; lista vuota = nessun recapito |
+| **Ricezione** | Allow list personale (`reception_allowlist`) — UI «Persone consentite» + toggle in scheda profilo peer (tap avatar) |
+| **Profilo peer** | Overlay fullscreen al tap avatar — Allow + rubrica — spec `PEER-PROFILE` |
 | **Gruppi** | Account `profile_kind = group`; shell senza inbox; partecipazione allow list bidirezionale; erogazione automatica — spec `GROUP-CORE`, `GROUP-DELIVERY` |
 | **Invio** | `send_message_to_profile` |
-| **Gate test** | `verify.sh` — **103** test unit/widget (zero issue analyze) |
+| **Gate test** | `verify.sh` — **108** test unit/widget (zero issue analyze) |
 
 ## Test
 
@@ -45,7 +46,7 @@ lib/
 ├── services/    # AccountManager, AccountSession, InboxService, …
 ├── screens/     # HomeScreen (shell), GroupConversationScreen, AppShell, …
 ├── providers/   # AuthController, InboxController, GroupMessagesController, MessagesController, …
-└── widgets/     # AuthOverlay, InboxPanel, ChatPanel, …
+└── widgets/     # AuthOverlay, InboxPanel, ChatPanel, PeerProfileOverlay, …
 ```
 
-Vedi `docs/decisions/multi-account-parallel-sessions.md`, `docs/implementation/multi-account-client.md`, `docs/implementation/groups-client.md`, `PROJECT_MAP.md`.
+Vedi `docs/decisions/multi-account-parallel-sessions.md`, `docs/implementation/multi-account-client.md`, `docs/implementation/groups-client.md`, `docs/implementation/peer-profile-overlay.md`, `PROJECT_MAP.md`.

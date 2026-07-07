@@ -19,6 +19,15 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Aggiunto (2026-07-07 — PEER-PROFILE, PR #163)
+
+- **Client**: overlay fullscreen al tap avatar peer (`showPeerProfileOverlay`, `PeerProfileOverlay`) — identità pubblica, switch Allow (`reception_allowlist`), pulsante rubrica add/remove (`contacts`); azioni **immediate** senza dialog di conferma
+- **Punti attivazione**: tile inbox (solo avatar), header chat, autore messaggio gruppo, lista «Persone consentite», rubrica internal
+- **Controller**: `ContactsController.contactForProfileId`, `removeInternalByProfileId`; `ReceptionAllowlistController.removeByProfileId`; `ProfileAvatar.onTap`
+- **Spec SDD**: `PEER-PROFILE` → `implemented`
+- **Test**: `peer_profile_overlay_test.dart`, `contacts_controller_test.dart`; gate **108** test
+- **Doc**: hub, `peer-profile-overlay.md`, registro PR #163, `PROJECT_MAP`, `SESSION_HANDOFF`
+
 ### Aggiunto (2026-07-06 — GROUP-CORE + GROUP-DELIVERY, PR #162)
 
 - **Migrazioni** `20260706120000`–`20260706140000`: `profile_kind` (`user`/`group`), `original_author_id`, RPC gruppo (`send_message_to_profile` destinatario gruppo, `broadcast_message_to_allowlist`, `list_owner_messages`, `erogate_group_message`), `peer_profile_kind` in `list_inbox`

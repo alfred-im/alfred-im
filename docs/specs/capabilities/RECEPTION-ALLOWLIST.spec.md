@@ -77,7 +77,7 @@ La rubrica (`contacts`) resta **isolata**: essere in rubrica non implica essere 
 
 ## 3. Fuori scope (questa capability)
 
-- Toggle «consenti ricezione» nella scheda profilo persona (futuro; scheda profilo peer non esiste in Alpha)
+- Toggle «consenti ricezione» nella scheda profilo persona — **implementato** in [PEER-PROFILE](./PEER-PROFILE.spec.md) (PR #163); schermata lista «Persone consentite» resta entry dedicata
 - Allow list per indirizzi federati non risolti a `profiles.id` (fase B: mapping identità bridge → `allowed_profile_id` o estensione schema)
 - Notifiche push al destinatario per messaggi rifiutati
 - Coda «messaggi in attesa di consenso»

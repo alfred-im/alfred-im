@@ -109,8 +109,9 @@ Nessuna RPC dedicata `update_profile` — client usa PostgREST `.from('profiles'
 
 - `AccountSidebar` — account in focus e lista account
 - `InboxPeerTile` — avatar + nome peer
-- `ChatPanel` header — identità controparte
+- `ChatPanel` header — identità controparte (tap avatar → [PEER-PROFILE](./PEER-PROFILE.spec.md))
 - `ChatPeer` — identità chat (con o senza storico inbox)
+- Overlay peer — tap avatar → `PeerProfileOverlay` (allow + rubrica)
 
 ---
 

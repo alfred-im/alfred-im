@@ -1,6 +1,6 @@
 # Registro PR Alpha Flutter (main)
 
-**Ultimo aggiornamento**: 2026-07-06 (GROUP-CORE/DELIVERY #162; RECEPTION-ALLOWLIST #161)  
+**Ultimo aggiornamento**: 2026-07-07 (PEER-PROFILE #163; GROUP-CORE/DELIVERY #162; RECEPTION-ALLOWLIST #161)  
 **Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
 
 Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/alpha-full-stack.md` (e fix dedicato se applicabile).
@@ -57,6 +57,7 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#160** | Regole consenso esplicito | Conferma verbale prima di scrittura repo; SDD gate unico | — | `.cursor-rules.md`, `AGENTS.md` |
 | **#161** | RECEPTION-ALLOWLIST | Allow list ricezione; gate `send_message_to_profile`; UI «Persone consentite»; rifiuto silenzioso | RECEPTION-ALLOWLIST | `RECEPTION-ALLOWLIST.spec.md`, `contracts/schema.md`, `contracts/rpc.md`, migrazione `20260704130000` |
 | **#162** | GROUP-CORE + GROUP-DELIVERY | Account `profile_kind = group`; shell senza inbox; erogazione automatica; broadcast singola riga; `original_author_id`; UI autore avatar+nome | GROUP-CORE, GROUP-DELIVERY | `GROUP-*.spec.md`, `groups-client.md`, `contracts/rpc.md`, `contracts/schema.md`, migrazioni `20260706120000`–`20260706140000` |
+| **#163** | PEER-PROFILE | Scheda profilo peer fullscreen al tap avatar; switch Allow + rubrica (senza conferma); inbox/chat/gruppo/allow list/rubrica | PEER-PROFILE | `PEER-PROFILE.spec.md`, `peer-profile-overlay.md`, `peer_profile_overlay.dart` |
 
 ---
 

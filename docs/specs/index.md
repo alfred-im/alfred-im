@@ -1,7 +1,7 @@
 # Catalogo spec — Alfred (prototipo)
 
-**Ultima revisione**: 2026-07-06  
-**REQ-ID**: capability Alpha su `main` sono `implemented` (inclusi `GROUP-CORE` e `GROUP-DELIVERY`, PR #162).
+**Ultima revisione**: 2026-07-07  
+**REQ-ID**: capability Alpha su `main` sono `implemented` (inclusi `PEER-PROFILE` PR #163).
 
 Indice capability con stato e tracciabilità PR. Contratti: [rpc.md](./contracts/rpc.md), [schema.md](./contracts/schema.md).
 
@@ -29,7 +29,7 @@ Indice capability con stato e tracciabilità PR. Contratti: [rpc.md](./contracts
 | **CONTACTS** | Rubrica personale | `implemented` | #109 | [CONTACTS.spec.md](./capabilities/CONTACTS.spec.md) |
 | **AUTH-MULTI** | Multi-account client | `implemented` | #140, #147, #152 | [AUTH-MULTI.spec.md](./capabilities/AUTH-MULTI.spec.md) |
 | **RECEPTION-ALLOWLIST** | Filtro ricezione personale (allow list) | `implemented` | #161 | [RECEPTION-ALLOWLIST.spec.md](./capabilities/RECEPTION-ALLOWLIST.spec.md) |
-| **PEER-PROFILE** | Scheda profilo peer in overlay (avatar tap) | `approved` | — | [PEER-PROFILE.spec.md](./capabilities/PEER-PROFILE.spec.md) |
+| **PEER-PROFILE** | Scheda profilo peer in overlay (avatar tap) | `implemented` | #163 | [PEER-PROFILE.spec.md](./capabilities/PEER-PROFILE.spec.md) |
 
 ---
 
@@ -48,6 +48,8 @@ Indice capability con stato e tracciabilità PR. Contratti: [rpc.md](./contracts
 | `architecture/mailbox-inbox-outbox-spec.md` | MAILBOX-CORE, MAILBOX-SEND, MAILBOX-INBOX, MAILBOX-READ |
 | Ricezione filtrata / blocco silenzioso | RECEPTION-ALLOWLIST |
 | Gruppi (account + erogazione) | GROUP-CORE, GROUP-DELIVERY |
+| Scheda profilo peer (avatar tap) | PEER-PROFILE |
+| `implementation/peer-profile-overlay.md` | PEER-PROFILE |
 
 ---
 

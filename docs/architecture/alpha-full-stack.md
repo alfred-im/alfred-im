@@ -85,6 +85,7 @@ client/lib/
 | Profilo, avatar, pronomi | [PROFILE](../specs/capabilities/PROFILE.spec.md) | PR #118, #134 |
 | Rubrica | [CONTACTS](../specs/capabilities/CONTACTS.spec.md) | PR #109 |
 | Allow list ricezione | [RECEPTION-ALLOWLIST](../specs/capabilities/RECEPTION-ALLOWLIST.spec.md) | PR #161 |
+| Scheda profilo peer (tap avatar) | [PEER-PROFILE](../specs/capabilities/PEER-PROFILE.spec.md) | PR #163 |
 | Account gruppo, erogazione | [GROUP-CORE](../specs/capabilities/GROUP-CORE.spec.md), [GROUP-DELIVERY](../specs/capabilities/GROUP-DELIVERY.spec.md) | PR #162 |
 
 ### UI cross-cutting (senza spec capability dedicata)
@@ -160,7 +161,7 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, workflow `.github/workflows/deploy-
 |--------------|-------|
 | Chat Alfred stessa istanza | ✅ testo, GIF, voice, location (recapito solo se mittente ∈ allow list destinatario) |
 | Chat gruppo Alfred | ✅ account gruppo, erogazione automatica, broadcast, UI autore (PR #162) |
-| Allow list ricezione | ✅ sempre attiva; lista vuota = nessun recapito; UI «Persone consentite» |
+| Allow list ricezione | ✅ sempre attiva; lista vuota = nessun recapito; UI «Persone consentite» + toggle in scheda profilo peer |
 | Rubrica XMPP/Matrix | ✅ salvataggio |
 | Invio federato | ⏸ outbox `pending` |
 | Ricezione federata | ❌ bridge |

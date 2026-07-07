@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-06 (gruppi GROUP-CORE/DELIVERY #162)  
+**Ultimo aggiornamento**: 2026-07-07 (PEER-PROFILE #163)  
 **Versione repository**: 3.2.0-alpha (client Flutter + piattaforma Supabase; bridge stub)
 
 ---
@@ -18,7 +18,7 @@
 
 ---
 
-## ⚠️ Stato repository (2026-07-06)
+## ⚠️ Stato repository (2026-07-07)
 
 | Elemento | Dettaglio |
 |----------|-----------|
@@ -29,8 +29,8 @@
 **Non deducibile — URL Alpha ≠ branch `main`**: https://alfred-im.github.io/XmppTest/ pubblica l’**ultimo** `deploy-alpha` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-alpha` → ultimo vince).
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
-| **PR Alpha** | **#108–#162** su `main` — registro `docs/architecture/alpha-pr-registry.md` (#162 gruppi) |
-| **Spec (SDD)** | Contratti capability: `docs/specs/index.md` — `MAILBOX-*`, `GROUP-*` e correlate `implemented` |
+| **PR Alpha** | **#108–#163** su `main` — registro `docs/architecture/alpha-pr-registry.md` (#163 scheda profilo peer) |
+| **Spec (SDD)** | Contratti capability: `docs/specs/index.md` — `MAILBOX-*`, `GROUP-*`, `PEER-PROFILE` e correlate `implemented` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -45,7 +45,7 @@
 - **Auth**: email + password (GoTrue); **username** obbligatorio in registrazione — identità IM pubblica; email non in rubrica/ricerca
 - **Multi-account**: manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore connessione — ADR `docs/decisions/multi-account-parallel-sessions.md` · fix web PR #152
 - **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — spec `docs/specs/capabilities/CONTACTS.spec.md` · ADR `docs/decisions/address-based-messaging.md`
-- **Ricezione filtrata**: allow list personale `reception_allowlist` — sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ singola) — spec `docs/specs/capabilities/RECEPTION-ALLOWLIST.spec.md`
+- **Ricezione filtrata**: allow list personale `reception_allowlist` — sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ singola) — spec `RECEPTION-ALLOWLIST`; toggle rapido anche da scheda profilo peer (tap avatar) — spec `PEER-PROFILE`
 - **Gruppi**: account `profile_kind = group` con identità propria; partecipazione **solo** allow list bidirezionale (no membership); shell senza inbox; erogazione automatica verso allow list del gruppo; UI autore (avatar + nome) in chat — spec `GROUP-CORE`, `GROUP-DELIVERY` (PR #162)
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); archivio **per owner** in `messages` (`owner_id`, `author_id`, `peer_profile_id`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca conversazioni on-demand (PR #132)
@@ -128,7 +128,7 @@
 
 **Non deducibile — posizione statica**: tap pin → anteprima mappa OSM (`flutter_map`) con affinamento GPS → conferma invio; bolle ricevute stesso widget tile OSM. Spec: `docs/implementation/location-sharing.md`.
 
-**Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi, `profileKind` (`user`/`group`); usato da `UserProfile.summary`, `OpenAccount.profile`, `ChatPeer.profile`. Spec: `docs/specs/capabilities/PROFILE.spec.md`, `GROUP-CORE.spec.md`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`).
+**Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi, `profileKind` (`user`/`group`); usato da `UserProfile.summary`, `OpenAccount.profile`, `ChatPeer.profile`. Spec: `docs/specs/capabilities/PROFILE.spec.md`, `GROUP-CORE.spec.md`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`). **Scheda profilo peer**: tap avatar → `showPeerProfileOverlay` (`lib/widgets/peer_profile_overlay.dart`) — Allow + rubrica; spec `PEER-PROFILE.spec.md`, doc `docs/implementation/peer-profile-overlay.md`.
 
 **Non deducibile — shell gruppo**: focus su account `group` → `HomeScreen` nasconde inbox; `GroupConversationScreen` (storico unico + broadcast); allow list e profilo come account umano; layout mobile full-width sotto 720px. Chat con peer gruppo (account `user`): `MessagesController` con `peerIsGroup` + etichette autore (`MessageAuthorHeader`, `author_display.dart`). Doc: `docs/implementation/groups-client.md`, spec `GROUP-CORE`, `GROUP-DELIVERY`.
 
@@ -193,7 +193,7 @@ bash scripts/verify.sh --build   # + build web
 
 | Area | Stato |
 |------|-------|
-| Auth, profilo, multi-account | ✅ |
+| Auth, profilo, multi-account, scheda profilo peer | ✅ |
 | Contatti, inbox, chat testo/GIF/voice/location | ✅ |
 | Modello caselle (mailbox per-owner, outbox sempre) | ✅ |
 | Account gruppo (shell, erogazione, UI autore) | ✅ |
