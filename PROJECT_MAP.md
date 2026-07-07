@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-04 (modello caselle mailbox #159)  
+**Ultimo aggiornamento**: 2026-07-06 (gruppi GROUP-CORE/DELIVERY #162)  
 **Versione repository**: 3.2.0-alpha (client Flutter + piattaforma Supabase; bridge stub)
 
 ---
@@ -18,7 +18,7 @@
 
 ---
 
-## ⚠️ Stato repository (2026-07-04)
+## ⚠️ Stato repository (2026-07-06)
 
 | Elemento | Dettaglio |
 |----------|-----------|
@@ -29,8 +29,8 @@
 **Non deducibile — URL Alpha ≠ branch `main`**: https://alfred-im.github.io/XmppTest/ pubblica l’**ultimo** `deploy-alpha` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-alpha` → ultimo vince).
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
-| **PR Alpha** | **#108–#161** su `main` — registro `docs/architecture/alpha-pr-registry.md` |
-| **Spec (SDD)** | Contratti capability: `docs/specs/index.md` — `MAILBOX-*` e capability correlate `implemented` |
+| **PR Alpha** | **#108–#162** su `main` — registro `docs/architecture/alpha-pr-registry.md` |
+| **Spec (SDD)** | Contratti capability: `docs/specs/index.md` — `MAILBOX-*`, `GROUP-*` e correlate `implemented` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -46,7 +46,8 @@
 - **Multi-account**: manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore connessione — ADR `docs/decisions/multi-account-parallel-sessions.md` · fix web PR #152
 - **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — spec `docs/specs/capabilities/CONTACTS.spec.md` · ADR `docs/decisions/address-based-messaging.md`
 - **Ricezione filtrata**: allow list personale `reception_allowlist` — sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ singola) — spec `docs/specs/capabilities/RECEPTION-ALLOWLIST.spec.md`
-- **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); archivio **per owner** in `messages` (`owner_id`, `author_id`, `peer_profile_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
+- **Gruppi**: account `profile_kind = group` con identità propria; partecipazione **solo** allow list bidirezionale (no membership); shell senza inbox; erogazione automatica verso allow list del gruppo; UI autore (avatar + nome) in chat — spec `GROUP-CORE`, `GROUP-DELIVERY` (PR #162)
+- **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); archivio **per owner** in `messages` (`owner_id`, `author_id`, `peer_profile_id`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca conversazioni on-demand (PR #132)
 - **GIF / voice / location**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client
 - **Federazione**: outbox `queued` — attende bridge
@@ -109,7 +110,7 @@
 | Elemento | Dettaglio |
 |----------|-----------|
 | **Entry** | `lib/main.dart` → `AppShell` → `HomeScreen` (sempre shell; overlay auth se 0 account o «Aggiungi account») |
-| **State** | Provider: `AuthController` (→ `AccountManager`), `InboxController` per account in focus, `ContactsController`, `MessagesController` |
+| **State** | Provider: `AuthController` (→ `AccountManager`), `InboxController` per account in focus, `ContactsController`, `MessagesController`, `GroupMessagesController` |
 | **Backend** | `SupabaseClient` della sessione in **focus** (una GoTrue attiva) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
 | **Gate** | `scripts/verify.sh` — pub get + analyze (zero issue) + test |
@@ -127,7 +128,9 @@
 
 **Non deducibile — posizione statica**: tap pin → anteprima mappa OSM (`flutter_map`) con affinamento GPS → conferma invio; bolle ricevute stesso widget tile OSM. Spec: `docs/implementation/location-sharing.md`.
 
-**Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi; usato da `UserProfile.summary`, `OpenAccount.profile`, `ChatPeer.profile`. Spec: `docs/specs/capabilities/PROFILE.spec.md`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`).
+**Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi, `profileKind` (`user`/`group`); usato da `UserProfile.summary`, `OpenAccount.profile`, `ChatPeer.profile`. Spec: `docs/specs/capabilities/PROFILE.spec.md`, `GROUP-CORE.spec.md`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`).
+
+**Non deducibile — shell gruppo**: focus su account `group` → `HomeScreen` nasconde inbox; `GroupConversationScreen` (storico unico + broadcast); allow list e profilo come account umano; layout mobile full-width sotto 720px. Chat con peer gruppo (account `user`): `MessagesController` con `peerIsGroup` + etichette autore (`MessageAuthorHeader`, `author_display.dart`). Doc: `docs/implementation/groups-client.md`, spec `GROUP-CORE`, `GROUP-DELIVERY`.
 
 **Non deducibile — coda invio client**: `OutboundMessageQueue` ≠ outbox server federato.
 
@@ -163,7 +166,7 @@ Avvio container: `scripts/start-bridges.sh`.
 | Storage `avatars` | Foto profilo (`{userId}/avatar.{jpg|png|webp}`, max 2 MB) |
 | Client `SharedPreferences` | Account aperti (`OpenAccount` + refresh token) e `focusUserId` |
 
-RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_profile`, `list_peer_messages`, `mark_peer_read`.
+RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_profile`, `list_peer_messages`, `list_owner_messages`, `broadcast_message_to_allowlist`, `mark_peer_read`.
 
 Dettaglio schema, RLS, trigger: `docs/architecture/alpha-full-stack.md` §3.
 
@@ -180,7 +183,7 @@ bash scripts/verify.sh --build   # + build web
 - CI: `.github/workflows/deploy-pages.yml` → `deploy-alpha` → GitHub Pages
 - **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (deploy da PR)
 - E2E: `client/e2e/` (Playwright)
-- SQL smoke: `schema_smoke.sql`, `mailbox_schema_smoke.sql`, `mailbox_send_smoke.sql`, `mailbox_idempotency_smoke.sql`, `mailbox_delivery_smoke.sql`, `mailbox_read_smoke.sql`, `mailbox_inbox_smoke.sql`, `mailbox_send_media_smoke.sql`, `send_message_to_profile_smoke.sql`
+- SQL smoke: `schema_smoke.sql`, `mailbox_*.sql`, `reception_allowlist_*.sql`, `group_schema_smoke.sql`, `group_delivery_smoke.sql`, `group_broadcast_smoke.sql`, `send_message_to_profile_smoke.sql`
 
 ---
 
@@ -193,6 +196,7 @@ bash scripts/verify.sh --build   # + build web
 | Auth, profilo, multi-account | ✅ |
 | Contatti, inbox, chat testo/GIF/voice/location | ✅ |
 | Modello caselle (mailbox per-owner, outbox sempre) | ✅ |
+| Account gruppo (shell, erogazione, UI autore) | ✅ |
 | Ricerca inbox on-demand, aggancio al fondo | ✅ |
 | Schema Supabase + RLS + RPC | ✅ |
 | Deploy Pages + gate `verify.sh` | ✅ |
@@ -212,8 +216,9 @@ bash scripts/verify.sh --build   # + build web
 
 ## 🔄 Ultima Revisione
 
-**Data**: 2026-07-04
+**Data**: 2026-07-06
 
+- GROUP-CORE + GROUP-DELIVERY (#162): account gruppo, erogazione, broadcast singola riga, `original_author_id`, UI autore avatar+nome; doc hub + `groups-client.md`
 - RECEPTION-ALLOWLIST (#161): allow list ricezione, gate server, UI «Persone consentite»; doc hub + semantica spunte ✓/✓✓
 - Modello caselle mailbox (#159): migrazione `20260704120000`, spec `MAILBOX-*`, client allineato (`delivered_at`/`read_at`)
 - Revisione precedente: sync PR #108–#153; posizione statica (#153); multi-account (#147/#152)

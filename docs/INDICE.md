@@ -24,6 +24,8 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 | [CONTACTS](./specs/capabilities/CONTACTS.spec.md) | `implemented` | Rubrica personale (isolata da chat) |
 | [AUTH-MULTI](./specs/capabilities/AUTH-MULTI.spec.md) | `implemented` | Multi-account, focus, overlay shell |
 | [RECEPTION-ALLOWLIST](./specs/capabilities/RECEPTION-ALLOWLIST.spec.md) | `implemented` | Allow list ricezione, gate server, UI «Persone consentite» |
+| [GROUP-CORE](./specs/capabilities/GROUP-CORE.spec.md) | `implemented` | Account gruppo, shell, partecipazione allow list |
+| [GROUP-DELIVERY](./specs/capabilities/GROUP-DELIVERY.spec.md) | `implemented` | Invio, erogazione, autori, broadcast |
 | [contracts/rpc.md](./specs/contracts/rpc.md) | `implemented` | Firme RPC messaggistica |
 | [contracts/schema.md](./specs/contracts/schema.md) | `implemented` | Schema DB, enum, RLS, storage |
 
@@ -60,7 +62,7 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 ## Architettura
 
 - [architecture/alpha-full-stack.md](./architecture/alpha-full-stack.md) — **🟢 Alpha** — client + Supabase
-- [architecture/alpha-pr-registry.md](./architecture/alpha-pr-registry.md) — Registro PR **#108–#161**
+- [architecture/alpha-pr-registry.md](./architecture/alpha-pr-registry.md) — Registro PR **#108–#162**
 - [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) — **🟢 Implementato** — modello caselle (PR #159)
 - [architecture/README.md](./architecture/README.md) — Indice architettura
 
@@ -70,7 +72,7 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 
 - [implementation/voice-notes.md](./implementation/voice-notes.md) — Note vocali WebM/Opus (PR #126)
 - [implementation/location-sharing.md](./implementation/location-sharing.md) — Posizione statica in chat (PR #153)
-- [implementation/multi-account-client.md](./implementation/multi-account-client.md) — **🟢** Multi-account (#140, #147, #152)
+- [implementation/groups-client.md](./implementation/groups-client.md) — Account gruppo, shell, UI autore (PR #162)
 - [implementation/README.md](./implementation/README.md) — Indice implementazione
 
 ---
@@ -94,4 +96,4 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-04 — pulizia contenuto obsoleto; solo spec e doc operativi
+**Ultimo aggiornamento**: 2026-07-06 — GROUP-CORE/DELIVERY (#162); pulizia contenuto obsoleto; solo spec e doc operativi

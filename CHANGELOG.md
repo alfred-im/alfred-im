@@ -19,6 +19,15 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased]
 
+### Aggiunto (2026-07-06 — GROUP-CORE + GROUP-DELIVERY, PR #162)
+
+- **Migrazioni** `20260706120000`–`20260706140000`: `profile_kind` (`user`/`group`), `original_author_id`, RPC gruppo (`send_message_to_profile` destinatario gruppo, `broadcast_message_to_allowlist`, `list_owner_messages`, `erogate_group_message`), `peer_profile_kind` in `list_inbox`
+- **Semantica**: gruppo = account Alfred; partecipazione solo allow list bidirezionale; erogazione automatica verso allow list del gruppo; broadcast = una riga storico + fan-out proxy; `original_author_id` sempre valorizzato nei flussi gruppo
+- **Client**: registrazione tipo account; shell gruppo (`GroupConversationScreen`, no inbox); etichette autore con avatar + nome leggibile (`MessageAuthorHeader`, `author_display.dart`); badge «Gruppo» in manifest
+- **Spec SDD**: `GROUP-CORE`, `GROUP-DELIVERY` → `implemented`
+- **Test**: `group_schema_smoke.sql`, `group_delivery_smoke.sql`, `group_broadcast_smoke.sql`; `group_shell_test.dart`, `group_message_display_test.dart`, `message_bubble_test.dart` (header autore); gate **103** test
+- **Doc**: hub, contratti, registro PR, `groups-client.md`, revisione completa post-gruppi
+
 ### Aggiunto (2026-07-04 — RECEPTION-ALLOWLIST, PR #161)
 
 - **Migrazione** `20260704130000_reception_allowlist.sql`: tabella `reception_allowlist`, helper `is_sender_allowed_for_reception`, gate in `send_message_to_profile`

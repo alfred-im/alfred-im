@@ -1,7 +1,7 @@
 # Contratto RPC — messaggistica Alpha
 
 **Ultima revisione**: 2026-07-06  
-**Status**: `implemented` su `main` (migrazioni fino a `20260706130000`, incl. GROUP-DELIVERY)  
+**Status**: `implemented` su `main` (migrazioni fino a `20260706140000`, incl. GROUP-DELIVERY)  
 **Spec**: [MAILBOX-SEND](../capabilities/MAILBOX-SEND.spec.md), [MAILBOX-INBOX](../capabilities/MAILBOX-INBOX.spec.md), [MAILBOX-READ](../capabilities/MAILBOX-READ.spec.md), [CONTACTS](../capabilities/CONTACTS.spec.md), [PROFILE](../capabilities/PROFILE.spec.md), [RECEPTION-ALLOWLIST](../capabilities/RECEPTION-ALLOWLIST.spec.md), [GROUP-DELIVERY](../capabilities/GROUP-DELIVERY.spec.md)
 
 Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
@@ -53,7 +53,7 @@ Idempotenza: stesso `p_client_message_id` → stessa riga mittente (no duplicati
 
 **MUST NOT**: promozione `delivered` senza copia destinatario materializzata; errore RPC verso mittente su rifiuto allow list; trigger `on_message_inserted` legacy.
 
-**Helper** (da implementare): `is_sender_allowed_for_reception(owner_id, sender_profile_id) → boolean`.
+**Helper**: `is_sender_allowed_for_reception(owner_id, sender_profile_id) → boolean` — migrazione `20260704130000`.
 
 **Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate).
 

@@ -1,6 +1,6 @@
 # Registro PR Alpha Flutter (main)
 
-**Ultimo aggiornamento**: 2026-07-04 (mailbox #158–#159; RECEPTION-ALLOWLIST #161; #160 regole)  
+**Ultimo aggiornamento**: 2026-07-06 (GROUP-CORE/DELIVERY #162; RECEPTION-ALLOWLIST #161)  
 **Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
 
 Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/alpha-full-stack.md` (e fix dedicato se applicabile).
@@ -56,6 +56,7 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#159** | Modello caselle mailbox | Drop/recreate `messages` per-owner; outbox sempre; `delivered_at`/`read_at`; client + test | MAILBOX-* | `mailbox-inbox-outbox-spec.md`, `contracts/rpc.md`, `contracts/schema.md`, migrazione `20260704120000` |
 | **#160** | Regole consenso esplicito | Conferma verbale prima di scrittura repo; SDD gate unico | — | `.cursor-rules.md`, `AGENTS.md` |
 | **#161** | RECEPTION-ALLOWLIST | Allow list ricezione; gate `send_message_to_profile`; UI «Persone consentite»; rifiuto silenzioso | RECEPTION-ALLOWLIST | `RECEPTION-ALLOWLIST.spec.md`, `contracts/schema.md`, `contracts/rpc.md`, migrazione `20260704130000` |
+| **#162** | GROUP-CORE + GROUP-DELIVERY | Account `profile_kind = group`; shell senza inbox; erogazione automatica; broadcast singola riga; `original_author_id`; UI autore avatar+nome | GROUP-CORE, GROUP-DELIVERY | `GROUP-*.spec.md`, `groups-client.md`, `contracts/rpc.md`, `contracts/schema.md`, migrazioni `20260706120000`–`20260706140000` |
 
 ---
 
@@ -103,6 +104,9 @@ Dopo ogni merge su `main`:
 | `20260702120100_message_location_support.sql` | #153 | Lat/lng, RPC 10 arg, preview inbox |
 | `20260704120000_mailbox_per_owner_archive.sql` | #159 | Modello caselle: archivio per `owner_id`, outbox sempre, spunte date |
 | `20260704130000_reception_allowlist.sql` | #161 | Allow list ricezione; gate recapito in `send_message_to_profile` |
+| `20260706120000_group_accounts.sql` | #162 | `profile_kind`, `original_author_id`, RPC gruppo, erogazione |
+| `20260706130000_list_inbox_peer_profile_kind.sql` | #162 | `peer_profile_kind` in `list_inbox` |
+| `20260706140000_group_broadcast_and_content_author.sql` | #162 | Broadcast singola riga; `original_author_id` sempre valorizzato |
 
 ---
 

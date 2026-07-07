@@ -1,8 +1,8 @@
 # Alfred Alpha — Architettura (panoramica)
 
-**Data**: 2026-07-04  
+**Data**: 2026-07-06  
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
-**Stato**: PR Alpha **#108–#161** su `main`  
+**Stato**: PR Alpha **#108–#162** su `main`  
 **Registro PR**: [alpha-pr-registry.md](./alpha-pr-registry.md)
 
 > **Contratti capability**: [docs/specs/index.md](../specs/index.md) — fonte canonica per inbox, invio, spunte, profilo, rubrica, multi-account.  
@@ -16,7 +16,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Flutter Web (`client/`)                                   │
-│  Auth · Contatti · Persone consentite · Conversazioni · Chat · Profilo · Multi-account │
+│  Auth · Contatti · Persone consentite · Conversazioni · Chat · Profilo · Multi-account · Gruppi │
 └───────────────────────────┬─────────────────────────────────┘
                             │ HTTPS (REST + Realtime + Auth)
                             ▼
@@ -85,6 +85,7 @@ client/lib/
 | Profilo, avatar, pronomi | [PROFILE](../specs/capabilities/PROFILE.spec.md) | PR #118, #134 |
 | Rubrica | [CONTACTS](../specs/capabilities/CONTACTS.spec.md) | PR #109 |
 | Allow list ricezione | [RECEPTION-ALLOWLIST](../specs/capabilities/RECEPTION-ALLOWLIST.spec.md) | PR #161 |
+| Account gruppo, erogazione | [GROUP-CORE](../specs/capabilities/GROUP-CORE.spec.md), [GROUP-DELIVERY](../specs/capabilities/GROUP-DELIVERY.spec.md) | PR #162 |
 
 ### UI cross-cutting (senza spec capability dedicata)
 
@@ -158,6 +159,7 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, workflow `.github/workflows/deploy-
 | Funzionalità | Stato |
 |--------------|-------|
 | Chat Alfred stessa istanza | ✅ testo, GIF, voice, location (recapito solo se mittente ∈ allow list destinatario) |
+| Chat gruppo Alfred | ✅ account gruppo, erogazione automatica, broadcast, UI autore (PR #162) |
 | Allow list ricezione | ✅ sempre attiva; lista vuota = nessun recapito; UI «Persone consentite» |
 | Rubrica XMPP/Matrix | ✅ salvataggio |
 | Invio federato | ⏸ outbox `pending` |

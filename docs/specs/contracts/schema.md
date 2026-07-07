@@ -1,7 +1,7 @@
 # Contratto schema — dominio Alpha (mailbox)
 
 **Ultima revisione**: 2026-07-06  
-**Status**: `implemented` su `main` (migrazioni fino a `20260706130000`, incl. GROUP-CORE)  
+**Status**: `implemented` su `main` (migrazioni fino a `20260706140000`, incl. GROUP-CORE/DELIVERY)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle capability spec. Per RPC: [rpc.md](./rpc.md). Per capability: [index.md](../index.md).

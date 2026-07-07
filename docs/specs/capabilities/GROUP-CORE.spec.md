@@ -7,7 +7,7 @@
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-06 |
 | **ADR** | [address-based-messaging.md](../../decisions/address-based-messaging.md), [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md) |
-| **PR** | — |
+| **PR** | #162 |
 | **Correlata** | [PROFILE](./PROFILE.spec.md), [AUTH-MULTI](./AUTH-MULTI.spec.md), [RECEPTION-ALLOWLIST](./RECEPTION-ALLOWLIST.spec.md), [GROUP-DELIVERY](./GROUP-DELIVERY.spec.md) |
 
 Documento per AI — account Alfred di tipo **gruppo**: identità, registrazione, shell client, partecipazione tramite allow list bidirezionale (nessuna membership separata).

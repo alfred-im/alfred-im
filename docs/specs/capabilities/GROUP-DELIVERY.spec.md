@@ -7,7 +7,7 @@
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-06 |
 | **ADR** | [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../decisions/server-as-reception.md) |
-| **PR** | — |
+| **PR** | #162 |
 | **Correlata** | [GROUP-CORE](./GROUP-CORE.spec.md), [MAILBOX-SEND](./MAILBOX-SEND.spec.md), [MAILBOX-READ](./MAILBOX-READ.spec.md), [RECEPTION-ALLOWLIST](./RECEPTION-ALLOWLIST.spec.md) |
 
 Documento per AI — recapito verso/da account gruppo, erogazione automatica verso allow list del gruppo, semantica `author_id` / `original_author_id`, spunte limitate al rapporto mittente↔gruppo.
@@ -36,7 +36,7 @@ Messaggi erogati: mittente tecnico = **gruppo**; autore contenuto = **`original_
 | **GROUP-DELIVERY-REQ-006** | **Erogazione automatica**: nella **stessa transazione** dopo INSERT storico gruppo, per ogni `allowed_profile_id` nella `reception_allowlist` del gruppo (`owner_id = gruppo`) tentare recapito verso quella persona |
 | **GROUP-DELIVERY-REQ-007** | Gate erogazione gruppo→persona: stesso meccanismo allow list — **gruppo** come mittente tecnico ∈ allow list della **persona**; persona ∈ allow list del **gruppo** (già in lista per definizione del loop; gate persona↔gruppo deve essere bidirezionale) |
 | **GROUP-DELIVERY-REQ-008** | Riga erogata su archivio persona: `owner_id = persona`; `author_id = gruppo` (mittente tecnico); `original_author_id = mittente umano originale`; `peer_profile_id = gruppo`; stesso λ della catena |
-| **GROUP-DELIVERY-REQ-009** | UI messaggio in contesto gruppo: testo attribuito **sempre** a `original_author_id` (campo canonico «chi ha scritto»); contesto conversazione con **gruppo** (`peer_profile_id`) |
+| **GROUP-DELIVERY-REQ-009** | UI messaggio in contesto gruppo: testo attribuito **sempre** a `original_author_id` (campo canonico «chi ha scritto»); intestazione sopra la bolla con **avatar** (foto o iniziale colorata) e **nome leggibile** (`display_name`, fallback username senza `@`); contesto conversazione con **gruppo** (`peer_profile_id`) |
 | **GROUP-DELIVERY-REQ-010** | Gruppo broadcast: **una** riga archivio gruppo (`owner_id = gruppo`, `author_id = gruppo`, **`original_author_id = gruppo`**, `peer_profile_id = NULL`, un λ); distribuzione proxy verso allow list nella **stessa transazione** (non N righe gruppo) |
 | **GROUP-DELIVERY-REQ-010b** | Copie membri da broadcast: `author_id = gruppo`, **`original_author_id = gruppo`**, `peer_profile_id = gruppo`, stesso λ |
 | **GROUP-DELIVERY-REQ-011** | Erogazione verso persona che **non** passa il gate: skip silenzioso (nessun errore verso gruppo o mittente originale); **non** aggiorna spunte del messaggio originale |
@@ -143,8 +143,10 @@ send_message_to_profile(destinatario = P) con auth.uid() = G
 | Componente | Responsabilità |
 |------------|----------------|
 | `ChatMessage.contentAuthorId` | Campo canonico «chi ha scritto» = `original_author_id` |
+| `author_display.dart` | `enrichMessageAuthor` — nome leggibile + avatar da `ProfileSummary` |
+| `MessageAuthorHeader` | Widget avatar + nome sopra la bolla (messaggi in arrivo) |
 | `GroupConversationScreen` | Lista messaggi archivio gruppo; compose broadcast |
-| `MessagesController` | Peer gruppo — etichette da `contentAuthorId` |
+| `GroupMessagesController` / `MessagesController` | Arricchimento autori via `enrichMessageAuthor` quando `peerIsGroup` |
 
 ---
 
@@ -156,7 +158,7 @@ send_message_to_profile(destinatario = P) con auth.uid() = G
 | GROUP-DELIVERY-REQ-010, 010b | `supabase/tests/group_broadcast_smoke.sql` |
 | GROUP-DELIVERY-REQ-014 | gate in `send_message_to_profile` (stesso smoke) |
 | GROUP-DELIVERY-REQ-015 | `supabase/tests/group_schema_smoke.sql` |
-| GROUP-DELIVERY-REQ-009 | `client/test/unit/group_message_display_test.dart` |
+| GROUP-DELIVERY-REQ-009 | `client/test/unit/group_message_display_test.dart`, `client/test/widget/message_bubble_test.dart` |
 
 Gate implementazione: `check-spec-sync.sh` + `verify.sh` + smoke SQL + `integration` esteso.
 
@@ -209,4 +211,4 @@ Scenario: Mittente non in allow list gruppo
 | [MAILBOX-SEND](./MAILBOX-SEND.spec.md) | Pipeline outbox |
 | [RECEPTION-ALLOWLIST](./RECEPTION-ALLOWLIST.spec.md) | Gate |
 
-**Codice target**: `supabase/migrations/*group*`, `send_message_to_profile` body, `client/lib/models/chat_message.dart`
+**Codice target**: `supabase/migrations/*group*`, `send_message_to_profile` body, `client/lib/models/message.dart`, `client/lib/utils/author_display.dart`, `client/lib/widgets/message_author_header.dart`

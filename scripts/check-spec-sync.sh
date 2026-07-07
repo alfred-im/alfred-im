@@ -71,6 +71,26 @@ while IFS= read -r spec; do
   done < <(grep -oE 'supabase/tests/[a-z0-9_]+\.sql' "$spec" | sort -u)
 done < <(printf '%s\n' "${MAILBOX_SPECS[@]}")
 
+echo "==> SDD: smoke SQL tracciati GROUP-*"
+GROUP_SPECS=(docs/specs/capabilities/GROUP-*.spec.md)
+for smoke in supabase/tests/group_*.sql; do
+  [[ -f "$smoke" ]] || continue
+  base="$(basename "$smoke")"
+  if ! grep -rq "$base" "${GROUP_SPECS[@]}" docs/specs/contracts/rpc.md 2>/dev/null; then
+    echo "WARN: $base non referenziato in spec GROUP o rpc.md" >&2
+  fi
+done
+while IFS= read -r spec; do
+  [[ -f "$spec" ]] || continue
+  while IFS= read -r smoke_path; do
+    [[ -n "$smoke_path" ]] || continue
+    if [[ ! -f "$smoke_path" ]]; then
+      echo "ERROR: $spec referenzia $smoke_path ma il file non esiste" >&2
+      ERR=1
+    fi
+  done < <(grep -oE 'supabase/tests/[a-z0-9_]+\.sql' "$spec" | sort -u)
+done < <(printf '%s\n' "${GROUP_SPECS[@]}")
+
 # Suggerimento (non bloccante): migrazioni RPC senza diff spec in PR
 if git rev-parse --git-dir >/dev/null 2>&1; then
   if git diff --name-only origin/main...HEAD 2>/dev/null | grep -q '^supabase/migrations/.*\.sql$'; then

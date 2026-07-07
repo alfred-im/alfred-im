@@ -17,8 +17,9 @@ Client ufficiale Alfred — multi-piattaforma (web, mobile, desktop).
 | **Media** | Testo, GIF, voice (WebM/Opus), location (mappa OSM) |
 | **Nuovo messaggio** | FAB → username → stessa chat (vuota o con storico) |
 | **Ricezione** | Allow list personale (`reception_allowlist`) — UI «Persone consentite»; lista vuota = nessun recapito |
+| **Gruppi** | Account `profile_kind = group`; shell senza inbox; partecipazione allow list bidirezionale; erogazione automatica — spec `GROUP-CORE`, `GROUP-DELIVERY` |
 | **Invio** | `send_message_to_profile` |
-| **Gate test** | `verify.sh` — 86 test unit/widget (zero issue analyze) |
+| **Gate test** | `verify.sh` — **103** test unit/widget (zero issue analyze) |
 
 ## Test
 
@@ -42,9 +43,9 @@ Gate CI (equivale a `test.sh gate`): `bash scripts/verify.sh`
 lib/
 ├── models/      # ChatPeer, ChatMessage, OpenAccount, …
 ├── services/    # AccountManager, AccountSession, InboxService, …
-├── providers/   # AuthController, InboxController (sessione in focus), …
-├── screens/     # HomeScreen (shell), AppShell, …
+├── screens/     # HomeScreen (shell), GroupConversationScreen, AppShell, …
+├── providers/   # AuthController, InboxController, GroupMessagesController, MessagesController, …
 └── widgets/     # AuthOverlay, InboxPanel, ChatPanel, …
 ```
 
-Vedi `docs/decisions/multi-account-parallel-sessions.md`, `docs/implementation/multi-account-client.md`, `PROJECT_MAP.md`.
+Vedi `docs/decisions/multi-account-parallel-sessions.md`, `docs/implementation/multi-account-client.md`, `docs/implementation/groups-client.md`, `PROJECT_MAP.md`.
