@@ -98,6 +98,15 @@ class AccountManager {
     session.wireStorage(_storage);
   }
 
+  /// Imposta focus su sessione iniettata (test) senza dispose/restore GoTrue.
+  @visibleForTesting
+  void focusTestSession(AccountSession session) {
+    _testOnlyAccountIds.add(session.userId);
+    _sessions[session.userId] = session;
+    _focusUserId = session.userId;
+    session.wireStorage(_storage);
+  }
+
   /// F5 / avvio app: manifest in cache + ripristina solo il focus.
   Future<void> initialize() async {
     await _rebuildFromManifest();

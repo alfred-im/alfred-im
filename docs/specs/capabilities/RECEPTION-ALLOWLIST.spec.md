@@ -151,7 +151,7 @@ Stesso gate nel consumer bridge **prima** di INSERT copia ingresso su archivio A
 | RECEPTION-ALLOWLIST-REQ-005–010 | `supabase/tests/reception_allowlist_gate_smoke.sql` |
 | RECEPTION-ALLOWLIST-REQ-007 | `reception_allowlist_gate_smoke.sql` — lista vuota |
 | RECEPTION-ALLOWLIST-REQ-011–012 | `reception_allowlist_gate_smoke.sql` |
-| RECEPTION-ALLOWLIST-REQ-015–017 | `client/test/unit/reception_allowlist_controller_test.dart` |
+| RECEPTION-ALLOWLIST-REQ-015–017 | `client/test/widget/allowed_people_screen_test.dart`, `client/test/unit/reception_allowlist_controller_test.dart` |
 | RECEPTION-ALLOWLIST-REQ-005–009 | `bash scripts/test.sh integration` |
 | MAILBOX-SEND-REQ-004 (aggiornato) | `mailbox_delivery_smoke.sql` + gate smoke |
 | RECEPTION-ALLOWLIST-REQ-028 | `supabase/tests/rpc_helper_security_smoke.sql` |

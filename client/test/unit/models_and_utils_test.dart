@@ -68,6 +68,20 @@ void main() {
       );
       expect(fromJson.status, MessageStatus.read);
     });
+
+    test('fromJson prefers mailbox timestamps over legacy delivery_status', () {
+      final fromJson = ChatMessage.fromJson(
+        json: {
+          'id': 'msg-legacy',
+          'created_at': '2026-06-29T12:00:00Z',
+          'author_id': 'sender-id',
+          'delivery_status': 'delivered',
+          'read_at': '2026-06-29T12:10:00Z',
+        },
+        currentUserId: 'sender-id',
+      );
+      expect(fromJson.status, MessageStatus.read);
+    });
   });
 
   group('MessageContentType', () {

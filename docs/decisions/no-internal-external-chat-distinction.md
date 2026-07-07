@@ -23,7 +23,7 @@
 
 Non esiste «la chat interna» e «la chat esterna» come concetti del prodotto, del dominio o dell'implementazione.
 
-Ogni conversazione è **una sola chat**, con lo stesso comportamento end-to-end — inclusi scroll, aggancio al fondo, elementi UI correlati, composer, indicatori, spunte, invio, ricezione, stati `delivery_status`, outbox.
+Ogni conversazione è **una sola chat**, con lo stesso comportamento end-to-end — inclusi scroll, aggancio al fondo, elementi UI correlati, composer, indicatori, spunte (`delivered_at` / `read_at`), invio, ricezione, outbox.
 
 ---
 
@@ -67,7 +67,7 @@ Non classifica la conversazione come entità diversa: l'utente vede persone e ch
 
 La semantica «consegnato = ricevuto sul server» vale **per tutte le conversazioni**.
 
-Eventuali differenze di **tempistica** (messaggio subito in piattaforma vs in coda outbox fino ad ack bridge) sono proprietà del **pipeline di recapito**, non di due tipi di chat. Stesso stato `delivery_status`, stessa UI spunte, stesso modello messaggio — handler di trasporto diversi dove serve.
+Eventuali differenze di **tempistica** (messaggio subito in piattaforma vs in coda outbox fino ad ack bridge) sono proprietà del **pipeline di recapito**, non di due tipi di chat. Stessi timestamp mailbox (`delivered_at` / `read_at`), stessa UI spunte, stesso modello messaggio — handler di trasporto diversi dove serve.
 
 Documentazione e codice che contraddistinguono «chat interna» vs «federata» per spunte o delivery vanno **riallineati** a questa regola (linguaggio e implementazione).
 

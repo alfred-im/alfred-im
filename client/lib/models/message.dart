@@ -150,7 +150,10 @@ class ChatMessage {
     final readAt = _parseOptionalTimestamp(json['read_at']);
     final failedAt = _parseOptionalTimestamp(json['failed_at']);
 
-    final status = json.containsKey('delivery_status')
+    final status = json.containsKey('delivery_status') &&
+            !json.containsKey('delivered_at') &&
+            !json.containsKey('read_at') &&
+            !json.containsKey('failed_at')
         ? messageStatusFromDelivery(json['delivery_status'] as String?)
         : messageStatusFromMailbox(
             isMine: isMine,
