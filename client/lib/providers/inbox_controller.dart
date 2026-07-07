@@ -12,12 +12,14 @@ class InboxController extends ChangeNotifier {
     required this.userId,
     required this.inboxService,
     this.enableRealtime = true,
+    this.enableInboxLoads = true,
   }) {
     unawaited(_bootstrap());
   }
 
   final String userId;
   final bool enableRealtime;
+  final bool enableInboxLoads;
   final InboxService inboxService;
   RealtimeChannel? _channel;
   int _loadGeneration = 0;
@@ -47,6 +49,11 @@ class InboxController extends ChangeNotifier {
   }
 
   Future<void> _bootstrap() async {
+    if (!enableInboxLoads) {
+      isLoading = false;
+      notifyListeners();
+      return;
+    }
     await load();
     if (enableRealtime) _attachRealtime();
   }
@@ -58,6 +65,7 @@ class InboxController extends ChangeNotifier {
   }
 
   Future<void> load() async {
+    if (!enableInboxLoads) return;
     final generation = ++_loadGeneration;
     isLoading = true;
     error = null;

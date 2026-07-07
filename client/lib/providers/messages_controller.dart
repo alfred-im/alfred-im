@@ -84,17 +84,55 @@ class MessagesController extends ChangeNotifier {
   }
 
   void _handleRealtimeMessage(ChatMessage message) {
-    final index = messages.indexWhere((m) => m.id == message.id);
-    if (index >= 0) {
-      messages[index] = _withTimeLabel(message);
-    } else {
-      messages = [...messages, _withTimeLabel(message)];
-    }
+    messages = _replaceOrInsertMessage(messages, _withTimeLabel(message));
     if (peerIsGroup) {
       unawaited(_enrichAuthorNames());
     } else {
       notifyListeners();
     }
+  }
+
+  int _indexForMessage(List<ChatMessage> list, ChatMessage message) {
+    final clientKey = message.clientMessageId;
+    for (var i = 0; i < list.length; i++) {
+      final existing = list[i];
+      if (existing.id == message.id) return i;
+      if (clientKey != null &&
+          (existing.id == clientKey || existing.clientMessageId == clientKey)) {
+        return i;
+      }
+      final existingClientKey = existing.clientMessageId;
+      if (existingClientKey != null && existingClientKey == message.id) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  List<ChatMessage> _replaceOrInsertMessage(
+    List<ChatMessage> list,
+    ChatMessage message,
+  ) {
+    final index = _indexForMessage(list, message);
+    if (index >= 0) {
+      final next = List<ChatMessage>.from(list);
+      next[index] = message;
+      return next;
+    }
+    return [...list, message];
+  }
+
+  List<ChatMessage> _dedupeMessages(List<ChatMessage> source) {
+    final deduped = <ChatMessage>[];
+    for (final message in source) {
+      final index = _indexForMessage(deduped, message);
+      if (index >= 0) {
+        deduped[index] = message;
+      } else {
+        deduped.add(message);
+      }
+    }
+    return deduped;
   }
 
   ChatMessage _withTimeLabel(ChatMessage message) {
@@ -129,7 +167,9 @@ class MessagesController extends ChangeNotifier {
         peerProfileId: peerProfileId,
         currentUserId: userId,
       );
-      messages = await _enrichMessages(loaded.map(_withTimeLabel).toList());
+      messages = _dedupeMessages(
+        await _enrichMessages(loaded.map(_withTimeLabel).toList()),
+      );
       error = null;
     } catch (e) {
       error = e.toString();
@@ -183,6 +223,7 @@ class MessagesController extends ChangeNotifier {
         isMine: true,
         status: MessageStatus.pending,
         createdAt: DateTime.now(),
+        clientMessageId: clientId,
         senderId: userId,
       ),
       queueItem: OutboundQueueItem(
@@ -220,6 +261,7 @@ class MessagesController extends ChangeNotifier {
         isMine: true,
         status: MessageStatus.pending,
         createdAt: DateTime.now(),
+        clientMessageId: clientId,
         senderId: userId,
         contentType: MessageContentType.gif,
         mediaUrl: 'pending://$clientId',
@@ -272,6 +314,7 @@ class MessagesController extends ChangeNotifier {
         isMine: true,
         status: MessageStatus.pending,
         createdAt: DateTime.now(),
+        clientMessageId: clientId,
         senderId: userId,
         contentType: MessageContentType.voice,
         mediaUrl: 'pending://$clientId',
@@ -326,6 +369,7 @@ class MessagesController extends ChangeNotifier {
         isMine: true,
         status: MessageStatus.pending,
         createdAt: DateTime.now(),
+        clientMessageId: clientId,
         senderId: userId,
         contentType: MessageContentType.location,
         latitude: lat,
@@ -383,9 +427,7 @@ class MessagesController extends ChangeNotifier {
 
     try {
       final saved = await send(clientId);
-      messages = messages
-          .map((m) => m.id == clientId ? _withTimeLabel(saved) : m)
-          .toList();
+      messages = _replaceOrInsertMessage(messages, _withTimeLabel(saved));
       await _outboundQueue.remove(clientId);
       await _outboundQueue.deleteMediaFile(
         queueItem.localMediaPath,
@@ -424,7 +466,11 @@ class MessagesController extends ChangeNotifier {
     if (queued.isEmpty) return;
 
     for (final item in queued) {
-      final alreadyVisible = messages.any((message) => message.id == item.clientId);
+      final alreadyVisible = messages.any(
+        (message) =>
+            message.id == item.clientId ||
+            message.clientMessageId == item.clientId,
+      );
       if (alreadyVisible) continue;
 
       messages = [
@@ -437,6 +483,7 @@ class MessagesController extends ChangeNotifier {
             isMine: true,
             status: MessageStatus.failed,
             createdAt: item.queuedAt,
+            clientMessageId: item.clientId,
             senderId: userId,
             contentType: _contentTypeForKind(item.kind),
             mediaUrl: item.kind == OutboundContentKind.text
@@ -547,13 +594,7 @@ class MessagesController extends ChangeNotifier {
           );
       }
 
-      messages = messages
-          .map(
-            (message) => message.id == item.clientId
-                ? _withTimeLabel(saved)
-                : message,
-          )
-          .toList();
+      messages = _replaceOrInsertMessage(messages, _withTimeLabel(saved));
       await _outboundQueue.remove(item.clientId);
       await _outboundQueue.deleteMediaFile(
         item.localMediaPath,

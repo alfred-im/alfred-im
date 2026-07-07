@@ -60,6 +60,7 @@ class ChatMessage {
     required this.isMine,
     this.status = MessageStatus.sent,
     this.createdAt,
+    this.clientMessageId,
     String? authorId,
     String? senderId,
     this.originalAuthorId,
@@ -85,6 +86,8 @@ class ChatMessage {
   final bool isMine;
   final MessageStatus status;
   final DateTime? createdAt;
+  /// Idempotency key from client send; matches optimistic bubble [id] before server row exists.
+  final String? clientMessageId;
   final String? authorId;
   final String? originalAuthorId;
   final String? authorDisplayName;
@@ -156,6 +159,8 @@ class ChatMessage {
             failedAt: failedAt,
           );
 
+    final clientMessageId = json['client_message_id'] as String?;
+
     return ChatMessage(
       id: json['id'] as String,
       body: json['body'] as String? ?? '',
@@ -163,6 +168,7 @@ class ChatMessage {
       isMine: isMine,
       status: status,
       createdAt: createdAt,
+      clientMessageId: clientMessageId,
       authorId: authorId,
       originalAuthorId: originalAuthorId,
       contentType: messageContentTypeFromString(json['content_type'] as String?),
@@ -185,6 +191,7 @@ class ChatMessage {
     bool? isMine,
     MessageStatus? status,
     DateTime? createdAt,
+    String? clientMessageId,
     String? authorId,
     String? originalAuthorId,
     String? authorDisplayName,
@@ -210,6 +217,7 @@ class ChatMessage {
       isMine: isMine ?? this.isMine,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
+      clientMessageId: clientMessageId ?? this.clientMessageId,
       authorId: authorId ?? this.authorId,
       originalAuthorId: originalAuthorId ?? this.originalAuthorId,
       authorDisplayName: authorDisplayName ?? this.authorDisplayName,

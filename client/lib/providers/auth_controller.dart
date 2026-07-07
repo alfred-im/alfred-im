@@ -71,7 +71,12 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> setFocus(String userId) async {
-    await _manager.setFocus(userId);
+    try {
+      await _manager.setFocus(userId);
+      error = null;
+    } catch (e) {
+      error = _friendlyAuthError(e);
+    }
     notifyListeners();
   }
 

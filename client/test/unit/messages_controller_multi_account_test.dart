@@ -146,6 +146,57 @@ void main() {
 
       controller.dispose();
     });
+
+    test('realtime merges optimistic bubble by client_message_id', () async {
+      const clientId = 'client-uuid-optimistic';
+      const serverId = 'server-uuid-confirmed';
+
+      final controller = MessagesController(
+        userId: _agent1,
+        peerProfileId: _agent2,
+        messageService: messageService,
+        messageMediaService: mediaService,
+        inboxService: inboxService,
+        outboundQueue: OutboundMessageQueue(),
+      );
+      await waitForMessagesController(controller);
+
+      controller.messages = [
+        ChatMessage(
+          id: clientId,
+          body: 'in invio',
+          timeLabel: '12:00',
+          isMine: true,
+          status: MessageStatus.pending,
+          createdAt: DateTime.utc(2026, 6, 29, 12),
+          clientMessageId: clientId,
+          senderId: _agent1,
+        ),
+      ];
+      controller.notifyListeners();
+
+      messageService.emitRealtimeMessage(
+        userId: _agent1,
+        peerProfileId: _agent2,
+        message: ChatMessage(
+          id: serverId,
+          body: 'inviato',
+          timeLabel: '',
+          isMine: true,
+          status: MessageStatus.sent,
+          createdAt: DateTime.utc(2026, 6, 29, 12, 1),
+          clientMessageId: clientId,
+          senderId: _agent1,
+        ),
+      );
+
+      expect(controller.messages, hasLength(1));
+      expect(controller.messages.single.id, serverId);
+      expect(controller.messages.single.body, 'inviato');
+      expect(controller.messages.single.clientMessageId, clientId);
+
+      controller.dispose();
+    });
   });
 }
 

@@ -289,20 +289,45 @@ class AccountManager {
     if (!_hasAccount(userId)) return;
 
     if (_focusUserId == userId) {
-      await _sessions[userId]?.inboxController.load();
+      await _loadFocusedInboxIfNeeded();
       return;
     }
+
+    final previousFocus = _focusUserId;
 
     await _disposeSessionsInRam(clearAuthStorage: false);
 
     _focusUserId = userId;
     await _storage.saveFocusUserId(userId);
 
-    if (!_testOnlyAccountIds.contains(userId)) {
-      await _activateFocusedSession();
+    try {
+      if (!_testOnlyAccountIds.contains(userId)) {
+        await _activateFocusedSession(requireSession: true);
+      }
+      await _loadFocusedInboxIfNeeded();
+    } catch (e) {
+      _focusUserId = previousFocus;
+      if (previousFocus != null) {
+        await _storage.saveFocusUserId(previousFocus);
+      } else {
+        await _storage.saveFocusUserId(null);
+      }
+      if (previousFocus != null &&
+          !_testOnlyAccountIds.contains(previousFocus)) {
+        try {
+          await _activateFocusedSession(requireSession: false);
+        } catch (_) {
+          // Best-effort restore of the previous session.
+        }
+      }
+      rethrow;
     }
+  }
 
-    await _sessions[userId]?.inboxController.load();
+  Future<void> _loadFocusedInboxIfNeeded() async {
+    final session = _sessions[_focusUserId];
+    if (session == null || session.profile.isGroup) return;
+    await session.inboxController.load();
   }
 
   Future<void> removeAccount(String userId) async {

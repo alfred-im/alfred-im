@@ -320,6 +320,7 @@ class AccountSession {
       inboxController: InboxController(
         userId: userId,
         inboxService: inboxService,
+        enableInboxLoads: !initialProfile.isGroup,
       ),
       profile: initialProfile,
     );
@@ -455,6 +456,7 @@ class AccountSession {
         userId: profile.id,
         inboxService: inboxService,
         enableRealtime: false,
+        enableInboxLoads: !profile.isGroup,
       ),
       profile: profile,
     ).._lastKnownRefreshToken = refreshToken;

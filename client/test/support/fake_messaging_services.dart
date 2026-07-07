@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
 import 'package:alfred_client/services/inbox_service.dart';
@@ -29,6 +30,7 @@ class FakeMessageService extends MessageService {
   final SupabaseClient _clientForTest;
 
   final Map<String, List<ChatMessage>> messagesByConversation = {};
+  final Map<String, void Function(ChatMessage message)> _realtimeHandlers = {};
 
   @override
   Future<List<ChatMessage>> fetchPeerMessages({
@@ -51,9 +53,24 @@ class FakeMessageService extends MessageService {
     required String peerProfileId,
     required void Function(ChatMessage message) onMessage,
   }) {
+    _realtimeHandlers[conversationKey(
+      userId: currentUserId,
+      peerProfileId: peerProfileId,
+    )] = onMessage;
     return _clientForTest
         .channel('test-$currentUserId-$peerProfileId')
         .subscribe();
+  }
+
+  void emitRealtimeMessage({
+    required String userId,
+    required String peerProfileId,
+    required ChatMessage message,
+  }) {
+    _realtimeHandlers[conversationKey(
+      userId: userId,
+      peerProfileId: peerProfileId,
+    )]?.call(message);
   }
 }
 
@@ -61,6 +78,13 @@ class FakeInboxService extends InboxService {
   FakeInboxService() : super(createTestSupabaseClient());
 
   final List<String> markReadCalls = [];
+  int fetchInboxCalls = 0;
+
+  @override
+  Future<List<ChatPeer>> fetchInbox() async {
+    fetchInboxCalls++;
+    return const [];
+  }
 
   @override
   Future<void> markRead(String peerProfileId) async {
