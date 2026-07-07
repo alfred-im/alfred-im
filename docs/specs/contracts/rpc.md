@@ -73,7 +73,50 @@ Invio con `auth.uid()` = gruppo verso persona: `author_id = gruppo`, **`original
 
 Solo account `profile_kind = group`. **Una** riga archivio gruppo (`original_author_id = gruppo`, `peer_profile_id = NULL`, un λ) + distribuzione proxy verso allow list (`erogate_group_message` con `original_author = gruppo`).
 
+```sql
+broadcast_message_to_allowlist(
+  p_body text default '',
+  p_client_message_id text default null,
+  p_content_type message_content_type default 'text',
+  p_media_url text default null,
+  p_duration_seconds integer default null,
+  p_media_mime text default null,
+  p_media_size_bytes bigint default null,
+  p_latitude double precision default null,
+  p_longitude double precision default null
+) → messages
+```
+
+| `content_type` | Validazione |
+|----------------|-------------|
+| `text` | `body` trim non vuoto |
+| `gif` | `media_url` obbligatorio |
+| `voice` | `media_url`, `duration_seconds` > 0, `media_mime` obbligatori |
+| `location` | `latitude` / `longitude` nei range |
+
+Errori: `not authenticated`, `only group accounts can broadcast`, validazione contenuto come `send_message_to_profile`.
+
+Idempotenza: stesso `p_client_message_id` → stessa riga archivio gruppo.
+
 **Migrazioni**: `20260706120000`, `20260706140000`.
+
+---
+
+## `list_owner_messages`
+
+Storico unico account gruppo (shell senza inbox peer).
+
+```sql
+list_owner_messages(
+  p_limit integer default 100
+) → setof messages
+```
+
+Righe WHERE `owner_id = auth.uid()` AND contenuto renderizzabile (`mailbox_has_renderable_content`) ORDER BY `created_at` ASC.
+
+Usato da account `profile_kind = group` al posto di `list_peer_messages` — vedi [GROUP-CORE](../capabilities/GROUP-CORE.spec.md) REQ-006/017.
+
+**Migrazioni**: `20260706120000`.
 
 ---
 
@@ -179,7 +222,7 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 | `supabase/tests/mailbox_send_media_smoke.sql` | Validazione `gif`/`location` |
 | `supabase/tests/send_message_to_profile_smoke.sql` | Invio a profilo non in rubrica |
 | `supabase/tests/reception_allowlist_schema_smoke.sql` | Tabella + helper gate |
-| `supabase/tests/reception_allowlist_gate_smoke.sql` | Rifiuto silenzioso vs recapito allowed |
+| `supabase/tests/group_schema_smoke.sql` | `list_owner_messages`, `profile_kind`, `broadcast_message_to_allowlist` |
 
 Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/test.sh e2e-multi`
 
@@ -190,8 +233,10 @@ Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/te
 | RPC | Service Dart |
 |-----|--------------|
 | `send_message_to_profile` | `MessageService.sendToProfile` |
+| `broadcast_message_to_allowlist` | `MessageService.broadcastToAllowlist` / `broadcastGifToAllowlist` / … |
 | `list_inbox` | `InboxService.fetchInbox` |
 | `list_peer_messages` | `MessageService.fetchPeerMessages` |
+| `list_owner_messages` | `MessageService.fetchOwnerMessages` |
 | `mark_peer_read` | `InboxService.markPeerRead` |
 | `find_profile_by_username` | `ComposeService` / profile lookup |
 | `search_profiles` | `ContactService.searchProfiles` |

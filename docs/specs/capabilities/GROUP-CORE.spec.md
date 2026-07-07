@@ -131,7 +131,8 @@ Rimozione da una delle due liste → recapito bloccato verso la direzione corris
 | REQ-ID | Verifica |
 |--------|----------|
 | GROUP-CORE-REQ-001–003 | `supabase/tests/group_schema_smoke.sql` |
-| GROUP-CORE-REQ-004–007, 016 | `client/test/unit/group_shell_test.dart` |
+| GROUP-CORE-REQ-004 | `AuthScreen` (toggle tipo account) — verifica manuale / e2e |
+| GROUP-CORE-REQ-006–007, 016 | `client/test/widget/group_conversation_screen_test.dart`, `client/test/unit/inbox_controller_group_test.dart` |
 | GROUP-CORE-REQ-008–009 | `supabase/tests/group_delivery_smoke.sql` (gate bidirezionale) |
 | GROUP-CORE-REQ-014 | `group_schema_smoke.sql` + `find_profile_by_username` client |
 | GROUP-CORE-REQ-005 | `account_manager_persistence_test.dart` (`profileKind` manifest) |

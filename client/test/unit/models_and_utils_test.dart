@@ -41,6 +41,33 @@ void main() {
         MessageStatus.sent,
       );
     });
+
+    // spec: MAILBOX-READ-REQ-015
+    test('read_at prevails when late delivered_at arrives', () {
+      final deliveredLate = DateTime.utc(2026, 6, 29, 12, 5);
+      final readEarlier = DateTime.utc(2026, 6, 29, 12, 1);
+
+      expect(
+        messageStatusFromMailbox(
+          isMine: true,
+          deliveredAt: deliveredLate,
+          readAt: readEarlier,
+        ),
+        MessageStatus.read,
+      );
+
+      final fromJson = ChatMessage.fromJson(
+        json: {
+          'id': 'msg-1',
+          'created_at': '2026-06-29T12:00:00Z',
+          'author_id': 'sender-id',
+          'delivered_at': deliveredLate.toIso8601String(),
+          'read_at': readEarlier.toIso8601String(),
+        },
+        currentUserId: 'sender-id',
+      );
+      expect(fromJson.status, MessageStatus.read);
+    });
   });
 
   group('MessageContentType', () {

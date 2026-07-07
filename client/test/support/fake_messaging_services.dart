@@ -30,7 +30,9 @@ class FakeMessageService extends MessageService {
   final SupabaseClient _clientForTest;
 
   final Map<String, List<ChatMessage>> messagesByConversation = {};
+  final Map<String, List<ChatMessage>> ownerMessagesByUserId = {};
   final Map<String, void Function(ChatMessage message)> _realtimeHandlers = {};
+  final Map<String, void Function(ChatMessage message)> _ownerRealtimeHandlers = {};
 
   @override
   Future<List<ChatMessage>> fetchPeerMessages({
@@ -71,6 +73,25 @@ class FakeMessageService extends MessageService {
       userId: userId,
       peerProfileId: peerProfileId,
     )]?.call(message);
+  }
+
+  @override
+  Future<List<ChatMessage>> fetchOwnerMessages({
+    required String currentUserId,
+    int limit = 200,
+  }) async {
+    return List<ChatMessage>.from(
+      ownerMessagesByUserId[currentUserId] ?? const [],
+    );
+  }
+
+  @override
+  RealtimeChannel subscribeToOwnerMessages({
+    required String currentUserId,
+    required void Function(ChatMessage message) onMessage,
+  }) {
+    _ownerRealtimeHandlers[currentUserId] = onMessage;
+    return _clientForTest.channel('test-owner-$currentUserId').subscribe();
   }
 }
 

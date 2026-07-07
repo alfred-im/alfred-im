@@ -437,20 +437,24 @@ class AccountSession {
   static Future<AccountSession> createForTest({
     required ProfileSummary profile,
     String refreshToken = 'test-refresh-token',
+    SupabaseClient? client,
+    MessageService? messageService,
+    MessageMediaService? messageMediaService,
   }) async {
-    final client = createClient(profile.id);
-    final inboxService = InboxService(client);
-    final profileService = ProfileService(client);
+    final resolvedClient = client ?? createClient(profile.id);
+    final inboxService = InboxService(resolvedClient);
+    final profileService = ProfileService(resolvedClient);
     final session = AccountSession._(
       userId: profile.id,
-      client: client,
+      client: resolvedClient,
       inboxService: inboxService,
-      messageService: MessageService(client),
+      messageService: messageService ?? MessageService(resolvedClient),
       profileService: profileService,
-      contactService: ContactService(client),
-      receptionAllowlistService: ReceptionAllowlistService(client),
-      profileAvatarService: ProfileAvatarService(client),
-      messageMediaService: MessageMediaService(client),
+      contactService: ContactService(resolvedClient),
+      receptionAllowlistService: ReceptionAllowlistService(resolvedClient),
+      profileAvatarService: ProfileAvatarService(resolvedClient),
+      messageMediaService:
+          messageMediaService ?? MessageMediaService(resolvedClient),
       composeService: ComposeService(profileService: profileService),
       inboxController: InboxController(
         userId: profile.id,

@@ -108,7 +108,7 @@ Paolo apre chat con Mario
 | MAILBOX-READ-REQ-006 | smoke filtri content_type |
 | MAILBOX-READ-REQ-007 | `messages_controller_multi_account_test.dart` |
 | MAILBOX-READ-REQ-008 | `mailbox_inbox_smoke.sql` unread |
-| MAILBOX-READ-REQ-015 | test unit SQL o Dart — read prima di delivered tardivo |
+| MAILBOX-READ-REQ-015 | `client/test/unit/models_and_utils_test.dart` — read_at prevale su delivered_at tardivo |
 | MAILBOX-READ-REQ-001–008 | `bash scripts/test.sh integration` + `e2e-multi` |
 
 Gate: `verify.sh` + `integration` + `e2e-multi`

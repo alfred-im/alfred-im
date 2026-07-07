@@ -140,7 +140,7 @@ Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 
 ### Regole
 
-- Il segnale aggiorna **solo** `delivery_status` (o equivalente) sulla **copia del mittente** identificata da `logical_message_id` (+ `owner_id` mittente).
+- Il segnale aggiorna **solo** `delivered_at` / `read_at` sulla **copia del mittente** identificata da `logical_message_id` (+ `owner_id` mittente).
 - **Mai** modificare l’archivio del peer per far vedere le spunte al mittente.
 - **Mai** allineare preview, ordine o contenuto tra le due copie come effetto delle spunte.
 - Realtime mittente: subscribe agli UPDATE sulla **propria** copia (`owner_id = io`); merge optimistic via `client_message_id`, spunte via `logical_message_id` — vedi [Identificatori](#identificatori--livelli-distinti-vincolante).
@@ -180,7 +180,7 @@ Il bridge è **stateless** ([bridge-stateless.md](../decisions/bridge-stateless.
 
 ## Delegato all’implementazione
 
-- Dettaglio schema (`marker_type` / `marker_for` vs solo `delivery_status`), nomi RPC e transazioni dei driver — al momento del codice.
+- Dettaglio schema (`delivered_at` / `read_at` su copia mittente), nomi RPC e transazioni dei driver — al momento del codice.
 - Driver internal: sync nella stessa RPC vs worker async (non cambia la semantica [Consegna](#consegna--stessa-pipeline-ovunque-vincolante)).
 
 ---
