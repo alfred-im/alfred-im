@@ -39,7 +39,7 @@ class _ImmediateInboxService extends InboxService {
 }
 
 void main() {
-  // spec: AUTH-MULTI-REQ-009
+  // spec: PROM-MULTI-ACCOUNT-009
   testWidgets(
     'ListenableProxyProvider with noop dispose keeps InboxController alive on focus switch',
     (tester) async {

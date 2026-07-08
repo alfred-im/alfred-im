@@ -9,38 +9,54 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 
 ---
 
-## Spec (SDD v2) — registro promesse
+## Spec (SDD) — registro promesse
 
-**Metodo**: [specs/README.md](./specs/README.md) · **Registro**: [specs/registry.md](./specs/registry.md) · **Capability legacy**: [specs/index.md](./specs/index.md)
+**Metodo**: [specs/README.md](./specs/README.md) · **Registro**: [specs/registry.md](./specs/registry.md) · **Indice**: [specs/index.md](./specs/index.md)
 
-### Promesse PRODUCT / SURFACE (v2)
+### SYSTEM
 
 | ID | Stato | Contenuto |
 |----|-------|-----------|
-| [PROM-LIST-FILTER](./specs/promises/product/PROM-LIST-FILTER.md) | `implemented` | Filtro locale + ricerca on-demand (lente) |
+| [SYS-MAILBOX](./specs/promises/system/SYS-MAILBOX.md) | `implemented` | Archivio per owner, invio, inbox, spunte |
+| [SYS-GROUP](./specs/promises/system/SYS-GROUP.md) | `implemented` | Account gruppo, erogazione |
+| [SYS-PROFILE](./specs/promises/system/SYS-PROFILE.md) | `implemented` | Tabella `profiles`, avatar, RPC |
+| [SYS-CONTACTS](./specs/promises/system/SYS-CONTACTS.md) | `implemented` | Rubrica, `search_profiles` |
+| [SYS-RECEPTION](./specs/promises/system/SYS-RECEPTION.md) | `implemented` | Allow list ricezione, gate server |
+| [contracts/rpc.md](./specs/contracts/rpc.md) | `implemented` | Firme RPC (dettaglio DDL) |
+| [contracts/schema.md](./specs/contracts/schema.md) | `implemented` | Schema DB, RLS, storage |
+
+### PRODUCT
+
+| ID | Stato | Contenuto |
+|----|-------|-----------|
+| [PROM-LIST-FILTER](./specs/promises/product/PROM-LIST-FILTER.md) | `implemented` | Filtro locale + ricerca on-demand |
+| [PROM-MULTI-ACCOUNT](./specs/promises/product/PROM-MULTI-ACCOUNT.md) | `implemented` | Manifest, focus, una GoTrue |
+| [PROM-PROFILE-IDENTITY](./specs/promises/product/PROM-PROFILE-IDENTITY.md) | `implemented` | `ProfileSummary`, widget identità |
+| [PROM-PERSONAL-CONTACTS](./specs/promises/product/PROM-PERSONAL-CONTACTS.md) | `implemented` | Rubrica isolata da inbox |
+| [PROM-RECEPTION-FILTER](./specs/promises/product/PROM-RECEPTION-FILTER.md) | `implemented` | Filtro ricezione, rifiuto silenzioso |
+| [PROM-PEER-PROFILE](./specs/promises/product/PROM-PEER-PROFILE.md) | `implemented` | Overlay profilo peer |
+| [PROM-CHAT-PEER-KEY](./specs/promises/product/PROM-CHAT-PEER-KEY.md) | `implemented` | Chat per `peer_profile_id` |
+| [PROM-OUTBOUND-SEND](./specs/promises/product/PROM-OUTBOUND-SEND.md) | `implemented` | Coda invio optimistic |
+| [PROM-MESSAGE-STATUS](./specs/promises/product/PROM-MESSAGE-STATUS.md) | `implemented` | Spunte da date mailbox |
+| [PROM-REALTIME-OWNER](./specs/promises/product/PROM-REALTIME-OWNER.md) | `implemented` | Realtime su `owner_id` |
+| [PROM-GROUP-AUTHOR-DISPLAY](./specs/promises/product/PROM-GROUP-AUTHOR-DISPLAY.md) | `implemented` | Autore in chat gruppo |
+| [PROM-GROUP-TICKS](./specs/promises/product/PROM-GROUP-TICKS.md) | `implemented` | Spunte gruppo |
+| [PROM-OVERLAY-DISMISS](./specs/promises/product/PROM-OVERLAY-DISMISS.md) | `implemented` | Chiusura overlay |
+
+### SURFACE
+
+| ID | Stato | Contenuto |
+|----|-------|-----------|
+| [SURF-AUTH](./specs/surfaces/SURF-AUTH.md) | `implemented` | Overlay login/registrazione |
+| [SURF-ACCOUNT-SIDEBAR](./specs/surfaces/SURF-ACCOUNT-SIDEBAR.md) | `implemented` | Manifest in sidebar |
 | [SURF-INBOX](./specs/surfaces/SURF-INBOX.md) | `implemented` | Lista conversazioni |
-| [SURF-CONTACTS](./specs/surfaces/SURF-CONTACTS.md) | `implemented` | Rubrica — filtro lista on-demand |
-| [SURF-ALLOWLIST](./specs/surfaces/SURF-ALLOWLIST.md) | `implemented` | Persone consentite — filtro lista on-demand |
-
-### SYSTEM + capability legacy
-
-| Spec | Stato | Contenuto |
-|------|-------|-----------|
-| [MAILBOX-CORE](./specs/capabilities/MAILBOX-CORE.spec.md) | `implemented` | Archivio per owner, outbox sempre, `logical_message_id` |
-| [MAILBOX-INBOX](./specs/capabilities/MAILBOX-INBOX.spec.md) | `implemented` | Inbox on-read sul mio archivio, `ChatPeer`, realtime |
-| [MAILBOX-SEND](./specs/capabilities/MAILBOX-SEND.spec.md) | `implemented` | Invio testo/GIF/voice/location, pipeline outbox |
-| [MAILBOX-READ](./specs/capabilities/MAILBOX-READ.spec.md) | `implemented` | Spunte `delivered_at`/`read_at`, `mark_peer_read` |
-| [PROFILE](./specs/capabilities/PROFILE.spec.md) | `implemented` | Profilo, avatar, pronomi, `ProfileSummary` |
-| [CONTACTS](./specs/capabilities/CONTACTS.spec.md) | `implemented` | Rubrica personale (isolata da chat) |
-| [AUTH-MULTI](./specs/capabilities/AUTH-MULTI.spec.md) | `implemented` | Multi-account, focus, overlay shell |
-| [RECEPTION-ALLOWLIST](./specs/capabilities/RECEPTION-ALLOWLIST.spec.md) | `implemented` | Allow list ricezione, gate server, UI «Persone consentite» |
-| [GROUP-CORE](./specs/capabilities/GROUP-CORE.spec.md) | `implemented` | Account gruppo, shell, partecipazione allow list |
-| [GROUP-DELIVERY](./specs/capabilities/GROUP-DELIVERY.spec.md) | `implemented` | Invio, erogazione, autori, broadcast |
-| [PEER-PROFILE](./specs/capabilities/PEER-PROFILE.spec.md) | `implemented` | Scheda profilo peer (tap avatar), Allow + rubrica |
-| [contracts/rpc.md](./specs/contracts/rpc.md) | `implemented` | Firme RPC messaggistica (SYSTEM) |
-| [contracts/schema.md](./specs/contracts/schema.md) | `implemented` | Schema DB, enum, RLS, storage (SYSTEM) |
-
-Capability `superseded`: [INBOX-SEARCH](./specs/capabilities/INBOX-SEARCH.spec.md) → PROM-LIST-FILTER + SURF-INBOX (solo mappa storica).
+| [SURF-CHAT](./specs/surfaces/SURF-CHAT.md) | `implemented` | Chat 1:1 |
+| [SURF-CONTACTS](./specs/surfaces/SURF-CONTACTS.md) | `implemented` | Rubrica |
+| [SURF-ALLOWLIST](./specs/surfaces/SURF-ALLOWLIST.md) | `implemented` | Persone consentite |
+| [SURF-PROFILE](./specs/surfaces/SURF-PROFILE.md) | `implemented` | Modifica profilo |
+| [SURF-PEER-PROFILE](./specs/surfaces/SURF-PEER-PROFILE.md) | `implemented` | Scheda profilo peer |
+| [SURF-GROUP-SHELL](./specs/surfaces/SURF-GROUP-SHELL.md) | `implemented` | Shell account gruppo |
+| [SURF-GROUP-CONVERSATION](./specs/surfaces/SURF-GROUP-CONVERSATION.md) | `implemented` | Chat gruppo |
 
 ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) (PR #159).
 
@@ -75,7 +91,7 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 ## Architettura
 
 - [architecture/alpha-full-stack.md](./architecture/alpha-full-stack.md) — **🟢 Alpha** — client + Supabase
-- [architecture/alpha-pr-registry.md](./architecture/alpha-pr-registry.md) — Registro PR **#108–#163**
+- [architecture/alpha-pr-registry.md](./architecture/alpha-pr-registry.md) — Registro PR **#108–#172**
 - [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) — **🟢 Implementato** — modello caselle (PR #159)
 - [architecture/README.md](./architecture/README.md) — Indice architettura
 
@@ -107,9 +123,9 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 
 - [design/conversation-bottom-anchor.md](./design/conversation-bottom-anchor.md) — Aggancio al fondo chat (PR #125); backlog PROM
 - [design/inbox-search-toggle.md](./design/inbox-search-toggle.md) — → PROM-LIST-FILTER (PR #132, #171)
-- [design/auth-overlay-shell.md](./design/auth-overlay-shell.md) — → AUTH-MULTI (PR #140)
+- [design/auth-overlay-shell.md](./design/auth-overlay-shell.md) — → SURF-AUTH (PR #140)
 - [design/README.md](./design/README.md) — Indice design
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-08 — SDD v2 allineamento doc (#171); registry canonico
+**Ultimo aggiornamento**: 2026-07-08 — SDD registro promesse; 5 SYS + 13 PROM + 10 SURF

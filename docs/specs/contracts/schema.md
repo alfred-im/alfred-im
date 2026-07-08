@@ -1,10 +1,10 @@
 # Contratto schema — dominio Alpha (mailbox)
 
 **Ultima revisione**: 2026-07-06  
-**Status**: `implemented` su `main` (migrazioni fino a `20260706140000`, incl. GROUP-CORE/DELIVERY)  
+**Status**: `implemented` su `main` (migrazioni fino a `20260706140000`, incl. SYS-GROUP)  
 **Fonte di verità**: `supabase/migrations/`
 
-Contratto **tabelle ed enum** usati dalle capability spec. Per RPC: [rpc.md](./rpc.md). Per capability: [index.md](../index.md).
+Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [index.md](../index.md).
 
 ---
 
@@ -34,7 +34,7 @@ storage: chat-media, avatars
 | `message_content_type` | `text`, `gif`, `voice`, `location` | Tipo contenuto messaggio |
 | `message_delivery_status` | `pending`, `sent`, `delivered`, `read`, `failed` | Stati `outbox` / `bridge_jobs` (non più su `messages`) |
 | `queue_status` | `queued`, … `failed` | `outbox`, `bridge_jobs` |
-| `profile_kind` | `user`, `group` | Tipo account — [GROUP-CORE](../capabilities/GROUP-CORE.spec.md) |
+| `profile_kind` | `user`, `group` | Tipo account — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
 
 ---
 
@@ -53,7 +53,7 @@ storage: chat-media, avatars
 
 **RLS**: SELECT authenticated; UPDATE solo `id = auth.uid()`.
 
-**Spec**: [PROFILE.spec.md](../capabilities/PROFILE.spec.md).
+**Spec**: [SYS-PROFILE](../promises/system/SYS-PROFILE.md).
 
 ---
 
@@ -73,7 +73,7 @@ storage: chat-media, avatars
 
 **RLS**: CRUD `owner_id = auth.uid()`.
 
-**Spec**: [CONTACTS.spec.md](../capabilities/CONTACTS.spec.md).
+**Spec**: [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md).
 
 ---
 
@@ -92,7 +92,7 @@ storage: chat-media, avatars
 
 **RLS**: CRUD `owner_id = auth.uid()`.
 
-**Spec**: [RECEPTION-ALLOWLIST.spec.md](../capabilities/RECEPTION-ALLOWLIST.spec.md).
+**Spec**: [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md).
 
 ---
 
@@ -103,7 +103,7 @@ storage: chat-media, avatars
 | `id` | uuid PK | Per owner |
 | `owner_id` | uuid FK → profiles | Archivio (`auth.uid()` in RLS) |
 | `author_id` | uuid FK → profiles | Mittente tecnico di recapito (gruppo se erogazione) |
-| `original_author_id` | uuid FK nullable → profiles | Autore contenuto se `author_id` è gruppo — [GROUP-DELIVERY](../capabilities/GROUP-DELIVERY.spec.md) |
+| `original_author_id` | uuid FK nullable → profiles | Autore contenuto se `author_id` è gruppo — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
 | `peer_profile_id` | uuid FK nullable | Controparte internal |
 | `peer_external_address` | text nullable | Federato futuro |
 | `logical_message_id` | uuid NOT NULL | λ — correlazione copie |
@@ -124,11 +124,11 @@ storage: chat-media, avatars
 
 **RLS**: `owner_id = auth.uid()` per SELECT/INSERT/UPDATE.
 
-**Spec**: [MAILBOX-CORE](../capabilities/MAILBOX-CORE.spec.md), [MAILBOX-SEND](../capabilities/MAILBOX-SEND.spec.md), [MAILBOX-INBOX](../capabilities/MAILBOX-INBOX.spec.md), [MAILBOX-READ](../capabilities/MAILBOX-READ.spec.md), [GROUP-DELIVERY](../capabilities/GROUP-DELIVERY.spec.md).
+**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md).
 
 ---
 
-## Partecipazione gruppo (GROUP-CORE)
+## Partecipazione gruppo (SYS-GROUP)
 
 Nessuna tabella aggiuntiva. Partecipazione = allow list bidirezionale:
 
@@ -145,7 +145,7 @@ Consumer internal: transazione RPC; federato: fase B bridge (stub).
 
 **RLS**: DENY per `authenticated`.
 
-**Spec**: [MAILBOX-SEND.spec.md](../capabilities/MAILBOX-SEND.spec.md).
+**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md).
 
 ---
 

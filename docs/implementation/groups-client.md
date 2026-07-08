@@ -1,6 +1,6 @@
 # Gruppi — client Flutter (PR #162)
 
-Documento per AI — implementazione client per [GROUP-CORE](../specs/capabilities/GROUP-CORE.spec.md) e [GROUP-DELIVERY](../specs/capabilities/GROUP-DELIVERY.spec.md).
+Documento per AI — implementazione client per [SYS-GROUP](../specs/promises/system/SYS-GROUP.md).
 
 ---
 
@@ -88,10 +88,10 @@ Smoke SQL: `supabase/tests/group_schema_smoke.sql`, `group_delivery_smoke.sql`, 
 
 ## Fuori scope v1 (documentato in spec)
 
-- Preview inbox con prefisso autore umano (`GROUP-DELIVERY-REQ-020` SHOULD)
+- Preview inbox con prefisso autore umano (`SYS-GROUP-033` SHOULD)
 - Membership / inviti / ruoli admin
 - Federazione gruppi
 
 ---
 
-**Riferimenti**: [GROUP-CORE.spec.md](../specs/capabilities/GROUP-CORE.spec.md), [GROUP-DELIVERY.spec.md](../specs/capabilities/GROUP-DELIVERY.spec.md), [contracts/rpc.md](../specs/contracts/rpc.md)
+**Riferimenti**: [SYS-GROUP.md](../specs/promises/system/SYS-GROUP.md), [contracts/rpc.md](../specs/contracts/rpc.md)

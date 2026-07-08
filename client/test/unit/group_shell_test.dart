@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:alfred_client/models/profile_summary.dart';
 
-// spec: GROUP-CORE-REQ-004, GROUP-CORE-REQ-006
+// spec: SURF-GROUP-SHELL-001, SURF-GROUP-SHELL-002
 void main() {
   group('ProfileSummary group account', () {
     test('serializes profileKind in saved account json', () {

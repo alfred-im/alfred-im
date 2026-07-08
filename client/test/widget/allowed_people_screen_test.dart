@@ -16,7 +16,7 @@ Future<void> _waitForAllowlist(ReceptionAllowlistController controller) async {
   }
 }
 
-// spec: RECEPTION-ALLOWLIST-REQ-015, SURF-ALLOWLIST-001
+// spec: SURF-ALLOWLIST-001, PROM-RECEPTION-FILTER-008
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

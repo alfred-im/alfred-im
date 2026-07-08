@@ -4,7 +4,7 @@ import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/utils/author_display.dart';
 
-// spec: GROUP-DELIVERY-REQ-009
+// spec: PROM-GROUP-AUTHOR-DISPLAY-001
 void main() {
   group('ChatMessage contentAuthorId', () {
     test('content author is original_author_id', () {

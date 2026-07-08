@@ -6,10 +6,9 @@
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-08 |
 | **Promesse** | [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md) |
-| **Supersedes** | [INBOX-SEARCH.spec.md](../capabilities/INBOX-SEARCH.spec.md) (parte UX) |
-| **PR** | #132 |
+| **PR** | #132, #161 |
 
-Binding della promessa PRODUCT filtro lista sulla inbox (`InboxPanel`).
+Binding promessa PRODUCT filtro lista sulla inbox (`InboxPanel`) + entry «Persone consentite» in header.
 
 ---
 
@@ -35,6 +34,7 @@ Binding della promessa PRODUCT filtro lista sulla inbox (`InboxPanel`).
 | **SURF-INBOX-004** | Layout **mobile** (`showTopBar: true`): lente nell'header «Alfred», prima di Contatti; barra sotto header |
 | **SURF-INBOX-005** | Layout **desktop** (`showTopBar: false`): lente nella riga «Conversazioni»; barra sotto titolo |
 | **SURF-INBOX-006** | Cambio account: `ValueKey(accountUserId)` su `InboxPanel` → stato ricerca reset |
+| **SURF-INBOX-007** | Icona «Persone consentite» in header inbox accanto a icona rubrica «Contatti» → naviga a `AllowedPeopleScreen` — [PROM-RECEPTION-FILTER](../promises/product/PROM-RECEPTION-FILTER.md) — entry icona [SURF-INBOX](../../surfaces/SURF-INBOX.md) |
 
 ### MUST NOT
 
@@ -44,19 +44,22 @@ Binding della promessa PRODUCT filtro lista sulla inbox (`InboxPanel`).
 
 ---
 
-## 3. Tracciabilità
+## 4. Tracciabilità
 
-| SURF-ID / PROM-ID | Verifica |
+| SURF-ID | Verifica |
 |-------------------|----------|
-| SURF-INBOX-001, PROM-LIST-FILTER-010–014 | `inbox_panel_test.dart`; `collapsible_list_search.dart`, `inbox_panel.dart` |
+| SURF-INBOX-001, PROM-LIST | `inbox_panel_test.dart`; `collapsible_list_search.dart`, `inbox_panel.dart` |
 | SURF-INBOX-002 | `inbox_controller.dart` `filteredPeers`; `list_filter_test.dart` |
 | SURF-INBOX-003 | `inbox_panel.dart` hint + tooltip |
 | SURF-INBOX-004, SURF-INBOX-005 | `inbox_panel.dart` — `showTopBar` |
 | SURF-INBOX-006 | `home_screen.dart` |
+| SURF-INBOX-007 | `inbox_panel_test.dart`; `allowed_people_screen_test.dart` |
 
 ---
 
-## 4. Riferimenti
+## 5. Riferimenti
 
 - [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md)
-- [MAILBOX-INBOX.spec.md](../capabilities/MAILBOX-INBOX.spec.md)
+- [SURF-ALLOWLIST.md](./SURF-ALLOWLIST.md)
+- [SURF-CHAT.md](./SURF-CHAT.md)
+- [registry.md](../registry.md)

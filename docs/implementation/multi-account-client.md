@@ -1,6 +1,6 @@
 # Implementazione client multi-account
 
-> **Superseded by spec**: [AUTH-MULTI.spec.md](../specs/capabilities/AUTH-MULTI.spec.md) — guida implementativa dettagliata; per contratto usare la spec.
+> **Superseded by spec**: [PROM-MULTI-ACCOUNT.md](../specs/promises/product/PROM-MULTI-ACCOUNT.md), [SURF-AUTH.md](../specs/surfaces/SURF-AUTH.md) — guida implementativa dettagliata; per contratto usare le promesse.
 
 **Data**: 2026-06-29 (PR #140)  
 **ADR**: [multi-account-parallel-sessions.md](../decisions/multi-account-parallel-sessions.md)  

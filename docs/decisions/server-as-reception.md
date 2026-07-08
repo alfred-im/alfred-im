@@ -1,6 +1,6 @@
 # Ricezione = ricezione sul server (client cloud)
 
-> **Contratto capability**: [MAILBOX-READ.spec.md](../specs/capabilities/MAILBOX-READ.spec.md) — questo ADR resta vincolante (semantica cloud).
+> **Contratto promessa**: [SYS-MAILBOX.md](../specs/promises/system/SYS-MAILBOX.md) — questo ADR resta vincolante (semantica cloud).
 
 **Data**: 2026-06-26  
 **Status**: ✅ Accettata — **concept vincolante** dell'applicazione  
@@ -33,7 +33,7 @@ Il disaccoppiamento non è un'eccezione futura: è la **stessa logica** del caso
 | Livello | UI | Significato nel modello cloud Alfred |
 |---------|-----|--------------------------------------|
 | **1 — Inviato** | ✓ grigia | Il messaggio è stato accettato dalla piattaforma (RPC `send_message_to_profile` / outbox `queued` per federato). |
-| **2 — Consegnato** | ✓✓ grigie | Il messaggio è **ricevuto sul server del destinatario** — cioè disponibile nella fonte di verità per il destinatario (inserimento copia nel suo archivio Alfred, oppure ack bridge/XEP-0184 per federato). **Non** significa «aperto sul telefono del destinatario». Se il gate [RECEPTION-ALLOWLIST](../specs/capabilities/RECEPTION-ALLOWLIST.spec.md) rifiuta il recapito, il mittente **non** raggiunge mai il livello 2 (resta su livello 1 in modo permanente e silenzioso). |
+| **2 — Consegnato** | ✓✓ grigie | Il messaggio è **ricevuto sul server del destinatario** — cioè disponibile nella fonte di verità per il destinatario (inserimento copia nel suo archivio Alfred, oppure ack bridge/XEP-0184 per federato). **Non** significa «aperto sul telefono del destinatario». Se il gate [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) / [PROM-RECEPTION-FILTER](../specs/promises/product/PROM-RECEPTION-FILTER.md) rifiuta il recapito, il mittente **non** raggiunge mai il livello 2 (resta su livello 1 in modo permanente e silenzioso). |
 | **3 — Lettura** | ✓✓ blu | Il destinatario ha **visualizzato** la conversazione (`mark_peer_read` / XEP-0333 `displayed` via bridge). |
 
 Nel client cloud Alfred il livello 2 segue il **server come fonte di verità**: consegnato = ricevuto **nella piattaforma** (o nel server federato di destinazione tramite bridge). Il multidispositivo è coerente: tutti i device del destinatario leggono lo stesso stato dal server.
@@ -46,7 +46,7 @@ Nel client cloud Alfred il livello 2 segue il **server come fonte di verità**: 
 2. **`read_at`** resta legato all'azione esplicita di lettura (`mark_peer_read`), indipendente dal disaccoppiamento invio/ricezione.
 3. **Outbox e bridge**: messaggi il cui recapito passa da bridge possono restare `pending`/`sent` fino a conferma — il disaccoppiamento è previsto nello schema (`outbox`, `bridge_jobs`); non definisce una «chat federata» separata.
 4. **Non confondere** con WhatsApp mobile P2P: Alfred è cloud-first; la semantica delle spunte riflette il server, non la singola sessione WebSocket del peer.
-5. **Allow list ricezione** ([RECEPTION-ALLOWLIST.spec.md](../specs/capabilities/RECEPTION-ALLOWLIST.spec.md)): livello 1 (✓) si ottiene sempre con RPC accettata e copia mittente; livello 2 richiede recapito nel archivio destinatario — il blocco silenzioso lascia il mittente al solo livello 1.
+5. **Allow list ricezione** ([SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md)): livello 1 (✓) si ottiene sempre con RPC accettata e copia mittente; livello 2 richiede recapito nel archivio destinatario — il blocco silenzioso lascia il mittente al solo livello 1.
 
 ---
 

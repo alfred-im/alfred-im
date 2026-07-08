@@ -14,7 +14,7 @@ import 'package:alfred_client/widgets/inbox_panel.dart';
 
 import '../support/fake_messaging_services.dart';
 
-// spec: GROUP-CORE-REQ-006
+// spec: SURF-GROUP-SHELL-002
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

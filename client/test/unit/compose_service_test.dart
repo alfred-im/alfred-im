@@ -22,7 +22,7 @@ void main() {
     );
   });
 
-  // spec: CONTACTS-REQ-011
+  // spec: PROM-PERSONAL-CONTACTS-006
   group('ComposeService.peerFromContact', () {
     test('maps internal contact to ChatPeer', () {
       final peer = composeService.peerFromContact(

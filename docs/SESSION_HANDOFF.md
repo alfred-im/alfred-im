@@ -8,15 +8,15 @@ Documento per AI — **leggere prima di task multi-account, messaggistica, profi
 
 | Item | Valore |
 |------|--------|
-| Branch `main` | PR Alpha **#108–#171** |
+| Branch `main` | PR Alpha **#108–#172** |
 | Alpha live | https://alfred-im.github.io/XmppTest/ — ultimo `deploy-alpha` riuscito |
-| **SDD** | **v2** — registro promesse `docs/specs/registry.md` (SYSTEM / PRODUCT / SURFACE); capability legacy `MAILBOX-*`, `GROUP-*` ancora authoritative per backend |
-| Multi-account | Manifest tutti gli account; **una** GoTrue in RAM (focus) |
-| Messaggistica | Modello **caselle** (`MAILBOX-*`): archivio per `owner_id`, outbox sempre, spunte `delivered_at`/`read_at` |
-| **Ricerca liste** | **`PROM-LIST-FILTER`** + **`SURF-*`**: lente on-demand su inbox, rubrica, persone consentite (`CollapsibleListSearch`) |
-| **Ricezione filtrata** | **`RECEPTION-ALLOWLIST`**: allow list sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ senza ✓✓) |
-| **Scheda profilo peer** | **`PEER-PROFILE`**: tap avatar → overlay fullscreen; switch Allow + rubrica (immediati, senza dialog) |
-| **Gruppi** | **`GROUP-CORE` + `GROUP-DELIVERY`**: account `profile_kind = group`; partecipazione allow list bidirezionale; erogazione automatica; shell senza inbox; `original_author_id` canonico; UI autore avatar+nome |
+| **SDD** | Registro `docs/specs/registry.md`: 5 SYS, 13 PROM, 10 SURF |
+| Multi-account | **`PROM-MULTI-ACCOUNT`** + **`SURF-AUTH`**: manifest; **una** GoTrue in RAM (focus) |
+| Messaggistica | **`SYS-MAILBOX`**: archivio per `owner_id`, outbox sempre, spunte `delivered_at`/`read_at` |
+| **Ricerca liste** | **`PROM-LIST-FILTER`** + **`SURF-*`**: lente on-demand (`CollapsibleListSearch`) |
+| **Ricezione filtrata** | **`SYS-RECEPTION`** + **`PROM-RECEPTION-FILTER`**: allow list sempre attiva; rifiuto silenzioso |
+| **Scheda profilo peer** | **`PROM-PEER-PROFILE`** + **`SURF-PEER-PROFILE`**: tap avatar → overlay; Allow + rubrica |
+| **Gruppi** | **`SYS-GROUP`** + **`SURF-GROUP-*`**: `profile_kind = group`; erogazione automatica; UI autore |
 | Chat media | Testo, GIF, voice (WebM), location (OSM) |
 | Gate test | **132** test (`verify.sh`) |
 
@@ -54,7 +54,7 @@ Contratto: `PROM-LIST-FILTER`, `SURF-INBOX`, `SURF-CONTACTS`, `SURF-ALLOWLIST`.
 | Rubrica | Pulsante aggiungi/rimuovi → `contacts` (subito) |
 | Self | Profilo proprio: nessun overlay peer |
 
-Doc: `docs/implementation/peer-profile-overlay.md`, spec `PEER-PROFILE.spec.md`.
+Doc: `docs/implementation/peer-profile-overlay.md`, promesse `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE`.
 
 ---
 
@@ -70,7 +70,7 @@ Doc: `docs/implementation/peer-profile-overlay.md`, spec `PEER-PROFILE.spec.md`.
 | Autore UI | `original_author_id` = chi ha scritto; header con avatar + `display_name` (tap → scheda profilo peer) |
 | Spunte umano→gruppo | ✓✓ = recapito al **gruppo**; erogazione verso terzi non tocca spunte originali |
 
-Doc: `docs/implementation/groups-client.md`, spec `GROUP-CORE`, `GROUP-DELIVERY`.
+Doc: `docs/implementation/groups-client.md`, promessa `SYS-GROUP`.
 
 ---
 
@@ -97,8 +97,7 @@ Smoke SQL gruppi: `supabase/tests/group_schema_smoke.sql`, `group_delivery_smoke
 | Multi-tab stesso browser | Last-write-wins (limite noto) |
 | «Disconnetti ovunque» (revoca globale) | Futuro opzionale — logout locale già in `AccountSession.close()` (`single-device-logout-open.md`) |
 | Bridge federazione (consumer outbox) | Stub health only — gate allow list anche su bridge (fase B) |
-| Preview inbox autore gruppo (REQ-020) | SHOULD non implementato — prefisso autore in `list_inbox` preview |
-| Distillazione capability legacy → promesse v2 | Backlog — `MAILBOX-*` / `GROUP-*` restano authoritative per backend |
+| Preview inbox autore gruppo (SYS-GROUP-033) | SHOULD non implementato — prefisso autore in `list_inbox` preview |
 
 ---
 

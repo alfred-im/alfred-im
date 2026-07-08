@@ -16,7 +16,7 @@ ChatPeer _peer(String id) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // spec: AUTH-MULTI-REQ-010
+  // spec: PROM-MULTI-ACCOUNT-010
   group('AccountManager per-account view state', () {
     late AccountManager manager;
 

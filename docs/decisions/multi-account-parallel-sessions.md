@@ -1,6 +1,6 @@
 # Multi-account client Alpha
 
-> **Contratto capability**: [AUTH-MULTI.spec.md](../specs/capabilities/AUTH-MULTI.spec.md) — questo ADR resta vincolante; la spec consolidano il contratto operativo.
+> **Contratto promessa**: [PROM-MULTI-ACCOUNT.md](../specs/promises/product/PROM-MULTI-ACCOUNT.md), [SURF-AUTH.md](../specs/surfaces/SURF-AUTH.md) — questo ADR resta vincolante; le promesse consolidano il contratto operativo.
 
 **Stato**: 🟢 Vincolante (client Alpha)  
 **Data**: 2026-06-29 (PR #140) · **runtime aggiornato** 2026-07-02 (PR #152)  

@@ -2,7 +2,7 @@
 
 <!-- Cosa cambia e perché -->
 
-## Spec-Driven Development (SDD v2)
+## Spec-Driven Development (SDD)
 
 - [ ] **Solo cosmetica theme** (colori, spacing, font — nessuna promessa toccata)
 - [ ] **Promesse aggiornate** — registro: `docs/specs/registry.md`
@@ -11,8 +11,7 @@
 |--------|-------------|-------|------|
 | SYSTEM / PRODUCT / SURFACE | <!-- es. PROM-LIST-FILTER, SURF-CONTACTS --> | `draft` \| `approved` \| `implemented` | <!-- path --> |
 
-- ID toccati: <!-- es. PROM-LIST-FILTER-010, SURF-CONTACTS-001, MAILBOX-SEND-REQ-003, oppure N/A -->
-- Capability legacy aggiornata (se backend): <!-- es. MAILBOX-SEND.spec.md, oppure N/A -->
+- ID toccati: <!-- es. PROM-LIST-FILTER-010, SURF-CONTACTS-001, SYS-MAILBOX-020, oppure N/A -->
 
 ## Verifica
 

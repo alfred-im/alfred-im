@@ -6,7 +6,6 @@
 | **Classe** | PRODUCT |
 | **Status** | `draft` \| `approved` \| `implemented` \| `deprecated` \| `superseded` |
 | **Ultima revisione** | YYYY-MM-DD |
-| **Supersedes** | doc storici (opzionale) |
 | **Superseded by** | `PROM-…` / `SURF-…` (se applicabile) |
 
 Promessa di prodotto **riusabile** su più superfici. Le superfici referenziano questo file; non duplicano le regole.

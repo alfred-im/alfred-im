@@ -41,7 +41,7 @@ Deploy: `.github/workflows/deploy-pages.yml`.
 | File | Contenuto |
 |------|-----------|
 | `PROJECT_MAP.md` | Mappa progetto (leggere a ogni sessione) |
-| `docs/specs/registry.md` | **Registro promesse SDD v2** (ingresso contratti) |
+| `docs/specs/registry.md` | **Registro promesse SDD** (ingresso contratti) |
 | `docs/INDICE.md` | Indice per area |
 | `docs/SESSION_HANDOFF.md` | Handoff rapido per agenti |
 | `docs/architecture/alpha-full-stack.md` | Architettura Alpha |

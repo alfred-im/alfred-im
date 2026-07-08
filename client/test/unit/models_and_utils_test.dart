@@ -42,7 +42,7 @@ void main() {
       );
     });
 
-    // spec: MAILBOX-READ-REQ-015
+    // spec: SYS-MAILBOX-054
     test('read_at prevails when late delivered_at arrives', () {
       final deliveredLate = DateTime.utc(2026, 6, 29, 12, 5);
       final readEarlier = DateTime.utc(2026, 6, 29, 12, 1);
@@ -94,7 +94,7 @@ void main() {
     });
   });
 
-  // spec: CONTACTS-REQ-002
+  // spec: SYS-CONTACTS-002
   group('ContactProtocol', () {
     test('parses protocol names', () {
       expect(contactProtocolFromString('xmpp'), ContactProtocol.xmpp);
@@ -102,7 +102,7 @@ void main() {
     });
   });
 
-  // spec: PROFILE-REQ-007
+  // spec: PROM-PROFILE-IDENTITY-001
   group('ProfileSummary.fromProfilesRow', () {
     test('parses public profile fields', () {
       final summary = ProfileSummary.fromProfilesRow({
@@ -121,7 +121,7 @@ void main() {
     });
   });
 
-  // spec: PROFILE-REQ-012
+  // spec: PROM-PROFILE-IDENTITY-002
   group('UserProfile.fromJson', () {
     test('parses pronouns and avatar via summary', () {
       final profile = UserProfile.fromJson({
@@ -141,7 +141,7 @@ void main() {
     });
   });
 
-  // spec: PROFILE-REQ-013
+  // spec: PROM-PROFILE-IDENTITY-010
   group('avatarColorForId', () {
     test('is deterministic', () {
       expect(avatarColorForId('abc'), avatarColorForId('abc'));

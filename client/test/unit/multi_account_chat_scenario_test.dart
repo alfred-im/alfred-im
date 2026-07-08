@@ -33,7 +33,7 @@ ChatMessage _msg(String id, String body, String senderId) => ChatMessage(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // spec: AUTH-MULTI-REQ-010, AUTH-MULTI-REQ-016
+  // spec: PROM-MULTI-ACCOUNT-010, PROM-MULTI-ACCOUNT-020
   group('Multi-account mutual chat scenario', () {
     late AccountManager manager;
     late FakeMessageService messageService;

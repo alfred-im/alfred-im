@@ -6,7 +6,6 @@
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-08 |
-| **Supersedes** | UX in [INBOX-SEARCH.spec.md](../../capabilities/INBOX-SEARCH.spec.md); [inbox-search-toggle.md](../../../design/inbox-search-toggle.md) |
 | **PR origine** | #132 (inbox); estensione contatti/allow list — backlog |
 
 Promessa di prodotto riusabile: filtrare una lista già caricata in memoria, con barra di ricerca **on-demand** (icona lente).
@@ -100,6 +99,7 @@ Le superfici ([SURF-*](../../registry.md)) dichiarano campi filtrabili, hint e c
 | SURF-CONTACTS (estensione) | `contacts_screen.dart` + `contacts_screen_test.dart` |
 | SURF-ALLOWLIST (estensione) | `allowed_people_screen.dart` + `allowed_people_screen_test.dart` |
 
+
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 
 ---
@@ -109,6 +109,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 | Documento | Ruolo |
 |-----------|--------|
 | [registry.md](../../registry.md) | Indice promesse |
-| [MAILBOX-INBOX.spec.md](../../capabilities/MAILBOX-INBOX.spec.md) | Sorgente dati inbox |
-| [CONTACTS.spec.md](../../capabilities/CONTACTS.spec.md) | Sorgente dati rubrica |
-| [RECEPTION-ALLOWLIST.spec.md](../../capabilities/RECEPTION-ALLOWLIST.spec.md) | Sorgente dati allow list |
+| [SYS-MAILBOX](../system/SYS-MAILBOX.md) | Sorgente dati inbox |
+| [SYS-CONTACTS](../system/SYS-CONTACTS.md) | Sorgente dati rubrica |
+| [SYS-RECEPTION](../system/SYS-RECEPTION.md) | Sorgente dati allow list |
+| [SURF-INBOX](../../surfaces/SURF-INBOX.md) | Superficie inbox |

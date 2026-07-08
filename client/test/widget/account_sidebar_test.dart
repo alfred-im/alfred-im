@@ -14,7 +14,7 @@ import 'package:alfred_client/widgets/account_sidebar.dart';
 
 import '../support/fake_messaging_services.dart';
 
-// spec: GROUP-CORE-REQ-016
+// spec: SURF-ACCOUNT-SIDEBAR-013
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

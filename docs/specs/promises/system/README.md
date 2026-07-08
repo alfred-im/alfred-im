@@ -2,7 +2,7 @@
 
 **Ultima revisione**: 2026-07-08
 
-In SDD v2 le promesse **SYSTEM** sono il contratto tra client, piattaforma Supabase e bridge. Il dettaglio backend **non è stato ridotto**: resta nei documenti canonici sotto.
+Le promesse **SYSTEM** sono il contratto tra client, piattaforma Supabase e bridge. Il dettaglio backend resta nei documenti canonici sotto.
 
 ---
 
@@ -13,7 +13,21 @@ In SDD v2 le promesse **SYSTEM** sono il contratto tra client, piattaforma Supab
 | [../contracts/schema.md](../contracts/schema.md) | Tabelle, colonne, enum, RLS, bucket storage, vincoli |
 | [../contracts/rpc.md](../contracts/rpc.md) | Firme RPC, parametri, semantica, mapping client |
 
-Ogni modifica a schema o RPC **deve** aggiornare questi file e la capability legacy correlata (`MAILBOX-*`, `GROUP-*`, …) finché non distillata.
+Ogni modifica a schema o RPC **deve** aggiornare questi contratti e la promessa SYSTEM correlata (`SYS-*`).
+
+---
+
+## Promesse SYSTEM
+
+| ID | File | Dominio |
+|----|------|---------|
+| SYS-MAILBOX | [SYS-MAILBOX.md](./SYS-MAILBOX.md) | Archivio, invio, inbox, lettura |
+| SYS-GROUP | [SYS-GROUP.md](./SYS-GROUP.md) | Account gruppo, partecipazione, erogazione |
+| SYS-PROFILE | [SYS-PROFILE.md](./SYS-PROFILE.md) | Profilo utente, avatar, RLS |
+| SYS-CONTACTS | [SYS-CONTACTS.md](./SYS-CONTACTS.md) | Rubrica, `search_profiles` |
+| SYS-RECEPTION | [SYS-RECEPTION.md](./SYS-RECEPTION.md) | Allow list, gate recapito |
+
+Indice completo: [registry.md](../../registry.md) · [index.md](../../index.md).
 
 ---
 
@@ -25,14 +39,9 @@ Ogni modifica a schema o RPC **deve** aggiornare questi file e la capability leg
 
 ---
 
-## Capability legacy come bundle SYSTEM+PRODUCT
+## Nuovo lavoro backend
 
-Le spec in [../capabilities/](../capabilities/) con prefisso `MAILBOX-`, `GROUP-`, `RECEPTION-ALLOWLIST`, ecc. restano **authoritative** per:
-
-- REQ backend già `implemented`
-- Tracciabilità REQ-ID → smoke / test
-- Amend sicurezza e piattaforma
-
-Nuovo lavoro **solo backend**: aggiornare `contracts/` + capability legacy; opzionalmente estrarre `SYS-*` dedicato in futuro.
-
-Nuovo lavoro **UX cross-cutting**: promessa PRODUCT + SURFACE (non duplicare in capability monolitica).
+1. Classificare quale promessa SYSTEM è toccata (o crearne una nuova in `draft`).
+2. Aggiornare `contracts/schema.md` e/o `contracts/rpc.md`.
+3. Aggiornare il file `SYS-*.md` con ID promessa e tracciabilità.
+4. Nuovo lavoro **UX cross-cutting**: promessa PRODUCT + SURFACE (non duplicare regole in contratti).

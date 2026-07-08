@@ -22,7 +22,7 @@ Widget _wrap(Widget child) {
   return MaterialApp(theme: AlfredTheme.light, home: Scaffold(body: child));
 }
 
-// spec: PROM-LIST-FILTER-010, PROM-LIST-FILTER-011, SURF-INBOX-001, RECEPTION-ALLOWLIST-REQ-015
+// spec: PROM-LIST-FILTER-010, PROM-LIST-FILTER-011, SURF-INBOX-001, SURF-ALLOWLIST-001
 void main() {
   testWidgets('InboxPanel desktop hides search until lens tap', (tester) async {
     var searchQuery = '';

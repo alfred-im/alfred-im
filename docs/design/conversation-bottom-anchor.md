@@ -1,6 +1,6 @@
 # Aggancio al fondo della conversazione
 
-> **SDD v2**: contratto non ancora distillato in promessa PRODUCT. Per nuovo lavoro usare [registry.md](../specs/registry.md) (backlog `PROM-BOTTOM-ANCHOR`). Evidenza UX PR #125.
+> **SDD**: contratto non ancora distillato in promessa PRODUCT. Per nuovo lavoro usare [registry.md](../specs/registry.md) (backlog `PROM-BOTTOM-ANCHOR`). Evidenza UX PR #125.
 
 **Data**: 2026-06-27  
 **Status**: Evidenza implementata — **non** contratto v2  

@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-08 (SDD v2 #171; PROM-LIST-FILTER + SURF contatti/allow list)  
+**Ultimo aggiornamento**: 2026-07-08 (SDD #172; epurazione doc legacy)  
 **Versione repository**: 3.2.0-alpha (client Flutter + piattaforma Supabase; bridge stub)
 
 ---
@@ -31,8 +31,8 @@
 **Non deducibile — URL Alpha ≠ branch `main`**: https://alfred-im.github.io/XmppTest/ pubblica l’**ultimo** `deploy-alpha` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-alpha` → ultimo vince).
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
-| **PR Alpha** | **#108–#171** su `main` — registro `docs/architecture/alpha-pr-registry.md` (#171 SDD v2 + ricerca liste) |
-| **Spec (SDD v2)** | Registro promesse: `docs/specs/registry.md` — `MAILBOX-*`, `GROUP-*`, `PROM-*`, `SURF-*` |
+| **PR Alpha** | **#108–#172** su `main` — registro `docs/architecture/alpha-pr-registry.md` (#171 ricerca liste; #172 epurazione doc) |
+| **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — `SYS-*`, `PROM-*`, `SURF-*` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -46,14 +46,14 @@
 
 - **Auth**: email + password (GoTrue); **username** obbligatorio in registrazione — identità IM pubblica; email non in rubrica/ricerca
 - **Multi-account**: manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore connessione — ADR `docs/decisions/multi-account-parallel-sessions.md` · fix web PR #152
-- **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — spec `docs/specs/capabilities/CONTACTS.spec.md` · ADR `docs/decisions/address-based-messaging.md`
-- **Ricezione filtrata**: allow list personale `reception_allowlist` — sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ singola) — spec `RECEPTION-ALLOWLIST`; toggle rapido anche da scheda profilo peer (tap avatar) — spec `PEER-PROFILE`
-- **Gruppi**: account `profile_kind = group` con identità propria; partecipazione **solo** allow list bidirezionale (no membership); shell senza inbox; erogazione automatica verso allow list del gruppo; UI autore (avatar + nome) in chat — spec `GROUP-CORE`, `GROUP-DELIVERY` (PR #162)
+- **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — promesse `SYS-CONTACTS`, `PROM-PERSONAL-CONTACTS`, `SURF-CONTACTS` · ADR `docs/decisions/address-based-messaging.md`
+- **Ricezione filtrata**: allow list personale `reception_allowlist` — sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ singola) — promesse `SYS-RECEPTION`, `PROM-RECEPTION-FILTER`, `SURF-ALLOWLIST`; toggle rapido anche da scheda profilo peer (tap avatar) — promesse `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE`
+- **Gruppi**: account `profile_kind = group` con identità propria; partecipazione **solo** allow list bidirezionale (no membership); shell senza inbox; erogazione automatica verso allow list del gruppo; UI autore (avatar + nome) in chat — promessa `SYS-GROUP` (PR #162)
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); archivio **per owner** in `messages` (`owner_id`, `author_id`, `peer_profile_id`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca liste on-demand — inbox, rubrica, persone consentite (`PROM-LIST-FILTER`, PR #132, #171)
 - **GIF / voice / location**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client
 - **Federazione**: outbox `queued` — attende bridge
-- **Spunte**: `delivered_at` / `read_at` nullable su copia archivio · `mark_peer_read` aggiorna lettura locale + segnale su copia mittente — spec `MAILBOX-READ`
+- **Spunte**: `delivered_at` / `read_at` nullable su copia archivio · `mark_peer_read` aggiorna lettura locale + segnale su copia mittente — promessa `SYS-MAILBOX`
 - **Brand**: `#2D2926`, layout responsive stile WhatsApp Web
 
 ### Tecnologie
@@ -86,7 +86,7 @@
 - **Bridge stateless**: `docs/decisions/bridge-stateless.md`
 - **Chat unificate** (nessuna distinzione interna/esterna): `docs/decisions/no-internal-external-chat-distinction.md`
 - **Dettaglio completo**: `docs/architecture/alpha-full-stack.md`
-- **Modello caselle (mailbox)**: `docs/architecture/mailbox-inbox-outbox-spec.md` — archivio per owner + outbox sempre; spec `MAILBOX-*` in `docs/specs/capabilities/` (PR #159)
+- **Modello caselle (mailbox)**: `docs/architecture/mailbox-inbox-outbox-spec.md` — archivio per owner + outbox sempre; promessa `SYS-MAILBOX` in `docs/specs/promises/system/` (PR #159)
 
 ---
 
@@ -122,7 +122,7 @@
 
 **Non deducibile — auth bootstrap**: login/add-account usa client effimero; **non** chiamare `signOut` sul bootstrap dopo adozione sessione dedicata (revoca refresh GoTrue). PKCE: `EphemeralPkceStorage`. Fix: PR #142 — `docs/fixes/auth-bootstrap-gotrue-revoke.md`. **Chiudi account** = logout **solo locale** (`close()` cancella storage, nessuna `POST /auth/v1/logout`). Fix multi-account PR #143: `docs/fixes/multi-account-chat-persistence-pr143.md`. Handoff: `docs/SESSION_HANDOFF.md`.
 
-**Non deducibile — layout inbox**: `HomeScreen` — mobile drawer `AccountSidebar`; desktop colonna sinistra account + inbox. `AccountSidebar`: chiusura account in card profilo. `InboxPanel`: ricerca on-demand (SDD v2: [PROM-LIST-FILTER](docs/specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](docs/specs/surfaces/SURF-INBOX.md)), `ValueKey(userId)` al cambio focus.
+**Non deducibile — layout inbox**: `HomeScreen` — mobile drawer `AccountSidebar`; desktop colonna sinistra account + inbox. `AccountSidebar`: chiusura account in card profilo. `InboxPanel`: ricerca on-demand ([PROM-LIST-FILTER](docs/specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](docs/specs/surfaces/SURF-INBOX.md)), `ValueKey(userId)` al cambio focus.
 
 **Non deducibile — chat**: `AnchoredMessageList` (`ListView` reverse, soglia 48 px). Spec: `docs/design/conversation-bottom-anchor.md`.
 
@@ -130,9 +130,9 @@
 
 **Non deducibile — posizione statica**: tap pin → anteprima mappa OSM (`flutter_map`) con affinamento GPS → conferma invio; bolle ricevute stesso widget tile OSM. Spec: `docs/implementation/location-sharing.md`.
 
-**Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi, `profileKind` (`user`/`group`); usato da `UserProfile.summary`, `OpenAccount.profile`, `ChatPeer.profile`. Spec: `docs/specs/capabilities/PROFILE.spec.md`, `GROUP-CORE.spec.md`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`). **Scheda profilo peer**: tap avatar → `showPeerProfileOverlay` (`lib/widgets/peer_profile_overlay.dart`) — Allow + rubrica; spec `PEER-PROFILE.spec.md`, doc `docs/implementation/peer-profile-overlay.md`.
+**Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi, `profileKind` (`user`/`group`); usato da `UserProfile.summary`, `OpenAccount.profile`, `ChatPeer.profile`. Promesse: `SYS-PROFILE`, `PROM-PROFILE-IDENTITY`, `SURF-PROFILE`, `SYS-GROUP`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`). **Scheda profilo peer**: tap avatar → `showPeerProfileOverlay` (`lib/widgets/peer_profile_overlay.dart`) — Allow + rubrica; promesse `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE`, doc `docs/implementation/peer-profile-overlay.md`.
 
-**Non deducibile — shell gruppo**: focus su account `group` → `HomeScreen` nasconde inbox; `GroupConversationScreen` (storico unico + broadcast); allow list e profilo come account umano; layout mobile full-width sotto 720px. Chat con peer gruppo (account `user`): `MessagesController` con `peerIsGroup` + etichette autore (`MessageAuthorHeader`, `author_display.dart`). Doc: `docs/implementation/groups-client.md`, spec `GROUP-CORE`, `GROUP-DELIVERY`.
+**Non deducibile — shell gruppo**: focus su account `group` → `HomeScreen` nasconde inbox; `GroupConversationScreen` (storico unico + broadcast); allow list e profilo come account umano; layout mobile full-width sotto 720px. Chat con peer gruppo (account `user`): `MessagesController` con `peerIsGroup` + etichette autore (`MessageAuthorHeader`, `author_display.dart`). Doc: `docs/implementation/groups-client.md`, promessa `SYS-GROUP`.
 
 **Non deducibile — coda invio client**: `OutboundMessageQueue` ≠ outbox server federato.
 
@@ -218,11 +218,12 @@ bash scripts/verify.sh --build   # + build web
 
 ## 🔄 Ultima Revisione
 
-**Data**: 2026-07-06
+**Data**: 2026-07-08
 
-- GROUP-CORE + GROUP-DELIVERY (#162): account gruppo, erogazione, broadcast singola riga, `original_author_id`, UI autore avatar+nome; doc hub + `groups-client.md`
-- RECEPTION-ALLOWLIST (#161): allow list ricezione, gate server, UI «Persone consentite»; doc hub + semantica spunte ✓/✓✓
-- Modello caselle mailbox (#159): migrazione `20260704120000`, spec `MAILBOX-*`, client allineato (`delivered_at`/`read_at`)
+- SDD registro promesse (#171, #172): `docs/specs/registry.md` — SYS/PROM/SURF; epurazione residui doc legacy
+- SYS-GROUP (#162): account gruppo, erogazione, broadcast singola riga, `original_author_id`, UI autore avatar+nome; doc hub + `groups-client.md`
+- SYS-RECEPTION (#161): allow list ricezione, gate server, UI «Persone consentite»; doc hub + semantica spunte ✓/✓✓
+- SYS-MAILBOX (#159): migrazione `20260704120000`, client allineato (`delivered_at`/`read_at`)
 - Revisione precedente: sync PR #108–#153; posizione statica (#153); multi-account (#147/#152)
 - Revisione doc 2026-07-04: allineamento post-mailbox (#159), contratti promossi, INDICE/README
 

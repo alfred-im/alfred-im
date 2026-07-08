@@ -8,7 +8,7 @@ import 'package:alfred_client/services/account_session.dart';
 
 import '../support/fake_messaging_services.dart';
 
-// spec: AUTH-MULTI-REQ-011, AUTH-MULTI-REQ-012, AUTH-MULTI-REQ-014, AUTH-MULTI-REQ-021
+// spec: SURF-AUTH-002, SURF-AUTH-003, SURF-AUTH-005, PROM-MULTI-ACCOUNT-021
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

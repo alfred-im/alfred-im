@@ -5,8 +5,7 @@
 **Stato**: PR Alpha **#108–#162** su `main`  
 **Registro PR**: [alpha-pr-registry.md](./alpha-pr-registry.md)
 
-> **Contratti (SDD v2)**: [docs/specs/registry.md](../specs/registry.md) — registro promesse SYSTEM / PRODUCT / SURFACE.  
-> **Capability legacy (backend bundle)**: [docs/specs/index.md](../specs/index.md) — `MAILBOX-*`, `GROUP-*`, … fino a distillazione.  
+> **Contratti (SDD)**: [docs/specs/registry.md](../specs/registry.md) — registro promesse SYSTEM / PRODUCT / SURFACE.  
 > **Contratti piattaforma (SYSTEM)**: [contracts/schema.md](../specs/contracts/schema.md), [contracts/rpc.md](../specs/contracts/rpc.md).  
 > Questo file è **panoramica architetturale** — non duplicare i requisiti delle promesse.
 
@@ -63,7 +62,7 @@ client/lib/
 
 - `ChangeNotifierProxyProvider` per contatti, profilo e allow list ricezione al cambio focus (fix PR #114)
 - Inbox: `ListenableBuilder` su `focusedSession?.inboxController` (PR #140 + #152)
-- Dettaglio: [AUTH-MULTI.spec.md](../specs/capabilities/AUTH-MULTI.spec.md)
+- Dettaglio: [PROM-MULTI-ACCOUNT](../specs/promises/product/PROM-MULTI-ACCOUNT.md), [SURF-AUTH](../specs/surfaces/SURF-AUTH.md)
 
 ### 2.3 Bootstrap
 
@@ -73,29 +72,29 @@ client/lib/
 
 ---
 
-## 3. Capability → spec (contratti su `main`)
+## 3. Promesse → area
 
 | Area | Spec | Note |
 |------|------|------|
-| Multi-account, overlay auth | [AUTH-MULTI](../specs/capabilities/AUTH-MULTI.spec.md) | PR #140, #147, #152 |
-| Archivio per owner, outbox sempre | [MAILBOX-CORE](../specs/capabilities/MAILBOX-CORE.spec.md) | PR #159 |
-| Inbox on-read, `ChatPeer` | [MAILBOX-INBOX](../specs/capabilities/MAILBOX-INBOX.spec.md) | PR #159 |
-| Invio testo/GIF/voice/location | [MAILBOX-SEND](../specs/capabilities/MAILBOX-SEND.spec.md) | PR #159 |
-| Spunte delivered/read (`delivered_at`/`read_at`) | [MAILBOX-READ](../specs/capabilities/MAILBOX-READ.spec.md) | PR #159 |
+| Multi-account, overlay auth | [PROM-MULTI-ACCOUNT](../specs/promises/product/PROM-MULTI-ACCOUNT.md), [SURF-AUTH](../specs/surfaces/SURF-AUTH.md) | PR #140, #147, #152 |
+| Archivio per owner, outbox sempre | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) | PR #159 |
+| Inbox on-read, `ChatPeer` | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) | PR #159 |
+| Invio testo/GIF/voice/location | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) | PR #159 |
+| Spunte delivered/read (`delivered_at`/`read_at`) | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) | PR #159 |
 | Ricerca liste (conversazioni, contatti, allow list) | [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md) + [SURF-*](../specs/registry.md) | PR #132, #171 |
-| Profilo, avatar, pronomi | [PROFILE](../specs/capabilities/PROFILE.spec.md) | PR #118, #134 |
-| Rubrica | [CONTACTS](../specs/capabilities/CONTACTS.spec.md) | PR #109 |
-| Allow list ricezione | [RECEPTION-ALLOWLIST](../specs/capabilities/RECEPTION-ALLOWLIST.spec.md) | PR #161 |
-| Scheda profilo peer (tap avatar) | [PEER-PROFILE](../specs/capabilities/PEER-PROFILE.spec.md) | PR #163 |
-| Account gruppo, erogazione | [GROUP-CORE](../specs/capabilities/GROUP-CORE.spec.md), [GROUP-DELIVERY](../specs/capabilities/GROUP-DELIVERY.spec.md) | PR #162 |
+| Profilo, avatar, pronomi | [SYS-PROFILE](../specs/promises/system/SYS-PROFILE.md), [PROM-PROFILE-IDENTITY](../specs/promises/product/PROM-PROFILE-IDENTITY.md), [SURF-PROFILE](../specs/surfaces/SURF-PROFILE.md) | PR #118, #134 |
+| Rubrica | [SYS-CONTACTS](../specs/promises/system/SYS-CONTACTS.md), [PROM-PERSONAL-CONTACTS](../specs/promises/product/PROM-PERSONAL-CONTACTS.md), [SURF-CONTACTS](../specs/surfaces/SURF-CONTACTS.md) | PR #109 |
+| Allow list ricezione | [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST](../specs/surfaces/SURF-ALLOWLIST.md) | PR #161 |
+| Scheda profilo peer (tap avatar) | [PROM-PEER-PROFILE](../specs/promises/product/PROM-PEER-PROFILE.md), [SURF-PEER-PROFILE](../specs/surfaces/SURF-PEER-PROFILE.md) | PR #163 |
+| Account gruppo, erogazione | [SYS-GROUP](../specs/promises/system/SYS-GROUP.md) | PR #162 |
 
 ### UI cross-cutting
 
-| Area | Contratto v2 / evidenza |
+| Area | Contratto / evidenza |
 |------|-------------------------|
 | Ricerca lista on-demand | [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md) + [SURF-*](../specs/registry.md) — [inbox-search-toggle.md](../design/inbox-search-toggle.md) (PR #132, #171) |
 | Scroll ancorato chat | [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) (PR #125) — *backlog promessa PRODUCT* |
-| ADR modello caselle | [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) → spec `MAILBOX-*` (PR #159) |
+| ADR modello caselle | [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) → [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) (PR #159) |
 
 ---
 
@@ -116,7 +115,7 @@ Bridge → claim outbox; aggiorna external_id, sync_cursors
        → stesso gate allow list prima di materializzare copia ingresso (fase B)
 ```
 
-Vedi [RECEPTION-ALLOWLIST](../specs/capabilities/RECEPTION-ALLOWLIST.spec.md), [bridge-stateless.md](../decisions/bridge-stateless.md), [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md). PostgREST: **un solo overload** di `send_message_to_profile`.
+Vedi [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST](../specs/surfaces/SURF-ALLOWLIST.md), [bridge-stateless.md](../decisions/bridge-stateless.md), [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md). PostgREST: **un solo overload** di `send_message_to_profile`.
 
 ---
 
@@ -138,7 +137,7 @@ Vedi [RECEPTION-ALLOWLIST](../specs/capabilities/RECEPTION-ALLOWLIST.spec.md), [
 | E2E | `client/e2e/` |
 | SQL smoke | `supabase/tests/` |
 
-Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (`registry.md`) o capability legacy.
+Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (`registry.md`).
 
 ---
 

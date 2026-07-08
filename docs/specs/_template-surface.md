@@ -6,7 +6,6 @@
 | **Status** | `draft` \| `approved` \| `implemented` \| `deprecated` \| `superseded` |
 | **Ultima revisione** | YYYY-MM-DD |
 | **Promesse** | [PROM-…](../promises/product/PROM-….md) |
-| **Capability legacy** | [{CAP}.spec.md](../capabilities/{CAP}.spec.md) (opzionale) |
 
 Binding promesse PRODUCT/SYSTEM su una schermata o widget.
 

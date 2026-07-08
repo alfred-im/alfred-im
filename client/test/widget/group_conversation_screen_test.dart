@@ -10,7 +10,7 @@ import 'package:alfred_client/theme/alfred_theme.dart';
 
 import '../support/fake_messaging_services.dart';
 
-// spec: GROUP-CORE-REQ-006, GROUP-CORE-REQ-007
+// spec: SURF-GROUP-SHELL-002, SURF-GROUP-SHELL-003
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

@@ -2,7 +2,7 @@ import 'package:alfred_client/utils/list_filter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // spec: PROM-LIST-FILTER-001, CONTACTS-REQ-013, SURF-CONTACTS-002
+  // spec: PROM-LIST-FILTER-001, SURF-CONTACTS-002, PROM-PERSONAL-CONTACTS-008
   group('filterByQueryFields', () {
     test('filters by substring case-insensitive across fields', () {
       final items = [

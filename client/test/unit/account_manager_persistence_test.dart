@@ -9,7 +9,7 @@ import 'package:alfred_client/services/account_storage_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // spec: AUTH-MULTI-REQ-003, AUTH-MULTI-REQ-006, AUTH-MULTI-REQ-014
+  // spec: PROM-MULTI-ACCOUNT-003, PROM-MULTI-ACCOUNT-006, PROM-MULTI-ACCOUNT-015
   group('AccountSession declarative persistence', () {
     late AccountStorageService storage;
 

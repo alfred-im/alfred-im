@@ -1,6 +1,6 @@
 # Shell sempre visibile + overlay credenziali
 
-> **Superseded by spec**: [AUTH-MULTI.spec.md](../specs/capabilities/AUTH-MULTI.spec.md) — UX overlay; per contratto usare la spec.
+> **Superseded by spec**: [PROM-MULTI-ACCOUNT.md](../specs/promises/product/PROM-MULTI-ACCOUNT.md), [SURF-AUTH.md](../specs/surfaces/SURF-AUTH.md) — UX overlay; per contratto usare le promesse.
 
 **Stato**: 🟢 Vincolante (client Alpha)  
 **Data**: 2026-06-29  

@@ -1,6 +1,6 @@
 # Voice notes (WebM/Opus)
 
-> **Contratto canonico**: [MAILBOX-SEND.spec.md](../specs/capabilities/MAILBOX-SEND.spec.md) — evidenza implementativa PR #126.
+> **Contratto canonico**: [SYS-MAILBOX.md](../specs/promises/system/SYS-MAILBOX.md) — evidenza implementativa PR #126.
 
 **Stato**: implementato in PR **#126**
 

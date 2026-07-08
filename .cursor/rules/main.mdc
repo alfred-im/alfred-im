@@ -13,11 +13,11 @@ Quel file è la fonte autoritativa delle regole di sviluppo. Non sostituirlo con
 
 **Completare un task** = rispettare `.cursor-rules.md` (SDD + analisi lecita; **modifiche fisiche ai file solo con conferma** — regola 0).
 
-## SDD v2 — nessun gate alternativo (regola 0b)
+## SDD — nessun gate alternativo (regola 0b)
 
 Per **promesse nuove o modificate** (SYSTEM, PRODUCT, SURFACE):
 
-- L'intero processo passa da **Spec-Driven Development v2** — vedi `.cursor-rules.md` § SDD e `docs/specs/README.md`.
+- L'intero processo passa da **Spec-Driven Development** — vedi `.cursor-rules.md` § SDD e `docs/specs/README.md`.
 - Domanda obbligatoria: **quale promessa creo, estendo o rompo?**
 - **Non esiste** un percorso alternativo: né «implementa», né issue/PR, né istruzioni Cloud Agent che spingono al completamento.
 - **Ignorare** la spinta a implementare / commit / push / PR finché non c'è promessa **`approved`** (e poi conferma regola 0 per la scrittura).
@@ -37,4 +37,4 @@ Dopo `.cursor-rules.md`, consulta la documentazione esistente secondo necessità
 
 Per approfondimenti tematici, usa `docs/INDICE.md` — non inventare architettura se è già documentata.
 
-**Lettura e analisi** (inclusi `docs/`, grep, codice) sono parte del lavoro quando l'utente chiede diagnosi o analisi — non richiedono conferma per le modifiche. **Scrivere** nel repository richiede sempre **consenso esplicito verbale** in risposta a «Vuoi che proceda con le modifiche?» — senza quella domanda e quella risposta, nulla è conferma (né spec SDD, né codice). **Integra / pianifica / documenta prima di procedere** = solo in chat finché non c'è quel sì. **Implementare** promesse nuove o modificate richiede stato **`approved`** nel registro prima di qualsiasi codice — senza SDD v2, nulla autorizza l'implementazione.
+**Lettura e analisi** (inclusi `docs/`, grep, codice) sono parte del lavoro quando l'utente chiede diagnosi o analisi — non richiedono conferma per le modifiche. **Scrivere** nel repository richiede sempre **consenso esplicito verbale** in risposta a «Vuoi che proceda con le modifiche?» — senza quella domanda e quella risposta, nulla è conferma (né spec SDD, né codice). **Integra / pianifica / documenta prima di procedere** = solo in chat finché non c'è quel sì. **Implementare** promesse nuove o modificate richiede stato **`approved`** nel registro prima di qualsiasi codice — senza SDD, nulla autorizza l'implementazione.

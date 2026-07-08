@@ -1,6 +1,6 @@
-# Scheda profilo peer in overlay (PEER-PROFILE)
+# Scheda profilo peer in overlay
 
-**Spec**: [PEER-PROFILE.spec.md](../specs/capabilities/PEER-PROFILE.spec.md) · **PR**: #163 · **Stato**: `implemented`
+**Promesse**: [PROM-PEER-PROFILE.md](../specs/promises/product/PROM-PEER-PROFILE.md), [SURF-PEER-PROFILE.md](../specs/surfaces/SURF-PEER-PROFILE.md) · **PR**: #163 · **Stato**: `implemented`
 
 Documento per AI — tap avatar di un account Alfred altrui → modale fullscreen con identità pubblica, toggle allow list e azione rubrica.
 
@@ -39,7 +39,7 @@ Contatti rubrica **esterni**: nessun overlay (nessun `profiles.id`).
 | Switch «Consenti messaggi» | `reception_allowlist` | `ReceptionAllowlistController.addProfile` / `removeByProfileId` |
 | «Aggiungi / Rimuovi dalla rubrica» | `contacts` | `ContactsController.addInternal` / `removeInternalByProfileId` |
 
-Allow e rubrica sono **indipendenti** (semantica invariata rispetto a RECEPTION-ALLOWLIST e CONTACTS).
+Allow e rubrica sono **indipendenti** (semantica invariata rispetto a [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) e [SYS-CONTACTS](../specs/promises/system/SYS-CONTACTS.md)).
 
 ---
 
