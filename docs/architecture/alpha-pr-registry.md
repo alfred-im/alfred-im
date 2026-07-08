@@ -1,6 +1,6 @@
 # Registro PR Alpha Flutter (main)
 
-**Ultimo aggiornamento**: 2026-07-07 (review design-first #164–#169; PEER-PROFILE #163; GROUP-CORE/DELIVERY #162; RECEPTION-ALLOWLIST #161)  
+**Ultimo aggiornamento**: 2026-07-08 (SDD v2 #171; PROM-LIST-FILTER + SURF contatti/allow list)  
 **Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
 
 Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/alpha-full-stack.md` (e fix dedicato se applicabile).

@@ -6,7 +6,11 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased] - 2026-07-08
 
-### Documentazione — SDD v2 (post-Alpha)
+### Aggiunto
+
+- **#171** — Ricerca on-demand su rubrica e persone consentite (`CollapsibleListSearch`); widget condiviso con inbox
+
+### Documentazione — SDD v2 (post-Alpha, #171)
 
 - **Riscrittura metodo SDD**: da capability-centric a **registro promesse** (SYSTEM / PRODUCT / SURFACE) — `docs/specs/README.md`
 - **Registro**: `docs/specs/registry.md`
