@@ -34,8 +34,8 @@ Dettaglio completo (schema, RPC, RLS, smoke): **[contracts/schema.md](./contract
 | Superficie ID | Titolo | Stato | Promesse | File |
 |---------------|--------|-------|----------|------|
 | **SURF-INBOX** | Lista conversazioni (`InboxPanel`) | `implemented` | PROM-LIST-FILTER | [SURF-INBOX.md](./surfaces/SURF-INBOX.md) |
-| **SURF-CONTACTS** | Rubrica (`ContactsScreen`) | `approved` | PROM-LIST-FILTER | [SURF-CONTACTS.md](./surfaces/SURF-CONTACTS.md) |
-| **SURF-ALLOWLIST** | Persone consentite (`AllowedPeopleScreen`) | `approved` | PROM-LIST-FILTER | [SURF-ALLOWLIST.md](./surfaces/SURF-ALLOWLIST.md) |
+| **SURF-CONTACTS** | Rubrica (`ContactsScreen`) | `implemented` | PROM-LIST-FILTER | [SURF-CONTACTS.md](./surfaces/SURF-CONTACTS.md) |
+| **SURF-ALLOWLIST** | Persone consentite (`AllowedPeopleScreen`) | `implemented` | PROM-LIST-FILTER | [SURF-ALLOWLIST.md](./surfaces/SURF-ALLOWLIST.md) |
 
 ---
 

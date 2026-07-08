@@ -19,8 +19,8 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 |----|-------|-----------|
 | [PROM-LIST-FILTER](./specs/promises/product/PROM-LIST-FILTER.md) | `implemented` | Filtro locale + ricerca on-demand (lente) |
 | [SURF-INBOX](./specs/surfaces/SURF-INBOX.md) | `implemented` | Lista conversazioni |
-| [SURF-CONTACTS](./specs/surfaces/SURF-CONTACTS.md) | `approved` | Rubrica — filtro lista (da implementare) |
-| [SURF-ALLOWLIST](./specs/surfaces/SURF-ALLOWLIST.md) | `approved` | Persone consentite — filtro lista (da implementare) |
+| [SURF-CONTACTS](./specs/surfaces/SURF-CONTACTS.md) | `implemented` | Rubrica — filtro lista on-demand |
+| [SURF-ALLOWLIST](./specs/surfaces/SURF-ALLOWLIST.md) | `implemented` | Persone consentite — filtro lista on-demand |
 
 ### SYSTEM + capability legacy
 

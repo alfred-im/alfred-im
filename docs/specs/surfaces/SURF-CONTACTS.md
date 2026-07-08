@@ -3,7 +3,7 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-CONTACTS` |
-| **Status** | `approved` |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-08 |
 | **Promesse** | [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md) |
 | **Capability legacy** | [CONTACTS.spec.md](../capabilities/CONTACTS.spec.md) (REQ-013 filtro logico) |
@@ -45,7 +45,7 @@ Binding filtro lista sulla schermata Contatti. **Non** copre il bottom sheet «A
 
 | SURF-ID | Verifica prevista |
 |---------|-------------------|
-| SURF-CONTACTS-001–004 | `contacts_screen.dart`; test widget `contacts_screen_test.dart` (da creare) |
+| SURF-CONTACTS-001–004 | `contacts_screen.dart`; `contacts_screen_test.dart` |
 | SURF-CONTACTS-002 | `contacts_controller.dart`; `list_filter_test.dart` |
 | PROM-LIST-FILTER-001–004 | già coperti da test unit |
 

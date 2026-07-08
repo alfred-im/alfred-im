@@ -16,7 +16,7 @@ Future<void> _waitForAllowlist(ReceptionAllowlistController controller) async {
   }
 }
 
-// spec: RECEPTION-ALLOWLIST-REQ-015
+// spec: RECEPTION-ALLOWLIST-REQ-015, SURF-ALLOWLIST-001
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -43,7 +43,12 @@ void main() {
     await tester.pump();
 
     expect(find.text('Persone consentite'), findsOneWidget);
-    expect(find.text('Cerca nella lista'), findsOneWidget);
+    expect(find.text('Cerca nella lista'), findsNothing);
+
+    await tester.tap(find.byTooltip('Cerca nella lista'));
+    await tester.pump();
+
+    expect(find.text('Cerca nella lista'), findsWidgets);
     expect(
       find.text(
         'Nessuno può consegnarti messaggi finché non aggiungi qualcuno a questa lista.',

@@ -8,6 +8,7 @@ import '../providers/contacts_controller.dart';
 import '../services/compose_service.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/avatar_color.dart';
+import '../widgets/collapsible_list_search.dart';
 import '../widgets/peer_profile_overlay.dart';
 import '../widgets/profile_identity.dart';
 
@@ -19,16 +20,8 @@ class ContactsScreen extends StatefulWidget {
 }
 
 class _ContactsScreenState extends State<ContactsScreen> {
-  final _searchController = TextEditingController();
-
   ComposeService? get _composeService =>
       context.read<AuthController>().focusedSession?.composeService;
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   void _startChat(Contact contact) {
     final composeService = _composeService;
@@ -55,77 +48,75 @@ class _ContactsScreenState extends State<ContactsScreen> {
   Widget build(BuildContext context) {
     final contacts = context.watch<ContactsController>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Contatti'),
-        backgroundColor: AlfredColors.charcoal,
-        foregroundColor: AlfredColors.textOnDark,
-        actions: [
-          IconButton(
-            onPressed: _showAddContact,
-            icon: const Icon(Icons.person_add_outlined),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              controller: _searchController,
-              onChanged: contacts.setSearchQuery,
-              decoration: const InputDecoration(
-                hintText: 'Cerca contatto',
-                prefixIcon: Icon(Icons.search),
+    return CollapsibleListSearch(
+      hintText: 'Cerca contatto',
+      onSearchChanged: contacts.setSearchQuery,
+      lensIconColor: AlfredColors.textOnDark,
+      builder: (context, search) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Contatti'),
+            backgroundColor: AlfredColors.charcoal,
+            foregroundColor: AlfredColors.textOnDark,
+            actions: [
+              search.lensButton,
+              IconButton(
+                onPressed: _showAddContact,
+                icon: const Icon(Icons.person_add_outlined),
               ),
-            ),
+            ],
           ),
-          Expanded(
-            child: contacts.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.separated(
-                    itemCount: contacts.filteredContacts.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final contact = contacts.filteredContacts[index];
-                      final internalProfile = contact.protocol ==
-                                  ContactProtocol.internal &&
-                              contact.linkedProfileId != null
-                          ? ProfileSummary(
-                              id: contact.linkedProfileId!,
-                              displayName: contact.displayName,
-                              avatarUrl: contact.avatarUrl,
-                            )
-                          : null;
-                      return ListTile(
-                        leading: internalProfile != null
-                            ? ProfileAvatar(
-                                profile: internalProfile,
-                                onTap: () => showPeerProfileOverlay(
-                                  context,
-                                  internalProfile,
-                                ),
-                              )
-                            : CircleAvatar(
-                                child: Text(avatarInitial(contact.displayName)),
-                              ),
-                        title: Text(contact.displayName),
-                        subtitle: Text(
-                          contact.protocol == ContactProtocol.internal
-                              ? 'Utente Alfred'
-                              : contact.externalAddress ?? '',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.chat_bubble_outline),
-                          onPressed: () => _startChat(contact),
-                        ),
-                      );
-                    },
-                  ),
+          body: Column(
+            children: [
+              search.field,
+              Expanded(
+                child: contacts.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView.separated(
+                        itemCount: contacts.filteredContacts.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final contact = contacts.filteredContacts[index];
+                          final internalProfile = contact.protocol ==
+                                      ContactProtocol.internal &&
+                                  contact.linkedProfileId != null
+                              ? ProfileSummary(
+                                  id: contact.linkedProfileId!,
+                                  displayName: contact.displayName,
+                                  avatarUrl: contact.avatarUrl,
+                                )
+                              : null;
+                          return ListTile(
+                            leading: internalProfile != null
+                                ? ProfileAvatar(
+                                    profile: internalProfile,
+                                    onTap: () => showPeerProfileOverlay(
+                                      context,
+                                      internalProfile,
+                                    ),
+                                  )
+                                : CircleAvatar(
+                                    child: Text(avatarInitial(contact.displayName)),
+                                  ),
+                            title: Text(contact.displayName),
+                            subtitle: Text(
+                              contact.protocol == ContactProtocol.internal
+                                  ? 'Utente Alfred'
+                                  : contact.externalAddress ?? '',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.chat_bubble_outline),
+                              onPressed: () => _startChat(contact),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

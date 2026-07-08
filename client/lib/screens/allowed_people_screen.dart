@@ -5,6 +5,7 @@ import '../models/allowed_person.dart';
 import '../models/profile_summary.dart';
 import '../providers/reception_allowlist_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../widgets/collapsible_list_search.dart';
 import '../widgets/peer_profile_overlay.dart';
 import '../widgets/profile_identity.dart';
 
@@ -16,14 +17,6 @@ class AllowedPeopleScreen extends StatefulWidget {
 }
 
 class _AllowedPeopleScreenState extends State<AllowedPeopleScreen> {
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   Future<void> _showAddPerson() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -70,86 +63,85 @@ class _AllowedPeopleScreenState extends State<AllowedPeopleScreen> {
   Widget build(BuildContext context) {
     final allowlist = context.watch<ReceptionAllowlistController>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Persone consentite'),
-        backgroundColor: AlfredColors.charcoal,
-        foregroundColor: AlfredColors.textOnDark,
-        actions: [
-          IconButton(
-            onPressed: _showAddPerson,
-            icon: const Icon(Icons.person_add_outlined),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              controller: _searchController,
-              onChanged: allowlist.setSearchQuery,
-              decoration: const InputDecoration(
-                hintText: 'Cerca nella lista',
-                prefixIcon: Icon(Icons.search),
+    return CollapsibleListSearch(
+      hintText: 'Cerca nella lista',
+      onSearchChanged: allowlist.setSearchQuery,
+      lensIconColor: AlfredColors.textOnDark,
+      builder: (context, search) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Persone consentite'),
+            backgroundColor: AlfredColors.charcoal,
+            foregroundColor: AlfredColors.textOnDark,
+            actions: [
+              search.lensButton,
+              IconButton(
+                onPressed: _showAddPerson,
+                icon: const Icon(Icons.person_add_outlined),
               ),
-            ),
+            ],
           ),
-          if (!allowlist.isLoading && allowlist.allowedPeople.isEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-              child: Text(
-                'Nessuno può consegnarti messaggi finché non aggiungi qualcuno a questa lista.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AlfredColors.textSecondary,
-                    ),
-              ),
-            ),
-          Expanded(
-            child: allowlist.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : allowlist.error != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Text(
-                            allowlist.error!,
-                            textAlign: TextAlign.center,
-                          ),
+          body: Column(
+            children: [
+              search.field,
+              if (!allowlist.isLoading && allowlist.allowedPeople.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  child: Text(
+                    'Nessuno può consegnarti messaggi finché non aggiungi qualcuno a questa lista.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AlfredColors.textSecondary,
                         ),
-                      )
-                    : ListView.separated(
-                        itemCount: allowlist.filteredAllowedPeople.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final person = allowlist.filteredAllowedPeople[index];
-                          return ListTile(
-                            leading: ProfileAvatar(
-                              profile: person.profile,
-                              onTap: () => showPeerProfileOverlay(
-                                context,
-                                person.profile,
+                  ),
+                ),
+              Expanded(
+                child: allowlist.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : allowlist.error != null
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Text(
+                                allowlist.error!,
+                                textAlign: TextAlign.center,
                               ),
                             ),
-                            title: Text(person.displayName),
-                            subtitle: person.profile.hasUsername
-                                ? Text(
-                                    person.profile.handle,
-                                    style: const TextStyle(fontSize: 12),
-                                  )
-                                : null,
-                            trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle_outline),
-                              tooltip: 'Rimuovi',
-                              onPressed: () => _confirmRemove(person),
-                            ),
-                          );
-                        },
-                      ),
+                          )
+                        : ListView.separated(
+                            itemCount: allowlist.filteredAllowedPeople.length,
+                            separatorBuilder: (_, _) => const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final person =
+                                  allowlist.filteredAllowedPeople[index];
+                              return ListTile(
+                                leading: ProfileAvatar(
+                                  profile: person.profile,
+                                  onTap: () => showPeerProfileOverlay(
+                                    context,
+                                    person.profile,
+                                  ),
+                                ),
+                                title: Text(person.displayName),
+                                subtitle: person.profile.hasUsername
+                                    ? Text(
+                                        person.profile.handle,
+                                        style: const TextStyle(fontSize: 12),
+                                      )
+                                    : null,
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.remove_circle_outline),
+                                  tooltip: 'Rimuovi',
+                                  onPressed: () => _confirmRemove(person),
+                                ),
+                              );
+                            },
+                          ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

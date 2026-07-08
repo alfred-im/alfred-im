@@ -3,7 +3,7 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-ALLOWLIST` |
-| **Status** | `approved` |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-08 |
 | **Promesse** | [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md) |
 | **Capability legacy** | [RECEPTION-ALLOWLIST.spec.md](../capabilities/RECEPTION-ALLOWLIST.spec.md) |
@@ -46,7 +46,7 @@ Binding filtro lista sulla schermata «Persone consentite». **Non** copre il bo
 | SURF-ID | Verifica |
 |---------|----------|
 | SURF-ALLOWLIST-002 | `reception_allowlist_controller_test.dart` — `filteredAllowedPeople` |
-| SURF-ALLOWLIST-001–004 | `allowed_people_screen.dart`; `allowed_people_screen_test.dart` (da aggiornare post-implementazione) |
+| SURF-ALLOWLIST-001–004 | `allowed_people_screen.dart`; `allowed_people_screen_test.dart` |
 
 ---
 

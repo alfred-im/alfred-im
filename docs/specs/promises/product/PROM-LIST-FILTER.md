@@ -82,8 +82,8 @@ Le superfici ([SURF-*](../../registry.md)) dichiarano campi filtrabili, hint e c
 | Superficie | Stato conformità | File |
 |------------|------------------|------|
 | SURF-INBOX | `implemented` | [SURF-INBOX.md](../../surfaces/SURF-INBOX.md) |
-| SURF-CONTACTS | `approved` (da implementare) | [SURF-CONTACTS.md](../../surfaces/SURF-CONTACTS.md) |
-| SURF-ALLOWLIST | `approved` (da implementare) | [SURF-ALLOWLIST.md](../../surfaces/SURF-ALLOWLIST.md) |
+| SURF-CONTACTS | `implemented` | [SURF-CONTACTS.md](../../surfaces/SURF-CONTACTS.md) |
+| SURF-ALLOWLIST | `implemented` | [SURF-ALLOWLIST.md](../../surfaces/SURF-ALLOWLIST.md) |
 
 ---
 
@@ -96,8 +96,8 @@ Le superfici ([SURF-*](../../registry.md)) dichiarano campi filtrabili, hint e c
 | PROM-LIST-FILTER-020–021 | `home_screen.dart` — `ValueKey(accountUserId)` su `InboxPanel` |
 | PROM-LIST-FILTER-030 | Nessuna RPC ricerca lista; solo memoria |
 | PROM-LIST-FILTER-031–033 | `inbox-search-toggle.md`; dismiss centralizzato |
-| SURF-CONTACTS (estensione) | `contacts_screen.dart` + test widget (backlog) |
-| SURF-ALLOWLIST (estensione) | `allowed_people_screen.dart` + test widget (backlog) |
+| SURF-CONTACTS (estensione) | `contacts_screen.dart` + `contacts_screen_test.dart` |
+| SURF-ALLOWLIST (estensione) | `allowed_people_screen.dart` + `allowed_people_screen_test.dart` |
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 

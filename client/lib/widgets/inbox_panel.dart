@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/chat_peer.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/compose_address.dart';
+import 'collapsible_list_search.dart';
 import 'inbox_peer_tile.dart';
 
 class InboxPanel extends StatefulWidget {
@@ -44,196 +45,132 @@ class InboxPanel extends StatefulWidget {
 }
 
 class _InboxPanelState extends State<InboxPanel> {
-  final _searchController = TextEditingController();
-  final _searchFocusNode = FocusNode();
-  final _searchTapRegionGroup = Object();
-  bool _searchVisible = false;
-
-  @override
-  void dispose() {
-    if (_searchVisible || _searchController.text.isNotEmpty) {
-      widget.onSearchChanged('');
-    }
-    _searchController.dispose();
-    _searchFocusNode.dispose();
-    super.dispose();
-  }
-
-  void _dismissSearch() {
-    final hadQuery = _searchController.text.isNotEmpty;
-    _searchController.clear();
-    _searchFocusNode.unfocus();
-    if (hadQuery) {
-      widget.onSearchChanged('');
-    }
-    if (_searchVisible) {
-      setState(() => _searchVisible = false);
-    }
-  }
-
-  void _toggleSearch() {
-    if (_searchVisible) {
-      _dismissSearch();
-      return;
-    }
-    setState(() => _searchVisible = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _searchFocusNode.requestFocus();
-    });
-  }
-
-  Widget _searchLensButton({Color? iconColor}) {
-    return TapRegion(
-      groupId: _searchTapRegionGroup,
-      child: IconButton(
-        onPressed: _toggleSearch,
-        icon: Icon(Icons.search, color: iconColor),
-        tooltip: 'Cerca messaggi',
-      ),
-    );
-  }
-
-  Widget _searchField() {
-    if (!_searchVisible) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-      child: TapRegion(
-        groupId: _searchTapRegionGroup,
-        onTapOutside: (_) => _dismissSearch(),
-        child: TextField(
-          controller: _searchController,
-          focusNode: _searchFocusNode,
-          onChanged: widget.onSearchChanged,
-          decoration: const InputDecoration(
-            hintText: 'Cerca messaggi',
-            prefixIcon: Icon(
-              Icons.search,
-              color: AlfredColors.textSecondary,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        ColoredBox(
-          color: AlfredColors.panel,
-          child: Column(
-            children: [
-              if (widget.showTopBar)
-                _Header(
-                  showBackButton: widget.showBackButton,
-                  onBack: widget.onBack,
-                  onDrawerTap: widget.onDrawerTap,
-                  onContactsTap: widget.onContactsTap,
-                  onAllowedPeopleTap: widget.onAllowedPeopleTap,
-                  searchLens: _searchLensButton(
-                    iconColor: AlfredColors.textOnDark,
-                  ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 4, 0),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Conversazioni',
-                          style: TextStyle(
-                            color: AlfredColors.textPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      _searchLensButton(),
-                      if (widget.onAllowedPeopleTap != null)
-                        IconButton(
-                          onPressed: widget.onAllowedPeopleTap,
-                          icon: const Icon(Icons.verified_user_outlined),
-                          tooltip: 'Persone consentite',
-                        ),
-                      IconButton(
-                        onPressed: widget.onContactsTap,
-                        icon: const Icon(Icons.people_outline),
-                        tooltip: 'Contatti',
-                      ),
-                    ],
-                  ),
-                ),
-              _searchField(),
-              const Divider(height: 1),
-              Expanded(
-                child: widget.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : widget.error != null
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    widget.error!,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: AlfredColors.textSecondary,
-                                    ),
-                                  ),
-                                  if (widget.onRetry != null) ...[
-                                    const SizedBox(height: 16),
-                                    FilledButton(
-                                      onPressed: widget.onRetry,
-                                      child: const Text('Riprova'),
-                                    ),
-                                  ],
-                                ],
+    return CollapsibleListSearch(
+      hintText: 'Cerca messaggi',
+      onSearchChanged: widget.onSearchChanged,
+      lensIconColor:
+          widget.showTopBar ? AlfredColors.textOnDark : null,
+      builder: (context, search) {
+        return Stack(
+          children: [
+            ColoredBox(
+              color: AlfredColors.panel,
+              child: Column(
+                children: [
+                  if (widget.showTopBar)
+                    _Header(
+                      showBackButton: widget.showBackButton,
+                      onBack: widget.onBack,
+                      onDrawerTap: widget.onDrawerTap,
+                      onContactsTap: widget.onContactsTap,
+                      onAllowedPeopleTap: widget.onAllowedPeopleTap,
+                      searchLens: search.lensButton,
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 4, 0),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Conversazioni',
+                              style: TextStyle(
+                                color: AlfredColors.textPrimary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          )
-                        : widget.peers.isEmpty
-                            ? const Center(
-                                child: Text(
-                                  'Nessun messaggio.\nUsa + per scrivere a un indirizzo.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: AlfredColors.textSecondary),
+                          ),
+                          search.lensButton,
+                          if (widget.onAllowedPeopleTap != null)
+                            IconButton(
+                              onPressed: widget.onAllowedPeopleTap,
+                              icon: const Icon(Icons.verified_user_outlined),
+                              tooltip: 'Persone consentite',
+                            ),
+                          IconButton(
+                            onPressed: widget.onContactsTap,
+                            icon: const Icon(Icons.people_outline),
+                            tooltip: 'Contatti',
+                          ),
+                        ],
+                      ),
+                    ),
+                  search.field,
+                  const Divider(height: 1),
+                  Expanded(
+                    child: widget.isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : widget.error != null
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        widget.error!,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: AlfredColors.textSecondary,
+                                        ),
+                                      ),
+                                      if (widget.onRetry != null) ...[
+                                        const SizedBox(height: 16),
+                                        FilledButton(
+                                          onPressed: widget.onRetry,
+                                          child: const Text('Riprova'),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                                 ),
                               )
-                            : ListView.separated(
-                                itemCount: widget.peers.length,
-                                separatorBuilder: (_, _) =>
-                                    const Divider(height: 1, indent: 76),
-                                itemBuilder: (context, index) {
-                                  final peer = widget.peers[index];
-                                  return InboxPeerTile(
-                                    peer: peer,
-                                    selected: peer.profileId == widget.selectedPeerId,
-                                    onTap: () => widget.onSelected(peer),
-                                  );
-                                },
-                              ),
+                            : widget.peers.isEmpty
+                                ? const Center(
+                                    child: Text(
+                                      'Nessun messaggio.\nUsa + per scrivere a un indirizzo.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: AlfredColors.textSecondary,
+                                      ),
+                                    ),
+                                  )
+                                : ListView.separated(
+                                    itemCount: widget.peers.length,
+                                    separatorBuilder: (_, _) =>
+                                        const Divider(height: 1, indent: 76),
+                                    itemBuilder: (context, index) {
+                                      final peer = widget.peers[index];
+                                      return InboxPeerTile(
+                                        peer: peer,
+                                        selected:
+                                            peer.profileId == widget.selectedPeerId,
+                                        onTap: () => widget.onSelected(peer),
+                                      );
+                                    },
+                                  ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-        if (widget.onNewMessage != null)
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: FloatingActionButton(
-              onPressed: () => _showNewMessageDialog(context),
-              backgroundColor: AlfredColors.unreadBadge,
-              foregroundColor: AlfredColors.textOnDark,
-              tooltip: 'Nuovo messaggio',
-              child: const Icon(Icons.chat_outlined),
             ),
-          ),
-      ],
+            if (widget.onNewMessage != null)
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton(
+                  onPressed: () => _showNewMessageDialog(context),
+                  backgroundColor: AlfredColors.unreadBadge,
+                  foregroundColor: AlfredColors.textOnDark,
+                  tooltip: 'Nuovo messaggio',
+                  child: const Icon(Icons.chat_outlined),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
