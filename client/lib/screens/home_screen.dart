@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
+import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
 import '../providers/inbox_controller.dart';
 import '../providers/messages_controller.dart';
@@ -12,6 +15,8 @@ import '../widgets/auth_overlay.dart';
 import '../widgets/chat_panel.dart';
 import '../widgets/no_account_placeholder.dart';
 import '../widgets/inbox_panel.dart';
+import '../widgets/group_home_panel.dart';
+import '../providers/group_home_controller.dart';
 import 'allowed_people_screen.dart';
 import 'contacts_screen.dart';
 import 'profile_screen.dart';
@@ -84,6 +89,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (updated != null) {
       auth.mergeActivePeerFromInbox(updated);
     }
+  }
+
+  Future<void> _onGroupMessagesChangedFrom(
+    BuildContext providerContext,
+  ) async {
+    if (!mounted) return;
+    await providerContext.read<GroupHomeController>().reload();
   }
 
   Future<void> _openProfile() async {
@@ -166,42 +178,24 @@ class _HomeScreenState extends State<HomeScreen> {
     final isGroupAccount = session?.profile.isGroup ?? false;
 
     if (isGroupAccount && session != null) {
-      final width = MediaQuery.sizeOf(context).width;
-      final isWide = width >= _breakpoint;
-      final sidebarWidth = width >= 1100 ? 320.0 : 280.0;
-
-      final groupConversation = GroupConversationScreen(
-        session: session,
-        profile: session.profile,
-        onAllowedPeopleTap: _openAllowedPeople,
-        onProfileTap: _openProfile,
-        onDrawerTap: isWide ? null : _openDrawer,
-      );
-
-      if (isWide) {
-        return Scaffold(
-          body: Row(
-            children: [
-              SizedBox(
-                width: sidebarWidth,
-                child: ColoredBox(
-                  color: AlfredColors.panel,
-                  child: _accountSidebar(context, compact: true),
-                ),
-              ),
-              const VerticalDivider(width: 1, color: AlfredColors.border),
-              Expanded(child: groupConversation),
-            ],
-          ),
-        );
-      }
-
-      return Scaffold(
-        key: _scaffoldKey,
-        drawer: Drawer(
-          child: _accountSidebar(context),
+      return ChangeNotifierProvider(
+        key: ValueKey(session.userId),
+        create: (_) => GroupHomeController(
+          session: session,
+          profile: session.profile,
+          messageService: session.messageService,
+          profileService: session.profileService,
         ),
-        body: groupConversation,
+        child: _GroupAccountLayout(
+          session: session,
+          auth: auth,
+          scaffoldKey: _scaffoldKey,
+          accountSidebar: _accountSidebar,
+          onOpenProfile: _openProfile,
+          onOpenAllowedPeople: _openAllowedPeople,
+          onOpenDrawer: _openDrawer,
+          onGroupMessagesChanged: _onGroupMessagesChangedFrom,
+        ),
       );
     }
 
@@ -280,6 +274,126 @@ class _HomeScreenState extends State<HomeScreen> {
         _mainContent(context),
         if (auth.showAuthOverlay) const AuthOverlay(),
       ],
+    );
+  }
+}
+
+class _GroupAccountLayout extends StatelessWidget {
+  const _GroupAccountLayout({
+    required this.session,
+    required this.auth,
+    required this.scaffoldKey,
+    required this.accountSidebar,
+    required this.onOpenProfile,
+    required this.onOpenAllowedPeople,
+    required this.onOpenDrawer,
+    required this.onGroupMessagesChanged,
+  });
+
+  static const _breakpoint = 720.0;
+
+  final AccountSession session;
+  final AuthController auth;
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  final Widget Function(BuildContext context, {bool compact}) accountSidebar;
+  final Future<void> Function() onOpenProfile;
+  final Future<void> Function() onOpenAllowedPeople;
+  final VoidCallback onOpenDrawer;
+  final Future<void> Function(BuildContext providerContext) onGroupMessagesChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isWide = width >= _breakpoint;
+    final sidebarWidth = width >= 1100 ? 380.0 : 320.0;
+
+    final groupHomeArea = GroupHomePanel(
+      profile: session.profile,
+      conversationSelected: auth.groupChatOpen,
+      onConversationTap: auth.openGroupChat,
+      onProfileTap: () => unawaited(onOpenProfile()),
+      onAllowedPeopleTap: () => unawaited(onOpenAllowedPeople()),
+      onDrawerTap: isWide ? null : onOpenDrawer,
+    );
+
+    final groupChatArea = auth.groupChatOpen
+        ? _GroupChatWithMessages(
+            key: ValueKey('${session.userId}-chat'),
+            session: session,
+            profile: session.profile,
+            showBackButton: !isWide,
+            onBack: auth.backToGroupHome,
+            onMessagesChanged: onGroupMessagesChanged,
+          )
+        : const EmptyChatPlaceholder();
+
+    if (isWide) {
+      return Scaffold(
+        body: Row(
+          children: [
+            SizedBox(
+              width: sidebarWidth,
+              child: ColoredBox(
+                color: AlfredColors.panel,
+                child: Column(
+                  children: [
+                    accountSidebar(context, compact: true),
+                    const Divider(height: 1),
+                    Expanded(child: groupHomeArea),
+                  ],
+                ),
+              ),
+            ),
+            const VerticalDivider(width: 1, color: AlfredColors.border),
+            Expanded(child: groupChatArea),
+          ],
+        ),
+      );
+    }
+
+    return Scaffold(
+      key: scaffoldKey,
+      drawer: Drawer(
+        child: accountSidebar(context),
+      ),
+      body: auth.groupChatOpen
+          ? _GroupChatWithMessages(
+              key: ValueKey('${session.userId}-chat-mobile'),
+              session: session,
+              profile: session.profile,
+              showBackButton: true,
+              onBack: auth.backToGroupHome,
+              onMessagesChanged: onGroupMessagesChanged,
+            )
+          : groupHomeArea,
+    );
+  }
+}
+
+class _GroupChatWithMessages extends StatelessWidget {
+  const _GroupChatWithMessages({
+    super.key,
+    required this.session,
+    required this.profile,
+    this.showBackButton = false,
+    this.onBack,
+    required this.onMessagesChanged,
+  });
+
+  final AccountSession session;
+  final ProfileSummary profile;
+  final bool showBackButton;
+  final VoidCallback? onBack;
+  final Future<void> Function(BuildContext providerContext) onMessagesChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return GroupConversationScreen(
+      session: session,
+      profile: profile,
+      showBackButton: showBackButton,
+      onBack: onBack,
+      onMessagesChanged: () => onMessagesChanged(context),
     );
   }
 }

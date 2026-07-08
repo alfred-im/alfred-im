@@ -5,10 +5,12 @@ class AccountViewState {
   const AccountViewState({
     this.activePeer,
     this.showInboxOnMobile = true,
+    this.groupChatOpen = false,
   });
 
   final ChatPeer? activePeer;
   final bool showInboxOnMobile;
+  final bool groupChatOpen;
 
   AccountViewState clearConversation() => const AccountViewState();
 
@@ -17,9 +19,19 @@ class AccountViewState {
         showInboxOnMobile: false,
       );
 
+  AccountViewState openGroupChat() => const AccountViewState(
+        showInboxOnMobile: false,
+        groupChatOpen: true,
+      );
+
   AccountViewState backToInboxOnMobile() => AccountViewState(
         activePeer: activePeer,
         showInboxOnMobile: true,
+      );
+
+  AccountViewState backToGroupHome() => const AccountViewState(
+        showInboxOnMobile: true,
+        groupChatOpen: false,
       );
 
   AccountViewState mergeActivePeer(ChatPeer inboxRow) {

@@ -5,30 +5,29 @@ import 'package:provider/provider.dart';
 
 import '../models/profile_summary.dart';
 import '../providers/group_messages_controller.dart';
-import '../services/account_session.dart';
 import '../theme/alfred_colors.dart';
 import '../widgets/anchored_message_list.dart';
 import '../widgets/chat_input_bar.dart';
+import '../widgets/peer_profile_overlay.dart';
 import '../widgets/profile_identity.dart';
+import '../services/account_session.dart';
 
-/// Shell account gruppo: allow list + profilo in alto, conversazione unica sotto.
+/// Conversazione account gruppo — header allineato a [ChatPanel].
 class GroupConversationScreen extends StatelessWidget {
   const GroupConversationScreen({
     super.key,
     required this.session,
     required this.profile,
-    required this.onAllowedPeopleTap,
-    required this.onProfileTap,
+    this.showBackButton = false,
+    this.onBack,
     this.onMessagesChanged,
-    this.onDrawerTap,
   });
 
   final AccountSession session;
   final ProfileSummary profile;
-  final VoidCallback onAllowedPeopleTap;
-  final VoidCallback onProfileTap;
+  final bool showBackButton;
+  final VoidCallback? onBack;
   final Future<void> Function()? onMessagesChanged;
-  final VoidCallback? onDrawerTap;
 
   @override
   Widget build(BuildContext context) {
@@ -44,13 +43,11 @@ class GroupConversationScreen extends StatelessWidget {
         color: AlfredColors.surface,
         child: Column(
           children: [
-            _GroupTopBar(
+            _GroupChatHeader(
               profile: profile,
-              onProfileTap: onProfileTap,
-              onAllowedPeopleTap: onAllowedPeopleTap,
-              onDrawerTap: onDrawerTap,
+              showBackButton: showBackButton,
+              onBack: onBack,
             ),
-            const Divider(height: 1),
             Expanded(
               child: Consumer<GroupMessagesController>(
                 builder: (context, controller, _) {
@@ -106,69 +103,53 @@ class GroupConversationScreen extends StatelessWidget {
   }
 }
 
-class _GroupTopBar extends StatelessWidget {
-  const _GroupTopBar({
+class _GroupChatHeader extends StatelessWidget {
+  const _GroupChatHeader({
     required this.profile,
-    required this.onProfileTap,
-    required this.onAllowedPeopleTap,
-    this.onDrawerTap,
+    required this.showBackButton,
+    this.onBack,
   });
 
   final ProfileSummary profile;
-  final VoidCallback onProfileTap;
-  final VoidCallback onAllowedPeopleTap;
-  final VoidCallback? onDrawerTap;
-
-  static const _compactBreakpoint = 720.0;
+  final bool showBackButton;
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
-    final isCompact = MediaQuery.sizeOf(context).width < _compactBreakpoint;
-
     return Material(
       color: AlfredColors.panel,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 8, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Container(
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AlfredColors.border)),
+        ),
+        padding: const EdgeInsets.fromLTRB(4, 8, 12, 8),
+        child: SafeArea(
+          bottom: false,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  if (onDrawerTap != null)
-                    IconButton(
-                      onPressed: onDrawerTap,
-                      icon: const Icon(Icons.menu),
-                      tooltip: 'Account',
-                    ),
-                  Expanded(
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: ProfileAvatar(profile: profile, radius: 22),
-                      title: ProfileIdentityLines(
-                        profile: profile,
-                        nameStyle: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      subtitle: const Text('Account gruppo'),
-                      onTap: onProfileTap,
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Persone consentite',
-                    onPressed: onAllowedPeopleTap,
-                    icon: const Icon(Icons.verified_user_outlined),
-                  ),
-                ],
-              ),
-              if (!isCompact) ...[
-                const SizedBox(height: 4),
-                OutlinedButton.icon(
-                  onPressed: onAllowedPeopleTap,
-                  icon: const Icon(Icons.verified_user_outlined, size: 18),
-                  label: const Text('Persone consentite'),
+              if (showBackButton)
+                IconButton(
+                  onPressed: onBack,
+                  icon: const Icon(Icons.arrow_back),
                 ),
-              ],
+              ProfileAvatar(
+                profile: profile,
+                radius: 20,
+                fontSize: 16,
+                onTap: () => showPeerProfileOverlay(context, profile),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ProfileIdentityLines(
+                  profile: profile,
+                  showUsername: false,
+                  nameStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: AlfredColors.textPrimary,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

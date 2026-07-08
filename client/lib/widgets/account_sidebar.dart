@@ -35,6 +35,8 @@ class AccountSidebar extends StatelessWidget {
       color: AlfredColors.panel,
       child: SafeArea(
         child: ListView(
+          shrinkWrap: compact,
+          physics: compact ? const NeverScrollableScrollPhysics() : null,
           padding: EdgeInsets.fromLTRB(12, compact ? 8 : 16, 12, 16),
           children: [
             if (profile != null && activeUserId != null)

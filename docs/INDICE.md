@@ -55,9 +55,9 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 | [SURF-ALLOWLIST](./specs/surfaces/SURF-ALLOWLIST.md) | `implemented` | Persone consentite |
 | [SURF-PROFILE](./specs/surfaces/SURF-PROFILE.md) | `implemented` | Modifica profilo |
 | [SURF-PEER-PROFILE](./specs/surfaces/SURF-PEER-PROFILE.md) | `implemented` | Scheda profilo peer |
-| [SURF-GROUP-SHELL](./specs/surfaces/SURF-GROUP-SHELL.md) | `draft` | Shell account gruppo |
-| [SURF-GROUP-HOME](./specs/surfaces/SURF-GROUP-HOME.md) | `draft` | Home account gruppo |
-| [SURF-GROUP-CONVERSATION](./specs/surfaces/SURF-GROUP-CONVERSATION.md) | `draft` | Chat gruppo |
+| [SURF-GROUP-SHELL](./specs/surfaces/SURF-GROUP-SHELL.md) | `implemented` | Shell account gruppo |
+| [SURF-GROUP-HOME](./specs/surfaces/SURF-GROUP-HOME.md) | `implemented` | Home account gruppo |
+| [SURF-GROUP-CONVERSATION](./specs/surfaces/SURF-GROUP-CONVERSATION.md) | `implemented` | Chat gruppo |
 
 ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) (PR #159).
 

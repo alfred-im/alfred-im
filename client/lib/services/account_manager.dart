@@ -62,6 +62,18 @@ class AccountManager {
     _setViewFor(userId, _storedViewFor(userId).backToInboxOnMobile());
   }
 
+  void openGroupChat() {
+    final userId = _focusUserId;
+    if (userId == null) return;
+    _setViewFor(userId, _storedViewFor(userId).openGroupChat());
+  }
+
+  void backToGroupHome() {
+    final userId = _focusUserId;
+    if (userId == null) return;
+    _setViewFor(userId, _storedViewFor(userId).backToGroupHome());
+  }
+
   void mergeActivePeerFromInbox(ChatPeer inboxRow) {
     final userId = _focusUserId;
     if (userId == null) return;

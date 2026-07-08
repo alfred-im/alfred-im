@@ -31,6 +31,22 @@ void main() {
       expect(cleared.showInboxOnMobile, isTrue);
     });
 
+    test('openGroupChat opens chat and hides home on mobile', () {
+      const empty = AccountViewState();
+      final opened = empty.openGroupChat();
+
+      expect(opened.groupChatOpen, isTrue);
+      expect(opened.showInboxOnMobile, isFalse);
+    });
+
+    test('backToGroupHome returns to home', () {
+      final opened = const AccountViewState().openGroupChat();
+      final home = opened.backToGroupHome();
+
+      expect(home.groupChatOpen, isFalse);
+      expect(home.showInboxOnMobile, isTrue);
+    });
+
     test('sanitizedForAccount clears peer when it matches account id', () {
       const accountId = 'self-id';
       final peer = _peer(accountId);

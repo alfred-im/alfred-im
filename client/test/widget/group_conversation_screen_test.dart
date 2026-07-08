@@ -10,7 +10,7 @@ import 'package:alfred_client/theme/alfred_theme.dart';
 
 import '../support/fake_messaging_services.dart';
 
-// spec: SURF-GROUP-SHELL-002, SURF-GROUP-SHELL-003
+// spec: SURF-GROUP-CONVERSATION-012
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -18,7 +18,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('GroupConversationScreen shows allow list entry and compose hint',
+  testWidgets('GroupConversationScreen shows chat header and compose hint',
       (tester) async {
     const groupProfile = ProfileSummary(
       id: 'group-1',
@@ -37,8 +37,6 @@ void main() {
     );
     addTearDown(() => session.disposeResources(clearAuthStorage: false));
 
-    var allowedPeopleTapped = false;
-
     await tester.pumpWidget(
       MaterialApp(
         theme: AlfredTheme.light,
@@ -46,8 +44,8 @@ void main() {
           body: GroupConversationScreen(
             session: session,
             profile: groupProfile,
-            onAllowedPeopleTap: () => allowedPeopleTapped = true,
-            onProfileTap: () {},
+            showBackButton: true,
+            onBack: () {},
           ),
         ),
       ),
@@ -59,13 +57,11 @@ void main() {
     }
     await tester.pump();
 
-    expect(find.text('Account gruppo'), findsOneWidget);
-    expect(find.text('Persone consentite'), findsOneWidget);
+    expect(find.text('Famiglia'), findsOneWidget);
+    expect(find.text('Account gruppo'), findsNothing);
+    expect(find.text('Persone consentite'), findsNothing);
     expect(find.text('Messaggio al gruppo (allow list)…'), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_back), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
-
-    await tester.tap(find.byTooltip('Persone consentite'));
-    await tester.pump();
-    expect(allowedPeopleTapped, isTrue);
   });
 }

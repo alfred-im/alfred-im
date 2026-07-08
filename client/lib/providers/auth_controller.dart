@@ -33,6 +33,7 @@ class AuthController extends ChangeNotifier {
   AccountViewState get viewState => _manager.viewState;
   ChatPeer? get activePeer => _manager.viewState.activePeer;
   bool get showInboxOnMobile => _manager.viewState.showInboxOnMobile;
+  bool get groupChatOpen => _manager.viewState.groupChatOpen;
   bool get hasOpenAccounts => _manager.hasOpenAccounts;
 
   UserProfile? get profile => focusedSession?.fullProfile;
@@ -87,6 +88,16 @@ class AuthController extends ChangeNotifier {
 
   void backToInboxOnMobile() {
     _manager.showInboxOnMobile();
+    notifyListeners();
+  }
+
+  void openGroupChat() {
+    _manager.openGroupChat();
+    notifyListeners();
+  }
+
+  void backToGroupHome() {
+    _manager.backToGroupHome();
     notifyListeners();
   }
 

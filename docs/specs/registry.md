@@ -56,9 +56,9 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **SURF-ALLOWLIST** | Persone consentite | `implemented` | PROM-LIST-FILTER, PROM-RECEPTION-FILTER | [SURF-ALLOWLIST.md](./surfaces/SURF-ALLOWLIST.md) |
 | **SURF-PROFILE** | Modifica profilo proprio | `implemented` | PROM-PROFILE-IDENTITY, SYS-PROFILE | [SURF-PROFILE.md](./surfaces/SURF-PROFILE.md) |
 | **SURF-PEER-PROFILE** | Scheda profilo peer | `implemented` | PROM-PEER-PROFILE, PROM-OVERLAY-DISMISS | [SURF-PEER-PROFILE.md](./surfaces/SURF-PEER-PROFILE.md) |
-| **SURF-GROUP-SHELL** | Shell account gruppo | `draft` | PROM-MULTI-ACCOUNT, SYS-GROUP, SURF-GROUP-HOME | [SURF-GROUP-SHELL.md](./surfaces/SURF-GROUP-SHELL.md) |
-| **SURF-GROUP-HOME** | Home account gruppo | `draft` | SYS-GROUP, SYS-PROFILE, PROM-PROFILE-IDENTITY, PROM-GROUP-AUTHOR-DISPLAY | [SURF-GROUP-HOME.md](./surfaces/SURF-GROUP-HOME.md) |
-| **SURF-GROUP-CONVERSATION** | Chat gruppo + erogazione UI | `draft` | PROM-GROUP-AUTHOR-DISPLAY, PROM-GROUP-TICKS, SURF-GROUP-HOME | [SURF-GROUP-CONVERSATION.md](./surfaces/SURF-GROUP-CONVERSATION.md) |
+| **SURF-GROUP-SHELL** | Shell account gruppo | `implemented` | PROM-MULTI-ACCOUNT, SYS-GROUP, SURF-GROUP-HOME | [SURF-GROUP-SHELL.md](./surfaces/SURF-GROUP-SHELL.md) |
+| **SURF-GROUP-HOME** | Home account gruppo | `implemented` | SYS-GROUP, SYS-PROFILE, PROM-PROFILE-IDENTITY, PROM-GROUP-AUTHOR-DISPLAY | [SURF-GROUP-HOME.md](./surfaces/SURF-GROUP-HOME.md) |
+| **SURF-GROUP-CONVERSATION** | Chat gruppo + erogazione UI | `implemented` | PROM-GROUP-AUTHOR-DISPLAY, PROM-GROUP-TICKS, SURF-GROUP-HOME | [SURF-GROUP-CONVERSATION.md](./surfaces/SURF-GROUP-CONVERSATION.md) |
 
 ---
 

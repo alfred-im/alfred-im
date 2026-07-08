@@ -3,7 +3,7 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-GROUP-HOME` |
-| **Status** | `draft` |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-08 |
 | **Promesse** | [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [PROM-PROFILE-IDENTITY](../promises/product/PROM-PROFILE-IDENTITY.md), [PROM-GROUP-AUTHOR-DISPLAY](../promises/product/PROM-GROUP-AUTHOR-DISPLAY.md) |
 | **PR** | — |

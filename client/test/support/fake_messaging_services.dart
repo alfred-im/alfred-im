@@ -5,6 +5,8 @@ import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
 import 'package:alfred_client/services/inbox_service.dart';
 import 'package:alfred_client/services/message_service.dart';
+import 'package:alfred_client/models/profile_summary.dart';
+import 'package:alfred_client/services/profile_service.dart';
 
 SupabaseClient createTestSupabaseClient() {
   return SupabaseClient(
@@ -92,6 +94,20 @@ class FakeMessageService extends MessageService {
   }) {
     _ownerRealtimeHandlers[currentUserId] = onMessage;
     return _clientForTest.channel('test-owner-$currentUserId').subscribe();
+  }
+}
+
+class FakeProfileService extends ProfileService {
+  FakeProfileService(super.client);
+
+  final Map<String, ProfileSummary> profilesById = {};
+
+  @override
+  Future<List<ProfileSummary>> fetchSummariesByIds(List<String> ids) async {
+    return ids
+        .map((id) => profilesById[id])
+        .whereType<ProfileSummary>()
+        .toList();
   }
 }
 

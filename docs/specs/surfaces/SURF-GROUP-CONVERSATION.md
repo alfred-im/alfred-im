@@ -3,7 +3,7 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-GROUP-CONVERSATION` |
-| **Status** | `draft` (amend header + navigazione da home) |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-08 |
 | **Promesse** | — |
 | **PR** | #162 |
