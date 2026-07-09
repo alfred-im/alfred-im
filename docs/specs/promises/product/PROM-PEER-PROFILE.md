@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-PEER-PROFILE` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-07-09 |
 | **PR origine** | #163 |
 
 Promessa di prodotto: tap avatar peer Alfred → overlay fullscreen con identità pubblica, toggle allow list e azione rubrica — **indipendenti** e **immediati**.
@@ -40,6 +40,8 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 | **PROM-PEER-PROFILE-007** | Allow e rubrica **indipendenti** — stato UI separato |
 | **PROM-PEER-PROFILE-008** | Allow e rubrica: azione **immediata**, **senza** dialog di conferma |
 | **PROM-PEER-PROFILE-009** | Controller legati all'account in **focus** — [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) |
+| **PROM-PEER-PROFILE-013** | Pulsante fisso «Inizia a chattare» in basso nell'overlay peer — fuori dall'area scrollabile |
+| **PROM-PEER-PROFILE-014** | Tap «Inizia a chattare» → chiude overlay e apre chat con quel peer (`ChatPeer.fromProfile`) sull'account in focus — stesso effetto di scorciatoia compose da rubrica ([PROM-PERSONAL-CONTACTS](./PROM-PERSONAL-CONTACTS.md)) |
 
 ### SHOULD
 
@@ -66,7 +68,7 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 | Elemento | Responsabilità |
 |----------|----------------|
 | `showPeerProfileOverlay` | Entry point; skip self; `showGeneralDialog` fullscreen |
-| `PeerProfileOverlay` | UI identità + switch Allow + pulsante rubrica |
+| `PeerProfileOverlay` | UI identità + switch Allow + pulsante rubrica + CTA «Inizia a chattare» sticky in basso |
 | `ProfileAvatar.onTap` | Tap avatar riusabile |
 | `ContactsController` | `contactForProfileId`, `removeInternalByProfileId` |
 | `ReceptionAllowlistController` | `removeByProfileId`, `addProfile` |
@@ -82,6 +84,7 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 | In rubrica | Pulsante «Rimuovi dalla rubrica» |
 | Non in rubrica | Pulsante «Aggiungi alla rubrica» |
 | Contatto esterno rubrica | Nessun overlay al tap avatar |
+| Tap «Inizia a chattare» | Chiude overlay; `AuthController.openConversation(ChatPeer.fromProfile(...))` |
 
 ---
 
@@ -106,6 +109,7 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 | PROM-PEER-PROFILE-002, 008, 012 | `peer_profile_overlay_test.dart` — widget smoke |
 | PROM-PEER-PROFILE-009 | `main.dart` — proxy provider focus |
 | PROM-PEER-PROFILE-011 | [PROM-OVERLAY-DISMISS](./PROM-OVERLAY-DISMISS.md) |
+| PROM-PEER-PROFILE-013, 014 | `peer_profile_overlay_test.dart` — CTA visibile; tap apre conversazione |
 
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`

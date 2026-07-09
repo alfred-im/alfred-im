@@ -4,7 +4,7 @@
 |-------|--------|
 | **Superficie ID** | `SURF-PEER-PROFILE` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-07-09 |
 | **Promesse** | [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) |
 | **PR** | #163 |
 
@@ -39,6 +39,8 @@ Binding UX overlay fullscreen al tap avatar di un account Alfred altrui: identit
 | **SURF-PEER-PROFILE-009** | `ContactsController.contactForProfileId` + `removeInternalByProfileId` per rimozione rubrica da overlay |
 | **SURF-PEER-PROFILE-010** | `ReceptionAllowlistController.removeByProfileId` per toggle Allow off da overlay |
 | **SURF-PEER-PROFILE-011** | Controller legati all'account in **focus** |
+| **SURF-PEER-PROFILE-015** | CTA «Inizia a chattare» fisso in basso al centro — **non** nello scroll con Allow/rubrica |
+| **SURF-PEER-PROFILE-016** | Tap CTA → chiude overlay e apre chat peer sull'account in focus (`ChatPeer.fromProfile`) |
 
 ### SHOULD
 
@@ -69,6 +71,7 @@ Binding UX overlay fullscreen al tap avatar di un account Alfred altrui: identit
 | SURF-PEER-PROFILE-007 | `peer_profile_overlay_test.dart` — skip self |
 | SURF-PEER-PROFILE-002 | `peer_profile_overlay_test.dart` — widget smoke |
 | SURF-PEER-PROFILE-011 | `main.dart` — proxy provider focus |
+| SURF-PEER-PROFILE-015, 016 | `peer_profile_overlay_test.dart` — CTA sticky; tap apre conversazione |
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 
