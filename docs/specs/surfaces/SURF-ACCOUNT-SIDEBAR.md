@@ -4,9 +4,9 @@
 |-------|--------|
 | **Superficie ID** | `SURF-ACCOUNT-SIDEBAR` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
-| **Promesse** | [SYS-PROFILE](../promises/system/SYS-PROFILE.md) (`ProfileSummary` in manifest), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
-| **PR** | #140, #147, #152, #162 |
+| **Ultima revisione** | 2026-07-09 |
+| **Promesse** | [PROM-MULTI-ACCOUNT](../promises/product/PROM-MULTI-ACCOUNT.md), [PROM-PROFILE-IDENTITY](../promises/product/PROM-PROFILE-IDENTITY.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md) (`ProfileSummary` in manifest), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
+| **PR** | #140, #147, #152, #162, #178 |
 
 Binding UX sidebar account aperti: manifest, focus, switch istantaneo, stato vista per account, badge gruppo.
 
@@ -40,6 +40,7 @@ Binding UX sidebar account aperti: manifest, focus, switch istantaneo, stato vis
 | **SURF-ACCOUNT-SIDEBAR-008** | «Chiudi account» (`removeAccount`): rimuove manifest + `alfred_auth_{userId}`; se era focus → primo rimasto o null |
 | **SURF-ACCOUNT-SIDEBAR-009** | Token refresh: sessione attiva aggiorna propria entry manifest su `tokenRefreshed` |
 | **SURF-ACCOUNT-SIDEBAR-010** | Sidebar mostra `ProfileSummary` per account in focus e lista account (`ProfileAvatar`, `ProfileIdentityLines`) |
+| **SURF-ACCOUNT-SIDEBAR-014** | Card account in focus: pulsante **Condividi** immediatamente a sinistra di «Chiudi account» — share di sistema link `#indirizzo` profilo attivo — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
 
 ### SHOULD
 
@@ -48,7 +49,6 @@ Binding UX sidebar account aperti: manifest, focus, switch istantaneo, stato vis
 | **SURF-ACCOUNT-SIDEBAR-011** | Switch focus senza loading auth visibile (restore in background) |
 | **SURF-ACCOUNT-SIDEBAR-012** | `NoAccountPlaceholder` in area inbox quando nessun account/focus |
 | **SURF-ACCOUNT-SIDEBAR-013** | Etichetta UI distinta per account `group` nel manifest (badge «Gruppo») — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
-| **SURF-ACCOUNT-SIDEBAR-014** | Card account in focus: pulsante **Condividi** immediatamente a sinistra di «Chiudi account» — share di sistema link `#indirizzo` profilo attivo — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
 
 ### MUST NOT
 
@@ -81,4 +81,5 @@ Gate: `verify.sh` + `integration` + `e2e-multi`
 
 - [SURF-AUTH.md](./SURF-AUTH.md)
 - [SURF-PROFILE.md](./SURF-PROFILE.md)
+- [PROM-SHAREABLE-LINK.md](../promises/product/PROM-SHAREABLE-LINK.md)
 - [registry.md](../registry.md)

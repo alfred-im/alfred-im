@@ -37,7 +37,7 @@ L'utente condivide un link che punta a una **risorsa** (profilo o chat con un in
 |------|--------------|
 | `https://alfred-im.github.io/XmppTest/#test2` | Profilo di `test2` |
 | `https://alfred-im.github.io/XmppTest/#test2/chat` | Chat con `test2` |
-| `…/#mario@dominio.it` | Stessa regola (`username@server`) |
+| `…/#mario@alfred.app` | Stesso peer in forma `username@server` (server locale `alfred.app`) |
 
 ### Gruppi
 
@@ -45,7 +45,9 @@ Account gruppo (`profile_kind = group`): **stessa struttura** — `#nomegruppo` 
 
 ### Fuori dal contratto link
 
-Navigazione personale **senza** link pubblici: rubrica, allow list, profilo proprio, inbox generica.
+Navigazione personale **senza** link pubblici: rubrica, allow list, **schermata modifica profilo** ([SURF-PROFILE](../../surfaces/SURF-PROFILE.md)), inbox generica.
+
+**Nota:** condividere il proprio `#username` dalla sidebar account attivo **è** nel contratto (PROM-SHAREABLE-LINK-023) — non va confuso con il link alla schermata di modifica profilo.
 
 ---
 
@@ -76,7 +78,7 @@ Navigazione personale **senza** link pubblici: rubrica, allow list, profilo prop
 | ID | Promessa |
 |----|----------|
 | **PROM-SHAREABLE-LINK-020** | Pulsante **Condividi** in alto a destra sulla **scheda profilo peer** (overlay) — utenti e gruppi |
-| **PROM-SHAREABLE-LINK-021** | Tap Condividi → **condivisione di sistema** (`Share` / Web Share API) con URL completo `#indirizzo` (link **profilo**, senza `/chat`) |
+| **PROM-SHAREABLE-LINK-021** | Tap Condividi → **condivisione di sistema** (`share_plus` / foglio Share nativo / Web Share API) con URL completo `#indirizzo` (link **profilo**, senza `/chat`) — **non** copia negli appunti come azione primaria |
 | **PROM-SHAREABLE-LINK-022** | Condividi **solo** su scheda profilo peer e sidebar account attivo — **nessun** pulsante Condividi in chat |
 | **PROM-SHAREABLE-LINK-023** | Sidebar account in focus: pulsante **Condividi** a sinistra di «Chiudi account» — share di sistema del link profilo attivo (`#indirizzo`) |
 
@@ -91,9 +93,10 @@ Navigazione personale **senza** link pubblici: rubrica, allow list, profilo prop
 
 | ID | Promessa |
 |----|----------|
-| **PROM-SHAREABLE-LINK-040** | Link pubblici verso rubrica, allow list o profilo proprio |
+| **PROM-SHAREABLE-LINK-040** | Link pubblici verso rubrica, allow list o schermata modifica profilo ([SURF-PROFILE](../../surfaces/SURF-PROFILE.md)) |
 | **PROM-SHAREABLE-LINK-041** | Path senza `#` come contratto condivisibile |
 | **PROM-SHAREABLE-LINK-042** | Segmento URL legato all'account in focus del visitatore |
+| **PROM-SHAREABLE-LINK-043** | Usare **solo** clipboard al posto del foglio Condividi di sistema |
 
 ### Federazione
 
@@ -105,12 +108,16 @@ Federazione **in pausa** — vedi [address-based-messaging.md](../../../decision
 
 | Elemento | Responsabilità |
 |----------|----------------|
-| Parser fragment | Legge `#indirizzo` e `#indirizzo/chat` all'avvio e su `hashchange` |
-| Risoluzione indirizzo | `ComposeService` / `find_profile_by_username` — allineare `username` e `username@server` locale |
+| `shareable_link.dart` | Parse/build URL; `shareShareableProfileLink` → `SharePlus.instance.share` |
+| `shareable_link_platform_*` | Lettura fragment e `hashchange` (web) |
+| `ShareableLinkController` | Pending target, risoluzione profilo, stato `notFound` |
+| `ShareableLinkListener` | Applica fragment; `handleIfReady` dopo `sessionReady` |
+| `app_shell.dart` | Mostra `ShareableLinkNotFoundScreen` o shell con listener |
+| Risoluzione indirizzo | `ProfileService.findByUsername` — `username` e `username@alfred.app` locale |
 | Pending link | Conservare fragment fino a manifest con ≥1 account |
-| `PeerProfileOverlay` | Pulsante Condividi alto a destra; `SharePlus.instance.share` con URL `Uri.base` + fragment |
-| `AccountSidebar` | Condividi account attivo — `share_plus` |
-| Risorsa assente | Schermata/stato «non trovato» — forma UI libera |
+| `PeerProfileOverlay` | Pulsante Condividi alto a destra → share di sistema URL profilo |
+| `AccountSidebar` | Condividi account attivo a sinistra di «Chiudi account» |
+| Risorsa assente | `ShareableLinkNotFoundScreen` — «Risorsa non trovata» |
 
 **Non vincolante:** sincronizzazione URL ↔ navigazione interna quando l'utente naviga senza Condividi.
 
@@ -137,7 +144,7 @@ Federazione **in pausa** — vedi [address-based-messaging.md](../../../decision
 | PROM-SHAREABLE-LINK-010, 011 | Scenario manuale — 0 account → auth → profilo linkato |
 | PROM-SHAREABLE-LINK-020, 021, 022 | `peer_profile_overlay_test.dart` — Condividi → `ShareParams` |
 | PROM-SHAREABLE-LINK-023 | `account_sidebar_test.dart` — Condividi account attivo → `ShareParams` |
-| PROM-SHAREABLE-LINK-007, 040–042 | Review spec — assenza id interni e path viewer |
+| PROM-SHAREABLE-LINK-007, 040–043 | Review spec — assenza id interni, path viewer, no clipboard primario |
 
 Gate (post-implementazione): `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 

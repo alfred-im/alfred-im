@@ -6,7 +6,7 @@
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-09 |
 | **Promesse** | [PROM-PEER-PROFILE](../promises/product/PROM-PEER-PROFILE.md), [PROM-OVERLAY-DISMISS](../promises/product/PROM-OVERLAY-DISMISS.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) |
-| **PR** | #163, #176 |
+| **PR** | #163, #176, #178 |
 
 Binding UX overlay fullscreen al tap avatar di un account Alfred altrui: identità pubblica, toggle allow list, azione rubrica, CTA «Inizia a chattare» sticky in basso.
 
@@ -84,5 +84,6 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 
 - [SYS-RECEPTION.md](../promises/system/SYS-RECEPTION.md)
 - [SYS-CONTACTS.md](../promises/system/SYS-CONTACTS.md)
+- [PROM-SHAREABLE-LINK.md](../promises/product/PROM-SHAREABLE-LINK.md)
 - [SURF-ALLOWLIST.md](./SURF-ALLOWLIST.md)
 - [registry.md](../registry.md)

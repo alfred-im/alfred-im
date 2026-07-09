@@ -5,8 +5,8 @@
 | **Superficie ID** | `SURF-AUTH` |
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-09 |
-| **Promesse** | PROM-MULTI-ACCOUNT |
-| **PR** | #140, #147, #152, #139 (redirect email) |
+| **Promesse** | [PROM-MULTI-ACCOUNT](../promises/product/PROM-MULTI-ACCOUNT.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
+| **PR** | #140, #147, #152, #139 (redirect email), #178 |
 
 Binding UX overlay login/registrazione sulla shell `HomeScreen` — credenziali come card temporanea, mai schermata full-screen.
 
@@ -36,6 +36,7 @@ Binding UX overlay login/registrazione sulla shell `HomeScreen` — credenziali 
 | **SURF-AUTH-005** | «Chiudi account» (`removeAccount`): se ultimo account → overlay obbligatorio |
 | **SURF-AUTH-006** | Registrazione: opzione tipo account `user` / `group` sulla stessa card — [SYS-GROUP](../promises/system/SYS-GROUP.md) SYS-GROUP-011 |
 | **SURF-AUTH-008** | Conferma email e reset password: il client passa `emailRedirectTo` / `redirectTo` = URL demo (`AuthRedirectUrl.devDemoDefault`, `https://alfred-im.github.io/XmppTest/`) |
+| **SURF-AUTH-014** | Fragment `#` in ingresso con **0 account**: overlay auth obbligatorio ([SURF-AUTH-002](./SURF-AUTH.md)); dopo primo account nel manifest → aprire risorsa linkata — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
 
 ### SHOULD
 
@@ -83,6 +84,7 @@ Il `supabase/config.toml` nel repo documenta anche `localhost:8080` per sviluppo
 | SURF-AUTH-005 | `account_manager_persistence_test.dart`; `auth_controller_test.dart` — overlay dopo ultimo account |
 | SURF-AUTH-006 | `AuthScreen` — toggle tipo account |
 | SURF-AUTH-008 | `auth_redirect_url.dart`; `account_session.dart` (`signUp`); `account_manager.dart` (`resetPasswordForEmail`); `auth_redirect_url_test.dart` |
+| SURF-AUTH-014 | `shareable_link_controller.dart`; scenario manuale — URL con `#peer` e 0 account → login → profilo |
 | SURF-AUTH-010 | `design/auth-overlay-shell.md`; PR #140 |
 | SURF-AUTH-013 | Verifica manuale: flusso corretto → GitHub Pages; localhost = canarino (errore config/deploy), non esito prodotto |
 
@@ -93,5 +95,6 @@ Gate: `cd client && bash scripts/verify.sh`
 ## 5. Riferimenti
 
 - [SURF-ACCOUNT-SIDEBAR.md](./SURF-ACCOUNT-SIDEBAR.md)
+- [PROM-SHAREABLE-LINK.md](../promises/product/PROM-SHAREABLE-LINK.md)
 - [registry.md](../registry.md)
 - [auth-overlay-shell.md](../../design/auth-overlay-shell.md)

@@ -128,3 +128,4 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` 
 | [SURF-ACCOUNT-SIDEBAR](../../surfaces/SURF-ACCOUNT-SIDEBAR.md) | Sidebar multi-account |
 | [multi-account-parallel-sessions.md](../../../decisions/multi-account-parallel-sessions.md) | ADR |
 | [PROM-REALTIME-OWNER](./PROM-REALTIME-OWNER.md) | Realtime scoped al focus |
+| [PROM-SHAREABLE-LINK](./PROM-SHAREABLE-LINK.md) | Link in ingresso con 0 account → auth poi risorsa |
