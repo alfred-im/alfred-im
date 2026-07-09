@@ -210,4 +210,80 @@ void main() {
     expect(sharedParams!.text, contains('#mario'));
     expect(sharedParams!.subject, 'Mario Rossi');
   });
+
+  testWidgets('Condividi con profilo inbox parziale carica username da DB',
+      (tester) async {
+    const inboxPeer = ProfileSummary(
+      id: 'peer-id',
+      displayName: 'Mario Rossi',
+    );
+
+    final client = createTestSupabaseClient();
+    final profileService = FakeProfileService(client)
+      ..profilesById['peer-id'] = const ProfileSummary(
+        id: 'peer-id',
+        displayName: 'Mario Rossi',
+        username: 'mario',
+      );
+    final ownerSession = await AccountSession.createForTest(
+      profile: const ProfileSummary(
+        id: 'owner-id',
+        displayName: 'Owner',
+        username: 'owner',
+      ),
+      client: client,
+      profileService: profileService,
+    );
+    final manager = AccountManager();
+    manager.focusTestSession(ownerSession);
+    final auth = AuthController(accountManager: manager);
+
+    final allowlistService = FakeReceptionAllowlistService();
+    final contactService = FakeContactService();
+    final allowlist = ReceptionAllowlistController(
+      ownerId: 'owner-id',
+      allowlistService: allowlistService,
+    );
+    final contacts = ContactsController(
+      ownerId: 'owner-id',
+      contactService: contactService,
+    );
+
+    await allowlist.load();
+    await contacts.load();
+
+    ShareParams? sharedParams;
+    shareParamsInvokerForTest = (params) async {
+      sharedParams = params;
+    };
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AuthController>.value(value: auth),
+            ChangeNotifierProvider<ReceptionAllowlistController>.value(
+              value: allowlist,
+            ),
+            ChangeNotifierProvider<ContactsController>.value(
+              value: contacts,
+            ),
+          ],
+          child: Scaffold(
+            body: PeerProfileOverlay(profile: inboxPeer),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('@mario'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Condividi'));
+    await tester.pumpAndSettle();
+
+    expect(sharedParams, isNotNull);
+    expect(sharedParams!.text, contains('#mario'));
+  });
 }

@@ -63,4 +63,10 @@ class ProfileService {
         .map((row) => ProfileSummary.fromProfilesRow(row))
         .toList();
   }
+
+  Future<ProfileSummary?> findById(String profileId) async {
+    final summaries = await fetchSummariesByIds([profileId]);
+    if (summaries.isEmpty) return null;
+    return summaries.first;
+  }
 }
