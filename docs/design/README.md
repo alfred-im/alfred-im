@@ -4,7 +4,7 @@ Principi UI per il client Flutter. Documento per AI.
 
 > **SDD**: i contratti vivono in [specs/registry.md](../specs/registry.md) (PROM/SURF). I file qui sono **evidenza storica** o backlog promesse non ancora distillate.
 
-| File | Contenuto | Contratto v2 |
+| File | Contenuto | Promessa SDD |
 |------|-----------|----------------|
 | [conversation-bottom-anchor.md](./conversation-bottom-anchor.md) | Scroll ancorato in chat | backlog `PROM-BOTTOM-ANCHOR` |
 | [inbox-search-toggle.md](./inbox-search-toggle.md) | Ricerca lista on-demand | [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md) |

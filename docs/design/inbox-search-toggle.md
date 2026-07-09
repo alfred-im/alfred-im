@@ -5,7 +5,7 @@
 **Data**: 2026-06-28  
 **Status**: Evidenza UX — implementata in client Flutter (PR #132, refactor #171)  
 **Categoria**: Inbox, UX, layout  
-**Correlata**: [full-stack.md](../architecture/full-stack.md) §2.12
+**Correlata**: [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](../specs/surfaces/SURF-INBOX.md)
 
 ---
 
@@ -66,6 +66,6 @@ Estensioni future devono usare `CollapsibleListSearch` (o API equivalente), non 
 
 ## Riferimenti
 
-- [full-stack.md](../architecture/full-stack.md) — §2.12
+- [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](../specs/surfaces/SURF-INBOX.md)
 - `PROJECT_MAP.md` — layout inbox
 - PR #132

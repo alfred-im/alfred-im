@@ -18,8 +18,8 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#110** | Passkeys bundle.js | Fix schermo bianco GitHub Pages | — | `full-stack.md` §6 |
 | **#111** | Multi-account switch (legacy) | `AccountStorageService`, `setSession` — **sostituito da #140** | — | storico `CHANGELOG` |
 | **#112** | `list_conversations` RPC | Inbox un round-trip — **sostituito da `list_inbox` #130** | — | migrazione `20260624220000` |
-| **#113** | Fix race auth inbox | `waitForSupabaseSessionReady`, `sessionReady` | — | `fixes/flutter-inbox-stability.md` |
-| **#114** | Fix provider listen | `ChangeNotifierProxyProvider` contatti/profilo | — | `fixes/flutter-inbox-stability.md` |
+| **#113** | Fix race auth inbox | Pattern `sessionReady` + restore sessione prima di RPC inbox (evoluzione post-#140) | — | `fixes/flutter-inbox-stability.md` |
+| **#114** | Fix provider listen | `ChangeNotifierProxyProvider` contatti/profilo/allow list | — | `fixes/flutter-inbox-stability.md`, `inbox_provider_listen_test.dart` |
 | **#115** | GIF in chat | `content_type`, `media_url`, bucket `chat-media` | SYS-MAILBOX | `voice-notes.md`, migrazioni `20260624230000` |
 | **#118** | Login email reale | Auth GoTrue con email; username come identità pubblica | SYS-PROFILE | migrazioni auth `202606251*` |
 | **#119** | Review refactoring | Ciclo revisione codice client | — | — |
@@ -57,7 +57,7 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#160** | Regole consenso esplicito | Conferma verbale prima di scrittura repo; SDD gate unico | — | `.cursor-rules.md`, `AGENTS.md` |
 | **#161** | Allow list ricezione | Allow list ricezione; gate `send_message_to_profile`; UI «Persone consentite»; rifiuto silenzioso | SYS-RECEPTION, PROM-RECEPTION-FILTER, SURF-ALLOWLIST | `contracts/schema.md`, `contracts/rpc.md`, migrazione `20260704130000` |
 | **#162** | Account gruppo | Account `profile_kind = group`; shell senza inbox; erogazione automatica; broadcast singola riga; `original_author_id`; UI autore avatar+nome | SYS-GROUP, SURF-GROUP-SHELL, SURF-GROUP-CONVERSATION | `groups-client.md`, `contracts/rpc.md`, `contracts/schema.md`, migrazioni `20260706120000`–`20260706140000` |
-| **#163** | Scheda profilo peer | Scheda profilo peer fullscreen al tap avatar; switch Allow + rubrica (senza conferma); inbox/chat/gruppo/allow list/rubrica | PROM-PEER-PROFILE, SURF-PEER-PROFILE | `peer-profile-overlay.md`, `peer_profile_overlay.dart` |
+| **#163** | Scheda profilo peer | Overlay fullscreen al tap avatar; Allow + rubrica + CTA chat (#176); azioni immediate | PROM-PEER-PROFILE, SURF-PEER-PROFILE | `peer-profile-overlay.md`, `peer_profile_overlay.dart` |
 | **#164** | Review P0 client | Dedupe realtime `client_message_id`; retry media web; skip `list_inbox` account gruppo; rollback `setFocus` | SYS-MAILBOX, SYS-GROUP, PROM-MULTI-ACCOUNT | `messages_controller.dart`, `outbound_message_queue.dart`, `inbox_controller.dart`, `account_manager.dart` |
 | **#165** | Review P1 doc+test | Sync `rpc.md`; drift mailbox spec; traceability SYS-GROUP; widget `GroupConversationScreen` | SYS-GROUP, SYS-MAILBOX | `contracts/rpc.md`, `group_conversation_screen_test.dart` |
 | **#166** | Security helper RPC | REVOKE `EXECUTE` helper gruppo da `authenticated`; smoke `rpc_helper_security_smoke.sql` | SYS-GROUP, SYS-RECEPTION | migrazione `20260707190000`, amend SYS-RECEPTION-028, SYS-GROUP-028, SYS-GROUP-027 |
@@ -67,6 +67,8 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#171** | SDD + ricerca liste | Registro promesse; `CollapsibleListSearch`; lente su Contatti e Persone consentite; refactor `InboxPanel` | PROM-LIST-FILTER, SURF-CONTACTS, SURF-ALLOWLIST, SURF-INBOX | `docs/specs/registry.md`, `collapsible_list_search.dart`, `contacts_screen_test.dart` |
 | **#172** | Epurazione doc legacy | Rimozione residui v1 in documentazione; ID uniformati SYS/PROM/SURF; SDD senza suffisso versione | — | `PROJECT_MAP.md`, `INDICE.md`, `pr-registry.md`, `implementation/*`, `decisions/*`, `design/*` |
 | **#174** | Redirect conferma email | `AuthRedirectUrl` demo su web pubblico; SURF-AUTH-008/013; Site URL localhost = canarino tecnico | SURF-AUTH | `SURF-AUTH.md`, `auth_redirect_url.dart`, `PROJECT_MAP` § redirect auth |
+| **#175** | Prodotto stabile / doc hub | Epurazione terminologia Alpha; rename `full-stack` / `pr-registry`; `devDemoDefault` | — | `PROJECT_MAP.md`, hub docs |
+| **#176** | CTA profilo peer | Pulsante sticky «Inizia a chattare»; chiude overlay e apre chat | PROM-PEER-PROFILE, SURF-PEER-PROFILE | `peer-profile-overlay.md`, `peer_profile_overlay.dart` |
 
 ---
 

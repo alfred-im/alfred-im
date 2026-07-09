@@ -19,7 +19,7 @@ Binding UX overlay login/registrazione sulla shell `HomeScreen` — credenziali 
 | Layout | `Stack` — `HomeScreen` sotto, `AuthOverlay` (45% nero) + `AuthScreen` card sopra |
 | Widget | `client/lib/widgets/auth_overlay.dart`, `client/lib/screens/auth_screen.dart` |
 | Controller | `AuthController` — gate overlay, errori user-friendly |
-| Shell parent | `client/lib/app_shell.dart` — `sessionReady` → sempre `HomeScreen` |
+| Shell parent | `client/lib/screens/app_shell.dart` — `sessionReady` → sempre `HomeScreen` |
 
 ---
 
@@ -76,7 +76,7 @@ Il `supabase/config.toml` nel repo documenta anche `localhost:8080` per sviluppo
 
 | SURF-ID | Verifica |
 |--------------------|----------|
-| SURF-AUTH-001 | `app_shell.dart` — `sessionReady` → sempre `HomeScreen`; `design/auth-overlay-shell.md` |
+| SURF-AUTH-001 | `client/lib/screens/app_shell.dart` — `sessionReady` → sempre `HomeScreen`; `design/auth-overlay-shell.md` |
 | SURF-AUTH-002 | `auth_overlay_shell.md`; `client/test/unit/auth_controller_test.dart` — gate overlay |
 | SURF-AUTH-003 | `auth_overlay_shell.md` |
 | SURF-AUTH-004 | `auth_screen.dart` — toggle Accedi/Registrati |

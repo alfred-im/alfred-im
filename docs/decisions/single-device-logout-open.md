@@ -1,6 +1,6 @@
 # Logout solo dispositivo (locale)
 
-**Data**: 2026-06-29 · **aggiornato** 2026-07-03  
+**Data**: 2026-06-29 · **aggiornato** 2026-07-09  
 **Status**: ✅ **Implementato** — `AccountSession.close()` senza revoca GoTrue  
 **Categoria**: Auth / multi-account
 
@@ -20,19 +20,15 @@ Futuro opzionale: azione separata «Disconnetti ovunque» (`signOut(scope: globa
 
 ---
 
-## Problema (storico)
+## Problema (storico — pre #143)
 
-Oggi (GoTrue / Supabase Auth):
+Prima del fix multi-account (#143), `removeAccount` poteva chiamare `client.auth.signOut()` e revocare il refresh token lato server (logout globale).
 
-- `signOut()` e `POST /auth/v1/logout` **revocano il refresh token** lato server.
-- Tutti i client che usano quel refresh token (stesso account, altri browser/tab/dispositivi) perdono la sessione al prossimo refresh o al riavvio.
-- Non è un bug del client Alfred: è il comportamento standard di revoca token.
-- I test agente con curl logout su account live hanno causato logout globale all'utente.
+**Oggi (implementato):**
 
-Il client Alfred oggi ha due “logout” concettuali non distinti in UX:
-
-1. **Rimuovi account** (`removeAccount`) → `client.auth.signOut()` + dispose sessione → revoca server.
-2. **Solo chiudi / smetti di usare su questo browser** → oggi non esiste come azione separata; basta non chiamare logout server.
+1. **Rimuovi account** (`removeAccount`) → `clearStoredAccount` + `disposeResources(clearAuthStorage: true)` — **nessuna** revoca GoTrue server.
+2. **Chiudi account** (`AccountSession.close()`) → stesso comportamento locale-only.
+3. Altri dispositivi con refresh token propri restano connessi finché non si usa un'azione futura «Disconnetti ovunque».
 
 ---
 

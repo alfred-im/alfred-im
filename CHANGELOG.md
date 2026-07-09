@@ -21,7 +21,12 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Aggiunto
 
+- **#176** — CTA «Inizia a chattare» nell'overlay profilo peer (sticky in basso); chiude overlay e apre conversazione — `PROM-PEER-PROFILE-013/014`, `SURF-PEER-PROFILE-015/016`
 - **#171** — Ricerca on-demand su rubrica e persone consentite (`CollapsibleListSearch`); widget condiviso con inbox
+
+### Documentazione — audit allineamento 2026-07-09
+
+- Hub: PR **#108–#176**, gate test **144**; fix collisione ID `SURF-PEER-PROFILE`; link morti `full-stack` §2.x; path `app_shell.dart`; `mailbox-inbox-outbox-spec`; ADR logout locale
 
 ### Documentazione — SDD registro promesse (#171, #172)
 
@@ -298,7 +303,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Flutter — PR #114 (fix provider listen)
 - **`ChangeNotifierProxyProvider`** al posto di `ProxyProvider` per Conversations/Contacts/Profile
-- Test widget `conversations_provider_listen_test.dart` + e2e `inbox-load.spec.ts`
+- Test widget `inbox_provider_listen_test.dart` + e2e `inbox-load.spec.ts`
 
 ### Flutter — PR #113 (fix inbox auth race)
 - **`waitForSupabaseSessionReady()`** dopo `Supabase.initialize` prima delle RPC
@@ -328,4 +333,4 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-04
+**Ultimo aggiornamento**: 2026-07-09

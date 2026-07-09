@@ -2,7 +2,7 @@
 
 **Data**: 2026-07-09  
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
-**Stato**: PR **#108–#172** su `main` — prodotto stabile  
+**Stato**: PR **#108–#176** su `main` — prodotto stabile  
 **Registro PR**: [pr-registry.md](./pr-registry.md)
 
 > **Contratti (SDD)**: [docs/specs/registry.md](../specs/registry.md) — registro promesse SYSTEM / PRODUCT / SURFACE.  

@@ -1,6 +1,6 @@
 # Indice promesse SDD
 
-**Ultima revisione**: 2026-07-08  
+**Ultima revisione**: 2026-07-09  
 **Registro canonico**: [registry.md](./registry.md) · **Metodo**: [README.md](./README.md)
 
 ---

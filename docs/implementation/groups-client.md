@@ -27,11 +27,13 @@ Documento per AI — implementazione client per [SYS-GROUP](../specs/promises/sy
 
 | File | Ruolo |
 |------|--------|
-| `lib/screens/home_screen.dart` | Branch: se focus `profileKind == group` → layout gruppo (no `InboxPanel`) |
+| `lib/screens/home_screen.dart` | Branch: se focus `profileKind == group` → `_GroupAccountLayout` (no `InboxPanel`) |
+| `lib/widgets/group_home_panel.dart` | Home gruppo: riepilogo, autori attivi, tile conversazione unica |
+| `lib/providers/group_home_controller.dart` | Dati home (conteggio messaggi, autori, tile conversazione) |
 | `lib/screens/group_conversation_screen.dart` | Storico unico + compose broadcast; header profilo + allow list |
-| `lib/providers/group_messages_controller.dart` | `fetchOwnerMessages`, broadcast testo/media (`send`, `sendGif`, `sendVoice`, `sendLocation`), realtime su `owner_id` |
+| `lib/providers/group_messages_controller.dart` | `fetchOwnerMessages`, broadcast testo/media, realtime su `owner_id` |
 
-Layout mobile: sotto 720px la conversazione è full-width (drawer per sidebar account).
+Layout mobile (<720px): prima `GroupHomePanel`; chat full-width dopo `auth.openGroupChat()` (drawer per sidebar account).
 
 ---
 

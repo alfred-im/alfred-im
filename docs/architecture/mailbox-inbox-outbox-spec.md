@@ -1,7 +1,7 @@
-# Proposta — modello caselle (direzione)
+# Modello caselle (mailbox) — implementato
 
-**Ultima revisione**: 2026-07-04  
-**Status**: ✅ **Implementato su `main`** (PR #159) — promessa `SYS-MAILBOX` `implemented`  
+**Ultima revisione**: 2026-07-09  
+**Status**: ✅ **Implementato su `main`** (PR #159; gruppi PR #162) — promessa `SYS-MAILBOX` `implemented`  
 **Audience**: AI / implementazione
 
 **Su `main`** vale il modello caselle descritto qui e nella promessa [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md). L’ADR [address-based-messaging.md](../decisions/address-based-messaging.md) resta riferimento per indirizzamento e rubrica isolata.
@@ -31,7 +31,7 @@ Con il modello caselle le **copie d’archivio** (mittente e destinatario) punta
 
 | Aspetto | Conseguenza |
 |---------|-------------|
-| **Riferimento** | Più righe `mailbox_messages` possono condividere lo stesso `media_url` |
+| **Riferimento** | Più righe `messages` possono condividere lo stesso `media_url` |
 | **Garbage collection** | Eliminare un messaggio o una casella **non** implica che il file sia orfano: va verificato se **altre** copie (o altri owner) referenziano ancora quell’URL prima di cancellare da `chat-media` |
 | **Delete locale** (futuro) | Cancello la chat dal mio lato → la mia riga sparisce, ma il peer può ancora referenziare lo stesso file |
 | **Rimozione lato mittente** | Cancellare il file in storage mentre il destinatario ha ancora il messaggio → **link rotto** per il peer, salvo policy esplicita |
@@ -175,8 +175,9 @@ Il bridge è **stateless** ([bridge-stateless.md](../decisions/bridge-stateless.
 ## Fuori scope (per ora)
 
 - Delete chat locale
-- Gruppi
 - Preservazione dati in migrazione (solo DB dev; niente prod)
+
+**Gruppi** — implementati (PR #162, promessa `SYS-GROUP`): account `profile_kind = group`, erogazione automatica, shell dedicata. Vedi [groups-client.md](../implementation/groups-client.md).
 
 ## Delegato all’implementazione
 

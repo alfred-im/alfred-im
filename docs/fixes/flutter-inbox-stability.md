@@ -14,12 +14,9 @@
 
 **Causa radice**: Race tra `Supabase.initialize` e la prima RPC. Su web, `recoverSession` parte in background; le RPC partivano prima che la sessione fosse idratata.
 
-**Fix**:
-- `waitForSupabaseSessionReady()` in `supabase_bootstrap.dart` dopo `Supabase.initialize`
-- `AuthController.sessionReady` — i `ProxyProvider` creano `InboxController` solo se `sessionReady && userId`
-- `InboxController`: realtime dopo primo `load()`; timeout 30s; UI errore + Riprova
+**Fix (storico PR #113)**: pattern `sessionReady` — i provider creano `InboxController` solo se `sessionReady && userId`. Bootstrap attuale: `bootstrapApp()` in `supabase_bootstrap.dart` (no-op wrapper); restore auth in `AccountSession.restore`.
 
-**File (storico PR #113)**: `client/lib/services/supabase_bootstrap.dart`, `client/lib/providers/auth_controller.dart`, `client/lib/providers/conversations_controller.dart` (→ `inbox_controller.dart`), `client/lib/main.dart`
+**File (storico PR #113)**: `client/lib/providers/auth_controller.dart`, `client/lib/providers/inbox_controller.dart`, `client/lib/main.dart`
 
 ---
 
@@ -29,13 +26,10 @@
 
 **Causa radice**: `ProxyProvider` non si sottoscrive a `notifyListeners()` del `ChangeNotifier` figlio. `ConversationsController.load()` completava ma la UI non rebuildava.
 
-**Fix**: Sostituire `ProxyProvider` con **`ChangeNotifierProxyProvider`** per:
-- `ConversationsController`
-- `ContactsController`
-- `ProfileController`
+**Fix**: Sostituire `ProxyProvider` con **`ChangeNotifierProxyProvider`** per `ContactsController`, `ProfileController`, `ReceptionAllowlistController`.
 
 **File**: `client/lib/main.dart`  
-**Test**: `client/test/widget/conversations_provider_listen_test.dart`, `client/e2e/inbox-load.spec.ts`
+**Test**: `client/test/widget/inbox_provider_listen_test.dart`, `client/e2e/inbox-load.spec.ts`
 
 ---
 
@@ -48,7 +42,7 @@
 
 ---
 
-**Riferimenti**: PR #113, #114; `docs/architecture/full-stack.md` §2.2–2.3; `docs/architecture/pr-registry.md`
+**Riferimenti**: PR #113, #114; `docs/architecture/full-stack.md` §3; `docs/architecture/pr-registry.md`
 
 ---
 

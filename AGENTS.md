@@ -80,11 +80,12 @@ backend out of the box.
 
 ### Auth / messaging gotchas (non-obvious, hit during setup)
 - Registration: GoTrue rejects unrealistic email domains (e.g. `@example.com` → "Email address is invalid"). Use a realistic domain like `gmail.com`.
+- **Non fare `signUp` su Supabase live con email inventate/fake** — rischio bounce e incidenti deliverability (vedi incidente 2026-07-09 in `docs/AGENT_DEBUG_ACCOUNTS.md`). Per test redirect/auth usare account agente confermati (`alfredagent1` / `alfredagent2`).
 - New signups require **email confirmation** before login. For testing, confirm directly in Supabase:
   `update auth.users set email_confirmed_at = now() where email = '<addr>';` (via the Supabase MCP `execute_sql`).
 - Supabase enforces an **email send rate limit**; rapid repeated signups fail with "email rate limit exceeded".
 - Messaging needs a real recipient profile: **self-messaging fails** ("Utente non trovato") and external `user@server` addresses are **unsupported** without federation ("Indirizzo esterno non ancora supportato"). Seeded recipients exist in the live DB (e.g. `test1`, `test2`, `test3`).
-- **Account debug agente:** usare **solo** `alfredagent1` / `alfredagent2` (credenziali in `docs/AGENT_DEBUG_ACCOUNTS.md`). **Non modificare mai** password o dati di `test1`/`test2`/`test3` — vedi incidente documentato in quel file (2026-06-29).
+- **Account debug agente:** usare **solo** `alfredagent1` / `alfredagent2` (credenziali in `docs/AGENT_DEBUG_ACCOUNTS.md`). **Non modificare mai** password o dati di `test1`/`test2`/`test3`/`test4` — vedi incidente documentato in quel file (2026-06-29).
 
 ### Browser (computerUse) testing of Flutter web
 - **Eseguire sempre `bash scripts/diagnose-test-env.sh` prima.** Se Chrome CDP `:9222` non risponde: `bash scripts/reset-chrome-cdp.sh` poi ritestare. Non usare computerUse con CDP morto.

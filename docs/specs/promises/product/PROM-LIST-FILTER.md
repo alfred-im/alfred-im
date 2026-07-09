@@ -5,8 +5,8 @@
 | **Promessa ID** | `PROM-LIST-FILTER` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
-| **PR origine** | #132 (inbox); estensione contatti/allow list — backlog |
+| **Ultima revisione** | 2026-07-09 |
+| **PR origine** | #132 (inbox); #171 (contatti e persone consentite) |
 
 Promessa di prodotto riusabile: filtrare una lista già caricata in memoria, con barra di ricerca **on-demand** (icona lente).
 

@@ -4,11 +4,11 @@
 |-------|--------|
 | **Superficie ID** | `SURF-PEER-PROFILE` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
-| **Promesse** | [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) |
-| **PR** | #163 |
+| **Ultima revisione** | 2026-07-09 |
+| **Promesse** | [PROM-PEER-PROFILE](../promises/product/PROM-PEER-PROFILE.md), [PROM-OVERLAY-DISMISS](../promises/product/PROM-OVERLAY-DISMISS.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) |
+| **PR** | #163, #176 |
 
-Binding UX overlay fullscreen al tap avatar di un account Alfred altrui: identità pubblica, toggle allow list, azione rubrica.
+Binding UX overlay fullscreen al tap avatar di un account Alfred altrui: identità pubblica, toggle allow list, azione rubrica, CTA «Inizia a chattare» sticky in basso.
 
 ---
 
@@ -39,6 +39,8 @@ Binding UX overlay fullscreen al tap avatar di un account Alfred altrui: identit
 | **SURF-PEER-PROFILE-009** | `ContactsController.contactForProfileId` + `removeInternalByProfileId` per rimozione rubrica da overlay |
 | **SURF-PEER-PROFILE-010** | `ReceptionAllowlistController.removeByProfileId` per toggle Allow off da overlay |
 | **SURF-PEER-PROFILE-011** | Controller legati all'account in **focus** |
+| **SURF-PEER-PROFILE-015** | CTA «Inizia a chattare» fisso in basso al centro — **non** nello scroll con Allow/rubrica |
+| **SURF-PEER-PROFILE-016** | Tap CTA → chiude overlay e apre chat peer sull'account in focus (`ChatPeer.fromProfile`) |
 
 ### SHOULD
 
@@ -52,11 +54,11 @@ Binding UX overlay fullscreen al tap avatar di un account Alfred altrui: identit
 
 | ID | Promessa |
 |----|----------|
-| **SURF-PEER-PROFILE-015** | Confondere Allow (ricezione) con rubrica (scorciatoia) |
-| **SURF-PEER-PROFILE-016** | Dialog di conferma su toggle Allow o azione rubrica nell'overlay |
-| **SURF-PEER-PROFILE-017** | Esporre email del peer |
-| **SURF-PEER-PROFILE-018** | Nuove RPC o tabelle — solo PostgREST esistente |
-| **SURF-PEER-PROFILE-019** | Overlay per contatti rubrica **esterni** (senza `linked_profile_id`) |
+| **SURF-PEER-PROFILE-020** | Confondere Allow (ricezione) con rubrica (scorciatoia) |
+| **SURF-PEER-PROFILE-021** | Dialog di conferma su toggle Allow o azione rubrica nell'overlay |
+| **SURF-PEER-PROFILE-022** | Esporre email del peer |
+| **SURF-PEER-PROFILE-023** | Nuove RPC o tabelle — solo PostgREST esistente |
+| **SURF-PEER-PROFILE-024** | Overlay per contatti rubrica **esterni** (senza `linked_profile_id`) |
 
 ---
 
@@ -69,6 +71,7 @@ Binding UX overlay fullscreen al tap avatar di un account Alfred altrui: identit
 | SURF-PEER-PROFILE-007 | `peer_profile_overlay_test.dart` — skip self |
 | SURF-PEER-PROFILE-002 | `peer_profile_overlay_test.dart` — widget smoke |
 | SURF-PEER-PROFILE-011 | `main.dart` — proxy provider focus |
+| SURF-PEER-PROFILE-015, 016 | `peer_profile_overlay_test.dart` — CTA sticky; tap apre conversazione |
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 

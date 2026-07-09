@@ -158,7 +158,7 @@ Dettaglio: `docs/fixes/multi-account-single-active-gotrue-pr152.md`
 | [auth-overlay-shell.md](../design/auth-overlay-shell.md) | Regole UX overlay + placeholder |
 | [multi-account-client.md](../implementation/multi-account-client.md) | Dettaglio file e flussi codice (§3.5 persistenza PR #147) |
 | [multi-account-single-active-gotrue-pr152.md](../fixes/multi-account-single-active-gotrue-pr152.md) | Fix BroadcastChannel web |
-| [full-stack.md](../architecture/full-stack.md) §2.3–2.4 | Architettura client aggiornata |
+| [full-stack.md](../architecture/full-stack.md) §3 | Architettura client aggiornata |
 | `PROJECT_MAP.md` | Mappa sintetica non deducibile |
 
 **Codice**: `client/lib/services/account_manager.dart`, `account_session.dart`, `client/lib/widgets/auth_overlay.dart`

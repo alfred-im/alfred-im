@@ -52,5 +52,5 @@ Nel client cloud Alfred il livello 2 segue il **server come fonte di verità**: 
 
 ## Riferimenti
 
-- [full-stack.md](../architecture/full-stack.md) — §2.9 Spunte lettura
+- [full-stack.md](../architecture/full-stack.md) — §3 promesse client; [PROM-MESSAGE-STATUS](../specs/promises/product/PROM-MESSAGE-STATUS.md) spunte
 - [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md) — regola vincolante: nessuna distinzione chat interna/esterna a nessun livello

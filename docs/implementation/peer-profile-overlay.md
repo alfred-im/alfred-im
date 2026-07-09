@@ -1,8 +1,8 @@
 # Scheda profilo peer in overlay
 
-**Promesse**: [PROM-PEER-PROFILE.md](../specs/promises/product/PROM-PEER-PROFILE.md), [SURF-PEER-PROFILE.md](../specs/surfaces/SURF-PEER-PROFILE.md) · **PR**: #163 · **Stato**: `implemented`
+**Promesse**: [PROM-PEER-PROFILE.md](../specs/promises/product/PROM-PEER-PROFILE.md), [SURF-PEER-PROFILE.md](../specs/surfaces/SURF-PEER-PROFILE.md) · **PR**: #163, #176 · **Stato**: `implemented`
 
-Documento per AI — tap avatar di un account Alfred altrui → modale fullscreen con identità pubblica, toggle allow list e azione rubrica.
+Documento per AI — tap avatar di un account Alfred altrui → modale fullscreen con identità pubblica, toggle allow list, azione rubrica e CTA chat sticky in basso.
 
 ---
 
@@ -38,8 +38,9 @@ Contatti rubrica **esterni**: nessun overlay (nessun `profiles.id`).
 |-----------|---------|------------|
 | Switch «Consenti messaggi» | `reception_allowlist` | `ReceptionAllowlistController.addProfile` / `removeByProfileId` |
 | «Aggiungi / Rimuovi dalla rubrica» | `contacts` | `ContactsController.addInternal` / `removeInternalByProfileId` |
+| **«Inizia a chattare»** (sticky in basso) | — | `AuthController.openConversation(ChatPeer.fromProfile(...))` dopo `Navigator.pop` |
 
-Allow e rubrica sono **indipendenti** (semantica invariata rispetto a [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) e [SYS-CONTACTS](../specs/promises/system/SYS-CONTACTS.md)).
+Allow e rubrica sono **indipendenti** (semantica invariata rispetto a [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) e [SYS-CONTACTS](../specs/promises/system/SYS-CONTACTS.md)). La CTA chat è **fuori** dall'area scrollabile (Allow + rubrica).
 
 ---
 
@@ -47,8 +48,8 @@ Allow e rubrica sono **indipendenti** (semantica invariata rispetto a [SYS-RECEP
 
 | REQ | Verifica |
 |-----|----------|
-| Overlay UI | `client/test/widget/peer_profile_overlay_test.dart` |
+| Overlay UI + CTA | `client/test/widget/peer_profile_overlay_test.dart` — PROM-PEER-PROFILE-013/014; SURF-PEER-PROFILE-015/016 |
 | Rubrica remove | `client/test/unit/contacts_controller_test.dart` |
 | Allow remove | `client/test/unit/reception_allowlist_controller_test.dart` |
 
-Gate: `cd client && bash scripts/verify.sh` (**108** test).
+Gate: `cd client && bash scripts/verify.sh` (**144** test).

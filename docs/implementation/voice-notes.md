@@ -38,7 +38,7 @@ File storage: `{userId}/{uuid}.webm`.
 | Registrazione | `lib/services/voice_recording_service.dart` (`record`) |
 | Transcode IO | `lib/services/voice_encoding_io.dart` / `voice_encoding_web.dart` |
 | Upload | `MessageMediaService.uploadVoice` |
-| Invio | `MessagesController.sendVoice` → RPC `send_message_to_profile` (8 argomenti) |
+| Invio | `MessagesController.sendVoice` → RPC `send_message_to_profile` (10 argomenti, incl. lat/lng opzionali) |
 | Bolla | `lib/widgets/voice_message_content.dart` — play/pausa, waveform, durata (`just_audio`) |
 | Coda retry | `OutboundMessageQueue` + `OutboundMediaCache` (web) — testo, GIF, **voice**; retry periodico + «Riprova invio» su bolle `failed` |
 
@@ -55,13 +55,13 @@ Migrazioni **due step** (enum PostgreSQL deve commitare prima dell'uso):
 | `20260627120000_message_voice_support.sql` | `ALTER TYPE … ADD VALUE 'voice'` |
 | `20260627120100_message_voice_support.sql` | colonne, CHECK, RPC, trigger, bucket |
 
-- RPC `send_message_to_profile` overload 8 parametri; overload 5 arg delega
+- RPC `send_message_to_profile` — overload canonico **10 parametri** (testo/media + `latitude`/`longitude` opzionali); overload legacy delegati
 - `format_voice_preview` → preview inbox `🎤 m:ss`
 - `on_message_inserted`: outbox payload include `duration_seconds`, `media_mime`, `media_size_bytes`
 - `mark_peer_read`: include `content_type = voice`
 - Bucket `chat-media`: MIME `image/gif`, `audio/webm`; `file_size_limit` 15 MB
 
-`supabase/tests/schema_smoke.sql`: verifica overload RPC 8 argomenti.
+`supabase/tests/schema_smoke.sql`: verifica overload RPC 10 argomenti.
 
 ## Bridge (futuro)
 

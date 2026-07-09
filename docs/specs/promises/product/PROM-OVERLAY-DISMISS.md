@@ -67,7 +67,7 @@ Pattern analogo a [PROM-LIST-FILTER](./PROM-LIST-FILTER.md) `dismissSearch()` �
 
 | Superficie | Stato | File |
 |------------|-------|------|
-| Overlay profilo peer | `implemented` | `peer_profile_overlay.dart` |
+| Overlay profilo peer | `implemented` | `peer_profile_overlay.dart`, [SURF-PEER-PROFILE](../../surfaces/SURF-PEER-PROFILE.md) |
 | SURF-INBOX | `implemented` | tap avatar → overlay conforme |
 | SURF-CONTACTS | `implemented` | tap avatar internal → overlay conforme |
 | SURF-ALLOWLIST | `implemented` | tap entry → overlay conforme |
@@ -78,9 +78,9 @@ Pattern analogo a [PROM-LIST-FILTER](./PROM-LIST-FILTER.md) `dismissSearch()` �
 
 | PROM-ID | Verifica |
 |---------|----------|
-| PROM-OVERLAY-DISMISS-001–003 | `peer_profile_overlay_test.dart` — widget smoke; barrier + close button |
-| PROM-OVERLAY-DISMISS-020–021 | `peer_profile_overlay.dart` — dismiss centralizzato; nessun callback parent |
-| PROM-OVERLAY-DISMISS-001–003 | `peer_profile_overlay_test.dart` |
+| PROM-OVERLAY-DISMISS-001–002 | `peer_profile_overlay.dart` — `barrierDismissible: true`; pulsante ✕ in `_ProfileHero` (verifica manuale / smoke UI) |
+| PROM-OVERLAY-DISMISS-003 | `peer_profile_overlay.dart` — dismiss centralizzato; nessun callback parent |
+| PROM-OVERLAY-DISMISS-020–021 | `peer_profile_overlay.dart` — nessun callback dismiss nel parent |
 
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
@@ -94,5 +94,4 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 | [registry.md](../../registry.md) | Indice promesse |
 | [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md) | Overlay profilo peer |
 | [SURF-PEER-PROFILE](../../surfaces/SURF-PEER-PROFILE.md) | Binding superficie |
-| [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md) | Contenuto overlay |
 | [PROM-LIST-FILTER](./PROM-LIST-FILTER.md) | Pattern dismiss unificato (lista) |

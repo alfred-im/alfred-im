@@ -34,20 +34,20 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 | [PROM-PROFILE-IDENTITY](./specs/promises/product/PROM-PROFILE-IDENTITY.md) | `implemented` | `ProfileSummary`, widget identità |
 | [PROM-PERSONAL-CONTACTS](./specs/promises/product/PROM-PERSONAL-CONTACTS.md) | `implemented` | Rubrica isolata da inbox |
 | [PROM-RECEPTION-FILTER](./specs/promises/product/PROM-RECEPTION-FILTER.md) | `implemented` | Filtro ricezione, rifiuto silenzioso |
-| [PROM-PEER-PROFILE](./specs/promises/product/PROM-PEER-PROFILE.md) | `implemented` | Overlay profilo peer |
+| [PROM-PEER-PROFILE](./specs/promises/product/PROM-PEER-PROFILE.md) | `implemented` | Overlay profilo peer + CTA chat |
+| [PROM-OVERLAY-DISMISS](./specs/promises/product/PROM-OVERLAY-DISMISS.md) | `implemented` | Chiusura overlay |
 | [PROM-CHAT-PEER-KEY](./specs/promises/product/PROM-CHAT-PEER-KEY.md) | `implemented` | Chat per `peer_profile_id` |
 | [PROM-OUTBOUND-SEND](./specs/promises/product/PROM-OUTBOUND-SEND.md) | `implemented` | Coda invio optimistic |
 | [PROM-MESSAGE-STATUS](./specs/promises/product/PROM-MESSAGE-STATUS.md) | `implemented` | Spunte da date mailbox |
 | [PROM-REALTIME-OWNER](./specs/promises/product/PROM-REALTIME-OWNER.md) | `implemented` | Realtime su `owner_id` |
 | [PROM-GROUP-AUTHOR-DISPLAY](./specs/promises/product/PROM-GROUP-AUTHOR-DISPLAY.md) | `implemented` | Autore in chat gruppo |
 | [PROM-GROUP-TICKS](./specs/promises/product/PROM-GROUP-TICKS.md) | `implemented` | Spunte gruppo |
-| [PROM-OVERLAY-DISMISS](./specs/promises/product/PROM-OVERLAY-DISMISS.md) | `implemented` | Chiusura overlay |
 
 ### SURFACE
 
 | ID | Stato | Contenuto |
 |----|-------|-----------|
-| [SURF-AUTH](./specs/surfaces/SURF-AUTH.md) | `implemented` | Overlay login/registrazione |
+| [SURF-AUTH](./specs/surfaces/SURF-AUTH.md) | `implemented` | Overlay login/registrazione (+ `SURF-APP-SHELL` in binding) |
 | [SURF-ACCOUNT-SIDEBAR](./specs/surfaces/SURF-ACCOUNT-SIDEBAR.md) | `implemented` | Manifest in sidebar |
 | [SURF-INBOX](./specs/surfaces/SURF-INBOX.md) | `implemented` | Lista conversazioni |
 | [SURF-CHAT](./specs/surfaces/SURF-CHAT.md) | `implemented` | Chat 1:1 |
@@ -71,7 +71,7 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 - **[CHANGELOG.md](../CHANGELOG.md)** — Storia modifiche
 - **[.cursor-rules.md](../.cursor-rules.md)** — Regole sviluppo AI
 - **[AGENTS.md](../AGENTS.md)** — Toolchain Cloud Agent
-- **[AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md)** — **Account Supabase solo agente** + regola non toccare test1/2/3
+- **[AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md)** — **Account Supabase solo agente** + regola non toccare test1/2/3/4
 - **[SESSION_HANDOFF.md](./SESSION_HANDOFF.md)** — **Handoff sessione** — stato corrente per nuova chat AI
 - **[WISHLIST.md](./WISHLIST.md)** — Funzionalità future (riferimenti XEP)
 
@@ -92,7 +92,7 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 ## Architettura
 
 - [architecture/full-stack.md](./architecture/full-stack.md) — **🟢 Attivo** — client + Supabase
-- [architecture/pr-registry.md](./architecture/pr-registry.md) — Registro PR **#108–#172**
+- [architecture/pr-registry.md](./architecture/pr-registry.md) — Registro PR **#108–#176**
 - [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) — **🟢 Implementato** — modello caselle (PR #159)
 - [architecture/README.md](./architecture/README.md) — Indice architettura
 
@@ -100,10 +100,11 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 
 ## Implementazione
 
+- [implementation/multi-account-client.md](./implementation/multi-account-client.md) — Multi-account client (PR #140, #147, #152)
 - [implementation/voice-notes.md](./implementation/voice-notes.md) — Note vocali WebM/Opus (PR #126)
 - [implementation/location-sharing.md](./implementation/location-sharing.md) — Posizione statica in chat (PR #153)
 - [implementation/groups-client.md](./implementation/groups-client.md) — Account gruppo, shell, UI autore (PR #162)
-- [implementation/peer-profile-overlay.md](./implementation/peer-profile-overlay.md) — Scheda profilo peer, tap avatar (PR #163)
+- [implementation/peer-profile-overlay.md](./implementation/peer-profile-overlay.md) — Scheda profilo peer (PR #163, #176)
 - [implementation/README.md](./implementation/README.md) — Indice implementazione
 
 ---
@@ -129,4 +130,4 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-08 — SDD registro promesse; 5 SYS + 13 PROM + 10 SURF
+**Ultimo aggiornamento**: 2026-07-09 — audit documentazione; 5 SYS + 13 PROM + 12 SURF (incluso `SURF-APP-SHELL` in `SURF-AUTH`)

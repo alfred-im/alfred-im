@@ -6,11 +6,11 @@ Traccia lo stato del progetto per continuità del lavoro. Non è documentazione 
 
 ## Stato attuale (2026-07-09)
 
-**Flutter + Supabase + bridge Python**. Prodotto **stabile** (senza versionamento release). PR **#108–#172** su `main`.
+**Flutter + Supabase + bridge Python**. Prodotto **stabile** (senza versionamento release). PR **#108–#176** su `main`.
 
 | Componente | Stato |
 |------------|-------|
-| **`client/`** | App Supabase — shell messaggistica, multi-account, ricerca liste on-demand (PROM-LIST-FILTER), allow list, scheda profilo peer, account gruppo, `verify.sh` (**132** test gate) |
+| **`client/`** | App Supabase — shell messaggistica, multi-account, ricerca liste on-demand (PROM-LIST-FILTER), allow list, scheda profilo peer (CTA «Inizia a chattare»), account gruppo, `verify.sh` (**144** test gate) |
 | **`supabase/`** | Schema dominio (profiles, contacts, messages per-owner, outbox, …) |
 | **`bridge-xmpp/`** · **`bridge-matrix/`** | Stub health Fly.io |
 

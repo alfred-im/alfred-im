@@ -1,7 +1,7 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-07-06  
-**Status**: `implemented` su `main` (migrazioni fino a `20260706140000`, incl. SYS-GROUP)  
+**Ultima revisione**: 2026-07-09  
+**Status**: `implemented` su `main` (migrazioni fino a `20260707190000`, incl. SYS-GROUP e revoke helper RPC)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [index.md](../index.md).

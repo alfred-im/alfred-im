@@ -17,10 +17,10 @@ Client — collegato a Supabase (contatti, inbox, chat realtime, profilo, **mult
 | **Media** | Testo, GIF, voice (WebM/Opus), location (mappa OSM) |
 | **Nuovo messaggio** | FAB → username → stessa chat (vuota o con storico) |
 | **Ricezione** | Allow list personale (`reception_allowlist`) — UI «Persone consentite» + toggle in scheda profilo peer (tap avatar) |
-| **Profilo peer** | Overlay fullscreen al tap avatar — Allow + rubrica — `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE` |
-| **Gruppi** | Account `profile_kind = group`; shell senza inbox; partecipazione allow list bidirezionale; erogazione automatica — `SYS-GROUP` |
+| **Profilo peer** | Overlay fullscreen al tap avatar — Allow + rubrica + CTA «Inizia a chattare» — `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE` |
+| **Gruppi** | Account `profile_kind = group`; `GroupHomePanel` + chat; partecipazione allow list bidirezionale — `SYS-GROUP` |
 | **Invio** | `send_message_to_profile` |
-| **Gate test** | `verify.sh` — **108** test unit/widget (zero issue analyze) |
+| **Gate test** | `verify.sh` — **144** test unit/widget (zero issue analyze) |
 
 ## Test
 

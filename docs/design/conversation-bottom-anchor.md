@@ -70,5 +70,5 @@ Un solo widget, un solo percorso logico nel client.
 ## Riferimenti
 
 - [no-internal-external-chat-distinction.md](../decisions/no-internal-external-chat-distinction.md)
-- [full-stack.md](../architecture/full-stack.md) — §2.10 Aggancio al fondo
+- [full-stack.md](../architecture/full-stack.md) — §3 promesse; [PROM-MESSAGE-STATUS](../specs/promises/product/PROM-MESSAGE-STATUS.md)
 - `PROJECT_MAP.md` — sezione client Flutter / chat

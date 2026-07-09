@@ -1,7 +1,7 @@
 # Spec-Driven Development (SDD) — Alfred
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-08  
+**Ultima revisione**: 2026-07-09  
 **Versione metodo**: SDD — unico metodo di specifica
 
 Alfred esce dalla fase sperimentale (storica): il metodo governa **tutto ciò che il prodotto promette** all'utente e ai componenti — schema, RPC, comportamento riusabile e binding per superficie.

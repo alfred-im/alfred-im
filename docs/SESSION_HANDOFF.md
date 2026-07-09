@@ -1,4 +1,4 @@
-# Handoff sessione — 2026-07-08
+# Handoff sessione — 2026-07-09
 
 Documento per AI — **leggere prima di task multi-account, messaggistica, profilo peer, gruppi o UX liste**.
 
@@ -8,17 +8,17 @@ Documento per AI — **leggere prima di task multi-account, messaggistica, profi
 
 | Item | Valore |
 |------|--------|
-| Branch `main` | PR su main **#108–#172** |
+| Branch `main` | PR su main **#108–#176** |
 | Demo live | https://alfred-im.github.io/XmppTest/ — ultimo `deploy-pages` riuscito |
-| **SDD** | Registro `docs/specs/registry.md`: 5 SYS, 13 PROM, 10 SURF |
+| **SDD** | Registro `docs/specs/registry.md`: 5 SYS, 13 PROM, 12 SURF (incluso `SURF-APP-SHELL` in `SURF-AUTH`) |
 | Multi-account | **`PROM-MULTI-ACCOUNT`** + **`SURF-AUTH`**: manifest; **una** GoTrue in RAM (focus) |
 | Messaggistica | **`SYS-MAILBOX`**: archivio per `owner_id`, outbox sempre, spunte `delivered_at`/`read_at` |
 | **Ricerca liste** | **`PROM-LIST-FILTER`** + **`SURF-*`**: lente on-demand (`CollapsibleListSearch`) |
 | **Ricezione filtrata** | **`SYS-RECEPTION`** + **`PROM-RECEPTION-FILTER`**: allow list sempre attiva; rifiuto silenzioso |
-| **Scheda profilo peer** | **`PROM-PEER-PROFILE`** + **`SURF-PEER-PROFILE`**: tap avatar → overlay; Allow + rubrica |
+| **Scheda profilo peer** | **`PROM-PEER-PROFILE`** + **`SURF-PEER-PROFILE`**: tap avatar → overlay; Allow + rubrica + CTA «Inizia a chattare» |
 | **Gruppi** | **`SYS-GROUP`** + **`SURF-GROUP-*`**: `profile_kind = group`; erogazione automatica; UI autore |
 | Chat media | Testo, GIF, voice (WebM), location (OSM) |
-| Gate test | **132** test (`verify.sh`) |
+| Gate test | **144** test (`verify.sh`) |
 
 ---
 
@@ -44,7 +44,7 @@ Contratto: `PROM-LIST-FILTER`, `SURF-INBOX`, `SURF-CONTACTS`, `SURF-ALLOWLIST`.
 
 ---
 
-## Scheda profilo peer (#163) — sintesi
+## Scheda profilo peer (#163, #176) — sintesi
 
 | Elemento | Comportamento |
 |----------|---------------|
@@ -52,6 +52,7 @@ Contratto: `PROM-LIST-FILTER`, `SURF-INBOX`, `SURF-CONTACTS`, `SURF-ALLOWLIST`.
 | UI | Overlay fullscreen — avatar, nome, `@username`, pronomi |
 | Allow | Switch «Consenti messaggi» → `reception_allowlist` (subito) |
 | Rubrica | Pulsante aggiungi/rimuovi → `contacts` (subito) |
+| Chat | CTA sticky «Inizia a chattare» in basso → chiude overlay e apre conversazione |
 | Self | Profilo proprio: nessun overlay peer |
 
 Doc: `docs/implementation/peer-profile-overlay.md`, promesse `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE`.
@@ -64,7 +65,7 @@ Doc: `docs/implementation/peer-profile-overlay.md`, promesse `PROM-PEER-PROFILE`
 |----------|---------------|
 | Identità | Gruppo = account Alfred (`profile_kind = group`), registrazione con email reale |
 | Partecipazione | Solo allow list **bidirezionale** — nessuna membership / inviti |
-| Shell gruppo | No `list_inbox`; `GroupConversationScreen` + allow list + profilo |
+| Shell gruppo | `GroupHomePanel` (home) → `GroupConversationScreen` quando `groupChatOpen`; no `list_inbox` |
 | Invio umano→gruppo | Storico gruppo + erogazione automatica ai membri in allow list |
 | Broadcast | **Una** riga storico gruppo + fan-out proxy (`broadcast_message_to_allowlist`) |
 | Autore UI | `original_author_id` = chi ha scritto; header con avatar + `display_name` (tap → scheda profilo peer) |
@@ -82,8 +83,9 @@ Doc: `docs/implementation/groups-client.md`, promessa `SYS-GROUP`.
 | Overlay profilo peer | `client/lib/widgets/peer_profile_overlay.dart` |
 | Allow list UI lista | `client/lib/screens/allowed_people_screen.dart` |
 | Rubrica | `client/lib/screens/contacts_screen.dart` |
-| Shell gruppo | `client/lib/screens/group_conversation_screen.dart` |
-| Multi-account | `client/lib/services/account_manager.dart` |
+| Shell gruppo home | `client/lib/widgets/group_home_panel.dart` |
+| Shell gruppo chat | `client/lib/screens/group_conversation_screen.dart` |
+| Multi-account | `client/lib/services/account_manager.dart` · guida `docs/implementation/multi-account-client.md` |
 
 Smoke SQL gruppi: `supabase/tests/group_schema_smoke.sql`, `group_delivery_smoke.sql`, `group_broadcast_smoke.sql`.
 

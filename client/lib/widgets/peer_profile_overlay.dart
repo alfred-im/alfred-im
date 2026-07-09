@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/chat_peer.dart';
 import '../models/message.dart';
 import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
@@ -112,6 +113,16 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     }
   }
 
+  void _startChat() {
+    final auth = context.read<AuthController>();
+    final peer = ChatPeer.fromProfile(
+      profile: widget.profile,
+      address: widget.profile.username,
+    );
+    Navigator.of(context).pop();
+    auth.openConversation(peer);
+  }
+
   @override
   Widget build(BuildContext context) {
     final profile = widget.profile;
@@ -134,7 +145,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),
+                padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -208,6 +219,25 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
                           ),
                     ),
                   ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _startChat,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AlfredColors.charcoal,
+                    foregroundColor: AlfredColors.textOnDark,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: const Text('Inizia a chattare'),
                 ),
               ),
             ),

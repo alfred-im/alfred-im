@@ -85,7 +85,7 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 | `AuthController` | Overlay, errori user-friendly |
 | `AuthOverlay`, `NoAccountPlaceholder` | UX gate |
 | `HomeScreen` | `ListenableBuilder` su inbox focus; `ValueKey(accountUserId)` su pannelli |
-| `app_shell.dart` | Loading `sessionReady` → sempre `HomeScreen` |
+| `client/lib/screens/app_shell.dart` | Loading `sessionReady` → sempre `HomeScreen` |
 
 Layout overlay: `Stack` — `HomeScreen` sotto, `AuthOverlay` (45% nero) + `AuthScreen` card sopra.
 
@@ -95,8 +95,8 @@ Layout overlay: `Stack` — `HomeScreen` sotto, `AuthOverlay` (45% nero) + `Auth
 
 | Superficie | Stato | File |
 |------------|-------|------|
-| SURF-AUTH | `draft` (backlog) | — |
-| Shell globale | `implemented` | `app_shell.dart`, `home_screen.dart`, `account_sidebar.dart` |
+| SURF-AUTH | `implemented` | [SURF-AUTH.md](../../surfaces/SURF-AUTH.md) |
+| Shell globale | `implemented` | `client/lib/screens/app_shell.dart`, `home_screen.dart`, `account_sidebar.dart` |
 
 ---
 
@@ -104,7 +104,7 @@ Layout overlay: `Stack` — `HomeScreen` sotto, `AuthOverlay` (45% nero) + `Auth
 
 | PROM-ID | Verifica |
 |---------|----------|
-| PROM-MULTI-ACCOUNT-001 | `app_shell.dart`; `design/auth-overlay-shell.md` |
+| PROM-MULTI-ACCOUNT-001 | `client/lib/screens/app_shell.dart`; `design/auth-overlay-shell.md` |
 | PROM-MULTI-ACCOUNT-002–004 | `account_storage_test.dart` |
 | PROM-MULTI-ACCOUNT-005–006 | `account_manager_persistence_test.dart` |
 | PROM-MULTI-ACCOUNT-010 | `account_manager_view_state_test.dart` |

@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-09 (epurazione terminologia Alpha; prodotto stabile)  
+**Ultimo aggiornamento**: 2026-07-09 (revisione documentazione; prodotto stabile)  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 ---
@@ -31,7 +31,7 @@
 **Non deducibile — URL live ≠ branch `main`**: https://alfred-im.github.io/XmppTest/ pubblica l’**ultimo** `deploy-pages` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-dev-demo` → ultimo vince).
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
-| **PR su `main`** | **#108–#172** — registro `docs/architecture/pr-registry.md` (#171 ricerca liste; #172 epurazione doc) |
+| **PR su `main`** | **#108–#176** — registro `docs/architecture/pr-registry.md` (#174 redirect email; #175 epurazione doc; #176 CTA profilo peer) |
 | **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — `SYS-*`, `PROM-*`, `SURF-*` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
