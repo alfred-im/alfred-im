@@ -31,7 +31,7 @@ Binding UX modifica profilo proprio: form edit, avatar, campi read-only identitÃ
 | ID | Promessa |
 |----|----------|
 | **SURF-PROFILE-001** | Email GoTrue: solo lettura in UI profilo; usata per login/recupero |
-| **SURF-PROFILE-002** | Username: `@username` read-only sotto avatar â€” non modificabile da schermata profilo Alpha |
+| **SURF-PROFILE-002** | Username: `@username` read-only sotto avatar â€” non modificabile da schermata profilo (scope attuale) |
 | **SURF-PROFILE-003** | Campi editabili: `display_name` (obbligatorio), `bio`, `pronouns`, foto avatar |
 | **SURF-PROFILE-004** | Modello UI unificato `ProfileSummary`: `id`, `displayName`, `username?`, `avatarUrl?`, `pronouns?` |
 | **SURF-PROFILE-005** | Widget condivisi: `ProfileAvatar` (foto o iniziale colorata), `ProfileIdentityLines` (nome, `@username`, pronomi) |
@@ -50,7 +50,7 @@ Binding UX modifica profilo proprio: form edit, avatar, campi read-only identitÃ
 
 | ID | Promessa |
 |----|----------|
-| **SURF-PROFILE-015** | Modificare `username` da schermata profilo Alpha |
+| **SURF-PROFILE-015** | Modificare `username` da schermata profilo (scope attuale) |
 
 ---
 

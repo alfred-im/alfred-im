@@ -98,7 +98,7 @@ Documento per AI — recap sessione, cause, fix, gap test.
 1. DevTools → Application → Local Storage → `alfred_saved_accounts` **prima** di F5 con 2 account
 2. F5 → stesso storage: quanti account? refresh token presenti?
 3. Network → `rpc/list_peer_messages` con JWT account corretto vs `activePeer.profileId`
-4. Confrontare URL deploy con ultimo workflow `deploy-alpha` riuscito (non assumere = `main`)
+4. Confrontare URL deploy con ultimo workflow `deploy-pages` riuscito (non assumere = `main`)
 
 Account debug: **solo** `alfredagent1` / `alfredagent2` — `docs/AGENT_DEBUG_ACCOUNTS.md`.
 

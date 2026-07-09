@@ -1,4 +1,4 @@
-"""Alfred XMPP bridge — Fly.io service (Alpha bootstrap)."""
+"""Alfred XMPP bridge — Fly.io service (bootstrap)."""
 
 from __future__ import annotations
 

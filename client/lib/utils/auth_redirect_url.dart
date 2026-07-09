@@ -4,20 +4,20 @@ import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 class AuthRedirectUrl {
   const AuthRedirectUrl._();
 
-  /// URL deploy Alpha su GitHub Pages — ambiente sviluppo/demo, **non** produzione.
-  static const alphaDefault = 'https://alfred-im.github.io/XmppTest/';
+  /// URL demo di sviluppo su GitHub Pages — **non** produzione.
+  static const devDemoDefault = 'https://alfred-im.github.io/XmppTest/';
 
-  /// Alias storico; preferire [alphaDefault].
-  @Deprecated('GitHub Pages è Alpha, non produzione — usare alphaDefault')
-  static const production = alphaDefault;
+  /// Alias storico; preferire [devDemoDefault].
+  @Deprecated('GitHub Pages è demo di sviluppo, non produzione — usare devDemoDefault')
+  static const production = devDemoDefault;
 
   static const _envOverride = String.fromEnvironment('AUTH_REDIRECT_URL');
 
   /// Risolve l'URL da passare a [emailRedirectTo] / [redirectTo].
   ///
-  /// Su web: Alpha pubblico → [alphaDefault]; solo `localhost` / `127.0.0.1`
+  /// Su web: istanza pubblica → [devDemoDefault]; solo `localhost` / `127.0.0.1`
   /// usano l'origine corrente (dev agente). Fuori web: [AUTH_REDIRECT_URL] o
-  /// [alphaDefault].
+  /// [devDemoDefault].
   static String resolve() {
     if (kIsWeb) {
       return resolveForOrigin(Uri.base);
@@ -27,7 +27,7 @@ class AuthRedirectUrl {
       return _withTrailingSlash(_envOverride);
     }
 
-    return alphaDefault;
+    return devDemoDefault;
   }
 
   @visibleForTesting
@@ -42,7 +42,7 @@ class AuthRedirectUrl {
       ).toString();
     }
 
-    return alphaDefault;
+    return devDemoDefault;
   }
 
   static bool _isLocalDevHost(String host) =>

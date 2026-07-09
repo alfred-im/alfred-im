@@ -90,7 +90,7 @@ Riferimenti che **violavano** questa regola; stato dopo `20260704120000`:
 - ~~Trigger `on_message_inserted` con branch internal vs federato~~ — **rimosso** in #159; outbox sempre via RPC
 - ~~RPC `get_or_create_direct_conversation`~~ — non presente nel modello mailbox
 - Migrazione `20260626100000_internal_delivered_on_server.sql` — storico pre-mailbox (nome «internal»); sostituita da `delivered_at`/`read_at`
-- ~~Documentazione `alpha-full-stack.md` §2.9 «Alpha interna»~~ — slim + modello unificato mailbox
+- ~~Documentazione `full-stack.md` §2.9 «interna (storico)»~~ — slim + modello unificato mailbox
 
 **Obiettivo**: un unico flusso messaggio/conversazione; `protocol` solo per handler di recapito uscente (fase B bridge), senza biforcazioni di prodotto.
 
@@ -101,4 +101,4 @@ Riferimenti che **violavano** questa regola; stato dopo `20260704120000`:
 - [bridge-stateless.md](./bridge-stateless.md) — handler recapito uscente
 - [server-as-reception.md](./server-as-reception.md) — semantica spunte lato server (unificata per tutte le chat)
 - [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) — aggancio al fondo (feature unificata)
-- [alpha-full-stack.md](../architecture/alpha-full-stack.md) — da riallineare dove cita tipi di chat distinti
+- [full-stack.md](../architecture/full-stack.md) — da riallineare dove cita tipi di chat distinti

@@ -26,9 +26,9 @@ Ogni utente Alfred ha un profilo pubblico legato 1:1 a `auth.users`. Il backend 
 | ID | Promessa |
 |----|----------|
 | **SYS-PROFILE-001** | Tabella `profiles`: `id` (= `auth.uid()`), `username`, `display_name`, `bio`, `avatar_url`, `pronouns`, `created_at`, `updated_at` |
-| **SYS-PROFILE-002** | `username`: formato `^[a-z0-9_]{3,32}$`, univoco case-insensitive; impostato in registrazione — non modificabile via UPDATE client Alpha |
+| **SYS-PROFILE-002** | `username`: formato `^[a-z0-9_]{3,32}$`, univoco case-insensitive; impostato in registrazione — non modificabile via UPDATE client |
 | **SYS-PROFILE-003** | Modifica profilo proprio: UPDATE diretto su `profiles` via RLS `profiles_update_own` (`id = auth.uid()`) |
-| **SYS-PROFILE-004** | Campi editabili Alpha: `display_name` (obbligatorio), `bio`, `pronouns`, `avatar_url` |
+| **SYS-PROFILE-004** | Campi editabili (scope attuale): `display_name` (obbligatorio), `bio`, `pronouns`, `avatar_url` |
 | **SYS-PROFILE-005** | Avatar: bucket `avatars`, path `{userId}/avatar.{jpg\|png\|webp}`, max **2 MB**, URL pubblico; upsert sullo stesso path |
 | **SYS-PROFILE-006** | RPC `list_inbox()` espone `peer_avatar_url`, `peer_pronouns` per ogni riga peer |
 | **SYS-PROFILE-007** | RPC `find_profile_by_username` ritorna `id`, `username`, `display_name`, `avatar_url`, `pronouns` |

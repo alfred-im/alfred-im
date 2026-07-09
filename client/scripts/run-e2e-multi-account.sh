@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# E2E multi-account — default Alpha live (flusso utente mobile).
+# E2E multi-account — default demo live (flusso utente mobile).
 # Hub: bash scripts/test.sh e2e-multi
 # Locale: ALFRED_BASE_URL=http://localhost:8080/ bash scripts/test.sh e2e-multi
 # test1/test2: ALFRED_ACCOUNT1_EMAIL=... ALFRED_ACCOUNT1_PASSWORD=... ALFRED_ACCOUNT1_LABEL=test1 ...

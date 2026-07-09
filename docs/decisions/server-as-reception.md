@@ -5,7 +5,7 @@
 **Data**: 2026-06-26  
 **Status**: ✅ Accettata — **concept vincolante** dell'applicazione  
 **Categoria**: Messaggistica, spunte, modello cloud  
-**Correlata**: [bridge-stateless.md](./bridge-stateless.md), [alpha-full-stack.md](../architecture/alpha-full-stack.md) §3
+**Correlata**: [bridge-stateless.md](./bridge-stateless.md), [full-stack.md](../architecture/full-stack.md) §3
 
 ---
 
@@ -21,7 +21,7 @@ Questo è il modello semantico dell'applicazione: il server è il punto in cui u
 
 | Fase | Comportamento |
 |------|----------------|
-| **Oggi (Alpha)** | Invio e ricezione *sembrano* coincidenti: il mittente chiama `send_message_to_profile`, il messaggio è subito nel DB piattaforma, il destinatario lo vede via Realtime. Il passaggio «consegnato» può avvenire nello stesso istante dell'inserimento. |
+| **Oggi (scope attuale)** | Invio e ricezione *sembrano* coincidenti: il mittente chiama `send_message_to_profile`, il messaggio è subito nel DB piattaforma, il destinatario lo vede via Realtime. Il passaggio «consegnato» può avvenire nello stesso istante dell'inserimento. |
 | **Domani (federazione / bridge)** | Invio e ricezione saranno **disaccoppiati**, come già accade tra server diversi in XMPP/Matrix: il messaggio resta `sent` o `pending` finché il bridge non lo consegna all'altro dominio; solo allora diventa «ricevuto» (sul server di destinazione o nella piattaforma come ack federato). |
 
 Il disaccoppiamento non è un'eccezione futura: è la **stessa logica** del caso federato, applicata progressivamente anche ai flussi che oggi appaiono sincroni.
@@ -52,5 +52,5 @@ Nel client cloud Alfred il livello 2 segue il **server come fonte di verità**: 
 
 ## Riferimenti
 
-- [alpha-full-stack.md](../architecture/alpha-full-stack.md) — §2.9 Spunte lettura
+- [full-stack.md](../architecture/full-stack.md) — §2.9 Spunte lettura
 - [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md) — regola vincolante: nessuna distinzione chat interna/esterna a nessun livello

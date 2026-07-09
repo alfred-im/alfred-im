@@ -48,7 +48,7 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 | `inbox-load.spec.ts` | `e2e` | Inbox senza digitare in ricerca |
 | `pages-smoke.spec.ts` | `e2e` | Smoke generico (fragile su canvas Flutter) |
 
-Default URL: Alpha `https://alfred-im.github.io/XmppTest/`  
+Default URL: demo `https://alfred-im.github.io/XmppTest/`  
 Locale: `ALFRED_BASE_URL=http://localhost:8080/ bash scripts/test.sh e2e-multi`
 
 Account: default `alfredagent1`/`alfredagent2`; per `test1`/`test2` → env `ALFRED_ACCOUNT{1,2}_{EMAIL,PASSWORD,USERNAME}`.

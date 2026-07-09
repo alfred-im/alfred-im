@@ -21,7 +21,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-alpha
+  group: pages-dev-demo
   cancel-in-progress: true
 
 jobs:
@@ -57,28 +57,28 @@ jobs:
         with:
           path: client/build/web
 
-  # Alpha / sviluppo: ogni build (PR o main) pubblica su https://alfred-im.github.io/XmppTest/
+  # Demo di sviluppo: ogni build (PR o main) pubblica su https://alfred-im.github.io/XmppTest/
   # Richiede ambiente github-pages con «Deployment branches: All branches»
   # (Settings → Environments → github-pages). Default repo: solo main → PR falliscono.
-  deploy-alpha:
+  deploy-pages:
     runs-on: ubuntu-latest
     needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry1.outputs.page_url || steps.deployment_retry2.outputs.page_url }}
     steps:
-      - name: Deploy Alpha dev (GitHub Pages)
+      - name: Deploy dev demo (GitHub Pages)
         id: deployment
         uses: actions/deploy-pages@v4
         continue-on-error: true
 
-      - name: Deploy Alpha dev (retry 1)
+      - name: Deploy dev demo (retry 1)
         if: steps.deployment.outcome == 'failure'
         id: deployment_retry1
         uses: actions/deploy-pages@v4
         continue-on-error: true
 
-      - name: Deploy Alpha dev (retry 2)
+      - name: Deploy dev demo (retry 2)
         if: steps.deployment.outcome == 'failure' && steps.deployment_retry1.outcome == 'failure'
         id: deployment_retry2
         uses: actions/deploy-pages@v4

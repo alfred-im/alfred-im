@@ -11,7 +11,7 @@
 | `content_type` | `location` |
 | `latitude` | double, obbligatorio, range [-90, 90] |
 | `longitude` | double, obbligatorio, range [-180, 180] |
-| `body` | opzionale (etichetta futura; Alpha invia vuoto) |
+| `body` | opzionale (etichetta futura; scope attuale invia vuoto) |
 
 Coordinate arrotondate a **5 decimali** lato client (`LocationConfig.coordinateDecimals` ≈ precisione al metro).
 
@@ -69,7 +69,7 @@ Migrazioni **due step** (enum PostgreSQL deve commitare prima dell'uso):
 - `list_inbox`, `list_peer_messages`, `mark_peer_read`: includono `content_type = location`
 - Outbox payload federato: `latitude`, `longitude` (bridge futuro → XEP-0080)
 
-## Non in scope (Alpha)
+## Non in scope (scope attuale)
 
 - Posizione **live** con aggiornamenti periodici in chat
 - Reverse geocoding (indirizzo testuale)

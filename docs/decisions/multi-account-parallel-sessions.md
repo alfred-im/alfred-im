@@ -1,8 +1,8 @@
-# Multi-account client Alpha
+# Multi-account client
 
 > **Contratto promessa**: [PROM-MULTI-ACCOUNT.md](../specs/promises/product/PROM-MULTI-ACCOUNT.md), [SURF-AUTH.md](../specs/surfaces/SURF-AUTH.md) — questo ADR resta vincolante; le promesse consolidano il contratto operativo.
 
-**Stato**: 🟢 Vincolante (client Alpha)  
+**Stato**: 🟢 Vincolante (client)  
 **Data**: 2026-06-29 (PR #140) · **runtime aggiornato** 2026-07-02 (PR #152)  
 **Sostituisce**: modello client «un account attivo + token salvati + `setSession` al cambio» (PR #111–#131)
 
@@ -12,7 +12,7 @@
 
 ## 1. Problema (contesto storico)
 
-Il client Alpha (fino a PR #131) implementava il multi-account così:
+Il client (fino a PR #131) implementava il multi-account così:
 
 - **Un solo** `SupabaseClient` globale (`Supabase.instance`)
 - Lista `SavedAccount` in `SharedPreferences` = refresh token **in attesa**
@@ -158,7 +158,7 @@ Dettaglio: `docs/fixes/multi-account-single-active-gotrue-pr152.md`
 | [auth-overlay-shell.md](../design/auth-overlay-shell.md) | Regole UX overlay + placeholder |
 | [multi-account-client.md](../implementation/multi-account-client.md) | Dettaglio file e flussi codice (§3.5 persistenza PR #147) |
 | [multi-account-single-active-gotrue-pr152.md](../fixes/multi-account-single-active-gotrue-pr152.md) | Fix BroadcastChannel web |
-| [alpha-full-stack.md](../architecture/alpha-full-stack.md) §2.3–2.4 | Architettura client aggiornata |
+| [full-stack.md](../architecture/full-stack.md) §2.3–2.4 | Architettura client aggiornata |
 | `PROJECT_MAP.md` | Mappa sintetica non deducibile |
 
 **Codice**: `client/lib/services/account_manager.dart`, `account_session.dart`, `client/lib/widgets/auth_overlay.dart`

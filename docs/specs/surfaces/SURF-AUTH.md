@@ -35,7 +35,7 @@ Binding UX overlay login/registrazione sulla shell `HomeScreen` — credenziali 
 | **SURF-AUTH-004** | Login e registrazione sulla stessa card (`AuthScreen`); toggle Accedi/Registrati |
 | **SURF-AUTH-005** | «Chiudi account» (`removeAccount`): se ultimo account → overlay obbligatorio |
 | **SURF-AUTH-006** | Registrazione: opzione tipo account `user` / `group` sulla stessa card — [SYS-GROUP](../promises/system/SYS-GROUP.md) SYS-GROUP-011 |
-| **SURF-AUTH-008** | Conferma email e reset password: il client passa `emailRedirectTo` / `redirectTo` = URL Alpha (`AuthRedirectUrl.alphaDefault`, `https://alfred-im.github.io/XmppTest/`) |
+| **SURF-AUTH-008** | Conferma email e reset password: il client passa `emailRedirectTo` / `redirectTo` = URL demo (`AuthRedirectUrl.devDemoDefault`, `https://alfred-im.github.io/XmppTest/`) |
 
 ### SHOULD
 
@@ -50,7 +50,7 @@ Binding UX overlay login/registrazione sulla shell `HomeScreen` — credenziali 
 | **SURF-AUTH-010** | `AuthScreen` a tutto schermo che sostituisce `HomeScreen` (eccetto card in overlay) |
 | **SURF-AUTH-011** | Overlay dismissibile con 0 account |
 | **SURF-AUTH-012** | Rotella globale che nasconde shell durante switch account |
-| **SURF-AUTH-013** | **Prodotto:** l'utente che si registra o resetta password dall'app Alpha **non** deve essere reindirizzato su `localhost` dopo conferma email — destinazione attesa = URL Alpha GitHub Pages |
+| **SURF-AUTH-013** | **Prodotto:** l'utente che si registra o resetta password dalla demo live **non** deve essere reindirizzato su `localhost` dopo conferma email — destinazione attesa = URL demo GitHub Pages |
 
 ---
 
@@ -63,7 +63,7 @@ Distinzione **prodotto** vs **canarino tecnico**:
 | **Prodotto** | Flusso corretto → utente su `https://alfred-im.github.io/XmppTest/` (SURF-AUTH-008, SURF-AUTH-013) |
 | **Tecnico (canarino)** | Site URL Supabase = fallback quando `redirect_to` manca o non è in allow list — **non** è destinazione prodotto; se l'utente ci arriva, c'è un errore da investigare |
 
-| Elemento | Valore Alpha |
+| Elemento | Valore demo live |
 |----------|----------------|
 | **Site URL** (canarino) | `http://localhost:3000` — volutamente diverso dall'app; segnala config/deploy rotto |
 | **Redirect URLs** | `https://alfred-im.github.io/XmppTest/**` — autorizza il redirect quando il client lo passa correttamente |

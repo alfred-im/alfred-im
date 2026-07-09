@@ -36,7 +36,7 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PERSONAL-CONTACTS-006** | «Scrivi» da rubrica (icona chat): **Internal** → `ComposeService.peerFromContact` → `ChatPeer`; **Esterno** → errore «Indirizzo esterno non ancora supportato» (Alpha) |
+| **PROM-PERSONAL-CONTACTS-006** | «Scrivi» da rubrica (icona chat): **Internal** → `ComposeService.peerFromContact` → `ChatPeer`; **Esterno** → errore «Indirizzo esterno non ancora supportato» (scope attuale) |
 | **PROM-PERSONAL-CONTACTS-007** | `ContactsController` legato all'account in **focus** — [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) |
 | **PROM-PERSONAL-CONTACTS-008** | Filtro lista: conforme a [PROM-LIST-FILTER](./PROM-LIST-FILTER.md) + [SURF-CONTACTS](../../surfaces/SURF-CONTACTS.md) |
 
@@ -52,7 +52,7 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 | ID | Promessa |
 |----|----------|
 | **PROM-PERSONAL-CONTACTS-020** | Mostrare protocollo in inbox o come tipo chat separato |
-| **PROM-PERSONAL-CONTACTS-021** | Messaggistica verso esterni da rubrica in Alpha (solo salvataggio rubrica) |
+| **PROM-PERSONAL-CONTACTS-021** | Messaggistica verso esterni da rubrica (scope attuale) (solo salvataggio rubrica) |
 | **PROM-PERSONAL-CONTACTS-022** | Confondere rubrica (scorciatoia) con allow list (ricezione) |
 
 ---
@@ -64,7 +64,7 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 | `ContactService` | fetch, search, add internal/external, delete |
 | `ContactsController` | Stato lista, filtro, delega add/search; `ownerId` = focus |
 | `ContactsScreen` | Lista + ricerca + sheet aggiunta |
-| `ComposeService.peerFromContact` | Contatto internal → `ChatPeer`; esterno → errore Alpha |
+| `ComposeService.peerFromContact` | Contatto internal → `ChatPeer`; esterno → errore contatto esterno |
 
 ### Relazione con messaggistica
 
@@ -93,7 +93,7 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 | PROM-PERSONAL-CONTACTS-007 | `main.dart` — `ChangeNotifierProxyProvider<AuthController, ContactsController?>` |
 | PROM-PERSONAL-CONTACTS-008 | `list_filter_test.dart`; `contacts_screen_test.dart` |
 | PROM-PERSONAL-CONTACTS-003, PROM-PERSONAL-CONTACTS-004 | `send_message_to_profile_smoke.sql`; `SYS-MAILBOX-045` |
-| PROM-PERSONAL-CONTACTS-021 | `compose_service.dart` — errore esterno Alpha |
+| PROM-PERSONAL-CONTACTS-021 | `compose_service.dart` — errore contatto esterno |
 | PROM-PERSONAL-CONTACTS-011 | `contacts_controller.dart` — `addInternal` / `addExternal` → `load()` |
 
 

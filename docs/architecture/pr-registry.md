@@ -1,9 +1,9 @@
-# Registro PR Alpha Flutter (main)
+# Registro PR Flutter (main)
 
-**Ultimo aggiornamento**: 2026-07-09 (PR #174 redirect email + canarino Site URL)  
+**Ultimo aggiornamento**: 2026-07-09 (epurazione terminologia Alpha)  
 **Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
 
-Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/alpha-full-stack.md` (e fix dedicato se applicabile).
+Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/full-stack.md` (e fix dedicato se applicabile).
 
 > Alcune PR (#115, #124–#125, #142, #152) sono entrate su `main` via merge branch o commit diretti — il numero PR resta il riferimento canonico in doc/CHANGELOG.
 
@@ -13,9 +13,9 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 
 | PR | Titolo / commit | Cosa introduce | Spec | Dove documentato |
 |----|-----------------|----------------|------|------------------|
-| **#108** | UI chat Flutter | Layout conversazioni + chat, tema Alfred, deploy Pages | — | `CHANGELOG` [3.0.0-alpha], `PROJECT_MAP` |
-| **#109** | App completa senza bridge | Auth, contatti, chat realtime Supabase, profilo, schema dominio | SYS-CONTACTS, SYS-PROFILE, PROM-MULTI-ACCOUNT, SURF-CONTACTS, SURF-AUTH | `alpha-full-stack.md`, `PROJECT_MAP` |
-| **#110** | Passkeys bundle.js | Fix schermo bianco GitHub Pages | — | `alpha-full-stack.md` §6 |
+| **#108** | UI chat Flutter | Layout conversazioni + chat, tema Alfred, deploy Pages | — | `CHANGELOG` [2026-06-24], `PROJECT_MAP` |
+| **#109** | App completa senza bridge | Auth, contatti, chat realtime Supabase, profilo, schema dominio | SYS-CONTACTS, SYS-PROFILE, PROM-MULTI-ACCOUNT, SURF-CONTACTS, SURF-AUTH | `full-stack.md`, `PROJECT_MAP` |
+| **#110** | Passkeys bundle.js | Fix schermo bianco GitHub Pages | — | `full-stack.md` §6 |
 | **#111** | Multi-account switch (legacy) | `AccountStorageService`, `setSession` — **sostituito da #140** | — | storico `CHANGELOG` |
 | **#112** | `list_conversations` RPC | Inbox un round-trip — **sostituito da `list_inbox` #130** | — | migrazione `20260624220000` |
 | **#113** | Fix race auth inbox | `waitForSupabaseSessionReady`, `sessionReady` | — | `fixes/flutter-inbox-stability.md` |
@@ -65,8 +65,8 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#168** | InboxPanel widget tests | 4 test inbox search/header; `AccountSidebar` Material fix | PROM-LIST-FILTER, SURF-INBOX, SURF-ALLOWLIST | `inbox_panel_test.dart`, `account_sidebar.dart` |
 | **#169** | AuthController + badge gruppo | Test overlay SURF-AUTH; badge «Gruppo» manifest sidebar | PROM-MULTI-ACCOUNT, SURF-AUTH, SYS-GROUP, SURF-ACCOUNT-SIDEBAR | `auth_controller_test.dart`, `account_sidebar_test.dart` |
 | **#171** | SDD + ricerca liste | Registro promesse; `CollapsibleListSearch`; lente su Contatti e Persone consentite; refactor `InboxPanel` | PROM-LIST-FILTER, SURF-CONTACTS, SURF-ALLOWLIST, SURF-INBOX | `docs/specs/registry.md`, `collapsible_list_search.dart`, `contacts_screen_test.dart` |
-| **#172** | Epurazione doc legacy | Rimozione residui v1 in documentazione; ID uniformati SYS/PROM/SURF; SDD senza suffisso versione | — | `PROJECT_MAP.md`, `INDICE.md`, `alpha-pr-registry.md`, `implementation/*`, `decisions/*`, `design/*` |
-| **#174** | Redirect conferma email | `AuthRedirectUrl` Alpha su web pubblico; SURF-AUTH-008/013; Site URL localhost = canarino tecnico | SURF-AUTH | `SURF-AUTH.md`, `auth_redirect_url.dart`, `PROJECT_MAP` § redirect auth |
+| **#172** | Epurazione doc legacy | Rimozione residui v1 in documentazione; ID uniformati SYS/PROM/SURF; SDD senza suffisso versione | — | `PROJECT_MAP.md`, `INDICE.md`, `pr-registry.md`, `implementation/*`, `decisions/*`, `design/*` |
+| **#174** | Redirect conferma email | `AuthRedirectUrl` demo su web pubblico; SURF-AUTH-008/013; Site URL localhost = canarino tecnico | SURF-AUTH | `SURF-AUTH.md`, `auth_redirect_url.dart`, `PROJECT_MAP` § redirect auth |
 
 ---
 
@@ -77,7 +77,7 @@ Dopo ogni merge su `main`:
 1. **`PROJECT_MAP.md`** — stato corrente, caratteristiche
 2. **`CHANGELOG.md`** — voce in `[Unreleased]` con numero PR
 3. **`docs/specs/`** — promesse in [registry.md](../specs/registry.md) (`approved` → `implemented`); `contracts/schema.md` / `rpc.md` se SYSTEM
-4. **`docs/architecture/alpha-full-stack.md`** — sezione client o piattaforma interessata
+4. **`docs/architecture/full-stack.md`** — sezione client o piattaforma interessata
 5. **`docs/INDICE.md`** — data ultimo aggiornamento
 6. **`README.md`** / **`client/README.md`** — se cambia stato dev
 7. **Fix dedicato** (`docs/fixes/`) — solo per bug/regressioni non ovvie
@@ -121,4 +121,4 @@ Dopo ogni merge su `main`:
 
 ---
 
-**Riferimenti**: `PROJECT_MAP.md`, `docs/architecture/alpha-full-stack.md`, `CHANGELOG.md`
+**Riferimenti**: `PROJECT_MAP.md`, `docs/architecture/full-stack.md`, `CHANGELOG.md`

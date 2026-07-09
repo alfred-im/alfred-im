@@ -1,4 +1,4 @@
--- Alfred Alpha — schema dominio (piattaforma)
+-- Alfred — schema dominio (piattaforma)
 -- Client Flutter parla solo con Supabase; bridge leggono outbox/sync (service_role).
 
 -- ---------------------------------------------------------------------------

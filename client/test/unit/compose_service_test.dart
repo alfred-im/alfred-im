@@ -41,7 +41,7 @@ void main() {
       expect(peer.displayName, 'Alice');
     });
 
-    test('rejects external contact in Alpha', () {
+    test('rejects external contact (scope attuale)', () {
       expect(
         () => composeService.peerFromContact(
           Contact(

@@ -1,4 +1,4 @@
-# Contratto RPC — messaggistica Alpha
+# Contratto RPC — messaggistica
 
 **Ultima revisione**: 2026-07-07  
 **Status**: `implemented` su `main` (migrazioni fino a `20260707190000`, incl. revoke helper RPC)  
@@ -267,5 +267,5 @@ Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/te
 
 ## Riferimenti
 
-- [alpha-full-stack.md](../../architecture/alpha-full-stack.md) §3
-- Migrazioni in [alpha-pr-registry.md](../../architecture/alpha-pr-registry.md) § migrazioni
+- [full-stack.md](../../architecture/full-stack.md) §3
+- Migrazioni in [pr-registry.md](../../architecture/pr-registry.md) § migrazioni

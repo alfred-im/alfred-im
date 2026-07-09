@@ -46,7 +46,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | ID | Promessa |
 |----|----------|
 | **SYS-MAILBOX-010** | Indici `(owner_id, peer_profile_id, created_at DESC)` e `(owner_id, logical_message_id)` |
-| **SYS-MAILBOX-011** | `peer_external_address` nullable per federazione futura (non usata in Alpha UI) |
+| **SYS-MAILBOX-011** | `peer_external_address` nullable per federazione futura (non usata (scope attuale) UI) |
 
 #### MUST NOT
 
@@ -71,7 +71,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | **SYS-MAILBOX-019** | **Outbox sempre**: INSERT `outbox` per ogni invio, incluso `protocol = internal` |
 | **SYS-MAILBOX-020** | Driver internal (stessa transazione RPC): **se** mittente ∈ [SYS-RECEPTION](./SYS-RECEPTION.md) del destinatario → materializza copia destinatario + valorizza `delivered_at` su copia mittente (match λ); **altrimenti** skip copia destinatario, `delivered_at` null, RPC successo (rifiuto silenzioso) |
 | **SYS-MAILBOX-021** | Idempotenza: retry stesso `(owner_id, client_message_id)` → stessa riga mittente, no duplicati |
-| **SYS-MAILBOX-022** | Tipi `content_type`: `text`, `gif`, `voice`, `location` — validazione invariata da Alpha pre-#159 |
+| **SYS-MAILBOX-022** | Tipi `content_type`: `text`, `gif`, `voice`, `location` — validazione invariata da pre-#159 |
 | **SYS-MAILBOX-023** | Bucket storage `chat-media`: path `{auth.uid()}/{uuid}.*` (upload prima RPC) |
 | **SYS-MAILBOX-024** | Outbox retry: `attempts`, `last_error`, `status` → `failed` dopo soglia (default 5 tentativi worker/cron futuro; internal sincrono non fallisce salvo errore transazione) |
 | **SYS-MAILBOX-025** | Invio fallito server: `failed_at` timestamptz sulla copia mittente (opzionale null se non applicabile) |
@@ -102,7 +102,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | ID | Promessa |
 |----|----------|
 | **SYS-MAILBOX-033** | `list_inbox()` aggrega **solo** `messages` WHERE `owner_id = auth.uid()` |
-| **SYS-MAILBOX-034** | GROUP BY `peer_profile_id` (internal Alpha) |
+| **SYS-MAILBOX-034** | GROUP BY `peer_profile_id` (interni (stessa istanza)) |
 | **SYS-MAILBOX-035** | Payload riga: `peer_profile_id`, `display_name`, `last_message_preview`, `last_message_at`, `unread_count`, campi profilo peer |
 | **SYS-MAILBOX-036** | `list_peer_messages(peer)` = righe WHERE `owner_id = auth.uid()` AND `peer_profile_id = peer` ORDER BY `created_at` |
 | **SYS-MAILBOX-037** | Prima riga inbox solo dopo primo messaggio nel mio archivio con quel peer |

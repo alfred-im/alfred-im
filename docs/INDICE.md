@@ -68,7 +68,7 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 - **[.cursor/rules/main.mdc](../.cursor/rules/main.mdc)** — Vincolo Cursor → `.cursor-rules.md`
 - **[PROJECT_MAP.md](../PROJECT_MAP.md)** — **Leggere all'inizio di ogni sessione**
 - **[README.md](../README.md)** — Stato progetto
-- **[CHANGELOG.md](../CHANGELOG.md)** — Storia modifiche Alpha
+- **[CHANGELOG.md](../CHANGELOG.md)** — Storia modifiche
 - **[.cursor-rules.md](../.cursor-rules.md)** — Regole sviluppo AI
 - **[AGENTS.md](../AGENTS.md)** — Toolchain Cloud Agent
 - **[AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md)** — **Account Supabase solo agente** + regola non toccare test1/2/3
@@ -91,8 +91,8 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 
 ## Architettura
 
-- [architecture/alpha-full-stack.md](./architecture/alpha-full-stack.md) — **🟢 Alpha** — client + Supabase
-- [architecture/alpha-pr-registry.md](./architecture/alpha-pr-registry.md) — Registro PR **#108–#172**
+- [architecture/full-stack.md](./architecture/full-stack.md) — **🟢 Attivo** — client + Supabase
+- [architecture/pr-registry.md](./architecture/pr-registry.md) — Registro PR **#108–#172**
 - [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) — **🟢 Implementato** — modello caselle (PR #159)
 - [architecture/README.md](./architecture/README.md) — Indice architettura
 

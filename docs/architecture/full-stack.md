@@ -1,9 +1,9 @@
-# Alfred Alpha — Architettura (panoramica)
+# Alfred — Architettura (panoramica)
 
-**Data**: 2026-07-06  
+**Data**: 2026-07-09  
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
-**Stato**: PR Alpha **#108–#162** su `main`  
-**Registro PR**: [alpha-pr-registry.md](./alpha-pr-registry.md)
+**Stato**: PR **#108–#172** su `main` — prodotto stabile  
+**Registro PR**: [pr-registry.md](./pr-registry.md)
 
 > **Contratti (SDD)**: [docs/specs/registry.md](../specs/registry.md) — registro promesse SYSTEM / PRODUCT / SURFACE.  
 > **Contratti piattaforma (SYSTEM)**: [contracts/schema.md](../specs/contracts/schema.md), [contracts/rpc.md](../specs/contracts/rpc.md).  
@@ -102,7 +102,7 @@ client/lib/
 
 Schema, enum, RLS, storage: **[contracts/schema.md](../specs/contracts/schema.md)**  
 RPC business logic: **[contracts/rpc.md](../specs/contracts/rpc.md)**  
-Migrazioni: [alpha-pr-registry.md](./alpha-pr-registry.md) § migrazioni
+Migrazioni: [pr-registry.md](./pr-registry.md) § migrazioni
 
 ### Integrazione bridge (non implementata)
 
@@ -119,7 +119,7 @@ Vedi [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION
 
 ---
 
-## 5. Sicurezza Alpha
+## 5. Sicurezza
 
 - Password solo GoTrue; RLS su tabelle dominio
 - Publishable key nel client (SPA standard)
@@ -145,12 +145,12 @@ Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (
 
 | Target | Meccanismo |
 |--------|------------|
-| Web Alpha | GitHub Pages `/XmppTest/` — job `deploy-alpha` |
+| Web demo di sviluppo | GitHub Pages `/XmppTest/` — job `deploy-pages` |
 | Supabase | Migrazioni in repo → MCP/dashboard |
 
-**Non è produzione**: l’URL https://alfred-im.github.io/XmppTest/ è **solo** l’istanza Alpha su GitHub Pages (demo, test, integrazione). Non è — e non va trattato come — un ambiente di produzione Alfred.
+**Non è produzione**: l’URL https://alfred-im.github.io/XmppTest/ è la **demo di sviluppo** su GitHub Pages (test, integrazione). Alfred è software personale open source: **non esiste** deploy di produzione né è previsto.
 
-**Non deducibile**: URL Alpha = ultimo `deploy-alpha` riuscito (PR o push su `main`), non sempre = tip di `main`.
+**Non deducibile**: URL live = ultimo `deploy-pages` riuscito (PR o push su `main`), non sempre = tip di `main`.
 
 **Web**: `passkeys` `bundle.js` obbligatorio in `client/web/index.html` (PR #110).
 
@@ -158,7 +158,7 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, workflow `.github/workflows/deploy-
 
 ---
 
-## 8. Limitazioni Alpha (senza bridge)
+## 8. Limitazioni attuali (senza bridge)
 
 | Funzionalità | Stato |
 |--------------|-------|
@@ -180,4 +180,4 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, workflow `.github/workflows/deploy-
 
 ---
 
-**Riferimenti**: `PROJECT_MAP.md`, [alpha-pr-registry.md](./alpha-pr-registry.md), [docs/specs/registry.md](../specs/registry.md), [docs/specs/README.md](../specs/README.md)
+**Riferimenti**: `PROJECT_MAP.md`, [pr-registry.md](./pr-registry.md), [docs/specs/registry.md](../specs/registry.md), [docs/specs/README.md](../specs/README.md)

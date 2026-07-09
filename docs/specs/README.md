@@ -4,7 +4,7 @@
 **Ultima revisione**: 2026-07-08  
 **Versione metodo**: SDD — unico metodo di specifica
 
-Alfred esce dalla fase Alpha: il metodo governa **tutto ciò che il prodotto promette** all'utente e ai componenti — schema, RPC, comportamento riusabile e binding per superficie.
+Alfred esce dalla fase sperimentale (storica): il metodo governa **tutto ciò che il prodotto promette** all'utente e ai componenti — schema, RPC, comportamento riusabile e binding per superficie.
 
 ---
 
@@ -108,7 +108,7 @@ docs/specs/
 |-------|------|--------|
 | **ADR** | `docs/decisions/` | Perché architetturale — non cosa promettiamo |
 | **Promesse** | `promises/`, `surfaces/`, `contracts/` | **Contratto** — cosa è garantito |
-| **Panoramica** | `PROJECT_MAP.md`, `alpha-full-stack.md` | Orientamento — **non** duplicare promesse |
+| **Panoramica** | `PROJECT_MAP.md`, `full-stack.md` | Orientamento — **non** duplicare promesse |
 | **Evidenza** | `docs/design/`, `docs/implementation/` | Storico PR; header `superseded by` promessa |
 | **Test** | `client/test/`, `supabase/tests/` | Verifica; citati in tracciabilità |
 
@@ -169,7 +169,7 @@ Implementazione + test mappati agli ID promessa
     ↓
 check-spec-sync.sh + verify.sh
     ↓
-Post-merge: implemented + registry + CHANGELOG / alpha-pr-registry
+Post-merge: implemented + registry + CHANGELOG / pr-registry
 ```
 
 ### Workflow PR

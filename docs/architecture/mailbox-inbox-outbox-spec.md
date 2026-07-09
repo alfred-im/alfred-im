@@ -17,13 +17,13 @@
 | **Inbox** | Lista derivata dal **mio** archivio via `list_inbox()` |
 | **Identità chat** | `(io, peer_profile_id)` — indirizzo `username` o `username@server` in compose |
 
-Tutto il resto (UI, realtime, spunte, tipi messaggio, rubrica) si deduce dall’Alpha attuale salvo quanto sotto.
+Tutto il resto (UI, realtime, spunte, tipi messaggio, rubrica) si deduce dall’implementazione attuale salvo quanto sotto.
 
 ---
 
 ## Media (GIF, voice) — file condiviso
 
-Il flusso client resta quello Alpha: **un upload** nel bucket `chat-media` → **un** `media_url` → metadati sul messaggio.
+Il flusso client resta quello attuale: **un upload** nel bucket `chat-media` → **un** `media_url` → metadati sul messaggio.
 
 Con il modello caselle le **copie d’archivio** (mittente e destinatario) puntano allo **stesso blob** — il file **non** si duplica in storage. È una scelta deliberata (come un allegato referenziato in due caselle), non un dettaglio trascurabile.
 
@@ -38,7 +38,7 @@ Con il modello caselle le **copie d’archivio** (mittente e destinatario) punta
 | **Retry / invio fallito** | Upload riuscito ma consegna non materializzata → blob in storage senza (o con) riga archivio — edge case da contare nel GC |
 | **Bridge** (futuro) | Il bridge può aver scaricato/cachato dal URL; delete storage non equivale a «revocato» fuori da Alfred |
 
-**Regola:** trattare i media come **risorsa condivisa con refcount logico** (o audit delle referenze), non come proprietà della singola riga archivio. La strategia GC (quando contare le referenze, job async, soft-delete) va definita **prima** di implementare delete messaggi/casella o purge storage — fuori scope Alpha ma **non** ignorabile nel design.
+**Regola:** trattare i media come **risorsa condivisa con refcount logico** (o audit delle referenze), non come proprietà della singola riga archivio. La strategia GC (quando contare le referenze, job async, soft-delete) va definita **prima** di implementare delete messaggi/casella o purge storage — fuori scope attuale ma **non** ignorabile nel design.
 
 ---
 
@@ -197,7 +197,7 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 - 2026-06-27: su `main` implementato message-centric (PR #130) — percorso diverso, temporaneo.
 - 2026-06-28: direzione caselle confermata; Q&A identità, outbox sempre, media condivisi/GC, **spunte = segnali** (modello XMPP/Matrix) confermato.
 - 2026-06-29: identificatori a livelli distinti (`id` / `client_message_id` / λ / `external_id`), idempotenza per operazione, consegna parziale = stato normale pipeline.
-- 2026-07-04: discovery chiuso; promessa `SYS-MAILBOX` approved; spunte Alpha = `delivered_at`/`read_at` (no enum status); federato UI blocked in Alpha.
+- 2026-07-04: discovery chiuso; promessa `SYS-MAILBOX` approved; spunte = `delivered_at`/`read_at` (no enum status); federato UI blocked (scope attuale).
 - 2026-07-04: gate `SYS-RECEPTION` (#161) nel driver internal — recapito condizionato; semantica ✓ (accettato) vs ✓✓ (consegnato).
 
 ---
@@ -207,7 +207,7 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 | Documento | Ruolo |
 |-----------|--------|
 | [address-based-messaging.md](../decisions/address-based-messaging.md) | Indirizzamento e rubrica isolata (vincolante) |
-| [alpha-full-stack.md](./alpha-full-stack.md) | Flussi Alpha da riusare |
+| [full-stack.md](./full-stack.md) | Flussi attuali da riusare |
 | [server-as-reception.md](../decisions/server-as-reception.md) | Spunte |
 | [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md) | Gate recapito destinatario |
 | [bridge-stateless.md](../decisions/bridge-stateless.md) | Outbox / bridge (se/un quando) |

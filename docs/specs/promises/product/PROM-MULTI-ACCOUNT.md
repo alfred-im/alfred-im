@@ -71,7 +71,7 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 
 - Realtime inbox per account non in focus (trade-off PR #152).
 - Badge/anteprima messaggi su account in background.
-- Encryption refresh token (post-Alpha).
+- Encryption refresh token (post-federazione).
 
 ---
 

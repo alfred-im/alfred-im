@@ -2,7 +2,7 @@
 
 > **Superseded by spec**: [PROM-MULTI-ACCOUNT.md](../specs/promises/product/PROM-MULTI-ACCOUNT.md), [SURF-AUTH.md](../specs/surfaces/SURF-AUTH.md) — UX overlay; per contratto usare le promesse.
 
-**Stato**: 🟢 Vincolante (client Alpha)  
+**Stato**: 🟢 Vincolante (client)  
 **Data**: 2026-06-29  
 **ADR**: [multi-account-parallel-sessions.md](../decisions/multi-account-parallel-sessions.md)  
 **PR**: #140

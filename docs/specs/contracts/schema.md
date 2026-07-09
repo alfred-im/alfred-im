@@ -1,4 +1,4 @@
-# Contratto schema — dominio Alpha (mailbox)
+# Contratto schema — dominio mailbox (mailbox)
 
 **Ultima revisione**: 2026-07-06  
 **Status**: `implemented` su `main` (migrazioni fino a `20260706140000`, incl. SYS-GROUP)  
@@ -164,7 +164,7 @@ Stato piattaforma bridge ([bridge-stateless.md](../../decisions/bridge-stateless
 | `chat-media` | GIF, voice | 10 MB gif / 15 MB webm | `{auth.uid()}/{uuid}.*` |
 | `avatars` | Foto profilo | 2 MB | `{auth.uid()}/avatar.{ext}` |
 
-Pubblici in Alpha (URL diretti in Realtime).
+Pubblici (scope attuale) (URL diretti in Realtime).
 
 ---
 
@@ -184,4 +184,4 @@ Verifica: `supabase/tests/schema_smoke.sql`, `mailbox_schema_smoke.sql`.
 
 ## Migrazioni
 
-Elenco completo: [alpha-pr-registry.md](../../architecture/alpha-pr-registry.md) § migrazioni.
+Elenco completo: [pr-registry.md](../../architecture/pr-registry.md) § migrazioni.

@@ -8,8 +8,8 @@ Documento per AI — **leggere prima di task multi-account, messaggistica, profi
 
 | Item | Valore |
 |------|--------|
-| Branch `main` | PR Alpha **#108–#172** |
-| Alpha live | https://alfred-im.github.io/XmppTest/ — ultimo `deploy-alpha` riuscito |
+| Branch `main` | PR su main **#108–#172** |
+| Demo live | https://alfred-im.github.io/XmppTest/ — ultimo `deploy-pages` riuscito |
 | **SDD** | Registro `docs/specs/registry.md`: 5 SYS, 13 PROM, 10 SURF |
 | Multi-account | **`PROM-MULTI-ACCOUNT`** + **`SURF-AUTH`**: manifest; **una** GoTrue in RAM (focus) |
 | Messaggistica | **`SYS-MAILBOX`**: archivio per `owner_id`, outbox sempre, spunte `delivered_at`/`read_at` |

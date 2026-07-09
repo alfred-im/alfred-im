@@ -6,11 +6,11 @@ Funzionalità **future** desiderate per Alfred (client Flutter + piattaforma + b
 
 ---
 
-## ✅ Già in Alpha (riferimento)
+## ✅ Già (scope attuale) (riferimento)
 
 | Area | Stato | Documentazione |
 |------|-------|----------------|
-| Spunte cloud (inviato / consegnato server / lettura) | Parziale su interni | [server-as-reception.md](./decisions/server-as-reception.md), [alpha-full-stack.md](./architecture/alpha-full-stack.md) §2.9 |
+| Spunte cloud (inviato / consegnato server / lettura) | Parziale su interni | [server-as-reception.md](./decisions/server-as-reception.md), [full-stack.md](./architecture/full-stack.md) §2.9 |
 | Chat testo, GIF, voice, location | ✅ | [voice-notes.md](./implementation/voice-notes.md), [location-sharing.md](./implementation/location-sharing.md) |
 | Inbox mailbox (archivio owner) | ✅ | [SYS-MAILBOX.md](./specs/promises/system/SYS-MAILBOX.md), [SURF-INBOX.md](./specs/surfaces/SURF-INBOX.md), [address-based-messaging.md](./decisions/address-based-messaging.md) |
 | Federazione XMPP/Matrix | ⏸ Outbox only | [bridge-stateless.md](./decisions/bridge-stateless.md) |
