@@ -1,5 +1,5 @@
 /**
- * Timeout e2e — tetti bassi: login Alpha sano ≈ 5–15s.
+ * Timeout e2e — tetti bassi: login demo sano ≈ 5–15s.
  * Se un passo supera questi limiti, qualcosa non va (fail fast).
  */
 export const E2E_TIMEOUT = {

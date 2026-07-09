@@ -3,7 +3,7 @@
 **Data**: 2026-06-24  
 **Status**: ✅ Accettata — **regola vincolante**  
 **Categoria**: Architettura bridge  
-**Correlata**: [alpha-full-stack.md](../architecture/alpha-full-stack.md)
+**Correlata**: [full-stack.md](../architecture/full-stack.md)
 
 ---
 

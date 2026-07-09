@@ -4,13 +4,13 @@ Client ufficiale Alfred — multi-piattaforma (web, mobile, desktop).
 
 ## Stato
 
-**Alpha** — collegato a Supabase (contatti, inbox, chat realtime, profilo, **multi-account**).
+Client — collegato a Supabase (contatti, inbox, chat realtime, profilo, **multi-account**).
 
 | | |
 |---|---|
 | **Multi-account** | Manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore |
 | **Auth** | Overlay su shell (`AuthOverlay`), non schermata piena |
-| **Live (Alpha dev)** | https://alfred-im.github.io/XmppTest/ |
+| **Live (dev demo)** | https://alfred-im.github.io/XmppTest/ |
 | **Layout** | Lista inbox + chat (stile WhatsApp Web) |
 | **Inbox** | RPC `list_inbox()` — aggregazione on-read su `messages` |
 | **Chat** | Identificata da `peer_profile_id` (`ChatPeer`) |
@@ -30,7 +30,7 @@ Catalogo e launcher unificato:
 cd client
 bash scripts/test.sh list        # tutte le suite (gate + manuali)
 bash scripts/test.sh gate        # gate CI — obbligatorio prima di git push
-bash scripts/test.sh e2e-multi   # Playwright multi-account (Alpha)
+bash scripts/test.sh e2e-multi   # Playwright multi-account (scope attuale)
 bash scripts/test.sh manual      # integration + e2e-multi + live
 ```
 

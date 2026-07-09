@@ -1,6 +1,6 @@
 # Bug Fixes (Riferimento Tecnico)
 
-Fix documentati per il client Flutter Alpha.
+Fix documentati per il client Flutter.
 
 | File | PR | Problema |
 |------|-----|----------|
@@ -9,4 +9,4 @@ Fix documentati per il client Flutter Alpha.
 | [multi-account-chat-persistence-pr143.md](./multi-account-chat-persistence-pr143.md) | #143 | Logout locale, view per account, test regressione |
 | [multi-account-single-active-gotrue-pr152.md](./multi-account-single-active-gotrue-pr152.md) | #152 | Inbox errata al switch web; una GoTrue attiva |
 
-Architettura e testing: `docs/architecture/alpha-full-stack.md` §5.
+Architettura e testing: `docs/architecture/full-stack.md` §5.

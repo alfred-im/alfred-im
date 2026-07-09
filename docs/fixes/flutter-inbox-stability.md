@@ -48,7 +48,7 @@
 
 ---
 
-**Riferimenti**: PR #113, #114; `docs/architecture/alpha-full-stack.md` §2.2–2.3; `docs/architecture/alpha-pr-registry.md`
+**Riferimenti**: PR #113, #114; `docs/architecture/full-stack.md` §2.2–2.3; `docs/architecture/pr-registry.md`
 
 ---
 

@@ -45,7 +45,7 @@ Schema backend (`profiles`, bucket `avatars`): [SYS-PROFILE](../system/SYS-PROFI
 | ID | Promessa |
 |----|----------|
 | **PROM-PROFILE-IDENTITY-020** | Esporre email in rubrica, ricerca profili o inbox |
-| **PROM-PROFILE-IDENTITY-021** | Modificare `username` da schermata profilo Alpha |
+| **PROM-PROFILE-IDENTITY-021** | Modificare `username` da schermata profilo (scope attuale) |
 
 ---
 

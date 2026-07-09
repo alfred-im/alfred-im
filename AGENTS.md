@@ -73,17 +73,17 @@ backend out of the box.
 - Use the `web-server` device (above): `-d chrome` requires `CHROME_EXECUTABLE` + a display and is less reliable here.
 - **Non riavviare `flutter run` se la porta 8080 è già in uso** — crea istanze orfane e tmux in errore. Verificare con `diagnose-test-env.sh`; kill mirato del PID su 8080 solo se necessario.
 
-### Deploy Alpha (GitHub Pages)
+### Deploy demo di sviluppo (GitHub Pages)
 
-- **Non è produzione**: https://alfred-im.github.io/XmppTest/ è solo l’ambiente **Alpha/sviluppo** (demo, test CI). Non chiamarlo «produzione» né «prod»; un deploy di produzione Alfred non esiste ancora o avrà URL e pipeline dedicati.
-- **Non** assumere che https://alfred-im.github.io/XmppTest/ rifletta il branch `main`: `deploy-alpha` pubblica da **PR su `main`** e da **push su `main`** (ultimo deploy riuscito vince). Vedi `docs/architecture/alpha-full-stack.md` §7.
+- **Non è produzione**: https://alfred-im.github.io/XmppTest/ è la **demo di sviluppo** (test, CI). Non chiamarlo «produzione» né «prod»; Alfred non ha deploy di produzione né è previsto.
+- **Non** assumere che https://alfred-im.github.io/XmppTest/ rifletta il branch `main`: `deploy-pages` pubblica da **PR su `main`** e da **push su `main`** (ultimo deploy riuscito vince). Vedi `docs/architecture/full-stack.md` §7.
 
 ### Auth / messaging gotchas (non-obvious, hit during setup)
 - Registration: GoTrue rejects unrealistic email domains (e.g. `@example.com` → "Email address is invalid"). Use a realistic domain like `gmail.com`.
 - New signups require **email confirmation** before login. For testing, confirm directly in Supabase:
   `update auth.users set email_confirmed_at = now() where email = '<addr>';` (via the Supabase MCP `execute_sql`).
 - Supabase enforces an **email send rate limit**; rapid repeated signups fail with "email rate limit exceeded".
-- Messaging needs a real recipient profile: **self-messaging fails** ("Utente non trovato") and external `user@server` addresses are **unsupported** in Alpha ("Indirizzo esterno non ancora supportato"). Seeded recipients exist in the live DB (e.g. `test1`, `test2`, `test3`).
+- Messaging needs a real recipient profile: **self-messaging fails** ("Utente non trovato") and external `user@server` addresses are **unsupported** without federation ("Indirizzo esterno non ancora supportato"). Seeded recipients exist in the live DB (e.g. `test1`, `test2`, `test3`).
 - **Account debug agente:** usare **solo** `alfredagent1` / `alfredagent2` (credenziali in `docs/AGENT_DEBUG_ACCOUNTS.md`). **Non modificare mai** password o dati di `test1`/`test2`/`test3` — vedi incidente documentato in quel file (2026-06-29).
 
 ### Browser (computerUse) testing of Flutter web

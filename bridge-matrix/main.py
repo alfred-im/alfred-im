@@ -1,4 +1,4 @@
-"""Alfred Matrix bridge — Fly.io service (Alpha bootstrap)."""
+"""Alfred Matrix bridge — Fly.io service (bootstrap)."""
 
 from __future__ import annotations
 

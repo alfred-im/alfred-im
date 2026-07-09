@@ -67,4 +67,4 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | ID proposto | Classe | Contenuto |
 |-------------|--------|-----------|
 | PROM-BOTTOM-ANCHOR | PRODUCT | Lista messaggi agganciata al fondo — evidenza [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) |
-| BRIDGE-* | SYSTEM | Consumer outbox federato (post-Alpha) |
+| BRIDGE-* | SYSTEM | Consumer outbox federato (post-federazione) |

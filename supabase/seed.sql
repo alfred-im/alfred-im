@@ -1,1 +1,1 @@
--- Alfred seed data (empty for Alpha bootstrap)
+-- Alfred seed data (empty bootstrap)

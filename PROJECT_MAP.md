@@ -1,7 +1,7 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-08 (SDD #172; epurazione doc legacy)  
-**Versione repository**: 3.2.0-alpha (client Flutter + piattaforma Supabase; bridge stub)
+**Ultimo aggiornamento**: 2026-07-09 (epurazione terminologia Alpha; prodotto stabile)  
+**Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 ---
 
@@ -18,20 +18,20 @@
 
 ---
 
-## ⚠️ Stato repository (2026-07-08)
+## ⚠️ Stato repository (2026-07-09)
 
 | Elemento | Dettaglio |
 |----------|-----------|
 | **Client** | `client/` — Flutter, collegato a Supabase |
-| **URL live** | https://alfred-im.github.io/XmppTest/ — **Alpha/sviluppo, non produzione** |
-| **Deploy** | `.github/workflows/deploy-pages.yml` — `verify.sh` + build; job `deploy-alpha` (**PR su `main` e push su `main`**, path `client/**`) |
+| **URL live** | https://alfred-im.github.io/XmppTest/ — **demo di sviluppo, non produzione** |
+| **Deploy** | `.github/workflows/deploy-pages.yml` — `verify.sh` + build; job `deploy-pages` (**PR su `main` e push su `main`**, path `client/**`) |
 
-**Non è produzione**: https://alfred-im.github.io/XmppTest/ è solo l’istanza **Alpha** su GitHub Pages (demo, test, CI). Non confonderla con un futuro ambiente di produzione Alfred, che avrà URL e pipeline dedicati.
+**Non è produzione**: https://alfred-im.github.io/XmppTest/ è la demo di sviluppo su GitHub Pages (test, CI). Alfred è software personale open source: **non esiste** deploy di produzione né è previsto.
 
-**Non deducibile — URL Alpha ≠ branch `main`**: https://alfred-im.github.io/XmppTest/ pubblica l’**ultimo** `deploy-alpha` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-alpha` → ultimo vince).
+**Non deducibile — URL live ≠ branch `main`**: https://alfred-im.github.io/XmppTest/ pubblica l’**ultimo** `deploy-pages` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-dev-demo` → ultimo vince).
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
-| **PR Alpha** | **#108–#172** su `main` — registro `docs/architecture/alpha-pr-registry.md` (#171 ricerca liste; #172 epurazione doc) |
+| **PR su `main`** | **#108–#172** — registro `docs/architecture/pr-registry.md` (#171 ricerca liste; #172 epurazione doc) |
 | **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — `SYS-*`, `PROM-*`, `SURF-*` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
@@ -49,7 +49,7 @@
 - **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — promesse `SYS-CONTACTS`, `PROM-PERSONAL-CONTACTS`, `SURF-CONTACTS` · ADR `docs/decisions/address-based-messaging.md`
 - **Ricezione filtrata**: allow list personale `reception_allowlist` — sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ singola) — promesse `SYS-RECEPTION`, `PROM-RECEPTION-FILTER`, `SURF-ALLOWLIST`; toggle rapido anche da scheda profilo peer (tap avatar) — promesse `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE`
 - **Gruppi**: account `profile_kind = group` con identità propria; partecipazione **solo** allow list bidirezionale (no membership); shell senza inbox; erogazione automatica verso allow list del gruppo; UI autore (avatar + nome) in chat — promessa `SYS-GROUP` (PR #162)
-- **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` in Alpha); archivio **per owner** in `messages` (`owner_id`, `author_id`, `peer_profile_id`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
+- **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` senza federazione); archivio **per owner** in `messages` (`owner_id`, `author_id`, `peer_profile_id`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca liste on-demand — inbox, rubrica, persone consentite (`PROM-LIST-FILTER`, PR #132, #171)
 - **GIF / voice / location**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client
 - **Federazione**: outbox `queued` — attende bridge
@@ -63,7 +63,7 @@
 | Client | Flutter 3.44.x / Dart 3.12 |
 | Piattaforma | Supabase (Postgres, Auth, Realtime, Storage) |
 | Bridge | Python 3.12 + aiohttp (Fly.io) |
-| CI | GitHub Actions `deploy-alpha` |
+| CI | GitHub Actions — job `deploy-pages` |
 
 ---
 
@@ -85,7 +85,7 @@
 
 - **Bridge stateless**: `docs/decisions/bridge-stateless.md`
 - **Chat unificate** (nessuna distinzione interna/esterna): `docs/decisions/no-internal-external-chat-distinction.md`
-- **Dettaglio completo**: `docs/architecture/alpha-full-stack.md`
+- **Dettaglio completo**: `docs/architecture/full-stack.md`
 - **Modello caselle (mailbox)**: `docs/architecture/mailbox-inbox-outbox-spec.md` — archivio per owner + outbox sempre; promessa `SYS-MAILBOX` in `docs/specs/promises/system/` (PR #159)
 
 ---
@@ -96,7 +96,7 @@
 
 ```
 /workspace/
-├── client/                 # Client Flutter (fase Alpha — deploy demo su GitHub Pages)
+├── client/                 # Client Flutter — deploy demo su GitHub Pages
 ├── supabase/               # Migrazioni e config piattaforma
 ├── bridge-xmpp/            # Demone bridge XMPP (stub)
 ├── bridge-matrix/          # Demone bridge Matrix (stub)
@@ -144,7 +144,7 @@
 
 - Config: `supabase/config.toml`, `supabase/migrations/`, `deploy/supabase.json`
 - MCP agente: `execute_sql`, `apply_migration`, `list_migrations`
-- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web pubblico = sempre URL Alpha GitHub Pages; solo `localhost`/`127.0.0.1` usano origine corrente (dev agente). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** include `https://alfred-im.github.io/XmppTest/**`; **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
+- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web pubblico = sempre URL demo GitHub Pages; solo `localhost`/`127.0.0.1` usano origine corrente (dev agente). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** include `https://alfred-im.github.io/XmppTest/**`; **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
 
 ### Fly.io (`xmpptest`, `fra`)
 
@@ -170,7 +170,7 @@ Avvio container: `scripts/start-bridges.sh`.
 
 RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_profile`, `list_peer_messages`, `list_owner_messages`, `broadcast_message_to_allowlist`, `mark_peer_read`.
 
-Dettaglio schema, RLS, trigger: `docs/architecture/alpha-full-stack.md` §3.
+Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §3.
 
 ---
 
@@ -182,7 +182,7 @@ bash scripts/verify.sh           # obbligatorio prima di git push
 bash scripts/verify.sh --build   # + build web
 ```
 
-- CI: `.github/workflows/deploy-pages.yml` → `deploy-alpha` → GitHub Pages
+- CI: `.github/workflows/deploy-pages.yml` → `deploy-pages` → GitHub Pages
 - **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (deploy da PR)
 - E2E: `client/e2e/` (Playwright)
 - SQL smoke: `schema_smoke.sql`, `mailbox_*.sql`, `reception_allowlist_*.sql`, `group_schema_smoke.sql`, `group_delivery_smoke.sql`, `group_broadcast_smoke.sql`, `send_message_to_profile_smoke.sql`
@@ -191,7 +191,7 @@ bash scripts/verify.sh --build   # + build web
 
 ## 📊 Stato Corrente
 
-### Implementato (Alpha)
+### Implementato
 
 | Area | Stato |
 |------|-------|
@@ -206,7 +206,7 @@ bash scripts/verify.sh --build   # + build web
 
 ### Prossimi passi
 
-- Bridge XMPP/Matrix (consume `outbox`, `sync_cursors`) — `docs/architecture/alpha-full-stack.md`
+- Bridge XMPP/Matrix (consume `outbox`, `sync_cursors`) — `docs/architecture/full-stack.md`
 - Spunte federate via bridge
 
 ### Design system
@@ -218,8 +218,9 @@ bash scripts/verify.sh --build   # + build web
 
 ## 🔄 Ultima Revisione
 
-**Data**: 2026-07-08
+**Data**: 2026-07-09
 
+- Epurazione terminologia Alpha: prodotto stabile; demo di sviluppo su GitHub Pages; nessun deploy produzione; doc `full-stack.md`, `pr-registry.md`; `AuthRedirectUrl.devDemoDefault`
 - SDD registro promesse (#171, #172): `docs/specs/registry.md` — SYS/PROM/SURF; epurazione residui doc legacy
 - SYS-GROUP (#162): account gruppo, erogazione, broadcast singola riga, `original_author_id`, UI autore avatar+nome; doc hub + `groups-client.md`
 - SYS-RECEPTION (#161): allow list ricezione, gate server, UI «Persone consentite»; doc hub + semantica spunte ✓/✓✓
@@ -227,4 +228,4 @@ bash scripts/verify.sh --build   # + build web
 - Revisione precedente: sync PR #108–#153; posizione statica (#153); multi-account (#147/#152)
 - Revisione doc 2026-07-04: allineamento post-mailbox (#159), contratti promossi, INDICE/README
 
-**Riferimenti**: `docs/INDICE.md`, `docs/architecture/alpha-pr-registry.md`, `CHANGELOG.md`
+**Riferimenti**: `docs/INDICE.md`, `docs/architecture/pr-registry.md`, `CHANGELOG.md`

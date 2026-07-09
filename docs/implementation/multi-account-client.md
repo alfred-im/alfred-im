@@ -180,5 +180,5 @@ cd client && bash scripts/verify.sh
 
 - [auth-overlay-shell.md](../design/auth-overlay-shell.md)
 - [multi-account-single-active-gotrue-pr152.md](../fixes/multi-account-single-active-gotrue-pr152.md)
-- [alpha-full-stack.md](../architecture/alpha-full-stack.md) §2.3–2.4
+- [full-stack.md](../architecture/full-stack.md) §2.3–2.4
 - [flutter-inbox-stability.md](../fixes/flutter-inbox-stability.md) §3

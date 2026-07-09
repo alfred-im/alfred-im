@@ -52,7 +52,7 @@ Binding inbox UI (già su main da PR precedente): `HomeScreen` usa `ListenableBu
 
 - **Niente realtime in background** per account non in focus (badge/anteprima futuri rinviati fino a fix upstream o `AuthState.fromBroadcast`).
 - Breve latenza al cambio focus (restore + `list_inbox()`).
-- Accettabile per Alpha; UX switch resta istantanea lato navigazione.
+- Accettabile per lo scope attuale; UX switch resta istantanea lato navigazione.
 
 ---
 
@@ -64,7 +64,7 @@ bash scripts/integration-multi-account.sh
 ALFRED_BASE_URL=http://localhost:8081/XmppTest/ npx playwright test e2e/multi-account-messages.spec.ts --workers=1
 ```
 
-Test manuale multi-account su Alpha: confermato OK (2026-07-02).
+Test manuale multi-account su demo live: confermato OK (2026-07-02).
 
 ---
 

@@ -6,9 +6,18 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ## [Unreleased] - 2026-07-09
 
+### Documentazione — prodotto stabile, epurazione Alpha
+
+- Prodotto **stabile** — senza versionamento release (pubspec Flutter default invariato)
+- Demo di sviluppo su GitHub Pages — **non** produzione; nessun deploy produzione previsto
+- Rinominati `alpha-full-stack.md` → `full-stack.md`, `alpha-pr-registry.md` → `pr-registry.md`
+- CI: job `deploy-pages`, concurrency `pages-dev-demo`
+- Codice: `AuthRedirectUrl.devDemoDefault` (ex `alphaDefault`)
+- Spec/decisioni: «(Alpha)» → scope attuale dove era limitazione funzionale
+
 ### Corretto
 
-- **#174** — Redirect post-conferma email: client passa sempre URL Alpha; `SURF-AUTH-008`/`013`; Site URL Supabase `localhost:3000` resta canarino tecnico
+- **#174** — Redirect post-conferma email: client passa sempre URL demo; `SURF-AUTH-008`/`013`; Site URL Supabase `localhost:3000` resta canarino tecnico
 
 ### Aggiunto
 
@@ -18,12 +27,12 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 - **Registro promesse**: `docs/specs/registry.md` — SYSTEM / PRODUCT / SURFACE come ingresso contratti
 - **Metodo**: `docs/specs/README.md`; allineamento `.cursor-rules.md`, `AGENTS.md`, `check-spec-sync.sh`, PR template
-- **Cross-ref**: `PROJECT_MAP.md`, `alpha-full-stack.md`, `alpha-pr-registry.md`, `INDICE.md`, `SESSION_HANDOFF.md`, `implementation/*`, `design/*`, `decisions/*`
+- **Cross-ref**: `PROJECT_MAP.md`, `full-stack.md`, `pr-registry.md`, `INDICE.md`, `SESSION_HANDOFF.md`, `implementation/*`, `design/*`, `decisions/*`
 - **#172**: documentazione uniformata a ID SYS/PROM/SURF; rimossi residui metodo precedente
 
 ---
 
-## [3.0.0-alpha] - 2026-06-24
+## [2026-06-24] - 2026-06-24
 
 ### Aggiunto
 - **ADR bridge stateless**: bridge senza stato di business; verità su Supabase — `docs/decisions/bridge-stateless.md`
@@ -71,7 +80,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **Client**: schermata «Persone consentite», `ReceptionAllowlistController`, icona in `InboxPanel`
 - **Spec SDD**: `RECEPTION-ALLOWLIST` → `implemented`; delta `MAILBOX-SEND` REQ-004
 - **Test**: `reception_allowlist_schema_smoke.sql`, `reception_allowlist_gate_smoke.sql`; smoke mailbox con setup allowlist; `reception_allowlist_controller_test.dart`
-- **Doc**: hub (`INDICE`, `SESSION_HANDOFF`, `alpha-full-stack`, registro PR); semantica spunte a due livelli in spec + ADR
+- **Doc**: hub (`INDICE`, `SESSION_HANDOFF`, `full-stack`, registro PR); semantica spunte a due livelli in spec + ADR
 
 ### Documentazione (2026-07-04 — rimozione contenuto obsoleto)
 
@@ -97,7 +106,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - Contratti `contracts/rpc.md` e `contracts/schema.md` promossi a modello mailbox
 - ADR `address-based-messaging`, `no-internal-external-chat-distinction`, `server-as-reception` aggiornati
 - Spec MAILBOX-*: PR #159, tracciabilità smoke; `INBOX-SEARCH` → `MAILBOX-INBOX`
-- Registro PR: #154, #155, #160; fix riferimenti sezioni `alpha-full-stack` slim
+- Registro PR: #154, #155, #160; fix riferimenti sezioni `full-stack` slim
 
 ### Aggiunto (2026-07-04 — modello caselle mailbox, PR #159)
 
@@ -106,7 +115,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **Spec SDD**: `MAILBOX-CORE`, `MAILBOX-SEND`, `MAILBOX-INBOX`, `MAILBOX-READ` → `implemented`; `MSG-INBOX`/`MSG-SEND`/`MSG-READ` → `superseded`
 - **Client**: modelli e servizi allineati (`owner_id` realtime, spunte da date); integrazione multi-account estesa (delivered/read pipeline)
 - **Test SQL**: `mailbox_schema_smoke.sql`, `mailbox_send_smoke.sql`; aggiornato `schema_smoke.sql`
-- **Doc**: `PROJECT_MAP`, `alpha-full-stack`, `alpha-pr-registry`, `mailbox-inbox-outbox-spec`, `contracts/schema.md` / `rpc.md`
+- **Doc**: `PROJECT_MAP`, `full-stack`, `pr-registry`, `mailbox-inbox-outbox-spec`, `contracts/schema.md` / `rpc.md`
 
 ### Documentazione (2026-07-03 — REQ-ID MSG-INBOX + MSG-READ)
 
@@ -117,7 +126,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 - **REQ-ID** nel template + pilota `MSG-SEND.spec.md` (tabella tracciabilità)
 - **`contracts/schema.md`**: tabelle, enum, RLS, storage
-- **`alpha-full-stack.md` slim**: panoramica + link spec (niente duplicazione requisiti)
+- **`full-stack.md` slim**: panoramica + link spec (niente duplicazione requisiti)
 - **`.github/PULL_REQUEST_TEMPLATE.md`** + `scripts/check-spec-sync.sh`
 - `docs/specs/README.md` aggiornato a SDD v1
 
@@ -147,16 +156,16 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **`docs/specs/`**: metodo SDD (`README.md`, `_template.md`, `index.md`)
 - **Capability specs** `implemented`: MSG-INBOX (#130), MSG-SEND (#115/#126/#153), AUTH-MULTI (#140/#147/#152)
 - **Contratto RPC**: `docs/specs/contracts/rpc.md`
-- `INDICE.md`, `AGENTS.md`, `alpha-pr-registry.md` (colonna Spec); header verso spec su doc implementation/design
+- `INDICE.md`, `AGENTS.md`, `pr-registry.md` (colonna Spec); header verso spec su doc implementation/design
 
 ### Documentazione (2026-07-03 — revisione sync)
 
-- Allineamento PR **#108–#153** in `PROJECT_MAP`, `README`, `INDICE`, `alpha-pr-registry`
+- Allineamento PR **#108–#153** in `PROJECT_MAP`, `README`, `INDICE`, `pr-registry`
 - Fix stato obsoleto: `auth-bootstrap-gotrue-revoke`, `conversations-empty-diagnosis`, `SESSION_HANDOFF`
 - RPC canonica `send_message_to_profile` in doc voice/spunte; location in ADR messaging
 - Gate test: **70** test unit/widget in `verify.sh`
 
-### Alpha Flutter — PR #153 (condivisione posizione statica)
+### Flutter — PR #153 (condivisione posizione statica)
 
 - **`content_type=location`**: colonne `latitude`/`longitude` in `messages`; RPC `send_message_to_profile` a 10 parametri
 - **Invio**: pin in `ChatInputBar` → overlay full-screen → stream GPS → anteprima mappa OSM (`flutter_map`) → conferma **Invia posizione**
@@ -164,10 +173,10 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **Inbox**: preview `📍 Posizione` (`format_location_preview`)
 - **Coda**: `OutboundContentKind.location` con coordinate in retry
 - **CI**: retry deploy GitHub Pages (fino a 3 tentativi su errori transitori)
-- **Doc**: `docs/implementation/location-sharing.md`; `alpha-full-stack.md` §2.13
+- **Doc**: `docs/implementation/location-sharing.md`; `full-stack.md` §2.13
 - **Migrazioni**: `20260702120000`, `20260702120100`
 
-### Alpha Flutter — PR #152 (multi-account: una GoTrue attiva)
+### Flutter — PR #152 (multi-account: una GoTrue attiva)
 
 - **Runtime**: al massimo una `AccountSession` GoTrue in RAM (account in focus); manifest elenca tutti gli account aperti
 - **`setFocus`**: dispose sessione corrente (conserva `alfred_auth_{userId}`), restore nuovo account da manifest, `inbox.load()`
@@ -175,14 +184,14 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **Doc**: `docs/fixes/multi-account-single-active-gotrue-pr152.md`; ADR e implementation multi-account aggiornati
 - **E2E**: `multi-account-messages.spec.ts` — gate DB + ricezione UI dopo switch
 
-### Alpha Flutter — PR #147 (persistenza dichiarativa multi-account)
+### Flutter — PR #147 (persistenza dichiarativa multi-account)
 
 - **`AccountSession.persistOpenAccount`**: token dalla risposta HTTP / evento auth, non da `currentSession` globale
 - **`AccountManager`**: niente `_persistAllOpenAccounts`; `upsertAccount` / `removeAccount` per entry
 - **F5**: manifest = unica verità; restore solo account in focus (completato con #152 per runtime)
 - **Doc**: `docs/implementation/multi-account-persistence-redesign.md` — implementato
 
-### Alpha Flutter — PR #143 (multi-account: logout locale, chat, persistenza)
+### Flutter — PR #143 (multi-account: logout locale, chat, persistenza)
 
 - **Logout locale**: `AccountSession.close()` senza `signOut` GoTrue — solo `alfred_auth_{userId}`
 - **View per account**: `Map<userId, AccountViewState>`; `sanitizedForAccount()`; niente reset globale su `setFocus`
@@ -193,7 +202,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **Doc**: `docs/fixes/multi-account-chat-persistence-pr143.md`
 - **Follow-up**: persistenza (#147) e switch web (#152) + e2e multi-account
 
-### Alpha Flutter — PR #142 (auth bootstrap + PKCE)
+### Flutter — PR #142 (auth bootstrap + PKCE)
 
 - **Rimosso** `bootstrap.auth.signOut()` dopo login/signup — non revoca più il refresh token condiviso con il client dedicato
 - **`EphemeralPkceStorage`**: PKCE su client bootstrap effimero (recupero password senza crash null)
@@ -201,12 +210,12 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **Doc**: `docs/fixes/auth-bootstrap-gotrue-revoke.md`, `docs/SESSION_HANDOFF.md`, `docs/AGENT_DEBUG_ACCOUNTS.md`
 - **Logout locale**: `docs/decisions/single-device-logout-open.md` (implementato in #143)
 
-### Alpha Flutter — PR #141 (add-account parziale, superseded da #142 su signOut)
+### Flutter — PR #141 (add-account parziale, superseded da #142 su signOut)
 
 - **`_sessionFromAuthResponse`**: adozione sessione dedicata con access+refresh senza `restore()` immediato
 - **Residuo pre-#142**: `signOut` bootstrap nel `finally` ancora presente su main fino a merge #142
 
-### Alpha Flutter — PR #140 (multi-account sessioni parallele)
+### Flutter — PR #140 (multi-account sessioni parallele)
 
 - **Modello**: account aperto = sessione Supabase viva + realtime inbox; non bookmark + `setSession`
 - **`AccountManager` / `AccountSession`**: un `SupabaseClient` per account; servizi dati per-client
@@ -220,40 +229,40 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Documentazione (2026-06-28 — sync post-merge #126–#132)
 
-- Allineati `PROJECT_MAP.md`, `README.md`, `docs/INDICE.md`, `alpha-full-stack.md` — stato PR e date (tutto mergiato su `main`)
+- Allineati `PROJECT_MAP.md`, `README.md`, `docs/INDICE.md`, `full-stack.md` — stato PR e date (tutto mergiato su `main`)
 
-### Alpha Flutter — PR #132 (ricerca on-demand inbox)
+### Flutter — PR #132 (ricerca on-demand inbox)
 
 - **`InboxPanel`**: barra «Cerca messaggi» nascosta di default; icona lente apre con focus; chiusura via `dismissSearch()` (toggle lente + `TapRegion.onTapOutside`); filtro azzerato alla chiusura
 - **Layout**: mobile = lente in header accanto a Contatti; desktop = riga «Conversazioni» + lente
 - **`HomeScreen`**: `ValueKey(userId)` su `InboxPanel` — reset stato ricerca al cambio account
 - **Design**: `docs/design/inbox-search-toggle.md`
 
-### Alpha Flutter — PR #131 (sidebar logout)
+### Flutter — PR #131 (sidebar logout)
 
 - **`AccountSidebar`**: rimossa spunta verde fissa sull'account attivo; logout spostato in card profilo (icona a destra del nome)
 - Rimossa voce «Esci» in fondo alla sidebar (logout unico punto di uscita nella card)
 
-### Alpha Flutter — PR #130 (inbox solo messaggi)
+### Flutter — PR #130 (inbox solo messaggi)
 
 - **Drop `inbox_threads`**: inbox = `list_inbox()` aggregazione on-read su `messages` (non vista materializzata, non cache con FK)
 - **RPC peer-based**: `list_peer_messages`, `mark_peer_read` (no `thread_id`)
 - **Client**: `ChatPeer` per account; niente bozza/ComposeTarget/InboxThread
 - Migrazione `20260627230000_messages_only_inbox.sql`
 
-### Alpha Flutter — PR #129 (messaggistica per indirizzo, iterazione precedente)
+### Flutter — PR #129 (messaggistica per indirizzo, iterazione precedente)
 - **Modello message-centric**: `inbox_threads`, messaggi con `sender_id` + `recipient_profile_id`; drop `conversations`
 - **RPC**: `list_inbox`, `list_thread_messages`, `send_message_to_profile`, `find_profile_by_username`, `mark_thread_read`
 - **Client**: `InboxController`, bozza compose (FAB → username), invio senza rubrica
 - **Fix invio**: rimosso overload duplicato `send_message_to_profile(uuid,text,text)` — PostgREST HTTP 300
 - **ADR**: `docs/decisions/address-based-messaging.md`
 
-### CI / deploy Alpha (2026-06-27)
-- **Workflow unificato `deploy-alpha`**: ogni PR su `main` (path `client/**`) e ogni push a `main` pubblicano su https://alfred-im.github.io/XmppTest/ — ambiente **sviluppo**, non produzione
-- Rimossi job `deploy-preview` / `deploy-prod`; concurrency `pages-alpha`
+### CI / deploy demo di sviluppo (2026-06-27)
+- **Workflow unificato `deploy-pages`**: ogni PR su `main` (path `client/**`) e ogni push a `main` pubblicano su https://alfred-im.github.io/XmppTest/ — ambiente **sviluppo**, non produzione
+- Rimossi job `deploy-preview` / `deploy-prod`; concurrency `pages-dev-demo`
 - **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (default solo `main` → errore `environment protection rules` su PR)
 
-### Alpha Flutter — PR #126 (note vocali in chat)
+### Flutter — PR #126 (note vocali in chat)
 - **`content_type=voice`**: `duration_seconds`, `media_mime`, `media_size_bytes`, `media_url` — formato canonico **WebM/Opus** (`audio/webm`)
 - Migrazioni `20260627120000` + `20260627120100` — applicate su progetto cloud
 - Client: `VoiceRecordingService`, transcode IO (FFmpeg), `VoiceMessageContent` (waveform + `just_audio`), gesti hold/swipe in `ChatInputBar`
@@ -261,7 +270,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - Bucket `chat-media`: esteso a `audio/webm`, limite 15 MB
 - Preview inbox: `🎤 m:ss`
 
-### Alpha Flutter — PR #127 (processo analyze, branch separata)
+### Flutter — PR #127 (processo analyze, branch separata)
 - **`client/scripts/verify.sh`**: `pub get` → `analyze` → `test` (opzionale `--build`)
 - Allineamento `.cursor-rules.md` e CI al gate `flutter analyze` (zero issue, incluso livello `info`)
 
@@ -269,51 +278,51 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **ADR** [no-internal-external-chat-distinction.md](docs/decisions/no-internal-external-chat-distinction.md) — vietata distinzione chat interna/esterna a tutti i livelli (PR #124)
 - **Design** [conversation-bottom-anchor.md](docs/design/conversation-bottom-anchor.md) — specifica aggancio al fondo conversazione
 
-### Alpha Flutter — PR #125 (aggancio al fondo)
+### Flutter — PR #125 (aggancio al fondo)
 - **`AnchoredMessageList`**: `ListView` `reverse: true`, soglia aggancio 48 px, pulsante riaggancio + badge
 - **`ConversationScrollAnchor`**: logica pura in `utils/conversation_scroll_anchor.dart`
 - Integrato in `ChatPanel` — comportamento unico per tutte le conversazioni (ADR chat unificate)
 - Rimosso sottotitolo header dipendente da `protocol`
 - Test: `conversation_scroll_anchor_test.dart`, `anchored_message_list_test.dart`
 
-### Documentazione (2026-06-24 — sync PR Alpha #108–#114)
-- **`docs/architecture/alpha-pr-registry.md`**: registro PR → feature → documenti da aggiornare
+### Documentazione (2026-06-24 — sync PR su main #108–#114)
+- **`docs/architecture/pr-registry.md`**: registro PR → feature → documenti da aggiornare
 - **`docs/fixes/flutter-inbox-stability.md`**: fix PR #113/#114 (race auth + ChangeNotifierProxyProvider)
-- Allineati PROJECT_MAP, CHANGELOG, INDICE, README, `alpha-full-stack.md`
+- Allineati PROJECT_MAP, CHANGELOG, INDICE, README, `full-stack.md`
 
-### Alpha Flutter — PR #115 (GIF in chat)
+### Flutter — PR #115 (GIF in chat)
 - **Messaggi GIF**: `messages.content_type` (`text`|`gif`), `messages.media_url`
 - Migrazione `20260624230000_message_gif_support.sql` — applicata su progetto cloud
 - Storage bucket `chat-media` (solo `image/gif`, 10 MB, RLS per cartella utente)
 - Client: `MessageMediaService`, picker GIF in `ChatInputBar`, rendering in `MessageBubble`
 
-### Alpha Flutter — PR #114 (fix provider listen)
+### Flutter — PR #114 (fix provider listen)
 - **`ChangeNotifierProxyProvider`** al posto di `ProxyProvider` per Conversations/Contacts/Profile
 - Test widget `conversations_provider_listen_test.dart` + e2e `inbox-load.spec.ts`
 
-### Alpha Flutter — PR #113 (fix inbox auth race)
+### Flutter — PR #113 (fix inbox auth race)
 - **`waitForSupabaseSessionReady()`** dopo `Supabase.initialize` prima delle RPC
 - `ConversationsController`: realtime dopo primo load; timeout 30s; UI errore + Riprova
 - Gate `sessionReady` su `ChangeNotifierProxyProvider` in `main.dart`
 
-### Alpha Flutter — PR #112 (inbox performance)
+### Flutter — PR #112 (inbox performance)
 - **RPC `list_conversations()`**: inbox completa in un round-trip (display name server-side)
 - Migrazione `20260624220000_list_conversations_rpc.sql` — applicata su progetto cloud
 - Client: `ConversationService` usa RPC; `Conversation.fromListRpcRow`
 
-### Alpha Flutter — PR #111 (multi-account)
+### Flutter — PR #111 (multi-account)
 - Switch account: persist refresh token; `tokenRefreshed`; flusso **Aggiungi account**
 - Ripristino sessione se switch fallisce
 
-### Alpha Flutter — PR #110 (GitHub Pages)
+### Flutter — PR #110 (GitHub Pages)
 - Script passkeys `bundle.js` in `client/web/index.html` — fix schermo bianco
 
-### Alpha Flutter — PR #109 (app completa + piattaforma)
+### Flutter — PR #109 (app completa + piattaforma)
 - Client Flutter collegato a Supabase: auth, contatti, chat realtime, profilo
 - Schema dominio `20260624200000_alfred_domain_schema.sql` + RLS + RPC base
-- Documentazione: `docs/architecture/alpha-full-stack.md`
+- Documentazione: `docs/architecture/full-stack.md`
 
-### Alpha Flutter — PR #108 (UI chat base)
+### Flutter — PR #108 (UI chat base)
 - Layout conversazioni + chat, tema Alfred, workflow deploy Pages
 
 

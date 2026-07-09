@@ -12,7 +12,7 @@ Documento per AI.
 
 | Sintomo | Contesto |
 |---------|----------|
-| «Sessione scaduta» subito dopo **Aggiungi account** / login | Client Alpha, multi-account |
+| «Sessione scaduta» subito dopo **Aggiungi account** / login | Client, multi-account |
 | Logout di **tutti** i dispositivi quando un client fa `signOut` o `POST /auth/v1/logout` | Test agente, stesso account su più browser |
 | Al riavvio browser, account salvato non si ripristina | Refresh token revocato ma ancora in `SharedPreferences` |
 | Recupero password → crash client «null value» | Bootstrap senza `pkceAsyncStorage` con flusso PKCE default |

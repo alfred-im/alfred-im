@@ -49,7 +49,7 @@ Account probe rimossi da Auth il 2026-07-09.
 
 ## Account agente (creati 2026-06-29)
 
-Progetto Supabase: `tvwpoxxcqwphryvuyqzu` (stesso dell'app Alpha).
+Progetto Supabase: `tvwpoxxcqwphryvuyqzu` (stesso della demo live).
 
 | Username | Email | Password | UUID |
 |----------|-------|----------|------|

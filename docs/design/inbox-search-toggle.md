@@ -5,7 +5,7 @@
 **Data**: 2026-06-28  
 **Status**: Evidenza UX — implementata in client Flutter (PR #132, refactor #171)  
 **Categoria**: Inbox, UX, layout  
-**Correlata**: [alpha-full-stack.md](../architecture/alpha-full-stack.md) §2.12
+**Correlata**: [full-stack.md](../architecture/full-stack.md) §2.12
 
 ---
 
@@ -41,7 +41,7 @@ Apertura: tap lente → barra visibile + `requestFocus` sul campo.
 
 **Vietato**: liste di callback sparse in parent per chiudere la ricerca (contatti, drawer, selezione peer, ecc.). Il tap-outside copre le interazioni utente senza enumerare le azioni.
 
-### Non coperto in Alpha (follow-up)
+### Non coperto (scope attuale) (follow-up)
 
 - Tasto **Indietro** (Android) / **Escape** (web)
 - Navigazione programmatica senza tap utente
@@ -66,6 +66,6 @@ Estensioni future devono usare `CollapsibleListSearch` (o API equivalente), non 
 
 ## Riferimenti
 
-- [alpha-full-stack.md](../architecture/alpha-full-stack.md) — §2.12
+- [full-stack.md](../architecture/full-stack.md) — §2.12
 - `PROJECT_MAP.md` — layout inbox
 - PR #132

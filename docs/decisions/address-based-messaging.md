@@ -22,7 +22,7 @@
 
 ### Indirizzamento
 
-| Tipo | Formato | Esempio | Stato Alpha |
+| Tipo | Formato | Esempio | Stato attuale |
 |------|---------|---------|-------------|
 | Alfred interno | `username` | `mario_rossi` | ✅ Supportato |
 | Esterno federato | `username@server` | `mario@dominio.it` | ⏸ `unsupported` fino ai bridge |
@@ -59,7 +59,7 @@ L’inbox **non** è una tabella né una vista materializzata. È il risultato d
 
 1. **Fonte di verità**: `messages` con `owner_id = auth.uid()` (+ join `profiles` per il nome)
 2. **Calcolo**: `list_inbox()` — `GROUP BY peer_profile_id`, ultimo messaggio, conteggio unread (`read_at IS NULL` su righe in entrata)
-3. **Indici**: su `(owner_id, peer_profile_id, created_at)` — sufficienti per Alpha
+3. **Indici**: su `(owner_id, peer_profile_id, created_at)` — sufficienti per lo scope attuale
 4. **Realtime inbox**: subscribe su `messages` con filtro `owner_id = io`; reload `list_inbox()` su INSERT
 5. **Realtime chat**: filtro server `owner_id = io`; filtro client `peer_profile_id` (Realtime EQ singola colonna)
 
@@ -112,4 +112,4 @@ Equivalente concettuale: una `VIEW` SQL normale (non `MATERIALIZED`). L’RPC è
 ## Riferimenti codice
 
 - Client: `ChatPeer`, `InboxController`, `MessagesController`, `ComposeService`
-- Architettura: `docs/architecture/alpha-full-stack.md`
+- Architettura: `docs/architecture/full-stack.md`

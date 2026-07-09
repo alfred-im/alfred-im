@@ -19,7 +19,7 @@ import {
 import { E2E_TIMEOUT } from './helpers/timeouts';
 
 /**
- * Flusso utente (mobile, Alpha):
+ * Flusso utente (mobile, demo live):
  * 1. pulisci dati → login account 1
  * 2. aggiungi account 2 → compaiono 2 account (sezione «Altri account»)
  * 3. F5 → devono restare 2 account (se il 2° sparisce, «Altri account» non c’è)

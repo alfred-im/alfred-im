@@ -3,26 +3,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:alfred_client/utils/auth_redirect_url.dart';
 
 void main() {
-  test('resolve returns Alpha default off-web', () {
-    expect(AuthRedirectUrl.resolve(), AuthRedirectUrl.alphaDefault);
+  test('resolve returns dev demo default off-web', () {
+    expect(AuthRedirectUrl.resolve(), AuthRedirectUrl.devDemoDefault);
   });
 
   group('resolveForOrigin', () {
-    test('GitHub Pages origin → alphaDefault', () {
+    test('GitHub Pages origin → devDemoDefault', () {
       expect(
         AuthRedirectUrl.resolveForOrigin(
           Uri.parse('https://alfred-im.github.io/XmppTest/'),
         ),
-        AuthRedirectUrl.alphaDefault,
+        AuthRedirectUrl.devDemoDefault,
       );
     });
 
-    test('GitHub Pages without trailing slash → alphaDefault', () {
+    test('GitHub Pages without trailing slash → devDemoDefault', () {
       expect(
         AuthRedirectUrl.resolveForOrigin(
           Uri.parse('https://alfred-im.github.io/XmppTest'),
         ),
-        AuthRedirectUrl.alphaDefault,
+        AuthRedirectUrl.devDemoDefault,
       );
     });
 
@@ -44,12 +44,12 @@ void main() {
       );
     });
 
-    test('host non locale → alphaDefault', () {
+    test('host non locale → devDemoDefault', () {
       expect(
         AuthRedirectUrl.resolveForOrigin(
           Uri.parse('https://preview.example.com/app/'),
         ),
-        AuthRedirectUrl.alphaDefault,
+        AuthRedirectUrl.devDemoDefault,
       );
     });
   });
