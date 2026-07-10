@@ -40,6 +40,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **PROM-REALTIME-OWNER** | Realtime filtrato su `owner_id` | `implemented` | [PROM-REALTIME-OWNER.md](./promises/product/PROM-REALTIME-OWNER.md) |
 | **PROM-GROUP-AUTHOR-DISPLAY** | Autore contenuto in chat gruppo | `implemented` | [PROM-GROUP-AUTHOR-DISPLAY.md](./promises/product/PROM-GROUP-AUTHOR-DISPLAY.md) |
 | **PROM-GROUP-TICKS** | Spunte limitate al rapporto con il gruppo | `implemented` | [PROM-GROUP-TICKS.md](./promises/product/PROM-GROUP-TICKS.md) |
+| **PROM-SHAREABLE-LINK** | Link condivisibili stabili (`#indirizzo`, `#indirizzo/chat`) | `implemented` | [PROM-SHAREABLE-LINK.md](./promises/product/PROM-SHAREABLE-LINK.md) |
 
 ---
 
@@ -47,15 +48,15 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 
 | Superficie ID | Titolo | Stato | Promesse principali | File |
 |---------------|--------|-------|---------------------|------|
-| **SURF-AUTH** | Overlay login/registrazione | `implemented` | PROM-MULTI-ACCOUNT | [SURF-AUTH.md](./surfaces/SURF-AUTH.md) |
+| **SURF-AUTH** | Overlay login/registrazione | `implemented` | PROM-MULTI-ACCOUNT, PROM-SHAREABLE-LINK | [SURF-AUTH.md](./surfaces/SURF-AUTH.md) |
 | **SURF-APP-SHELL** | `HomeScreen` sempre visibile | `implemented` | PROM-MULTI-ACCOUNT | (in SURF-AUTH) |
-| **SURF-ACCOUNT-SIDEBAR** | Manifest account in sidebar | `implemented` | PROM-MULTI-ACCOUNT, PROM-PROFILE-IDENTITY | [SURF-ACCOUNT-SIDEBAR.md](./surfaces/SURF-ACCOUNT-SIDEBAR.md) |
+| **SURF-ACCOUNT-SIDEBAR** | Manifest account in sidebar | `implemented` | PROM-MULTI-ACCOUNT, PROM-PROFILE-IDENTITY, PROM-SHAREABLE-LINK | [SURF-ACCOUNT-SIDEBAR.md](./surfaces/SURF-ACCOUNT-SIDEBAR.md) |
 | **SURF-INBOX** | Lista conversazioni | `implemented` | PROM-LIST-FILTER, PROM-REALTIME-OWNER | [SURF-INBOX.md](./surfaces/SURF-INBOX.md) |
-| **SURF-CHAT** | Conversazione 1:1 | `implemented` | PROM-CHAT-PEER-KEY, PROM-MESSAGE-STATUS, PROM-OUTBOUND-SEND | [SURF-CHAT.md](./surfaces/SURF-CHAT.md) |
+| **SURF-CHAT** | Conversazione 1:1 | `implemented` | PROM-CHAT-PEER-KEY, PROM-MESSAGE-STATUS, PROM-OUTBOUND-SEND, PROM-SHAREABLE-LINK | [SURF-CHAT.md](./surfaces/SURF-CHAT.md) |
 | **SURF-CONTACTS** | Rubrica | `implemented` | PROM-LIST-FILTER, PROM-PERSONAL-CONTACTS | [SURF-CONTACTS.md](./surfaces/SURF-CONTACTS.md) |
 | **SURF-ALLOWLIST** | Persone consentite | `implemented` | PROM-LIST-FILTER, PROM-RECEPTION-FILTER | [SURF-ALLOWLIST.md](./surfaces/SURF-ALLOWLIST.md) |
 | **SURF-PROFILE** | Modifica profilo proprio | `implemented` | PROM-PROFILE-IDENTITY, SYS-PROFILE | [SURF-PROFILE.md](./surfaces/SURF-PROFILE.md) |
-| **SURF-PEER-PROFILE** | Scheda profilo peer | `implemented` | PROM-PEER-PROFILE, PROM-OVERLAY-DISMISS | [SURF-PEER-PROFILE.md](./surfaces/SURF-PEER-PROFILE.md) |
+| **SURF-PEER-PROFILE** | Scheda profilo peer | `implemented` | PROM-PEER-PROFILE, PROM-OVERLAY-DISMISS, PROM-SHAREABLE-LINK | [SURF-PEER-PROFILE.md](./surfaces/SURF-PEER-PROFILE.md) |
 | **SURF-GROUP-SHELL** | Shell account gruppo | `implemented` | PROM-MULTI-ACCOUNT, SYS-GROUP, SURF-GROUP-HOME | [SURF-GROUP-SHELL.md](./surfaces/SURF-GROUP-SHELL.md) |
 | **SURF-GROUP-HOME** | Home account gruppo | `implemented` | SYS-GROUP, SYS-PROFILE, PROM-PROFILE-IDENTITY, PROM-GROUP-AUTHOR-DISPLAY | [SURF-GROUP-HOME.md](./surfaces/SURF-GROUP-HOME.md) |
 | **SURF-GROUP-CONVERSATION** | Chat gruppo + erogazione UI | `implemented` | PROM-GROUP-AUTHOR-DISPLAY, PROM-GROUP-TICKS, SURF-GROUP-HOME | [SURF-GROUP-CONVERSATION.md](./surfaces/SURF-GROUP-CONVERSATION.md) |

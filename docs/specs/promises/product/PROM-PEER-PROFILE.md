@@ -68,7 +68,7 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 | Elemento | Responsabilità |
 |----------|----------------|
 | `showPeerProfileOverlay` | Entry point; skip self; `showGeneralDialog` fullscreen |
-| `PeerProfileOverlay` | UI identità + switch Allow + pulsante rubrica + CTA «Inizia a chattare» sticky in basso |
+| `PeerProfileOverlay` | UI identità + switch Allow + pulsante rubrica + CTA «Inizia a chattare» sticky in basso + **Condividi** (share di sistema — [PROM-SHAREABLE-LINK](./PROM-SHAREABLE-LINK.md)) |
 | `ProfileAvatar.onTap` | Tap avatar riusabile |
 | `ContactsController` | `contactForProfileId`, `removeInternalByProfileId` |
 | `ReceptionAllowlistController` | `removeByProfileId`, `addProfile` |
@@ -125,3 +125,4 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 | [PROM-OVERLAY-DISMISS](./PROM-OVERLAY-DISMISS.md) | Chiusura overlay |
 | [PROM-RECEPTION-FILTER](./PROM-RECEPTION-FILTER.md) | Semantica Allow |
 | [PROM-PERSONAL-CONTACTS](./PROM-PERSONAL-CONTACTS.md) | Semantica rubrica |
+| [PROM-SHAREABLE-LINK](./PROM-SHAREABLE-LINK.md) | Condividi profilo peer (overlay) |

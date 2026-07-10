@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +10,7 @@ import '../providers/auth_controller.dart';
 import '../providers/contacts_controller.dart';
 import '../providers/reception_allowlist_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/shareable_link.dart';
 import 'profile_identity.dart';
 
 /// Apre la scheda profilo peer se [profile] non è l'account in focus.
@@ -68,6 +71,49 @@ class PeerProfileOverlay extends StatefulWidget {
 class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
   bool _allowBusy = false;
   bool _rubricaBusy = false;
+  late ProfileSummary _profile;
+  bool _hydrateStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _profile = widget.profile;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_hydrateStarted) return;
+    _hydrateStarted = true;
+    unawaited(_hydrateProfileFromServer());
+  }
+
+  Future<void> _hydrateProfileFromServer() async {
+    final AuthController auth;
+    try {
+      auth = context.read<AuthController>();
+    } on ProviderNotFoundException {
+      return;
+    }
+
+    final session = auth.focusedSession;
+    if (session == null) return;
+
+    try {
+      final fromServer =
+          await session.profileService.findById(widget.profile.id);
+      if (!mounted || fromServer == null) return;
+      setState(() => _profile = widget.profile.mergeDisplay(fromServer));
+    } catch (_) {
+      // Overlay resta utilizzabile con i dati parziali già noti.
+    }
+  }
+
+  Future<ProfileSummary> _profileForActions() async {
+    if (_profile.hasUsername) return _profile;
+    await _hydrateProfileFromServer();
+    return _profile;
+  }
 
   Future<void> _setAllowed(bool value) async {
     final allowlist = context.read<ReceptionAllowlistController?>();
@@ -76,9 +122,9 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     setState(() => _allowBusy = true);
     try {
       if (value) {
-        await allowlist.addProfile(widget.profile);
+        await allowlist.addProfile(_profile);
       } else {
-        await allowlist.removeByProfileId(widget.profile.id);
+        await allowlist.removeByProfileId(_profile.id);
       }
     } catch (e) {
       if (mounted) {
@@ -100,7 +146,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
       if (inRubrica) {
         await contacts.removeInternalByProfileId(widget.profile.id);
       } else {
-        await contacts.addInternal(widget.profile);
+        await contacts.addInternal(_profile);
       }
     } catch (e) {
       if (mounted) {
@@ -113,19 +159,32 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     }
   }
 
-  void _startChat() {
+  Future<void> _startChat() async {
     final auth = context.read<AuthController>();
+    final profile = await _profileForActions();
+    if (!mounted) return;
     final peer = ChatPeer.fromProfile(
-      profile: widget.profile,
-      address: widget.profile.username,
+      profile: profile,
+      address: profile.username,
     );
     Navigator.of(context).pop();
     auth.openConversation(peer);
   }
 
+  Future<void> _shareProfile({Rect? sharePositionOrigin}) async {
+    final profile = await _profileForActions();
+    if (!mounted) return;
+    return shareShareableProfileLink(
+      context,
+      profile,
+      shareTitle: profile.displayName,
+      sharePositionOrigin: sharePositionOrigin,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final profile = widget.profile;
+    final profile = _profile;
     final allowlist = context.watch<ReceptionAllowlistController?>();
     final contacts = context.watch<ContactsController?>();
 
@@ -142,6 +201,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
             _ProfileHero(
               profile: profile,
               onClose: () => Navigator.of(context).pop(),
+              onShare: _shareProfile,
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -227,7 +287,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: _startChat,
+                  onPressed: () => unawaited(_startChat()),
                   style: FilledButton.styleFrom(
                     backgroundColor: AlfredColors.charcoal,
                     foregroundColor: AlfredColors.textOnDark,
@@ -252,10 +312,12 @@ class _ProfileHero extends StatelessWidget {
   const _ProfileHero({
     required this.profile,
     required this.onClose,
+    required this.onShare,
   });
 
   final ProfileSummary profile;
   final VoidCallback onClose;
+  final void Function({Rect? sharePositionOrigin}) onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -364,6 +426,24 @@ class _ProfileHero extends StatelessWidget {
               icon: const Icon(Icons.close),
               color: AlfredColors.textOnDark,
               tooltip: 'Chiudi',
+            ),
+          ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Builder(
+              builder: (buttonContext) => IconButton(
+                onPressed: () {
+                  final box = buttonContext.findRenderObject() as RenderBox?;
+                  final origin = box != null
+                      ? box.localToGlobal(Offset.zero) & box.size
+                      : null;
+                  onShare(sharePositionOrigin: origin);
+                },
+                icon: const Icon(Icons.share_outlined),
+                color: AlfredColors.textOnDark,
+                tooltip: 'Condividi',
+              ),
             ),
           ),
         ],

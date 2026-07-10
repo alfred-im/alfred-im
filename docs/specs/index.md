@@ -35,6 +35,7 @@
 | PROM-REALTIME-OWNER | [promises/product/PROM-REALTIME-OWNER.md](./promises/product/PROM-REALTIME-OWNER.md) |
 | PROM-GROUP-AUTHOR-DISPLAY | [promises/product/PROM-GROUP-AUTHOR-DISPLAY.md](./promises/product/PROM-GROUP-AUTHOR-DISPLAY.md) |
 | PROM-GROUP-TICKS | [promises/product/PROM-GROUP-TICKS.md](./promises/product/PROM-GROUP-TICKS.md) |
+| PROM-SHAREABLE-LINK | [promises/product/PROM-SHAREABLE-LINK.md](./promises/product/PROM-SHAREABLE-LINK.md) |
 
 ---
 

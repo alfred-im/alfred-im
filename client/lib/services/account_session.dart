@@ -440,22 +440,24 @@ class AccountSession {
     SupabaseClient? client,
     MessageService? messageService,
     MessageMediaService? messageMediaService,
+    ProfileService? profileService,
   }) async {
     final resolvedClient = client ?? createClient(profile.id);
     final inboxService = InboxService(resolvedClient);
-    final profileService = ProfileService(resolvedClient);
+    final resolvedProfileService =
+        profileService ?? ProfileService(resolvedClient);
     final session = AccountSession._(
       userId: profile.id,
       client: resolvedClient,
       inboxService: inboxService,
       messageService: messageService ?? MessageService(resolvedClient),
-      profileService: profileService,
+      profileService: resolvedProfileService,
       contactService: ContactService(resolvedClient),
       receptionAllowlistService: ReceptionAllowlistService(resolvedClient),
       profileAvatarService: ProfileAvatarService(resolvedClient),
       messageMediaService:
           messageMediaService ?? MessageMediaService(resolvedClient),
-      composeService: ComposeService(profileService: profileService),
+      composeService: ComposeService(profileService: resolvedProfileService),
       inboxController: InboxController(
         userId: profile.id,
         inboxService: inboxService,

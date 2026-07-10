@@ -5,6 +5,7 @@ import '../providers/auth_controller.dart';
 import '../providers/contacts_controller.dart';
 import '../providers/profile_controller.dart';
 import '../providers/reception_allowlist_controller.dart';
+import '../providers/shareable_link_controller.dart';
 import '../services/supabase_bootstrap.dart';
 import 'screens/app_shell.dart';
 import 'theme/alfred_theme.dart';
@@ -23,6 +24,9 @@ class AlfredApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (_) => AuthController()..initialize(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ShareableLinkController(),
         ),
         ChangeNotifierProxyProvider<AuthController, ContactsController?>(
           create: (_) => null,
