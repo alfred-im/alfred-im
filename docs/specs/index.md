@@ -14,6 +14,8 @@
 | SYS-PROFILE | [promises/system/SYS-PROFILE.md](./promises/system/SYS-PROFILE.md) |
 | SYS-CONTACTS | [promises/system/SYS-CONTACTS.md](./promises/system/SYS-CONTACTS.md) |
 | SYS-RECEPTION | [promises/system/SYS-RECEPTION.md](./promises/system/SYS-RECEPTION.md) |
+| SYS-ACCOUNT-BOUNDARY | [promises/system/SYS-ACCOUNT-BOUNDARY.md](./promises/system/SYS-ACCOUNT-BOUNDARY.md) |
+| SYS-DELIVERY | [promises/system/SYS-DELIVERY.md](./promises/system/SYS-DELIVERY.md) |
 | Contratti DDL/RPC | [contracts/schema.md](./contracts/schema.md) · [contracts/rpc.md](./contracts/rpc.md) |
 
 ---

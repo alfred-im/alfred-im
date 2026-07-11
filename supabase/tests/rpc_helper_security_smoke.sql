@@ -29,10 +29,10 @@ BEGIN
 
   IF has_function_privilege(
     'authenticated',
-    'public.erogate_group_message(uuid, uuid, uuid, public.contact_protocol, text, public.message_content_type, text, integer, text, bigint, double precision, double precision)',
+    'alfred_delivery.erogate_group_message(uuid, uuid, uuid, public.contact_protocol, text, public.message_content_type, text, integer, text, bigint, double precision, double precision)',
     'EXECUTE'
   ) THEN
-    RAISE EXCEPTION 'erogate_group_message must not be executable by authenticated';
+    RAISE EXCEPTION 'alfred_delivery.erogate_group_message must not be executable by authenticated';
   END IF;
 
   RAISE NOTICE 'rpc_helper_security_smoke_ok';

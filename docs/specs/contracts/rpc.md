@@ -1,8 +1,8 @@
 # Contratto RPC — messaggistica
 
 **Ultima revisione**: 2026-07-07  
-**Status**: `implemented` su `main` (migrazioni fino a `20260707190000`, incl. revoke helper RPC)  
-**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md)
+**Status**: `implemented` su `main` (migrazioni fino a `20260711190000`, incl. account boundary delivery)  
+**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md)
 
 Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
 
@@ -40,14 +40,15 @@ send_message_to_profile(
 
 Errori comuni: `not authenticated`, `cannot message yourself`, `recipient not found`, `empty message`, `unsupported content_type`.
 
-Semantica mailbox (transazione unica):
+Semantica mailbox ([SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md) — RPC account solo confine mittente):
 
 1. INSERT copia mittente (`owner_id = author_id = auth.uid()`), λ nuovo, date null
-2. INSERT `outbox` (`protocol = internal`, payload con λ)
-3. **Gate allow list** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): mittente ∈ `reception_allowlist` del destinatario?
-4. Se **sì**: INSERT copia destinatario (stesso λ, stesso contenuto/`media_url`); UPDATE mittente `delivered_at = now()`
-5. Se **no**: skip copia destinatario; `delivered_at` resta null; outbox `completed` (rifiuto silenzioso)
-6. RETURN riga mittente (sempre successo se validazione ok)
+2. INSERT `outbox` (`protocol = internal`, `event_kind = deliver`, `status = queued`)
+3. `alfred_delivery.process_outbox` (worker, stessa transazione):
+   - **Gate allow list** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): mittente ∈ `reception_allowlist` del destinatario?
+   - Se **sì**: INSERT copia destinatario; UPDATE mittente `delivered_at = now()`
+   - Se **no**: skip copia destinatario; `delivered_at` resta null; outbox `completed` (rifiuto silenzioso)
+4. RETURN riga mittente (sempre successo se validazione ok)
 
 Lista allow vuota → passo 3 sempre **no** (nessuno consentito).
 
@@ -57,23 +58,22 @@ Idempotenza: stesso `p_client_message_id` → stessa riga mittente (no duplicati
 
 **Helper**: `is_sender_allowed_for_reception(owner_id, sender_profile_id) → boolean` — migrazione `20260704130000`; **helper interno** (non chiamabile da client).
 
-**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate).
+**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate), `20260711190000` (delivery plane).
 
 ### Destinatario gruppo (SYS-GROUP)
 
-Se `p_recipient_profile_id` ha `profile_kind = group`:
+Se `p_recipient_profile_id` ha `profile_kind = group` — recapito via worker [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md):
 
-1. Stessi passi 1–2 (copia mittente umano, outbox, λ)
-2. Gate allow list bidirezionale mittente ↔ gruppo
-3. Se **sì**: INSERT storico gruppo (`owner_id = gruppo`, `author_id = mittente`, **`original_author_id = mittente`**, `peer_profile_id = mittente`); `delivered_at` su copia mittente
-4. **Erogazione automatica** (stessa transazione): per ogni persona in `reception_allowlist(owner_id = gruppo)` con gate gruppo ↔ persona → INSERT riga erogata (`author_id = gruppo`, `original_author_id = mittente`, `peer_profile_id = gruppo`, stesso λ)
-5. Erogazione fallita per singolo partecipante: skip silenzioso; **non** altera `delivered_at` mittente oltre passo 3
+1. Stessi passi 1–2 (solo copia mittente umano + outbox)
+2. Worker: gate allow list bidirezionale mittente ↔ gruppo
+3. Se **sì**: INSERT storico gruppo; `delivered_at` su copia mittente; erogazione automatica verso allow list gruppo
+4. Erogazione fallita per singolo partecipante: skip silenzioso; **non** altera `delivered_at` mittente oltre passo 3
 
 Invio con `auth.uid()` = gruppo verso persona: `author_id = gruppo`, **`original_author_id = gruppo`**; gate e recapito come chat private.
 
 ### `broadcast_message_to_allowlist` (SYS-GROUP)
 
-Solo account `profile_kind = group`. **Una** riga archivio gruppo (`original_author_id = gruppo`, `peer_profile_id = NULL`, un λ) + distribuzione proxy verso allow list (`erogate_group_message` con `original_author = gruppo`).
+Solo account `profile_kind = group`. **Una** riga archivio gruppo + outbox `event_kind = group_erogate` → worker `alfred_delivery.group_erogate`.
 
 ```sql
 broadcast_message_to_allowlist(
@@ -100,7 +100,7 @@ Errori: `not authenticated`, `only group accounts can broadcast`, validazione co
 
 Idempotenza: stesso `p_client_message_id` → stessa riga archivio gruppo.
 
-**Migrazioni**: `20260706120000`, `20260706140000`.
+**Migrazioni**: `20260706120000`, `20260706140000`, `20260711190000`.
 
 ---
 
@@ -164,10 +164,10 @@ mark_peer_read(p_peer_profile_id uuid) → void
 
 Chiamata dal **destinatario** all’apertura chat con un peer.
 
-Effetti:
+Effetti (solo confine lettore — [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md)):
 
 1. UPDATE righe in entrata nel mio archivio (`author_id = peer`, `read_at IS NULL`) SET `read_at = now()`
-2. Per ogni λ toccato: UPDATE copia mittente SET `read_at = now()` (SECURITY DEFINER)
+2. Per ogni λ: outbox `event_kind = read_receipt` → worker aggiorna `read_at` sulla copia mittente
 
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md).
 
@@ -204,14 +204,15 @@ Ricerca utenti Alfred per aggiunta contatto internal (min 2 caratteri client). E
 
 ## Helper interni (non API client)
 
-Funzioni `SECURITY DEFINER` invocate **solo** da altre RPC SQL. **MUST NOT** avere `GRANT EXECUTE` per `authenticated` — evita enumerazione allow list e bypass gate via PostgREST.
+Funzioni `SECURITY DEFINER` invocate **solo** da worker `alfred_delivery` o altre RPC SQL. **MUST NOT** avere `GRANT EXECUTE` per `authenticated`.
 
 | Funzione | Uso interno | Migrazione |
 |----------|-------------|------------|
-| `is_sender_allowed_for_reception(uuid, uuid)` | Gate allow list in `send_message_to_profile` | `20260704130000` |
+| `is_sender_allowed_for_reception(uuid, uuid)` | Gate allow list nel worker delivery | `20260704130000` |
 | `is_bidirectional_allowed(uuid, uuid, uuid)` | Gate bidirezionale gruppo | `20260706120000` |
-| `profile_kind_of(uuid)` | Routing `profile_kind` in RPC | `20260706120000` |
-| `erogate_group_message(...)` | Fan-out proxy gruppo | `20260706120000` |
+| `profile_kind_of(uuid)` | Routing `profile_kind` in RPC account | `20260706120000` |
+| `alfred_delivery.erogate_group_message(...)` | Fan-out proxy gruppo | `20260711190000` |
+| `alfred_delivery.process_outbox(uuid)` | Dispatcher outbox | `20260711190000` |
 
 Revoca `authenticated`: migrazione `20260707190000`. Smoke: `supabase/tests/rpc_helper_security_smoke.sql`.
 

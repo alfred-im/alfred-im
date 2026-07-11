@@ -131,32 +131,24 @@ Requisiti **client/UI** (shell senza inbox, registrazione toggle tipo account, b
 | Copia membro da broadcast | **gruppo** | **gruppo** | **gruppo** |
 | Chat private user↔user | umano | NULL | controparte |
 
-### Flusso umano → gruppo → erogazione (transazione RPC)
+### Flusso umano → gruppo → erogazione (worker [SYS-DELIVERY](./SYS-DELIVERY.md))
 
 ```
-send_message_to_profile(destinatario = G, G.profile_kind = group)
-  → INSERT copia mittente U (author=U, peer=G, λ)
-  → outbox
-  → SE gate allow U↔G:
-       INSERT storico gruppo (owner=G, author=U, original_author=U, peer=U, λ)
-       UPDATE copia U delivered_at = now()
-       PER OGNI P in reception_allowlist(owner=G):
-         SE gate allow G↔P:
-           INSERT erogazione (owner=P, author=G, original_author=U, peer=G, λ)
-         ALTRIMENTI skip silenzioso
-     ALTRIMENTI:
-       delivered_at null su copia U
+send_message_to_profile(destinatario = G) — solo copia mittente U + outbox
+  → alfred_delivery.process_outbox:
+       SE gate allow U↔G:
+         INSERT storico gruppo (owner=G, author=U, original_author=U, peer=U, λ)
+         UPDATE copia U delivered_at = now()
+         erogate_group_message → INSERT erogazioni verso allow list
+       ALTRIMENTI delivered_at null su copia U
   → RETURN copia U
 ```
 
 ### Flusso gruppo broadcast
 
 ```
-broadcast_message_to_allowlist()
-  → INSERT unica riga storico gruppo (owner=G, author=G, original_author=G, peer=NULL, λ)
-  → PER OGNI P in reception_allowlist(owner=G), P ≠ G:
-       SE gate allow G↔P:
-         INSERT copia membro (owner=P, author=G, original_author=G, peer=G, λ)
+broadcast_message_to_allowlist() — solo riga storico gruppo + outbox group_erogate
+  → alfred_delivery.group_erogate → erogate_group_message verso allow list
   → RETURN riga gruppo
 ```
 
@@ -167,7 +159,7 @@ broadcast_message_to_allowlist()
 | Elemento | Documento / codice |
 |----------|-------------------|
 | `profiles.profile_kind`, `messages.original_author_id` | [contracts/schema.md](../../contracts/schema.md) § gruppi |
-| `send_message_to_profile` (branch gruppo), `broadcast_message_to_allowlist`, helper `erogate_group_message` | [contracts/rpc.md](../../contracts/rpc.md) |
+| `send_message_to_profile` (branch gruppo), `broadcast_message_to_allowlist`, worker `alfred_delivery.erogate_group_message` | [contracts/rpc.md](../../contracts/rpc.md) |
 | Gate bidirezionale | `is_bidirectional_allowed` (SECURITY DEFINER, no GRANT authenticated) |
 | Migrazioni gruppo | `supabase/migrations/*group*` |
 | Smoke SQL | `supabase/tests/group_schema_smoke.sql`, `group_delivery_smoke.sql`, `group_broadcast_smoke.sql`, `rpc_helper_security_smoke.sql` |

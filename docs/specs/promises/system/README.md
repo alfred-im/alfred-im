@@ -26,6 +26,8 @@ Ogni modifica a schema o RPC **deve** aggiornare questi contratti e la promessa 
 | SYS-PROFILE | [SYS-PROFILE.md](./SYS-PROFILE.md) | Profilo utente, avatar, RLS |
 | SYS-CONTACTS | [SYS-CONTACTS.md](./SYS-CONTACTS.md) | Rubrica, `search_profiles` |
 | SYS-RECEPTION | [SYS-RECEPTION.md](./SYS-RECEPTION.md) | Allow list, gate recapito |
+| SYS-ACCOUNT-BOUNDARY | [SYS-ACCOUNT-BOUNDARY.md](./SYS-ACCOUNT-BOUNDARY.md) | Confine account (legge madre) |
+| SYS-DELIVERY | [SYS-DELIVERY.md](./SYS-DELIVERY.md) | Outbox + worker delivery |
 
 Indice completo: [registry.md](../../registry.md) · [index.md](../../index.md).
 

@@ -68,8 +68,8 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 |----|----------|
 | **SYS-MAILBOX-017** | Unico RPC invio: `send_message_to_profile` — firma invariata PostgREST — [rpc.md](../../contracts/rpc.md) § mailbox |
 | **SYS-MAILBOX-018** | Accettazione: INSERT copia mittente (`owner_id = author_id = auth.uid()`), `delivered_at`/`read_at` null, λ assegnato |
-| **SYS-MAILBOX-019** | **Outbox sempre**: INSERT `outbox` per ogni invio, incluso `protocol = internal` |
-| **SYS-MAILBOX-020** | Driver internal (stessa transazione RPC): **se** mittente ∈ [SYS-RECEPTION](./SYS-RECEPTION.md) del destinatario → materializza copia destinatario + valorizza `delivered_at` su copia mittente (match λ); **altrimenti** skip copia destinatario, `delivered_at` null, RPC successo (rifiuto silenzioso) |
+| **SYS-MAILBOX-019** | **Outbox sempre**: INSERT `outbox` (`event_kind = deliver`) per ogni invio, incluso `protocol = internal` |
+| **SYS-MAILBOX-020** | Driver internal: worker [SYS-DELIVERY](./SYS-DELIVERY.md) nella stessa transazione RPC — **se** gate reception → materializza copia destinatario + `delivered_at` mittente; **altrimenti** rifiuto silenzioso |
 | **SYS-MAILBOX-021** | Idempotenza: retry stesso `(owner_id, client_message_id)` → stessa riga mittente, no duplicati |
 | **SYS-MAILBOX-022** | Tipi `content_type`: `text`, `gif`, `voice`, `location` — validazione invariata da pre-#159 |
 | **SYS-MAILBOX-023** | Bucket storage `chat-media`: path `{auth.uid()}/{uuid}.*` (upload prima RPC) |
@@ -135,7 +135,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 |----|----------|
 | **SYS-MAILBOX-046** | `delivered_at` valorizzato solo dopo materializzazione copia destinatario ([SYS-MAILBOX](./SYS-MAILBOX.md) invio) — non da Realtime client destinatario |
 | **SYS-MAILBOX-047** | `mark_peer_read(peer)`: UPDATE righe in entrata nel mio archivio (`owner_id = io`, `author_id = peer`, `read_at IS NULL`) SET `read_at = now()` |
-| **SYS-MAILBOX-048** | Per ogni λ delle righe lette: UPDATE copia mittente SET `read_at = now()` WHERE `owner_id = peer` (mittente) AND `logical_message_id = λ` AND `read_at IS NULL` — SECURITY DEFINER |
+| **SYS-MAILBOX-048** | Per ogni λ letto: accoda `outbox` `event_kind = read_receipt`; worker [SYS-DELIVERY](./SYS-DELIVERY.md) aggiorna `read_at` sulla copia mittente — **nessuna** UPDATE account cross-boundary |
 | **SYS-MAILBOX-049** | Lettura include body non vuoto OPPURE `content_type` ∈ gif, voice, location |
 | **SYS-MAILBOX-050** | `list_inbox` unread: righe in entrata con `read_at IS NULL` |
 
@@ -180,18 +180,20 @@ Regola: se `read_at` valorizzata su copia mittente, `delivered_at` tardivo non l
 | Smoke SQL | `supabase/tests/mailbox_*.sql`, `reception_allowlist_gate_smoke.sql` |
 | Client RPC / servizi | `message_service.dart`, `inbox_service.dart` |
 
-### Flusso internal (transazione RPC)
+### Flusso internal (transazione RPC + worker)
 
 ```
-send_message_to_profile
+send_message_to_profile (solo confine mittente)
   → INSERT messages (owner=mittente, author=mittente, λ, peer=dest)     ← livello ✓
-  → gate reception_allowlist (destinatario)
-  → SE allowed:
-       INSERT messages (owner=destinatario, …)
-       UPDATE messages SET delivered_at=now() WHERE owner=mittente AND λ  ← livello ✓✓
-     ALTRIMENTI:
-       delivered_at resta null (✓ senza ✓✓)
-  → INSERT outbox completed
+  → INSERT outbox (event_kind=deliver, queued)
+  → alfred_delivery.process_outbox
+       → gate reception_allowlist (destinatario)
+       → SE allowed:
+            INSERT messages (owner=destinatario, …)
+            UPDATE messages SET delivered_at=now() WHERE owner=mittente AND λ  ← livello ✓✓
+          ALTRIMENTI:
+            delivered_at resta null (✓ senza ✓✓)
+  → outbox completed
   → RETURN riga mittente
 ```
 
@@ -202,7 +204,7 @@ mark_peer_read(p_peer_profile_id uuid) → void
 ```
 
 1. UPDATE `messages` SET `read_at = now()` WHERE `owner_id = auth.uid()` AND `peer_profile_id = p_peer` AND `author_id = p_peer` AND `read_at IS NULL` AND contenuto leggibile
-2. Per ogni λ toccato: UPDATE copia mittente `read_at` (funzione interna SECURITY DEFINER)
+2. Per ogni λ: outbox `read_receipt` → worker aggiorna copia mittente (vedi [SYS-DELIVERY](./SYS-DELIVERY.md))
 
 ---
 

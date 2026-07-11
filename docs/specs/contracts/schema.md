@@ -139,13 +139,29 @@ Nessuna tabella aggiuntiva. Partecipazione = allow list bidirezionale:
 
 ## `outbox`
 
-Coda invio — popolata per **ogni** invio (internal + federato). FK `message_id` → copia **mittente**.
+Coda invio — popolata per **ogni** invio (internal + federato). FK `message_id` → copia **mittente**. Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`.
 
-Consumer internal: transazione RPC; federato: fase B bridge (stub).
+Consumer internal: worker `alfred_delivery.process_outbox` (sincrono in transazione RPC account); federato: fase B bridge (stub).
 
 **RLS**: DENY per `authenticated`.
 
-**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md).
+**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md).
+
+---
+
+## `alfred_delivery` (schema)
+
+Worker infrastruttura **non-account** — unico attore autorizzato a attraversare confini [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md).
+
+| Funzione | Ruolo |
+|----------|--------|
+| `process_outbox(uuid)` | Dispatcher per `event_kind` |
+| `deliver_internal(uuid)` | Recapito 1:1 / verso gruppo |
+| `process_read_receipt(uuid)` | Propaga `read_at` al mittente |
+| `group_erogate(uuid)` | Broadcast gruppo → allow list |
+| `erogate_group_message(...)` | Fan-out proxy partecipanti |
+
+**GRANT**: nessuno su `authenticated`. Migrazione `20260711190000`.
 
 ---
 

@@ -19,7 +19,9 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **SYS-GROUP** | Account gruppo, partecipazione, erogazione | `implemented` | [SYS-GROUP.md](./promises/system/SYS-GROUP.md) |
 | **SYS-PROFILE** | Tabella `profiles`, avatar, RPC profilo | `implemented` | [SYS-PROFILE.md](./promises/system/SYS-PROFILE.md) |
 | **SYS-CONTACTS** | Rubrica `contacts`, `search_profiles` | `implemented` | [SYS-CONTACTS.md](./promises/system/SYS-CONTACTS.md) |
-| **SYS-RECEPTION** | Allow list ricezione, gate `send_message_to_profile` | `implemented` | [SYS-RECEPTION.md](./promises/system/SYS-RECEPTION.md) |
+| **SYS-RECEPTION** | Allow list ricezione, gate nel worker delivery | `implemented` | [SYS-RECEPTION.md](./promises/system/SYS-RECEPTION.md) |
+| **SYS-ACCOUNT-BOUNDARY** | Legge madre confine account (nessun cross-boundary) | `implemented` | [SYS-ACCOUNT-BOUNDARY.md](./promises/system/SYS-ACCOUNT-BOUNDARY.md) |
+| **SYS-DELIVERY** | Piano recapito outbox + worker `alfred_delivery` | `implemented` | [SYS-DELIVERY.md](./promises/system/SYS-DELIVERY.md) |
 
 ---
 
