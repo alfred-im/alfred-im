@@ -5,8 +5,8 @@
 | **Promessa ID** | `PROM-RECEPTION-FILTER` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
-| **PR origine** | #161 |
+| **Ultima revisione** | 2026-07-11 |
+| **PR origine** | #161, #179 |
 
 Promessa di prodotto: il destinatario controlla chi può **consegnargli** messaggi; filtro **sempre attivo**; rifiuto **silenzioso** verso il mittente (stile blocco XMPP).
 
@@ -66,8 +66,8 @@ Su rifiuto allow list: il mittente resta al livello **1** per sempre — come bl
 
 | Elemento | Responsabilità |
 |----------|----------------|
-| `send_message_to_profile` | Gate prima di INSERT copia destinatario |
-| `is_sender_allowed_for_reception` | Helper SECURITY DEFINER (solo RPC interne) |
+| `alfred_delivery.deliver_internal` | Gate allow list destinatario prima di INSERT copia destinatario |
+| `is_sender_allowed_for_reception` | Helper SECURITY DEFINER (solo worker / RPC interne) |
 | `reception_allowlist` | Tabella allow list per `owner_id` |
 | UI gestione lista | [SURF-ALLOWLIST](../../surfaces/SURF-ALLOWLIST.md), toggle in [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md) |
 
@@ -94,7 +94,7 @@ Su rifiuto allow list: il mittente resta al livello **1** per sempre — come bl
 
 | PROM-ID | Verifica |
 |---------|----------|
-| PROM-RECEPTION-FILTER-002, 005–006 | `reception_allowlist_gate_smoke.sql` |
+| PROM-RECEPTION-FILTER-002, 005–006 | `reception_allowlist_gate_smoke.sql`, `delivery_ticks_smoke.sql` |
 | PROM-RECEPTION-FILTER-008–009 | `reception_allowlist_gate_smoke.sql` |
 | PROM-RECEPTION-FILTER-006 | `bash scripts/test.sh integration` |
 | PROM-RECEPTION-FILTER-005, 007 | [SYS-MAILBOX](../system/SYS-MAILBOX.md) — `delivered_at` null = ✓ singola |
@@ -110,6 +110,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `verify.sh` + smoke SQL + `integration
 | Documento | Ruolo |
 |-----------|--------|
 | [registry.md](../../registry.md) | Indice promesse |
-| [SYS-RECEPTION](../system/SYS-RECEPTION.md) | Gate recapito backend |
+| [SYS-RECEPTION](../system/SYS-RECEPTION.md) | Gate allow list (semantica) |
+| [SYS-DELIVERY](../system/SYS-DELIVERY.md) | Worker recapito e gate |
 | [SYS-MAILBOX](../system/SYS-MAILBOX.md) | Pipeline invio condizionata |
 | [server-as-reception.md](../../../decisions/server-as-reception.md) | ADR semantica consegna |

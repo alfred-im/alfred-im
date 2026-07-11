@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-09 (revisione documentazione; prodotto stabile)  
+**Ultimo aggiornamento**: 2026-07-11 (delivery plane + revisione doc)  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 ---
@@ -31,8 +31,8 @@
 **Non deducibile — URL live ≠ branch `main`**: https://alfred-im.github.io/XmppTest/ pubblica l’**ultimo** `deploy-pages` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-dev-demo` → ultimo vince).
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
-| **PR su `main`** | **#108–#176** — registro `docs/architecture/pr-registry.md` (#174 redirect email; #175 epurazione doc; #176 CTA profilo peer) |
-| **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — `SYS-*`, `PROM-*`, `SURF-*` |
+| **PR su `main`** | **#108–#179** — registro `docs/architecture/pr-registry.md` (#179 account boundary + delivery plane) |
+| **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — `SYS-*` (incl. `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY`), `PROM-*`, `SURF-*` |
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -53,7 +53,7 @@
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca liste on-demand — inbox, rubrica, persone consentite (`PROM-LIST-FILTER`, PR #132, #171)
 - **GIF / voice / location**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client
 - **Federazione**: outbox `queued` — attende bridge
-- **Spunte**: `delivered_at` / `read_at` nullable su copia archivio · `mark_peer_read` aggiorna lettura locale + segnale su copia mittente — promessa `SYS-MAILBOX`
+- **Spunte**: `delivered_at` / `read_at` sulla copia mittente — ✓ = accettato server; ✓✓/blu via worker [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md) (`deliver` + `read_receipt` outbox); lettura locale `mark_peer_read` sul destinatario — promesse `SYS-MAILBOX`, `PROM-MESSAGE-STATUS`
 - **Brand**: `#2D2926`, layout responsive stile WhatsApp Web
 
 ### Tecnologie
@@ -86,7 +86,7 @@
 - **Bridge stateless**: `docs/decisions/bridge-stateless.md`
 - **Chat unificate** (nessuna distinzione interna/esterna): `docs/decisions/no-internal-external-chat-distinction.md`
 - **Dettaglio completo**: `docs/architecture/full-stack.md`
-- **Modello caselle (mailbox)**: `docs/architecture/mailbox-inbox-outbox-spec.md` — archivio per owner + outbox sempre; promessa `SYS-MAILBOX` in `docs/specs/promises/system/` (PR #159)
+- **Modello caselle (mailbox)**: `docs/architecture/mailbox-inbox-outbox-spec.md` — archivio per owner + outbox; promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` (PR #159, #179)
 
 ---
 
@@ -159,11 +159,11 @@ Avvio container: `scripts/start-bridges.sh`.
 
 ## 💾 Database e Storage
 
-**Fonte di verità messaggistica**: tabella `messages` (archivio per `owner_id`) + `profiles`. Inbox = aggregazione on-read (`list_inbox()` sul mio archivio), nessuna tabella/cache inbox. Invio: outbox sempre → materializzazione copie mittente/destinatario in una RPC.
+**Fonte di verità messaggistica**: tabella `messages` (archivio per `owner_id`) + `profiles`. Inbox = aggregazione on-read (`list_inbox()`). Invio: RPC account scrive **solo** copia mittente + accoda `outbox`; worker `alfred_delivery.process_outbox` materializza destinatario, `delivered_at`/`read_at` mittente e erogazione gruppo ([SYS-ACCOUNT-BOUNDARY](docs/specs/promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md)).
 
 | Storage | Uso |
 |---------|-----|
-| Postgres | `profiles` (+ `pronouns`), `contacts`, `reception_allowlist`, `messages`, `outbox`, `sync_cursors`, `bridge_jobs` |
+| Postgres | `profiles`, `contacts`, `reception_allowlist`, `messages`, `outbox`, `sync_cursors`, `bridge_jobs`; schema worker `alfred_delivery` |
 | Storage `chat-media` | GIF + voice WebM (`{userId}/{uuid}.…`) |
 | Storage `avatars` | Foto profilo (`{userId}/avatar.{jpg|png|webp}`, max 2 MB) |
 | Client `SharedPreferences` | Account aperti (`OpenAccount` + refresh token) e `focusUserId` |
@@ -185,7 +185,8 @@ bash scripts/verify.sh --build   # + build web
 - CI: `.github/workflows/deploy-pages.yml` → `deploy-pages` → GitHub Pages
 - **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (deploy da PR)
 - E2E: `client/e2e/` (Playwright)
-- SQL smoke: `schema_smoke.sql`, `mailbox_*.sql`, `reception_allowlist_*.sql`, `group_schema_smoke.sql`, `group_delivery_smoke.sql`, `group_broadcast_smoke.sql`, `send_message_to_profile_smoke.sql`
+- SQL smoke: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `reception_allowlist_*.sql`, `group_*.sql`, `rpc_helper_security_smoke.sql`, `send_message_to_profile_smoke.sql`
+- Integrazione spunte: `bash scripts/test.sh integration-ticks` (contratto ✓ / ✓✓ / allow list)
 
 ---
 
@@ -197,7 +198,7 @@ bash scripts/verify.sh --build   # + build web
 |------|-------|
 | Auth, profilo, multi-account, scheda profilo peer | ✅ |
 | Contatti, inbox, chat testo/GIF/voice/location | ✅ |
-| Modello caselle (mailbox per-owner, outbox sempre) | ✅ |
+| Modello caselle + delivery plane | ✅ |
 | Account gruppo (shell, erogazione, UI autore) | ✅ |
 | Ricerca inbox on-demand, aggancio al fondo | ✅ |
 | Schema Supabase + RLS + RPC | ✅ |
@@ -218,9 +219,10 @@ bash scripts/verify.sh --build   # + build web
 
 ## 🔄 Ultima Revisione
 
-**Data**: 2026-07-09
+**Data**: 2026-07-11
 
-- Epurazione terminologia Alpha: prodotto stabile; demo di sviluppo su GitHub Pages; nessun deploy produzione; doc `full-stack.md`, `pr-registry.md`; `AuthRedirectUrl.devDemoDefault`
+- **#179** — `SYS-ACCOUNT-BOUNDARY` + `SYS-DELIVERY`: schema `alfred_delivery`, RPC account solo confine proprio, test `delivery_ticks_smoke.sql` + `integration-ticks`
+- Epurazione terminologia Alpha (2026-07-09): prodotto stabile; demo GitHub Pages
 - SDD registro promesse (#171, #172): `docs/specs/registry.md` — SYS/PROM/SURF; epurazione residui doc legacy
 - SYS-GROUP (#162): account gruppo, erogazione, broadcast singola riga, `original_author_id`, UI autore avatar+nome; doc hub + `groups-client.md`
 - SYS-RECEPTION (#161): allow list ricezione, gate server, UI «Persone consentite»; doc hub + semantica spunte ✓/✓✓

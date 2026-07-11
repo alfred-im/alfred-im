@@ -5,10 +5,12 @@
 | **Promessa ID** | `PROM-MESSAGE-STATUS` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
-| **PR origine** | #159 |
+| **Ultima revisione** | 2026-07-11 |
+| **PR origine** | #159, #179 |
 
 Promessa di prodotto: spunte mittente (✓ / ✓✓ grigie / ✓✓ blu) derivate da `delivered_at` e `read_at` sulla copia in uscita; stati `pending`/`failed` solo client pre-ACK.
+
+Pipeline server: worker [SYS-DELIVERY](../system/SYS-DELIVERY.md) (`deliver`, `read_receipt`) — unico attore che valorizza `delivered_at`/`read_at` sulla copia mittente.
 
 RPC `mark_peer_read`: [SYS-MAILBOX](../system/SYS-MAILBOX.md) e [contracts/rpc.md](../../contracts/rpc.md).
 
@@ -60,8 +62,8 @@ Il mittente interpreta lo stato del proprio messaggio da date nullable sulla **p
 |----------|----------------|
 | `messageStatusFromMailbox` | Mapping date → stato UI in `message.dart` |
 | `MessageBubble` | Rendering checkmarks da stato |
-| `delivered_at` | Valorizzato solo dopo materializzazione copia destinatario ([SYS-MAILBOX](./SYS-MAILBOX.md)) |
-| `read_at` | Aggiornato su lettura destinatario + propagazione a copia mittente via λ |
+| `delivered_at` | Valorizzato dal worker `deliver` dopo materializzazione copia destinatario ([SYS-DELIVERY](../system/SYS-DELIVERY.md)) |
+| `read_at` | Aggiornato su lettura destinatario (archivio locale) + propagazione a copia mittente via worker `read_receipt` |
 
 ### Tabella stati UI mittente
 
@@ -91,7 +93,7 @@ Il mittente interpreta lo stato del proprio messaggio da date nullable sulla **p
 | PROM-MESSAGE-STATUS-005 | `messages_controller_multi_account_test.dart` |
 | PROM-MESSAGE-STATUS-010 | `message_bubble_test.dart` |
 | PROM-MESSAGE-STATUS-020 | `models_and_utils_test.dart` — read_at prevale su delivered_at tardivo |
-| PROM-MESSAGE-STATUS-001–008 | `bash scripts/test.sh integration` + `e2e-multi` |
+| PROM-MESSAGE-STATUS-001–008 | `bash scripts/test.sh integration` + `integration-ticks` + `e2e-multi` |
 
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
@@ -103,6 +105,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 | Documento | Ruolo |
 |-----------|--------|
 | [registry.md](../../registry.md) | Indice promesse |
+| [SYS-DELIVERY](../system/SYS-DELIVERY.md) | Worker recapito e propagazione spunte |
 | [SYS-MAILBOX](../system/SYS-MAILBOX.md) | Date consegna/lettura, `mark_peer_read` |
 | [PROM-RECEPTION-FILTER](./PROM-RECEPTION-FILTER.md) | `delivered_at` null permanente |
 | [PROM-REALTIME-OWNER](./PROM-REALTIME-OWNER.md) | Aggiornamento `read_at` via Realtime |

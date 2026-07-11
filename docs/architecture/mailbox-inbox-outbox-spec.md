@@ -1,19 +1,20 @@
 # Modello caselle (mailbox) — implementato
 
-**Ultima revisione**: 2026-07-09  
-**Status**: ✅ **Implementato su `main`** (PR #159; gruppi PR #162) — promessa `SYS-MAILBOX` `implemented`  
+**Ultima revisione**: 2026-07-11  
+**Status**: ✅ **Implementato su `main`** (PR #159; gruppi #162; delivery plane #179) — promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` `implemented`  
 **Audience**: AI / implementazione
 
-**Su `main`** vale il modello caselle descritto qui e nella promessa [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md). L’ADR [address-based-messaging.md](../decisions/address-based-messaging.md) resta riferimento per indirizzamento e rubrica isolata.
+**Su `main`** vale il modello caselle descritto qui e nelle promesse SDD. L’ADR [address-based-messaging.md](../decisions/address-based-messaging.md) resta riferimento per indirizzamento e rubrica isolata.
 
 ---
 
-## Modello attuale (implementato PR #159)
+## Modello attuale (implementato)
 
 | Aspetto | Comportamento su `main` |
 |---------|-------------------------|
 | **Archivio** | Un archivio per owner: ogni utente ha le proprie righe `messages` (`owner_id`) |
-| **Consegna** | **Outbox sempre** (anche internal), poi materializzazione copia destinatario — un solo tipo di pipeline |
+| **Confine account** | RPC account toccano **solo** il proprio archivio — [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) |
+| **Consegna** | **Outbox sempre** → worker `alfred_delivery.process_outbox` materializza destinatario e date spunte mittente — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) |
 | **Inbox** | Lista derivata dal **mio** archivio via `list_inbox()` |
 | **Identità chat** | `(io, peer_profile_id)` — indirizzo `username` o `username@server` in compose |
 
@@ -61,8 +62,9 @@ Niente `thread_id` lato client. Niente entità «casella verso Paolo» esposta c
 2. **Nessun allineamento obbligatorio** tra il mio archivio e quello del peer.
 3. **Solo `author_id`** — niente `direction` in schema.
 4. **Il mio archivio alimenta la mia interfaccia** — casella = dove vivono i messaggi dell’owner, non cache su tabella condivisa.
-5. **Outbox sempre** — anche internal passa da outbox; internal / xmpp / matrix differiscono solo nel driver di consegna in fondo. Un solo flusso invio → outbox → archivio destinatario.
+5. **Outbox sempre** — anche internal passa da outbox; internal / xmpp / matrix differiscono solo nel driver di consegna in fondo.
 6. **Spunte = segnali puntuali** — aggiornano solo la copia del mittente tramite id di correlazione; **non** sincronizzano né modificano l’archivio del peer (modello federato).
+7. **Confine account** — nessuna RPC account attraversa l’archivio altrui; solo worker `alfred_delivery` (infrastruttura, non account).
 
 ## Identificatori — livelli distinti (vincolante)
 
@@ -88,7 +90,7 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e 
 |------------|--------|
 | Retry invio client | `(owner_id mittente, client_message_id)` |
 | Materializzazione copia destinatario | `(owner_id destinatario, logical_message_id)` |
-| Job outbox | `logical_message_id` (o `outbox.id` equivalente) |
+| Job outbox | `outbox.id` + `event_kind` |
 | Segnale `delivered` / `read` | `(owner_id mittente, logical_message_id)` |
 | Bridge federato (inbound ack) | `external_id` + protocollo → risoluzione su λ |
 
@@ -96,27 +98,28 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e 
 
 ## Consegna — stessa pipeline ovunque (vincolante)
 
-Internal e federato condividono **un solo tipo** di recapito; differisce solo il driver in fondo (sync sulla stessa istanza vs bridge).
+Internal e federato condividono **un solo tipo** di recapito; differisce solo il driver in fondo (worker internal sincrono vs bridge async).
 
-| Fase | Effetto |
-|------|---------|
-| **Accettazione** | Copia mittente creata → UI ✓ (`sent`) |
-| **Recapito** | Outbox → materializzazione copia destinatario |
-| **Ack** | Segnale `delivered` sulla copia mittente (via λ) |
+| Fase | Attore | Effetto |
+|------|--------|---------|
+| **Accettazione** | RPC account mittente | INSERT copia mittente → UI ✓ |
+| **Accodamento** | RPC account mittente | INSERT `outbox` (`event_kind = deliver`) |
+| **Recapito** | Worker `alfred_delivery` | Gate allow list destinatario → INSERT copia destinatario |
+| **Ack consegnato** | Worker `alfred_delivery` | UPDATE `delivered_at` su copia mittente (✓✓ grigie) |
 
-Se il recapito non completa (copia mittente sì, destinatario no), **non** è un’anomalia del modello caselle: è uno **stato di consegna** come per email, XMPP o Matrix. Oggi su internal sembra istantaneo solo perché insert + `delivered` sono nella stessa transazione — shortcut da eliminare.
+Su internal il worker gira **nella stessa transazione** della RPC mittente (sincrono per l’utente). Non è uno shortcut da eliminare: è il contratto [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md).
 
-### Stati operativi (da implementare)
+### Stati operativi
 
 - **Retry** outbox — stesso meccanismo internal e federato
 - **`failed` / dead-letter** se esauriti i tentativi
-- **UI mittente**: resta su ✓ finché non arriva il segnale `delivered`; assenza di ✓✓ = consegna in corso o fallita, non «messaggio perso»
+- **UI mittente**: resta su ✓ finché non arriva il segnale `delivered`; assenza di ✓✓ = consegna in corso, rifiuto allow list o fallita — non «messaggio perso»
 
 ## Spunte — segnali, non sync archivi (vincolante)
 
-Nel federato **non esiste** una riga condivisa tra mittente e destinatario. Ogni lato ha il proprio archivio; le spunte si risolvono con **messaggi/segnali separati** che **referenziano** il messaggio originale per id — non aggiornando la copia altrui.
+Nel federato **non esiste** una riga condivisa tra mittente e destinatario. Ogni lato ha il proprio archivio; le spunte si risolvono con **segnali separati** che **referenziano** il messaggio originale per id — non aggiornando la copia altrui dall’RPC account.
 
-Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istanza (internal).
+Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istanza (internal), con worker `alfred_delivery` come unico attraversamento confine.
 
 ### Correlazione
 
@@ -132,30 +135,35 @@ Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 
 | Livello | UI | Significato | Internal | Federato |
 |---------|-----|-------------|----------|----------|
-| Inviato | ✓ | Accettato da piattaforma / in outbox | Copia mittente `sent` | Outbox `queued` |
-| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Dopo materializzazione copia destinatario → **segnale** `delivered` sulla copia mittente | XEP-0184 `received@id` o ack bridge → stesso aggiornamento sulla copia mittente Alfred |
-| Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` sul **proprio** archivio → **segnale** `read` sulla copia mittente (stesso `logical_message_id`) | XEP-0333 `displayed@id` o Matrix `m.receipt` → bridge aggiorna copia mittente |
+| Inviato | ✓ | Accettato da piattaforma / in outbox | Copia mittente creata | Outbox `queued` |
+| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | XEP-0184 / ack bridge → stesso aggiornamento |
+| Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` locale → outbox `read_receipt` → worker → `read_at` mittente | XEP-0333 / m.receipt → bridge |
 
 **Non** significa «arrivato sul device» in senso P2P: significa «nella fonte di verità rilevante» (server / piattaforma).
 
 ### Regole
 
-- Il segnale aggiorna **solo** `delivered_at` / `read_at` sulla **copia del mittente** identificata da `logical_message_id` (+ `owner_id` mittente).
+- Il segnale aggiorna **solo** `delivered_at` / `read_at` sulla **copia del mittente** identificata da `logical_message_id` (+ `owner_id` mittente), tramite **worker** — mai da RPC account cross-boundary.
 - **Mai** modificare l’archivio del peer per far vedere le spunte al mittente.
 - **Mai** allineare preview, ordine o contenuto tra le due copie come effetto delle spunte.
-- Realtime mittente: subscribe agli UPDATE sulla **propria** copia (`owner_id = io`); merge optimistic via `client_message_id`, spunte via `logical_message_id` — vedi [Identificatori](#identificatori--livelli-distinti-vincolante).
+- Realtime mittente: subscribe agli UPDATE sulla **propria** copia (`owner_id = io`); merge optimistic via `client_message_id`, spunte via `logical_message_id`.
 - I marker non vanno «all’indietro» (segnale su id più vecchio dello stato locale → ignorare).
 
 ### Flusso internal (sintesi)
 
 ```
-Invio → copia mittente (λ) — livello ✓ (accettato server)
-      → gate reception_allowlist(destinatario)
-      → SE allowed: copia destinatario (λ) + delivered_at su mittente — livello ✓✓
-      → outbox completed
+Invio (account mittente)
+  → INSERT copia mittente (λ) — ✓
+  → INSERT outbox (event_kind=deliver)
+  → alfred_delivery.process_outbox:
+       gate reception_allowlist(destinatario)
+       SE allowed: INSERT copia destinatario + delivered_at mittente — ✓✓ grigie
+       ALTRIMENTI: reception_rejected, delivered_at null — ✓ permanente
 
-Paolo apre chat → mark_peer_read sul SUO archivio
-               → segnale read sulla copia Mario WHERE logical_message_id = λ
+Paolo apre chat (account Paolo)
+  → mark_peer_read: UPDATE read_at solo archivio Paolo
+  → outbox read_receipt per ogni λ
+  → worker: UPDATE read_at copia Mario — ✓✓ blu
 ```
 
 Gate allow list: [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md).
@@ -177,12 +185,7 @@ Il bridge è **stateless** ([bridge-stateless.md](../decisions/bridge-stateless.
 - Delete chat locale
 - Preservazione dati in migrazione (solo DB dev; niente prod)
 
-**Gruppi** — implementati (PR #162, promessa `SYS-GROUP`): account `profile_kind = group`, erogazione automatica, shell dedicata. Vedi [groups-client.md](../implementation/groups-client.md).
-
-## Delegato all’implementazione
-
-- Dettaglio schema (`delivered_at` / `read_at` su copia mittente), nomi RPC e transazioni dei driver — al momento del codice.
-- Driver internal: sync nella stessa RPC vs worker async (non cambia la semantica [Consegna](#consegna--stessa-pipeline-ovunque-vincolante)).
+**Gruppi** — implementati (PR #162, promessa `SYS-GROUP`): account `profile_kind = group`, erogazione via worker, shell dedicata. Vedi [groups-client.md](../implementation/groups-client.md).
 
 ---
 
@@ -198,8 +201,9 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 - 2026-06-27: su `main` implementato message-centric (PR #130) — percorso diverso, temporaneo.
 - 2026-06-28: direzione caselle confermata; Q&A identità, outbox sempre, media condivisi/GC, **spunte = segnali** (modello XMPP/Matrix) confermato.
 - 2026-06-29: identificatori a livelli distinti (`id` / `client_message_id` / λ / `external_id`), idempotenza per operazione, consegna parziale = stato normale pipeline.
-- 2026-07-04: discovery chiuso; promessa `SYS-MAILBOX` approved; spunte = `delivered_at`/`read_at` (no enum status); federato UI blocked (scope attuale).
-- 2026-07-04: gate `SYS-RECEPTION` (#161) nel driver internal — recapito condizionato; semantica ✓ (accettato) vs ✓✓ (consegnato).
+- 2026-07-04: discovery chiuso; promessa `SYS-MAILBOX` approved; spunte = `delivered_at`/`read_at` (no enum status).
+- 2026-07-04: gate `SYS-RECEPTION` (#161) nel driver internal — recapito condizionato.
+- 2026-07-11: **#179** — `SYS-ACCOUNT-BOUNDARY` + `SYS-DELIVERY`; worker `alfred_delivery`; RPC account solo confine proprio.
 
 ---
 
@@ -210,5 +214,8 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 | [address-based-messaging.md](../decisions/address-based-messaging.md) | Indirizzamento e rubrica isolata (vincolante) |
 | [full-stack.md](./full-stack.md) | Flussi attuali da riusare |
 | [server-as-reception.md](../decisions/server-as-reception.md) | Spunte |
-| [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md) | Gate recapito destinatario |
+| [SYS-ACCOUNT-BOUNDARY.md](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) | Legge madre confine account |
+| [SYS-DELIVERY.md](../specs/promises/system/SYS-DELIVERY.md) | Worker outbox + contratto spunte |
+| [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md) | Gate recapito nel worker |
 | [bridge-stateless.md](../decisions/bridge-stateless.md) | Outbox / bridge (se/un quando) |
+| [contracts/schema.md](../specs/contracts/schema.md) · [contracts/rpc.md](../specs/contracts/rpc.md) | Dettaglio DDL/RPC |

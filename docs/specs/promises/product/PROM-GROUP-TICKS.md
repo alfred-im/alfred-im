@@ -5,8 +5,8 @@
 | **Promessa ID** | `PROM-GROUP-TICKS` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
-| **PR origine** | #162 |
+| **Ultima revisione** | 2026-07-11 |
+| **PR origine** | #162, #179 |
 
 Promessa di prodotto: spunte del messaggio umano→gruppo riflettono solo recapito al **gruppo**; erogazione verso terzi non modifica le spunte originali; nessuna visibilità al mittente su chi ha ricevuto l'erogazione.
 
@@ -51,8 +51,8 @@ Quando un utente invia a un gruppo, le spunte sulla **propria** copia indicano s
 
 | Elemento | Responsabilità |
 |----------|----------------|
-| `send_message_to_profile` (dest = group) | UPDATE `delivered_at` su copia U solo se storico gruppo INSERT |
-| `erogate_group_message` | Loop allow list — skip silenzioso; no touch copia U |
+| `send_message_to_profile` (dest = group) | INSERT copia mittente + outbox; worker `deliver` valorizza `delivered_at` se storico gruppo INSERT |
+| `alfred_delivery.erogate_group_message` | Loop allow list — skip silenzioso; no touch copia U |
 | `MessageBubble` | Checkmarks da [PROM-MESSAGE-STATUS](./PROM-MESSAGE-STATUS.md) |
 | UI mittente umano | Mai lista destinatari erogazione |
 

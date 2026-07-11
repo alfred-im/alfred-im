@@ -6,7 +6,7 @@ Traccia lo stato del progetto per continuità del lavoro. Non è documentazione 
 
 ## Stato attuale (2026-07-09)
 
-**Flutter + Supabase + bridge Python**. Prodotto **stabile** (senza versionamento release). PR **#108–#176** su `main`.
+**Flutter + Supabase + bridge Python**. Prodotto **stabile** (senza versionamento release). PR **#108–#179** su `main`.
 
 | Componente | Stato |
 |------------|-------|

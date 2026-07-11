@@ -21,7 +21,9 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 | [SYS-GROUP](./specs/promises/system/SYS-GROUP.md) | `implemented` | Account gruppo, erogazione |
 | [SYS-PROFILE](./specs/promises/system/SYS-PROFILE.md) | `implemented` | Tabella `profiles`, avatar, RPC |
 | [SYS-CONTACTS](./specs/promises/system/SYS-CONTACTS.md) | `implemented` | Rubrica, `search_profiles` |
-| [SYS-RECEPTION](./specs/promises/system/SYS-RECEPTION.md) | `implemented` | Allow list ricezione, gate server |
+| [SYS-RECEPTION](./specs/promises/system/SYS-RECEPTION.md) | `implemented` | Allow list ricezione, gate nel worker delivery |
+| [SYS-ACCOUNT-BOUNDARY](./specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) | `implemented` | Confine account — legge madre |
+| [SYS-DELIVERY](./specs/promises/system/SYS-DELIVERY.md) | `implemented` | Outbox + worker `alfred_delivery`, contratto spunte |
 | [contracts/rpc.md](./specs/contracts/rpc.md) | `implemented` | Firme RPC (dettaglio DDL) |
 | [contracts/schema.md](./specs/contracts/schema.md) | `implemented` | Schema DB, RLS, storage |
 
@@ -59,7 +61,7 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 | [SURF-GROUP-HOME](./specs/surfaces/SURF-GROUP-HOME.md) | `implemented` | Home account gruppo |
 | [SURF-GROUP-CONVERSATION](./specs/surfaces/SURF-GROUP-CONVERSATION.md) | `implemented` | Chat gruppo |
 
-ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) (PR #159).
+ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) (PR #159, delivery plane #179).
 
 ---
 
@@ -130,4 +132,4 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 
 ---
 
-**Ultimo aggiornamento**: 2026-07-09 — audit documentazione; 5 SYS + 13 PROM + 12 SURF (incluso `SURF-APP-SHELL` in `SURF-AUTH`)
+**Ultimo aggiornamento**: 2026-07-11 — 7 SYS + 13 PROM + 12 SURF (incluso `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY`)

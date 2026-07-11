@@ -4,6 +4,20 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
+## [Unreleased] - 2026-07-11
+
+### Aggiunto
+
+- **#179** — `SYS-ACCOUNT-BOUNDARY` + `SYS-DELIVERY`: schema `alfred_delivery`, RPC account solo confine proprio; worker outbox (`deliver`, `read_receipt`, `group_erogate`); migrazione `20260711190000`
+- Test contratto spunte: `delivery_ticks_smoke.sql`, `bash scripts/test.sh integration-ticks`
+
+### Documentazione — allineamento delivery plane (2026-07-11)
+
+- Hub: `PROJECT_MAP.md`, `mailbox-inbox-outbox-spec.md`, `full-stack.md`, `INDICE.md`, `SESSION_HANDOFF.md`, `pr-registry.md`
+- Spec PRODUCT: `PROM-MESSAGE-STATUS`, `PROM-REALTIME-OWNER`, `PROM-RECEPTION-FILTER`, `PROM-GROUP-TICKS`; fix `SYS-DELIVERY` / `SYS-RECEPTION` intro
+
+---
+
 ## [Unreleased] - 2026-07-09
 
 ### Documentazione — prodotto stabile, epurazione Alpha

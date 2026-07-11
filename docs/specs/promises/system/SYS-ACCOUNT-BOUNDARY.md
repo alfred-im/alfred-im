@@ -7,7 +7,7 @@
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-11 |
 | **ADR** | [multi-account-parallel-sessions.md](../../../decisions/multi-account-parallel-sessions.md) |
-| **PR origine** | (in corso) |
+| **PR origine** | #179 |
 
 Promessa SYSTEM fondamentale: **nessun account** (sessione GoTrue / `auth.uid()`) può leggere o scrivere dati nel confine di un altro account. L'unica eccezione è l'infrastruttura di recapito [SYS-DELIVERY](./SYS-DELIVERY.md), che **non è** un account.
 

@@ -5,8 +5,8 @@
 | **Promessa ID** | `PROM-REALTIME-OWNER` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
-| **PR origine** | #159 |
+| **Ultima revisione** | 2026-07-11 |
+| **PR origine** | #159, #179 |
 
 Promessa di prodotto: subscribe Realtime Postgres su `messages` filtrato per `owner_id = io` — inbox, chat per peer e aggiornamento spunte mittente.
 
@@ -72,8 +72,9 @@ Multi-account: realtime solo sull'account in focus — [PROM-MULTI-ACCOUNT](./PR
 
 ```
 Destinatario apre chat → mark_peer_read(peer)
-  → read_at su righe destinatario (entrata)
-  → read_at su copia mittente (stesso λ)
+  → UPDATE read_at su righe destinatario (entrata, solo confine lettore)
+  → INSERT outbox event_kind=read_receipt per ogni λ
+  → alfred_delivery.process_outbox → UPDATE read_at copia mittente
   → Realtime UPDATE su mittente → ✓✓ blu
 ```
 

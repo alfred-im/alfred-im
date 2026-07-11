@@ -42,7 +42,7 @@ Nel client cloud Alfred il livello 2 segue il **server come fonte di verità**: 
 
 ## Conseguenze implementative
 
-1. **`delivered_at`** va valorizzato quando il messaggio è persistito/recapitato nella fonte di verità rilevante — **non** quando il client del destinatario riceve un evento Realtime. Il meccanismo concreto (immediato in piattaforma vs ack bridge) è **pipeline di recapito**, non due tipi di chat — vedi [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md).
+1. **`delivered_at`** va valorizzato quando il messaggio è persistito/recapitato nella fonte di verità rilevante — **non** quando il client del destinatario riceve un evento Realtime. Il meccanismo concreto (internal: worker `alfred_delivery.process_outbox` nella stessa transazione RPC; federato: ack bridge) è **pipeline di recapito** [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md), non due tipi di chat — vedi [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md).
 2. **`read_at`** resta legato all'azione esplicita di lettura (`mark_peer_read`), indipendente dal disaccoppiamento invio/ricezione.
 3. **Outbox e bridge**: messaggi il cui recapito passa da bridge possono restare `pending`/`sent` fino a conferma — il disaccoppiamento è previsto nello schema (`outbox`, `bridge_jobs`); non definisce una «chat federata» separata.
 4. **Non confondere** con WhatsApp mobile P2P: Alfred è cloud-first; la semantica delle spunte riflette il server, non la singola sessione WebSocket del peer.

@@ -1,8 +1,8 @@
 # Alfred — Architettura (panoramica)
 
-**Data**: 2026-07-09  
+**Data**: 2026-07-11  
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
-**Stato**: PR **#108–#176** su `main` — prodotto stabile  
+**Stato**: PR **#108–#179** su `main` — prodotto stabile  
 **Registro PR**: [pr-registry.md](./pr-registry.md)
 
 > **Contratti (SDD)**: [docs/specs/registry.md](../specs/registry.md) — registro promesse SYSTEM / PRODUCT / SURFACE.  
@@ -80,13 +80,14 @@ client/lib/
 | Archivio per owner, outbox sempre | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) | PR #159 |
 | Inbox on-read, `ChatPeer` | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) | PR #159 |
 | Invio testo/GIF/voice/location | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) | PR #159 |
-| Spunte delivered/read (`delivered_at`/`read_at`) | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) | PR #159 |
+| Spunte delivered/read (`delivered_at`/`read_at`) | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md), [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) | PR #159, #179 |
+| Confine account (nessun cross-boundary RPC) | [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) | PR #179 |
 | Ricerca liste (conversazioni, contatti, allow list) | [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md) + [SURF-*](../specs/registry.md) | PR #132, #171 |
 | Profilo, avatar, pronomi | [SYS-PROFILE](../specs/promises/system/SYS-PROFILE.md), [PROM-PROFILE-IDENTITY](../specs/promises/product/PROM-PROFILE-IDENTITY.md), [SURF-PROFILE](../specs/surfaces/SURF-PROFILE.md) | PR #118, #134 |
 | Rubrica | [SYS-CONTACTS](../specs/promises/system/SYS-CONTACTS.md), [PROM-PERSONAL-CONTACTS](../specs/promises/product/PROM-PERSONAL-CONTACTS.md), [SURF-CONTACTS](../specs/surfaces/SURF-CONTACTS.md) | PR #109 |
-| Allow list ricezione | [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST](../specs/surfaces/SURF-ALLOWLIST.md) | PR #161 |
+| Allow list ricezione | [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST](../specs/surfaces/SURF-ALLOWLIST.md) | PR #161; gate nel worker #179 |
 | Scheda profilo peer (tap avatar) | [PROM-PEER-PROFILE](../specs/promises/product/PROM-PEER-PROFILE.md), [SURF-PEER-PROFILE](../specs/surfaces/SURF-PEER-PROFILE.md) | PR #163 |
-| Account gruppo, erogazione | [SYS-GROUP](../specs/promises/system/SYS-GROUP.md) | PR #162 |
+| Account gruppo, erogazione | [SYS-GROUP](../specs/promises/system/SYS-GROUP.md), [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) | PR #162, #179 |
 
 ### UI cross-cutting
 
@@ -107,15 +108,18 @@ Migrazioni: [pr-registry.md](./pr-registry.md) § migrazioni
 ### Integrazione bridge (non implementata)
 
 ```
-Client → send_message_to_profile → copia archivio mittente (✓ — accettato server)
-                                 → gate reception_allowlist(destinatario)
-                                 → SE allowed: copia archivio destinatario + delivered_at (✓✓)
-                                 → outbox completed (sempre)
-Bridge → claim outbox; aggiorna external_id, sync_cursors
+Client → send_message_to_profile (account mittente)
+       → INSERT copia mittente (✓)
+       → INSERT outbox (event_kind=deliver)
+       → alfred_delivery.process_outbox (stessa transazione, internal):
+            gate reception_allowlist(destinatario)
+            SE allowed: copia destinatario + delivered_at mittente (✓✓)
+            ALTRIMENTI: skip silenzioso (✓ permanente)
+Bridge → claim outbox federato; aggiorna external_id, sync_cursors
        → stesso gate allow list prima di materializzare copia ingresso (fase B)
 ```
 
-Vedi [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST](../specs/surfaces/SURF-ALLOWLIST.md), [bridge-stateless.md](../decisions/bridge-stateless.md), [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md). PostgREST: **un solo overload** di `send_message_to_profile`.
+Vedi [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md), [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md), [bridge-stateless.md](../decisions/bridge-stateless.md), [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md).
 
 ---
 
@@ -133,7 +137,7 @@ Vedi [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION
 |---------|------|
 | Gate CI | `client/scripts/verify.sh` |
 | SDD sync | `scripts/check-spec-sync.sh` |
-| Integrazione | `client/scripts/integration-multi-account.sh` |
+| Integrazione | `client/scripts/integration-multi-account.sh` · `bash scripts/test.sh integration-ticks` |
 | E2E | `client/e2e/` |
 | SQL smoke | `supabase/tests/` |
 

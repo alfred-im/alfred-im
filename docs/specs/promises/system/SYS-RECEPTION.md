@@ -5,11 +5,11 @@
 | **Promessa ID** | `SYS-RECEPTION` |
 | **Classe** | SYSTEM |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-07-11 |
 | **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) |
-| **PR** | #161 |
+| **PR** | #161, #179 |
 
-Promesse di piattaforma per `reception_allowlist`, gate recapito in `send_message_to_profile` e semantica rifiuto silenzioso — filtro sempre attivo, isolato da rubrica.
+Promesse di piattaforma per `reception_allowlist`, gate recapito nel worker [SYS-DELIVERY](./SYS-DELIVERY.md) e semantica rifiuto silenzioso — filtro sempre attivo, isolato da rubrica.
 
 ---
 

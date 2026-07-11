@@ -1,7 +1,7 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-07-09  
-**Status**: `implemented` su `main` (migrazioni fino a `20260707190000`, incl. SYS-GROUP e revoke helper RPC)  
+**Ultima revisione**: 2026-07-11  
+**Status**: `implemented` su `main` (migrazioni fino a `20260711190000`, incl. account boundary delivery plane)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [index.md](../index.md).
@@ -158,8 +158,8 @@ Worker infrastruttura **non-account** — unico attore autorizzato a attraversar
 | `process_outbox(uuid)` | Dispatcher per `event_kind` |
 | `deliver_internal(uuid)` | Recapito 1:1 / verso gruppo |
 | `process_read_receipt(uuid)` | Propaga `read_at` al mittente |
-| `group_erogate(uuid)` | Broadcast gruppo → allow list |
-| `erogate_group_message(...)` | Fan-out proxy partecipanti |
+| `alfred_delivery.group_erogate(uuid)` | Broadcast gruppo → allow list |
+| `alfred_delivery.erogate_group_message(...)` | Fan-out proxy partecipanti |
 
 **GRANT**: nessuno su `authenticated`. Migrazione `20260711190000`.
 

@@ -1,6 +1,6 @@
 # Registro PR Flutter (main)
 
-**Ultimo aggiornamento**: 2026-07-09 (epurazione terminologia Alpha)  
+**Ultimo aggiornamento**: 2026-07-11 (delivery plane #179)  
 **Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
 
 Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/full-stack.md` (e fix dedicato se applicabile).
@@ -55,7 +55,7 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#158** | Spec SYS-MAILBOX (SDD) | Promessa `SYS-MAILBOX` approved | SYS-MAILBOX | **incorporata in #159** |
 | **#159** | Modello caselle mailbox | Drop/recreate `messages` per-owner; outbox sempre; `delivered_at`/`read_at`; client + test | SYS-MAILBOX | `mailbox-inbox-outbox-spec.md`, `contracts/rpc.md`, `contracts/schema.md`, migrazione `20260704120000` |
 | **#160** | Regole consenso esplicito | Conferma verbale prima di scrittura repo; SDD gate unico | — | `.cursor-rules.md`, `AGENTS.md` |
-| **#161** | Allow list ricezione | Allow list ricezione; gate `send_message_to_profile`; UI «Persone consentite»; rifiuto silenzioso | SYS-RECEPTION, PROM-RECEPTION-FILTER, SURF-ALLOWLIST | `contracts/schema.md`, `contracts/rpc.md`, migrazione `20260704130000` |
+| **#161** | Allow list ricezione | Allow list ricezione; gate recapito (poi spostato in worker #179); UI «Persone consentite»; rifiuto silenzioso | SYS-RECEPTION, PROM-RECEPTION-FILTER, SURF-ALLOWLIST | `contracts/schema.md`, `contracts/rpc.md`, migrazione `20260704130000` |
 | **#162** | Account gruppo | Account `profile_kind = group`; shell senza inbox; erogazione automatica; broadcast singola riga; `original_author_id`; UI autore avatar+nome | SYS-GROUP, SURF-GROUP-SHELL, SURF-GROUP-CONVERSATION | `groups-client.md`, `contracts/rpc.md`, `contracts/schema.md`, migrazioni `20260706120000`–`20260706140000` |
 | **#163** | Scheda profilo peer | Overlay fullscreen al tap avatar; Allow + rubrica + CTA chat (#176); azioni immediate | PROM-PEER-PROFILE, SURF-PEER-PROFILE | `peer-profile-overlay.md`, `peer_profile_overlay.dart` |
 | **#164** | Review P0 client | Dedupe realtime `client_message_id`; retry media web; skip `list_inbox` account gruppo; rollback `setFocus` | SYS-MAILBOX, SYS-GROUP, PROM-MULTI-ACCOUNT | `messages_controller.dart`, `outbound_message_queue.dart`, `inbox_controller.dart`, `account_manager.dart` |
@@ -69,6 +69,7 @@ Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`,
 | **#174** | Redirect conferma email | `AuthRedirectUrl` demo su web pubblico; SURF-AUTH-008/013; Site URL localhost = canarino tecnico | SURF-AUTH | `SURF-AUTH.md`, `auth_redirect_url.dart`, `PROJECT_MAP` § redirect auth |
 | **#175** | Prodotto stabile / doc hub | Epurazione terminologia Alpha; rename `full-stack` / `pr-registry`; `devDemoDefault` | — | `PROJECT_MAP.md`, hub docs |
 | **#176** | CTA profilo peer | Pulsante sticky «Inizia a chattare»; chiude overlay e apre chat | PROM-PEER-PROFILE, SURF-PEER-PROFILE | `peer-profile-overlay.md`, `peer_profile_overlay.dart` |
+| **#179** | Account boundary + delivery plane | `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY`; schema `alfred_delivery`; RPC account solo confine proprio; worker outbox (`deliver`, `read_receipt`, `group_erogate`); test spunte `integration-ticks` | SYS-ACCOUNT-BOUNDARY, SYS-DELIVERY, SYS-MAILBOX, SYS-RECEPTION, SYS-GROUP | `mailbox-inbox-outbox-spec.md`, `contracts/schema.md`, `contracts/rpc.md`, migrazione `20260711190000` |
 
 ---
 
@@ -115,11 +116,12 @@ Dopo ogni merge su `main`:
 | `20260702120000_message_location_support.sql` | #153 | Enum `location` (step 1) |
 | `20260702120100_message_location_support.sql` | #153 | Lat/lng, RPC 10 arg, preview inbox |
 | `20260704120000_mailbox_per_owner_archive.sql` | #159 | Modello caselle: archivio per `owner_id`, outbox sempre, spunte date |
-| `20260704130000_reception_allowlist.sql` | #161 | Allow list ricezione; gate recapito in `send_message_to_profile` |
+| `20260704130000_reception_allowlist.sql` | #161 | Allow list ricezione; gate recapito (refactor worker in #179) |
 | `20260706120000_group_accounts.sql` | #162 | `profile_kind`, `original_author_id`, RPC gruppo, erogazione |
 | `20260706130000_list_inbox_peer_profile_kind.sql` | #162 | `peer_profile_kind` in `list_inbox` |
 | `20260706140000_group_broadcast_and_content_author.sql` | #162 | Broadcast singola riga; `original_author_id` sempre valorizzato |
 | `20260707190000_revoke_helper_rpc_from_authenticated.sql` | #166 | REVOKE helper RPC gruppo da ruolo `authenticated` |
+| `20260711190000_account_boundary_delivery.sql` | #179 | Schema `alfred_delivery`; worker outbox; RPC account senza cross-boundary |
 
 ---
 

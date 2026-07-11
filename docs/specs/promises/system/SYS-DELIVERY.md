@@ -7,7 +7,7 @@
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-11 |
 | **ADR** | [bridge-stateless.md](../../../decisions/bridge-stateless.md), [server-as-reception.md](../../../decisions/server-as-reception.md) |
-| **PR origine** | (in corso) |
+| **PR origine** | #179 |
 
 Promessa SYSTEM — infrastruttura **non-account** che attraversa i confini [SYS-ACCOUNT-BOUNDARY](./SYS-ACCOUNT-BOUNDARY.md): bus `outbox`, worker `alfred_delivery.*`, stesso contratto per internal oggi e federazione domani.
 
@@ -51,7 +51,6 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 | **SYS-DELIVERY-015** | `group_erogate`: per ogni partecipante allow list con gate → INSERT riga erogata (stesso λ) |
 | **SYS-DELIVERY-016** | Al termine: `outbox.status = completed` (o `failed` con `last_error` su errore transazione) |
 | **SYS-DELIVERY-017** | Idempotenza destinatario: `ON CONFLICT (owner_id, logical_message_id) DO NOTHING` |
-
 | **SYS-DELIVERY-018** | ✓ singola: copia mittente con `delivered_at` null permanente se gate rifiuta |
 | **SYS-DELIVERY-019** | ✓✓ grigie: worker `deliver` valorizza `delivered_at` su copia mittente; `read_at` null |
 | **SYS-DELIVERY-020** | ✓✓ blu: lettore aggiorna solo archivio locale; worker `read_receipt` propaga `read_at` alla copia mittente |
