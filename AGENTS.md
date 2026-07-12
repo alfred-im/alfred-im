@@ -55,10 +55,36 @@ project. There is no local backend to start: the Supabase URL + anon key are bak
 `client/lib/config/app_config.dart` defaults, so the running web app talks to the real cloud
 backend out of the box.
 
-### Toolchain (already provisioned in the VM snapshot)
+### Toolchain (provisioned in the VM snapshot; refreshed by the startup update script)
 - Flutter SDK lives at `/opt/flutter` and is on `PATH` via `~/.bashrc` (Flutter 3.44.x / Dart 3.12.x).
-- The startup update script only refreshes dependencies (`flutter pub get` + `npm install` in `client/`).
   If `flutter` is not found in a non-interactive shell, call it by absolute path `/opt/flutter/bin/flutter`.
+- The startup update script only refreshes dependencies: `flutter pub get` + `npm install` in `client/`,
+  plus the Python bridge venv (`.venv` at repo root, deps from `bridge-*/requirements.txt`).
+- Also present in the snapshot: Docker CE, `supabase` CLI, `flyctl` is **not** installed (Fly deploy happens
+  via git push, not from this VM — see below).
+
+### Whole-stack local dev (non-obvious)
+- **Two backend options.** By default the app points at the **hosted** Supabase (defaults in
+  `client/lib/config/app_config.dart`), so `flutter run` talks to it out of the box. For an **isolated local**
+  backend, run `supabase start` and launch the client with
+  `--dart-define=SUPABASE_URL=http://localhost:54321 --dart-define=SUPABASE_ANON_KEY=<local anon>`
+  (get the anon key from `supabase status`). Prefer local for anything that writes, so you never touch the
+  user's live/test data.
+- **`supabase start` works on a fresh apply** (all 29 migrations + `seed.sql`). It needs the Docker daemon
+  running (see below). Local users can be created confirmed via the GoTrue admin API with the `service_role`
+  key (`POST /auth/v1/admin/users`, `email_confirm:true`, `user_metadata.username`); the `handle_new_user`
+  trigger then creates the `profiles` row. Note: the async delivery worker (`alfred_delivery.process_outbox`)
+  is not scheduled locally, so a sent message's `delivered_at`/recipient copy stay null until processed — the
+  sender's copy is still written, which is enough to exercise the send path.
+- **Docker daemon is not managed by systemd here.** Start it manually if needed:
+  `sudo dockerd > /tmp/dockerd.log 2>&1 &` then `sudo chmod 666 /var/run/docker.sock` so non-root can use it.
+- **Python bridges (`bridge-xmpp`, `bridge-matrix`) are stubs** exposing only `GET /health`. Run locally:
+  `.venv/bin/python bridge-xmpp/main.py` (`XMPP_PORT`, default 8080) and `.venv/bin/python bridge-matrix/main.py`
+  (`MATRIX_PORT`, default 8081). Both return `{"status":"ok",...}`. **Port clash:** the XMPP bridge default 8080
+  collides with the `flutter run` example port below — run the web app on a different port (e.g. 8090) if both run.
+- **Fly.io + GitHub Pages are the user's test/review environment**, fed automatically by pushing to git (Pages via
+  `.github/workflows/deploy-pages.yml`; Fly via its own deploy-on-push). Do **not** `flyctl deploy` or write to the
+  live Supabase from this dev VM without explicit user confirmation — that is their review surface, not a dev target.
 
 ### Lint / test / build
 - **Hub test:** `cd client && bash scripts/test.sh list` — catalogo gate + suite manuali (`scripts/test/README.md`).
