@@ -83,7 +83,7 @@ curl -sS -X POST "$SUPABASE_URL/auth/v1/token?grant_type=password" \
 
 Il client bootstrap usa `EphemeralPkceStorage` (`pkceAsyncStorage`) con `EmptyLocalStorage` —
 non PKCE senza storage (crash null) né `AuthFlowType.implicit`. Vedi PR #142 e
-`docs/fixes/auth-bootstrap-gotrue-revoke.md`.
+`docs/guides/multi-account.md`.
 
 ---
 

@@ -60,6 +60,6 @@ Prima del fix multi-account (#143), `removeAccount` poteva chiamare `client.auth
 
 ## Riferimenti
 
-- `docs/fixes/auth-bootstrap-gotrue-revoke.md`
+- `docs/guides/multi-account.md`
 - `docs/decisions/multi-account-parallel-sessions.md`
 - `docs/AGENT_DEBUG_ACCOUNTS.md`

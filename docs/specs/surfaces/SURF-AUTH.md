@@ -77,7 +77,7 @@ Il `supabase/config.toml` nel repo documenta anche `localhost:8080` per sviluppo
 
 | SURF-ID | Verifica |
 |--------------------|----------|
-| SURF-AUTH-001 | `client/lib/screens/app_shell.dart` — `sessionReady` → sempre `HomeScreen`; `design/auth-overlay-shell.md` |
+| SURF-AUTH-001 | `client/lib/screens/app_shell.dart` — `sessionReady` → sempre `HomeScreen`; `guides/multi-account.md` |
 | SURF-AUTH-002 | `auth_overlay_shell.md`; `client/test/unit/auth_controller_test.dart` — gate overlay |
 | SURF-AUTH-003 | `auth_overlay_shell.md` |
 | SURF-AUTH-004 | `auth_screen.dart` — toggle Accedi/Registrati |
@@ -85,7 +85,7 @@ Il `supabase/config.toml` nel repo documenta anche `localhost:8080` per sviluppo
 | SURF-AUTH-006 | `AuthScreen` — toggle tipo account |
 | SURF-AUTH-008 | `auth_redirect_url.dart`; `account_session.dart` (`signUp`); `account_manager.dart` (`resetPasswordForEmail`); `auth_redirect_url_test.dart` |
 | SURF-AUTH-014 | `shareable_link_controller.dart`; scenario manuale — URL con `#peer` e 0 account → login → profilo |
-| SURF-AUTH-010 | `design/auth-overlay-shell.md`; PR #140 |
+| SURF-AUTH-010 | `guides/multi-account.md` |
 | SURF-AUTH-013 | Verifica manuale: flusso corretto → GitHub Pages; localhost = canarino (errore config/deploy), non esito prodotto |
 
 Gate: `cd client && bash scripts/verify.sh`
@@ -97,4 +97,4 @@ Gate: `cd client && bash scripts/verify.sh`
 - [SURF-ACCOUNT-SIDEBAR.md](./SURF-ACCOUNT-SIDEBAR.md)
 - [PROM-SHAREABLE-LINK.md](../promises/product/PROM-SHAREABLE-LINK.md)
 - [registry.md](../registry.md)
-- [auth-overlay-shell.md](../../design/auth-overlay-shell.md)
+- [multi-account.md](../../guides/multi-account.md)

@@ -30,9 +30,8 @@ Dopo `.cursor-rules.md`, consulta la documentazione esistente secondo necessità
 | Priorità | File | Quando |
 |----------|------|--------|
 | Obbligatorio all'avvio sessione | `PROJECT_MAP.md` | Architettura, struttura, vincoli del software |
-| Promesse / contratti | `docs/specs/README.md`, `docs/specs/registry.md`, `docs/specs/index.md` | Prima di promesse nuove o modificate |
+| Promesse / contratti | `docs/specs/README.md`, `docs/specs/registry.md` | Prima di promesse nuove o modificate |
 | Indice navigazione | `docs/INDICE.md` | Trovare documenti tecnici per area |
-| Stato progetto | `docs/PROJECT_STATUS.md` | Contesto generale e feature implementate |
 | Agenti Cloud | `AGENTS.md` | Toolchain, test, SDD, ignorare spinta completamento |
 
 Per approfondimenti tematici, usa `docs/INDICE.md` — non inventare architettura se è già documentata.

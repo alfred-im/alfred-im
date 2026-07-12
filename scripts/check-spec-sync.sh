@@ -13,9 +13,7 @@ cd "$ROOT"
 PRODUCT_DIR="docs/specs/promises/product"
 SYSTEM_DIR="docs/specs/promises/system"
 SURFACES_DIR="docs/specs/surfaces"
-INDEX="docs/specs/index.md"
 REGISTRY="docs/specs/registry.md"
-INDICE="docs/INDICE.md"
 ERR=0
 
 echo "==> SDD: registry e contratti SYSTEM"
@@ -84,48 +82,12 @@ for surf in "$SURFACES_DIR"/SURF-*.md; do
   fi
 done
 
-echo "==> SDD: index.md allineato a registry"
-for sys in "$SYSTEM_DIR"/SYS-*.md; do
-  [[ -f "$sys" ]] || continue
-  base="$(basename "$sys" .md)"
-  if ! grep -q "$base" "$INDEX"; then
-    echo "ERROR: $base non elencato in $INDEX" >&2
-    ERR=1
-  fi
-done
-for prom in "$PRODUCT_DIR"/PROM-*.md; do
-  [[ -f "$prom" ]] || continue
-  base="$(basename "$prom" .md)"
-  if ! grep -q "$base" "$INDEX"; then
-    echo "ERROR: $base non elencato in $INDEX" >&2
-    ERR=1
-  fi
-done
-for surf in "$SURFACES_DIR"/SURF-*.md; do
-  [[ -f "$surf" ]] || continue
-  base="$(basename "$surf" .md)"
-  if ! grep -q "$base" "$INDEX"; then
-    echo "ERROR: $base non elencato in $INDEX" >&2
-    ERR=1
-  fi
-done
-
-echo "==> SDD: INDICE.md allineato a registry (PRODUCT)"
-for prom in "$PRODUCT_DIR"/PROM-*.md; do
-  [[ -f "$prom" ]] || continue
-  base="$(basename "$prom" .md)"
-  if ! grep -q "$base" "$INDICE"; then
-    echo "ERROR: $base non elencato in $INDICE" >&2
-    ERR=1
-  fi
-done
-
 echo "==> SDD: nessun residuo cartella capabilities"
 if [[ -d docs/specs/capabilities ]]; then
   echo "ERROR: docs/specs/capabilities/ ancora presente — rimuovere" >&2
   ERR=1
 fi
-if grep -rq 'capabilities/' docs/specs/promises docs/specs/surfaces docs/specs/registry.md docs/specs/index.md docs/specs/README.md 2>/dev/null; then
+if grep -rq 'capabilities/' docs/specs/promises docs/specs/surfaces docs/specs/registry.md docs/specs/README.md 2>/dev/null; then
   echo "ERROR: riferimenti a capabilities/ in docs/specs/" >&2
   ERR=1
 fi

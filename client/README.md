@@ -50,4 +50,4 @@ lib/
 └── widgets/     # AuthOverlay, InboxPanel, ChatPanel, PeerProfileOverlay, …
 ```
 
-Vedi `docs/decisions/multi-account-parallel-sessions.md`, `docs/implementation/multi-account-client.md`, `docs/implementation/groups-client.md`, `docs/implementation/peer-profile-overlay.md`, `PROJECT_MAP.md`.
+Vedi `docs/guides/multi-account.md`, `docs/guides/groups.md`, `docs/guides/peer-profile.md`, `docs/decisions/multi-account-parallel-sessions.md`, `PROJECT_MAP.md`.

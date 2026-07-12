@@ -100,5 +100,5 @@ Riferimenti che **violavano** questa regola; stato dopo `20260704120000`:
 
 - [bridge-stateless.md](./bridge-stateless.md) — handler recapito uscente
 - [server-as-reception.md](./server-as-reception.md) — semantica spunte lato server (unificata per tutte le chat)
-- [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) — aggancio al fondo (feature unificata)
+- [chat-scroll.md](../guides/chat-scroll.md) — aggancio al fondo
 - [full-stack.md](../architecture/full-stack.md) — da riallineare dove cita tipi di chat distinti

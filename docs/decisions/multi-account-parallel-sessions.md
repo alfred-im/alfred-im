@@ -119,7 +119,7 @@ La sessione client in focus usa il JWT proprio → RLS e Realtime rispettano `au
 
 **Trade-off**: niente realtime inbox in background per account non in focus.
 
-Dettaglio: `docs/fixes/multi-account-single-active-gotrue-pr152.md`
+Dettaglio: `docs/guides/multi-account.md`
 
 ---
 
@@ -155,9 +155,7 @@ Dettaglio: `docs/fixes/multi-account-single-active-gotrue-pr152.md`
 
 | Documento | Contenuto |
 |-----------|-----------|
-| [auth-overlay-shell.md](../design/auth-overlay-shell.md) | Regole UX overlay + placeholder |
-| [multi-account-client.md](../implementation/multi-account-client.md) | Dettaglio file e flussi codice (§3.5 persistenza PR #147) |
-| [multi-account-single-active-gotrue-pr152.md](../fixes/multi-account-single-active-gotrue-pr152.md) | Fix BroadcastChannel web |
+| [multi-account.md](../guides/multi-account.md) | Dettaglio file, flussi, overlay, una GoTrue attiva |
 | [full-stack.md](../architecture/full-stack.md) §3 | Architettura client aggiornata |
 | `PROJECT_MAP.md` | Mappa sintetica non deducibile |
 

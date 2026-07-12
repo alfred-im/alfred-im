@@ -4,7 +4,7 @@
 **Status**: `implemented` su `main` (migrazioni fino a `20260711190000`, incl. account boundary delivery plane)  
 **Fonte di verità**: `supabase/migrations/`
 
-Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [index.md](../index.md).
+Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
 
 ---
 

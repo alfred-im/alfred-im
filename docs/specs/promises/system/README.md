@@ -29,7 +29,7 @@ Ogni modifica a schema o RPC **deve** aggiornare questi contratti e la promessa 
 | SYS-ACCOUNT-BOUNDARY | [SYS-ACCOUNT-BOUNDARY.md](./SYS-ACCOUNT-BOUNDARY.md) | Confine account (legge madre) |
 | SYS-DELIVERY | [SYS-DELIVERY.md](./SYS-DELIVERY.md) | Outbox + worker delivery |
 
-Indice completo: [registry.md](../../registry.md) · [index.md](../../index.md).
+Indice completo: [registry.md](../../registry.md).
 
 ---
 

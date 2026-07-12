@@ -10,13 +10,13 @@ Funzionalità **future** desiderate per Alfred (client Flutter + piattaforma + b
 
 | Area | Stato | Documentazione |
 |------|-------|----------------|
-| Spunte cloud (inviato / consegnato server / lettura) | ✅ interni via worker `alfred_delivery` (#179) | [server-as-reception.md](./decisions/server-as-reception.md), [PROM-MESSAGE-STATUS](./specs/promises/product/PROM-MESSAGE-STATUS.md), [SYS-DELIVERY](./specs/promises/system/SYS-DELIVERY.md) |
-| Chat testo, GIF, voice, location | ✅ | [voice-notes.md](./implementation/voice-notes.md), [location-sharing.md](./implementation/location-sharing.md) |
+| Spunte cloud (inviato / consegnato server / lettura) | ✅ interni via worker `alfred_delivery` | [server-as-reception.md](./decisions/server-as-reception.md), [PROM-MESSAGE-STATUS](./specs/promises/product/PROM-MESSAGE-STATUS.md), [SYS-DELIVERY](./specs/promises/system/SYS-DELIVERY.md) |
+| Chat testo, GIF, voice, location | ✅ | [media.md](./guides/media.md) |
 | Inbox mailbox (archivio owner) | ✅ | [SYS-MAILBOX.md](./specs/promises/system/SYS-MAILBOX.md), [SURF-INBOX.md](./specs/surfaces/SURF-INBOX.md), [address-based-messaging.md](./decisions/address-based-messaging.md) |
-| Allow list ricezione | ✅ sempre attiva; rifiuto silenzioso (#161, gate worker #179) | [SYS-RECEPTION.md](./specs/promises/system/SYS-RECEPTION.md), [SURF-ALLOWLIST.md](./specs/surfaces/SURF-ALLOWLIST.md) |
-| Account gruppo + erogazione | ✅ (#162, worker #179) | [SYS-GROUP.md](./specs/promises/system/SYS-GROUP.md), [groups-client.md](./implementation/groups-client.md) |
-| Link condivisibili `#indirizzo` | ✅ (#178) | [PROM-SHAREABLE-LINK.md](./specs/promises/product/PROM-SHAREABLE-LINK.md), [shareable-link.md](./implementation/shareable-link.md) |
-| Multi-account (manifest + focus) | ✅ | [PROM-MULTI-ACCOUNT.md](./specs/promises/product/PROM-MULTI-ACCOUNT.md), [multi-account-client.md](./implementation/multi-account-client.md) |
+| Allow list ricezione | ✅ sempre attiva; rifiuto silenzioso | [SYS-RECEPTION.md](./specs/promises/system/SYS-RECEPTION.md), [SURF-ALLOWLIST.md](./specs/surfaces/SURF-ALLOWLIST.md) |
+| Account gruppo + erogazione | ✅ | [SYS-GROUP.md](./specs/promises/system/SYS-GROUP.md), [groups.md](./guides/groups.md) |
+| Link condivisibili `#indirizzo` | ✅ | [PROM-SHAREABLE-LINK.md](./specs/promises/product/PROM-SHAREABLE-LINK.md), [shareable-link.md](./guides/shareable-link.md) |
+| Multi-account (manifest + focus) | ✅ | [PROM-MULTI-ACCOUNT.md](./specs/promises/product/PROM-MULTI-ACCOUNT.md), [multi-account.md](./guides/multi-account.md) |
 | Federazione XMPP/Matrix | ⏸ Outbox only | [bridge-stateless.md](./decisions/bridge-stateless.md) |
 
 Spunte federate (XEP-0184 / XEP-0333 via bridge): da implementare con i bridge Python.
@@ -145,7 +145,7 @@ Spunte federate (XEP-0184 / XEP-0333 via bridge): da implementare con i bridge P
 La maggior parte delle XEP richiede supporto server. Prima di implementare una feature, verificare supporto lato bridge e homeserver federati.
 
 ### Testing
-Ogni nuova XEP deve includere test bridge, integrazione piattaforma e documentazione in `docs/implementation/`.
+Ogni nuova XEP deve includere test bridge, integrazione piattaforma e documentazione in `docs/guides/`.
 
 ### Riferimenti Utili
 - **XEP Index**: https://xmpp.org/extensions/

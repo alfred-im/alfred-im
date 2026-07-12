@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-11 (delivery plane + revisione doc)  
+**Ultimo aggiornamento**: 2026-07-12  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 ---
@@ -18,7 +18,7 @@
 
 ---
 
-## ⚠️ Stato repository (2026-07-11)
+## ⚠️ Stato repository
 
 | Elemento | Dettaglio |
 |----------|-----------|
@@ -27,7 +27,7 @@
 | **Deploy** | `.github/workflows/deploy-pages.yml` — `verify.sh` + build; job `deploy-pages` (**PR su `main` e push su `main`**, path `client/**`) |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
-| **PR su `main`** | **#108–#179** — cronologia in `CHANGELOG.md` (ultime: #178 shareable link, #179 delivery plane) |
+| **Cronologia merge** | `CHANGELOG.md` |
 | **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — `SYS-*` (incl. `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY`), `PROM-*`, `SURF-*` |
 
 **Non è produzione**: https://alfred-im.github.io/XmppTest/ è la demo di sviluppo su GitHub Pages (test, CI). Alfred è software personale open source: **non esiste** deploy di produzione né è previsto.
@@ -119,21 +119,19 @@
 | **Gate** | `scripts/verify.sh` — pub get + analyze (zero issue) + test |
 | **Build web** | `flutter build web --base-href "/XmppTest/"` |
 
-**Non deducibile — multi-account client**: `AccountManager` / `AccountSession` — manifest `alfred_saved_accounts` elenca **tutti** gli account aperti; in RAM **al massimo una** `AccountSession` GoTrue (quella in focus). Al `setFocus`: dispose sessione corrente (`clearAuthStorage: false`), `AccountSession.restore()` dal manifest, `inboxController.load()`. Storage auth per account: `SharedPreferencesLocalStorage` → `alfred_auth_{userId}`. Persistenza **dichiarativa** per entry (`persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). `openAccounts` legge dal manifest. **Vista UI** (`AccountViewState` per `userId`): chat aperta + inbox/chat su mobile **indipendenti per account**. Inbox UI: `HomeScreen` + `ListenableBuilder` su `focusedSession?.inboxController`. Coda invio: `userId|peerProfileId`. Overlay credenziali su `HomeScreen`. Doc: `docs/decisions/multi-account-parallel-sessions.md`, `docs/implementation/multi-account-client.md`, `docs/fixes/multi-account-single-active-gotrue-pr152.md`.
+**Non deducibile — multi-account client**: `AccountManager` / `AccountSession` — manifest `alfred_saved_accounts` elenca **tutti** gli account aperti; in RAM **al massimo una** `AccountSession` GoTrue (quella in focus). Al `setFocus`: dispose sessione corrente (`clearAuthStorage: false`), `AccountSession.restore()` dal manifest, `inboxController.load()`. Storage auth per account: `SharedPreferencesLocalStorage` → `alfred_auth_{userId}`. Persistenza **dichiarativa** per entry (`persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). `openAccounts` legge dal manifest. **Vista UI** (`AccountViewState` per `userId`): chat aperta + inbox/chat su mobile **indipendenti per account**. Inbox UI: `HomeScreen` + `ListenableBuilder` su `focusedSession?.inboxController`. Coda invio: `userId|peerProfileId`. Overlay credenziali su `HomeScreen`. Doc: `docs/guides/multi-account.md`, `docs/decisions/multi-account-parallel-sessions.md`.
 
-**Non deducibile — auth bootstrap**: login/add-account usa client effimero; **non** chiamare `signOut` sul bootstrap dopo adozione sessione dedicata (revoca refresh GoTrue). PKCE: `EphemeralPkceStorage`. Fix: PR #142 — `docs/fixes/auth-bootstrap-gotrue-revoke.md`. **Chiudi account** = logout **solo locale** (`close()` cancella storage, nessuna `POST /auth/v1/logout`). Fix multi-account PR #143: `docs/fixes/multi-account-chat-persistence-pr143.md`. Handoff: `docs/SESSION_HANDOFF.md`.
+**Non deducibile — auth bootstrap**: login/add-account usa client effimero; **non** chiamare `signOut` sul bootstrap dopo adozione sessione dedicata (revoca refresh GoTrue). PKCE: `EphemeralPkceStorage`. **Chiudi account** = logout **solo locale** (`close()` cancella storage, nessuna `POST /auth/v1/logout`). Doc: `docs/guides/multi-account.md`.
 
-**Non deducibile — layout inbox**: `HomeScreen` — mobile drawer `AccountSidebar`; desktop colonna sinistra account + inbox. `AccountSidebar`: chiusura account in card profilo. `InboxPanel`: ricerca on-demand ([PROM-LIST-FILTER](docs/specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](docs/specs/surfaces/SURF-INBOX.md)), `ValueKey(userId)` al cambio focus.
+**Non deducibile — layout inbox**: `HomeScreen` — mobile drawer `AccountSidebar`; desktop colonna sinistra account + inbox. `AccountSidebar`: chiusura account in card profilo. `InboxPanel`: ricerca on-demand ([PROM-LIST-FILTER](docs/specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](docs/specs/surfaces/SURF-INBOX.md)), `ValueKey(userId)` al cambio focus. Doc: `docs/guides/inbox.md`.
 
-**Non deducibile — chat**: `AnchoredMessageList` (`ListView` reverse, soglia 48 px). Spec: `docs/design/conversation-bottom-anchor.md`.
+**Non deducibile — chat**: `AnchoredMessageList` (`ListView` reverse, soglia 48 px). Doc: `docs/guides/chat-scroll.md`.
 
-**Non deducibile — voice**: hold-to-send, WebM/Opus canonico. Spec: `docs/implementation/voice-notes.md`.
+**Non deducibile — voice / location**: hold-to-send WebM/Opus; posizione statica con anteprima mappa OSM. Doc: `docs/guides/media.md`.
 
-**Non deducibile — posizione statica**: tap pin → anteprima mappa OSM (`flutter_map`) con affinamento GPS → conferma invio; bolle ricevute stesso widget tile OSM. Spec: `docs/implementation/location-sharing.md`.
+**Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi, `profileKind` (`user`/`group`); usato da `UserProfile.summary`, `OpenAccount.profile`, `ChatPeer.profile`. Promesse: `SYS-PROFILE`, `PROM-PROFILE-IDENTITY`, `SURF-PROFILE`, `SYS-GROUP`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`). **Scheda profilo peer**: tap avatar → `showPeerProfileOverlay` — doc `docs/guides/peer-profile.md`.
 
-**Non deducibile — profilo pubblico UI**: `ProfileSummary` (`lib/models/profile_summary.dart`) — unico modello per nome, username, avatar, pronomi, `profileKind` (`user`/`group`); usato da `UserProfile.summary`, `OpenAccount.profile`, `ChatPeer.profile`. Promesse: `SYS-PROFILE`, `PROM-PROFILE-IDENTITY`, `SURF-PROFILE`, `SYS-GROUP`. Fetch batch: `ProfileService.fetchSummariesByIds`. Widget condivisi: `ProfileAvatar`, `ProfileIdentityLines` (`lib/widgets/profile_identity.dart`). **Scheda profilo peer**: tap avatar → `showPeerProfileOverlay` (`lib/widgets/peer_profile_overlay.dart`) — Allow + rubrica; promesse `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE`, doc `docs/implementation/peer-profile-overlay.md`.
-
-**Non deducibile — shell gruppo**: focus su account `group` → `HomeScreen` nasconde inbox; `GroupConversationScreen` (storico unico + broadcast); allow list e profilo come account umano; layout mobile full-width sotto 720px. Chat con peer gruppo (account `user`): `MessagesController` con `peerIsGroup` + etichette autore (`MessageAuthorHeader`, `author_display.dart`). Doc: `docs/implementation/groups-client.md`, promessa `SYS-GROUP`.
+**Non deducibile — shell gruppo**: focus su account `group` → `HomeScreen` nasconde inbox; `GroupConversationScreen` (storico unico + broadcast); allow list e profilo come account umano; layout mobile full-width sotto 720px. Chat con peer gruppo (account `user`): `MessagesController` con `peerIsGroup` + etichette autore (`MessageAuthorHeader`, `author_display.dart`). Doc: `docs/guides/groups.md`, promessa `SYS-GROUP`.
 
 **Non deducibile — coda invio client**: `OutboundMessageQueue` ≠ outbox server federato.
 
@@ -218,18 +216,42 @@ bash scripts/verify.sh --build   # + build web
 
 ---
 
-## 🔄 Ultima Revisione
+## Riferimento operativo
 
-**Data**: 2026-07-11
+### Allow list ricezione
 
-- **#179** — `SYS-ACCOUNT-BOUNDARY` + `SYS-DELIVERY`: schema `alfred_delivery`, RPC account solo confine proprio, test `delivery_ticks_smoke.sql` + `integration-ticks`
-- Epurazione terminologia Alpha (2026-07-09): prodotto stabile; demo GitHub Pages
-- Doc hub (2026-07-12): `shareable-link.md`, allineamento feature #178/#179 in hub e `full-stack.md`
-- SDD registro promesse (#171, #172): `docs/specs/registry.md` — SYS/PROM/SURF; epurazione residui doc legacy
-- SYS-GROUP (#162): account gruppo, erogazione, broadcast singola riga, `original_author_id`, UI autore avatar+nome; doc hub + `groups-client.md`
-- SYS-RECEPTION (#161): allow list ricezione, gate server, UI «Persone consentite»; doc hub + semantica spunte ✓/✓✓
-- SYS-MAILBOX (#159): migrazione `20260704120000`, client allineato (`delivered_at`/`read_at`)
-- Revisione precedente: sync PR #108–#153; posizione statica (#153); multi-account (#147/#152)
-- Revisione doc 2026-07-04: allineamento post-mailbox (#159), contratti promossi, INDICE/README
+Ogni account parte con **`reception_allowlist` vuota** → nessun recapito finché non si aggiunge qualcuno in **Persone consentite** o dalla scheda profilo peer. Mittente non in lista: RPC ok, copia mittente (✓), **mai** `delivered_at` — worker segna `reception_rejected` in outbox. Rubrica (`contacts`) **≠** allow list.
 
-**Riferimenti**: `docs/INDICE.md`, `CHANGELOG.md`, `docs/specs/registry.md`
+### Spunte (delivery plane)
+
+| Spunta | Copia mittente | Chi imposta |
+|--------|----------------|-------------|
+| ✓ | `delivered_at` null | Account mittente (accettato server) |
+| ✓✓ grigie | `delivered_at` set | Worker `deliver` dopo gate destinatario |
+| ✓✓ blu | `read_at` set | Lettore → worker `read_receipt` |
+
+Test: `bash scripts/test.sh integration-ticks`
+
+### Gate test
+
+`verify.sh` — **161** test Dart. Smoke SQL: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `group_*.sql`, `reception_allowlist_*.sql`.
+
+### File chiave client
+
+| Area | Path |
+|------|------|
+| Multi-account | `client/lib/services/account_manager.dart` |
+| Invio / spunte UI | `message_service.dart`, `message.dart`, `message_bubble.dart` |
+| Link condivisibili | `shareable_link_controller.dart` |
+
+### Limiti noti
+
+Badge / realtime account in background — rinviato (BroadcastChannel web). Multi-tab stesso browser: last-write-wins.
+
+---
+
+## Cronologia
+
+Dettaglio merge e revisioni: **`CHANGELOG.md`**.
+
+**Riferimenti**: `docs/INDICE.md`, `docs/specs/registry.md`, `CHANGELOG.md`

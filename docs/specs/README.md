@@ -4,7 +4,7 @@
 **Ultima revisione**: 2026-07-12  
 **Versione metodo**: SDD — unico metodo di specifica
 
-Alfred esce dalla fase sperimentale (storica): il metodo governa **tutto ciò che il prodotto promette** all'utente e ai componenti — schema, RPC, comportamento riusabile e binding per superficie.
+Alfred è software stabile: il metodo governa **tutto ciò che il prodotto promette** — schema, RPC, comportamento riusabile e binding per superficie.
 
 ---
 
@@ -89,8 +89,7 @@ draft → approved → implemented → deprecated | superseded
 ```
 docs/specs/
 ├── README.md                 # Questo file (SDD)
-├── registry.md               # Indice unico promesse + stato
-├── index.md                  # Catalogo promesse
+├── registry.md               # Catalogo unico promesse + stato
 ├── _template-promise-product.md
 ├── _template-surface.md
 ├── promises/
@@ -106,10 +105,11 @@ docs/specs/
 
 | Layer | Dove | Ruolo |
 |-------|------|--------|
-| **ADR** | `docs/decisions/` | Perché architetturale — non cosa promettiamo |
-| **Promesse** | `promises/`, `surfaces/`, `contracts/` | **Contratto** — cosa è garantito |
-| **Panoramica** | `PROJECT_MAP.md`, `full-stack.md` | Orientamento — **non** duplicare promesse |
-| **Evidenza** | `docs/design/`, `docs/implementation/` | Storico PR; header `superseded by` promessa |
+| **ADR** | `docs/decisions/` | Perché architetturale |
+| **Promesse** | `promises/`, `surfaces/`, `contracts/`, `registry.md` | Contratto — cosa è garantito |
+| **Panoramica** | `PROJECT_MAP.md`, `full-stack.md` | Orientamento |
+| **Guide** | `docs/guides/` | Dettaglio implementativo |
+| **Cronologia** | `CHANGELOG.md` | Merge e revisioni |
 | **Test** | `client/test/`, `supabase/tests/` | Verifica; citati in tracciabilità |
 
 ---
@@ -183,13 +183,13 @@ Post-merge: implemented + registry + CHANGELOG (+ hub sotto)
 
 ### Checklist allineamento doc (post-merge su `main`)
 
-1. **`PROJECT_MAP.md`** — stato corrente, caratteristiche
-2. **`CHANGELOG.md`** — voce in `[Unreleased]` con numero PR
-3. **`docs/specs/`** — promesse in [registry.md](./registry.md) (`approved` → `implemented`); `contracts/schema.md` / `rpc.md` se SYSTEM
-4. **`docs/architecture/full-stack.md`** — sezione client o piattaforma interessata
-5. **`docs/INDICE.md`** — nuove doc o promesse in hub
-6. **`docs/PROJECT_STATUS.md`** / **`client/README.md`** — se cambia stato dev
-7. **`docs/implementation/`** o **`docs/fixes/`** — feature nuova o bug non ovvio
+1. **`PROJECT_MAP.md`** — stato corrente
+2. **`CHANGELOG.md`** — voce in `[Unreleased]`
+3. **`docs/specs/`** — [registry.md](./registry.md) (`approved` → `implemented`); `contracts/` se SYSTEM
+4. **`docs/architecture/full-stack.md`** — sezione interessata
+5. **`docs/INDICE.md`** — nuove guide o promesse
+6. **`client/README.md`** — se cambia toolchain client
+7. **`docs/guides/`** — nuova guida operativa se serve dettaglio implementativo
 8. **`scripts/check-spec-sync.sh`** — se toccate spec o migrazioni
 
 ---
@@ -207,6 +207,6 @@ Verifica: registry, promesse PRODUCT/SURFACE/SYSTEM, contratti `contracts/`, coe
 ## Riferimenti rapidi
 
 - **Registro**: [registry.md](./registry.md)
-- **Catalogo promesse**: [index.md](./index.md)
+- **Navigazione**: [INDICE.md](../INDICE.md)
 - **Regole agente**: [`.cursor-rules.md`](../../.cursor-rules.md) § SDD
 - **PR**: [`.github/PULL_REQUEST_TEMPLATE.md`](../../.github/PULL_REQUEST_TEMPLATE.md)

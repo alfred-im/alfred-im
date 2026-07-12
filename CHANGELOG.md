@@ -14,11 +14,10 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Documentazione
 
-- Allineamento delivery plane (2026-07-11): hub + spec PRODUCT spunte/ricezione
-- Feature non riportate (2026-07-12): `shareable-link.md`, `full-stack`, `peer-profile-overlay`, `WISHLIST`
-- Audit doc (2026-07-12): link morti; hub 14 PROM; test gate 161; contratti `rpc.md` / `schema.md`; rimosso `merge-doc-index.md` (checklist post-merge in `docs/specs/README.md`)
-- Prodotto stabile (2026-07-09): epurazione Alpha; `alpha-full-stack` → `full-stack`; ex `alpha-pr-registry` / `pr-registry` / `merge-doc-index` (poi rimosso 2026-07-12)
-- **#174**, **#176**, **#171**; SDD registro (#171, #172); audit hub 2026-07-09
+- Ristrutturazione doc (2026-07-12): catalogo unico `registry.md`; `docs/guides/`; stato in `PROJECT_MAP.md`; cronologia in `CHANGELOG.md`
+- Allineamento delivery plane: hub + spec PRODUCT spunte/ricezione
+- Feature shareable link: `guides/shareable-link.md`, `full-stack`, `peer-profile`
+- Audit doc: link morti; contratti `rpc.md` / `schema.md`; test gate 161
 
 ---
 

@@ -185,7 +185,7 @@ Il bridge è **stateless** ([bridge-stateless.md](../decisions/bridge-stateless.
 - Delete chat locale
 - Preservazione dati in migrazione (solo DB dev; niente prod)
 
-**Gruppi** — implementati (PR #162, promessa `SYS-GROUP`): account `profile_kind = group`, erogazione via worker, shell dedicata. Vedi [groups-client.md](../implementation/groups-client.md).
+**Gruppi** — account `profile_kind = group`, erogazione via worker, shell dedicata. Vedi [groups.md](../guides/groups.md) e promessa `SYS-GROUP`.
 
 ---
 

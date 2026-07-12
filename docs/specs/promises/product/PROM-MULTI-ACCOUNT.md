@@ -104,7 +104,7 @@ Layout overlay: `Stack` — `HomeScreen` sotto, `AuthOverlay` (45% nero) + `Auth
 
 | PROM-ID | Verifica |
 |---------|----------|
-| PROM-MULTI-ACCOUNT-001 | `client/lib/screens/app_shell.dart`; `design/auth-overlay-shell.md` |
+| PROM-MULTI-ACCOUNT-001 | `client/lib/screens/app_shell.dart`; `guides/multi-account.md` |
 | PROM-MULTI-ACCOUNT-002–004 | `account_storage_test.dart` |
 | PROM-MULTI-ACCOUNT-005–006 | `account_manager_persistence_test.dart` |
 | PROM-MULTI-ACCOUNT-010 | `account_manager_view_state_test.dart` |
@@ -112,7 +112,7 @@ Layout overlay: `Stack` — `HomeScreen` sotto, `AuthOverlay` (45% nero) + `Auth
 | PROM-MULTI-ACCOUNT-009 | `inbox_provider_lifecycle_test.dart` |
 | PROM-MULTI-ACCOUNT-010, 020 | `multi_account_chat_scenario_test.dart` |
 | PROM-MULTI-ACCOUNT-011 | `auth_service_multi_account_test.dart` |
-| PROM-MULTI-ACCOUNT-030, 034 | `design/auth-overlay-shell.md`; PR #140 |
+| PROM-MULTI-ACCOUNT-030, 034 | `guides/multi-account.md` |
 
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` · Integrazione: `bash scripts/test.sh integration` · E2E: `bash scripts/test.sh e2e-multi`
