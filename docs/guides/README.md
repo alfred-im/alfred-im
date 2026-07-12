@@ -1,6 +1,6 @@
 # Guide operative
 
-Dettaglio implementativo per AI. I contratti vivono in [specs/registry.md](../specs/registry.md).
+Dettaglio implementativo per AI. I contratti vivono in [specs/registry.md](../specs/registry.md). Panoramica pubblica: [`README.md`](../../README.md).
 
 | Guida | Promesse principali |
 |-------|----------------------|

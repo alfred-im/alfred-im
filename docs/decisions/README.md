@@ -1,6 +1,6 @@
 # Decisioni architetturali (ADR)
 
-Architecture Decision Records. Documento per AI.
+Architecture Decision Records. Documento per AI. Contesto prodotto: [`README.md`](../../README.md).
 
 ## Decisioni vincolanti
 

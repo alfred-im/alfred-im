@@ -29,6 +29,7 @@ Dopo `.cursor-rules.md`, consulta la documentazione esistente secondo necessità
 
 | Priorità | File | Quando |
 |----------|------|--------|
+| Ingresso pubblico | `README.md` | Panoramica repository, getting started, CoC |
 | Obbligatorio all'avvio sessione | `PROJECT_MAP.md` | Architettura, struttura, vincoli del software |
 | Promesse / contratti | `docs/specs/README.md`, `docs/specs/registry.md` | Prima di promesse nuove o modificate |
 | Indice navigazione | `docs/INDICE.md` | Trovare documenti tecnici per area |

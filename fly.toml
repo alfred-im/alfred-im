@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-app = "xmpptest"
+app = "alfred-im"
 primary_region = "fra"
 
 [build]

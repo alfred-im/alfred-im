@@ -1,6 +1,6 @@
 # Architettura
 
-Documentazione architetturale per AI.
+Documentazione architetturale per AI. Panoramica pubblica: [`README.md`](../../README.md).
 
 ## Documenti attivi
 

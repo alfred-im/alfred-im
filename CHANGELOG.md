@@ -8,12 +8,15 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Aggiunto
 
+- **#184** — Migrazione naming legacy `XmppTest` / `xmpptest` → `alfred-im` (GitHub Pages URL/base-href, Fly.io app, auth redirect, spec SURF-AUTH)
+- **#184** — Ingresso OSS su GitHub: `README.md` (consent-first, web/PWA, feminist-informed), `SECURITY.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1); badge CI + spec-sync
 - **#179** — `SYS-ACCOUNT-BOUNDARY` + `SYS-DELIVERY`: schema `alfred_delivery`, RPC account solo confine proprio; worker outbox (`deliver`, `read_receipt`, `group_erogate`); migrazione `20260711190000`
 - Test contratto spunte: `delivery_ticks_smoke.sql`, `bash scripts/test.sh integration-ticks`
 - **#178** — Link condivisibili stabili (`PROM-SHAREABLE-LINK`): fragment `#indirizzo` / `#indirizzo/chat`; share di sistema da scheda profilo peer e sidebar account; `ShareableLinkController` + test gate
 
 ### Documentazione
 
+- Allineamento post-#184: migrazione URL/path `alfred-im`; `docs/INDICE.md`, `PROJECT_MAP.md`, `client/README.md`, `docs/architecture/full-stack.md`, `docs/architecture/README.md`, `docs/decisions/README.md`, `docs/guides/README.md`, `docs/specs/README.md`, `docs/specs/promises/system/README.md`, `AGENTS.md`, `.cursor/rules/main.mdc`, `client/scripts/test/README.md`
 - Ristrutturazione doc (2026-07-12): catalogo unico `registry.md`; `docs/guides/`; stato in `PROJECT_MAP.md`; cronologia in `CHANGELOG.md`
 - Allineamento delivery plane: hub + spec PRODUCT spunte/ricezione
 - Feature shareable link: `guides/shareable-link.md`, `full-stack`, `peer-profile`
@@ -234,7 +237,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **ADR**: `docs/decisions/address-based-messaging.md`
 
 ### CI / deploy demo di sviluppo (2026-06-27)
-- **Workflow unificato `deploy-pages`**: ogni PR su `main` (path `client/**`) e ogni push a `main` pubblicano su https://alfred-im.github.io/XmppTest/ — ambiente **sviluppo**, non produzione
+- **Workflow unificato `deploy-pages`**: ogni PR su `main` (path `client/**`) e ogni push a `main` pubblicano su https://alfred-im.github.io/alfred-im/
 - Rimossi job `deploy-preview` / `deploy-prod`; concurrency `pages-dev-demo`
 - **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (default solo `main` → errore `environment protection rules` su PR)
 

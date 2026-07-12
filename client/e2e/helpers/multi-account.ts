@@ -12,7 +12,7 @@ import {
 import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
 
 export const BASE_URL =
-  process.env.ALFRED_BASE_URL ?? 'https://alfred-im.github.io/XmppTest/';
+  process.env.ALFRED_BASE_URL ?? 'https://alfred-im.github.io/alfred-im/';
 
 export const ACCOUNT1 = {
   email:

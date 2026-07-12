@@ -67,7 +67,7 @@ run_e2e() {
     npm install
     npx playwright install chromium
   fi
-  echo "==> Playwright e2e/ (ALFRED_BASE_URL=${ALFRED_BASE_URL:-https://alfred-im.github.io/XmppTest/})"
+  echo "==> Playwright e2e/ (ALFRED_BASE_URL=${ALFRED_BASE_URL:-https://alfred-im.github.io/alfred-im/})"
   npx playwright test e2e/ "$@"
 }
 

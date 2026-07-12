@@ -4,10 +4,21 @@ Navigazione per AI. **Contratti**: [specs/registry.md](./specs/registry.md) · *
 
 ---
 
+## Ingresso pubblico (GitHub)
+
+| File | Uso |
+|------|-----|
+| [README.md](../README.md) | Porta d'ingresso del repository — consent-first, getting started |
+| [SECURITY.md](../SECURITY.md) | Segnalazione vulnerabilità (Security Advisories) |
+| [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 |
+
+---
+
 ## Ingresso sessione
 
 | File | Uso |
 |------|-----|
+| [README.md](../README.md) | Panoramica pubblica e link rapidi |
 | [PROJECT_MAP.md](../PROJECT_MAP.md) | Mappa progetto — leggere all'inizio di ogni sessione |
 | [specs/registry.md](./specs/registry.md) | Catalogo unico promesse SYSTEM / PRODUCT / SURFACE |
 | [CHANGELOG.md](../CHANGELOG.md) | Cronologia merge e modifiche |
@@ -16,9 +27,9 @@ Navigazione per AI. **Contratti**: [specs/registry.md](./specs/registry.md) · *
 
 ## Client e toolchain
 
-- **Live**: https://alfred-im.github.io/XmppTest/
+- **Web client (Try it)**: https://alfred-im.github.io/alfred-im/
 - **Codice**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
-- [.cursor-rules.md](../.cursor-rules.md) · [AGENTS.md](../AGENTS.md)
+- [client/README.md](../client/README.md) · [.cursor-rules.md](../.cursor-rules.md) · [AGENTS.md](../AGENTS.md)
 - [AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md) — account agente; non toccare test1–4
 
 ---

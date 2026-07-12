@@ -1,16 +1,18 @@
-# Alfred Client (Flutter)
+# Alfred Client (Flutter web)
 
-Client ufficiale Alfred — multi-piattaforma (web, mobile, desktop).
+Client ufficiale Alfred — **Flutter web** (installabile come **PWA** su browser desktop e mobile).
+
+Panoramica repository: [`../README.md`](../README.md)
 
 ## Stato
 
-Client — collegato a Supabase (contatti, inbox, chat realtime, profilo, **multi-account**).
+Client web collegato a Supabase (contatti, inbox, chat realtime, profilo, **multi-account**).
 
 | | |
 |---|---|
 | **Multi-account** | Manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore |
 | **Auth** | Overlay su shell (`AuthOverlay`), non schermata piena |
-| **Live (dev demo)** | https://alfred-im.github.io/XmppTest/ |
+| **Try it** | https://alfred-im.github.io/alfred-im/ |
 | **Layout** | Lista inbox + chat (stile WhatsApp Web) |
 | **Inbox** | RPC `list_inbox()` — aggregazione on-read su `messages` |
 | **Chat** | Identificata da `peer_profile_id` (`ChatPeer`) |
@@ -22,6 +24,8 @@ Client — collegato a Supabase (contatti, inbox, chat realtime, profilo, **mult
 | **Gruppi** | Account `profile_kind = group`; `GroupHomePanel` + chat; partecipazione allow list bidirezionale — `SYS-GROUP` |
 | **Invio** | `send_message_to_profile` |
 | **Gate test** | `verify.sh` — **161** test unit/widget (zero issue analyze) |
+
+Build native mobile/desktop non è focus del progetto oggi; la superficie supportata è il web client.
 
 ## Test
 

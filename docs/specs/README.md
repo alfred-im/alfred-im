@@ -105,6 +105,7 @@ docs/specs/
 
 | Layer | Dove | Ruolo |
 |-------|------|--------|
+| **Ingresso pubblico** | `README.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md` | GitHub — panoramica, sicurezza, community |
 | **ADR** | `docs/decisions/` | Perché architetturale |
 | **Promesse** | `promises/`, `surfaces/`, `contracts/`, `registry.md` | Contratto — cosa è garantito |
 | **Panoramica** | `PROJECT_MAP.md`, `full-stack.md` | Orientamento |
@@ -183,14 +184,15 @@ Post-merge: implemented + registry + CHANGELOG (+ hub sotto)
 
 ### Checklist allineamento doc (post-merge su `main`)
 
-1. **`PROJECT_MAP.md`** — stato corrente
-2. **`CHANGELOG.md`** — voce in `[Unreleased]`
-3. **`docs/specs/`** — [registry.md](./registry.md) (`approved` → `implemented`); `contracts/` se SYSTEM
-4. **`docs/architecture/full-stack.md`** — sezione interessata
-5. **`docs/INDICE.md`** — nuove guide o promesse
-6. **`client/README.md`** — se cambia toolchain client
-7. **`docs/guides/`** — nuova guida operativa se serve dettaglio implementativo
-8. **`scripts/check-spec-sync.sh`** — se toccate spec o migrazioni
+1. **`README.md`** — se cambia posizionamento pubblico, getting started o community policy
+2. **`PROJECT_MAP.md`** — stato corrente
+3. **`CHANGELOG.md`** — voce in `[Unreleased]`
+4. **`docs/specs/`** — [registry.md](./registry.md) (`approved` → `implemented`); `contracts/` se SYSTEM
+5. **`docs/architecture/full-stack.md`** — sezione interessata
+6. **`docs/INDICE.md`** — nuove guide o promesse
+7. **`client/README.md`** — se cambia toolchain client
+8. **`docs/guides/`** — nuova guida operativa se serve dettaglio implementativo
+9. **`scripts/check-spec-sync.sh`** — se toccate spec o migrazioni
 
 ---
 

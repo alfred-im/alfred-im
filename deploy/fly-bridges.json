@@ -1,15 +1,15 @@
 {
-  "app": "xmpptest",
+  "app": "alfred-im",
   "region": "fra",
   "services": {
     "xmpp": {
-      "url": "https://xmpptest.fly.dev",
-      "health": "https://xmpptest.fly.dev/health",
+      "url": "https://alfred-im.fly.dev",
+      "health": "https://alfred-im.fly.dev/health",
       "internal_port": 8080
     },
     "matrix": {
-      "url": "https://xmpptest.fly.dev:8081",
-      "health": "https://xmpptest.fly.dev:8081/health",
+      "url": "https://alfred-im.fly.dev:8081",
+      "health": "https://alfred-im.fly.dev:8081/health",
       "internal_port": 8081
     }
   }

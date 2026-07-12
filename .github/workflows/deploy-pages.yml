@@ -42,7 +42,7 @@ jobs:
         working-directory: client
 
       - name: Build Flutter web (GitHub Pages base path)
-        run: flutter build web --release --base-href "/XmppTest/"
+        run: flutter build web --release --base-href "/alfred-im/"
         working-directory: client
 
       - name: SPA fallback for GitHub Pages
@@ -57,7 +57,7 @@ jobs:
         with:
           path: client/build/web
 
-  # Demo di sviluppo: ogni build (PR o main) pubblica su https://alfred-im.github.io/XmppTest/
+  # Web client: ogni build (PR o main) pubblica su https://alfred-im.github.io/alfred-im/
   # Richiede ambiente github-pages con «Deployment branches: All branches»
   # (Settings → Environments → github-pages). Default repo: solo main → PR falliscono.
   deploy-pages:
@@ -67,7 +67,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry1.outputs.page_url || steps.deployment_retry2.outputs.page_url }}
     steps:
-      - name: Deploy dev demo (GitHub Pages)
+      - name: Deploy web client (GitHub Pages)
         id: deployment
         uses: actions/deploy-pages@v4
         continue-on-error: true

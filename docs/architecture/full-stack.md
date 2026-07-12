@@ -12,7 +12,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Flutter Web (`client/`)                                   │
+│  Flutter web (`client/`) — PWA                            │
 │  Auth · Contatti · Persone consentite · Conversazioni · Chat · Profilo · Multi-account · Gruppi · Link `#` │
 └───────────────────────────┬─────────────────────────────────┘
                             │ HTTPS (REST + Realtime + Auth)
@@ -139,10 +139,10 @@ Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (
 
 | Target | Meccanismo |
 |--------|------------|
-| Web demo di sviluppo | GitHub Pages `/XmppTest/` — job `deploy-pages` |
+| Web client (GitHub Pages) | `/alfred-im/` — job `deploy-pages` |
 | Supabase | Migrazioni in repo → MCP/dashboard |
 
-**Non è produzione**: l’URL https://alfred-im.github.io/XmppTest/ è la **demo di sviluppo** su GitHub Pages (test, integrazione). Alfred è software personale open source: **non esiste** deploy di produzione né è previsto.
+**Try it:** https://alfred-im.github.io/alfred-im/ — panoramica pubblica in [`README.md`](../../README.md).
 
 **Non deducibile**: URL live = ultimo `deploy-pages` riuscito (PR o push su `main`), non sempre = tip di `main`.
 
@@ -175,4 +175,4 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, workflow `.github/workflows/deploy-
 
 ---
 
-**Riferimenti**: `PROJECT_MAP.md`, [docs/specs/registry.md](../specs/registry.md), [docs/specs/README.md](../specs/README.md)
+**Riferimenti**: [`README.md`](../../README.md), `PROJECT_MAP.md`, [docs/specs/registry.md](../specs/registry.md), [docs/specs/README.md](../specs/README.md)

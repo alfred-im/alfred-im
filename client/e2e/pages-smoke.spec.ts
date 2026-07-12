@@ -8,7 +8,7 @@ test('GitHub Pages mostra la schermata di login Alfred', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
 
-  await page.goto('https://alfred-im.github.io/XmppTest/', {
+  await page.goto('https://alfred-im.github.io/alfred-im/', {
     waitUntil: 'networkidle',
     timeout: 90_000,
   });

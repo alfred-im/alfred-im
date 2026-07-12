@@ -30,7 +30,7 @@ void main() {
       try {
         await client.auth.resetPasswordForEmail(
           'agadriel.sexpositive+alfredagent1@gmail.com',
-          redirectTo: 'https://alfred-im.github.io/XmppTest/',
+          redirectTo: 'https://alfred-im.github.io/alfred-im/',
         );
       } catch (e) {
         caught = e;

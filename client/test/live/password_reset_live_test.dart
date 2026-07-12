@@ -11,7 +11,7 @@ import 'package:test/test.dart';
 import 'package:alfred_client/config/app_config.dart';
 
 const _agentEmail = 'agadriel.sexpositive+alfredagent1@gmail.com';
-const _redirect = 'https://alfred-im.github.io/XmppTest/';
+const _redirect = 'https://alfred-im.github.io/alfred-im/';
 
 /// Storage in-memory minimo per PKCE (come farebbe Supabase.initialize).
 class _MemoryPkceStorage implements GotrueAsyncStorage {

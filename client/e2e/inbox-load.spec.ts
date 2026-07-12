@@ -5,7 +5,7 @@
 import { test, expect } from '@playwright/test';
 
 const BASE_URL =
-  process.env.ALFRED_BASE_URL ?? 'https://alfred-im.github.io/XmppTest/';
+  process.env.ALFRED_BASE_URL ?? 'https://alfred-im.github.io/alfred-im/';
 
 async function enableFlutterAccessibility(page: import('@playwright/test').Page) {
   const enabled = await page.evaluate(() => {

@@ -12,7 +12,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-BASE="${ALFRED_BASE_URL:-https://alfred-im.github.io/XmppTest/}"
+BASE="${ALFRED_BASE_URL:-https://alfred-im.github.io/alfred-im/}"
 
 if [[ "$BASE" == http://localhost:* ]] || [[ "$BASE" == http://127.0.0.1:* ]]; then
   SESSION_NAME="flutter-dev-server"

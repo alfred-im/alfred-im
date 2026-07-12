@@ -45,7 +45,7 @@ flutter test --exclude-tags live
 
 if [[ "$RUN_BUILD" == 1 ]]; then
   echo "==> flutter build web"
-  flutter build web --release --base-href "/XmppTest/"
+  flutter build web --release --base-href "/alfred-im/"
 fi
 
 echo "verify_ok"

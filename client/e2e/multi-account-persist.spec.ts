@@ -38,7 +38,7 @@ test('multi-account mobile: dopo F5 restano 2 account in lista (flusso utente)',
   page.on('pageerror', (err) => errors.push(err.message));
 
   const base =
-    process.env.ALFRED_BASE_URL ?? 'https://alfred-im.github.io/XmppTest/';
+    process.env.ALFRED_BASE_URL ?? 'https://alfred-im.github.io/alfred-im/';
   await page.goto(base, {
     waitUntil: 'domcontentloaded',
     timeout: E2E_TIMEOUT.boot,

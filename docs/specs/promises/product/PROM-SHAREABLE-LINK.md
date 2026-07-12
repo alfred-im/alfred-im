@@ -36,8 +36,8 @@ L'utente condivide un link che punta a una **risorsa** (profilo o chat con un in
 
 | Link | Destinazione |
 |------|--------------|
-| `https://alfred-im.github.io/XmppTest/#test2` | Profilo di `test2` |
-| `https://alfred-im.github.io/XmppTest/#test2/chat` | Chat con `test2` |
+| `https://alfred-im.github.io/alfred-im/#test2` | Profilo di `test2` |
+| `https://alfred-im.github.io/alfred-im/#test2/chat` | Chat con `test2` |
 | `…/#mario@alfred.app` | Stesso peer in forma `username@server` (server locale `alfred.app`) |
 
 ### Gruppi
