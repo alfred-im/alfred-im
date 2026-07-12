@@ -1,7 +1,7 @@
-# Registro PR Flutter (main)
+# Registro PR (main)
 
 **Ultimo aggiornamento**: 2026-07-11 (delivery plane #179)  
-**Scope**: PR mergiate su `main` dopo migrazione Flutter — riferimento per allineamento documentazione.
+**Scope**: PR mergiate su `main` — riferimento per allineamento documentazione.
 
 Documento per AI. Ogni PR deve riflettersi in: `PROJECT_MAP.md`, `CHANGELOG.md`, `docs/architecture/full-stack.md` (e fix dedicato se applicabile).
 

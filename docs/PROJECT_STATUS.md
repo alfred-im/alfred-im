@@ -6,7 +6,7 @@ Traccia lo stato del progetto per continuità del lavoro (`docs/PROJECT_STATUS.m
 
 ## Stato attuale (2026-07-09)
 
-**Flutter + Supabase + bridge Python**. Prodotto **stabile** (senza versionamento release). PR **#108–#179** su `main`.
+**Piattaforma di messaggistica** — Supabase + client Flutter + bridge Python. Prodotto **stabile** (senza versionamento release). PR **#108–#179** su `main`.
 
 | Componente | Stato |
 |------------|-------|
@@ -21,7 +21,7 @@ Traccia lo stato del progetto per continuità del lavoro (`docs/PROJECT_STATUS.m
 ## Stack
 
 ```
-Flutter (client/)  →  Supabase (piattaforma)  →  bridge XMPP + bridge Matrix (Fly.io)
+Supabase (piattaforma)  ←  client Flutter (`client/`)  →  bridge XMPP + Matrix (Fly.io)
 ```
 
 ## Build locale

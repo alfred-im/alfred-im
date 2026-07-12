@@ -50,9 +50,9 @@ Registro: [docs/specs/registry.md](docs/specs/registry.md). Metodo: [docs/specs/
 
 ## Cursor Cloud specific instructions
 
-Alfred is a **Flutter web** messaging client (`client/`) backed by a **live, hosted Supabase**
-project. There is no local backend to start: the Supabase URL + anon key are baked into
-`client/lib/config/app_config.dart` defaults, so the running web app talks to the real cloud
+Alfred is a **messaging platform** (Supabase + Flutter client + Python bridges). The web UI lives in
+`client/` (Flutter). There is no local backend to start by default: the Supabase URL + anon key are
+baked into `client/lib/config/app_config.dart` defaults, so `flutter run` talks to the hosted cloud
 backend out of the box.
 
 ### Toolchain (provisioned in the VM snapshot; refreshed by the startup update script)

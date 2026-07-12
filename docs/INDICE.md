@@ -5,7 +5,7 @@ Indice documenti tecnici per navigazione rapida. Documento per AI, non per utent
 ## Client attivo
 
 - **Live**: https://alfred-im.github.io/XmppTest/
-- **Codice**: `client/` (Flutter + Supabase)
+- **Codice**: `client/` (Flutter) · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
 ---
 

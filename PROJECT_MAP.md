@@ -40,7 +40,7 @@
 
 ## 📌 Panoramica Progetto
 
-**Alfred** è una piattaforma di messaggistica: **Flutter + Supabase + bridge Python** (federazione futura).
+**Alfred** è una piattaforma di messaggistica: **Supabase + client Flutter + bridge Python** (federazione futura). Non è un «progetto Flutter»: Flutter è solo il client in `client/`.
 
 ### Caratteristiche attuali
 
