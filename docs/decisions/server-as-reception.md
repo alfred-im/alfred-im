@@ -21,7 +21,7 @@ Questo è il modello semantico dell'applicazione: il server è il punto in cui u
 
 | Fase | Comportamento |
 |------|----------------|
-| **Oggi (scope attuale)** | Invio e ricezione *sembrano* coincidenti: il mittente chiama `send_message_to_profile`, il messaggio è subito nel DB piattaforma, il destinatario lo vede via Realtime. Il passaggio «consegnato» può avvenire nello stesso istante dell'inserimento. |
+| **Oggi (scope attuale)** | RPC account scrive copia mittente + outbox; worker `alfred_delivery.process_outbox` (stessa transazione su internal, #179) materializza destinatario e `delivered_at`/`read_at` mittente. Il destinatario vede messaggi via Realtime sulla propria copia. Gate allow list nel worker — rifiuto silenzioso se mittente non in lista. |
 | **Domani (federazione / bridge)** | Invio e ricezione saranno **disaccoppiati**, come già accade tra server diversi in XMPP/Matrix: il messaggio resta `sent` o `pending` finché il bridge non lo consegna all'altro dominio; solo allora diventa «ricevuto» (sul server di destinazione o nella piattaforma come ack federato). |
 
 Il disaccoppiamento non è un'eccezione futura: è la **stessa logica** del caso federato, applicata progressivamente anche ai flussi che oggi appaiono sincroni.

@@ -224,6 +224,7 @@ bash scripts/verify.sh --build   # + build web
 
 - **#179** — `SYS-ACCOUNT-BOUNDARY` + `SYS-DELIVERY`: schema `alfred_delivery`, RPC account solo confine proprio, test `delivery_ticks_smoke.sql` + `integration-ticks`
 - Epurazione terminologia Alpha (2026-07-09): prodotto stabile; demo GitHub Pages
+- Doc hub (2026-07-12): `shareable-link.md`, allineamento feature #178/#179 in hub e `full-stack.md`
 - SDD registro promesse (#171, #172): `docs/specs/registry.md` — SYS/PROM/SURF; epurazione residui doc legacy
 - SYS-GROUP (#162): account gruppo, erogazione, broadcast singola riga, `original_author_id`, UI autore avatar+nome; doc hub + `groups-client.md`
 - SYS-RECEPTION (#161): allow list ricezione, gate server, UI «Persone consentite»; doc hub + semantica spunte ✓/✓✓

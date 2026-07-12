@@ -1,6 +1,6 @@
 # Registro promesse — Alfred
 
-**Ultima revisione**: 2026-07-11  
+**Ultima revisione**: 2026-07-12  
 **Metodo**: [README.md](./README.md) (SDD)
 
 Indice unico di promesse **SYSTEM**, **PRODUCT** e **SURFACE**. Nessun altro layer contrattuale.

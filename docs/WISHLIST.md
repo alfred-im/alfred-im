@@ -13,6 +13,10 @@ Funzionalità **future** desiderate per Alfred (client Flutter + piattaforma + b
 | Spunte cloud (inviato / consegnato server / lettura) | ✅ interni via worker `alfred_delivery` (#179) | [server-as-reception.md](./decisions/server-as-reception.md), [PROM-MESSAGE-STATUS](./specs/promises/product/PROM-MESSAGE-STATUS.md), [SYS-DELIVERY](./specs/promises/system/SYS-DELIVERY.md) |
 | Chat testo, GIF, voice, location | ✅ | [voice-notes.md](./implementation/voice-notes.md), [location-sharing.md](./implementation/location-sharing.md) |
 | Inbox mailbox (archivio owner) | ✅ | [SYS-MAILBOX.md](./specs/promises/system/SYS-MAILBOX.md), [SURF-INBOX.md](./specs/surfaces/SURF-INBOX.md), [address-based-messaging.md](./decisions/address-based-messaging.md) |
+| Allow list ricezione | ✅ sempre attiva; rifiuto silenzioso (#161, gate worker #179) | [SYS-RECEPTION.md](./specs/promises/system/SYS-RECEPTION.md), [SURF-ALLOWLIST.md](./specs/surfaces/SURF-ALLOWLIST.md) |
+| Account gruppo + erogazione | ✅ (#162, worker #179) | [SYS-GROUP.md](./specs/promises/system/SYS-GROUP.md), [groups-client.md](./implementation/groups-client.md) |
+| Link condivisibili `#indirizzo` | ✅ (#178) | [PROM-SHAREABLE-LINK.md](./specs/promises/product/PROM-SHAREABLE-LINK.md), [shareable-link.md](./implementation/shareable-link.md) |
+| Multi-account (manifest + focus) | ✅ | [PROM-MULTI-ACCOUNT.md](./specs/promises/product/PROM-MULTI-ACCOUNT.md), [multi-account-client.md](./implementation/multi-account-client.md) |
 | Federazione XMPP/Matrix | ⏸ Outbox only | [bridge-stateless.md](./decisions/bridge-stateless.md) |
 
 Spunte federate (XEP-0184 / XEP-0333 via bridge): da implementare con i bridge Python.

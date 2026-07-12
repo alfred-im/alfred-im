@@ -1,6 +1,6 @@
 # Alfred — Architettura (panoramica)
 
-**Data**: 2026-07-11  
+**Data**: 2026-07-12  
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
 **Stato**: PR **#108–#179** su `main` — prodotto stabile  
 **Registro PR**: [pr-registry.md](./pr-registry.md)
@@ -16,7 +16,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Flutter Web (`client/`)                                   │
-│  Auth · Contatti · Persone consentite · Conversazioni · Chat · Profilo · Multi-account · Gruppi │
+│  Auth · Contatti · Persone consentite · Conversazioni · Chat · Profilo · Multi-account · Gruppi · Link `#` │
 └───────────────────────────┬─────────────────────────────────┘
                             │ HTTPS (REST + Realtime + Auth)
                             ▼
@@ -55,7 +55,7 @@ client/lib/
 ├── providers/   # ChangeNotifier (stato UI)
 ├── screens/     # Shell, auth, home, contatti, profilo
 ├── widgets/     # Componenti presentazionali
-└── utils/       # Formattazione, scroll anchor, filtri
+└── utils/       # Formattazione, scroll anchor, filtri, shareable link
 ```
 
 ### 2.2 Provider
@@ -69,6 +69,18 @@ client/lib/
 1. `bootstrapApp()` — nessuna sessione globale
 2. `AuthController.initialize()` → manifest + restore focus
 3. `AppShell` → sempre `HomeScreen`; overlay se 0 account
+4. `ShareableLinkListener` → fragment `#` in ingresso ([PROM-SHAREABLE-LINK](../specs/promises/product/PROM-SHAREABLE-LINK.md), PR #178)
+
+### 2.4 Link condivisibili (fragment `#`)
+
+| Elemento | Ruolo |
+|----------|--------|
+| `shareable_link.dart` | Parse/build URL `#indirizzo` / `#indirizzo/chat` |
+| `ShareableLinkController` | Stato destinazione, risoluzione profilo, 404 |
+| `ShareableLinkListener` | `hashchange` web → `handleIfReady` dopo `sessionReady` |
+| `ShareableLinkNotFoundScreen` | Peer/gruppo non risolvibile |
+
+Dettaglio: [shareable-link.md](../implementation/shareable-link.md).
 
 ---
 
@@ -86,7 +98,8 @@ client/lib/
 | Profilo, avatar, pronomi | [SYS-PROFILE](../specs/promises/system/SYS-PROFILE.md), [PROM-PROFILE-IDENTITY](../specs/promises/product/PROM-PROFILE-IDENTITY.md), [SURF-PROFILE](../specs/surfaces/SURF-PROFILE.md) | PR #118, #134 |
 | Rubrica | [SYS-CONTACTS](../specs/promises/system/SYS-CONTACTS.md), [PROM-PERSONAL-CONTACTS](../specs/promises/product/PROM-PERSONAL-CONTACTS.md), [SURF-CONTACTS](../specs/surfaces/SURF-CONTACTS.md) | PR #109 |
 | Allow list ricezione | [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST](../specs/surfaces/SURF-ALLOWLIST.md) | PR #161; gate nel worker #179 |
-| Scheda profilo peer (tap avatar) | [PROM-PEER-PROFILE](../specs/promises/product/PROM-PEER-PROFILE.md), [SURF-PEER-PROFILE](../specs/surfaces/SURF-PEER-PROFILE.md) | PR #163 |
+| Scheda profilo peer (tap avatar) | [PROM-PEER-PROFILE](../specs/promises/product/PROM-PEER-PROFILE.md), [SURF-PEER-PROFILE](../specs/surfaces/SURF-PEER-PROFILE.md) | PR #163, #176 |
+| Link condivisibili (`#indirizzo`, share di sistema) | [PROM-SHAREABLE-LINK](../specs/promises/product/PROM-SHAREABLE-LINK.md), [SURF-AUTH](../specs/surfaces/SURF-AUTH.md), [SURF-CHAT](../specs/surfaces/SURF-CHAT.md) | PR #178 |
 | Account gruppo, erogazione | [SYS-GROUP](../specs/promises/system/SYS-GROUP.md), [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) | PR #162, #179 |
 
 ### UI cross-cutting
@@ -95,6 +108,7 @@ client/lib/
 |------|-------------------------|
 | Ricerca lista on-demand | [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md) + [SURF-*](../specs/registry.md) — [inbox-search-toggle.md](../design/inbox-search-toggle.md) (PR #132, #171) |
 | Scroll ancorato chat | [conversation-bottom-anchor.md](../design/conversation-bottom-anchor.md) (PR #125) — *backlog promessa PRODUCT* |
+| Share ingresso `#peer/chat` | [PROM-SHAREABLE-LINK](../specs/promises/product/PROM-SHAREABLE-LINK.md) — [shareable-link.md](../implementation/shareable-link.md) (PR #178) |
 | ADR modello caselle | [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) → [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) (PR #159) |
 
 ---
@@ -169,6 +183,7 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, workflow `.github/workflows/deploy-
 | Chat Alfred stessa istanza | ✅ testo, GIF, voice, location (recapito solo se mittente ∈ allow list destinatario) |
 | Chat gruppo Alfred | ✅ account gruppo, erogazione automatica, broadcast, UI autore (PR #162) |
 | Allow list ricezione | ✅ sempre attiva; lista vuota = nessun recapito; UI «Persone consentite» + toggle in scheda profilo peer |
+| Link condivisibili | ✅ `#username` / `#username/chat`; share da profilo peer e sidebar (#178) |
 | Rubrica XMPP/Matrix | ✅ salvataggio |
 | Invio federato | ⏸ outbox `pending` |
 | Ricezione federata | ❌ bridge |

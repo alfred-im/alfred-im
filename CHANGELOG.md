@@ -17,6 +17,10 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - Hub: `PROJECT_MAP.md`, `mailbox-inbox-outbox-spec.md`, `full-stack.md`, `INDICE.md`, `SESSION_HANDOFF.md`, `pr-registry.md`
 - Spec PRODUCT: `PROM-MESSAGE-STATUS`, `PROM-REALTIME-OWNER`, `PROM-RECEPTION-FILTER`, `PROM-GROUP-TICKS`; fix `SYS-DELIVERY` / `SYS-RECEPTION` intro
 
+### Documentazione — feature non riportate (2026-07-12)
+
+- `docs/implementation/shareable-link.md` (PR #178); aggiornamenti `full-stack.md`, `peer-profile-overlay.md`, `WISHLIST.md`
+
 ---
 
 ## [Unreleased] - 2026-07-09

@@ -108,6 +108,7 @@ ADR e panoramica: [architecture/mailbox-inbox-outbox-spec.md](./architecture/mai
 - [implementation/location-sharing.md](./implementation/location-sharing.md) — Posizione statica in chat (PR #153)
 - [implementation/groups-client.md](./implementation/groups-client.md) — Account gruppo, shell, UI autore (PR #162)
 - [implementation/peer-profile-overlay.md](./implementation/peer-profile-overlay.md) — Scheda profilo peer (PR #163, #176, #178)
+- [implementation/shareable-link.md](./implementation/shareable-link.md) — Link `#indirizzo` / share di sistema (PR #178)
 - [implementation/README.md](./implementation/README.md) — Indice implementazione
 
 ---

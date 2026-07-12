@@ -38,6 +38,7 @@ Contatti rubrica **esterni**: nessun overlay (nessun `profiles.id`).
 |-----------|---------|------------|
 | Switch «Consenti messaggi» | `reception_allowlist` | `ReceptionAllowlistController.addProfile` / `removeByProfileId` |
 | «Aggiungi / Rimuovi dalla rubrica» | `contacts` | `ContactsController.addInternal` / `removeInternalByProfileId` |
+| **Condividi** (alto a destra) | — | `shareShareableProfileLink` → foglio di sistema con URL `#indirizzo` profilo — [PROM-SHAREABLE-LINK](../specs/promises/product/PROM-SHAREABLE-LINK.md) |
 | **«Inizia a chattare»** (sticky in basso) | — | `AuthController.openConversation(ChatPeer.fromProfile(...))` dopo `Navigator.pop` |
 
 Allow e rubrica sono **indipendenti** (semantica invariata rispetto a [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) e [SYS-CONTACTS](../specs/promises/system/SYS-CONTACTS.md)). La CTA chat è **fuori** dall'area scrollabile (Allow + rubrica).
@@ -49,6 +50,7 @@ Allow e rubrica sono **indipendenti** (semantica invariata rispetto a [SYS-RECEP
 | REQ | Verifica |
 |-----|----------|
 | Overlay UI + CTA | `client/test/widget/peer_profile_overlay_test.dart` — PROM-PEER-PROFILE-013/014; SURF-PEER-PROFILE-015/016 |
+| Condividi share sheet | `peer_profile_overlay_test.dart` — PROM-SHAREABLE-LINK-020/021; SURF-PEER-PROFILE-025 |
 | Rubrica remove | `client/test/unit/contacts_controller_test.dart` |
 | Allow remove | `client/test/unit/reception_allowlist_controller_test.dart` |
 
