@@ -3,7 +3,7 @@
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -24,6 +24,7 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Alfred — messaggistica istantanea">
   <meta name="theme-color" content="#2D2926">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -36,11 +37,86 @@
 
   <title>Alfred</title>
   <link rel="manifest" href="manifest.json">
-  <!-- Richiesto da supabase_flutter (passkeys web) -->
-  <script src="https://github.com/corbado/flutter-passkeys/releases/download/2.5.0/bundle.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #2D2926;
+    }
+
+    #alfred-boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      background-color: #2D2926;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      transition: opacity 0.2s ease-out;
+    }
+
+    #alfred-boot-splash.alfred-boot-splash--hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #alfred-boot-splash img {
+      width: 96px;
+      height: 96px;
+      border-radius: 20px;
+    }
+
+    #alfred-boot-splash .alfred-boot-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    #alfred-boot-splash .alfred-boot-spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(255, 255, 255, 0.25);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: alfred-boot-spin 0.8s linear infinite;
+    }
+
+    @keyframes alfred-boot-spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
+  <div id="alfred-boot-splash" role="status" aria-live="polite" aria-label="Caricamento Alfred">
+    <img src="icons/Icon-192.png" alt="" width="96" height="96">
+    <div class="alfred-boot-title">Alfred</div>
+    <div class="alfred-boot-spinner" aria-hidden="true"></div>
+  </div>
+
+  <script>
+    (function () {
+      function hideBootSplash() {
+        var splash = document.getElementById('alfred-boot-splash');
+        if (!splash || splash.dataset.hidden === '1') return;
+        splash.dataset.hidden = '1';
+        splash.classList.add('alfred-boot-splash--hide');
+        window.setTimeout(function () {
+          splash.remove();
+        }, 220);
+      }
+
+      window.addEventListener('flutter-first-frame', hideBootSplash);
+      // Fallback se il motore non parte (es. errore di caricamento).
+      window.setTimeout(hideBootSplash, 45000);
+    })();
+  </script>
+
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -50,5 +126,9 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <!-- Richiesto da supabase_flutter (passkeys web) — defer: non blocca il primo paint -->
+  <script defer src="https://github.com/corbado/flutter-passkeys/releases/download/2.5.0/bundle.js"></script>
+  <!-- Conversione HEIC → JPEG su web (foto iPhone) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 </body>
 </html>

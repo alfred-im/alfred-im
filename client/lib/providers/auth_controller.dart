@@ -18,7 +18,9 @@ import '../utils/auth_identity.dart';
 
 class AuthController extends ChangeNotifier {
   AuthController({AccountManager? accountManager})
-      : _manager = accountManager ?? AccountManager();
+      : _manager = accountManager ?? AccountManager() {
+    _manager.onFocusedProfileSynced = notifyListeners;
+  }
 
   final AccountManager _manager;
 

@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -22,6 +24,9 @@ import 'account_storage_service.dart';
 class AccountManager {
   AccountManager({AccountStorageService? storage})
       : _storage = storage ?? AccountStorageService();
+
+  /// Chiamato quando il sync profilo in background termina (es. avvio app).
+  VoidCallback? onFocusedProfileSynced;
 
   final AccountStorageService _storage;
   final Map<String, AccountSession> _sessions = {};
@@ -128,7 +133,7 @@ class AccountManager {
 
   /// F5 / avvio app: manifest in cache + ripristina solo il focus.
   Future<void> initialize() async {
-    await _rebuildFromManifest();
+    await _rebuildFromManifest(deferProfileSync: true);
   }
 
   /// Scrive il token nel manifest e attiva la sessione del nuovo focus.
@@ -184,17 +189,23 @@ class AccountManager {
   Future<AccountSession?> _rebuildFromManifest({
     String? focusUserId,
     bool requireSession = false,
+    bool deferProfileSync = false,
   }) async {
     await _disposeSessionsInRam(clearAuthStorage: false);
-    await _refreshManifestCache();
 
-    final stored = await _storage.loadAccounts();
-    for (final account in stored) {
-      if (account.refreshToken.isEmpty) {
-        await _storage.removeAccount(account.userId);
-      }
+    var stored = await _storage.loadAccounts();
+    final staleUserIds = stored
+        .where((account) => account.refreshToken.isEmpty)
+        .map((account) => account.userId)
+        .toList();
+    for (final userId in staleUserIds) {
+      await _storage.removeAccount(userId);
     }
-    await _refreshManifestCache();
+    if (staleUserIds.isNotEmpty) {
+      stored = await _storage.loadAccounts();
+    }
+    _manifestAccounts =
+        stored.where((account) => account.refreshToken.isNotEmpty).toList();
 
     if (_manifestAccounts.isEmpty) {
       _focusUserId = null;
@@ -212,7 +223,10 @@ class AccountManager {
     }
     await _storage.saveFocusUserId(_focusUserId);
 
-    return _activateFocusedSession(requireSession: requireSession);
+    return _activateFocusedSession(
+      requireSession: requireSession,
+      deferProfileSync: deferProfileSync,
+    );
   }
 
   Future<void> _refreshManifestCache() async {
@@ -224,6 +238,7 @@ class AccountManager {
   /// Ripristina GoTrue solo per [_focusUserId]; su auth permanente prova altro account.
   Future<AccountSession?> _activateFocusedSession({
     bool requireSession = false,
+    bool deferProfileSync = false,
   }) async {
     while (_focusUserId != null) {
       if (_testOnlyAccountIds.contains(_focusUserId)) {
@@ -249,7 +264,11 @@ class AccountManager {
         _sessions.clear();
         _sessions[session.userId] = session;
         session.wireStorage(_storage);
-        await _syncFocusedProfile(session);
+        if (deferProfileSync) {
+          unawaited(_syncFocusedProfile(session));
+        } else {
+          await _syncFocusedProfile(session);
+        }
         return session;
       } catch (e) {
         if (_isPermanentAuthFailure(e)) {
@@ -403,6 +422,7 @@ class AccountManager {
       await session.syncProfileSummary();
       await session.updateStoredProfile(session.profile);
       await _refreshManifestCache();
+      onFocusedProfileSynced?.call();
     } catch (_) {
       // Mantieni la sessione ripristinata anche se il sync profilo fallisce.
     }
