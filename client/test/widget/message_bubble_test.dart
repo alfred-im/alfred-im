@@ -80,6 +80,53 @@ void main() {
     expect(find.text('12:31'), findsOneWidget);
   });
 
+  testWidgets('MessageBubble renders photo image', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: const Scaffold(
+          body: MessageBubble(
+            message: ChatMessage(
+              id: '2b',
+              body: 'Didascalia',
+              timeLabel: '12:31',
+              isMine: false,
+              contentType: MessageContentType.image,
+              mediaUrl: 'https://example.com/test.jpg',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(Image), findsOneWidget);
+    expect(find.text('Didascalia'), findsOneWidget);
+  });
+
+  testWidgets('MessageBubble renders pending video placeholder', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: const Scaffold(
+          body: MessageBubble(
+            message: ChatMessage(
+              id: '2c',
+              body: '',
+              timeLabel: '12:31',
+              isMine: true,
+              status: MessageStatus.pending,
+              contentType: MessageContentType.video,
+              mediaUrl: 'pending://client-id',
+              durationSeconds: 8,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(CircularProgressIndicator), findsWidgets);
+  });
+
   testWidgets('MessageBubble renders voice player', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

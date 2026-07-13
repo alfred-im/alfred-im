@@ -4,10 +4,10 @@
 
 import 'dart:typed_data';
 
+import '../config/chat_media_config.dart';
+import '../config/voice_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-
-import '../config/voice_config.dart';
 
 class MessageMediaService {
   MessageMediaService(this._client);
@@ -23,6 +23,22 @@ class MessageMediaService {
       userId: userId,
       extension: 'gif',
       contentType: 'image/gif',
+      maxBytes: VoiceConfig.maxBytes,
+    );
+  }
+
+  Future<String> uploadImage({
+    required Uint8List bytes,
+    required String userId,
+    required String extension,
+    required String contentType,
+  }) async {
+    return _upload(
+      bytes: bytes,
+      userId: userId,
+      extension: extension,
+      contentType: contentType,
+      maxBytes: ChatMediaConfig.imageMaxBytes,
     );
   }
 
@@ -35,6 +51,22 @@ class MessageMediaService {
       userId: userId,
       extension: VoiceConfig.fileExtension,
       contentType: VoiceConfig.canonicalMime,
+      maxBytes: VoiceConfig.maxBytes,
+    );
+  }
+
+  Future<String> uploadVideo({
+    required Uint8List bytes,
+    required String userId,
+    required String extension,
+    required String contentType,
+  }) async {
+    return _upload(
+      bytes: bytes,
+      userId: userId,
+      extension: extension,
+      contentType: contentType,
+      maxBytes: ChatMediaConfig.videoMaxBytes,
     );
   }
 
@@ -43,8 +75,9 @@ class MessageMediaService {
     required String userId,
     required String extension,
     required String contentType,
+    required int maxBytes,
   }) async {
-    if (bytes.length > VoiceConfig.maxBytes) {
+    if (bytes.length > maxBytes) {
       throw StateError('Media exceeds size limit');
     }
 

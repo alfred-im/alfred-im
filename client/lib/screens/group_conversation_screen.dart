@@ -90,6 +90,25 @@ class GroupConversationScreen extends StatelessWidget {
                 hintText: 'Messaggio al gruppo (allow list)…',
                 onSend: controller.send,
                 onSendGif: controller.sendGif,
+                onSendImage: (bytes, {required extension, required mime, caption}) =>
+                    controller.sendImage(
+                  bytes: bytes,
+                  extension: extension,
+                  mime: mime,
+                  caption: caption,
+                ),
+                onSendVideo: (bytes,
+                        {required extension,
+                        required mime,
+                        required durationSeconds,
+                        caption}) =>
+                    controller.sendVideo(
+                  bytes: bytes,
+                  extension: extension,
+                  mime: mime,
+                  durationSeconds: durationSeconds,
+                  caption: caption,
+                ),
                 onSendVoice: (bytes, durationMs) => controller.sendVoice(
                   bytes: bytes,
                   durationMs: durationMs,

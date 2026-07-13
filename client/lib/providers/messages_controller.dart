@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 
 import '../config/location_config.dart';
 import '../config/voice_config.dart';
+import '../config/chat_media_config.dart';
 import '../models/message.dart';
 import '../models/profile_summary.dart';
 import '../models/outbound_queue_item.dart';
@@ -19,6 +20,7 @@ import '../services/outbound_message_queue.dart';
 import '../services/profile_service.dart';
 import '../utils/author_display.dart' show enrichMessageAuthor;
 import '../utils/date_format.dart';
+import '../utils/video_duration.dart';
 
 class MessagesController extends ChangeNotifier {
   MessagesController({
@@ -294,6 +296,138 @@ class MessagesController extends ChangeNotifier {
     );
   }
 
+  Future<void> sendImage({
+    required Uint8List bytes,
+    required String extension,
+    required String mime,
+    String? caption,
+  }) async {
+    if (bytes.isEmpty || isSending) return;
+    if (!_ensureValidSession()) return;
+
+    final body = caption?.trim() ?? '';
+    final clientId = _uuid.v4();
+    final mediaPath = await _outboundQueue.persistMediaBytes(
+      clientId: clientId,
+      bytes: bytes,
+      extension: extension,
+    );
+
+    await _sendOptimistic(
+      optimistic: ChatMessage(
+        id: clientId,
+        body: body,
+        timeLabel: formatMessageTime(DateTime.now()),
+        isMine: true,
+        status: MessageStatus.pending,
+        createdAt: DateTime.now(),
+        clientMessageId: clientId,
+        senderId: userId,
+        contentType: MessageContentType.image,
+        mediaUrl: 'pending://$clientId',
+        mediaMime: mime,
+        mediaSizeBytes: bytes.length,
+        retryPayloadPath: mediaPath,
+      ),
+      queueItem: OutboundQueueItem(
+        clientId: clientId,
+        queueKey: _queueKey,
+        kind: OutboundContentKind.image,
+        attempts: 0,
+        queuedAt: DateTime.now(),
+        body: body.isEmpty ? null : body,
+        localMediaPath: mediaPath,
+        mediaMime: mime,
+        mediaExtension: extension,
+      ),
+      send: (id) async {
+        final mediaUrl = await messageMediaService.uploadImage(
+          bytes: bytes,
+          userId: userId,
+          extension: extension,
+          contentType: mime,
+        );
+        return messageService.sendImageToProfile(
+          recipientProfileId: peerProfileId,
+          mediaUrl: mediaUrl,
+          mediaMime: mime,
+          mediaSizeBytes: bytes.length,
+          currentUserId: userId,
+          clientMessageId: id,
+          body: body,
+        );
+      },
+    );
+  }
+
+  Future<void> sendVideo({
+    required Uint8List bytes,
+    required String extension,
+    required String mime,
+    required int durationSeconds,
+    String? caption,
+  }) async {
+    if (bytes.isEmpty || isSending) return;
+    if (!_ensureValidSession()) return;
+
+    final body = caption?.trim() ?? '';
+    final clientId = _uuid.v4();
+    final mediaPath = await _outboundQueue.persistMediaBytes(
+      clientId: clientId,
+      bytes: bytes,
+      extension: extension,
+    );
+
+    await _sendOptimistic(
+      optimistic: ChatMessage(
+        id: clientId,
+        body: body,
+        timeLabel: formatMessageTime(DateTime.now()),
+        isMine: true,
+        status: MessageStatus.pending,
+        createdAt: DateTime.now(),
+        clientMessageId: clientId,
+        senderId: userId,
+        contentType: MessageContentType.video,
+        mediaUrl: 'pending://$clientId',
+        durationSeconds: durationSeconds,
+        mediaMime: mime,
+        mediaSizeBytes: bytes.length,
+        retryPayloadPath: mediaPath,
+      ),
+      queueItem: OutboundQueueItem(
+        clientId: clientId,
+        queueKey: _queueKey,
+        kind: OutboundContentKind.video,
+        attempts: 0,
+        queuedAt: DateTime.now(),
+        body: body.isEmpty ? null : body,
+        localMediaPath: mediaPath,
+        durationSeconds: durationSeconds,
+        mediaMime: mime,
+        mediaExtension: extension,
+      ),
+      send: (id) async {
+        final mediaUrl = await messageMediaService.uploadVideo(
+          bytes: bytes,
+          userId: userId,
+          extension: extension,
+          contentType: mime,
+        );
+        return messageService.sendVideoToProfile(
+          recipientProfileId: peerProfileId,
+          mediaUrl: mediaUrl,
+          mediaMime: mime,
+          durationSeconds: durationSeconds,
+          mediaSizeBytes: bytes.length,
+          currentUserId: userId,
+          clientMessageId: id,
+          body: body,
+        );
+      },
+    );
+  }
+
   Future<void> sendVoice({
     required Uint8List bytes,
     required int durationMs,
@@ -513,6 +647,10 @@ class MessagesController extends ChangeNotifier {
         return MessageContentType.voice;
       case OutboundContentKind.location:
         return MessageContentType.location;
+      case OutboundContentKind.image:
+        return MessageContentType.image;
+      case OutboundContentKind.video:
+        return MessageContentType.video;
       case OutboundContentKind.text:
         return MessageContentType.text;
     }
@@ -595,6 +733,63 @@ class MessagesController extends ChangeNotifier {
             longitude: longitude,
             currentUserId: userId,
             clientMessageId: item.clientId,
+          );
+        case OutboundContentKind.image:
+          final bytes = await _outboundQueue.readMediaBytes(
+            item.localMediaPath,
+            item.clientId,
+          );
+          if (bytes == null || bytes.isEmpty) {
+            throw StateError('Image retry payload missing');
+          }
+          final extension = item.mediaExtension ?? 'jpg';
+          final mime = item.mediaMime ??
+              ChatMediaConfig.imageMimeForExtension(extension) ??
+              'image/jpeg';
+          final mediaUrl = await messageMediaService.uploadImage(
+            bytes: bytes,
+            userId: userId,
+            extension: extension,
+            contentType: mime,
+          );
+          saved = await messageService.sendImageToProfile(
+            recipientProfileId: peerProfileId,
+            mediaUrl: mediaUrl,
+            mediaMime: mime,
+            mediaSizeBytes: bytes.length,
+            currentUserId: userId,
+            clientMessageId: item.clientId,
+            body: item.body ?? '',
+          );
+        case OutboundContentKind.video:
+          final bytes = await _outboundQueue.readMediaBytes(
+            item.localMediaPath,
+            item.clientId,
+          );
+          if (bytes == null || bytes.isEmpty) {
+            throw StateError('Video retry payload missing');
+          }
+          final extension = item.mediaExtension ?? 'mp4';
+          final mime = item.mediaMime ??
+              ChatMediaConfig.videoMimeForExtension(extension) ??
+              'video/mp4';
+          final durationSeconds = item.durationSeconds ??
+              await readVideoDurationSeconds(bytes: bytes, extension: extension);
+          final mediaUrl = await messageMediaService.uploadVideo(
+            bytes: bytes,
+            userId: userId,
+            extension: extension,
+            contentType: mime,
+          );
+          saved = await messageService.sendVideoToProfile(
+            recipientProfileId: peerProfileId,
+            mediaUrl: mediaUrl,
+            mediaMime: mime,
+            durationSeconds: durationSeconds,
+            mediaSizeBytes: bytes.length,
+            currentUserId: userId,
+            clientMessageId: item.clientId,
+            body: item.body ?? '',
           );
       }
 

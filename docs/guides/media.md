@@ -1,6 +1,39 @@
-# Media in chat (voice, location)
+# Media in chat (voice, location, foto, video)
 
-**Contratto**: [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md)
+**Contratto**: [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) · [PROM-CHAT-MEDIA](../specs/promises/product/PROM-CHAT-MEDIA.md)
+
+---
+
+## Foto (`image`)
+
+| Campo | Valore |
+|-------|--------|
+| `content_type` | `image` |
+| `media_mime` | `image/jpeg`, `image/png`, `image/webp` |
+| `media_url` | bucket `chat-media` |
+| `body` | didascalia opzionale |
+
+Max **10 MB**. Path: `{userId}/{uuid}.{ext}`.
+
+**UX** (`ChatInputBar`): allegato → galleria o fotocamera (`image_picker`); didascalia nel campo testo prima dell'invio.
+
+File: `message_media_service.dart` (`uploadImage`), `MessagesController.sendImage`
+
+---
+
+## Video (`video`)
+
+| Campo | Valore |
+|-------|--------|
+| `content_type` | `video` |
+| `media_mime` | `video/mp4`, `video/webm` |
+| `media_url` | bucket `chat-media` |
+| `duration_seconds` | obbligatorio |
+| `body` | didascalia opzionale |
+
+Max **50 MB**. Solo picker file (no registrazione).
+
+File: `video_message_content.dart`, `video_duration.dart`, `MessagesController.sendVideo`
 
 ---
 

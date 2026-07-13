@@ -146,6 +146,64 @@ class GroupMessagesController extends ChangeNotifier {
     });
   }
 
+  Future<void> sendImage({
+    required Uint8List bytes,
+    required String extension,
+    required String mime,
+    String? caption,
+  }) async {
+    if (bytes.isEmpty || isSending) return;
+
+    final body = caption?.trim() ?? '';
+
+    await _broadcast((clientId) async {
+      final mediaUrl = await messageMediaService.uploadImage(
+        bytes: bytes,
+        userId: userId,
+        extension: extension,
+        contentType: mime,
+      );
+      return messageService.broadcastImageToAllowlist(
+        mediaUrl: mediaUrl,
+        mediaMime: mime,
+        mediaSizeBytes: bytes.length,
+        currentUserId: userId,
+        clientMessageId: clientId,
+        body: body,
+      );
+    });
+  }
+
+  Future<void> sendVideo({
+    required Uint8List bytes,
+    required String extension,
+    required String mime,
+    required int durationSeconds,
+    String? caption,
+  }) async {
+    if (bytes.isEmpty || isSending) return;
+
+    final body = caption?.trim() ?? '';
+
+    await _broadcast((clientId) async {
+      final mediaUrl = await messageMediaService.uploadVideo(
+        bytes: bytes,
+        userId: userId,
+        extension: extension,
+        contentType: mime,
+      );
+      return messageService.broadcastVideoToAllowlist(
+        mediaUrl: mediaUrl,
+        mediaMime: mime,
+        durationSeconds: durationSeconds,
+        mediaSizeBytes: bytes.length,
+        currentUserId: userId,
+        clientMessageId: clientId,
+        body: body,
+      );
+    });
+  }
+
   Future<void> sendLocation({
     required double latitude,
     required double longitude,

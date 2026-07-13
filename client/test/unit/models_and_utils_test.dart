@@ -93,6 +93,8 @@ void main() {
       expect(messageContentTypeFromString('gif'), MessageContentType.gif);
       expect(messageContentTypeFromString('voice'), MessageContentType.voice);
       expect(messageContentTypeFromString('location'), MessageContentType.location);
+      expect(messageContentTypeFromString('image'), MessageContentType.image);
+      expect(messageContentTypeFromString('video'), MessageContentType.video);
       expect(messageContentTypeFromString('text'), MessageContentType.text);
       expect(messageContentTypeFromString(null), MessageContentType.text);
     });

@@ -8,14 +8,15 @@ import '../models/message.dart';
 import '../theme/alfred_colors.dart';
 import 'location_message_content.dart';
 import 'message_author_header.dart';
+import 'video_message_content.dart';
 import 'voice_message_content.dart';
 
-const double _gifMaxWidth = 240;
-const double _gifMaxHeight = 240;
+const double _mediaMaxWidth = 240;
+const double _mediaMaxHeight = 240;
 
-Widget _gifLoadingPlaceholder() {
+Widget _mediaLoadingPlaceholder() {
   return const SizedBox(
-    width: _gifMaxWidth,
+    width: _mediaMaxWidth,
     height: 120,
     child: Center(
       child: SizedBox(
@@ -74,7 +75,9 @@ class MessageBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (message.isGif) _GifContent(url: message.mediaUrl!),
+            if (message.isGif) _NetworkImageContent(url: message.mediaUrl!),
+            if (message.isImage) _NetworkImageContent(url: message.mediaUrl!),
+            if (message.isVideo) VideoMessageContent(message: message),
             if (message.isVoice)
               VoiceMessageContent(message: message, isMine: isMine),
             if (message.isLocation)
@@ -138,31 +141,31 @@ class MessageBubble extends StatelessWidget {
   }
 }
 
-class _GifContent extends StatelessWidget {
-  const _GifContent({required this.url});
+class _NetworkImageContent extends StatelessWidget {
+  const _NetworkImageContent({required this.url});
 
   final String url;
 
   @override
   Widget build(BuildContext context) {
     if (url.startsWith('pending://')) {
-      return _gifLoadingPlaceholder();
+      return _mediaLoadingPlaceholder();
     }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Image.network(
         url,
-        width: _gifMaxWidth,
-        height: _gifMaxHeight,
+        width: _mediaMaxWidth,
+        height: _mediaMaxHeight,
         fit: BoxFit.cover,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
-          return _gifLoadingPlaceholder();
+          return _mediaLoadingPlaceholder();
         },
         errorBuilder: (context, error, stackTrace) {
           return Container(
-            width: _gifMaxWidth,
+            width: _mediaMaxWidth,
             height: 120,
             color: AlfredColors.border,
             alignment: Alignment.center,
