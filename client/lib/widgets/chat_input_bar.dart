@@ -17,6 +17,7 @@ import '../services/location_service.dart';
 import '../services/voice_recording_service.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/duration_format.dart';
+import '../utils/image_bytes.dart';
 import '../utils/video_duration.dart';
 import 'location_map_preview.dart';
 import 'voice_message_content.dart';
@@ -166,20 +167,34 @@ class _ChatInputBarState extends State<ChatInputBar> {
     if (!widget.enabled || widget.onSendImage == null) return;
 
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: source);
+    final file = await picker.pickImage(
+      source: source,
+      imageQuality: 90,
+      maxWidth: 4096,
+      maxHeight: 4096,
+    );
     if (file == null) return;
 
     final bytes = await file.readAsBytes();
     if (bytes.isEmpty) return;
 
-    final mime = file.mimeType ?? 'image/jpeg';
-    final extension = ChatMediaConfig.imageExtensionForMime(mime);
+    final NormalizedImageBytes normalized;
+    try {
+      normalized = normalizeImageBytes(bytes);
+    } on UnsupportedImageFormatException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.userMessage)),
+      );
+      return;
+    }
+
     final caption = _takeCaption();
 
     await widget.onSendImage!(
-      bytes,
-      extension: extension,
-      mime: mime,
+      normalized.bytes,
+      extension: normalized.extension,
+      mime: normalized.mime,
       caption: caption,
     );
   }

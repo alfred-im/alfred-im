@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/message.dart';
@@ -160,6 +161,8 @@ class _NetworkImageContent extends StatelessWidget {
         height: _mediaMaxHeight,
         fit: BoxFit.cover,
         gaplessPlayback: true,
+        webHtmlElementStrategy:
+            kIsWeb ? WebHtmlElementStrategy.prefer : WebHtmlElementStrategy.never,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return _mediaLoadingPlaceholder();
