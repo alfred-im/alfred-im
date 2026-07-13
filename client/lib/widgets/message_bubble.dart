@@ -159,6 +159,7 @@ class _NetworkImageContent extends StatelessWidget {
         width: _mediaMaxWidth,
         height: _mediaMaxHeight,
         fit: BoxFit.cover,
+        gaplessPlayback: true,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return _mediaLoadingPlaceholder();

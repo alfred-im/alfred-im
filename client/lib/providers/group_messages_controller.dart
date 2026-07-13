@@ -17,6 +17,7 @@ import '../services/message_service.dart';
 import '../services/profile_service.dart';
 import '../utils/author_display.dart' show enrichMessageAuthor;
 import '../utils/date_format.dart';
+import '../utils/merge_chat_message.dart';
 
 /// Messaggistica account gruppo — storico unico + broadcast allow list.
 class GroupMessagesController extends ChangeNotifier {
@@ -60,7 +61,10 @@ class GroupMessagesController extends ChangeNotifier {
   void _handleRealtimeMessage(ChatMessage message) {
     final index = messages.indexWhere((m) => m.id == message.id);
     if (index >= 0) {
-      messages[index] = message;
+      messages[index] = mergeChatMessage(
+        existing: messages[index],
+        incoming: message,
+      );
     } else {
       messages.add(message);
       messages.sort(

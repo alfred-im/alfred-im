@@ -20,6 +20,7 @@ import '../services/outbound_message_queue.dart';
 import '../services/profile_service.dart';
 import '../utils/author_display.dart' show enrichMessageAuthor;
 import '../utils/date_format.dart';
+import '../utils/merge_chat_message.dart';
 import '../utils/video_duration.dart';
 
 class MessagesController extends ChangeNotifier {
@@ -122,7 +123,7 @@ class MessagesController extends ChangeNotifier {
     final index = _indexForMessage(list, message);
     if (index >= 0) {
       final next = List<ChatMessage>.from(list);
-      next[index] = message;
+      next[index] = mergeChatMessage(existing: list[index], incoming: message);
       return next;
     }
     return [...list, message];
@@ -133,7 +134,10 @@ class MessagesController extends ChangeNotifier {
     for (final message in source) {
       final index = _indexForMessage(deduped, message);
       if (index >= 0) {
-        deduped[index] = message;
+        deduped[index] = mergeChatMessage(
+          existing: deduped[index],
+          incoming: message,
+        );
       } else {
         deduped.add(message);
       }

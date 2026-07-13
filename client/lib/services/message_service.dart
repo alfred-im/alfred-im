@@ -363,7 +363,8 @@ class MessageService {
         json: record,
         currentUserId: currentUserId,
       );
-      if (!message.hasRenderableContent) return;
+      final isDeliveryTick = payload.eventType == PostgresChangeEvent.update;
+      if (!message.hasRenderableContent && !isDeliveryTick) return;
       onMessage(message);
     }
 
@@ -413,7 +414,8 @@ class MessageService {
         json: record,
         currentUserId: currentUserId,
       );
-      if (!message.hasRenderableContent) return;
+      final isDeliveryTick = payload.eventType == PostgresChangeEvent.update;
+      if (!message.hasRenderableContent && !isDeliveryTick) return;
       onMessage(message);
     }
 
