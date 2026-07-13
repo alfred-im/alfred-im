@@ -16,11 +16,14 @@ import '../models/outbound_queue_item.dart';
 import '../services/inbox_service.dart';
 import '../services/message_media_service.dart';
 import '../services/message_service.dart';
+import '../services/outbound_media_cache.dart';
 import '../services/outbound_message_queue.dart';
 import '../services/profile_service.dart';
 import '../utils/author_display.dart' show enrichMessageAuthor;
 import '../utils/date_format.dart';
 import '../utils/merge_chat_message.dart';
+import '../utils/prepare_image_for_upload.dart';
+import '../utils/image_bytes.dart';
 import '../utils/video_duration.dart';
 
 class MessagesController extends ChangeNotifier {
@@ -302,65 +305,158 @@ class MessagesController extends ChangeNotifier {
 
   Future<void> sendImage({
     required Uint8List bytes,
-    required String extension,
-    required String mime,
     String? caption,
   }) async {
     if (bytes.isEmpty || isSending) return;
     if (!_ensureValidSession()) return;
 
+    final rawFormat = detectImageFormat(bytes);
+    if (rawFormat == DetectedImageFormat.unknown) {
+      error = UnsupportedImageFormatException.unsupported().userMessage;
+      notifyListeners();
+      return;
+    }
+
     final body = caption?.trim() ?? '';
     final clientId = _uuid.v4();
-    final mediaPath = await _outboundQueue.persistMediaBytes(
-      clientId: clientId,
-      bytes: bytes,
-      extension: extension,
+    final rawExtension = extensionForDetectedFormat(rawFormat);
+
+    // Preview in chat immediately — conversion and disk persist run after.
+    OutboundMediaCache.instance.put(clientId, bytes);
+
+    final optimistic = ChatMessage(
+      id: clientId,
+      body: body,
+      timeLabel: formatMessageTime(DateTime.now()),
+      isMine: true,
+      status: MessageStatus.pending,
+      createdAt: DateTime.now(),
+      clientMessageId: clientId,
+      senderId: userId,
+      contentType: MessageContentType.image,
+      mediaUrl: 'pending://$clientId',
+      mediaMime: ChatMediaConfig.imageMimeForExtension(rawExtension),
+      mediaSizeBytes: bytes.length,
     );
 
-    await _sendOptimistic(
-      optimistic: ChatMessage(
-        id: clientId,
-        body: body,
-        timeLabel: formatMessageTime(DateTime.now()),
-        isMine: true,
-        status: MessageStatus.pending,
-        createdAt: DateTime.now(),
-        clientMessageId: clientId,
-        senderId: userId,
-        contentType: MessageContentType.image,
-        mediaUrl: 'pending://$clientId',
-        mediaMime: mime,
-        mediaSizeBytes: bytes.length,
-        retryPayloadPath: mediaPath,
-      ),
-      queueItem: OutboundQueueItem(
+    isSending = true;
+    messages = [...messages, optimistic];
+    notifyListeners();
+
+    String? mediaPath;
+    try {
+      mediaPath = await _outboundQueue.persistMediaBytes(
+        clientId: clientId,
+        bytes: bytes,
+        extension: rawExtension,
+      );
+      messages = messages
+          .map(
+            (m) => m.id == clientId
+                ? m.copyWith(retryPayloadPath: mediaPath)
+                : m,
+          )
+          .toList();
+      notifyListeners();
+
+      final normalized = await prepareImageForUpload(bytes);
+
+      var uploadPath = mediaPath;
+      if (normalized.bytes.length != bytes.length ||
+          normalized.extension != rawExtension) {
+        await _outboundQueue.deleteMediaFile(mediaPath, clientId: clientId);
+        uploadPath = await _outboundQueue.persistMediaBytes(
+          clientId: clientId,
+          bytes: normalized.bytes,
+          extension: normalized.extension,
+        );
+      }
+
+      final queueItem = OutboundQueueItem(
         clientId: clientId,
         queueKey: _queueKey,
         kind: OutboundContentKind.image,
         attempts: 0,
         queuedAt: DateTime.now(),
         body: body.isEmpty ? null : body,
+        localMediaPath: uploadPath,
+        mediaMime: normalized.mime,
+        mediaExtension: normalized.extension,
+      );
+      await _outboundQueue.enqueue(queueItem);
+
+      notifyListeners();
+
+      final saved = await _uploadAndSendImage(
+        clientId: clientId,
+        bytes: normalized.bytes,
+        extension: normalized.extension,
+        mime: normalized.mime,
+        body: body,
+      );
+      messages = _replaceOrInsertMessage(messages, _withTimeLabel(saved));
+      await _outboundQueue.remove(clientId);
+      await _outboundQueue.deleteMediaFile(
+        uploadPath,
+        clientId: clientId,
+      );
+      error = null;
+      if (onMessagesChanged != null) {
+        await onMessagesChanged!();
+      }
+    } catch (e) {
+      final failedItem = OutboundQueueItem(
+        clientId: clientId,
+        queueKey: _queueKey,
+        kind: OutboundContentKind.image,
+        attempts: 1,
+        queuedAt: DateTime.now(),
+        body: body.isEmpty ? null : body,
         localMediaPath: mediaPath,
-        mediaMime: mime,
-        mediaExtension: extension,
-      ),
-      send: (id) async {
-        final mediaUrl = await messageMediaService.uploadImage(
-          bytes: bytes,
-          userId: userId,
-          extension: extension,
-          contentType: mime,
-        );
-        return messageService.sendImageToProfile(
-          recipientProfileId: peerProfileId,
-          mediaUrl: mediaUrl,
-          mediaMime: mime,
-          mediaSizeBytes: bytes.length,
-          currentUserId: userId,
-          clientMessageId: id,
-          body: body,
-        );
-      },
+        lastError: e.toString(),
+      );
+      await _outboundQueue.enqueue(failedItem);
+      messages = messages
+          .map(
+            (m) => m.id == clientId
+                ? m.copyWith(
+                    status: MessageStatus.failed,
+                    isMine: true,
+                    retryPayloadPath: mediaPath,
+                  )
+                : m,
+          )
+          .toList();
+      error = e is UnsupportedImageFormatException
+          ? e.userMessage
+          : e.toString();
+    } finally {
+      isSending = false;
+      notifyListeners();
+    }
+  }
+
+  Future<ChatMessage> _uploadAndSendImage({
+    required String clientId,
+    required Uint8List bytes,
+    required String extension,
+    required String mime,
+    required String body,
+  }) async {
+    final mediaUrl = await messageMediaService.uploadImage(
+      bytes: bytes,
+      userId: userId,
+      extension: extension,
+      contentType: mime,
+    );
+    return messageService.sendImageToProfile(
+      recipientProfileId: peerProfileId,
+      mediaUrl: mediaUrl,
+      mediaMime: mime,
+      mediaSizeBytes: bytes.length,
+      currentUserId: userId,
+      clientMessageId: clientId,
+      body: body,
     );
   }
 
@@ -739,28 +835,25 @@ class MessagesController extends ChangeNotifier {
             clientMessageId: item.clientId,
           );
         case OutboundContentKind.image:
-          final bytes = await _outboundQueue.readMediaBytes(
+          final rawBytes = await _outboundQueue.readMediaBytes(
             item.localMediaPath,
             item.clientId,
           );
-          if (bytes == null || bytes.isEmpty) {
+          if (rawBytes == null || rawBytes.isEmpty) {
             throw StateError('Image retry payload missing');
           }
-          final extension = item.mediaExtension ?? 'jpg';
-          final mime = item.mediaMime ??
-              ChatMediaConfig.imageMimeForExtension(extension) ??
-              'image/jpeg';
+          final normalized = await prepareImageForUpload(rawBytes);
           final mediaUrl = await messageMediaService.uploadImage(
-            bytes: bytes,
+            bytes: normalized.bytes,
             userId: userId,
-            extension: extension,
-            contentType: mime,
+            extension: normalized.extension,
+            contentType: normalized.mime,
           );
           saved = await messageService.sendImageToProfile(
             recipientProfileId: peerProfileId,
             mediaUrl: mediaUrl,
-            mediaMime: mime,
-            mediaSizeBytes: bytes.length,
+            mediaMime: normalized.mime,
+            mediaSizeBytes: normalized.bytes.length,
             currentUserId: userId,
             clientMessageId: item.clientId,
             body: item.body ?? '',

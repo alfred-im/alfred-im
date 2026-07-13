@@ -17,8 +17,6 @@ import '../services/location_service.dart';
 import '../services/voice_recording_service.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/duration_format.dart';
-import '../utils/image_bytes.dart';
-import '../utils/prepare_image_for_upload.dart';
 import '../utils/video_duration.dart';
 import 'location_map_preview.dart';
 import 'voice_message_content.dart';
@@ -31,8 +29,6 @@ typedef LocationSendCallback = Future<void> Function(
 );
 typedef ImageSendCallback = Future<void> Function(
   Uint8List bytes, {
-  required String extension,
-  required String mime,
   String? caption,
 });
 typedef VideoSendCallback = Future<void> Function(
@@ -179,23 +175,10 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final bytes = await file.readAsBytes();
     if (bytes.isEmpty) return;
 
-    final NormalizedImageBytes normalized;
-    try {
-      normalized = await prepareImageForUpload(bytes);
-    } on UnsupportedImageFormatException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.userMessage)),
-      );
-      return;
-    }
-
     final caption = _takeCaption();
 
     await widget.onSendImage!(
-      normalized.bytes,
-      extension: normalized.extension,
-      mime: normalized.mime,
+      bytes,
       caption: caption,
     );
   }

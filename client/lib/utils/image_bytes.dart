@@ -65,6 +65,21 @@ DetectedImageFormat detectImageFormat(Uint8List bytes) {
   return DetectedImageFormat.unknown;
 }
 
+String extensionForDetectedFormat(DetectedImageFormat format) {
+  switch (format) {
+    case DetectedImageFormat.jpeg:
+      return 'jpg';
+    case DetectedImageFormat.png:
+      return 'png';
+    case DetectedImageFormat.webp:
+      return 'webp';
+    case DetectedImageFormat.heic:
+      return 'heic';
+    case DetectedImageFormat.unknown:
+      return 'bin';
+  }
+}
+
 /// Validates magic bytes and returns canonical MIME/extension for upload.
 ///
 /// Throws [UnsupportedImageFormatException] when the file is HEIC/HEIF or

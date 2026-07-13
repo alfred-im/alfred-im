@@ -65,11 +65,8 @@ class ChatPanel extends StatelessWidget {
             enabled: !messagesController.isSending,
             onSend: messagesController.send,
             onSendGif: messagesController.sendGif,
-            onSendImage: (bytes, {required extension, required mime, caption}) =>
-                messagesController.sendImage(
+            onSendImage: (bytes, {caption}) => messagesController.sendImage(
               bytes: bytes,
-              extension: extension,
-              mime: mime,
               caption: caption,
             ),
             onSendVideo: (bytes,

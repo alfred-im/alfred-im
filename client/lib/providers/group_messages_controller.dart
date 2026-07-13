@@ -18,6 +18,7 @@ import '../services/profile_service.dart';
 import '../utils/author_display.dart' show enrichMessageAuthor;
 import '../utils/date_format.dart';
 import '../utils/merge_chat_message.dart';
+import '../utils/prepare_image_for_upload.dart';
 
 /// Messaggistica account gruppo — storico unico + broadcast allow list.
 class GroupMessagesController extends ChangeNotifier {
@@ -152,8 +153,6 @@ class GroupMessagesController extends ChangeNotifier {
 
   Future<void> sendImage({
     required Uint8List bytes,
-    required String extension,
-    required String mime,
     String? caption,
   }) async {
     if (bytes.isEmpty || isSending) return;
@@ -161,16 +160,17 @@ class GroupMessagesController extends ChangeNotifier {
     final body = caption?.trim() ?? '';
 
     await _broadcast((clientId) async {
+      final normalized = await prepareImageForUpload(bytes);
       final mediaUrl = await messageMediaService.uploadImage(
-        bytes: bytes,
+        bytes: normalized.bytes,
         userId: userId,
-        extension: extension,
-        contentType: mime,
+        extension: normalized.extension,
+        contentType: normalized.mime,
       );
       return messageService.broadcastImageToAllowlist(
         mediaUrl: mediaUrl,
-        mediaMime: mime,
-        mediaSizeBytes: bytes.length,
+        mediaMime: normalized.mime,
+        mediaSizeBytes: normalized.bytes.length,
         currentUserId: userId,
         clientMessageId: clientId,
         body: body,

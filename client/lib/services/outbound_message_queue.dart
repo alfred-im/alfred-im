@@ -67,8 +67,9 @@ class OutboundMessageQueue {
     required Uint8List bytes,
     required String extension,
   }) async {
+    OutboundMediaCache.instance.put(clientId, bytes);
+
     if (kIsWeb) {
-      OutboundMediaCache.instance.put(clientId, bytes);
       await _persistWebMedia(clientId, bytes);
       return 'memory://$clientId';
     }

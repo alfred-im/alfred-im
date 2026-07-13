@@ -6,7 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/message.dart';
+import '../services/outbound_media_cache.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/image_bytes.dart';
 import 'location_message_content.dart';
 import 'message_author_header.dart';
 import 'video_message_content.dart';
@@ -25,6 +27,38 @@ Widget _mediaLoadingPlaceholder() {
         height: 28,
         child: CircularProgressIndicator(strokeWidth: 2),
       ),
+    ),
+  );
+}
+
+Widget _pendingImageConvertingPlaceholder() {
+  return SizedBox(
+    width: _mediaMaxWidth,
+    height: _mediaMaxHeight,
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: ColoredBox(
+            color: AlfredColors.panel.withValues(alpha: 0.45),
+            child: const SizedBox(
+              width: _mediaMaxWidth,
+              height: _mediaMaxHeight,
+              child: Icon(
+                Icons.image_outlined,
+                size: 48,
+                color: AlfredColors.textSecondary,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ],
     ),
   );
 }
@@ -77,7 +111,10 @@ class MessageBubble extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (message.isGif) _NetworkImageContent(url: message.mediaUrl!),
-            if (message.isImage) _NetworkImageContent(url: message.mediaUrl!),
+            if (message.isImage)
+              message.mediaUrl != null && message.mediaUrl!.startsWith('pending://')
+                  ? _PendingImageContent(message: message)
+                  : _NetworkImageContent(url: message.mediaUrl!),
             if (message.isVideo) VideoMessageContent(message: message),
             if (message.isVoice)
               VoiceMessageContent(message: message, isMine: isMine),
@@ -139,6 +176,47 @@ class MessageBubble extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _PendingImageContent extends StatelessWidget {
+  const _PendingImageContent({required this.message});
+
+  final ChatMessage message;
+
+  String get _clientId {
+    final url = message.mediaUrl;
+    if (url != null && url.startsWith('pending://')) {
+      return url.substring('pending://'.length);
+    }
+    return message.clientMessageId ?? message.id;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = OutboundMediaCache.instance.peek(_clientId);
+    if (bytes != null) {
+      final format = detectImageFormat(bytes);
+      if (format == DetectedImageFormat.jpeg ||
+          format == DetectedImageFormat.png ||
+          format == DetectedImageFormat.webp) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.memory(
+            bytes,
+            width: _mediaMaxWidth,
+            height: _mediaMaxHeight,
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+          ),
+        );
+      }
+      if (format == DetectedImageFormat.heic) {
+        return _pendingImageConvertingPlaceholder();
+      }
+    }
+
+    return _pendingImageConvertingPlaceholder();
   }
 }
 
