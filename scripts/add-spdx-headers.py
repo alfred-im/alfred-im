@@ -12,13 +12,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MARKER = "SPDX-License-Identifier: GPL-3.0-or-later"
 
-# Fly deploy chain: no SPDX prepend (breaks shebang / confuses tooling).
-SPDX_SKIP = {
-    ROOT / "fly.toml",
-    ROOT / "Dockerfile",
-    ROOT / "scripts" / "start-bridges.sh",
-}
-
 DART_HEADER = """\
 // Copyright (C) 2026 im.alfred
 //
@@ -98,8 +91,6 @@ def main() -> None:
     ]
     for pattern, header in patterns:
         for path in sorted(ROOT.glob(pattern)):
-            if path.resolve() in SPDX_SKIP:
-                continue
             apply = prepend_shell if path.suffix == ".sh" else prepend
             if apply(path, header):
                 updated += 1
