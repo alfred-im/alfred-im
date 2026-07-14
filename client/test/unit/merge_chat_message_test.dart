@@ -68,4 +68,70 @@ void main() {
     expect(merged.contentType, MessageContentType.image);
     expect(merged.mediaUrl, 'https://example.com/photo.jpg');
   });
+
+  test('merge preserves video media on tick-only realtime update', () {
+    const existing = ChatMessage(
+      id: 'client-id',
+      body: 'Clip',
+      timeLabel: '12:00',
+      isMine: true,
+      contentType: MessageContentType.video,
+      mediaUrl: 'https://example.com/clip.mp4',
+      durationSeconds: 12,
+      clientMessageId: 'client-id',
+    );
+
+    final tickUpdate = ChatMessage.fromJson(
+      json: {
+        'id': 'server-id',
+        'body': '',
+        'created_at': DateTime.utc(2026, 7, 13, 12).toIso8601String(),
+        'author_id': 'me',
+        'client_message_id': 'client-id',
+        'delivered_at': DateTime.utc(2026, 7, 13, 12, 1).toIso8601String(),
+      },
+      currentUserId: 'me',
+    );
+
+    final merged = mergeChatMessage(existing: existing, incoming: tickUpdate);
+
+    expect(merged.id, 'server-id');
+    expect(merged.contentType, MessageContentType.video);
+    expect(merged.mediaUrl, 'https://example.com/clip.mp4');
+    expect(merged.durationSeconds, 12);
+    expect(merged.body, 'Clip');
+    expect(merged.status, MessageStatus.delivered);
+  });
+
+  test('merge keeps video url when update has video type but no url', () {
+    const existing = ChatMessage(
+      id: 'client-id',
+      body: '',
+      timeLabel: '12:00',
+      isMine: true,
+      contentType: MessageContentType.video,
+      mediaUrl: 'https://example.com/clip.mp4',
+      durationSeconds: 5,
+      clientMessageId: 'client-id',
+    );
+
+    final partialUpdate = ChatMessage.fromJson(
+      json: {
+        'id': 'server-id',
+        'body': '',
+        'content_type': 'video',
+        'created_at': DateTime.utc(2026, 7, 13, 12).toIso8601String(),
+        'author_id': 'me',
+        'client_message_id': 'client-id',
+        'delivered_at': DateTime.utc(2026, 7, 13, 12, 1).toIso8601String(),
+      },
+      currentUserId: 'me',
+    );
+
+    final merged = mergeChatMessage(existing: existing, incoming: partialUpdate);
+
+    expect(merged.contentType, MessageContentType.video);
+    expect(merged.mediaUrl, 'https://example.com/clip.mp4');
+    expect(merged.durationSeconds, 5);
+  });
 }

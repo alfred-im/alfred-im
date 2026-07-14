@@ -15,9 +15,11 @@
 
 Max **10 MB**. Path: `{userId}/{uuid}.{ext}`.
 
-**UX** (`ChatInputBar`): allegato → galleria o fotocamera (`image_picker`); didascalia nel campo testo prima dell'invio.
+**HEIC/HEIF** (iPhone): accettato dal picker; conversione JPEG lato client prima dell’upload (`prepareImageForUpload`).
 
-File: `message_media_service.dart` (`uploadImage`), `MessagesController.sendImage`
+**UX** (`ChatInputBar`): allegato → galleria o fotocamera (`image_picker`); didascalia nel campo testo prima dell'invio. Bolla ottimistica con preview da `OutboundMediaCache` (`pending://`) **prima** della conversione/upload.
+
+File: `message_media_service.dart` (`uploadImage`), `MessagesController.sendImage`, `prepare_image_for_upload_*.dart`
 
 ---
 
@@ -33,7 +35,9 @@ File: `message_media_service.dart` (`uploadImage`), `MessagesController.sendImag
 
 Max **50 MB**. Solo picker file (no registrazione).
 
-File: `video_message_content.dart`, `video_duration.dart`, `MessagesController.sendVideo`
+**UX**: bolla video subito dopo la selezione file; byte letti in background; su web blob > 4 MB non persistiti in SharedPreferences (`ChatMediaConfig.webOutboundPersistMaxBytes`). Probe durata con timeout 6 s (`media_probe_timeout.dart`).
+
+File: `video_message_content.dart`, `video_duration.dart`, `MessagesController.sendVideo` / `sendVideoFromPicker`
 
 ---
 
@@ -67,3 +71,14 @@ Nessun bucket — solo coordinate in Postgres.
 **UX ricezione**: tile OSM in bolla (`flutter_map`); tap apre OSM in browser.
 
 File: `location_service.dart`, `LocationMessageContent`, `ChatInputBar` pin flow
+
+---
+
+## Verifica (gate)
+
+| Livello | Artefatti |
+|---------|-----------|
+| SQL | `supabase/tests/mailbox_send_media_smoke.sql` |
+| Dart unit | `messages_controller_media_test.dart`, `group_messages_controller_media_test.dart`, `chat_media_support_test.dart`, `image_bytes_test.dart`, `merge_chat_message_test.dart` |
+| Dart widget | `message_bubble_test.dart` |
+| Gate | `cd client && bash scripts/verify.sh` |

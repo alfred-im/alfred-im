@@ -62,7 +62,7 @@ Binding UX messaggistica gruppo: attribuzione autore contenuto, header avatar+no
 | SURF-GROUP-CONVERSATION-001–003 | `group_message_display_test.dart`, `message_bubble_test.dart` |
 | SURF-GROUP-CONVERSATION-004 | `group_conversation_screen_test.dart` |
 | SURF-GROUP-CONVERSATION-005 | `mailbox_inbox_smoke.sql`; integration |
-| SURF-GROUP-CONVERSATION-006 | `group_conversation_screen.dart` — compose broadcast |
+| SURF-GROUP-CONVERSATION-006 | `group_messages_controller_media_test.dart`, `group_broadcast_smoke.sql` |
 | SURF-GROUP-CONVERSATION-009, 012 | `group_conversation_screen_test.dart`; `home_screen_group_test.dart` |
 | SURF-GROUP-CONVERSATION-007 | realtime subscribe `messages` owner filter |
 

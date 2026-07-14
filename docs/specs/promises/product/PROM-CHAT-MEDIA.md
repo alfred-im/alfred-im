@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-CHAT-MEDIA` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-13 |
+| **Ultima revisione** | 2026-07-14 |
 
 Promessa di prodotto: invio e visualizzazione di **foto** (`image`) e **video** (`video`) in chat, con didascalia opzionale, upload su bucket `chat-media`, coda/retry allineata a GIF/voice.
 
@@ -49,10 +49,12 @@ L'utente può condividere foto e video nelle conversazioni 1:1 e nei broadcast d
 | `ChatMediaConfig` | Limiti byte, MIME, estensioni |
 | `MessageMediaService` | `uploadImage`, `uploadVideo` |
 | `MessageService` | `sendImageToProfile`, `sendVideoToProfile`, broadcast analoghi |
-| `MessagesController` | Optimistic + retry con didascalia |
+| `MessagesController` | Optimistic + retry con didascalia; bolla **prima** di conversione HEIC / lettura byte video |
 | `GroupMessagesController` | Broadcast image/video |
 | `ChatInputBar` | Menu allegati: galleria, fotocamera, video |
-| `MessageBubble` | Rendering foto + player video inline |
+| `MessageBubble` | Rendering foto + player video inline; preview da `OutboundMediaCache` su `pending://` |
+| `prepareImageForUpload` | HEIC/HEIF → JPEG (web: `heic2any`; IO: `flutter_image_compress`) |
+| `ChatMediaConfig.webOutboundPersistMaxBytes` | Su web, blob outbound > 4 MB restano solo in RAM (no SharedPreferences) |
 
 ---
 
@@ -69,10 +71,15 @@ L'utente può condividere foto e video nelle conversazioni 1:1 e nei broadcast d
 
 | PROM-ID | Verifica |
 |---------|----------|
-| PROM-CHAT-MEDIA-001–002 | `mailbox_send_media_smoke.sql` |
-| PROM-CHAT-MEDIA-003–007 | `models_and_utils_test.dart`, `messages_controller_multi_account_test.dart` |
-| PROM-CHAT-MEDIA-008 | `group_broadcast` smoke + widget test |
-| PROM-CHAT-MEDIA | `bash scripts/test.sh gate` |
+| PROM-CHAT-MEDIA-001 | `mailbox_send_media_smoke.sql` (validazione RPC `image`); `image_bytes_test.dart` (magic bytes JPEG/PNG/WebP) |
+| PROM-CHAT-MEDIA-001b | `image_bytes_test.dart` (sniff HEIC); `prepare_image_for_upload` via `chat_media_support_test.dart`; widget pending HEIC in `message_bubble_test.dart` |
+| PROM-CHAT-MEDIA-002 | `mailbox_send_media_smoke.sql` (validazione RPC `video`); `video_file_extension_test.dart`; `messages_controller_media_test.dart` |
+| PROM-CHAT-MEDIA-003 | `messages_controller_media_test.dart` (caption); `message_bubble_test.dart` (didascalia sotto foto) |
+| PROM-CHAT-MEDIA-004 | `MessageMediaService` limiti in `chat_media_support_test.dart`; path upload in `message_media_service.dart` |
+| PROM-CHAT-MEDIA-005–006 | `picked_file_bytes_test.dart`; flussi controller in `messages_controller_media_test.dart` |
+| PROM-CHAT-MEDIA-007 | `chat_media_support_test.dart` (coda + `OutboundMediaCache`); `messages_controller_media_test.dart` (optimistic + retry path) |
+| PROM-CHAT-MEDIA-008 | `group_messages_controller_media_test.dart`; `group_broadcast_smoke.sql` |
+| PROM-CHAT-MEDIA (gate) | `bash scripts/test.sh gate` (**192** test Dart) |
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 

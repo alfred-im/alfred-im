@@ -11,6 +11,12 @@ abstract final class ChatMediaConfig {
   static const imageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
   static const videoExtensions = ['mp4', 'webm'];
 
+  /// Web SharedPreferences cannot hold large video blobs; keep in RAM only.
+  static const webOutboundPersistMaxBytes = 4 * 1024 * 1024;
+
+  static bool shouldPersistOutboundMediaOnWeb(int bytes) =>
+      bytes <= webOutboundPersistMaxBytes;
+
   static const imageMimeTypes = {
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',

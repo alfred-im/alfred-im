@@ -6,8 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:alfred_client/models/message.dart';
+import 'package:alfred_client/services/outbound_media_cache.dart';
 import 'package:alfred_client/theme/alfred_theme.dart';
 import 'package:alfred_client/widgets/message_bubble.dart';
+
+import '../support/media_test_fixtures.dart';
 
 void main() {
   testWidgets('MessageBubble renders body and checkmarks', (tester) async {
@@ -101,6 +104,37 @@ void main() {
 
     expect(find.byType(Image), findsOneWidget);
     expect(find.text('Didascalia'), findsOneWidget);
+  });
+
+  testWidgets('MessageBubble renders pending image from OutboundMediaCache', (
+    tester,
+  ) async {
+    const clientId = 'pending-image-client';
+    OutboundMediaCache.instance.put(clientId, kHeicBytes);
+
+    addTearDown(() => OutboundMediaCache.instance.remove(clientId));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: const Scaffold(
+          body: MessageBubble(
+            message: ChatMessage(
+              id: clientId,
+              body: '',
+              timeLabel: '12:31',
+              isMine: true,
+              status: MessageStatus.pending,
+              contentType: MessageContentType.image,
+              mediaUrl: 'pending://pending-image-client',
+              clientMessageId: clientId,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.image_outlined), findsOneWidget);
   });
 
   testWidgets('MessageBubble renders pending video placeholder', (tester) async {

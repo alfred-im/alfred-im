@@ -273,7 +273,7 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 | `supabase/tests/mailbox_delivery_smoke.sql` | Copia destinatario + outbox `completed` |
 | `supabase/tests/mailbox_read_smoke.sql` | `mark_peer_read` → `read_at` mittente |
 | `supabase/tests/mailbox_inbox_smoke.sql` | `list_inbox` + unread |
-| `supabase/tests/mailbox_send_media_smoke.sql` | Validazione `gif`/`location` |
+| `supabase/tests/mailbox_send_media_smoke.sql` | Validazione `gif` / `location` / `image` / `video` |
 | `supabase/tests/send_message_to_profile_smoke.sql` | Invio a profilo non in rubrica |
 | `supabase/tests/reception_allowlist_schema_smoke.sql` | Tabella + helper gate |
 | `supabase/tests/reception_allowlist_gate_smoke.sql` | Rifiuto silenzioso vs recapito allowed |

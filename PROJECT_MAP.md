@@ -238,7 +238,7 @@ Test: `bash scripts/test.sh integration-ticks`
 
 ### Gate test
 
-`verify.sh` — **161** test Dart. Smoke SQL: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `group_*.sql`, `reception_allowlist_*.sql`.
+`verify.sh` — **192** test Dart. Smoke SQL: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `group_*.sql`, `reception_allowlist_*.sql`.
 
 ### File chiave client
 

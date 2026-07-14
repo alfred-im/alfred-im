@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/chat_media_config.dart';
 import '../models/outbound_queue_item.dart';
 import 'outbound_media_cache.dart';
 
@@ -22,8 +23,6 @@ class OutboundMessageQueue {
 
   static const _storageKey = 'alfred_outbound_queue_v1';
   static const _webMediaStorageKey = 'alfred_outbound_media_v1';
-  /// SharedPreferences is unsuitable for large video blobs on web.
-  static const _webPersistMaxBytes = 4 * 1024 * 1024;
 
   final Future<SharedPreferences> _preferencesFuture;
   final _controller = StreamController<List<OutboundQueueItem>>.broadcast();
@@ -72,7 +71,7 @@ class OutboundMessageQueue {
     OutboundMediaCache.instance.put(clientId, bytes);
 
     if (kIsWeb) {
-      if (bytes.length <= _webPersistMaxBytes) {
+      if (ChatMediaConfig.shouldPersistOutboundMediaOnWeb(bytes.length)) {
         await _persistWebMedia(clientId, bytes);
       }
       return 'memory://$clientId';

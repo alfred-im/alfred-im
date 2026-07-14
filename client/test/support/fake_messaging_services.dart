@@ -81,6 +81,150 @@ class FakeMessageService extends MessageService {
     )]?.call(message);
   }
 
+  final imageProfileSends = <Map<String, Object?>>[];
+  final videoProfileSends = <Map<String, Object?>>[];
+  final imageBroadcasts = <Map<String, Object?>>[];
+  final videoBroadcasts = <Map<String, Object?>>[];
+
+  @override
+  Future<ChatMessage> sendImageToProfile({
+    required String recipientProfileId,
+    required String mediaUrl,
+    required String mediaMime,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+    String body = '',
+  }) async {
+    imageProfileSends.add({
+      'recipientProfileId': recipientProfileId,
+      'mediaUrl': mediaUrl,
+      'mediaMime': mediaMime,
+      'mediaSizeBytes': mediaSizeBytes,
+      'clientMessageId': clientMessageId,
+      'body': body,
+    });
+    return _mediaMessage(
+      clientMessageId: clientMessageId,
+      currentUserId: currentUserId,
+      contentType: MessageContentType.image,
+      mediaUrl: mediaUrl,
+      mediaMime: mediaMime,
+      body: body,
+    );
+  }
+
+  @override
+  Future<ChatMessage> sendVideoToProfile({
+    required String recipientProfileId,
+    required String mediaUrl,
+    required String mediaMime,
+    required int durationSeconds,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+    String body = '',
+  }) async {
+    videoProfileSends.add({
+      'recipientProfileId': recipientProfileId,
+      'mediaUrl': mediaUrl,
+      'mediaMime': mediaMime,
+      'durationSeconds': durationSeconds,
+      'mediaSizeBytes': mediaSizeBytes,
+      'clientMessageId': clientMessageId,
+      'body': body,
+    });
+    return _mediaMessage(
+      clientMessageId: clientMessageId,
+      currentUserId: currentUserId,
+      contentType: MessageContentType.video,
+      mediaUrl: mediaUrl,
+      mediaMime: mediaMime,
+      durationSeconds: durationSeconds,
+      body: body,
+    );
+  }
+
+  @override
+  Future<ChatMessage> broadcastImageToAllowlist({
+    required String mediaUrl,
+    required String mediaMime,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+    String body = '',
+  }) async {
+    imageBroadcasts.add({
+      'mediaUrl': mediaUrl,
+      'mediaMime': mediaMime,
+      'mediaSizeBytes': mediaSizeBytes,
+      'clientMessageId': clientMessageId,
+      'body': body,
+    });
+    return _mediaMessage(
+      clientMessageId: clientMessageId,
+      currentUserId: currentUserId,
+      contentType: MessageContentType.image,
+      mediaUrl: mediaUrl,
+      mediaMime: mediaMime,
+      body: body,
+    );
+  }
+
+  @override
+  Future<ChatMessage> broadcastVideoToAllowlist({
+    required String mediaUrl,
+    required String mediaMime,
+    required int durationSeconds,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+    String body = '',
+  }) async {
+    videoBroadcasts.add({
+      'mediaUrl': mediaUrl,
+      'mediaMime': mediaMime,
+      'durationSeconds': durationSeconds,
+      'mediaSizeBytes': mediaSizeBytes,
+      'clientMessageId': clientMessageId,
+      'body': body,
+    });
+    return _mediaMessage(
+      clientMessageId: clientMessageId,
+      currentUserId: currentUserId,
+      contentType: MessageContentType.video,
+      mediaUrl: mediaUrl,
+      mediaMime: mediaMime,
+      durationSeconds: durationSeconds,
+      body: body,
+    );
+  }
+
+  ChatMessage _mediaMessage({
+    required String clientMessageId,
+    required String currentUserId,
+    required MessageContentType contentType,
+    required String mediaUrl,
+    String? mediaMime,
+    int? durationSeconds,
+    String body = '',
+  }) {
+    return ChatMessage(
+      id: 'server-$clientMessageId',
+      body: body,
+      timeLabel: '12:00',
+      isMine: true,
+      status: MessageStatus.sent,
+      createdAt: DateTime.utc(2026, 7, 14, 12),
+      clientMessageId: clientMessageId,
+      senderId: currentUserId,
+      contentType: contentType,
+      mediaUrl: mediaUrl,
+      mediaMime: mediaMime,
+      durationSeconds: durationSeconds,
+    );
+  }
+
   @override
   Future<List<ChatMessage>> fetchOwnerMessages({
     required String currentUserId,

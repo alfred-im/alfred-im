@@ -23,7 +23,7 @@ Client web collegato a Supabase (contatti, inbox, chat realtime, profilo, **mult
 | **Link condivisibili** | Fragment `#username` / `#username/chat`; share di sistema — `PROM-SHAREABLE-LINK` |
 | **Gruppi** | Account `profile_kind = group`; `GroupHomePanel` + chat; partecipazione allow list bidirezionale — `SYS-GROUP` |
 | **Invio** | `send_message_to_profile` |
-| **Gate test** | `verify.sh` — **161** test unit/widget (zero issue analyze) |
+| **Gate test** | `verify.sh` — **192** test unit/widget (zero issue analyze) |
 
 Build native mobile/desktop non è focus del progetto oggi; la superficie supportata è il web client.
 

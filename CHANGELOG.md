@@ -4,6 +4,19 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
+## [Unreleased] - 2026-07-14
+
+### Aggiunto
+
+- **#190** — `PROM-CHAT-MEDIA`: foto e video in chat 1:1 e gruppo (picker, fotocamera, didascalia, HEIC→JPEG, bolla ottimistica, coda outbound)
+- **#191** — Copertura test media: `messages_controller_media_test.dart`, `group_messages_controller_media_test.dart`, `chat_media_support_test.dart`; fixture/fake test; tracciabilità SDD aggiornata
+
+### Documentazione
+
+- Revisione post-#191: `PROM-CHAT-MEDIA`, `SURF-CHAT-013`, `SURF-GROUP-CONVERSATION-006`, `guides/media.md`, `rpc.md`; gate **192** test
+
+---
+
 ## [Unreleased] - 2026-07-12
 
 ### Aggiunto
