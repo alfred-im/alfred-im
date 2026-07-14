@@ -31,7 +31,7 @@ storage: chat-media, avatars
 | Tipo | Valori | Uso |
 |------|--------|-----|
 | `contact_protocol` | `internal`, `xmpp`, `matrix` | Routing backend; invisibile in UI inbox |
-| `message_content_type` | `text`, `gif`, `voice`, `location` | Tipo contenuto messaggio |
+| `message_content_type` | `text`, `gif`, `voice`, `location`, `image`, `video` | Tipo contenuto messaggio |
 | `message_delivery_status` | `pending`, `sent`, `delivered`, `read`, `failed` | Enum legacy (pre-mailbox); **non** usato da `outbox`/`bridge_jobs` su `main` |
 | `queue_status` | `queued`, `processing`, `completed`, `failed` | `outbox`, `bridge_jobs` |
 | `profile_kind` | `user`, `group` | Tipo account — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
@@ -185,7 +185,7 @@ Stato piattaforma bridge ([bridge-stateless.md](../../decisions/bridge-stateless
 
 | Bucket | Uso | Limite | Path pattern |
 |--------|-----|--------|--------------|
-| `chat-media` | GIF, voice | 10 MB gif / 15 MB webm | `{auth.uid()}/{uuid}.*` |
+| `chat-media` | GIF, voice, image, video | 50 MB max (video) | `{auth.uid()}/{uuid}.*` |
 | `avatars` | Foto profilo | 2 MB | `{auth.uid()}/avatar.{ext}` |
 
 Pubblici (scope attuale) (URL diretti in Realtime).

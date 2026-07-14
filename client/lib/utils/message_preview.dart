@@ -13,6 +13,10 @@ String inboxPreviewForMessage(ChatMessage message) {
       return '🎤';
     case MessageContentType.location:
       return '📍 Posizione';
+    case MessageContentType.image:
+      return message.body.isNotEmpty ? '📷 ${message.body}' : '📷 Foto';
+    case MessageContentType.video:
+      return message.body.isNotEmpty ? '🎬 ${message.body}' : '🎬 Video';
     case MessageContentType.text:
       return message.body;
   }

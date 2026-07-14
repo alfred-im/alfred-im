@@ -71,5 +71,75 @@ BEGIN
     RAISE EXCEPTION 'recipient copy missing for location message';
   END IF;
 
+  BEGIN
+    PERFORM public.send_message_to_profile(
+      v_agent2,
+      '',
+      'smoke-image-missing-url',
+      'image'::public.message_content_type
+    );
+    RAISE EXCEPTION 'image without media_url should fail';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM NOT ILIKE '%media_url%' AND SQLERRM NOT ILIKE '%image%' THEN
+      RAISE;
+    END IF;
+  END;
+
+  v_client_id := 'smoke-image-' || floor(random() * 1000000)::text;
+  SELECT * INTO v_msg FROM public.send_message_to_profile(
+    v_agent2,
+    'Didascalia foto',
+    v_client_id,
+    'image'::public.message_content_type,
+    'https://example.com/chat-media/smoke.jpg',
+    null,
+    'image/jpeg',
+    1024,
+    null,
+    null
+  );
+
+  IF v_msg.content_type <> 'image' OR trim(v_msg.body) <> 'Didascalia foto' THEN
+    RAISE EXCEPTION 'image message mismatch';
+  END IF;
+
+  BEGIN
+    PERFORM public.send_message_to_profile(
+      v_agent2,
+      '',
+      'smoke-video-missing-duration',
+      'video'::public.message_content_type,
+      'https://example.com/chat-media/smoke.mp4',
+      null,
+      'video/mp4',
+      2048,
+      null,
+      null
+    );
+    RAISE EXCEPTION 'video without duration should fail';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM NOT ILIKE '%duration%' AND SQLERRM NOT ILIKE '%video%' THEN
+      RAISE;
+    END IF;
+  END;
+
+  v_client_id := 'smoke-video-' || floor(random() * 1000000)::text;
+  SELECT * INTO v_msg FROM public.send_message_to_profile(
+    v_agent2,
+    '',
+    v_client_id,
+    'video'::public.message_content_type,
+    'https://example.com/chat-media/smoke.mp4',
+    12,
+    'video/mp4',
+    2048,
+    null,
+    null
+  );
+
+  IF v_msg.content_type <> 'video' OR v_msg.duration_seconds <> 12 THEN
+    RAISE EXCEPTION 'video message mismatch';
+  END IF;
+
   RAISE NOTICE 'mailbox_send_media_smoke_ok';
 END $$;

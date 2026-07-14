@@ -92,6 +92,46 @@ class MessageService {
     );
   }
 
+  Future<ChatMessage> broadcastImageToAllowlist({
+    required String mediaUrl,
+    required String mediaMime,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+    String body = '',
+  }) {
+    return _broadcastToAllowlist(
+      currentUserId: currentUserId,
+      clientMessageId: clientMessageId,
+      contentType: 'image',
+      body: body,
+      mediaUrl: mediaUrl,
+      mediaMime: mediaMime,
+      mediaSizeBytes: mediaSizeBytes,
+    );
+  }
+
+  Future<ChatMessage> broadcastVideoToAllowlist({
+    required String mediaUrl,
+    required String mediaMime,
+    required int durationSeconds,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+    String body = '',
+  }) {
+    return _broadcastToAllowlist(
+      currentUserId: currentUserId,
+      clientMessageId: clientMessageId,
+      contentType: 'video',
+      body: body,
+      mediaUrl: mediaUrl,
+      durationSeconds: durationSeconds,
+      mediaMime: mediaMime,
+      mediaSizeBytes: mediaSizeBytes,
+    );
+  }
+
   Future<ChatMessage> _broadcastToAllowlist({
     required String currentUserId,
     required String clientMessageId,
@@ -217,6 +257,50 @@ class MessageService {
     );
   }
 
+  Future<ChatMessage> sendImageToProfile({
+    required String recipientProfileId,
+    required String mediaUrl,
+    required String mediaMime,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+    String body = '',
+  }) {
+    return _sendToProfile(
+      recipientProfileId: recipientProfileId,
+      currentUserId: currentUserId,
+      clientMessageId: clientMessageId,
+      contentType: 'image',
+      body: body,
+      mediaUrl: mediaUrl,
+      mediaMime: mediaMime,
+      mediaSizeBytes: mediaSizeBytes,
+    );
+  }
+
+  Future<ChatMessage> sendVideoToProfile({
+    required String recipientProfileId,
+    required String mediaUrl,
+    required String mediaMime,
+    required int durationSeconds,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+    String body = '',
+  }) {
+    return _sendToProfile(
+      recipientProfileId: recipientProfileId,
+      currentUserId: currentUserId,
+      clientMessageId: clientMessageId,
+      contentType: 'video',
+      body: body,
+      mediaUrl: mediaUrl,
+      durationSeconds: durationSeconds,
+      mediaMime: mediaMime,
+      mediaSizeBytes: mediaSizeBytes,
+    );
+  }
+
   Future<ChatMessage> _sendToProfile({
     required String recipientProfileId,
     required String currentUserId,
@@ -279,7 +363,8 @@ class MessageService {
         json: record,
         currentUserId: currentUserId,
       );
-      if (!message.hasRenderableContent) return;
+      final isDeliveryTick = payload.eventType == PostgresChangeEvent.update;
+      if (!message.hasRenderableContent && !isDeliveryTick) return;
       onMessage(message);
     }
 
@@ -329,7 +414,8 @@ class MessageService {
         json: record,
         currentUserId: currentUserId,
       );
-      if (!message.hasRenderableContent) return;
+      final isDeliveryTick = payload.eventType == PostgresChangeEvent.update;
+      if (!message.hasRenderableContent && !isDeliveryTick) return;
       onMessage(message);
     }
 

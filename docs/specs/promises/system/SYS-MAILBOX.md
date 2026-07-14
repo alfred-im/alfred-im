@@ -71,7 +71,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | **SYS-MAILBOX-019** | **Outbox sempre**: INSERT `outbox` (`event_kind = deliver`) per ogni invio, incluso `protocol = internal` |
 | **SYS-MAILBOX-020** | Driver internal: worker [SYS-DELIVERY](./SYS-DELIVERY.md) nella stessa transazione RPC — **se** gate reception → materializza copia destinatario + `delivered_at` mittente; **altrimenti** rifiuto silenzioso |
 | **SYS-MAILBOX-021** | Idempotenza: retry stesso `(owner_id, client_message_id)` → stessa riga mittente, no duplicati |
-| **SYS-MAILBOX-022** | Tipi `content_type`: `text`, `gif`, `voice`, `location` — validazione invariata da pre-#159 |
+| **SYS-MAILBOX-022** | Tipi `content_type`: `text`, `gif`, `voice`, `location`, `image`, `video` — validazione in [PROM-CHAT-MEDIA](../product/PROM-CHAT-MEDIA.md) |
 | **SYS-MAILBOX-023** | Bucket storage `chat-media`: path `{auth.uid()}/{uuid}.*` (upload prima RPC) |
 | **SYS-MAILBOX-024** | Outbox retry: `attempts`, `last_error`, `status` → `failed` dopo soglia (default 5 tentativi worker/cron futuro; internal sincrono non fallisce salvo errore transazione) |
 | **SYS-MAILBOX-025** | Invio fallito server: `failed_at` timestamptz sulla copia mittente (opzionale null se non applicabile) |
@@ -136,7 +136,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | **SYS-MAILBOX-046** | `delivered_at` valorizzato solo dopo materializzazione copia destinatario ([SYS-MAILBOX](./SYS-MAILBOX.md) invio) — non da Realtime client destinatario |
 | **SYS-MAILBOX-047** | `mark_peer_read(peer)`: UPDATE righe in entrata nel mio archivio (`owner_id = io`, `author_id = peer`, `read_at IS NULL`) SET `read_at = now()` |
 | **SYS-MAILBOX-048** | Per ogni λ letto: accoda `outbox` `event_kind = read_receipt`; worker [SYS-DELIVERY](./SYS-DELIVERY.md) aggiorna `read_at` sulla copia mittente — **nessuna** UPDATE account cross-boundary |
-| **SYS-MAILBOX-049** | Lettura include body non vuoto OPPURE `content_type` ∈ gif, voice, location |
+| **SYS-MAILBOX-049** | Lettura include body non vuoto OPPURE `content_type` ∈ gif, voice, location, image, video |
 | **SYS-MAILBOX-050** | `list_inbox` unread: righe in entrata con `read_at IS NULL` |
 
 #### MUST NOT

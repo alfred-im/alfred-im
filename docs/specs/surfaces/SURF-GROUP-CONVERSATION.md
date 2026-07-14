@@ -35,7 +35,7 @@ Binding UX messaggistica gruppo: attribuzione autore contenuto, header avatar+no
 | **SURF-GROUP-CONVERSATION-003** | Contesto conversazione con **gruppo** (`peer_profile_id`) per messaggi erogati su archivio `user` |
 | **SURF-GROUP-CONVERSATION-004** | Account `group`: storico via query su `messages` WHERE `owner_id = auth.uid()` ORDER BY `created_at` (non `list_inbox`) |
 | **SURF-GROUP-CONVERSATION-005** | Account `user`: `list_inbox()` e `list_peer_messages(gruppo)` includono messaggi erogati con `peer_profile_id = gruppo` |
-| **SURF-GROUP-CONVERSATION-006** | Gruppo in focus: compose broadcast (`sendGif` / `sendVoice` / `sendLocation`) verso allow list |
+| **SURF-GROUP-CONVERSATION-006** | Gruppo in focus: compose broadcast (`sendGif` / `sendVoice` / `sendLocation` / `sendImage` / `sendVideo`) verso allow list — [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md) |
 | **SURF-GROUP-CONVERSATION-009** | Apertura da [SURF-GROUP-HOME](./SURF-GROUP-HOME.md): non è schermata default al focus gruppo |
 | **SURF-GROUP-CONVERSATION-012** | Header chat allineato a [SURF-CHAT](./SURF-CHAT.md) `ChatPanel`: back su mobile, avatar + nome gruppo, bordo inferiore — **senza** entry allow list né sottotitolo «Account gruppo» |
 

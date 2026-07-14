@@ -9,21 +9,31 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../config/location_config.dart';
 import '../config/voice_config.dart';
 import '../models/location_reading.dart';
 import '../services/location_service.dart';
 import '../services/voice_recording_service.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/duration_format.dart';
-import '../config/location_config.dart';
+import '../utils/video_file_extension.dart';
 import 'location_map_preview.dart';
 import 'voice_message_content.dart';
+import 'package:image_picker/image_picker.dart';
 
 typedef VoiceSendCallback = Future<void> Function(Uint8List bytes, int durationMs);
 typedef LocationSendCallback = Future<void> Function(
   double latitude,
   double longitude,
 );
+typedef ImageSendCallback = Future<void> Function(
+  Uint8List bytes, {
+  String? caption,
+});
+typedef VideoSendCallback = Future<void> Function(
+  PlatformFile file, {
+  String? caption,
+});
 
 class ChatInputBar extends StatefulWidget {
   const ChatInputBar({
@@ -32,6 +42,8 @@ class ChatInputBar extends StatefulWidget {
     this.hintText = 'Scrivi un messaggio',
     this.onSend,
     this.onSendGif,
+    this.onSendImage,
+    this.onSendVideo,
     this.onSendVoice,
     this.onSendLocation,
   });
@@ -40,6 +52,8 @@ class ChatInputBar extends StatefulWidget {
   final String hintText;
   final Future<void> Function(String body)? onSend;
   final Future<void> Function(Uint8List bytes)? onSendGif;
+  final ImageSendCallback? onSendImage;
+  final VideoSendCallback? onSendVideo;
   final VoiceSendCallback? onSendVoice;
   final LocationSendCallback? onSendLocation;
 
@@ -85,8 +99,117 @@ class _ChatInputBarState extends State<ChatInputBar> {
   bool get _hasText => _controller.text.trim().isNotEmpty;
 
   bool get _showGif => widget.onSendGif != null;
+  bool get _showAttachments =>
+      widget.onSendImage != null || widget.onSendVideo != null;
   bool get _showLocation => widget.onSendLocation != null;
   bool get _showVoice => widget.onSendVoice != null;
+
+  String? _takeCaption() {
+    final caption = _controller.text.trim();
+    if (caption.isEmpty) return null;
+    _controller.clear();
+    setState(() {});
+    return caption;
+  }
+
+  Future<void> _showAttachmentMenu() async {
+    if (!widget.enabled || _isComposerLocked) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.onSendImage != null) ...[
+                ListTile(
+                  leading: const Icon(Icons.photo_library_outlined),
+                  title: const Text('Galleria foto'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    unawaited(_pickImage(ImageSource.gallery));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt_outlined),
+                  title: const Text('Fotocamera'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    unawaited(_pickImage(ImageSource.camera));
+                  },
+                ),
+              ],
+              if (widget.onSendVideo != null)
+                ListTile(
+                  leading: const Icon(Icons.videocam_outlined),
+                  title: const Text('Video'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    unawaited(_pickVideo());
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    if (!widget.enabled || widget.onSendImage == null) return;
+
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: source,
+      imageQuality: 90,
+      maxWidth: 4096,
+      maxHeight: 4096,
+    );
+    if (file == null) return;
+
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) return;
+
+    final caption = _takeCaption();
+
+    await widget.onSendImage!(
+      bytes,
+      caption: caption,
+    );
+  }
+
+  Future<void> _pickVideo() async {
+    if (!widget.enabled || widget.onSendVideo == null) return;
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.video,
+      withData: false,
+      withReadStream: true,
+      allowMultiple: false,
+    );
+
+    final file = result?.files.single;
+    if (file == null) return;
+
+    final extension = videoExtensionFromPickedFile(file);
+    if (!isSupportedVideoExtension(extension)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Formato video non supportato. Usa MP4 o WebM.'),
+        ),
+      );
+      return;
+    }
+
+    final caption = _takeCaption();
+
+    await widget.onSendVideo!(
+      file,
+      caption: caption,
+    );
+  }
 
   Future<void> _submit() async {
     final text = _controller.text.trim();
@@ -679,6 +802,19 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
                 child: Row(
                 children: [
+                  if (_showAttachments)
+                    IconButton(
+                      onPressed: widget.enabled && !_isComposerLocked
+                          ? () => unawaited(_showAttachmentMenu())
+                          : null,
+                      tooltip: 'Allega',
+                      icon: Icon(
+                        Icons.attach_file_outlined,
+                        color: widget.enabled
+                            ? AlfredColors.textPrimary
+                            : AlfredColors.textSecondary,
+                      ),
+                    ),
                   if (_showGif)
                     IconButton(
                       onPressed: widget.enabled ? _pickGif : null,

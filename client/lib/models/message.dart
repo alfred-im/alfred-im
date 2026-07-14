@@ -4,7 +4,7 @@
 
 enum MessageStatus { sent, delivered, read, pending, failed }
 
-enum MessageContentType { text, gif, voice, location }
+enum MessageContentType { text, gif, voice, location, image, video }
 
 /// Parses ISO8601 timestamps from PostgREST (nullable).
 DateTime? _parseOptionalTimestamp(dynamic value) {
@@ -51,6 +51,10 @@ MessageContentType messageContentTypeFromString(String? value) {
       return MessageContentType.voice;
     case 'location':
       return MessageContentType.location;
+    case 'image':
+      return MessageContentType.image;
+    case 'video':
+      return MessageContentType.video;
     default:
       return MessageContentType.text;
   }
@@ -133,10 +137,20 @@ class ChatMessage {
       latitude != null &&
       longitude != null;
 
-  bool get isMedia => isGif || isVoice || isLocation;
+  bool get isImage =>
+      contentType == MessageContentType.image &&
+      mediaUrl != null &&
+      mediaUrl!.isNotEmpty;
+
+  bool get isVideo =>
+      contentType == MessageContentType.video &&
+      mediaUrl != null &&
+      mediaUrl!.isNotEmpty;
+
+  bool get isMedia => isGif || isVoice || isLocation || isImage || isVideo;
 
   bool get hasRenderableContent =>
-      body.isNotEmpty || isGif || isVoice || isLocation;
+      body.isNotEmpty || isGif || isVoice || isLocation || isImage || isVideo;
 
   bool get canRetry => isMine && status == MessageStatus.failed;
 

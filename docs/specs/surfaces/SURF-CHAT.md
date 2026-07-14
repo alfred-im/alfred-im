@@ -5,7 +5,7 @@
 | **Superficie ID** | `SURF-CHAT` |
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-09 |
-| **Promesse** | [PROM-CHAT-PEER-KEY](../promises/product/PROM-CHAT-PEER-KEY.md), [PROM-MESSAGE-STATUS](../promises/product/PROM-MESSAGE-STATUS.md), [PROM-OUTBOUND-SEND](../promises/product/PROM-OUTBOUND-SEND.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) (semantica spunte) |
+| **Promesse** | [PROM-CHAT-PEER-KEY](../promises/product/PROM-CHAT-PEER-KEY.md), [PROM-MESSAGE-STATUS](../promises/product/PROM-MESSAGE-STATUS.md), [PROM-OUTBOUND-SEND](../promises/product/PROM-OUTBOUND-SEND.md), [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) (semantica spunte) |
 | **PR** | #159, #178 |
 
 Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pieno, spunte, invio optimistic, preview inbox.
@@ -37,7 +37,8 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | **SURF-CHAT-005** | Checkmarks solo bolle `isMine` (author = io) |
 | **SURF-CHAT-006** | Coda client `OutboundMessageQueue` + merge optimistic su `client_message_id` |
 | **SURF-CHAT-007** | Stati client `pending`/`failed` solo lato mittente pre-ACK server — non persistiti come enum DB |
-| **SURF-CHAT-008** | Preview inbox per tipo: testo troncato, `[GIF]`, `🎤`, `📍 Posizione` |
+| **SURF-CHAT-008** | Preview inbox per tipo: testo troncato, `[GIF]`, `🎤`, `📍 Posizione`, `📷 Foto`, `🎬 Video` (con didascalia se presente) |
+| **SURF-CHAT-013** | Allegato: galleria foto, fotocamera, video (picker); didascalia opzionale nel composer — [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md) |
 | **SURF-CHAT-012** | Apertura conversazione da fragment `#indirizzo/chat` — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) via `ShareableLinkController` (non pulsante Condividi in chat) |
 
 ### SHOULD

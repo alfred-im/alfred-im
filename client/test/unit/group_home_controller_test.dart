@@ -31,6 +31,33 @@ void main() {
         ),
         '[GIF]',
       );
+      expect(
+        inboxPreviewForMessage(
+          const ChatMessage(
+            id: '2',
+            body: 'Al mare',
+            timeLabel: '',
+            isMine: false,
+            contentType: MessageContentType.image,
+            mediaUrl: 'https://example.com/a.jpg',
+          ),
+        ),
+        '📷 Al mare',
+      );
+      expect(
+        inboxPreviewForMessage(
+          const ChatMessage(
+            id: '3',
+            body: '',
+            timeLabel: '',
+            isMine: false,
+            contentType: MessageContentType.video,
+            mediaUrl: 'https://example.com/a.mp4',
+            durationSeconds: 10,
+          ),
+        ),
+        '🎬 Video',
+      );
     });
   });
 

@@ -4,10 +4,12 @@
 
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../config/chat_media_config.dart';
 import '../config/location_config.dart';
 import '../config/voice_config.dart';
 import '../models/message.dart';
@@ -17,6 +19,11 @@ import '../services/message_service.dart';
 import '../services/profile_service.dart';
 import '../utils/author_display.dart' show enrichMessageAuthor;
 import '../utils/date_format.dart';
+import '../utils/merge_chat_message.dart';
+import '../utils/prepare_image_for_upload.dart';
+import '../utils/picked_file_bytes.dart';
+import '../utils/video_duration.dart';
+import '../utils/video_file_extension.dart';
 
 /// Messaggistica account gruppo — storico unico + broadcast allow list.
 class GroupMessagesController extends ChangeNotifier {
@@ -60,7 +67,10 @@ class GroupMessagesController extends ChangeNotifier {
   void _handleRealtimeMessage(ChatMessage message) {
     final index = messages.indexWhere((m) => m.id == message.id);
     if (index >= 0) {
-      messages[index] = message;
+      messages[index] = mergeChatMessage(
+        existing: messages[index],
+        incoming: message,
+      );
     } else {
       messages.add(message);
       messages.sort(
@@ -142,6 +152,89 @@ class GroupMessagesController extends ChangeNotifier {
         mediaSizeBytes: bytes.length,
         currentUserId: userId,
         clientMessageId: clientId,
+      );
+    });
+  }
+
+  Future<void> sendImage({
+    required Uint8List bytes,
+    String? caption,
+  }) async {
+    if (bytes.isEmpty || isSending) return;
+
+    final body = caption?.trim() ?? '';
+
+    await _broadcast((clientId) async {
+      final normalized = await prepareImageForUpload(bytes);
+      final mediaUrl = await messageMediaService.uploadImage(
+        bytes: normalized.bytes,
+        userId: userId,
+        extension: normalized.extension,
+        contentType: normalized.mime,
+      );
+      return messageService.broadcastImageToAllowlist(
+        mediaUrl: mediaUrl,
+        mediaMime: normalized.mime,
+        mediaSizeBytes: normalized.bytes.length,
+        currentUserId: userId,
+        clientMessageId: clientId,
+        body: body,
+      );
+    });
+  }
+
+  Future<void> sendVideoFromPicker({
+    required PlatformFile file,
+    String? caption,
+  }) async {
+    final extension = videoExtensionFromPickedFile(file);
+    if (!isSupportedVideoExtension(extension)) return;
+
+    final bytes = await readPickedFileBytes(file);
+    if (bytes == null || bytes.isEmpty) return;
+
+    final mime =
+        ChatMediaConfig.videoMimeForExtension(extension) ?? 'video/mp4';
+    final durationSeconds = await readVideoDurationSeconds(
+      bytes: bytes,
+      extension: extension,
+    );
+
+    await sendVideo(
+      bytes: bytes,
+      extension: extension,
+      mime: mime,
+      durationSeconds: durationSeconds,
+      caption: caption,
+    );
+  }
+
+  Future<void> sendVideo({
+    required Uint8List bytes,
+    required String extension,
+    required String mime,
+    required int durationSeconds,
+    String? caption,
+  }) async {
+    if (bytes.isEmpty || isSending) return;
+
+    final body = caption?.trim() ?? '';
+
+    await _broadcast((clientId) async {
+      final mediaUrl = await messageMediaService.uploadVideo(
+        bytes: bytes,
+        userId: userId,
+        extension: extension,
+        contentType: mime,
+      );
+      return messageService.broadcastVideoToAllowlist(
+        mediaUrl: mediaUrl,
+        mediaMime: mime,
+        durationSeconds: durationSeconds,
+        mediaSizeBytes: bytes.length,
+        currentUserId: userId,
+        clientMessageId: clientId,
+        body: body,
       );
     });
   }
