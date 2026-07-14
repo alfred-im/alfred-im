@@ -19,6 +19,7 @@ import '../theme/alfred_colors.dart';
 import '../utils/duration_format.dart';
 import '../utils/picked_file_bytes.dart';
 import '../utils/video_duration.dart';
+import '../utils/video_file_extension.dart';
 import 'location_map_preview.dart';
 import 'voice_message_content.dart';
 import 'package:image_picker/image_picker.dart';
@@ -188,9 +189,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
     if (!widget.enabled || widget.onSendVideo == null) return;
 
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ChatMediaConfig.videoExtensions,
+      type: FileType.video,
       withData: true,
+      withReadStream: true,
       allowMultiple: false,
     );
 
@@ -208,8 +209,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
       return;
     }
 
-    final extension = (file.extension ?? 'mp4').toLowerCase();
-    if (!ChatMediaConfig.videoExtensions.contains(extension)) {
+    final extension = videoExtensionFromFilename(file.name);
+    if (!isSupportedVideoExtension(extension)) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

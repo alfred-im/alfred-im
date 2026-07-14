@@ -10,6 +10,7 @@ import 'package:video_player/video_player.dart';
 import '../models/message.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/duration_format.dart';
+import '../utils/media_probe_timeout.dart';
 
 const double _videoMaxWidth = 280;
 const double _videoMaxHeight = 200;
@@ -63,7 +64,10 @@ class _VideoMessageContentState extends State<VideoMessageContent> {
     final controller = VideoPlayerController.networkUrl(Uri.parse(url));
     _controller = controller;
     try {
-      await controller.initialize();
+      await withMediaProbeTimeout<void>(
+        controller.initialize(),
+        onTimeout: () => throw TimeoutException('video player init'),
+      );
       if (mounted) {
         setState(() {
           _failed = false;

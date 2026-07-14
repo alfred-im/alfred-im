@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:async';
+
 import 'dart:js_interop';
 import 'dart:typed_data';
 
@@ -9,6 +11,7 @@ import 'package:video_player/video_player.dart';
 import 'package:web/web.dart' as web;
 
 import '../config/chat_media_config.dart';
+import 'media_probe_timeout.dart';
 
 Future<int> readVideoDurationSeconds({
   required Uint8List bytes,
@@ -20,7 +23,10 @@ Future<int> readVideoDurationSeconds({
   final url = web.URL.createObjectURL(blob);
   try {
     final controller = VideoPlayerController.networkUrl(Uri.parse(url));
-    await controller.initialize();
+    await withMediaProbeTimeout<void>(
+      controller.initialize(),
+      onTimeout: () => throw TimeoutException('video duration probe'),
+    );
     final seconds = controller.value.duration.inSeconds
         .clamp(1, ChatMediaConfig.maxVideoDurationSeconds);
     await controller.dispose();
