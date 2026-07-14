@@ -267,8 +267,6 @@ begin
       continue;
     end if;
 
-    v_inserted := false;
-
     insert into public.messages (
       owner_id,
       author_id,
