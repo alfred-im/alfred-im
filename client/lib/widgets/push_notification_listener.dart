@@ -22,7 +22,6 @@ class PushNotificationListener extends StatefulWidget {
 
   final Widget child;
 
-  /// Solo test: stream intent senza dipendere da `kIsWeb` / service worker.
   @visibleForTesting
   final Stream<PushOpenChatIntent>? debugOpenChatIntents;
 
@@ -33,6 +32,7 @@ class PushNotificationListener extends StatefulWidget {
 
 class _PushNotificationListenerState extends State<PushNotificationListener> {
   StreamSubscription<PushOpenChatIntent>? _sub;
+  bool _drainScheduled = false;
 
   @override
   void initState() {
@@ -55,10 +55,20 @@ class _PushNotificationListenerState extends State<PushNotificationListener> {
 
     final conversation = intent.conversation;
 
+    if (!auth.accountManager.hasOpenAccount(conversation.ownerUserId)) {
+      if (kIsWeb) PushPlatform.clearPendingOpenChat();
+      return;
+    }
+
     final focused = await auth.focusAccountForPushNotification(
       conversation.ownerUserId,
     );
-    if (!focused || !mounted) return;
+    if (!focused || !mounted) {
+      if (auth.error != null && kIsWeb) {
+        PushPlatform.clearPendingOpenChat();
+      }
+      return;
+    }
 
     final session = auth.focusedSession;
     if (session == null || session.userId != conversation.ownerUserId) return;
@@ -67,7 +77,10 @@ class _PushNotificationListenerState extends State<PushNotificationListener> {
       conversation.peerProfileId,
     );
     if (!mounted || summary == null) return;
-    if (summary.id == session.userId) return;
+    if (summary.id == session.userId) {
+      if (kIsWeb) PushPlatform.clearPendingOpenChat();
+      return;
+    }
 
     auth.openConversation(ChatPeer(profile: summary));
     if (kIsWeb) {
@@ -75,11 +88,16 @@ class _PushNotificationListenerState extends State<PushNotificationListener> {
     }
   }
 
-  void _drainPendingWhenReady() {
-    if (!kIsWeb) return;
+  void _scheduleDrainPending() {
+    if (!kIsWeb || _drainScheduled) return;
     final auth = context.read<AuthController>();
     if (!auth.sessionReady) return;
-    PushPlatform.tryDrainPendingOpenChat();
+    _drainScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _drainScheduled = false;
+      if (!mounted) return;
+      PushPlatform.tryDrainPendingOpenChat();
+    });
   }
 
   @override
@@ -91,7 +109,7 @@ class _PushNotificationListenerState extends State<PushNotificationListener> {
   @override
   Widget build(BuildContext context) {
     context.watch<AuthController>();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _drainPendingWhenReady());
+    _scheduleDrainPending();
     return widget.child;
   }
 }

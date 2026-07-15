@@ -12,14 +12,16 @@ import 'package:uuid/uuid.dart';
 import 'package:web/web.dart' as web;
 
 import '../models/push_conversation_key.dart';
+import 'push_deep_link.dart';
+import 'push_launch.dart';
 import 'push_permission_flow.dart';
 import 'push_stub.dart' show PushOpenChatIntent, PushSubscriptionKeys;
 
 export '../models/push_conversation_key.dart';
+export 'push_deep_link.dart';
 export 'push_stub.dart' show PushOpenChatIntent, PushSubscriptionKeys;
 
 const _deviceIdKey = 'alfred_device_id';
-const _suppressionKey = 'alfred_push_suppression';
 const _pendingOpenChatKey = 'alfred_pending_open_chat';
 
 final _openChatController = StreamController<PushOpenChatIntent>.broadcast();
@@ -28,7 +30,6 @@ final _openChatController = StreamController<PushOpenChatIntent>.broadcast();
 class PushPlatform {
   const PushPlatform._();
 
-  /// `Notification`, `serviceWorker` (su `navigator`) e `PushManager` (su `window`).
   static bool get isPushSupported {
     try {
       final _ = web.Notification.permission;
@@ -62,12 +63,10 @@ class PushPlatform {
     return id;
   }
 
-  /// Legge lo stato permesso; il prompt nativo avviene in [ensureSubscription] via `subscribe()`.
   static Future<String?> requestPermissionIfNeeded() async {
     return notificationPermission;
   }
 
-  /// Registra `push_sw.js` e sottoscrive VAPID. Con permesso `default`, `subscribe()` apre il dialog di sistema.
   static Future<PushSubscriptionKeys?> ensureSubscription({
     required String vapidPublicKey,
   }) async {
@@ -126,17 +125,26 @@ class PushPlatform {
     required bool appVisible,
   }) {
     final payload = jsonEncode({
+      'type': 'alfred_push_suppression',
       'focusUserId': focusUserId,
       'activePeerProfileId': activePeerProfileId,
       'appVisible': appVisible,
     });
-    web.window.localStorage.setItem(_suppressionKey, payload);
+    unawaited(_postToServiceWorker(payload));
+  }
+
+  static Future<void> _postToServiceWorker(String payload) async {
+    try {
+      final controller = web.window.navigator.serviceWorker.controller;
+      controller?.postMessage(payload.toJS);
+    } catch (_) {
+      // SW non ancora attivo.
+    }
   }
 
   static Stream<PushOpenChatIntent> get openChatIntents =>
       _openChatController.stream;
 
-  /// Tap notifica con app chiusa: SW scrive in localStorage prima di postMessage.
   static void persistPendingOpenChat(PushConversationKey conversation) {
     final payload = jsonEncode({
       'recipientUserId': conversation.ownerUserId,
@@ -160,13 +168,22 @@ class PushPlatform {
 
   static void clearPendingOpenChat() {
     web.window.localStorage.removeItem(_pendingOpenChatKey);
+    clearPushLaunchFragment();
   }
 
-  /// Emette intent pendente (cold start / listener non ancora pronto).
   static void tryDrainPendingOpenChat() {
+    consumePushLaunchFragment();
     final intent = readPendingOpenChat();
     if (intent == null) return;
-    _openChatController.add(intent);
+    _emitOpenChat(intent.conversation);
+  }
+
+  static void consumePushLaunchFragment() {
+    final fragment = readPushLaunchFragment();
+    final conversation = PushDeepLink.tryParseFragment(fragment);
+    if (conversation == null) return;
+    persistPendingOpenChat(conversation);
+    clearPushLaunchFragment();
   }
 
   static void _emitOpenChat(PushConversationKey conversation) {

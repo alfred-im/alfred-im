@@ -91,7 +91,7 @@ L'utente Alfred riceve notifiche su **tutti i dispositivi** dove ha aperto un ac
 | SYS-PUSH-001–004 | `supabase/tests/push_subscriptions_schema_smoke.sql` |
 | SYS-PUSH-003 | `supabase/tests/push_multi_account_endpoint_smoke.sql` |
 | SYS-PUSH-004–005 | `supabase/tests/push_subscriptions_rls_smoke.sql` |
-| SYS-PUSH-020–021 | `supabase/tests/push_delivery_trigger_smoke.sql` |
+| SYS-PUSH-020–021 | `supabase/tests/push_delivery_trigger_smoke.sql`; `supabase/tests/push_deliver_idempotent_smoke.sql` |
 | SYS-PUSH-010–013 | `supabase/functions/send-push/index.ts`; `client/e2e/push-full.spec.ts` (invio locale) |
 | SYS-PUSH-023 | `supabase/tests/push_multi_device_smoke.sql` |
 | SYS-PUSH-013 | `supabase/functions/send-push/index.ts` (cleanup endpoint 410) |

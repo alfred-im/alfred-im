@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
   });
 
   let sent = 0;
-  const stale: string[] = [];
+  const staleEndpoints = new Set<string>();
 
   for (const sub of subscriptions ?? []) {
     try {
@@ -155,16 +155,16 @@ Deno.serve(async (req) => {
     } catch (err) {
       const statusCode = (err as { statusCode?: number }).statusCode;
       if (statusCode === 404 || statusCode === 410) {
-        stale.push(sub.id);
+        staleEndpoints.add(sub.endpoint);
       }
     }
   }
 
-  if (stale.length > 0) {
-    await supabase.from("push_subscriptions").delete().in("id", stale);
+  for (const endpoint of staleEndpoints) {
+    await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
   }
 
-  return new Response(JSON.stringify({ sent, stale: stale.length }), {
+  return new Response(JSON.stringify({ sent, stale: staleEndpoints.size }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });

@@ -42,6 +42,8 @@ ShareableLinkTarget? parseShareableFragment(String? fragment) {
   }
   if (raw.isEmpty) return null;
 
+  if (raw.startsWith('push-chat/')) return null;
+
   var kind = ShareableLinkKind.profile;
   const chatSuffix = '/chat';
   if (raw.endsWith(chatSuffix)) {

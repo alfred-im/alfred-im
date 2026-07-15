@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,7 +17,35 @@ import '../utils/push_platform.dart';
 class PushSubscriptionService {
   PushSubscriptionService();
 
+  static Future<void>? _syncInFlight;
+
   Future<void> syncOpenAccounts(
+    List<OpenAccount> accounts, {
+    AccountSession? focusedSession,
+  }) async {
+    if (!kIsWeb) return;
+    if (accounts.isEmpty) return;
+
+    while (_syncInFlight != null) {
+      await _syncInFlight;
+    }
+
+    final gate = Completer<void>();
+    _syncInFlight = gate.future;
+    try {
+      await _syncOpenAccountsImpl(
+        accounts,
+        focusedSession: focusedSession,
+      );
+    } finally {
+      gate.complete();
+      if (identical(_syncInFlight, gate.future)) {
+        _syncInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _syncOpenAccountsImpl(
     List<OpenAccount> accounts, {
     AccountSession? focusedSession,
   }) async {

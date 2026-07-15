@@ -58,7 +58,7 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 | **PROM-PUSH-NOTIFY-021** | Stato `denied` → app funziona senza push; nessun retry invasivo |
 | **PROM-PUSH-NOTIFY-022** | Soppressione: **nessuna** notifica visibile se app in foreground + account destinatario in focus + chat con quel `peer_profile_id` aperta |
 | **PROM-PUSH-NOTIFY-023** | Soppressione: account in focus ma chat diversa o inbox → push consentita |
-| **PROM-PUSH-NOTIFY-024** | Stato soppressione sincronizzato client Flutter ↔ service worker (BroadcastChannel o `postMessage`) |
+| **PROM-PUSH-NOTIFY-024** | Stato soppressione sincronizzato client Flutter → service worker via `postMessage` (`alfred_push_suppression`); stato in RAM nel SW |
 
 ### MUST — interazione
 

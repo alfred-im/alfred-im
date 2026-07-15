@@ -66,15 +66,12 @@ class AuthController extends ChangeNotifier {
         showAuthOverlay = true;
         authOverlayDismissible = false;
       }
-      await _pushService.syncOpenAccounts(
-        _manager.openAccounts,
-        focusedSession: _manager.focusedSession,
-      );
     } finally {
       isLoading = false;
       sessionReady = true;
       notifyListeners();
     }
+    unawaited(syncPushSubscriptions());
   }
 
   void openAuthOverlay({required bool dismissible}) {
