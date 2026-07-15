@@ -175,6 +175,8 @@ class PushPlatform {
     consumePushLaunchFragment();
     final intent = readPendingOpenChat();
     if (intent == null) return;
+    // Evita ri-emissione a ogni rebuild (pending restava fino alla fine handler).
+    web.window.localStorage.removeItem(_pendingOpenChatKey);
     _emitOpenChat(intent.conversation);
   }
 
@@ -190,18 +192,21 @@ class PushPlatform {
     _openChatController.add(PushOpenChatIntent(conversation));
   }
 
+  static String? _coerceMessagePayload(JSAny? data) {
+    if (data == null) return null;
+    if (data.isA<JSString>()) {
+      return (data as JSString).toDart;
+    }
+    final dartified = data.dartify();
+    if (dartified is String) return dartified;
+    return null;
+  }
+
   static void _handleWindowMessage(web.Event event) {
     if (!event.isA<web.MessageEvent>()) return;
     final messageEvent = event as web.MessageEvent;
-    final data = messageEvent.data;
-    if (data == null) return;
-
-    final String? raw;
-    if (data.isA<JSString>()) {
-      raw = (data as JSString).toDart;
-    } else {
-      return;
-    }
+    final raw = _coerceMessagePayload(messageEvent.data);
+    if (raw == null) return;
 
     Map<String, dynamic> map;
     try {
@@ -213,8 +218,11 @@ class PushPlatform {
     if (map['type'] != 'open_chat') return;
     final conversation = PushConversationKey.tryFromPayload(map);
     if (conversation == null) return;
-    persistPendingOpenChat(conversation);
     _emitOpenChat(conversation);
+  }
+
+  static void _handleHashChange(web.Event event) {
+    tryDrainPendingOpenChat();
   }
 
   static var _messageHookInstalled = false;
@@ -223,6 +231,7 @@ class PushPlatform {
     if (_messageHookInstalled) return;
     _messageHookInstalled = true;
     web.window.addEventListener('message', _handleWindowMessage.toJS);
+    web.window.addEventListener('hashchange', _handleHashChange.toJS);
     tryDrainPendingOpenChat();
   }
 

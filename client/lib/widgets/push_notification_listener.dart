@@ -64,7 +64,12 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
   Future<void> _handleOpenChat(PushOpenChatIntent intent) async {
     if (!mounted) return;
     final auth = context.read<AuthController>();
-    if (!auth.sessionReady) return;
+    if (!auth.sessionReady) {
+      if (kIsWeb) {
+        PushPlatform.persistPendingOpenChat(intent.conversation);
+      }
+      return;
+    }
 
     final conversation = intent.conversation;
 
@@ -87,19 +92,53 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
       return;
     }
 
-    final summary = await session.profileService.findById(
-      conversation.peerProfileId,
-    );
-    if (!mounted || summary == null) return;
-    if (summary.id == session.userId) {
+    // Dopo il focus, il peer è in inbox (list_inbox) — non fare SELECT diretta su
+    // profiles (RLS / permessi variabili tra ambienti).
+    ChatPeer? peer;
+    for (var attempt = 0; attempt < 20; attempt++) {
+      if (!mounted) return;
+      final liveSession = auth.focusedSession;
+      if (liveSession == null ||
+          liveSession.userId != conversation.ownerUserId) {
+        break;
+      }
+
+      peer = liveSession.inboxController.findByProfileId(
+        conversation.peerProfileId,
+      );
+      if (peer != null && peer.profileId != liveSession.userId) {
+        break;
+      }
+
+      try {
+        final summary = await liveSession.profileService.findById(
+          conversation.peerProfileId,
+        );
+        if (summary != null && summary.id != liveSession.userId) {
+          peer = ChatPeer(profile: summary);
+          break;
+        }
+      } catch (_) {
+        // Inbox o profilo non ancora pronti (RLS / rete).
+      }
+
+      peer = null;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+
+    if (peer == null) {
       if (kIsWeb) PushPlatform.clearPendingOpenChat();
       return;
     }
 
-    auth.openConversation(ChatPeer(profile: summary));
-    if (kIsWeb) {
-      PushPlatform.clearPendingOpenChat();
-    }
+    final peerToOpen = peer;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<AuthController>().openConversation(peerToOpen);
+      if (kIsWeb) {
+        PushPlatform.clearPendingOpenChat();
+      }
+    });
   }
 
   void _scheduleDrainPending() {

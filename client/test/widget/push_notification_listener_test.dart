@@ -107,6 +107,7 @@ void main() {
         peerProfileId: 'peer-uuid',
       ),
     );
+    await tester.pump();
     for (var i = 0; i < 200; i++) {
       await tester.pump(const Duration(milliseconds: 5));
       if (find.text('E2E Peer').evaluate().isNotEmpty) break;
@@ -197,6 +198,7 @@ void main() {
         peerProfileId: 'account-a',
       ),
     );
+    await tester.pump();
     for (var i = 0; i < 200; i++) {
       await tester.pump(const Duration(milliseconds: 5));
       if (auth.userId == 'account-b' &&
