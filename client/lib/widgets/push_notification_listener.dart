@@ -27,28 +27,41 @@ class PushNotificationListener extends StatefulWidget {
 
   @override
   State<PushNotificationListener> createState() =>
-      _PushNotificationListenerState();
+      PushNotificationListenerState();
 }
 
-class _PushNotificationListenerState extends State<PushNotificationListener> {
+class PushNotificationListenerState extends State<PushNotificationListener> {
   StreamSubscription<PushOpenChatIntent>? _sub;
   bool _drainScheduled = false;
+  Future<void> _openChatChain = Future<void>.value();
 
   @override
   void initState() {
     super.initState();
     final debugStream = widget.debugOpenChatIntents;
     if (debugStream != null) {
-      _sub = debugStream.listen(_onOpenChat);
+      _sub = debugStream.listen(_enqueueOpenChat);
       return;
     }
     if (kIsWeb) {
       PushPlatform.ensureMessageHook();
-      _sub = PushPlatform.openChatIntents.listen(_onOpenChat);
+      _sub = PushPlatform.openChatIntents.listen(_enqueueOpenChat);
     }
   }
 
-  Future<void> _onOpenChat(PushOpenChatIntent intent) async {
+  void _enqueueOpenChat(PushOpenChatIntent intent) {
+    _openChatChain = _openChatChain.then((_) async {
+      await _handleOpenChat(intent);
+    });
+  }
+
+  /// Test: esegue il percorso tap push senza dipendere dal timing dello stream.
+  @visibleForTesting
+  Future<void> processOpenChatForTest(PushOpenChatIntent intent) async {
+    await _handleOpenChat(intent);
+  }
+
+  Future<void> _handleOpenChat(PushOpenChatIntent intent) async {
     if (!mounted) return;
     final auth = context.read<AuthController>();
     if (!auth.sessionReady) return;
@@ -64,14 +77,15 @@ class _PushNotificationListenerState extends State<PushNotificationListener> {
       conversation.ownerUserId,
     );
     if (!focused || !mounted) {
-      if (auth.error != null && kIsWeb) {
-        PushPlatform.clearPendingOpenChat();
-      }
+      if (kIsWeb) PushPlatform.clearPendingOpenChat();
       return;
     }
 
     final session = auth.focusedSession;
-    if (session == null || session.userId != conversation.ownerUserId) return;
+    if (session == null || session.userId != conversation.ownerUserId) {
+      if (kIsWeb) PushPlatform.clearPendingOpenChat();
+      return;
+    }
 
     final summary = await session.profileService.findById(
       conversation.peerProfileId,

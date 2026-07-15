@@ -25,6 +25,10 @@ class AccountManager {
   AccountManager({AccountStorageService? storage})
       : _storage = storage ?? AccountStorageService();
 
+  /// Sostituisce [AccountSession.restore] nei test (percorso dispose + ripristino).
+  @visibleForTesting
+  Future<AccountSession> Function(OpenAccount account)? restoreSessionForTest;
+
   /// Chiamato quando il sync profilo in background termina (es. avvio app).
   VoidCallback? onFocusedProfileSynced;
 
@@ -123,6 +127,11 @@ class AccountManager {
   void injectTestSession(AccountSession session) {
     _sessions[session.userId] = session;
     session.wireStorage(_storage);
+  }
+
+  @visibleForTesting
+  void clearSessionsInRamForTest() {
+    _sessions.clear();
   }
 
   /// Imposta focus su sessione iniettata (test) senza dispose/restore GoTrue.
@@ -320,6 +329,11 @@ class AccountManager {
   }
 
   Future<AccountSession> _restoreWithRetry(OpenAccount account) async {
+    final restoreForTest = restoreSessionForTest;
+    if (restoreForTest != null) {
+      return restoreForTest(account);
+    }
+
     Object? lastError;
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
@@ -335,10 +349,22 @@ class AccountManager {
     throw lastError ?? const AuthException('Ripristino account non riuscito.');
   }
 
+  /// Tap push / deep link: garantisce focus e sessione GoTrue in RAM.
+  Future<void> ensureRecipientAccountActive(String userId) async {
+    if (!_hasAccount(userId)) {
+      throw StateError('Account non aperto: $userId');
+    }
+    await setFocus(userId);
+  }
+
   Future<void> setFocus(String userId) async {
     if (!_hasAccount(userId)) return;
 
     if (_focusUserId == userId) {
+      if (_sessions[userId] == null &&
+          !_testOnlyAccountIds.contains(userId)) {
+        await _activateFocusedSession(requireSession: true);
+      }
       await _loadFocusedInboxIfNeeded();
       return;
     }

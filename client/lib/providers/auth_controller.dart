@@ -102,12 +102,18 @@ class AuthController extends ChangeNotifier {
   Future<bool> focusAccountForPushNotification(String recipientUserId) async {
     if (!_manager.hasOpenAccount(recipientUserId)) return false;
 
-    if (_manager.focusUserId != recipientUserId) {
-      await setFocus(recipientUserId);
+    try {
+      await _manager.ensureRecipientAccountActive(recipientUserId);
+      error = null;
+    } catch (e) {
+      error = _friendlyAuthError(e);
     }
+    notifyListeners();
 
+    final session = _manager.focusedSession;
     return _manager.focusUserId == recipientUserId &&
-        _manager.focusedSession != null &&
+        session != null &&
+        session.userId == recipientUserId &&
         error == null;
   }
 
