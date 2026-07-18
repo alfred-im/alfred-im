@@ -4,6 +4,7 @@
 
 import 'package:web/web.dart' as web;
 
+import 'diagnostic_log.dart';
 import 'push_deep_link.dart';
 
 String? _bootPushFragment;
@@ -18,6 +19,7 @@ void captureBootPushLaunchFragment() {
   final fragment = _fragmentFromHash(web.window.location.hash);
   if (fragment != null && fragment.startsWith(PushDeepLink.fragmentPrefix)) {
     _bootPushFragment = fragment;
+    diagLog('push', 'fragment.boot_capture', data: {'fragment': fragment});
   }
 }
 

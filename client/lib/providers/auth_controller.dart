@@ -16,6 +16,7 @@ import '../services/account_manager.dart';
 import '../services/account_session.dart';
 import '../services/push_subscription_service.dart';
 import '../utils/auth_identity.dart';
+import '../utils/diagnostic_log.dart';
 
 class AuthController extends ChangeNotifier {
   AuthController({AccountManager? accountManager})
@@ -100,21 +101,59 @@ class AuthController extends ChangeNotifier {
 
   /// Tap notifica push: focus sull'account destinatario prima di aprire la chat.
   Future<bool> focusAccountForPushNotification(String recipientUserId) async {
-    if (!_manager.hasOpenAccount(recipientUserId)) return false;
+    diagLog(
+      'push',
+      'focus.start',
+      data: {'recipientUserId': recipientUserId, 'focusBefore': _manager.focusUserId},
+    );
+    if (!_manager.hasOpenAccount(recipientUserId)) {
+      diagLogFail(
+        'push',
+        'focus',
+        'no_open_account',
+        data: {'recipientUserId': recipientUserId},
+      );
+      return false;
+    }
 
     try {
       await _manager.ensureRecipientAccountActive(recipientUserId);
       error = null;
     } catch (e) {
       error = _friendlyAuthError(e);
+      diagLogFail(
+        'push',
+        'focus',
+        'restore_error',
+        data: {'recipientUserId': recipientUserId, 'error': error},
+      );
     }
     notifyListeners();
 
     final session = _manager.focusedSession;
-    return _manager.focusUserId == recipientUserId &&
+    final ok = _manager.focusUserId == recipientUserId &&
         session != null &&
         session.userId == recipientUserId &&
         error == null;
+    if (ok) {
+      diagLog(
+        'push',
+        'focus.ok',
+        data: {'recipientUserId': recipientUserId},
+      );
+    } else if (error == null) {
+      diagLogFail(
+        'push',
+        'focus',
+        'session_mismatch',
+        data: {
+          'recipientUserId': recipientUserId,
+          'focusAfter': _manager.focusUserId,
+          'sessionUserId': session?.userId,
+        },
+      );
+    }
+    return ok;
   }
 
   void openConversation(ChatPeer peer) {

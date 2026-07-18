@@ -12,6 +12,7 @@ import '../models/chat_peer.dart';
 import '../models/open_account.dart';
 import '../models/profile_summary.dart';
 import '../utils/auth_redirect_url.dart';
+import '../utils/diagnostic_log.dart';
 import 'account_session.dart';
 import 'account_storage_service.dart';
 
@@ -351,10 +352,13 @@ class AccountManager {
 
   /// Tap push / deep link: garantisce focus e sessione GoTrue in RAM.
   Future<void> ensureRecipientAccountActive(String userId) async {
+    diagLog('push', 'ensure_focus.start', data: {'userId': userId});
     if (!_hasAccount(userId)) {
+      diagLogFail('push', 'ensure_focus', 'no_account', data: {'userId': userId});
       throw StateError('Account non aperto: $userId');
     }
     await setFocus(userId);
+    diagLog('push', 'ensure_focus.ok', data: {'userId': userId});
   }
 
   Future<void> setFocus(String userId) async {

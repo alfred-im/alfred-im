@@ -89,6 +89,7 @@ ensure_flutter_local() {
   flutter_cmd+=" --dart-define=SUPABASE_URL=${SUPABASE_URL}"
   flutter_cmd+=" --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}"
   flutter_cmd+=" --dart-define=VAPID_PUBLIC_KEY=${LOCAL_VAPID_PUBLIC_KEY}"
+  flutter_cmd+=" --dart-define=ALFRED_DIAGNOSTIC_LOG=true"
 
   tmux -f /exec-daemon/tmux.portal.conf send-keys -t "$SESSION_NAME:0.0" "$flutter_cmd" C-m
   for _ in $(seq 1 120); do

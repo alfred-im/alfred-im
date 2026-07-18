@@ -12,10 +12,12 @@ import 'package:uuid/uuid.dart';
 import 'package:web/web.dart' as web;
 
 import '../models/push_conversation_key.dart';
+import 'diagnostic_log.dart';
 import 'push_deep_link.dart';
 import 'push_launch.dart';
 import 'push_permission_flow.dart';
-import 'push_stub.dart' show PushOpenChatIntent, PushSubscriptionKeys;
+import 'push_stub.dart'
+    show PushOpenChatIntent, PushSubscriptionKeys;
 
 export '../models/push_conversation_key.dart';
 export 'push_deep_link.dart';
@@ -146,6 +148,14 @@ class PushPlatform {
       _openChatController.stream;
 
   static void persistPendingOpenChat(PushConversationKey conversation) {
+    diagLog(
+      'push',
+      'pending.persist',
+      data: {
+        'recipientUserId': conversation.ownerUserId,
+        'peerProfileId': conversation.peerProfileId,
+      },
+    );
     final payload = jsonEncode({
       'recipientUserId': conversation.ownerUserId,
       'peerProfileId': conversation.peerProfileId,
@@ -167,6 +177,7 @@ class PushPlatform {
   }
 
   static void clearPendingOpenChat() {
+    diagLog('push', 'pending.clear');
     web.window.localStorage.removeItem(_pendingOpenChatKey);
     clearPushLaunchFragment();
   }
@@ -174,7 +185,18 @@ class PushPlatform {
   static void tryDrainPendingOpenChat() {
     consumePushLaunchFragment();
     final intent = readPendingOpenChat();
-    if (intent == null) return;
+    if (intent == null) {
+      diagLog('push', 'pending.drain', data: {'empty': true});
+      return;
+    }
+    diagLog(
+      'push',
+      'pending.drain',
+      data: {
+        'recipientUserId': intent.conversation.ownerUserId,
+        'peerProfileId': intent.conversation.peerProfileId,
+      },
+    );
     // Evita ri-emissione a ogni rebuild (pending restava fino alla fine handler).
     web.window.localStorage.removeItem(_pendingOpenChatKey);
     _emitOpenChat(intent.conversation);
@@ -182,13 +204,26 @@ class PushPlatform {
 
   static void consumePushLaunchFragment() {
     final fragment = readPushLaunchFragment();
+    if (fragment == null) return;
+    diagLog('push', 'fragment.consume', data: {'fragment': fragment});
     final conversation = PushDeepLink.tryParseFragment(fragment);
-    if (conversation == null) return;
+    if (conversation == null) {
+      diagLogFail('push', 'fragment.consume', 'parse_failed', data: {'fragment': fragment});
+      return;
+    }
     persistPendingOpenChat(conversation);
     clearPushLaunchFragment();
   }
 
   static void _emitOpenChat(PushConversationKey conversation) {
+    diagLog(
+      'push',
+      'open_chat.emit',
+      data: {
+        'recipientUserId': conversation.ownerUserId,
+        'peerProfileId': conversation.peerProfileId,
+      },
+    );
     _openChatController.add(PushOpenChatIntent(conversation));
   }
 
@@ -217,11 +252,24 @@ class PushPlatform {
 
     if (map['type'] != 'open_chat') return;
     final conversation = PushConversationKey.tryFromPayload(map);
-    if (conversation == null) return;
+    if (conversation == null) {
+      diagLogFail('push', 'window.message', 'open_chat_invalid_payload');
+      return;
+    }
+    diagLog(
+      'push',
+      'window.message',
+      data: {
+        'type': 'open_chat',
+        'recipientUserId': conversation.ownerUserId,
+        'peerProfileId': conversation.peerProfileId,
+      },
+    );
     _emitOpenChat(conversation);
   }
 
   static void _handleHashChange(web.Event event) {
+    diagLog('push', 'hashchange', data: {'hash': web.window.location.hash});
     tryDrainPendingOpenChat();
   }
 
@@ -230,6 +278,7 @@ class PushPlatform {
   static void ensureMessageHook() {
     if (_messageHookInstalled) return;
     _messageHookInstalled = true;
+    diagLog('push', 'hook.install');
     web.window.addEventListener('message', _handleWindowMessage.toJS);
     web.window.addEventListener('hashchange', _handleHashChange.toJS);
     tryDrainPendingOpenChat();

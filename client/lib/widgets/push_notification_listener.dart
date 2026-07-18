@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
 import '../providers/auth_controller.dart';
+import '../utils/diagnostic_log.dart';
 import '../utils/push_platform.dart';
 
 /// Gestisce tap notifica push → focus account + apertura chat.
@@ -50,6 +51,14 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
   }
 
   void _enqueueOpenChat(PushOpenChatIntent intent) {
+    diagLog(
+      'push',
+      'handler.enqueue',
+      data: {
+        'recipientUserId': intent.conversation.ownerUserId,
+        'peerProfileId': intent.conversation.peerProfileId,
+      },
+    );
     _openChatChain = _openChatChain.then((_) async {
       await _handleOpenChat(intent);
     });
@@ -62,44 +71,86 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
   }
 
   Future<void> _handleOpenChat(PushOpenChatIntent intent) async {
-    if (!mounted) return;
+    final conversation = intent.conversation;
+    if (!mounted) {
+      diagLogFail(
+        'push',
+        'handler.open_chat',
+        'unmounted',
+        data: {'recipientUserId': conversation.ownerUserId},
+      );
+      return;
+    }
     final auth = context.read<AuthController>();
     if (!auth.sessionReady) {
+      diagLogFail('push', 'handler.open_chat', 'session_not_ready');
       if (kIsWeb) {
-        PushPlatform.persistPendingOpenChat(intent.conversation);
+        PushPlatform.persistPendingOpenChat(conversation);
       }
       return;
     }
 
-    final conversation = intent.conversation;
-
     if (!auth.accountManager.hasOpenAccount(conversation.ownerUserId)) {
+      diagLogFail(
+        'push',
+        'handler.open_chat',
+        'no_open_account',
+        data: {'recipientUserId': conversation.ownerUserId},
+      );
       if (kIsWeb) PushPlatform.clearPendingOpenChat();
       return;
     }
 
+    diagLog(
+      'push',
+      'handler.focus.start',
+      data: {'recipientUserId': conversation.ownerUserId},
+    );
     final focused = await auth.focusAccountForPushNotification(
       conversation.ownerUserId,
     );
     if (!focused || !mounted) {
+      diagLogFail(
+        'push',
+        'handler.open_chat',
+        focused ? 'unmounted_after_focus' : 'focus_failed',
+        data: {'recipientUserId': conversation.ownerUserId},
+      );
       if (kIsWeb) PushPlatform.clearPendingOpenChat();
       return;
     }
 
     final session = auth.focusedSession;
     if (session == null || session.userId != conversation.ownerUserId) {
+      diagLogFail(
+        'push',
+        'handler.open_chat',
+        'wrong_session',
+        data: {
+          'expected': conversation.ownerUserId,
+          'actual': session?.userId,
+        },
+      );
       if (kIsWeb) PushPlatform.clearPendingOpenChat();
       return;
     }
 
-    // Dopo il focus, il peer è in inbox (list_inbox) — non fare SELECT diretta su
-    // profiles (RLS / permessi variabili tra ambienti).
+    diagLog('push', 'handler.peer_lookup.start', data: {'peerProfileId': conversation.peerProfileId});
     ChatPeer? peer;
     for (var attempt = 0; attempt < 20; attempt++) {
-      if (!mounted) return;
+      if (!mounted) {
+        diagLogFail('push', 'handler.peer_lookup', 'unmounted', data: {'attempt': attempt});
+        return;
+      }
       final liveSession = auth.focusedSession;
       if (liveSession == null ||
           liveSession.userId != conversation.ownerUserId) {
+        diagLogFail(
+          'push',
+          'handler.peer_lookup',
+          'session_lost',
+          data: {'attempt': attempt},
+        );
         break;
       }
 
@@ -107,6 +158,11 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
         conversation.peerProfileId,
       );
       if (peer != null && peer.profileId != liveSession.userId) {
+        diagLog(
+          'push',
+          'handler.peer_lookup',
+          data: {'source': 'inbox', 'attempt': attempt},
+        );
         break;
       }
 
@@ -116,10 +172,19 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
         );
         if (summary != null && summary.id != liveSession.userId) {
           peer = ChatPeer(profile: summary);
+          diagLog(
+            'push',
+            'handler.peer_lookup',
+            data: {'source': 'profile', 'attempt': attempt},
+          );
           break;
         }
-      } catch (_) {
-        // Inbox o profilo non ancora pronti (RLS / rete).
+      } catch (e) {
+        diagLog(
+          'push',
+          'handler.peer_lookup.retry',
+          data: {'attempt': attempt, 'error': e.runtimeType.toString()},
+        );
       }
 
       peer = null;
@@ -127,14 +192,28 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
     }
 
     if (peer == null) {
+      diagLogFail(
+        'push',
+        'handler.open_chat',
+        'peer_timeout',
+        data: {'peerProfileId': conversation.peerProfileId},
+      );
       if (kIsWeb) PushPlatform.clearPendingOpenChat();
       return;
     }
 
     final peerToOpen = peer;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted) {
+        diagLogFail('push', 'handler.open_chat', 'unmounted_before_open');
+        return;
+      }
       context.read<AuthController>().openConversation(peerToOpen);
+      diagLog(
+        'push',
+        'handler.chat_opened',
+        data: {'peerProfileId': peerToOpen.profileId},
+      );
       if (kIsWeb) {
         PushPlatform.clearPendingOpenChat();
       }
