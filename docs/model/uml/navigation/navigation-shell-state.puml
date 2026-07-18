@@ -1,0 +1,26 @@
+@startuml navigation-shell-state
+' Context: navigation
+' SDD: PROM-MULTI-ACCOUNT, PROM-SHAREABLE-LINK
+' Revision: 2026-07-18
+
+title Navigation — shell state machine (per account in focus)
+
+state InboxVisible
+state ChatOpen
+state GroupShell
+
+[*] --> InboxVisible
+
+InboxVisible --> ChatOpen : OpenPeerOnFocusedAccount\n/ ConversationOpened
+InboxVisible --> ChatOpen : OpenConversationOnAccount\n/ ConversationOpened
+InboxVisible --> GroupShell : [account gruppo in focus]
+
+ChatOpen --> InboxVisible : CloseConversation
+GroupShell --> GroupShell : OpenGroupChat
+
+note right of ChatOpen
+  OpenFromPushTap e OpenFromShareableLink
+  usano OpenConversationOnAccount
+end note
+
+@enduml

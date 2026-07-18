@@ -7,6 +7,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../machines/notifications/auth_notifications_effects.dart';
+import '../machines/notifications/notifications_adapters.dart';
+import '../machines/notifications/notifications_machine.dart';
+import '../machines/multi-account/multi_account_machine.dart';
 import '../models/open_account.dart';
 import '../models/profile_summary.dart';
 import '../models/account_view_state.dart';
@@ -17,6 +21,8 @@ import '../services/account_session.dart';
 import '../services/navigation_coordinator.dart';
 import '../services/push_subscription_service.dart';
 import '../utils/auth_identity.dart';
+import '../utils/push_permission_flow.dart';
+import '../utils/push_platform.dart';
 
 class AuthController extends ChangeNotifier {
   AuthController({
@@ -25,11 +31,18 @@ class AuthController extends ChangeNotifier {
   }) : _manager = accountManager ?? AccountManager() {
     _navigation = navigation ?? NavigationCoordinator(_manager);
     _manager.onFocusedProfileSynced = notifyListeners;
+    final effects = AuthNotificationsEffects(this);
+    notificationsMachine = NotificationsMachine(effects: effects);
+    notificationsAdapters = NotificationsAdapters(notificationsMachine);
+    multiAccountMachine = MultiAccountMachine(manager: _manager);
   }
 
   final AccountManager _manager;
   late final NavigationCoordinator _navigation;
   final PushSubscriptionService _pushService = PushSubscriptionService();
+  late final NotificationsMachine notificationsMachine;
+  late final NotificationsAdapters notificationsAdapters;
+  late final MultiAccountMachine multiAccountMachine;
 
   @visibleForTesting
   NavigationCoordinator get navigation => _navigation;
@@ -59,10 +72,36 @@ class AuthController extends ChangeNotifier {
 
   /// Re-registra subscription push (es. dopo resume PWA o permesso concesso).
   Future<void> syncPushSubscriptions() async {
-    await _pushService.syncOpenAccounts(
-      _manager.openAccounts,
-      focusedSession: _manager.focusedSession,
-    );
+    if (kIsWeb) {
+      _applyPushEnvironmentToMachine();
+      if (!shouldAttemptPushSubscription(
+        isPushSupported: PushPlatform.isPushSupported,
+        notificationPermission: PushPlatform.notificationPermission,
+      )) {
+        return;
+      }
+    }
+
+    notificationsMachine.send(const SyncSubscriptionsRequested());
+    try {
+      await _pushService.syncOpenAccounts(
+        _manager.openAccounts,
+        focusedSession: _manager.focusedSession,
+      );
+      notificationsMachine.send(const SubscriptionRegistered());
+    } catch (_) {
+      notificationsMachine.send(const SubscriptionSyncFailed());
+    }
+  }
+
+  void _applyPushEnvironmentToMachine() {
+    if (!PushPlatform.isPushSupported) {
+      notificationsMachine.send(const PushUnsupportedDetected());
+    } else if (PushPlatform.notificationPermission == 'denied') {
+      notificationsMachine.send(const PermissionDeniedDetected());
+    } else {
+      notificationsMachine.send(const SubscriptionIdleReached());
+    }
   }
 
   Future<void> initialize() async {
@@ -77,6 +116,7 @@ class AuthController extends ChangeNotifier {
     } finally {
       isLoading = false;
       sessionReady = true;
+      multiAccountMachine.syncFromManager();
       notifyListeners();
     }
     unawaited(syncPushSubscriptions());
@@ -97,12 +137,16 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> setFocus(String userId) async {
+    multiAccountMachine.send(FocusAccountRequested(userId));
     try {
       await _navigation.switchToAccount(userId);
       error = null;
     } catch (e) {
       error = _friendlyAuthError(e);
     }
+    multiAccountMachine.send(
+      FocusAccountCompleted(sessionReady: _manager.focusedSession != null),
+    );
     notifyListeners();
   }
 
@@ -128,10 +172,9 @@ class AuthController extends ChangeNotifier {
     required String peerProfileId,
   }) async {
     try {
-      final ok = await _navigation.openConversationOnAccount(
+      final ok = await _navigation.adapters.openFromPushTap(
         accountUserId: recipientUserId,
         peerProfileId: peerProfileId,
-        allowProfileFallback: false,
       );
       if (ok) error = null;
       notifyListeners();
@@ -293,6 +336,7 @@ class AuthController extends ChangeNotifier {
       account: account,
       isLastAccountOnDevice: remaining == 0,
     );
+    notificationsMachine.send(const UnregisterSubscriptionRequested());
     await _manager.removeAccount(userId);
     if (!_manager.hasOpenAccounts) {
       showAuthOverlay = true;

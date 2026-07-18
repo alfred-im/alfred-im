@@ -1,20 +1,24 @@
 # Contesto: notifications
 
-**Stato modellazione:** `scheletro`
+**Stato modellazione:** `implemented` (client open chat + sync; SW documentato in UML)
 
 Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.md).
 
-## File da compilare
+## Artefatti
 
-| File | Contenuto |
-|------|-----------|
-| `glossary.md` | Linguaggio ubiquo |
-| `commands-and-events.md` | Comandi, eventi, invarianti (Event Storming) |
+| File | Stato |
+|------|-------|
+| [glossary.md](./glossary.md) | compilato |
+| [commands-and-events.md](./commands-and-events.md) | compilato |
+| [UML client state](../../model/uml/notifications/notifications-client-state.puml) | compilato |
+| [UML SW state](../../model/uml/notifications/notifications-sw-state.puml) | compilato |
+| Sequenze `seq-*.puml` | compilate |
+| [statechart](../../../client/lib/machines/notifications/) | **implementato** (open chat + sync subscription) |
 
-## UML
+## Adapter verso navigation
 
-`docs/model/uml/notifications/` — `notifications-state.puml`, `seq-*.puml`
+Tap notifica → comando `OpenFromPushTap` → contesto `navigation` (`seq-notification-click.puml`).
 
-## Statechart (se UI)
+## SDD (confine prodotto, non duplicazione)
 
-`client/lib/machines/notifications/` — vedi [client/lib/machines/README.md](../../../client/lib/machines/README.md)
+[PROM-PUSH-NOTIFY](../../specs/promises/product/PROM-PUSH-NOTIFY.md) · [SURF-NOTIFICATIONS](../../specs/surfaces/SURF-NOTIFICATIONS.md) · [SYS-PUSH](../../specs/promises/system/SYS-PUSH.md)

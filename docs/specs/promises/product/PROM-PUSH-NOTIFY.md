@@ -137,7 +137,18 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 
 ---
 
-## 7. Riferimenti
+## 7. Modello (riferimento)
+
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/notifications/](../../domain/notifications/) |
+| UML | [docs/model/uml/notifications/](../../model/uml/notifications/) |
+| Statechart client | [client/lib/machines/notifications/](../../../client/lib/machines/notifications/) |
+| Tap → chat | `OpenFromPushTap` → `seq-notification-click.puml` → contesto `navigation` |
+
+---
+
+## 8. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

@@ -1,0 +1,25 @@
+@startuml seq-open-conversation-on-account
+' Command: OpenConversationOnAccount / OpenFromPushTap
+' Revision: 2026-07-18
+
+title seq-open-conversation-on-account — push / link / compose
+
+participant "Adapter" as Ad
+participant "NavigationMachine" as Nav
+participant "AccountManager" as AM
+participant "InboxController" as Inbox
+
+Ad -> Nav : OpenConversationOnAccount\n(accountId, peerId, fallback)
+Nav -> AM : setFocus(accountId)
+AM --> Nav : session ready
+Nav -> Inbox : load + findByProfileId(peerId)
+alt peer in inbox
+  Nav -> AM : openConversation(peer)
+  Nav --> Ad : ConversationOpened
+else no peer && !fallback
+  Nav --> Ad : NavigationRejected
+else profile fallback
+  Nav -> AM : openConversation(peer from profile)
+end
+
+@enduml

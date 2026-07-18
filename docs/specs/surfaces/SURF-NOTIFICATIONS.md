@@ -78,7 +78,17 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 
 ---
 
-## 4. Riferimenti
+## 5. Modello (riferimento)
+
+| Elemento | Artefatto |
+|----------|-----------|
+| Dominio | [docs/domain/notifications/](../../domain/notifications/) |
+| UML | [docs/model/uml/notifications/](../../model/uml/notifications/) |
+| Statechart | [client/lib/machines/notifications/](../../client/lib/machines/notifications/) |
+
+---
+
+## Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

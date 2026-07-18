@@ -1,0 +1,50 @@
+@startuml notifications-client-state
+' Context: notifications (client Flutter)
+' SDD: PROM-PUSH-NOTIFY, SURF-NOTIFICATIONS
+' Revision: 2026-07-18
+
+title Notifications — client state machine (subscription + open chat)
+
+state PushUnsupported : PushManager o SW assente
+state PermissionDenied : permission === denied
+state Idle : supportato, non ancora subscribed
+state Syncing : SyncSubscriptions in corso
+state Active : subscription attiva, manifest sincronizzato
+
+state OpenChatIdle
+state OpenChatQueued : intent in coda / pending
+state OpenChatProcessing : handler serializzato
+
+[*] --> PushUnsupported : CheckPushSupport\n[!supported]
+[*] --> PermissionDenied : CheckPushSupport\n[permission denied]
+[*] --> Idle : CheckPushSupport\n[supported, not denied]
+
+Idle --> Syncing : SyncSubscriptions
+Syncing --> Active : SubscriptionRegistered
+Syncing --> Idle : SubscriptionSyncFailed
+Active --> Syncing : SyncSubscriptions\n(login, resume, add account)
+Active --> Idle : UnregisterSubscription\n(ultimo account)
+
+state c_subscription {
+  PushUnsupported
+  PermissionDenied
+  Idle
+  Syncing
+  Active
+}
+
+state c_openchat {
+  OpenChatIdle --> OpenChatQueued : OpenChatIntentReceived\n[!sessionReady]
+  OpenChatIdle --> OpenChatProcessing : OpenChatIntentReceived\n[sessionReady]
+  OpenChatQueued --> OpenChatProcessing : SessionBecameReady\n/ DrainPendingOpenChat
+  OpenChatProcessing --> OpenChatIdle : OpenChatForwarded
+  OpenChatProcessing --> OpenChatIdle : OpenChatRejected
+  OpenChatProcessing --> OpenChatQueued : OpenChatDeferred
+}
+
+note right of OpenChatProcessing
+  Effetto: delega OpenFromPushTap
+  al contesto navigation
+end note
+
+@enduml

@@ -1,0 +1,36 @@
+# Glossario — contesto navigation
+
+**Bounded context:** `navigation`  
+**Ultima revisione:** 2026-07-18  
+**Promesse SDD:** [PROM-SHAREABLE-LINK](../../specs/promises/product/PROM-SHAREABLE-LINK.md), [PROM-MULTI-ACCOUNT](../../specs/promises/product/PROM-MULTI-ACCOUNT.md)
+
+---
+
+## Linguaggio ubiquo
+
+| Termine | Definizione |
+|---------|-------------|
+| **Shell** | `HomeScreen` — sidebar + inbox + chat (sempre visibile). |
+| **InboxVisible** | Area inbox mostrata (mobile o desktop). |
+| **ChatOpen** | Conversazione 1:1 o gruppo aperta per account in focus. |
+| **OpenConversationOnAccount** | Focus account + risolvi peer in inbox + apri chat. |
+| **allowProfileFallback** | Se peer non in inbox, lookup profilo (solo link/compose; **no** push). |
+| **Adapter** | Ingresso esterno che traduce in comando navigation (`OpenFromPushTap`, `OpenFromShareableLink`). |
+
+---
+
+## Confini
+
+| Contesto | Relazione |
+|----------|-----------|
+| **multi-account** | `FocusAccount` prima di aprire chat su altro account. |
+| **notifications** | `OpenFromPushTap` → `OpenConversationOnAccount(fallback: false)`. |
+| **shareable-link** | `OpenFromShareableLink` → stesso percorso composito. |
+
+---
+
+## Invarianti
+
+1. Un solo ingresso navigazione: `NavigationMachine` (implementazione di `NavigationCoordinator`).
+2. Push e link **non** chiamano `AccountManager` direttamente.
+3. Tap inbox su account già in focus: `OpenPeerOnFocusedAccount` (no switch account).

@@ -1,20 +1,7 @@
 # Contesto: navigation
 
-**Stato modellazione:** `scheletro`
+**Stato modellazione:** `implemented` (dominio + UML + macchina cablata)
 
-Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.md).
+Vedi [glossary.md](./glossary.md) · [commands-and-events.md](./commands-and-events.md) · [UML](../../model/uml/navigation/)
 
-## File da compilare
-
-| File | Contenuto |
-|------|-----------|
-| `glossary.md` | Linguaggio ubiquo |
-| `commands-and-events.md` | Comandi, eventi, invarianti (Event Storming) |
-
-## UML
-
-`docs/model/uml/navigation/` — `navigation-state.puml`, `seq-*.puml`
-
-## Statechart (se UI)
-
-`client/lib/machines/navigation/` — vedi [client/lib/machines/README.md](../../../client/lib/machines/README.md)
+Statechart: `client/lib/machines/navigation/` — `NavigationCoordinator` delega a `NavigationMachine`.

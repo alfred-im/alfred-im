@@ -1,0 +1,27 @@
+@startuml multi-account-state
+' Context: multi-account
+' SDD: PROM-MULTI-ACCOUNT
+' Revision: 2026-07-18
+
+title Multi-account — client state machine
+
+state NoOpenAccounts
+state HasOpenAccounts
+state FocusSwitching
+state FocusedWithSession
+state FocusedAwaitingSession : focus impostato,\nsessione in ripristino
+
+[*] --> NoOpenAccounts : InitializeManifest\n[manifest empty]
+[*] --> FocusedWithSession : InitializeManifest\n[session ok]
+[*] --> FocusedAwaitingSession : InitializeManifest\n[focus but no session]
+
+NoOpenAccounts --> HasOpenAccounts : AccountOpened
+HasOpenAccounts --> FocusSwitching : FocusAccount
+FocusSwitching --> FocusedWithSession : AccountFocused
+FocusSwitching --> FocusedAwaitingSession : SessionRestoreFailed
+
+FocusedWithSession --> FocusSwitching : FocusAccount\n[altro account]
+FocusedAwaitingSession --> FocusedWithSession : ReconnectFocusedSession\n/ AccountFocused
+FocusedWithSession --> NoOpenAccounts : AccountClosed\n[ultimo account]
+
+@enduml

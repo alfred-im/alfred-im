@@ -39,4 +39,4 @@ messaging ──RPC──► reception, delivery
 | `approved` | Modello congelato — si implementa |
 | `implemented` | Codice allineato al modello su `main` |
 
-Tutti i contesti sono attualmente **`scheletro`**. La modellazione avviene per contesto in sessioni dedicate.
+Tutti i contesti sono **`scheletro`** tranne **notifications**, **multi-account** e **navigation** (`implemented`).

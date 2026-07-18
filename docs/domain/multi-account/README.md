@@ -1,20 +1,7 @@
 # Contesto: multi-account
 
-**Stato modellazione:** `scheletro`
+**Stato modellazione:** `implemented` (dominio + UML + macchina stato focus)
 
-Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.md).
+Vedi [glossary.md](./glossary.md) · [commands-and-events.md](./commands-and-events.md) · [UML](../../model/uml/multi-account/)
 
-## File da compilare
-
-| File | Contenuto |
-|------|-----------|
-| `glossary.md` | Linguaggio ubiquo |
-| `commands-and-events.md` | Comandi, eventi, invarianti (Event Storming) |
-
-## UML
-
-`docs/model/uml/multi-account/` — `multi-account-state.puml`, `seq-*.puml`
-
-## Statechart (se UI)
-
-`client/lib/machines/multi-account/` — vedi [client/lib/machines/README.md](../../../client/lib/machines/README.md)
+Statechart: `client/lib/machines/multi-account/multi_account_machine.dart` — sincronizzato da `AuthController`.

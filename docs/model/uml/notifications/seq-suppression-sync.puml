@@ -1,0 +1,21 @@
+@startuml seq-suppression-sync
+' Context: notifications
+' Command: UpdateSuppressionState
+' SDD: PROM-PUSH-NOTIFY-022–024, SURF-NOTIFICATIONS-008
+' Revision: 2026-07-18
+
+title seq-suppression-sync — client → service worker
+
+participant "AuthController" as Auth
+participant "PushSuppressionBinder" as Binder
+participant "PushPlatform" as Plat
+participant "ServiceWorker" as SW
+
+Auth -> Binder : focus / activePeer / lifecycle change
+Binder -> Binder : appVisible = resumed?
+Binder -> Plat : updateSuppression(\n  focusUserId,\n  activePeerProfileId,\n  appVisible)
+Plat -> SW : postMessage alfred_push_suppression
+SW -> SW : applySuppressionState
+SW --> SW : SuppressionStateApplied
+
+@enduml

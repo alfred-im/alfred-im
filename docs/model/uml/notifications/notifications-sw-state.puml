@@ -1,0 +1,29 @@
+@startuml notifications-sw-state
+' Context: notifications (service worker)
+' SDD: SURF-NOTIFICATIONS-005–008
+' Revision: 2026-07-18
+
+title Notifications — service worker state machine
+
+state Waiting
+state SuppressionReady : suppressionState in RAM
+state NotificationShown
+
+[*] --> Waiting
+
+Waiting --> SuppressionReady : alfred_push_suppression\n/ applySuppressionState
+
+SuppressionReady --> SuppressionReady : alfred_push_suppression\n/ applySuppressionState
+
+SuppressionReady --> Waiting : push event\n[shouldSuppress]\n/ PushNotificationSuppressed
+SuppressionReady --> NotificationShown : push event\n[!shouldSuppress, payload valido]\n/ showNotification
+
+NotificationShown --> SuppressionReady : notificationclick\n/ OpenFromPushTap
+
+note right of SuppressionReady
+  shouldSuppress quando:
+  appVisible && focusUserId == owner
+  && activePeerProfileId == peer
+end note
+
+@enduml

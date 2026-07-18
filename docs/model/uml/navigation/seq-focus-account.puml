@@ -1,0 +1,21 @@
+@startuml seq-focus-account
+' Command: FocusAccount / SwitchToAccount
+' Revision: 2026-07-18
+
+title seq-focus-account — sidebar switch
+
+actor Utente
+participant "AccountSidebar" as UI
+participant "NavigationMachine" as Nav
+participant "MultiAccountMachine" as MA
+participant "AccountManager" as AM
+
+Utente -> UI : tap account
+UI -> Nav : SwitchToAccount(userId)
+Nav -> MA : FocusAccount(userId)
+MA -> AM : setFocus(userId)
+AM --> MA : AccountFocused
+MA --> Nav : ok
+Nav --> UI : InboxVisible
+
+@enduml
