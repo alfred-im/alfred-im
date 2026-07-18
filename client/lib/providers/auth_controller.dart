@@ -5,7 +5,6 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/open_account.dart';
@@ -15,18 +14,25 @@ import '../models/chat_peer.dart';
 import '../models/profile.dart';
 import '../services/account_manager.dart';
 import '../services/account_session.dart';
+import '../services/navigation_coordinator.dart';
 import '../services/push_subscription_service.dart';
 import '../utils/auth_identity.dart';
-import '../utils/diagnostic_log.dart';
 
 class AuthController extends ChangeNotifier {
-  AuthController({AccountManager? accountManager})
-      : _manager = accountManager ?? AccountManager() {
+  AuthController({
+    AccountManager? accountManager,
+    NavigationCoordinator? navigation,
+  }) : _manager = accountManager ?? AccountManager() {
+    _navigation = navigation ?? NavigationCoordinator(_manager);
     _manager.onFocusedProfileSynced = notifyListeners;
   }
 
   final AccountManager _manager;
+  late final NavigationCoordinator _navigation;
   final PushSubscriptionService _pushService = PushSubscriptionService();
+
+  @visibleForTesting
+  NavigationCoordinator get navigation => _navigation;
 
   bool isLoading = true;
   bool sessionReady = false;
@@ -92,7 +98,7 @@ class AuthController extends ChangeNotifier {
 
   Future<void> setFocus(String userId) async {
     try {
-      await _manager.setFocus(userId);
+      await _navigation.switchToAccount(userId);
       error = null;
     } catch (e) {
       error = _friendlyAuthError(e);
@@ -100,173 +106,67 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Tap notifica push: focus sull'account destinatario prima di aprire la chat.
+  /// Tap notifica push: focus sull'account destinatario (delega a [NavigationCoordinator]).
   Future<bool> focusAccountForPushNotification(String recipientUserId) async {
-    diagLog(
-      'push',
-      'focus.start',
-      data: {'recipientUserId': recipientUserId, 'focusBefore': _manager.focusUserId},
-    );
-    if (!_manager.hasOpenAccount(recipientUserId)) {
-      diagLogFail(
-        'push',
-        'focus',
-        'no_open_account',
-        data: {'recipientUserId': recipientUserId},
-      );
+    try {
+      final ok = await _navigation.ensureAccountFocused(recipientUserId);
+      if (ok) {
+        error = null;
+      }
+      notifyListeners();
+      return ok;
+    } catch (e) {
+      error = _friendlyAuthError(e);
+      notifyListeners();
       return false;
     }
-
-    try {
-      await _manager.ensureRecipientAccountActive(recipientUserId);
-      error = null;
-    } catch (e) {
-      error = _friendlyAuthError(e);
-      diagLogFail(
-        'push',
-        'focus',
-        'restore_error',
-        data: {'recipientUserId': recipientUserId, 'error': error},
-      );
-    }
-    notifyListeners();
-
-    final session = _manager.focusedSession;
-    final ok = _manager.focusUserId == recipientUserId &&
-        session != null &&
-        session.userId == recipientUserId &&
-        error == null;
-    if (ok) {
-      diagLog(
-        'push',
-        'focus.ok',
-        data: {'recipientUserId': recipientUserId},
-      );
-    } else if (error == null) {
-      diagLogFail(
-        'push',
-        'focus',
-        'session_mismatch',
-        data: {
-          'recipientUserId': recipientUserId,
-          'focusAfter': _manager.focusUserId,
-          'sessionUserId': session?.userId,
-        },
-      );
-    }
-    return ok;
   }
 
-  /// Tap push: stesso percorso di switch account in sidebar + tap riga inbox.
+  /// Tap push: account destinatario → inbox → conversazione (solo peer in inbox).
   Future<bool> openConversationAfterPushTap({
     required String recipientUserId,
     required String peerProfileId,
   }) async {
-    diagLog(
-      'push',
-      'composite.start',
-      data: {
-        'recipientUserId': recipientUserId,
-        'peerProfileId': peerProfileId,
-        'focusBefore': _manager.focusUserId,
-      },
-    );
-
-    if (!await focusAccountForPushNotification(recipientUserId)) {
+    try {
+      final ok = await _navigation.openConversationOnAccount(
+        accountUserId: recipientUserId,
+        peerProfileId: peerProfileId,
+        allowProfileFallback: false,
+      );
+      if (ok) error = null;
+      notifyListeners();
+      return ok;
+    } catch (e) {
+      error = _friendlyAuthError(e);
+      notifyListeners();
       return false;
     }
+  }
 
-    // Sidebar e inbox dell'account destinatario prima di aprire la chat.
-    await SchedulerBinding.instance.endOfFrame;
-
-    final session = _manager.focusedSession;
-    if (session == null || session.userId != recipientUserId) {
-      diagLogFail(
-        'push',
-        'composite',
-        'wrong_session',
-        data: {
-          'expected': recipientUserId,
-          'actual': session?.userId,
-        },
+  /// Apre conversazione su account specifico (link condivisibili, compose).
+  Future<bool> openConversationOnAccount({
+    required String accountUserId,
+    required String peerProfileId,
+    bool allowProfileFallback = true,
+  }) async {
+    try {
+      final ok = await _navigation.openConversationOnAccount(
+        accountUserId: accountUserId,
+        peerProfileId: peerProfileId,
+        allowProfileFallback: allowProfileFallback,
       );
+      if (ok) error = null;
+      notifyListeners();
+      return ok;
+    } catch (e) {
+      error = _friendlyAuthError(e);
+      notifyListeners();
       return false;
     }
-
-    await session.inboxController.load();
-
-    ChatPeer? peer = session.inboxController.findByProfileId(peerProfileId);
-    if (peer != null && peer.profileId != session.userId) {
-      diagLog(
-        'push',
-        'composite.peer',
-        data: {'source': 'inbox', 'attempt': 0},
-      );
-    } else {
-      peer = null;
-      for (var attempt = 1; attempt < 10; attempt++) {
-        if (session.inboxController.isLoading) {
-          await Future<void>.delayed(const Duration(milliseconds: 50));
-          continue;
-        }
-        await session.inboxController.load();
-        peer = session.inboxController.findByProfileId(peerProfileId);
-        if (peer != null && peer.profileId != session.userId) {
-          diagLog(
-            'push',
-            'composite.peer',
-            data: {'source': 'inbox', 'attempt': attempt},
-          );
-          break;
-        }
-        peer = null;
-        break;
-      }
-    }
-
-    if (peer == null) {
-      try {
-        final summary = await session.profileService.findById(peerProfileId);
-        if (summary != null && summary.id != session.userId) {
-          peer = ChatPeer(profile: summary);
-          diagLog(
-            'push',
-            'composite.peer',
-            data: {'source': 'profile_fallback'},
-          );
-        }
-      } catch (e) {
-        diagLogFail(
-          'push',
-          'composite',
-          'profile_lookup_error',
-          data: {'error': e.runtimeType.toString()},
-        );
-      }
-    }
-
-    if (peer == null) {
-      diagLogFail(
-        'push',
-        'composite',
-        'peer_not_found',
-        data: {'peerProfileId': peerProfileId},
-      );
-      return false;
-    }
-
-    _manager.openConversation(peer);
-    notifyListeners();
-    diagLog(
-      'push',
-      'composite.ok',
-      data: {'peerProfileId': peerProfileId},
-    );
-    return true;
   }
 
   void openConversation(ChatPeer peer) {
-    _manager.openConversation(peer);
+    _navigation.openPeerOnFocusedAccount(peer);
     notifyListeners();
   }
 

@@ -260,15 +260,16 @@ class FakeProfileService extends ProfileService {
 }
 
 class FakeInboxService extends InboxService {
-  FakeInboxService() : super(createTestSupabaseClient());
+  FakeInboxService({this.peers = const []}) : super(createTestSupabaseClient());
 
+  final List<ChatPeer> peers;
   final List<String> markReadCalls = [];
   int fetchInboxCalls = 0;
 
   @override
   Future<List<ChatPeer>> fetchInbox() async {
     fetchInboxCalls++;
-    return const [];
+    return List<ChatPeer>.from(peers);
   }
 
   @override

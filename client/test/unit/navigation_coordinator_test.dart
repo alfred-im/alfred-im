@@ -7,10 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/profile_summary.dart';
-import 'package:alfred_client/providers/auth_controller.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
+import 'package:alfred_client/services/navigation_coordinator.dart';
 import 'package:alfred_client/services/profile_service.dart';
 
 import '../support/fake_messaging_services.dart';
@@ -24,21 +24,21 @@ class _FakeProfileService extends ProfileService {
   Future<ProfileSummary?> findById(String id) async => _peers[id];
 }
 
-// PROM-PUSH-NOTIFY-030 — tap push garantisce sessione destinatario attiva
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('AuthController focusAccountForPushNotification', () {
+  group('NavigationCoordinator', () {
     late AccountStorageService storage;
     late AccountManager manager;
+    late NavigationCoordinator nav;
     late AccountSession sessionA;
     late AccountSession sessionB;
-    late AuthController auth;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       storage = AccountStorageService();
       manager = AccountManager(storage: storage);
+      nav = NavigationCoordinator(manager);
 
       sessionA = await AccountSession.createForTest(
         profile: const ProfileSummary(
@@ -47,17 +47,7 @@ void main() {
           displayName: 'Agent A',
         ),
         client: createTestSupabaseClient(),
-        inboxService: FakeInboxService(
-          peers: [
-            ChatPeer(
-              profile: const ProfileSummary(
-                id: 'account-b',
-                username: 'agent_b',
-                displayName: 'Agent B',
-              ),
-            ),
-          ],
-        ),
+        inboxService: FakeInboxService(),
         profileService: _FakeProfileService({
           'account-b': const ProfileSummary(
             id: 'account-b',
@@ -103,65 +93,59 @@ void main() {
         return account.userId == 'account-a' ? sessionA : sessionB;
       };
 
-      auth = AuthController(accountManager: manager)
-        ..isLoading = false
-        ..sessionReady = true;
-
       await manager.initialize();
     });
 
-    test('reactivates session when focus id already matches recipient', () async {
-      expect(auth.userId, 'account-a');
-
-      manager.clearSessionsInRamForTest();
-
-      final focused = await auth.focusAccountForPushNotification('account-a');
-
-      expect(focused, isTrue);
-      expect(auth.userId, 'account-a');
-      expect(auth.focusedSession?.userId, 'account-a');
+    test('switchToAccount changes focus', () async {
+      await nav.switchToAccount('account-b');
+      expect(manager.focusUserId, 'account-b');
     });
 
-    test('switches focus to recipient account', () async {
-      final focused = await auth.focusAccountForPushNotification('account-b');
-
-      expect(focused, isTrue);
-      expect(auth.userId, 'account-b');
-      expect(auth.focusedSession?.userId, 'account-b');
+    test('openPeerOnFocusedAccount rejects self peer', () {
+      nav.openPeerOnFocusedAccount(
+        ChatPeer(
+          profile: const ProfileSummary(
+            id: 'account-a',
+            username: 'agent_a',
+            displayName: 'Agent A',
+          ),
+        ),
+      );
+      expect(manager.viewState.activePeer, isNull);
     });
 
-    test('returns false when recipient is not in manifest', () async {
-      final focused = await auth.focusAccountForPushNotification('missing');
+    test('openConversationOnAccount switches account and opens inbox peer', () async {
+      final ok = await nav.openConversationOnAccount(
+        accountUserId: 'account-b',
+        peerProfileId: 'account-a',
+        allowProfileFallback: false,
+      );
 
-      expect(focused, isFalse);
-      expect(auth.userId, 'account-a');
+      expect(ok, isTrue);
+      expect(manager.focusUserId, 'account-b');
+      expect(manager.viewState.activePeer?.profileId, 'account-a');
     });
 
-    test('tap flow: focus recipient then open peer conversation', () async {
-      final opened = await auth.openConversationAfterPushTap(
-        recipientUserId: 'account-b',
+    test('openConversationOnAccount rejects self peer pair', () async {
+      final ok = await nav.openConversationOnAccount(
+        accountUserId: 'account-a',
         peerProfileId: 'account-a',
       );
-      expect(opened, isTrue);
 
-      expect(auth.userId, 'account-b');
-      expect(auth.focusedSession?.userId, 'account-b');
-      expect(auth.activePeer?.profileId, 'account-a');
-      expect(manager.sessions.length, 1);
-      expect(manager.sessions.single.userId, 'account-b');
+      expect(ok, isFalse);
+      expect(manager.viewState.activePeer, isNull);
     });
 
-    test('tap flow: reactivates session when focus id matches but RAM empty', () async {
-      manager.clearSessionsInRamForTest();
-
-      final opened = await auth.openConversationAfterPushTap(
-        recipientUserId: 'account-a',
-        peerProfileId: 'account-b',
+    test('openConversationOnAccount without inbox uses profile when allowed', () async {
+      final ok = await nav.openConversationOnAccount(
+        accountUserId: 'account-b',
+        peerProfileId: 'account-a',
+        allowProfileFallback: true,
       );
-      expect(opened, isTrue);
 
-      expect(auth.userId, 'account-a');
-      expect(auth.activePeer?.profileId, 'account-b');
+      expect(ok, isTrue);
+      expect(manager.focusUserId, 'account-b');
+      expect(manager.viewState.activePeer?.profileId, 'account-a');
     });
   });
 }

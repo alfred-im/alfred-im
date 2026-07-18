@@ -135,11 +135,11 @@ test('tap push con focus su altro account apre chat destinatario', async ({
   expect(
     diagLogs.some(
       (line) =>
-        line.includes('composite.ok') ||
-        line.includes('composite.peer') ||
-        line.includes('handler.chat_opened'),
+        line.includes('open_on_account.ok') ||
+        line.includes('resolve_peer') ||
+        line.includes('[nav]'),
     ),
-    `percorso composito push atteso; ${diagFooter()}`,
+    `percorso navigazione push atteso; ${diagFooter()}`,
   ).toBe(true);
 
   expect(errors, `errori JS: ${errors.join('; ')}; ${diagFooter()}`).toEqual(

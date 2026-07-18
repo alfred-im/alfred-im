@@ -64,7 +64,9 @@ void main() {
     final session = await AccountSession.createForTest(
       profile: owner,
       client: client,
-      inboxService: FakeInboxService(),
+      inboxService: FakeInboxService(
+        peers: [ChatPeer(profile: peer)],
+      ),
       profileService: _FakeProfileService({'peer-uuid': peer}),
       messageService: FakeMessageService(client),
     );
@@ -146,7 +148,9 @@ void main() {
     final sessionB = await AccountSession.createForTest(
       profile: accountB,
       client: createTestSupabaseClient(),
-      inboxService: FakeInboxService(),
+      inboxService: FakeInboxService(
+        peers: [ChatPeer(profile: accountA)],
+      ),
       profileService: _FakeProfileService({'account-a': accountA}),
       messageService: FakeMessageService(client),
     );

@@ -5,7 +5,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/chat_peer.dart';
 import '../providers/auth_controller.dart';
 import '../utils/shareable_link.dart';
 import '../utils/shareable_link_platform.dart';
@@ -85,11 +84,9 @@ class ShareableLinkController extends ChangeNotifier {
       if (!context.mounted) return;
 
       if (_target!.kind == ShareableLinkKind.chat) {
-        auth.openConversation(
-          ChatPeer.fromProfile(
-            profile: profile,
-            address: profile.username,
-          ),
+        await auth.openConversationOnAccount(
+          accountUserId: auth.userId!,
+          peerProfileId: profile.id,
         );
       } else {
         await showPeerProfileOverlay(context, profile);
