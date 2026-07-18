@@ -4,8 +4,6 @@
 
 /// Effetti collaterali del contesto notifications (implementazione in servizi esistenti).
 abstract class NotificationsEffects {
-  Future<void> syncSubscriptions();
-
   Future<bool> forwardOpenFromPushTap({
     required String recipientUserId,
     required String peerProfileId,

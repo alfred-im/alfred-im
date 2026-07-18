@@ -269,11 +269,6 @@ class PushPlatform {
     _emitOpenChat(conversation);
   }
 
-  static void _handleWindowMessage(web.Event event) {
-    if (!event.isA<web.MessageEvent>()) return;
-    _handleIncomingMessage(event as web.MessageEvent, 'window.message');
-  }
-
   static void _handleServiceWorkerMessage(web.Event event) {
     if (!event.isA<web.MessageEvent>()) return;
     _handleIncomingMessage(event as web.MessageEvent, 'sw.message');
@@ -294,7 +289,6 @@ class PushPlatform {
       'message',
       _handleServiceWorkerMessage.toJS,
     );
-    web.window.addEventListener('message', _handleWindowMessage.toJS);
     web.window.addEventListener('hashchange', _handleHashChange.toJS);
     tryDrainPendingOpenChat();
   }

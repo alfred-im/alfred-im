@@ -1,6 +1,6 @@
 # Contesto: notifications
 
-**Stato modellazione:** `draft`
+**Stato modellazione:** `implemented` (client open chat + sync; SW documentato in UML)
 
 Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.md).
 
@@ -13,7 +13,7 @@ Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.
 | [UML client state](../../model/uml/notifications/notifications-client-state.puml) | compilato |
 | [UML SW state](../../model/uml/notifications/notifications-sw-state.puml) | compilato |
 | Sequenze `seq-*.puml` | compilate |
-| [statechart](../../../client/lib/machines/notifications/) | draft (non ancora cablato su tutti gli ingressi legacy) |
+| [statechart](../../../client/lib/machines/notifications/) | **implementato** (open chat + sync subscription) |
 
 ## Adapter verso navigation
 

@@ -74,8 +74,8 @@ final class SessionBecameReady extends NotificationsEvent {
 
 /// Macchina notifications — interprete statechart client.
 ///
-/// Non sostituisce ancora tutti gli ingressi legacy; è la definizione
-/// eseguibile del modello UML per test e allineamento futuro.
+/// Ingresso open chat: [NotificationsAdapters] da [PushNotificationListener].
+/// Sync subscription: eventi da [AuthController.syncPushSubscriptions].
 class NotificationsMachine {
   NotificationsMachine({this._effects});
 
@@ -85,8 +85,8 @@ class NotificationsMachine {
       NotificationsSubscriptionState.idle;
   NotificationsOpenChatState openChatState = NotificationsOpenChatState.idle;
 
-  String? _queuedRecipientUserId;
-  String? _queuedPeerProfileId;
+  final List<({String recipientUserId, String peerProfileId})> _pendingWhileBusy =
+      [];
   bool _openChatChainBusy = false;
 
   void send(NotificationsEvent event) {
@@ -107,7 +107,6 @@ class NotificationsMachine {
           return;
         }
         subscriptionState = NotificationsSubscriptionState.syncing;
-        _effects?.syncSubscriptions();
       case SubscriptionRegistered():
         subscriptionState = NotificationsSubscriptionState.active;
       case SubscriptionSyncFailed():
@@ -127,12 +126,15 @@ class NotificationsMachine {
 
   void _handleOpenChatIntent(OpenChatIntentReceived event) {
     if (_openChatChainBusy) {
-      _queueOpenChat(event.recipientUserId, event.peerProfileId);
+      _pendingWhileBusy.add((
+        recipientUserId: event.recipientUserId,
+        peerProfileId: event.peerProfileId,
+      ));
+      openChatState = NotificationsOpenChatState.queued;
       return;
     }
     if (!event.sessionReady) {
       openChatState = NotificationsOpenChatState.queued;
-      _queueOpenChat(event.recipientUserId, event.peerProfileId);
       _effects?.persistPendingOpenChat(
         recipientUserId: event.recipientUserId,
         peerProfileId: event.peerProfileId,
@@ -147,20 +149,10 @@ class NotificationsMachine {
     _startOpenChatProcessing(event.recipientUserId, event.peerProfileId);
   }
 
-  void _queueOpenChat(String recipientUserId, String peerProfileId) {
-    _queuedRecipientUserId = recipientUserId;
-    _queuedPeerProfileId = peerProfileId;
-    openChatState = NotificationsOpenChatState.queued;
-  }
-
   void _drainQueuedOpenChat() {
-    final recipient = _queuedRecipientUserId;
-    final peer = _queuedPeerProfileId;
-    if (recipient == null || peer == null) return;
-    if (_openChatChainBusy) return;
-    _queuedRecipientUserId = null;
-    _queuedPeerProfileId = null;
-    _startOpenChatProcessing(recipient, peer);
+    if (_openChatChainBusy || _pendingWhileBusy.isEmpty) return;
+    final next = _pendingWhileBusy.removeAt(0);
+    _startOpenChatProcessing(next.recipientUserId, next.peerProfileId);
   }
 
   void _startOpenChatProcessing(String recipientUserId, String peerProfileId) {
@@ -183,12 +175,8 @@ class NotificationsMachine {
   void _completeOpenChat({required bool forwarded}) {
     _openChatChainBusy = false;
     openChatState = NotificationsOpenChatState.idle;
-    if (forwarded) {
-      _effects?.clearPendingOpenChat();
-    } else {
-      _effects?.clearPendingOpenChat();
-    }
-    if (_queuedRecipientUserId != null && _queuedPeerProfileId != null) {
+    _effects?.clearPendingOpenChat();
+    if (_pendingWhileBusy.isNotEmpty) {
       _drainQueuedOpenChat();
     }
   }

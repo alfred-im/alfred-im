@@ -8,7 +8,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Aggiunto
 
-- **Metodo modello** — `docs/domain/notifications/`: primo contesto convertito (glossario, UML, statechart draft)
+- **Metodo modello** — `docs/domain/notifications/`: primo contesto convertito e **codice allineato** (`NotificationsMachine`, listener, sync)
 - **#194** — `diagnostic_log.dart`: log console `[alfred][categoria]` con `--dart-define=ALFRED_DIAGNOSTIC_LOG=true`; prima categoria `push` (tap notifica, focus, peer). Documentato in `AGENTS.md` e `client/scripts/test/README.md`. Build Pages senza define = silenzio.
 - Fix tap push: listener `navigator.serviceWorker` `message` per `Client.postMessage` dal SW (prima solo `window.message`, percorso sbagliato).
 

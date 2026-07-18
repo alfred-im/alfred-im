@@ -9,16 +9,10 @@ import 'package:alfred_client/models/push_conversation_key.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _RecordingEffects implements NotificationsEffects {
-  int syncCount = 0;
   int forwardCount = 0;
   int persistCount = 0;
   int clearCount = 0;
   bool forwardResult = true;
-
-  @override
-  Future<void> syncSubscriptions() async {
-    syncCount++;
-  }
 
   @override
   Future<bool> forwardOpenFromPushTap({
@@ -46,25 +40,24 @@ class _RecordingEffects implements NotificationsEffects {
 void main() {
   group('NotificationsMachine subscription', () {
     test('SyncSubscriptions da idle → syncing → active', () {
-      final effects = _RecordingEffects();
-      final machine = NotificationsMachine(effects: effects);
+      final machine = NotificationsMachine();
 
       machine.send(const SyncSubscriptionsRequested());
       expect(machine.subscriptionState, NotificationsSubscriptionState.syncing);
-      expect(effects.syncCount, 1);
 
       machine.send(const SubscriptionRegistered());
       expect(machine.subscriptionState, NotificationsSubscriptionState.active);
     });
 
     test('permission denied blocca sync', () {
-      final effects = _RecordingEffects();
-      final machine = NotificationsMachine(effects: effects)
+      final machine = NotificationsMachine()
         ..send(const PermissionDeniedDetected());
 
       machine.send(const SyncSubscriptionsRequested());
-      expect(machine.subscriptionState, NotificationsSubscriptionState.permissionDenied);
-      expect(effects.syncCount, 0);
+      expect(
+        machine.subscriptionState,
+        NotificationsSubscriptionState.permissionDenied,
+      );
     });
   });
 

@@ -8,11 +8,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
+import '../machines/notifications/notifications_machine.dart';
 import '../providers/auth_controller.dart';
 import '../utils/diagnostic_log.dart';
 import '../utils/push_platform.dart';
 
-/// Gestisce tap notifica push → focus account + apertura chat.
+/// Gestisce tap notifica push → [NotificationsMachine] → navigation.
 class PushNotificationListener extends StatefulWidget {
   const PushNotificationListener({
     super.key,
@@ -33,86 +34,56 @@ class PushNotificationListener extends StatefulWidget {
 class PushNotificationListenerState extends State<PushNotificationListener> {
   StreamSubscription<PushOpenChatIntent>? _sub;
   bool _drainScheduled = false;
-  Future<void> _openChatChain = Future<void>.value();
 
   @override
   void initState() {
     super.initState();
     final debugStream = widget.debugOpenChatIntents;
     if (debugStream != null) {
-      _sub = debugStream.listen(_enqueueOpenChat);
+      _sub = debugStream.listen(_dispatchOpenChatIntent);
       return;
     }
     if (kIsWeb) {
       PushPlatform.ensureMessageHook();
-      _sub = PushPlatform.openChatIntents.listen(_enqueueOpenChat);
+      _sub = PushPlatform.openChatIntents.listen(_dispatchOpenChatIntent);
     }
   }
 
-  void _enqueueOpenChat(PushOpenChatIntent intent) {
-    diagLog(
-      'push',
-      'handler.enqueue',
-      data: {
-        'recipientUserId': intent.conversation.ownerUserId,
-        'peerProfileId': intent.conversation.peerProfileId,
-      },
-    );
-    _openChatChain = _openChatChain.then((_) async {
-      await _handleOpenChat(intent);
-    });
-  }
-
-  /// Test: esegue il percorso tap push senza dipendere dal timing dello stream.
-  @visibleForTesting
-  Future<void> processOpenChatForTest(PushOpenChatIntent intent) async {
-    await _handleOpenChat(intent);
-  }
-
-  Future<void> _handleOpenChat(PushOpenChatIntent intent) async {
-    final conversation = intent.conversation;
+  void _dispatchOpenChatIntent(PushOpenChatIntent intent) {
     if (!mounted) {
       diagLogFail(
         'push',
         'handler.open_chat',
         'unmounted',
-        data: {'recipientUserId': conversation.ownerUserId},
+        data: {'recipientUserId': intent.conversation.ownerUserId},
       );
       return;
     }
     final auth = context.read<AuthController>();
-    if (!auth.sessionReady) {
-      diagLogFail('push', 'handler.open_chat', 'session_not_ready');
-      if (kIsWeb) {
-        PushPlatform.persistPendingOpenChat(conversation);
-      }
-      return;
-    }
-
-    if (!auth.accountManager.hasOpenAccount(conversation.ownerUserId)) {
-      diagLogFail(
-        'push',
-        'handler.open_chat',
-        'no_open_account',
-        data: {'recipientUserId': conversation.ownerUserId},
-      );
-      if (kIsWeb) PushPlatform.clearPendingOpenChat();
-      return;
-    }
-
-    final opened = await auth.openConversationAfterPushTap(
-      recipientUserId: conversation.ownerUserId,
-      peerProfileId: conversation.peerProfileId,
+    final conversation = intent.conversation;
+    diagLog(
+      'push',
+      'handler.enqueue',
+      data: {
+        'recipientUserId': conversation.ownerUserId,
+        'peerProfileId': conversation.peerProfileId,
+      },
     );
+    auth.notificationsAdapters.onOpenChatIntent(
+      conversation: conversation,
+      sessionReady: auth.sessionReady,
+      hasOpenAccount: auth.accountManager.hasOpenAccount(conversation.ownerUserId),
+    );
+  }
 
-    if (!mounted) return;
-
-    if (opened) {
-      if (kIsWeb) {
-        PushPlatform.clearPendingOpenChat();
-      }
-    } else if (kIsWeb) {
-      PushPlatform.clearPendingOpenChat();
+  /// Test: esegue il percorso tap push senza dipendere dal timing dello stream.
+  @visibleForTesting
+  Future<void> processOpenChatForTest(PushOpenChatIntent intent) async {
+    _dispatchOpenChatIntent(intent);
+    final auth = context.read<AuthController>();
+    while (auth.notificationsMachine.openChatState !=
+        NotificationsOpenChatState.idle) {
+      await Future<void>.delayed(Duration.zero);
     }
   }
 
