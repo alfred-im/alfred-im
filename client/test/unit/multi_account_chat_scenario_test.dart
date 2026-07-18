@@ -11,6 +11,7 @@ import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/message_media_service.dart';
+import 'package:alfred_client/services/navigation_coordinator.dart';
 
 import '../support/fake_messaging_services.dart';
 
@@ -40,12 +41,14 @@ void main() {
   // spec: PROM-MULTI-ACCOUNT-010, PROM-MULTI-ACCOUNT-020
   group('Multi-account mutual chat scenario', () {
     late AccountManager manager;
+    late NavigationCoordinator nav;
     late FakeMessageService messageService;
     late FakeInboxService inboxService;
 
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       manager = AccountManager();
+      nav = NavigationCoordinator(manager);
       final client = createTestSupabaseClient();
       messageService = FakeMessageService(client);
       inboxService = FakeInboxService();
@@ -74,7 +77,7 @@ void main() {
       final peer2 = _peer(_profile(_agent1, 'alfredagent1'));
 
       await manager.setFocus(_agent1);
-      manager.openConversation(peer1);
+      nav.openPeerOnFocusedAccount(peer1);
       expect(manager.viewState.activePeer?.profileId, _agent2);
 
       final chatAsAgent1 = MessagesController(
@@ -88,7 +91,7 @@ void main() {
       expect(chatAsAgent1.messages.length, 2);
 
       await manager.setFocus(_agent2);
-      manager.openConversation(peer2);
+      nav.openPeerOnFocusedAccount(peer2);
       expect(manager.viewState.activePeer?.profileId, _agent1);
 
       final chatAsAgent2 = MessagesController(
@@ -124,7 +127,7 @@ void main() {
       await manager.setFocus(_agent2);
 
       // Simula stato corrotto: peer = sé stessi (bug dopo switch da altro account).
-      manager.openConversation(_peer(_profile(_agent2, 'alfredagent2')));
+      nav.openPeerOnFocusedAccount(_peer(_profile(_agent2, 'alfredagent2')));
 
       expect(manager.viewState.activePeer, isNull);
     });

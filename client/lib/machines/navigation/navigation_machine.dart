@@ -59,6 +59,19 @@ final class OpenFromShareableLink extends NavigationEvent {
   final String peerProfileId;
 }
 
+/// Nuovo messaggio da indirizzo compose — stesso percorso di link con stale clear.
+final class OpenFromCompose extends NavigationEvent {
+  const OpenFromCompose({
+    required this.accountUserId,
+    required this.peerProfileId,
+    this.allowProfileFallback = true,
+  });
+
+  final String accountUserId;
+  final String peerProfileId;
+  final bool allowProfileFallback;
+}
+
 /// Back mobile / chiudi chat — inbox o group home.
 final class CloseConversation extends NavigationEvent {
   const CloseConversation();
@@ -70,6 +83,12 @@ final class OpenGroupChat extends NavigationEvent {
 
 final class BackToGroupHome extends NavigationEvent {
   const BackToGroupHome();
+}
+
+/// Aggiorna metadati peer attivo da riga inbox (preview, timestamp).
+final class MergeActivePeerFromInbox extends NavigationEvent {
+  const MergeActivePeerFromInbox(this.inboxRow);
+  final ChatPeer inboxRow;
 }
 
 /// Macchina navigation — unico ingresso shell inbox/chat.
@@ -126,6 +145,21 @@ class NavigationMachine {
             : _effects.focusedAccountIsGroup
                 ? NavigationShellState.groupShell
                 : NavigationShellState.inboxVisible;
+      case OpenFromCompose(
+        :final accountUserId,
+        :final peerProfileId,
+        :final allowProfileFallback,
+      ):
+        final ok = await _effects.openConversationOnAccount(
+          accountUserId: accountUserId,
+          peerProfileId: peerProfileId,
+          allowProfileFallback: allowProfileFallback,
+        );
+        shellState = ok
+            ? NavigationShellState.chatOpen
+            : _effects.focusedAccountIsGroup
+                ? NavigationShellState.groupShell
+                : NavigationShellState.inboxVisible;
       case CloseConversation():
         _effects.closeConversation();
         shellState = _effects.focusedAccountIsGroup
@@ -137,6 +171,8 @@ class NavigationMachine {
       case BackToGroupHome():
         _effects.backToGroupHome();
         shellState = NavigationShellState.groupShell;
+      case MergeActivePeerFromInbox(:final inboxRow):
+        _effects.mergeActivePeerFromInbox(inboxRow);
     }
   }
 }

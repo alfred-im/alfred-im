@@ -7,7 +7,13 @@ import 'package:alfred_client/machines/navigation/navigation_effects.dart';
 import 'package:alfred_client/machines/navigation/navigation_machine.dart';
 import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/profile_summary.dart';
+import 'package:alfred_client/services/account_manager.dart';
+import 'package:alfred_client/services/account_session.dart';
+import 'package:alfred_client/services/navigation_coordinator.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../support/fake_messaging_services.dart';
 
 class _RecordingNavigationEffects implements NavigationEffects {
   String? lastFocusAccountId;
@@ -73,6 +79,9 @@ class _RecordingNavigationEffects implements NavigationEffects {
   void backToGroupHome() {
     backToGroupHomeCount++;
   }
+
+  @override
+  void mergeActivePeerFromInbox(ChatPeer inboxRow) {}
 }
 
 ChatPeer _peer(String id) => ChatPeer(
@@ -84,6 +93,8 @@ ChatPeer _peer(String id) => ChatPeer(
     );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('NavigationMachine shell state', () {
     test('SwitchToAccount su utente → inboxVisible', () async {
       final effects = _RecordingNavigationEffects();
@@ -158,6 +169,37 @@ void main() {
       expect(effects.lastAllowFallback, isTrue);
     });
 
+    test('OpenFromCompose usa stale clear e fallback profilo', () async {
+      final effects = _RecordingNavigationEffects();
+      final machine = NavigationMachine(effects);
+
+      await machine.send(
+        const OpenFromCompose(
+          accountUserId: 'user-a',
+          peerProfileId: 'peer-b',
+        ),
+      );
+
+      expect(machine.shellState, NavigationShellState.chatOpen);
+      expect(effects.lastAllowFallback, isTrue);
+    });
+
+    test('OpenFromPushTap → chatOpen', () async {
+      final effects = _RecordingNavigationEffects();
+      final machine = NavigationMachine(effects);
+
+      await machine.send(
+        const OpenFromPushTap(
+          accountUserId: 'user-a',
+          peerProfileId: 'peer-b',
+        ),
+      );
+
+      expect(machine.shellState, NavigationShellState.chatOpen);
+      expect(effects.lastOpenAccountId, 'user-a');
+      expect(effects.lastOpenPeerId, 'peer-b');
+    });
+
     test('CloseConversation → inboxVisible', () async {
       final effects = _RecordingNavigationEffects();
       final machine = NavigationMachine(effects)
@@ -194,4 +236,85 @@ void main() {
       expect(effects.backToGroupHomeCount, 1);
     });
   });
+
+  group('NavigationMachine AccountViewState transitions', () {
+    late AccountManager manager;
+    late NavigationCoordinator nav;
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      manager = AccountManager();
+      nav = NavigationCoordinator(manager);
+      manager.seedTestAccount('account-a');
+      manager.seedTestAccount('account-b');
+    });
+
+    test('OpenPeerOnFocusedAccount aggiorna view state per account in focus', () async {
+      final session = await _testSession('account-a');
+      manager.focusTestSession(session);
+
+      nav.openPeerOnFocusedAccount(_peer('peer-b'));
+
+      expect(manager.viewState.activePeer?.profileId, 'peer-b');
+      expect(manager.viewState.showInboxOnMobile, isFalse);
+    });
+
+    test('CloseConversation ripristina inbox mobile', () async {
+      manager.focusTestSession(await _testSession('account-a'));
+      nav.openPeerOnFocusedAccount(_peer('peer-b'));
+
+      await nav.closeConversation();
+
+      expect(manager.viewState.activePeer?.profileId, 'peer-b');
+      expect(manager.viewState.showInboxOnMobile, isTrue);
+    });
+
+    test('OpenGroupChat e BackToGroupHome aggiornano groupChatOpen', () async {
+      manager.focusTestSession(
+        await _testSession(
+          'account-a',
+          profileKind: ProfileKind.group,
+        ),
+      );
+
+      await nav.openGroupChat();
+      expect(manager.viewState.groupChatOpen, isTrue);
+      expect(manager.viewState.showInboxOnMobile, isFalse);
+
+      await nav.backToGroupHome();
+      expect(manager.viewState.groupChatOpen, isFalse);
+      expect(manager.viewState.showInboxOnMobile, isTrue);
+    });
+
+    test('setFocus preserva view state per account', () async {
+      manager.injectTestSession(await _testSession('account-a'));
+      manager.injectTestSession(await _testSession('account-b'));
+      manager.focusTestSession(await _testSession('account-a'));
+
+      await manager.setFocus('account-b');
+      nav.openPeerOnFocusedAccount(_peer('peer-x'));
+
+      await manager.setFocus('account-a');
+      expect(manager.viewState.activePeer, isNull);
+
+      await manager.setFocus('account-b');
+      expect(manager.viewState.activePeer?.profileId, 'peer-x');
+    });
+  });
+}
+
+Future<AccountSession> _testSession(
+  String id, {
+  ProfileKind profileKind = ProfileKind.user,
+}) {
+  return AccountSession.createForTest(
+    profile: ProfileSummary(
+      id: id,
+      username: id,
+      displayName: id,
+      profileKind: profileKind,
+    ),
+    client: createTestSupabaseClient(),
+    inboxService: FakeInboxService(),
+  );
 }

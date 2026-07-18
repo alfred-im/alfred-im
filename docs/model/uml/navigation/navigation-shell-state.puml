@@ -1,7 +1,7 @@
 @startuml navigation-shell-state
 ' Context: navigation
 ' SDD: PROM-MULTI-ACCOUNT, PROM-SHAREABLE-LINK
-' Revision: 2026-07-18
+' Revision: 2026-07-18 — AccountViewState via navigation; ExternalIntentAdapter
 
 title Navigation — shell state machine (per account in focus)
 
@@ -13,6 +13,9 @@ state GroupShell
 
 InboxVisible --> ChatOpen : OpenPeerOnFocusedAccount\n/ ConversationOpened
 InboxVisible --> ChatOpen : OpenConversationOnAccount\n/ ConversationOpened
+InboxVisible --> ChatOpen : OpenFromPushTap\n/ ConversationOpened
+InboxVisible --> ChatOpen : OpenFromShareableLink\n/ ConversationOpened
+InboxVisible --> ChatOpen : OpenFromCompose\n/ ConversationOpened
 InboxVisible --> GroupShell : SwitchToAccount\n[account gruppo]
 
 ChatOpen --> InboxVisible : CloseConversation\n/ NavigationIdle
@@ -22,14 +25,14 @@ GroupShell --> GroupShell : BackToGroupHome\n/ GroupShellEntered
 GroupShell --> GroupShell : CloseConversation\n[chat gruppo aperta]
 
 note right of ChatOpen
-  OpenFromPushTap e OpenFromShareableLink
-  usano OpenConversationOnAccount
+  ExternalIntentAdapter unifica
+  OpenFromPushTap, OpenFromShareableLink,
+  OpenFromCompose → NavigationMachine
 end note
 
 note bottom of GroupShell
-  Account gruppo: inbox classica sostituita
-  da GroupHomePanel; chat gruppo è
-  sotto-stato di GroupShell (groupChatOpen)
+  AccountViewState (per account) mutato solo
+  da AccountViewStateStore via navigation
 end note
 
 @enduml

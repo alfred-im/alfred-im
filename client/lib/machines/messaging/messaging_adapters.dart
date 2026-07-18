@@ -2,38 +2,65 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import '../../models/message.dart';
-import '../../providers/messages_controller.dart';
-import 'messaging_effects.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 
-/// Delega effetti al [MessagesController] esistente — nessun cambio API widget.
-class MessagesControllerEffects implements MessagingEffects {
-  MessagesControllerEffects(this._controller);
+import 'messaging_coordinator.dart';
 
-  final MessagesController _controller;
+/// Adapter UI → [MessagingCoordinator].
+class MessagingAdapters {
+  MessagingAdapters(this._coordinator);
 
-  @override
-  Future<void> loadMessages() => _controller.reload();
+  final MessagingCoordinator _coordinator;
 
-  @override
-  Future<void> markRead() async {
-    // markRead è side-effect interno di _init; esposto per completezza modello.
-  }
+  Future<void> init() => _coordinator.init();
 
-  @override
-  void attachRealtime() {
-    // Realtime attaccato in _init del controller.
-  }
+  Future<void> load() => _coordinator.load();
 
-  @override
-  Future<void> sendText(String body) => _controller.send(body);
+  Future<void> reload() => _coordinator.reload();
 
-  @override
+  Future<void> sendText(String body) => _coordinator.sendText(body);
+
+  Future<void> sendGif(Uint8List bytes) => _coordinator.sendGif(bytes);
+
+  Future<void> sendImage({required Uint8List bytes, String? caption}) =>
+      _coordinator.sendImage(bytes: bytes, caption: caption);
+
+  Future<void> sendVideoFromPicker({
+    required PlatformFile file,
+    String? caption,
+  }) =>
+      _coordinator.sendVideoFromPicker(file: file, caption: caption);
+
+  Future<void> sendVideo({
+    required Uint8List bytes,
+    required String extension,
+    required String mime,
+    required int durationSeconds,
+    String? caption,
+  }) =>
+      _coordinator.sendVideo(
+        bytes: bytes,
+        extension: extension,
+        mime: mime,
+        durationSeconds: durationSeconds,
+        caption: caption,
+      );
+
+  Future<void> sendVoice({
+    required Uint8List bytes,
+    required int durationMs,
+  }) =>
+      _coordinator.sendVoice(bytes: bytes, durationMs: durationMs);
+
+  Future<void> sendLocation({
+    required double latitude,
+    required double longitude,
+  }) =>
+      _coordinator.sendLocation(latitude: latitude, longitude: longitude);
+
   Future<void> retryMessage(String clientId) =>
-      _controller.retryMessage(clientId);
+      _coordinator.retryMessage(clientId);
 
-  @override
-  void onRealtimeMessage(ChatMessage message) {
-    // Il controller gestisce realtime via callback interna.
-  }
+  void dispose() => _coordinator.dispose();
 }

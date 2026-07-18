@@ -51,8 +51,7 @@ final class RemoveAllowedByProfileId extends ReceptionEvent {
 
 /// Interprete statechart reception — allineato a UML.
 ///
-/// Il percorso produzione resta [ReceptionAllowlistController]; questa
-/// macchina documenta transizioni load/filtro/add/remove.
+/// Produzione: [ReceptionCoordinator] + [ReceptionAllowlistController].
 class ReceptionMachine {
   ReceptionMachine(this._effects, {required this.ownerId});
 

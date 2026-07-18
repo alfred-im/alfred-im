@@ -1,6 +1,7 @@
 @startuml seq-suppression-sync
 ' Context: notifications
 ' Command: UpdateSuppressionState
+' Contract: docs/specs/contracts/push-payload.md §3.1
 ' SDD: PROM-PUSH-NOTIFY-022–024, SURF-NOTIFICATIONS-008
 ' Revision: 2026-07-18
 

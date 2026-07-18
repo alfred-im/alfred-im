@@ -4,82 +4,50 @@
 
 import 'package:flutter/foundation.dart';
 
+import '../coordinators/reception_coordinator.dart';
 import '../models/allowed_person.dart';
 import '../models/profile_summary.dart';
 import '../services/reception_allowlist_service.dart';
-import '../utils/list_filter.dart';
 
+/// Facade UI allow list — orchestrazione in [ReceptionCoordinator].
 class ReceptionAllowlistController extends ChangeNotifier {
   ReceptionAllowlistController({
     required this.ownerId,
-    required this.allowlistService,
+    required ReceptionAllowlistService allowlistService,
   }) {
-    load();
+    _coordinator = ReceptionCoordinator(
+      ownerId: ownerId,
+      allowlistService: allowlistService,
+      onStateChanged: notifyListeners,
+    );
   }
 
   final String ownerId;
-  final ReceptionAllowlistService allowlistService;
+  late final ReceptionCoordinator _coordinator;
 
-  List<AllowedPerson> allowedPeople = [];
-  bool isLoading = true;
-  String? error;
-  String _searchQuery = '';
+  List<AllowedPerson> get allowedPeople => _coordinator.state.allowedPeople;
 
-  List<AllowedPerson> get filteredAllowedPeople => filterByQuery(
-        allowedPeople,
-        _searchQuery,
-        (person) => person.displayName,
-      );
+  bool get isLoading => _coordinator.state.isLoading;
 
-  Set<String> get allowedProfileIds =>
-      allowedPeople.map((p) => p.profile.id).toSet();
+  String? get error => _coordinator.state.error;
 
-  void setSearchQuery(String value) {
-    _searchQuery = value;
-    notifyListeners();
-  }
+  List<AllowedPerson> get filteredAllowedPeople =>
+      _coordinator.filteredAllowedPeople;
 
-  Future<void> load() async {
-    try {
-      allowedPeople = await allowlistService.fetchAllowedPeople(ownerId);
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
+  Set<String> get allowedProfileIds => _coordinator.allowedProfileIds;
 
-  Future<List<ProfileSummary>> searchProfiles(String query) {
-    return allowlistService.searchProfiles(query);
-  }
+  void setSearchQuery(String value) => _coordinator.setSearchQuery(value);
 
-  Future<void> addProfile(ProfileSummary profile) async {
-    if (profile.id == ownerId) return;
-    if (allowedProfileIds.contains(profile.id)) return;
+  Future<void> load() => _coordinator.load();
 
-    await allowlistService.addAllowedProfile(
-      ownerId: ownerId,
-      profile: profile,
-    );
-    await load();
-  }
+  Future<List<ProfileSummary>> searchProfiles(String query) =>
+      _coordinator.searchProfiles(query);
 
-  Future<void> remove(AllowedPerson person) async {
-    await allowlistService.removeAllowedPerson(person.entryId);
-    await load();
-  }
+  Future<void> addProfile(ProfileSummary profile) =>
+      _coordinator.addProfile(profile);
 
-  Future<void> removeByProfileId(String profileId) async {
-    AllowedPerson? person;
-    for (final entry in allowedPeople) {
-      if (entry.profile.id == profileId) {
-        person = entry;
-        break;
-      }
-    }
-    if (person == null) return;
-    await remove(person);
-  }
+  Future<void> remove(AllowedPerson person) => _coordinator.remove(person);
+
+  Future<void> removeByProfileId(String profileId) =>
+      _coordinator.removeByProfileId(profileId);
 }

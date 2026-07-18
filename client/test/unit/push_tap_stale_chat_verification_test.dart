@@ -74,7 +74,10 @@ void main() {
     manager.focusTestSession(sessionA);
 
     await manager.setFocus(accountB);
-    manager.openConversation(_peer(_profile(stalePeerId, 'stale_y')));
+    manager.applyAccountViewState(
+      accountB,
+      (view) => view.openChat(_peer(_profile(stalePeerId, 'stale_y'))),
+    );
     expect(manager.viewState.activePeer?.profileId, stalePeerId);
 
     await manager.setFocus(accountA);

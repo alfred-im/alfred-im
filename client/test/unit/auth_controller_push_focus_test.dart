@@ -103,11 +103,11 @@ void main() {
         return account.userId == 'account-a' ? sessionA : sessionB;
       };
 
-      auth = AuthController(accountManager: manager)
+      auth = AuthController(accountManager: manager);
+      await auth.multiAccountAdapters.bootstrapManifest();
+      auth
         ..isLoading = false
         ..sessionReady = true;
-
-      await manager.initialize();
     });
 
     test('reactivates session when focus id already matches recipient', () async {

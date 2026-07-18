@@ -62,8 +62,7 @@ final class AvatarUploadFailed extends ProfileEvent {
 
 /// Interprete statechart profile — allineato a UML.
 ///
-/// Il percorso produzione resta [ProfileController]; questa macchina
-/// documenta transizioni save/upload e supporta test unitari.
+/// Produzione: [ProfileCoordinator] + [ProfileController].
 class ProfileMachine {
   ProfileMachine(this._effects);
 

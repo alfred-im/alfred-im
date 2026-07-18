@@ -1,10 +1,10 @@
 # Contesto: profile
 
-**Stato modellazione:** `implemented` (dominio + UML + macchina documentata)
+**Stato modellazione:** `verified`
 
 Vedi [glossary.md](./glossary.md) · [commands-and-events.md](./commands-and-events.md) · [UML](../../model/uml/profile/)
 
-Statechart: `client/lib/machines/profile/` — `ProfileMachine` documenta edit proprio; overlay peer in `PeerProfileOverlay`.
+Statechart: `client/lib/machines/profile/` — produzione via [ProfileCoordinator](../../../client/lib/coordinators/profile_coordinator.dart) + [ProfileController](../../../client/lib/providers/profile_controller.dart).
 
 ## Artefatti
 
@@ -15,7 +15,7 @@ Statechart: `client/lib/machines/profile/` — `ProfileMachine` documenta edit p
 | [profile-edit-state.puml](../../model/uml/profile/profile-edit-state.puml) | compilato |
 | [seq-save-own-profile.puml](../../model/uml/profile/seq-save-own-profile.puml) | compilato |
 | [seq-peer-profile-overlay.puml](../../model/uml/profile/seq-peer-profile-overlay.puml) | compilato |
-| [statechart](../../../client/lib/machines/profile/) | documentato (produzione = `ProfileController` + overlay) |
+| [statechart](../../../client/lib/machines/profile/) | `verified` — `ProfileCoordinator` + `ProfileController` |
 
 ## Implementazione runtime
 
@@ -24,7 +24,8 @@ Statechart: `client/lib/machines/profile/` — `ProfileMachine` documenta edit p
 | `ProfileSummary` / `UserProfile` | Modelli identità pubblica |
 | `ProfileService` | UPDATE profilo, lookup username/id |
 | `ProfileAvatarService` | Upload bucket `avatars` |
-| `ProfileController` | Stato save/upload |
+| `ProfileController` | Facade UI — delega a `ProfileCoordinator` |
+| `ProfileCoordinator` | Macchina + effetti servizio (`ProfileService`, `ProfileAvatarService`) |
 | `ProfileScreen` | Form edit profilo proprio |
 | `profile_identity.dart` | `ProfileAvatar`, `ProfileIdentityLines` |
 | `peer_profile_overlay.dart` | Scheda peer + allow/rubrica/chat/share |

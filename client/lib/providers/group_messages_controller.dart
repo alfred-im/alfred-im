@@ -2,30 +2,16 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'dart:async';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 
-import '../config/chat_media_config.dart';
-import '../config/location_config.dart';
-import '../config/voice_config.dart';
+import '../coordinators/group_messages_coordinator.dart';
 import '../models/message.dart';
-import '../models/profile_summary.dart';
 import '../services/message_media_service.dart';
 import '../services/message_service.dart';
 import '../services/profile_service.dart';
-import '../utils/author_display.dart' show enrichMessageAuthor;
-import '../utils/date_format.dart';
-import '../utils/merge_chat_message.dart';
-import '../utils/prepare_image_for_upload.dart';
-import '../utils/picked_file_bytes.dart';
-import '../utils/video_duration.dart';
-import '../utils/video_file_extension.dart';
 
-/// Messaggistica account gruppo — storico unico + broadcast allow list.
+/// Facade UI conversazione gruppo — orchestrazione in [GroupMessagesCoordinator].
 class GroupMessagesController extends ChangeNotifier {
   GroupMessagesController({
     required this.userId,
@@ -34,7 +20,14 @@ class GroupMessagesController extends ChangeNotifier {
     required this.profileService,
     this.onMessagesChanged,
   }) {
-    unawaited(_init());
+    _coordinator = GroupMessagesCoordinator(
+      userId: userId,
+      messageService: messageService,
+      messageMediaService: messageMediaService,
+      profileService: profileService,
+      onStateChanged: notifyListeners,
+      onMessagesChanged: onMessagesChanged,
+    );
   }
 
   final String userId;
@@ -42,172 +35,41 @@ class GroupMessagesController extends ChangeNotifier {
   final MessageMediaService messageMediaService;
   final ProfileService profileService;
   final Future<void> Function()? onMessagesChanged;
+  late final GroupMessagesCoordinator _coordinator;
 
-  final _uuid = const Uuid();
+  List<ChatMessage> get messages => _coordinator.state.messages;
 
-  List<ChatMessage> messages = [];
-  bool isLoading = true;
-  bool isSending = false;
-  String? error;
-  RealtimeChannel? _channel;
+  bool get isLoading => _coordinator.state.isLoading;
 
-  Future<void> _init() async {
-    await load();
-    _attachRealtime();
-    notifyListeners();
-  }
+  bool get isSending => _coordinator.state.isSending;
 
-  void _attachRealtime() {
-    _channel = messageService.subscribeToOwnerMessages(
-      currentUserId: userId,
-      onMessage: _handleRealtimeMessage,
-    );
-  }
+  String? get error => _coordinator.state.error;
 
-  void _handleRealtimeMessage(ChatMessage message) {
-    final index = messages.indexWhere((m) => m.id == message.id);
-    if (index >= 0) {
-      messages[index] = mergeChatMessage(
-        existing: messages[index],
-        incoming: message,
-      );
-    } else {
-      messages.add(message);
-      messages.sort(
-        (a, b) => (a.createdAt ?? DateTime(0)).compareTo(b.createdAt ?? DateTime(0)),
-      );
-    }
-    unawaited(_enrichAuthorNames());
-    notifyListeners();
-    unawaited(onMessagesChanged?.call());
-  }
+  Future<void> load() => _coordinator.load();
 
-  Future<void> load() async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+  Future<void> reload() => _coordinator.reload();
 
-    try {
-      final loaded = await messageService.fetchOwnerMessages(
-        currentUserId: userId,
-      );
-      messages = await _enrichMessages(loaded);
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
+  Future<void> send(String body) => _coordinator.send(body);
 
-  Future<void> reload() => load();
-
-  Future<void> send(String body) async {
-    final trimmed = body.trim();
-    if (trimmed.isEmpty || isSending) return;
-
-    await _broadcast(
-      (clientId) => messageService.broadcastToAllowlist(
-        body: trimmed,
-        currentUserId: userId,
-        clientMessageId: clientId,
-      ),
-    );
-  }
-
-  Future<void> sendGif(Uint8List bytes) async {
-    if (bytes.isEmpty || isSending) return;
-
-    await _broadcast((clientId) async {
-      final mediaUrl = await messageMediaService.uploadGif(
-        bytes: bytes,
-        userId: userId,
-      );
-      return messageService.broadcastGifToAllowlist(
-        mediaUrl: mediaUrl,
-        currentUserId: userId,
-        clientMessageId: clientId,
-      );
-    });
-  }
+  Future<void> sendGif(Uint8List bytes) => _coordinator.sendGif(bytes);
 
   Future<void> sendVoice({
     required Uint8List bytes,
     required int durationMs,
-  }) async {
-    if (bytes.isEmpty || isSending) return;
-
-    final durationSeconds =
-        (durationMs / 1000).ceil().clamp(1, VoiceConfig.maxDurationSeconds);
-
-    await _broadcast((clientId) async {
-      final mediaUrl = await messageMediaService.uploadVoice(
-        bytes: bytes,
-        userId: userId,
-      );
-      return messageService.broadcastVoiceToAllowlist(
-        mediaUrl: mediaUrl,
-        durationSeconds: durationSeconds,
-        mediaSizeBytes: bytes.length,
-        currentUserId: userId,
-        clientMessageId: clientId,
-      );
-    });
-  }
+  }) =>
+      _coordinator.sendVoice(bytes: bytes, durationMs: durationMs);
 
   Future<void> sendImage({
     required Uint8List bytes,
     String? caption,
-  }) async {
-    if (bytes.isEmpty || isSending) return;
-
-    final body = caption?.trim() ?? '';
-
-    await _broadcast((clientId) async {
-      final normalized = await prepareImageForUpload(bytes);
-      final mediaUrl = await messageMediaService.uploadImage(
-        bytes: normalized.bytes,
-        userId: userId,
-        extension: normalized.extension,
-        contentType: normalized.mime,
-      );
-      return messageService.broadcastImageToAllowlist(
-        mediaUrl: mediaUrl,
-        mediaMime: normalized.mime,
-        mediaSizeBytes: normalized.bytes.length,
-        currentUserId: userId,
-        clientMessageId: clientId,
-        body: body,
-      );
-    });
-  }
+  }) =>
+      _coordinator.sendImage(bytes: bytes, caption: caption);
 
   Future<void> sendVideoFromPicker({
     required PlatformFile file,
     String? caption,
-  }) async {
-    final extension = videoExtensionFromPickedFile(file);
-    if (!isSupportedVideoExtension(extension)) return;
-
-    final bytes = await readPickedFileBytes(file);
-    if (bytes == null || bytes.isEmpty) return;
-
-    final mime =
-        ChatMediaConfig.videoMimeForExtension(extension) ?? 'video/mp4';
-    final durationSeconds = await readVideoDurationSeconds(
-      bytes: bytes,
-      extension: extension,
-    );
-
-    await sendVideo(
-      bytes: bytes,
-      extension: extension,
-      mime: mime,
-      durationSeconds: durationSeconds,
-      caption: caption,
-    );
-  }
+  }) =>
+      _coordinator.sendVideoFromPicker(file: file, caption: caption);
 
   Future<void> sendVideo({
     required Uint8List bytes,
@@ -215,102 +77,24 @@ class GroupMessagesController extends ChangeNotifier {
     required String mime,
     required int durationSeconds,
     String? caption,
-  }) async {
-    if (bytes.isEmpty || isSending) return;
-
-    final body = caption?.trim() ?? '';
-
-    await _broadcast((clientId) async {
-      final mediaUrl = await messageMediaService.uploadVideo(
+  }) =>
+      _coordinator.sendVideo(
         bytes: bytes,
-        userId: userId,
         extension: extension,
-        contentType: mime,
-      );
-      return messageService.broadcastVideoToAllowlist(
-        mediaUrl: mediaUrl,
-        mediaMime: mime,
+        mime: mime,
         durationSeconds: durationSeconds,
-        mediaSizeBytes: bytes.length,
-        currentUserId: userId,
-        clientMessageId: clientId,
-        body: body,
+        caption: caption,
       );
-    });
-  }
 
   Future<void> sendLocation({
     required double latitude,
     required double longitude,
-  }) async {
-    if (isSending) return;
-
-    final lat = LocationConfig.roundCoordinate(latitude);
-    final lng = LocationConfig.roundCoordinate(longitude);
-
-    await _broadcast(
-      (clientId) => messageService.broadcastLocationToAllowlist(
-        latitude: lat,
-        longitude: lng,
-        currentUserId: userId,
-        clientMessageId: clientId,
-      ),
-    );
-  }
-
-  Future<void> _broadcast(
-    Future<ChatMessage> Function(String clientId) send,
-  ) async {
-    isSending = true;
-    notifyListeners();
-
-    try {
-      await send(_uuid.v4());
-      await load();
-      await onMessagesChanged?.call();
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      isSending = false;
-      notifyListeners();
-    }
-  }
-
-  Future<List<ChatMessage>> _enrichMessages(List<ChatMessage> source) async {
-    final authorIds = source
-        .map((m) => m.contentAuthorId ?? m.authorId)
-        .whereType<String>()
-        .where((id) => id != userId)
-        .toSet()
-        .toList();
-
-    var profilesById = <String, ProfileSummary>{};
-    if (authorIds.isNotEmpty) {
-      final profiles = await profileService.fetchSummariesByIds(authorIds);
-      profilesById = {for (final p in profiles) p.id: p};
-    }
-
-    return source
-        .map(
-          (m) => enrichMessageAuthor(
-            message: m,
-            profilesById: profilesById,
-            currentUserId: userId,
-          ).copyWith(
-            timeLabel: formatMessageTime(m.createdAt ?? DateTime.now()),
-          ),
-        )
-        .toList();
-  }
-
-  Future<void> _enrichAuthorNames() async {
-    messages = await _enrichMessages(messages);
-  }
+  }) =>
+      _coordinator.sendLocation(latitude: latitude, longitude: longitude);
 
   @override
   void dispose() {
-    messageService.disposeChannel(_channel);
+    _coordinator.dispose();
     super.dispose();
   }
 }

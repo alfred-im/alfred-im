@@ -10,6 +10,7 @@ import 'package:alfred_client/providers/auth_controller.dart';
 import 'package:alfred_client/screens/home_screen.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
+import 'package:alfred_client/services/account_storage_service.dart';
 import 'package:alfred_client/services/profile_service.dart';
 import 'package:alfred_client/theme/alfred_theme.dart';
 import 'package:alfred_client/utils/push_stub.dart';
@@ -20,6 +21,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fake_messaging_services.dart';
+import '../support/seed_multi_account_machine.dart';
 
 // SURF-NOTIFICATIONS-006–007 (isolato: nessun account live / test1)
 class _FakeProfileService extends ProfileService {
@@ -75,6 +77,11 @@ void main() {
     final auth = AuthController(accountManager: manager)
       ..isLoading = false
       ..sessionReady = true;
+    await seedMultiAccountMachineForTest(
+      auth,
+      openAccountUserIds: const ['owner-uuid'],
+      focusUserId: 'owner-uuid',
+    );
 
     addTearDown(() => session.disposeResources(clearAuthStorage: false));
 
@@ -138,6 +145,7 @@ void main() {
     );
 
     final client = createTestSupabaseClient();
+    final storage = AccountStorageService();
     final sessionA = await AccountSession.createForTest(
       profile: accountA,
       client: client,
@@ -155,19 +163,22 @@ void main() {
       messageService: FakeMessageService(client),
     );
 
-    final manager = AccountManager();
-    manager.focusTestSession(sessionA);
-    manager.seedTestAccount('account-b');
-    manager.injectTestSession(sessionB);
+    sessionA.wireStorage(storage);
+    sessionB.wireStorage(storage);
+    await sessionA.persistOpenAccount(refreshToken: 'refresh-a');
+    await sessionB.persistOpenAccount(refreshToken: 'refresh-b');
+    await storage.saveFocusUserId('account-a');
 
-    final auth = AuthController(accountManager: manager)
+    final manager = AccountManager(storage: storage);
+    manager.restoreSessionForTest = (account) async {
+      return account.userId == 'account-a' ? sessionA : sessionB;
+    };
+
+    final auth = AuthController(accountManager: manager);
+    await auth.multiAccountAdapters.bootstrapManifest();
+    auth
       ..isLoading = false
       ..sessionReady = true;
-
-    addTearDown(() async {
-      await sessionA.disposeResources(clearAuthStorage: false);
-      await sessionB.disposeResources(clearAuthStorage: false);
-    });
 
     final intents = StreamController<PushOpenChatIntent>.broadcast();
 
@@ -196,19 +207,20 @@ void main() {
 
     expect(auth.userId, 'account-a');
 
-    intents.add(
-      PushOpenChatIntent.fromParts(
-        recipientUserId: 'account-b',
-        peerProfileId: 'account-a',
+    final listenerState = tester.state<PushNotificationListenerState>(
+      find.byType(PushNotificationListener),
+    );
+    await tester.runAsync(
+      () => listenerState.processOpenChatForTest(
+        PushOpenChatIntent.fromParts(
+          recipientUserId: 'account-b',
+          peerProfileId: 'account-a',
+        ),
       ),
     );
-    await tester.pump();
     for (var i = 0; i < 200; i++) {
       await tester.pump(const Duration(milliseconds: 5));
-      if (auth.userId == 'account-b' &&
-          find.text('Agent A').evaluate().isNotEmpty) {
-        break;
-      }
+      if (find.text('Agent A').evaluate().isNotEmpty) break;
     }
     await tester.pump();
 

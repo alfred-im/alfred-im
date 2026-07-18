@@ -2,142 +2,55 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
+import '../coordinators/group_home_coordinator.dart';
 import '../models/chat_peer.dart';
 import '../models/group_active_author.dart';
-import '../models/message.dart';
 import '../models/profile_summary.dart';
 import '../services/account_session.dart';
 import '../services/message_service.dart';
 import '../services/profile_service.dart';
-import '../utils/date_format.dart';
-import '../utils/message_preview.dart';
 
-/// Stato home account gruppo — riepilogo, autori attivi, tile conversazione.
+/// Facade UI home gruppo — orchestrazione in [GroupHomeCoordinator].
 class GroupHomeController extends ChangeNotifier {
   GroupHomeController({
     required this.session,
     required this.profile,
-    required this.messageService,
-    required this.profileService,
+    required MessageService messageService,
+    required ProfileService profileService,
   }) {
-    unawaited(load());
+    _coordinator = GroupHomeCoordinator(
+      session: session,
+      profile: profile,
+      messageService: messageService,
+      profileService: profileService,
+      onStateChanged: notifyListeners,
+    );
   }
 
   final AccountSession session;
   final ProfileSummary profile;
-  final MessageService messageService;
-  final ProfileService profileService;
+  late final GroupHomeCoordinator _coordinator;
 
-  DateTime? createdAt;
-  int totalMessageCount = 0;
-  List<GroupActiveAuthor> activeAuthors = [];
-  ChatPeer? conversationTile;
-  bool isLoading = true;
-  String? error;
+  DateTime? get createdAt => _coordinator.state.createdAt;
 
-  String get userId => session.userId;
+  int get totalMessageCount => _coordinator.state.totalMessageCount;
 
-  Future<void> load() async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+  List<GroupActiveAuthor> get activeAuthors => _coordinator.state.activeAuthors;
 
-    try {
-      final fullProfile = session.fullProfile ?? await session.fetchFullProfile();
-      if (fullProfile != null) {
-        session.fullProfile = fullProfile;
-        createdAt = fullProfile.createdAt;
-      }
+  ChatPeer? get conversationTile => _coordinator.state.conversationTile;
 
-      final messages = await messageService.fetchOwnerMessages(
-        currentUserId: userId,
-      );
-      totalMessageCount = messages.length;
-      activeAuthors = await _buildActiveAuthors(messages);
-      conversationTile = _buildConversationTile(messages);
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
+  bool get isLoading => _coordinator.state.isLoading;
 
-  Future<void> reload() => load();
+  String? get error => _coordinator.state.error;
 
-  Future<List<GroupActiveAuthor>> _buildActiveAuthors(
-    List<ChatMessage> messages,
-  ) async {
-    final counts = <String, int>{};
-    for (final message in messages) {
-      final authorId = message.contentAuthorId ?? message.authorId;
-      if (authorId == null || authorId == userId) continue;
-      counts[authorId] = (counts[authorId] ?? 0) + 1;
-    }
+  String get userId => _coordinator.userId;
 
-    if (counts.isEmpty) return const [];
+  Future<void> load() => _coordinator.load();
 
-    final profiles = await profileService.fetchSummariesByIds(counts.keys.toList());
-    final profilesById = {for (final p in profiles) p.id: p};
+  Future<void> reload() => _coordinator.reload();
 
-    final authors = counts.entries
-        .map((entry) {
-          final summary = profilesById[entry.key];
-          if (summary == null) return null;
-          return GroupActiveAuthor(
-            profile: summary,
-            messageCount: entry.value,
-          );
-        })
-        .whereType<GroupActiveAuthor>()
-        .toList()
-      ..sort((a, b) => b.messageCount.compareTo(a.messageCount));
-
-    return authors;
-  }
-
-  ChatPeer _buildConversationTile(List<ChatMessage> messages) {
-    if (messages.isEmpty) {
-      return ChatPeer.fromProfile(profile: profile);
-    }
-
-    final sorted = List<ChatMessage>.from(messages)
-      ..sort(
-        (a, b) =>
-            (a.createdAt ?? DateTime(0)).compareTo(b.createdAt ?? DateTime(0)),
-      );
-    final last = sorted.last;
-    final lastAt = last.createdAt;
-
-    return ChatPeer(
-      profile: profile,
-      preview: inboxPreviewForMessage(last),
-      timeLabel: formatConversationTime(lastAt),
-      lastMessageAt: lastAt,
-    );
-  }
-
-  static String formatBirthDate(DateTime dateTime) {
-    const months = [
-      'gen',
-      'feb',
-      'mar',
-      'apr',
-      'mag',
-      'giu',
-      'lug',
-      'ago',
-      'set',
-      'ott',
-      'nov',
-      'dic',
-    ];
-    final local = dateTime.toLocal();
-    return '${local.day} ${months[local.month - 1]} ${local.year}';
-  }
+  static String formatBirthDate(DateTime dateTime) =>
+      GroupHomeCoordinator.formatBirthDate(dateTime);
 }

@@ -4,72 +4,56 @@
 
 import 'package:flutter/foundation.dart';
 
+import '../coordinators/profile_coordinator.dart';
 import '../models/profile.dart';
 import '../services/profile_avatar_service.dart';
 import '../services/profile_service.dart';
 
+/// Facade UI profilo — orchestrazione in [ProfileCoordinator].
 class ProfileController extends ChangeNotifier {
   ProfileController({
     required this.userId,
-    required this.profileService,
-    required this.avatarService,
-  });
+    required ProfileService profileService,
+    required ProfileAvatarService avatarService,
+  }) {
+    _coordinator = ProfileCoordinator(
+      userId: userId,
+      profileService: profileService,
+      avatarService: avatarService,
+      onStateChanged: notifyListeners,
+    );
+  }
 
   final String userId;
-  final ProfileService profileService;
-  final ProfileAvatarService avatarService;
+  late final ProfileCoordinator _coordinator;
 
-  bool isSaving = false;
-  bool isUploadingAvatar = false;
-  String? error;
+  bool get isSaving => _coordinator.isSaving;
+
+  bool get isUploadingAvatar => _coordinator.isUploadingAvatar;
+
+  String? get error => _coordinator.error;
 
   Future<UserProfile> save({
     required String displayName,
     String? bio,
     String? pronouns,
     String? avatarUrl,
-  }) async {
-    isSaving = true;
-    error = null;
-    notifyListeners();
-    try {
-      return await profileService.updateProfile(
-        userId: userId,
+  }) =>
+      _coordinator.save(
         displayName: displayName,
         bio: bio,
         pronouns: pronouns,
         avatarUrl: avatarUrl,
       );
-    } catch (e) {
-      error = e.toString();
-      rethrow;
-    } finally {
-      isSaving = false;
-      notifyListeners();
-    }
-  }
 
   Future<String> uploadAvatar({
     required Uint8List bytes,
     required String extension,
     required String contentType,
-  }) async {
-    isUploadingAvatar = true;
-    error = null;
-    notifyListeners();
-    try {
-      return await avatarService.uploadAvatar(
+  }) =>
+      _coordinator.uploadAvatar(
         bytes: bytes,
-        userId: userId,
         extension: extension,
         contentType: contentType,
       );
-    } catch (e) {
-      error = e.toString();
-      rethrow;
-    } finally {
-      isUploadingAvatar = false;
-      notifyListeners();
-    }
-  }
 }

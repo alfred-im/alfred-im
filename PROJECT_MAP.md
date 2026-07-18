@@ -30,7 +30,7 @@
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
 | **Cronologia merge** | `CHANGELOG.md` |
 | **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — confine prodotto |
-| **Modello** | `docs/domain/` · `docs/model/uml/` · `client/lib/machines/` — 13 bounded context **implemented** (DDD → UML → statechart); indice: [bounded-contexts.md](docs/domain/bounded-contexts.md) |
+| **Modello** | `docs/domain/` · `docs/model/uml/` · `client/lib/machines/` — 13 bounded context con stato **`verified`** o **`documented`** (non più `implemented`); gate `scripts/check-model-sync.sh`; indice: [bounded-contexts.md](docs/domain/bounded-contexts.md) |
 
 **Non deducibile — URL live ≠ branch `main`**: https://alfred-im.github.io/alfred-im/ pubblica l’**ultimo** `deploy-pages` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-dev-demo` → ultimo vince). Panoramica pubblica: `README.md`.
 
@@ -118,13 +118,15 @@
 | Elemento | Dettaglio |
 |----------|-----------|
 | **Entry** | `lib/main.dart` → `AppShell` → `HomeScreen` (sempre shell; overlay auth se 0 account o «Aggiungi account») |
-| **State** | Provider: `AuthController` (→ `AccountManager`), `InboxController` per account in focus, `ContactsController`, `MessagesController`, `GroupMessagesController` |
+| **State** | **Macchine** (`client/lib/machines/<context>/`) + **coordinatori** (`client/lib/coordinators/`) + controller UI sottili; composition root: `AuthController` |
 | **Backend** | `SupabaseClient` della sessione in **focus** (una GoTrue attiva) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
-| **Gate** | `scripts/verify.sh` — pub get + analyze (zero issue) + test |
+| **Gate** | `scripts/verify.sh` — `check-spec-sync` + `check-model-sync` + pub get + analyze (zero issue) + test |
 | **Build web** | `flutter build web --base-href "/alfred-im/"` |
 
-**Non deducibile — multi-account client**: `AccountManager` / `AccountSession` — manifest `alfred_saved_accounts` elenca **tutti** gli account aperti; in RAM **al massimo una** `AccountSession` GoTrue (quella in focus). Al `setFocus`: dispose sessione corrente (`clearAuthStorage: false`), `AccountSession.restore()` dal manifest, `inboxController.load()`. Storage auth per account: `SharedPreferencesLocalStorage` → `alfred_auth_{userId}`. Persistenza **dichiarativa** per entry (`persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). `openAccounts` legge dal manifest. **Vista UI** (`AccountViewState` per `userId`): chat aperta + inbox/chat su mobile **indipendenti per account**. Inbox UI: `HomeScreen` + `ListenableBuilder` su `focusedSession?.inboxController`. Coda invio: `userId|peerProfileId`. Overlay credenziali su `HomeScreen`. Doc: `docs/guides/multi-account.md`, `docs/decisions/multi-account-parallel-sessions.md`.
+**Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `group_home`, `group_messages` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — ingresso unificato push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `machines/messaging/` (facade: `MessagesController`).
+
+**Non deducibile — multi-account client**: `MultiAccountMachine` **possiede** `focusUserId` (intent focus); `AccountManager` esegue dispose/restore GoTrue via effetti. Manifest `alfred_saved_accounts` elenca **tutti** gli account aperti; in RAM **al massimo una** `AccountSession` GoTrue (quella in focus). Storage auth per account: `SharedPreferencesLocalStorage` → `alfred_auth_{userId}`. Persistenza **dichiarativa** per entry (`persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). **Vista UI** (`AccountViewState` per `userId`): mutazione **solo** via `AccountViewStateStore` (`machines/navigation/`) — chat aperta + inbox/chat su mobile **indipendenti per account**. Inbox UI: `HomeScreen` + `ListenableBuilder` su `focusedSession?.inboxController`. Coda invio: `userId|peerProfileId`. Overlay credenziali su `HomeScreen`. Doc: `docs/guides/multi-account.md`, `docs/decisions/multi-account-parallel-sessions.md`.
 
 **Non deducibile — auth bootstrap**: login/add-account usa client effimero; **non** chiamare `signOut` sul bootstrap dopo adozione sessione dedicata (revoca refresh GoTrue). PKCE: `EphemeralPkceStorage`. **Chiudi account** = logout **solo locale** (`close()` cancella storage, nessuna `POST /auth/v1/logout`). Doc: `docs/guides/multi-account.md`.
 
@@ -184,7 +186,7 @@ Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §3.
 
 ```bash
 cd client
-bash scripts/verify.sh           # obbligatorio prima di git push
+bash scripts/verify.sh           # check-spec-sync + check-model-sync + gate Dart
 bash scripts/verify.sh --build   # + build web
 ```
 
@@ -241,15 +243,20 @@ Test: `bash scripts/test.sh integration-ticks`
 
 ### Gate test
 
-`verify.sh` — **192** test Dart. Smoke SQL: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `group_*.sql`, `reception_allowlist_*.sql`.
+`verify.sh` — `check-spec-sync.sh` + `check-model-sync.sh` (stati contesto `documented`|`wired`|`verified`, no `implemented`) + **192** test Dart. Smoke SQL: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `group_*.sql`, `reception_allowlist_*.sql`.
 
 ### File chiave client
 
 | Area | Path |
 |------|------|
-| Multi-account | `client/lib/services/account_manager.dart` |
+| Composition root | `client/lib/providers/auth_controller.dart` |
+| Coordinatori | `client/lib/coordinators/` |
+| Intent esterni | `client/lib/adapters/external_intent_adapter.dart` |
+| Focus account | `client/lib/machines/multi-account/multi_account_machine.dart` |
+| View-state UI | `client/lib/machines/navigation/account_view_state_store.dart` |
+| Messaggistica 1:1 | `client/lib/machines/messaging/messaging_coordinator.dart` |
+| Multi-account I/O | `client/lib/services/account_manager.dart` |
 | Invio / spunte UI | `message_service.dart`, `message.dart`, `message_bubble.dart` |
-| Link condivisibili | `shareable_link_controller.dart` |
 
 ### Limiti noti
 

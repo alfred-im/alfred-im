@@ -61,6 +61,20 @@ Ogni area dell'app ha una cartella in `docs/domain/<context>/` con:
 
 Non mescolare comandi di contesti diversi in un unico diagramma stati.
 
+### Stato modellazione per contesto
+
+Ogni `docs/domain/<context>/README.md` dichiara **un solo** stato tra:
+
+| Stato | Significato | Artefatti minimi |
+|-------|-------------|------------------|
+| `documented` | Significato e forma UML allineati; nessuno statechart in produzione (o solo mirror documentativo) | `glossary.md`, `commands-and-events.md`, almeno un `.puml` |
+| `wired` | Statechart client in `client/lib/machines/<context>/` cablato al runtime | come `documented` + directory macchina |
+| `verified` | Transizioni statechart coperte da test unitari | come `wired` + `client/test/unit/<context>_machine_test.dart` |
+
+Mappa contesti e relazioni: [bounded-contexts.md](./bounded-contexts.md) · [context-map.puml](../model/context-map.puml).
+
+Gate CI: `bash scripts/check-model-sync.sh` (invocato da `client/scripts/verify.sh`).
+
 ---
 
 ## Event Storming (formato)
@@ -98,7 +112,7 @@ L'utente osserva il cambiamento?
     ↓
 Implementazione + test (transizioni / ID promessa)
     ↓
-check-spec-sync.sh + verify.sh
+check-spec-sync.sh + check-model-sync.sh + verify.sh
 ```
 
 ### Cosa richiede ogni livello

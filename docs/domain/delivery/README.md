@@ -1,6 +1,6 @@
 # Contesto: delivery
 
-**Stato modellazione:** `implemented`
+**Stato modellazione:** `documented`
 
 Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.md).
 

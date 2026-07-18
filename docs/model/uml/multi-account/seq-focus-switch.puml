@@ -7,14 +7,14 @@ title seq-focus-switch — cambio focus account
 actor Utente
 participant "MultiAccountAdapters" as Adapters
 participant "MultiAccountMachine" as MA
-participant "MultiAccountEffects" as FX
+participant "AccountMultiAccountEffects" as FX
 participant "AccountManager" as AM
 
 Utente -> Adapters : focusAccount(userId)
 Adapters -> MA : FocusAccount(userId)
-MA -> MA : FocusSwitching
-MA -> FX : focusAccount(userId)
-FX -> AM : setFocus(userId)
+MA -> MA : focusUserId = userId\nFocusSwitching
+MA -> FX : executeFocus(userId)
+FX -> AM : executeFocus(userId)
 note right of AM
   dispose sessione precedente
   saveFocusUserId

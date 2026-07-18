@@ -11,7 +11,7 @@ import '../providers/auth_controller.dart';
 import '../providers/shareable_link_controller.dart';
 import '../utils/shareable_link_platform.dart';
 
-/// Ascolta il fragment `#` e apre profilo/chat quando c'è almeno un account.
+/// Ascolta il fragment `#` e apre profilo/chat via [ExternalIntentAdapter].
 class ShareableLinkListener extends StatefulWidget {
   const ShareableLinkListener({super.key, required this.child});
 

@@ -3,19 +3,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import '../../models/profile_summary.dart';
-import '../../providers/auth_controller.dart';
 import '../../services/account_manager.dart';
-import '../../services/navigation_coordinator.dart';
 import 'multi_account_effects.dart';
 
-/// Effetti multi-account → [AccountManager] e [NavigationCoordinator].
+/// Effetti multi-account → [AccountManager] (solo I/O).
 class AccountMultiAccountEffects implements MultiAccountEffects {
-  AccountMultiAccountEffects(this._auth, this._navigation);
+  AccountMultiAccountEffects(this._manager);
 
-  final AuthController _auth;
-  final NavigationCoordinator _navigation;
-
-  AccountManager get _manager => _auth.accountManager;
+  final AccountManager _manager;
 
   @override
   bool get hasFocusedSession => _manager.focusedSession != null;
@@ -24,32 +19,40 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
   bool get hasOpenAccounts => _manager.hasOpenAccounts;
 
   @override
-  Future<void> focusAccount(String accountUserId) {
-    return _navigation.switchToAccount(accountUserId);
+  String? get focusUserId => _manager.focusUserId;
+
+  @override
+  Future<ManifestBootstrap> loadManifestBootstrap() {
+    return _manager.loadManifestBootstrap();
   }
 
   @override
-  Future<void> reconnectFocusedSession() {
-    return _manager.reconnectFocusedSession();
+  Future<void> executeFocus(String userId) {
+    return _manager.executeFocus(userId);
   }
 
   @override
-  Future<void> openAccountWithPassword({
+  Future<void> reconnectFocusedSession(String focusUserId) {
+    return _manager.reconnectFocusedSession(focusUserId);
+  }
+
+  @override
+  Future<String> openAccountWithPassword({
     required String email,
     required String password,
   }) {
-    return _manager.openWithPassword(email: email, password: password);
+    return _manager.signInAndUpsertManifest(email: email, password: password);
   }
 
   @override
-  Future<void> openAccountWithSignUp({
+  Future<String> openAccountWithSignUp({
     required String email,
     required String password,
     required String username,
     required String displayName,
     ProfileKind profileKind = ProfileKind.user,
   }) {
-    return _manager.openWithSignUp(
+    return _manager.signUpAndUpsertManifest(
       email: email,
       password: password,
       username: username,
@@ -59,7 +62,7 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
   }
 
   @override
-  Future<void> closeAccount(String accountUserId) {
+  Future<CloseAccountResult> closeAccount(String accountUserId) {
     return _manager.removeAccount(accountUserId);
   }
 }

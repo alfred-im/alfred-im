@@ -9,12 +9,12 @@
 
 | Comando | Emesso da | Implementazione | Descrizione |
 |---------|-----------|-----------------|-------------|
-| `InitializeManifest` | `AuthController.initialize` | `AccountManager.initialize` | F5 / avvio: carica manifest, imposta focus, ripristina sessione GoTrue del focus. |
-| `FocusAccount` | Sidebar, push (`NavigationCoordinator`), link | `AccountManager.setFocus` | Imposta `alfred_focus_user_id`, dispose sessione corrente, restore nuova da manifest. |
-| `OpenAccountWithPassword` | Auth overlay login | `AccountManager.openWithPassword` | Sign-in → upsert manifest → focus sul nuovo account → sessione obbligatoria. |
-| `OpenAccountWithSignUp` | Auth overlay registrazione | `AccountManager.openWithSignUp` | Sign-up → upsert manifest → focus → sessione obbligatoria. |
-| `CloseAccount` | Sidebar profilo | `AccountManager.removeAccount` | Rimuove da manifest + storage auth; se era in focus, focus sul primo rimanente o svuota. |
-| `ReconnectFocusedSession` | `HomeScreen` (manifest + focus, `focusedSession == null`) | `AccountManager.reconnectFocusedSession` | Ritenta `_activateFocusedSession` per il focus corrente. |
+| `InitializeManifest` | `AuthController.initialize` | `MultiAccountAdapters.bootstrapManifest` | F5 / avvio: carica manifest, macchina decide `focusUserId`, effetti attivano sessione. |
+| `FocusAccount` | Sidebar, push (`NavigationCoordinator`), link | `MultiAccountMachine` → `AccountManager.executeFocus` | Macchina imposta `focusUserId`, effetti persistono + restore sessione. |
+| `OpenAccountWithPassword` | Auth overlay login | `MultiAccountMachine` → sign-in + `executeFocus` | Sign-in → upsert manifest → macchina imposta focus → sessione. |
+| `OpenAccountWithSignUp` | Auth overlay registrazione | `MultiAccountMachine` → sign-up + `executeFocus` | Sign-up → upsert manifest → macchina imposta focus → sessione. |
+| `CloseAccount` | Sidebar profilo | `MultiAccountMachine` → `AccountManager.removeAccount` | Rimuove da manifest; macchina decide prossimo `focusUserId`. |
+| `ReconnectFocusedSession` | `HomeScreen` (manifest + focus, `focusedSession == null`) | `MultiAccountMachine` → `reconnectFocusedSession(focusUserId)` | Ritenta restore per il focus della macchina. |
 
 ---
 

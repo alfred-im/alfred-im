@@ -1,6 +1,6 @@
 # Contesto: federation
 
-**Stato modellazione:** `implemented` (modello documentato; runtime bridge stub)
+**Stato modellazione:** `documented` (modello documentato; runtime bridge stub)
 
 Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.md).
 

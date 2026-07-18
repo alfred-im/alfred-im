@@ -19,13 +19,21 @@ sealed class MultiAccountEvent {
   const MultiAccountEvent();
 }
 
-final class ManifestInitialized extends MultiAccountEvent {
-  const ManifestInitialized({
-    required this.hasOpenAccounts,
-    required this.hasFocusedSession,
+/// Manifest letto da storage; la macchina decide [focusUserId].
+final class ManifestLoaded extends MultiAccountEvent {
+  const ManifestLoaded({
+    required this.openAccountUserIds,
+    this.persistedFocusUserId,
   });
 
-  final bool hasOpenAccounts;
+  final List<String> openAccountUserIds;
+  final String? persistedFocusUserId;
+}
+
+/// Sessione GoTrue attivata (o meno) per il focus corrente.
+final class FocusActivationCompleted extends MultiAccountEvent {
+  const FocusActivationCompleted({required this.hasFocusedSession});
+
   final bool hasFocusedSession;
 }
 
@@ -43,7 +51,12 @@ final class SessionRestoreFailed extends MultiAccountEvent {
 }
 
 final class AccountOpened extends MultiAccountEvent {
-  const AccountOpened({required this.sessionReady});
+  const AccountOpened({
+    required this.accountUserId,
+    required this.sessionReady,
+  });
+
+  final String accountUserId;
   final bool sessionReady;
 }
 
@@ -92,7 +105,7 @@ final class CloseAccount extends MultiAccountEvent {
   final String accountUserId;
 }
 
-/// Macchina multi-account — traccia focus e sessione GoTrue.
+/// Macchina multi-account — fonte di verità per focus intent e stato sessione.
 class MultiAccountMachine {
   MultiAccountMachine({this._effects});
 
@@ -100,24 +113,45 @@ class MultiAccountMachine {
 
   MultiAccountFocusState focusState = MultiAccountFocusState.noOpenAccounts;
 
+  /// Intent focus UI — persistito via effetti su [AccountManager].
+  String? focusUserId;
+
+  /// Risolve focus da manifest (usato da adapter bootstrap).
+  static String? resolveFocusUserId({
+    required List<String> openAccountUserIds,
+    String? persistedFocusUserId,
+  }) {
+    if (openAccountUserIds.isEmpty) return null;
+    if (persistedFocusUserId != null &&
+        openAccountUserIds.contains(persistedFocusUserId)) {
+      return persistedFocusUserId;
+    }
+    return openAccountUserIds.first;
+  }
+
   Future<void> send(MultiAccountEvent event) async {
     switch (event) {
-      case ManifestInitialized(
-        :final hasOpenAccounts,
-        :final hasFocusedSession,
+      case ManifestLoaded(
+        :final openAccountUserIds,
+        :final persistedFocusUserId,
       ):
-        _applyManifestInitialized(
-          hasOpenAccounts: hasOpenAccounts,
-          hasFocusedSession: hasFocusedSession,
+        _applyManifestLoaded(
+          openAccountUserIds: openAccountUserIds,
+          persistedFocusUserId: persistedFocusUserId,
         );
+      case FocusActivationCompleted(:final hasFocusedSession):
+        _applyFocusActivationCompleted(hasFocusedSession: hasFocusedSession);
       case FocusAccount(:final accountUserId):
         await _handleFocusAccount(accountUserId);
       case AccountFocused():
         _applyAccountFocused();
       case SessionRestoreFailed():
         _applySessionRestoreFailed();
-      case AccountOpened(:final sessionReady):
-        _applyAccountOpened(sessionReady: sessionReady);
+      case AccountOpened(:final accountUserId, :final sessionReady):
+        _applyAccountOpened(
+          accountUserId: accountUserId,
+          sessionReady: sessionReady,
+        );
       case AccountClosed(:final wasLastAccount, :final sessionReady):
         _applyAccountClosed(
           wasLastAccount: wasLastAccount,
@@ -149,6 +183,7 @@ class MultiAccountMachine {
   Future<void> _handleFocusAccount(String accountUserId) async {
     if (focusState == MultiAccountFocusState.noOpenAccounts) return;
 
+    focusUserId = accountUserId;
     focusState = MultiAccountFocusState.focusSwitching;
 
     final effects = _effects;
@@ -158,14 +193,19 @@ class MultiAccountMachine {
     }
 
     try {
-      await effects.focusAccount(accountUserId);
+      await effects.executeFocus(accountUserId);
       if (effects.hasFocusedSession) {
         _applyAccountFocused();
       } else {
         _applySessionRestoreFailed();
       }
     } catch (_) {
-      _applySessionRestoreFailed();
+      focusUserId = effects.focusUserId;
+      if (effects.hasFocusedSession) {
+        _applyAccountFocused();
+      } else {
+        _applySessionRestoreFailed();
+      }
       rethrow;
     }
   }
@@ -173,10 +213,13 @@ class MultiAccountMachine {
   Future<void> _handleReconnectFocusedSession() async {
     if (focusState != MultiAccountFocusState.focusedAwaitingSession) return;
 
+    final focus = focusUserId;
+    if (focus == null) return;
+
     final effects = _effects;
     if (effects == null) return;
 
-    await effects.reconnectFocusedSession();
+    await effects.reconnectFocusedSession(focus);
     if (effects.hasFocusedSession) {
       _applyAccountFocused();
     }
@@ -189,8 +232,16 @@ class MultiAccountMachine {
     final effects = _effects;
     if (effects == null) return;
 
-    await effects.openAccountWithPassword(email: email, password: password);
-    _applyAccountOpened(sessionReady: effects.hasFocusedSession);
+    final userId = await effects.openAccountWithPassword(
+      email: email,
+      password: password,
+    );
+    focusUserId = userId;
+    await effects.executeFocus(userId);
+    _applyAccountOpened(
+      accountUserId: userId,
+      sessionReady: effects.hasFocusedSession,
+    );
   }
 
   Future<void> _handleOpenAccountWithSignUp({
@@ -203,27 +254,62 @@ class MultiAccountMachine {
     final effects = _effects;
     if (effects == null) return;
 
-    await effects.openAccountWithSignUp(
+    final userId = await effects.openAccountWithSignUp(
       email: email,
       password: password,
       username: username,
       displayName: displayName,
       profileKind: profileKind,
     );
-    _applyAccountOpened(sessionReady: effects.hasFocusedSession);
+    focusUserId = userId;
+    await effects.executeFocus(userId);
+    _applyAccountOpened(
+      accountUserId: userId,
+      sessionReady: effects.hasFocusedSession,
+    );
   }
 
   Future<void> _handleCloseAccount(String accountUserId) async {
     final effects = _effects;
     if (effects == null) return;
-    await effects.closeAccount(accountUserId);
+
+    final result = await effects.closeAccount(accountUserId);
+
+    if (result.wasLastAccount) {
+      focusUserId = null;
+      _applyAccountClosed(wasLastAccount: true, sessionReady: false);
+      return;
+    }
+
+    if (result.wasFocused && result.remainingUserIds.isNotEmpty) {
+      focusUserId = result.remainingUserIds.first;
+      focusState = MultiAccountFocusState.focusSwitching;
+      await effects.executeFocus(focusUserId!);
+    }
+
+    _applyAccountClosed(
+      wasLastAccount: false,
+      sessionReady: effects.hasFocusedSession,
+    );
   }
 
-  void _applyManifestInitialized({
-    required bool hasOpenAccounts,
-    required bool hasFocusedSession,
+  void _applyManifestLoaded({
+    required List<String> openAccountUserIds,
+    String? persistedFocusUserId,
   }) {
-    if (!hasOpenAccounts) {
+    focusUserId = resolveFocusUserId(
+      openAccountUserIds: openAccountUserIds,
+      persistedFocusUserId: persistedFocusUserId,
+    );
+    if (focusUserId == null) {
+      focusState = MultiAccountFocusState.noOpenAccounts;
+    } else {
+      focusState = MultiAccountFocusState.hasOpenAccounts;
+    }
+  }
+
+  void _applyFocusActivationCompleted({required bool hasFocusedSession}) {
+    if (focusUserId == null) {
       focusState = MultiAccountFocusState.noOpenAccounts;
     } else if (hasFocusedSession) {
       focusState = MultiAccountFocusState.focusedWithSession;
@@ -232,7 +318,11 @@ class MultiAccountMachine {
     }
   }
 
-  void _applyAccountOpened({required bool sessionReady}) {
+  void _applyAccountOpened({
+    required String accountUserId,
+    required bool sessionReady,
+  }) {
+    focusUserId = accountUserId;
     if (focusState == MultiAccountFocusState.noOpenAccounts) {
       focusState = sessionReady
           ? MultiAccountFocusState.focusedWithSession
@@ -265,6 +355,7 @@ class MultiAccountMachine {
     required bool sessionReady,
   }) {
     if (wasLastAccount) {
+      focusUserId = null;
       focusState = MultiAccountFocusState.noOpenAccounts;
       return;
     }

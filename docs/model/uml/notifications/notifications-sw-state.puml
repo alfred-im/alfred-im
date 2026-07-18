@@ -1,5 +1,6 @@
 @startuml notifications-sw-state
 ' Context: notifications (service worker)
+' Contract: docs/specs/contracts/push-payload.md
 ' SDD: SURF-NOTIFICATIONS-005–008
 ' Revision: 2026-07-18
 

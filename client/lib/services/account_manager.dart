@@ -7,21 +7,20 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../machines/multi-account/multi_account_effects.dart';
 import '../models/account_view_state.dart';
-import '../models/chat_peer.dart';
 import '../models/open_account.dart';
 import '../models/profile_summary.dart';
 import '../utils/auth_redirect_url.dart';
-import '../utils/diagnostic_log.dart';
 import 'account_session.dart';
 import 'account_storage_service.dart';
 
-/// Gestisce account messaggistica aperti e il focus UI.
+/// Gestisce I/O account messaggistica: manifest, sessioni GoTrue, storage.
 ///
 /// Il manifest ([alfred_saved_accounts]) elenca tutti gli account aperti; in RAM
 /// c'è **al massimo una** [AccountSession] GoTrue attiva (quella in focus).
-/// Al cambio focus la sessione corrente viene rilasciata (storage auth locale
-/// conservato) e si ripristina solo il nuovo account da manifest.
+/// **Il focus intent è deciso da [MultiAccountMachine]**; questo servizio esegue
+/// dispose/restore quando comandato via effetti.
 class AccountManager {
   AccountManager({AccountStorageService? storage})
       : _storage = storage ?? AccountStorageService();
@@ -62,55 +61,19 @@ class AccountManager {
 
   AccountViewState get viewState => _viewFor(_focusUserId);
 
+  /// View state per account (sanitizzato); sola lettura.
+  AccountViewState viewStateFor(String accountUserId) => _viewFor(accountUserId);
+
   bool get hasOpenAccounts =>
       _manifestAccounts.isNotEmpty || _testOnlyAccountIds.isNotEmpty;
 
-  void openConversation(ChatPeer peer) {
-    final userId = _focusUserId;
-    if (userId == null || peer.profileId == userId) return;
-    _setViewFor(userId, _storedViewFor(userId).openChat(peer));
-  }
-
-  /// Tap push: evita chat stale su account destinatario prima di aprire il peer.
-  void clearConversationForAccount(String accountUserId) {
-    if (!_hasAccount(accountUserId)) return;
-    _setViewFor(accountUserId, _storedViewFor(accountUserId).clearConversation());
-  }
-
-  /// Link / compose: azzera chat solo se il peer attivo è diverso dal target.
-  void clearStaleConversationUnlessPeer(
+  /// Mutazione view-state — solo da [AccountViewStateStore] / navigation.
+  void applyAccountViewState(
     String accountUserId,
-    String peerProfileId,
+    AccountViewState Function(AccountViewState current) transform,
   ) {
     if (!_hasAccount(accountUserId)) return;
-    final active = _viewFor(accountUserId).activePeer?.profileId;
-    if (active != null && active != peerProfileId) {
-      clearConversationForAccount(accountUserId);
-    }
-  }
-
-  void showInboxOnMobile() {
-    final userId = _focusUserId;
-    if (userId == null) return;
-    _setViewFor(userId, _storedViewFor(userId).backToInboxOnMobile());
-  }
-
-  void openGroupChat() {
-    final userId = _focusUserId;
-    if (userId == null) return;
-    _setViewFor(userId, _storedViewFor(userId).openGroupChat());
-  }
-
-  void backToGroupHome() {
-    final userId = _focusUserId;
-    if (userId == null) return;
-    _setViewFor(userId, _storedViewFor(userId).backToGroupHome());
-  }
-
-  void mergeActivePeerFromInbox(ChatPeer inboxRow) {
-    final userId = _focusUserId;
-    if (userId == null) return;
-    _setViewFor(userId, _storedViewFor(userId).mergeActivePeer(inboxRow));
+    _setViewFor(accountUserId, transform(_storedViewFor(accountUserId)));
   }
 
   AccountViewState _viewFor(String? userId) {
@@ -163,13 +126,29 @@ class AccountManager {
     session.wireStorage(_storage);
   }
 
-  /// F5 / avvio app: manifest in cache + ripristina solo il focus.
-  Future<void> initialize() async {
-    await _rebuildFromManifest(deferProfileSync: true);
+  /// Lettura manifest per bootstrap macchina (nessuna decisione focus).
+  Future<ManifestBootstrap> loadManifestBootstrap() async {
+    await _refreshManifestCache();
+    final persistedFocus = await _storage.loadFocusUserId();
+    return ManifestBootstrap(
+      openAccountUserIds: _manifestAccounts.map((a) => a.userId).toList(),
+      persistedFocusUserId: persistedFocus,
+    );
   }
 
-  /// Scrive il token nel manifest e attiva la sessione del nuovo focus.
-  Future<AccountSession> openWithPassword({
+  /// F5 / avvio app: carica manifest + esegue focus deciso dalla macchina.
+  Future<void> initialize({required String? focusUserId}) async {
+    await _refreshManifestCache();
+    if (focusUserId != null) {
+      await executeFocus(focusUserId, deferProfileSync: true);
+    } else {
+      _focusUserId = null;
+      await _disposeSessionsInRam(clearAuthStorage: false);
+    }
+  }
+
+  /// Sign-in → upsert manifest; il focus è comandato dalla macchina.
+  Future<String> signInAndUpsertManifest({
     required String email,
     required String password,
   }) async {
@@ -180,17 +159,14 @@ class AccountManager {
         password: password,
       );
       await _storage.upsertAccount(account);
-      final session = await _rebuildFromManifest(
-        focusUserId: account.userId,
-        requireSession: true,
-      );
-      return session!;
+      await _refreshManifestCache();
+      return account.userId;
     } finally {
       await _resumeAuthListeners();
     }
   }
 
-  Future<AccountSession> openWithSignUp({
+  Future<String> signUpAndUpsertManifest({
     required String email,
     required String password,
     required String username,
@@ -207,24 +183,14 @@ class AccountManager {
         profileKind: profileKind,
       );
       await _storage.upsertAccount(account);
-      final session = await _rebuildFromManifest(
-        focusUserId: account.userId,
-        requireSession: true,
-      );
-      return session!;
+      await _refreshManifestCache();
+      return account.userId;
     } finally {
       await _resumeAuthListeners();
     }
   }
 
-  /// Aggiorna cache manifest, rilascia sessioni RAM e ripristina solo il focus.
-  Future<AccountSession?> _rebuildFromManifest({
-    String? focusUserId,
-    bool requireSession = false,
-    bool deferProfileSync = false,
-  }) async {
-    await _disposeSessionsInRam(clearAuthStorage: false);
-
+  Future<void> _refreshManifestCache() async {
     var stored = await _storage.loadAccounts();
     final staleUserIds = stored
         .where((account) => account.refreshToken.isEmpty)
@@ -238,95 +204,59 @@ class AccountManager {
     }
     _manifestAccounts =
         stored.where((account) => account.refreshToken.isNotEmpty).toList();
+  }
 
-    if (_manifestAccounts.isEmpty) {
-      _focusUserId = null;
+  /// Ripristina GoTrue solo per [userId]; su auth permanente rimuove account invalido.
+  Future<AccountSession?> _activateSessionForFocus(
+    String userId, {
+    bool requireSession = false,
+    bool deferProfileSync = false,
+  }) async {
+    if (!_hasAccount(userId)) {
       if (requireSession) {
         throw const AuthException('Sessione account non disponibile.');
       }
       return null;
     }
 
-    final savedFocus = focusUserId ?? await _storage.loadFocusUserId();
-    if (savedFocus != null && _hasAccount(savedFocus)) {
-      _focusUserId = savedFocus;
-    } else {
-      _focusUserId = _manifestAccounts.first.userId;
+    if (_testOnlyAccountIds.contains(userId)) {
+      return _sessions[userId];
     }
-    await _storage.saveFocusUserId(_focusUserId);
 
-    return _activateFocusedSession(
-      requireSession: requireSession,
-      deferProfileSync: deferProfileSync,
-    );
-  }
+    final accountIndex =
+        _manifestAccounts.indexWhere((a) => a.userId == userId);
+    if (accountIndex < 0) {
+      if (requireSession) {
+        throw const AuthException('Sessione account non disponibile.');
+      }
+      return null;
+    }
+    final account = _manifestAccounts[accountIndex];
 
-  Future<void> _refreshManifestCache() async {
-    final stored = await _storage.loadAccounts();
-    _manifestAccounts =
-        stored.where((a) => a.refreshToken.isNotEmpty).toList();
-  }
-
-  /// Ripristina GoTrue solo per [_focusUserId]; su auth permanente prova altro account.
-  Future<AccountSession?> _activateFocusedSession({
-    bool requireSession = false,
-    bool deferProfileSync = false,
-  }) async {
-    while (_focusUserId != null) {
-      if (_testOnlyAccountIds.contains(_focusUserId)) {
+    try {
+      final session = await _restoreWithRetry(account);
+      _sessions.clear();
+      _sessions[session.userId] = session;
+      session.wireStorage(_storage);
+      if (deferProfileSync) {
+        unawaited(_syncFocusedProfile(session));
+      } else {
+        await _syncFocusedProfile(session);
+      }
+      return session;
+    } catch (e) {
+      if (_isPermanentAuthFailure(e)) {
+        await _storage.removeAccount(userId);
+        await AccountSession.clearLocalAuthStorage(userId);
+        await _refreshManifestCache();
+        if (requireSession) {
+          throw const AuthException('Sessione account non disponibile.');
+        }
         return null;
       }
-
-      final userId = _focusUserId!;
-      final accountIndex =
-          _manifestAccounts.indexWhere((a) => a.userId == userId);
-      if (accountIndex < 0) {
-        if (_manifestAccounts.isEmpty) {
-          _focusUserId = null;
-          break;
-        }
-        _focusUserId = _manifestAccounts.first.userId;
-        await _storage.saveFocusUserId(_focusUserId);
-        continue;
-      }
-      final account = _manifestAccounts[accountIndex];
-
-      try {
-        final session = await _restoreWithRetry(account);
-        _sessions.clear();
-        _sessions[session.userId] = session;
-        session.wireStorage(_storage);
-        if (deferProfileSync) {
-          unawaited(_syncFocusedProfile(session));
-        } else {
-          await _syncFocusedProfile(session);
-        }
-        return session;
-      } catch (e) {
-        if (_isPermanentAuthFailure(e)) {
-          await _storage.removeAccount(userId);
-          await AccountSession.clearLocalAuthStorage(userId);
-          await _refreshManifestCache();
-          if (_manifestAccounts.isEmpty) {
-            _focusUserId = null;
-            await _storage.saveFocusUserId(null);
-            break;
-          }
-          if (!_manifestAccounts.any((a) => a.userId == _focusUserId)) {
-            _focusUserId = _manifestAccounts.first.userId;
-            await _storage.saveFocusUserId(_focusUserId);
-          }
-          continue;
-        }
-        if (requireSession) rethrow;
-        return null;
-      }
+      if (requireSession) rethrow;
+      return null;
     }
-
-    if (requireSession) {
-      throw const AuthException('Sessione account non disponibile.');
-    }
-    return null;
   }
 
   Future<void> _disposeSessionsInRam({required bool clearAuthStorage}) async {
@@ -370,34 +300,36 @@ class AccountManager {
   }
 
   /// Tap push / deep link: garantisce focus e sessione GoTrue in RAM.
-  Future<void> ensureRecipientAccountActive(String userId) async {
-    diagLog('push', 'ensure_focus.start', data: {'userId': userId});
-    if (!_hasAccount(userId)) {
-      diagLogFail('push', 'ensure_focus', 'no_account', data: {'userId': userId});
-      throw StateError('Account non aperto: $userId');
-    }
-    await setFocus(userId);
-    diagLog('push', 'ensure_focus.ok', data: {'userId': userId});
+  Future<void> ensureRecipientAccountActive(String userId) {
+    return executeFocus(userId);
   }
 
   /// Manifest con account ma sessione GoTrue assente in RAM — ripristina il focus.
-  Future<void> reconnectFocusedSession() {
-    return _enqueueFocusOperation(_reconnectFocusedSessionImpl);
+  Future<void> reconnectFocusedSession(String focusUserId) {
+    return _enqueueFocusOperation(
+      () => _reconnectFocusedSessionImpl(focusUserId),
+    );
   }
 
-  Future<void> _reconnectFocusedSessionImpl() async {
+  Future<void> _reconnectFocusedSessionImpl(String focusUserId) async {
     await _refreshManifestCache();
     if (_manifestAccounts.isEmpty) return;
-
-    final target = (_focusUserId != null && _hasAccount(_focusUserId!))
-        ? _focusUserId!
-        : _manifestAccounts.first.userId;
-    await _setFocusImpl(target);
+    if (!_hasAccount(focusUserId)) return;
+    await _executeFocusImpl(focusUserId);
   }
 
-  Future<void> setFocus(String userId) {
-    return _enqueueFocusOperation(() => _setFocusImpl(userId));
+  /// Esegue focus comandato dalla macchina (persist + dispose + restore).
+  Future<void> executeFocus(
+    String userId, {
+    bool deferProfileSync = false,
+  }) {
+    return _enqueueFocusOperation(
+      () => _executeFocusImpl(userId, deferProfileSync: deferProfileSync),
+    );
   }
+
+  /// Alias per test e retrocompatibilità interna navigation.
+  Future<void> setFocus(String userId) => executeFocus(userId);
 
   Future<void> _enqueueFocusOperation(Future<void> Function() operation) async {
     final previous = _focusOperationChain;
@@ -411,13 +343,20 @@ class AccountManager {
     }
   }
 
-  Future<void> _setFocusImpl(String userId) async {
+  Future<void> _executeFocusImpl(
+    String userId, {
+    bool deferProfileSync = false,
+  }) async {
     if (!_hasAccount(userId)) return;
 
     if (_focusUserId == userId) {
       if (_sessions[userId] == null &&
           !_testOnlyAccountIds.contains(userId)) {
-        await _activateFocusedSession(requireSession: true);
+        await _activateSessionForFocus(
+          userId,
+          requireSession: true,
+          deferProfileSync: deferProfileSync,
+        );
       }
       await _loadFocusedInboxIfNeeded();
       return;
@@ -425,7 +364,6 @@ class AccountManager {
 
     final previousFocus = _focusUserId;
 
-    // Test harness: sessioni iniettate restano in RAM tra un focus e l'altro.
     final keepTestSessions = _testOnlyAccountIds.isEmpty
         ? <String, AccountSession>{}
         : Map<String, AccountSession>.fromEntries(
@@ -449,7 +387,11 @@ class AccountManager {
 
     try {
       if (!_testOnlyAccountIds.contains(userId)) {
-        await _activateFocusedSession(requireSession: true);
+        await _activateSessionForFocus(
+          userId,
+          requireSession: true,
+          deferProfileSync: deferProfileSync,
+        );
       }
       await _loadFocusedInboxIfNeeded();
     } catch (e) {
@@ -462,7 +404,7 @@ class AccountManager {
       if (previousFocus != null &&
           !_testOnlyAccountIds.contains(previousFocus)) {
         try {
-          await _activateFocusedSession(requireSession: false);
+          await _activateSessionForFocus(previousFocus, requireSession: false);
         } catch (_) {
           // Best-effort restore of the previous session.
         }
@@ -477,7 +419,8 @@ class AccountManager {
     await session.inboxController.load();
   }
 
-  Future<void> removeAccount(String userId) async {
+  /// Rimuove account dal manifest; non decide il prossimo focus (macchina).
+  Future<CloseAccountResult> removeAccount(String userId) async {
     _testOnlyAccountIds.remove(userId);
     _viewsByAccount.remove(userId);
 
@@ -495,15 +438,15 @@ class AccountManager {
 
     if (wasFocused) {
       await _disposeSessionsInRam(clearAuthStorage: false);
-      if (_manifestAccounts.isNotEmpty) {
-        _focusUserId = _manifestAccounts.first.userId;
-        await _storage.saveFocusUserId(_focusUserId);
-        await _activateFocusedSession();
-      } else {
-        _focusUserId = null;
-        await _storage.saveFocusUserId(null);
-      }
+      _focusUserId = null;
     }
+
+    final remaining = _manifestAccounts.map((a) => a.userId).toList();
+    return CloseAccountResult(
+      wasLastAccount: remaining.isEmpty,
+      wasFocused: wasFocused,
+      remainingUserIds: remaining,
+    );
   }
 
   bool _isPermanentAuthFailure(Object e) {

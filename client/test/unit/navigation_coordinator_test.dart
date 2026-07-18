@@ -93,7 +93,7 @@ void main() {
         return account.userId == 'account-a' ? sessionA : sessionB;
       };
 
-      await manager.initialize();
+      await manager.initialize(focusUserId: 'account-a');
     });
 
     test('switchToAccount changes focus', () async {

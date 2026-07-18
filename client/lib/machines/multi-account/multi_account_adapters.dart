@@ -6,27 +6,41 @@ import '../../models/profile_summary.dart';
 import 'multi_account_effects.dart';
 import 'multi_account_machine.dart';
 
+/// Comando focus account — implementato da [MultiAccountAdapters] per navigation.
+abstract class AccountFocusCommand {
+  Future<void> focusAccount(String accountUserId);
+}
+
 /// Mappa ingressi attuali → eventi macchina multi-account.
 ///
 /// UML: `docs/model/uml/multi-account/seq-focus-switch.puml`
-class MultiAccountAdapters {
-  MultiAccountAdapters(this._machine, {this.effects});
+class MultiAccountAdapters implements AccountFocusCommand {
+  MultiAccountAdapters(this._machine, {required this.effects});
 
   final MultiAccountMachine _machine;
-  final MultiAccountEffects? effects;
+  final MultiAccountEffects effects;
 
-  void onManifestInitialized({
-    required bool hasOpenAccounts,
-    required bool hasFocusedSession,
-  }) {
-    _machine.send(
-      ManifestInitialized(
-        hasOpenAccounts: hasOpenAccounts,
-        hasFocusedSession: hasFocusedSession,
+  /// F5 / avvio: carica manifest, macchina decide focus, effetti attivano sessione.
+  Future<void> bootstrapManifest() async {
+    final bootstrap = await effects.loadManifestBootstrap();
+    await _machine.send(
+      ManifestLoaded(
+        openAccountUserIds: bootstrap.openAccountUserIds,
+        persistedFocusUserId: bootstrap.persistedFocusUserId,
       ),
+    );
+
+    final focus = _machine.focusUserId;
+    if (focus != null) {
+      await effects.executeFocus(focus);
+    }
+
+    await _machine.send(
+      FocusActivationCompleted(hasFocusedSession: effects.hasFocusedSession),
     );
   }
 
+  @override
   Future<void> focusAccount(String accountUserId) {
     return _machine.send(FocusAccount(accountUserId));
   }
@@ -62,28 +76,7 @@ class MultiAccountAdapters {
     );
   }
 
-  void onAccountOpened({required bool sessionReady}) {
-    _machine.send(AccountOpened(sessionReady: sessionReady));
-  }
-
-  void onAccountClosed({
-    required bool wasLastAccount,
-    bool? sessionReady,
-  }) {
-    _machine.send(
-      AccountClosed(
-        wasLastAccount: wasLastAccount,
-        sessionReady: sessionReady ?? effects?.hasFocusedSession ?? false,
-      ),
-    );
-  }
-
-  void syncFromEffects() {
-    final effects = this.effects;
-    if (effects == null) return;
-    onManifestInitialized(
-      hasOpenAccounts: effects.hasOpenAccounts,
-      hasFocusedSession: effects.hasFocusedSession,
-    );
+  Future<void> closeAccount(String accountUserId) {
+    return _machine.send(CloseAccount(accountUserId));
   }
 }

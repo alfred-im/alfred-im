@@ -1,0 +1,71 @@
+@startuml context-map
+' Alfred — bounded context map (relazioni principali)
+' Revision: 2026-07-18
+' Metodo: docs/domain/bounded-contexts.md
+
+title Alfred — bounded context map
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+package "Client (statechart)" #E8F4FD {
+  component [auth\nverified] as auth
+  component [multi-account\nverified] as multiaccount
+  component [navigation\nverified] as navigation
+  component [notifications\nverified] as notifications
+  component [shareable-link\nverified] as shareablelink
+  component [messaging\ndocumented] as messaging
+  component [contacts\ndocumented] as contacts
+  component [profile\ndocumented] as profile
+  component [reception\ndocumented] as reception
+  component [media\ndocumented] as media
+}
+
+package "Server / infrastruttura" #F5F5F5 {
+  component [delivery\ndocumented] as delivery
+  component [groups\ndocumented] as groups
+  component [federation\ndocumented] as federation
+}
+
+' Ingressi esterni → shell
+notifications --> navigation : OpenFromPushTap
+shareablelink --> navigation : OpenFromShareableLink
+
+' Shell e sessione
+navigation --> multiaccount : FocusAccount
+multiaccount --> auth : sessione / token
+
+' Messaggistica e rubrica
+messaging --> reception : RPC gate allowlist
+messaging --> delivery : RPC outbox
+media ..> messaging : allegati / voice\n(sotto-contesto)
+
+' Gruppi
+groups --> delivery : broadcast / erogazione
+groups --> reception : allow list bidirezionale
+groups ..> navigation : OpenGroupChat\n/ BackToGroupHome
+
+' Federazione futura
+federation --> delivery : outbox queued\n(consumer bridge stub)
+
+note right of notifications
+  Adapter → NavigationMachine
+end note
+
+note right of shareablelink
+  Fragment URL → NavigationMachine
+end note
+
+note bottom of messaging
+  Mirror statechart;
+  produzione = MessagesController
+end note
+
+note bottom of delivery
+  Worker SQL alfred_delivery
+  (nessuno statechart client)
+end note
+
+@enduml

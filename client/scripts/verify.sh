@@ -15,6 +15,9 @@ cd "$ROOT"
 echo "==> check-spec-sync (SDD)"
 bash "$ROOT/../scripts/check-spec-sync.sh"
 
+echo "==> check-model-sync (dominio / UML / statechart)"
+bash "$ROOT/../scripts/check-model-sync.sh"
+
 RUN_BUILD=0
 for arg in "$@"; do
   case "$arg" in

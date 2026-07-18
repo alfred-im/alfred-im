@@ -4,92 +4,59 @@
 
 import 'package:flutter/foundation.dart';
 
+import '../coordinators/contacts_coordinator.dart';
 import '../models/contact.dart';
 import '../models/profile_summary.dart';
 import '../services/contact_service.dart';
-import '../utils/list_filter.dart';
 
+/// Facade UI rubrica — orchestrazione in [ContactsCoordinator].
 class ContactsController extends ChangeNotifier {
   ContactsController({
     required this.ownerId,
-    required this.contactService,
+    required ContactService contactService,
   }) {
-    load();
+    _coordinator = ContactsCoordinator(
+      ownerId: ownerId,
+      contactService: contactService,
+      onStateChanged: notifyListeners,
+    );
   }
 
   final String ownerId;
-  final ContactService contactService;
+  late final ContactsCoordinator _coordinator;
 
-  List<Contact> contacts = [];
-  bool isLoading = true;
-  String? error;
-  String _searchQuery = '';
+  List<Contact> get contacts => _coordinator.state.contacts;
 
-  List<Contact> get filteredContacts => filterByQuery(
-        contacts,
-        _searchQuery,
-        (contact) => contact.displayName,
-      );
+  bool get isLoading => _coordinator.state.isLoading;
 
-  Contact? contactForProfileId(String profileId) {
-    for (final contact in contacts) {
-      if (contact.protocol == ContactProtocol.internal &&
-          contact.linkedProfileId == profileId) {
-        return contact;
-      }
-    }
-    return null;
-  }
+  String? get error => _coordinator.state.error;
 
-  void setSearchQuery(String value) {
-    _searchQuery = value;
-    notifyListeners();
-  }
+  List<Contact> get filteredContacts => _coordinator.filteredContacts;
 
-  Future<void> load() async {
-    try {
-      contacts = await contactService.fetchContacts(ownerId);
-      error = null;
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
+  Contact? contactForProfileId(String profileId) =>
+      _coordinator.contactForProfileId(profileId);
 
-  Future<List<ProfileSummary>> searchProfiles(String query) {
-    return contactService.searchProfiles(query);
-  }
+  void setSearchQuery(String value) => _coordinator.setSearchQuery(value);
 
-  Future<Contact> addInternal(ProfileSummary profile) async {
-    final contact = await contactService.addInternalContact(
-      ownerId: ownerId,
-      profile: profile,
-    );
-    await load();
-    return contact;
-  }
+  Future<void> load() => _coordinator.load();
 
-  Future<void> removeInternalByProfileId(String profileId) async {
-    final contact = contactForProfileId(profileId);
-    if (contact == null) return;
-    await contactService.deleteContact(contact.id);
-    await load();
-  }
+  Future<List<ProfileSummary>> searchProfiles(String query) =>
+      _coordinator.searchProfiles(query);
+
+  Future<Contact> addInternal(ProfileSummary profile) =>
+      _coordinator.addInternal(profile);
+
+  Future<void> removeInternalByProfileId(String profileId) =>
+      _coordinator.removeInternalByProfileId(profileId);
 
   Future<Contact> addExternal({
     required ContactProtocol protocol,
     required String address,
     required String displayName,
-  }) async {
-    final contact = await contactService.addExternalContact(
-      ownerId: ownerId,
-      protocol: protocol,
-      externalAddress: address,
-      displayName: displayName,
-    );
-    await load();
-    return contact;
-  }
+  }) =>
+      _coordinator.addExternal(
+        protocol: protocol,
+        address: address,
+        displayName: displayName,
+      );
 }

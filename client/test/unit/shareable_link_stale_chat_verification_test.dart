@@ -60,7 +60,10 @@ void main() {
 
     manager.focusTestSession(session);
 
-    manager.openConversation(_peer(_profile(stalePeerId, 'stale_y')));
+    manager.applyAccountViewState(
+      accountId,
+      (view) => view.openChat(_peer(_profile(stalePeerId, 'stale_y'))),
+    );
     expect(manager.viewState.activePeer?.profileId, stalePeerId);
   });
 

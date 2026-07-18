@@ -30,6 +30,8 @@ abstract class NavigationEffects {
 
   void backToGroupHome();
 
+  void mergeActivePeerFromInbox(ChatPeer inboxRow);
+
   /// Account in focus con `profileKind == group`.
   bool get focusedAccountIsGroup;
 }

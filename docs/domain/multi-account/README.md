@@ -1,6 +1,6 @@
 # Contesto: multi-account
 
-**Stato modellazione:** `implemented` (dominio + UML + statechart + test transizioni)
+**Stato modellazione:** `verified` (dominio + UML + statechart + test transizioni)
 
 Vedi [glossary.md](./glossary.md) · [commands-and-events.md](./commands-and-events.md) · [UML](../../model/uml/multi-account/)
 

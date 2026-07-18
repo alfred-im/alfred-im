@@ -1,6 +1,6 @@
 # Contesto: shareable-link
 
-**Stato modellazione:** `implemented` (dominio + UML + macchina cablata)
+**Stato modellazione:** `verified` (dominio + UML + macchina cablata + test)
 
 Vedi [glossary.md](./glossary.md) · [commands-and-events.md](./commands-and-events.md) · [UML](../../model/uml/shareable-link/) · [guida operativa](../../guides/shareable-link.md)
 

@@ -4,6 +4,8 @@
 
 import 'package:flutter/foundation.dart';
 
+import '../adapters/external_intent_adapter.dart';
+import '../machines/multi-account/multi_account_adapters.dart';
 import '../machines/navigation/account_navigation_effects.dart';
 import '../machines/navigation/navigation_adapters.dart';
 import '../machines/navigation/navigation_machine.dart';
@@ -11,15 +13,32 @@ import '../models/chat_peer.dart';
 import 'account_manager.dart';
 import 'account_session.dart';
 
+/// Fallback test: focus diretto su manager senza macchina.
+class _ManagerFocusCommand implements AccountFocusCommand {
+  _ManagerFocusCommand(this._manager);
+
+  final AccountManager _manager;
+
+  @override
+  Future<void> focusAccount(String accountUserId) {
+    return _manager.executeFocus(accountUserId);
+  }
+}
+
 /// Unico ingresso per navigazione account → inbox → conversazione.
 ///
 /// Implementazione: [NavigationMachine] + [AccountNavigationEffects].
 /// Sidebar, tap inbox, push, link condivisibili passano da qui (via [AuthController]).
 class NavigationCoordinator {
-  NavigationCoordinator(this._manager) {
-    _effects = AccountNavigationEffects(_manager);
+  NavigationCoordinator(
+    this._manager, {
+    AccountFocusCommand? focusCommand,
+  }) {
+    final command = focusCommand ?? _ManagerFocusCommand(_manager);
+    _effects = AccountNavigationEffects(_manager, focusCommand: command);
     _machine = NavigationMachine(_effects);
     adapters = NavigationAdapters(_machine);
+    externalIntents = ExternalIntentAdapter(adapters);
   }
 
   final AccountManager _manager;
@@ -27,6 +46,7 @@ class NavigationCoordinator {
   late final NavigationMachine _machine;
 
   late final NavigationAdapters adapters;
+  late final ExternalIntentAdapter externalIntents;
 
   NavigationMachine get machine => _machine;
 
@@ -65,9 +85,21 @@ class NavigationCoordinator {
     required String accountUserId,
     required String peerProfileId,
   }) {
-    return adapters.openFromShareableLink(
+    return externalIntents.openFromShareableLink(
       accountUserId: accountUserId,
       peerProfileId: peerProfileId,
+    );
+  }
+
+  Future<bool> openFromCompose({
+    required String accountUserId,
+    required String peerProfileId,
+    bool allowProfileFallback = true,
+  }) {
+    return externalIntents.openFromCompose(
+      accountUserId: accountUserId,
+      peerProfileId: peerProfileId,
+      allowProfileFallback: allowProfileFallback,
     );
   }
 

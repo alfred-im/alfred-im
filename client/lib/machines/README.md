@@ -51,7 +51,7 @@ client/lib/machines/<context>/
 | shareable-link | `shareable-link/` | implementato (adapter → navigation) |
 | notifications | `notifications/` | implementato (adapter → navigation) |
 | multi-account | `multi-account/` | implementato |
-| messaging | `messaging/` | implementato (mirror; produzione = `MessagesController`) |
+| messaging | `messaging/` | verified (3 macchine + coordinator) |
 | contacts | `contacts/` | documentato (produzione = `ContactsController`) |
 | profile | `profile/` | documentato (produzione = `ProfileController`) |
 | reception | `reception/` | documentato (produzione = `ReceptionAllowlistController`) |

@@ -72,7 +72,7 @@ void main() {
 
     test('setFocus disposes previous session and keeps only focused session in RAM',
         () async {
-      await manager.initialize();
+      await manager.initialize(focusUserId: 'account-a');
 
       expect(manager.focusUserId, 'account-a');
       expect(manager.sessions.map((s) => s.userId), ['account-a']);
@@ -87,7 +87,7 @@ void main() {
 
     test('ensureRecipientAccountActive reactivates session when focus id matches but RAM is empty',
         () async {
-      await manager.initialize();
+      await manager.initialize(focusUserId: 'account-a');
       expect(manager.focusUserId, 'account-a');
       expect(manager.focusedSession?.userId, 'account-a');
 
@@ -101,7 +101,7 @@ void main() {
     });
 
     test('ensureRecipientAccountActive switches to recipient account', () async {
-      await manager.initialize();
+      await manager.initialize(focusUserId: 'account-a');
 
       await manager.ensureRecipientAccountActive('account-b');
 
@@ -112,10 +112,10 @@ void main() {
 
     test('reconnectFocusedSession restores session when manifest has focus but RAM is empty',
         () async {
-      await manager.initialize();
+      await manager.initialize(focusUserId: 'account-a');
       manager.clearSessionsInRamForTest();
 
-      await manager.reconnectFocusedSession();
+      await manager.reconnectFocusedSession('account-a');
 
       expect(manager.focusUserId, 'account-a');
       expect(manager.focusedSession?.userId, 'account-a');

@@ -75,7 +75,7 @@ final class SessionBecameReady extends NotificationsEvent {
 /// Macchina notifications — interprete statechart client.
 ///
 /// Ingresso open chat: [NotificationsAdapters] da [PushNotificationListener].
-/// Sync subscription: eventi da [AuthController.syncPushSubscriptions].
+/// Sync subscription: eventi da [PushCoordinator.syncPushSubscriptions].
 class NotificationsMachine {
   NotificationsMachine({this._effects});
 

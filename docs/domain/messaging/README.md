@@ -1,6 +1,6 @@
 # Contesto: messaging
 
-**Stato modellazione:** `implemented`
+**Stato modellazione:** `verified`
 
 Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.md).
 
@@ -13,16 +13,25 @@ Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.
 | [UML state](../../model/uml/messaging/messaging-state.puml) | compilato |
 | [seq-send-optimistic](../../model/uml/messaging/seq-send-optimistic.puml) | compilato |
 | [seq-realtime-merge](../../model/uml/messaging/seq-realtime-merge.puml) | compilato |
-| [statechart](../../../client/lib/machines/messaging/) | **implementato** (mirror load/send/realtime) |
+| [statechart](../../../client/lib/machines/messaging/) | **verified** (3 macchine + coordinator) |
 
 ## Implementazione runtime
 
 | Componente | Ruolo |
 |------------|-------|
-| `MessagesController` | Orchestratore produzione — load, send, realtime, retry |
+| `MessagesController` | Thin delegate — API widget invariata |
+| `MessagingCoordinator` | Compone load / outbound / realtime |
+| `MessagesControllerEffects` | RPC, coda, media, realtime |
 | `MessageService` | RPC + subscribe Realtime owner |
 | `OutboundMessageQueue` | Coda persistente e media retry |
-| `MessagingMachine` | Statechart documentato; effetti delegano al controller |
+
+### Macchine (`client/lib/machines/messaging/`)
+
+| Macchina | Stati |
+|----------|-------|
+| `ConversationLoadMachine` | Loading, Ready, SessionBlocked |
+| `OutboundSendMachine` | Idle, Sending, FailedQueue |
+| `RealtimeAttachmentMachine` | Detached, Attached |
 
 ## SDD (confine prodotto)
 

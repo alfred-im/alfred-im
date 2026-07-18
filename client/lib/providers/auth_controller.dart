@@ -5,8 +5,10 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../adapters/external_intent_adapter.dart';
+import '../coordinators/auth_session_coordinator.dart';
+import '../coordinators/push_coordinator.dart';
 import '../machines/auth/auth_adapters.dart';
 import '../machines/auth/auth_machine.dart';
 import '../machines/notifications/auth_notifications_effects.dart';
@@ -23,34 +25,52 @@ import '../models/profile.dart';
 import '../services/account_manager.dart';
 import '../services/account_session.dart';
 import '../services/navigation_coordinator.dart';
-import '../services/push_subscription_service.dart';
-import '../utils/auth_identity.dart';
-import '../utils/push_permission_flow.dart';
-import '../utils/push_platform.dart';
+import '../utils/friendly_auth_error.dart';
 
+/// Composition root: macchine, coordinatori, stato UI read-only.
 class AuthController extends ChangeNotifier {
   AuthController({
     AccountManager? accountManager,
     NavigationCoordinator? navigation,
   }) : _manager = accountManager ?? AccountManager() {
-    _navigation = navigation ?? NavigationCoordinator(_manager);
-    _manager.onFocusedProfileSynced = notifyListeners;
-    final notificationEffects = AuthNotificationsEffects(this);
-    notificationsMachine = NotificationsMachine(effects: notificationEffects);
-    notificationsAdapters = NotificationsAdapters(notificationsMachine);
-    final multiAccountEffects = AccountMultiAccountEffects(this, _navigation);
+    final multiAccountEffects = AccountMultiAccountEffects(_manager);
     multiAccountMachine = MultiAccountMachine(effects: multiAccountEffects);
     multiAccountAdapters = MultiAccountAdapters(
       multiAccountMachine,
       effects: multiAccountEffects,
     );
+    _navigation = navigation ??
+        NavigationCoordinator(
+          _manager,
+          focusCommand: multiAccountAdapters,
+        );
+    _manager.onFocusedProfileSynced = notifyListeners;
+    final notificationEffects = AuthNotificationsEffects(this);
+    notificationsMachine = NotificationsMachine(effects: notificationEffects);
+    notificationsAdapters = NotificationsAdapters(notificationsMachine);
     authMachine = AuthMachine();
     authAdapters = AuthAdapters(authMachine);
+    _sessionState = AuthSessionState();
+    _pushCoordinator = PushCoordinator(
+      manager: _manager,
+      notificationsMachine: notificationsMachine,
+    );
+    _sessionCoordinator = AuthSessionCoordinator(
+      manager: _manager,
+      authMachine: authMachine,
+      authAdapters: authAdapters,
+      multiAccountAdapters: multiAccountAdapters,
+      pushCoordinator: _pushCoordinator,
+      state: _sessionState,
+      onStateChanged: notifyListeners,
+    );
   }
 
   final AccountManager _manager;
   late final NavigationCoordinator _navigation;
-  final PushSubscriptionService _pushService = PushSubscriptionService();
+  late final AuthSessionState _sessionState;
+  late final PushCoordinator _pushCoordinator;
+  late final AuthSessionCoordinator _sessionCoordinator;
   late final NotificationsMachine notificationsMachine;
   late final NotificationsAdapters notificationsAdapters;
   late final MultiAccountMachine multiAccountMachine;
@@ -61,12 +81,23 @@ class AuthController extends ChangeNotifier {
   @visibleForTesting
   NavigationCoordinator get navigation => _navigation;
 
-  bool isLoading = true;
-  bool sessionReady = false;
-  String? error;
+  ExternalIntentAdapter get externalIntents => _navigation.externalIntents;
 
-  bool showAuthOverlay = false;
-  bool authOverlayDismissible = false;
+  bool get isLoading => _sessionState.isLoading;
+  set isLoading(bool value) => _sessionState.isLoading = value;
+
+  bool get sessionReady => _sessionState.sessionReady;
+  set sessionReady(bool value) => _sessionState.sessionReady = value;
+
+  String? get error => _sessionState.error;
+  set error(String? value) => _sessionState.error = value;
+
+  bool get showAuthOverlay => _sessionState.showAuthOverlay;
+  set showAuthOverlay(bool value) => _sessionState.showAuthOverlay = value;
+
+  bool get authOverlayDismissible => _sessionState.authOverlayDismissible;
+  set authOverlayDismissible(bool value) =>
+      _sessionState.authOverlayDismissible = value;
 
   AccountManager get accountManager => _manager;
 
@@ -84,105 +115,39 @@ class AuthController extends ChangeNotifier {
   String? get email => focusedSession?.client.auth.currentUser?.email;
   String? get username => focusedSession?.profile.username;
 
-  /// Re-registra subscription push (es. dopo resume PWA o permesso concesso).
-  Future<void> syncPushSubscriptions() async {
-    if (kIsWeb) {
-      _applyPushEnvironmentToMachine();
-      if (!shouldAttemptPushSubscription(
-        isPushSupported: PushPlatform.isPushSupported,
-        notificationPermission: PushPlatform.notificationPermission,
-      )) {
-        return;
-      }
-    }
+  Future<void> syncPushSubscriptions() =>
+      _pushCoordinator.syncPushSubscriptions();
 
-    notificationsMachine.send(const SyncSubscriptionsRequested());
-    try {
-      await _pushService.syncOpenAccounts(
-        _manager.openAccounts,
-        focusedSession: _manager.focusedSession,
-      );
-      notificationsMachine.send(const SubscriptionRegistered());
-    } catch (_) {
-      notificationsMachine.send(const SubscriptionSyncFailed());
-    }
-  }
+  Future<void> initialize() => _sessionCoordinator.initialize();
 
-  void _applyPushEnvironmentToMachine() {
-    if (!PushPlatform.isPushSupported) {
-      notificationsMachine.send(const PushUnsupportedDetected());
-    } else if (PushPlatform.notificationPermission == 'denied') {
-      notificationsMachine.send(const PermissionDeniedDetected());
-    } else {
-      notificationsMachine.send(const SubscriptionIdleReached());
-    }
-  }
+  void openAuthOverlay({required bool dismissible}) =>
+      _sessionCoordinator.openAuthOverlay(dismissible: dismissible);
 
-  Future<void> initialize() async {
-    authAdapters.onBootstrapStarted();
-    isLoading = true;
-    notifyListeners();
-    try {
-      await _manager.initialize();
-      authAdapters.onBootstrapCompleted(
+  void closeAuthOverlay() => _sessionCoordinator.closeAuthOverlay(
         hasOpenAccounts: _manager.hasOpenAccounts,
       );
-    } finally {
-      isLoading = false;
-      sessionReady = true;
-      multiAccountAdapters.onManifestInitialized(
-        hasOpenAccounts: _manager.hasOpenAccounts,
-        hasFocusedSession: _manager.focusedSession != null,
-      );
-      _syncAuthOverlayFromMachine();
-      notifyListeners();
-    }
-    unawaited(syncPushSubscriptions());
-  }
-
-  void openAuthOverlay({required bool dismissible}) {
-    authAdapters.onOverlayOpen(dismissible: dismissible);
-    _syncAuthOverlayFromMachine();
-    error = null;
-    notifyListeners();
-  }
-
-  void closeAuthOverlay() {
-    if (!authOverlayDismissible && !_manager.hasOpenAccounts) return;
-    authAdapters.onOverlayClose();
-    _syncAuthOverlayFromMachine();
-    error = null;
-    notifyListeners();
-  }
-
-  void _syncAuthOverlayFromMachine() {
-    showAuthOverlay = authMachine.showOverlay;
-    authOverlayDismissible = authMachine.overlayDismissible;
-  }
 
   Future<void> setFocus(String userId) async {
     try {
       await multiAccountAdapters.focusAccount(userId);
       error = null;
     } catch (e) {
-      error = _friendlyAuthError(e);
+      error = friendlyAuthError(e);
     }
     notifyListeners();
   }
 
-  /// Account nel manifest ma sessione assente: ripristina connessione GoTrue.
   Future<void> reconnectFocusedSession() async {
     if (!hasOpenAccounts || focusedSession != null) return;
     try {
       await multiAccountAdapters.reconnectFocusedSession();
       error = null;
     } catch (e) {
-      error = _friendlyAuthError(e);
+      error = friendlyAuthError(e);
     }
     notifyListeners();
   }
 
-  /// Tap notifica push: focus sull'account destinatario (delega a [NavigationCoordinator]).
   Future<bool> focusAccountForPushNotification(String recipientUserId) async {
     try {
       final ok = await _navigation.ensureAccountFocused(recipientUserId);
@@ -192,19 +157,18 @@ class AuthController extends ChangeNotifier {
       notifyListeners();
       return ok;
     } catch (e) {
-      error = _friendlyAuthError(e);
+      error = friendlyAuthError(e);
       notifyListeners();
       return false;
     }
   }
 
-  /// Tap push: account destinatario → inbox → conversazione (solo peer in inbox).
   Future<bool> openConversationAfterPushTap({
     required String recipientUserId,
     required String peerProfileId,
   }) async {
     try {
-      final ok = await _navigation.adapters.openFromPushTap(
+      final ok = await _navigation.externalIntents.openFromPushTap(
         accountUserId: recipientUserId,
         peerProfileId: peerProfileId,
       );
@@ -212,20 +176,19 @@ class AuthController extends ChangeNotifier {
       notifyListeners();
       return ok;
     } catch (e) {
-      error = _friendlyAuthError(e);
+      error = friendlyAuthError(e);
       notifyListeners();
       return false;
     }
   }
 
-  /// Apre conversazione su account specifico (link condivisibili, compose).
   Future<bool> openConversationOnAccount({
     required String accountUserId,
     required String peerProfileId,
     bool allowProfileFallback = true,
   }) async {
     try {
-      final ok = await _navigation.openConversationOnAccount(
+      final ok = await _navigation.openFromCompose(
         accountUserId: accountUserId,
         peerProfileId: peerProfileId,
         allowProfileFallback: allowProfileFallback,
@@ -234,19 +197,18 @@ class AuthController extends ChangeNotifier {
       notifyListeners();
       return ok;
     } catch (e) {
-      error = _friendlyAuthError(e);
+      error = friendlyAuthError(e);
       notifyListeners();
       return false;
     }
   }
 
-  /// Link `#indirizzo/chat` sull'account in focus (adapter shareable-link).
   Future<bool> openConversationFromShareableLink({
     required String accountUserId,
     required String peerProfileId,
   }) async {
     try {
-      final ok = await _navigation.openFromShareableLink(
+      final ok = await _navigation.externalIntents.openFromShareableLink(
         accountUserId: accountUserId,
         peerProfileId: peerProfileId,
       );
@@ -254,7 +216,7 @@ class AuthController extends ChangeNotifier {
       notifyListeners();
       return ok;
     } catch (e) {
-      error = _friendlyAuthError(e);
+      error = friendlyAuthError(e);
       notifyListeners();
       return false;
     }
@@ -281,32 +243,12 @@ class AuthController extends ChangeNotifier {
   }
 
   void mergeActivePeerFromInbox(ChatPeer inboxRow) {
-    _manager.mergeActivePeerFromInbox(inboxRow);
+    _navigation.adapters.mergeActivePeerFromInbox(inboxRow);
     notifyListeners();
   }
 
-  Future<void> signIn(String email, String password) async {
-    final validationError = AuthIdentity.validateEmail(email);
-    if (validationError != null) {
-      authAdapters.onValidationRejected();
-      error = validationError;
-      notifyListeners();
-      return;
-    }
-
-    await _withLoading(() async {
-      await _manager.openWithPassword(email: email, password: password);
-      authAdapters.onAuthOperationCompleted(success: true);
-      multiAccountAdapters.onAccountOpened(
-        sessionReady: _manager.focusedSession != null,
-      );
-      _syncAuthOverlayFromMachine();
-      await _pushService.syncOpenAccounts(
-        _manager.openAccounts,
-        focusedSession: _manager.focusedSession,
-      );
-    });
-  }
+  Future<void> signIn(String email, String password) =>
+      _sessionCoordinator.signIn(email, password);
 
   Future<void> signUp({
     required String email,
@@ -314,157 +256,26 @@ class AuthController extends ChangeNotifier {
     required String username,
     required String displayName,
     ProfileKind profileKind = ProfileKind.user,
-  }) async {
-    final emailError = AuthIdentity.validateEmail(email);
-    if (emailError != null) {
-      authAdapters.onValidationRejected();
-      error = emailError;
-      notifyListeners();
-      return;
-    }
-
-    final usernameError = AuthIdentity.validateUsername(username);
-    if (usernameError != null) {
-      authAdapters.onValidationRejected();
-      error = usernameError;
-      notifyListeners();
-      return;
-    }
-
-    if (displayName.trim().isEmpty) {
-      authAdapters.onValidationRejected();
-      error = 'Inserisci un nome visualizzato';
-      notifyListeners();
-      return;
-    }
-
-    await _withLoading(() async {
-      final available = await _manager.isUsernameAvailable(username);
-      if (!available) {
-        throw const AuthException('Username già in uso. Scegline un altro.');
-      }
-      await _manager.openWithSignUp(
+  }) =>
+      _sessionCoordinator.signUp(
         email: email,
         password: password,
         username: username,
-        displayName: displayName.trim(),
+        displayName: displayName,
         profileKind: profileKind,
       );
-      authAdapters.onAuthOperationCompleted(success: true);
-      multiAccountAdapters.onAccountOpened(
-        sessionReady: _manager.focusedSession != null,
-      );
-      _syncAuthOverlayFromMachine();
-      await _pushService.syncOpenAccounts(
-        _manager.openAccounts,
-        focusedSession: _manager.focusedSession,
-      );
-    });
-  }
 
-  Future<bool> resetPassword(String email) async {
-    final validationError = AuthIdentity.validateEmail(email);
-    if (validationError != null) {
-      error = validationError;
-      notifyListeners();
-      return false;
-    }
+  Future<bool> resetPassword(String email) =>
+      _sessionCoordinator.resetPassword(email);
 
-    error = null;
-    isLoading = true;
-    notifyListeners();
-    try {
-      await _manager.resetPassword(email);
-      return true;
-    } catch (e) {
-      error = _friendlyAuthError(e);
-      return false;
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> removeAccount(String userId) async {
-    OpenAccount? account;
-    for (final entry in _manager.openAccounts) {
-      if (entry.userId == userId) {
-        account = entry;
-        break;
-      }
-    }
-    final remaining =
-        _manager.openAccounts.where((a) => a.userId != userId).length;
-    await _pushService.unregisterAccount(
-      userId: userId,
-      account: account,
-      isLastAccountOnDevice: remaining == 0,
-    );
-    notificationsMachine.send(const UnregisterSubscriptionRequested());
-    await _manager.removeAccount(userId);
-    multiAccountAdapters.onAccountClosed(wasLastAccount: remaining == 0);
-    if (!_manager.hasOpenAccounts) {
-      authAdapters.onLastAccountRemoved();
-    }
-    _syncAuthOverlayFromMachine();
-    notifyListeners();
-  }
+  Future<void> removeAccount(String userId) =>
+      _sessionCoordinator.removeAccount(userId);
 
   Future<void> refreshProfile() async {
     await focusedSession?.syncProfileSummary();
     focusedSession?.fullProfile = await focusedSession?.fetchFullProfile();
     await _manager.refreshOpenAccountProfiles();
     notifyListeners();
-  }
-
-  Future<void> _withLoading(Future<void> Function() action) async {
-    error = null;
-    authAdapters.onAuthOperationStarted();
-    isLoading = true;
-    notifyListeners();
-    try {
-      await action();
-    } catch (e) {
-      authAdapters.onAuthOperationFailed();
-      _syncAuthOverlayFromMachine();
-      error = _friendlyAuthError(e);
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  String _friendlyAuthError(Object e) {
-    if (e is AuthException) {
-      final msg = e.message.toLowerCase();
-      if (msg.contains('invalid refresh') ||
-          msg.contains('refresh token not found') ||
-          msg.contains('session expired') ||
-          msg.contains('token has expired')) {
-        return 'Sessione scaduta per questo account. Accedi di nuovo.';
-      }
-      if (msg.contains('invalid login credentials')) {
-        return 'Email o password non corretti.';
-      }
-      if (msg.contains('username già in uso')) {
-        return 'Username già in uso. Scegline un altro.';
-      }
-      if (msg.contains('database error saving new user')) {
-        return 'Username già in uso o non valido. Scegline un altro.';
-      }
-      if (msg.contains('user already registered')) {
-        return 'Email già registrata. Prova ad accedere.';
-      }
-      if (msg.contains('email rate limit exceeded') ||
-          msg.contains('over_email_send_rate_limit')) {
-        return 'Troppi tentativi email. Riprova tra qualche minuto.';
-      }
-      if (msg.contains('conferma l\'email')) {
-        return e.message;
-      }
-      return e.message;
-    }
-    return e.toString();
   }
 
   @override

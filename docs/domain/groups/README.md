@@ -1,6 +1,6 @@
 # Contesto: groups
 
-**Stato modellazione:** `implemented`
+**Stato modellazione:** `verified`
 
 Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.md).
 
@@ -12,14 +12,16 @@ Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.
 | [commands-and-events.md](./commands-and-events.md) | compilato |
 | [UML state](../../model/uml/groups/groups-state.puml) | compilato |
 | [seq-broadcast](../../model/uml/groups/seq-broadcast.puml) | compilato |
-| Statechart client | **non richiesto** — produzione = `GroupHomeController` + `GroupMessagesController` |
+| Statechart client | `client/lib/machines/groups/` — `GroupHomeMachine` + `GroupMessagesMachine` |
 
 ## Implementazione runtime
 
 | Componente | Ruolo |
 |------------|-------|
-| `GroupHomeController` | Home gruppo — conteggi, autori attivi, tile conversazione |
-| `GroupMessagesController` | Storico owner, broadcast allow list, realtime |
+| `GroupHomeController` | Facade UI home — delega a `GroupHomeCoordinator` |
+| `GroupHomeCoordinator` | Macchina home + effetti (`MessageService`, `ProfileService`) |
+| `GroupMessagesController` | Facade UI conversazione — delega a `GroupMessagesCoordinator` |
+| `GroupMessagesCoordinator` | Macchina messaggi + broadcast + realtime |
 | `GroupHomePanel` | Shell home senza inbox |
 | `GroupConversationScreen` | Chat gruppo con `showAuthorLabels` |
 | `MessageService` | `fetchOwnerMessages`, `broadcast*ToAllowlist`, `subscribeToOwnerMessages` |

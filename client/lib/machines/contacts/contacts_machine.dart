@@ -57,8 +57,7 @@ final class RemoveInternalContact extends ContactsEvent {
 
 /// Interprete statechart contacts — allineato a UML.
 ///
-/// Il percorso produzione resta [ContactsController]; questa macchina
-/// documenta transizioni load/filtro/CRUD e supporta test unitari.
+/// Produzione: [ContactsCoordinator] + [ContactsController].
 class ContactsMachine {
   ContactsMachine(this._effects);
 

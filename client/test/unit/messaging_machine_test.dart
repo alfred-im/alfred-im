@@ -2,181 +2,161 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:alfred_client/machines/messaging/messaging_effects.dart';
-import 'package:alfred_client/machines/messaging/messaging_machine.dart';
-import 'package:alfred_client/models/message.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'dart:typed_data';
 
-class _RecordingMessagingEffects implements MessagingEffects {
-  int loadCount = 0;
+import 'package:alfred_client/machines/messaging/conversation_load_machine.dart';
+import 'package:alfred_client/machines/messaging/messaging_conversation_state.dart';
+import 'package:alfred_client/machines/messaging/messaging_coordinator.dart';
+import 'package:alfred_client/machines/messaging/messaging_effects.dart';
+import 'package:alfred_client/machines/messaging/outbound_send_machine.dart';
+import 'package:alfred_client/machines/messaging/realtime_attachment_machine.dart';
+import 'package:alfred_client/models/message.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class _RecordingEffects implements MessagingEffects {
+  int fetchCount = 0;
   int markReadCount = 0;
   int attachCount = 0;
-  int sendCount = 0;
-  int retryCount = 0;
-  int realtimeMessageCount = 0;
-  String? lastSendBody;
-  String? lastRetryClientId;
 
   @override
-  Future<void> loadMessages() async {
-    loadCount++;
-  }
+  bool ensureValidSession() => true;
 
   @override
-  Future<void> markRead() async {
-    markReadCount++;
-  }
+  Future<void> fetchAndSetMessages() async => fetchCount++;
 
   @override
-  void attachRealtime() {
+  Future<void> enrichAuthorNamesIfNeeded() async {}
+
+  @override
+  Future<void> markRead() async => markReadCount++;
+
+  @override
+  RealtimeChannel? attachRealtime(void Function(ChatMessage message) onMessage) {
     attachCount++;
+    return null;
   }
 
   @override
-  Future<void> sendText(String body) async {
-    sendCount++;
-    lastSendBody = body;
-  }
+  void disposeRealtime(RealtimeChannel? channel) {}
 
   @override
-  Future<void> retryMessage(String clientId) async {
-    retryCount++;
-    lastRetryClientId = clientId;
-  }
+  void startRetryTimer(void Function() onTick) {}
 
   @override
-  void onRealtimeMessage(ChatMessage message) {
-    realtimeMessageCount++;
-  }
+  void stopRetryTimer() {}
+
+  @override
+  Future<void> restoreFailedFromQueue() async {}
+
+  @override
+  Future<void> sendText(String body) async {}
+
+  @override
+  Future<void> sendGif(Uint8List bytes) async {}
+
+  @override
+  Future<void> sendImage({required Uint8List bytes, String? caption}) async {}
+
+  @override
+  Future<void> sendVideoFromPicker({
+    required PlatformFile file,
+    String? caption,
+  }) async {}
+
+  @override
+  Future<void> sendVideo({
+    required Uint8List bytes,
+    required String extension,
+    required String mime,
+    required int durationSeconds,
+    String? caption,
+  }) async {}
+
+  @override
+  Future<void> sendVoice({
+    required Uint8List bytes,
+    required int durationMs,
+  }) async {}
+
+  @override
+  Future<void> sendLocation({
+    required double latitude,
+    required double longitude,
+  }) async {}
+
+  @override
+  Future<void> retryMessage(String clientId) async {}
+
+  @override
+  Future<void> processRetries() async {}
+
+  @override
+  void disposeQueue() {}
 }
 
-ChatMessage _message() => const ChatMessage(
-      id: 'msg-1',
-      body: 'hello',
-      timeLabel: '12:00',
-      isMine: false,
-    );
-
 void main() {
-  group('MessagingMachine load state', () {
-    test('InitMessaging carica, segna letto e attacca realtime', () async {
-      final effects = _RecordingMessagingEffects();
-      final machine = MessagingMachine(effects);
+  group('ConversationLoadMachine', () {
+    test('LoadMessages → loading', () {
+      final machine = ConversationLoadMachine()
+        ..state = ConversationLoadState.ready;
+      machine.send(const LoadMessages());
+      expect(machine.state, ConversationLoadState.loading);
+    });
 
-      await machine.send(const InitMessaging());
+    test('SessionExpired → sessionBlocked', () {
+      final machine = ConversationLoadMachine();
+      machine.send(const SessionExpired());
+      expect(machine.state, ConversationLoadState.sessionBlocked);
+    });
+  });
 
-      expect(machine.loadState, MessagingLoadState.loading);
-      expect(machine.realtimeState, MessagingRealtimeState.attached);
-      expect(effects.loadCount, 1);
+  group('OutboundSendMachine', () {
+    test('SendStarted → sending → SendAcknowledged → idle', () {
+      final machine = OutboundSendMachine();
+      machine.send(const SendStarted());
+      expect(machine.state, OutboundSendState.sending);
+      machine.send(const SendAcknowledged());
+      expect(machine.state, OutboundSendState.idle);
+    });
+
+    test('SendFailed → failedQueue', () {
+      final machine = OutboundSendMachine()..state = OutboundSendState.sending;
+      machine.send(const SendFailed());
+      expect(machine.state, OutboundSendState.failedQueue);
+    });
+  });
+
+  group('RealtimeAttachmentMachine', () {
+    test('AttachRealtime / DetachRealtime', () {
+      final machine = RealtimeAttachmentMachine();
+      machine.send(const AttachRealtime());
+      expect(machine.state, RealtimeAttachmentState.attached);
+      machine.send(const DetachRealtime());
+      expect(machine.state, RealtimeAttachmentState.detached);
+    });
+  });
+
+  group('MessagingCoordinator', () {
+    test('init wires load, markRead, realtime', () async {
+      final effects = _RecordingEffects();
+      final coordinator = MessagingCoordinator(
+        state: MessagingConversationState(),
+        effects: effects,
+        onChanged: () {},
+      );
+
+      await coordinator.init();
+
+      expect(coordinator.loadMachine.state, ConversationLoadState.ready);
+      expect(
+        coordinator.realtimeMachine.state,
+        RealtimeAttachmentState.attached,
+      );
+      expect(effects.fetchCount, 1);
       expect(effects.markReadCount, 1);
       expect(effects.attachCount, 1);
-    });
-
-    test('MessagesLoaded → ready', () async {
-      final machine = MessagingMachine(_RecordingMessagingEffects());
-
-      await machine.send(const MessagesLoaded());
-
-      expect(machine.loadState, MessagingLoadState.ready);
-    });
-
-    test('SessionExpired → sessionBlocked', () async {
-      final machine = MessagingMachine(_RecordingMessagingEffects());
-
-      await machine.send(const SessionExpired());
-
-      expect(machine.loadState, MessagingLoadState.sessionBlocked);
-    });
-
-    test('LoadFailed resta ready con errore gestito', () async {
-      final machine = MessagingMachine(_RecordingMessagingEffects());
-
-      await machine.send(const LoadFailed());
-
-      expect(machine.loadState, MessagingLoadState.ready);
-    });
-
-    test('ReloadMessages torna in loading', () async {
-      final effects = _RecordingMessagingEffects();
-      final machine = MessagingMachine(effects)
-        ..loadState = MessagingLoadState.ready;
-
-      await machine.send(const ReloadMessages());
-
-      expect(machine.loadState, MessagingLoadState.loading);
-      expect(effects.loadCount, 1);
-    });
-  });
-
-  group('MessagingMachine send state', () {
-    test('SendMessageRequested → sending → SendCompleted → idle', () async {
-      final effects = _RecordingMessagingEffects();
-      final machine = MessagingMachine(effects)
-        ..loadState = MessagingLoadState.ready;
-
-      await machine.send(const SendMessageRequested('ciao'));
-      expect(machine.sendState, MessagingSendState.sending);
-      expect(effects.sendCount, 1);
-      expect(effects.lastSendBody, 'ciao');
-
-      await machine.send(const SendCompleted());
-      expect(machine.sendState, MessagingSendState.idle);
-    });
-
-    test('SendFailed riporta idle', () async {
-      final machine = MessagingMachine(_RecordingMessagingEffects())
-        ..loadState = MessagingLoadState.ready
-        ..sendState = MessagingSendState.sending;
-
-      await machine.send(const SendFailed());
-
-      expect(machine.sendState, MessagingSendState.idle);
-    });
-
-    test('SendMessageRequested ignorato se sessionBlocked', () async {
-      final effects = _RecordingMessagingEffects();
-      final machine = MessagingMachine(effects)
-        ..loadState = MessagingLoadState.sessionBlocked;
-
-      await machine.send(const SendMessageRequested('ciao'));
-
-      expect(effects.sendCount, 0);
-      expect(machine.sendState, MessagingSendState.idle);
-    });
-
-    test('RetryMessageRequested invoca effetto e torna idle', () async {
-      final effects = _RecordingMessagingEffects();
-      final machine = MessagingMachine(effects)
-        ..loadState = MessagingLoadState.ready;
-
-      await machine.send(const RetryMessageRequested('client-1'));
-
-      expect(effects.retryCount, 1);
-      expect(effects.lastRetryClientId, 'client-1');
-      expect(machine.sendState, MessagingSendState.idle);
-    });
-  });
-
-  group('MessagingMachine realtime', () {
-    test('RealtimeReceived inoltra messaggio agli effetti', () async {
-      final effects = _RecordingMessagingEffects();
-      final machine = MessagingMachine(effects);
-
-      await machine.send(RealtimeReceived(_message()));
-
-      expect(effects.realtimeMessageCount, 1);
-    });
-
-    test('AttachRealtime e DisposeMessaging gestiscono regione', () async {
-      final effects = _RecordingMessagingEffects();
-      final machine = MessagingMachine(effects);
-
-      await machine.send(const AttachRealtime());
-      expect(machine.realtimeState, MessagingRealtimeState.attached);
-      expect(effects.attachCount, 1);
-
-      await machine.send(const DisposeMessaging());
-      expect(machine.realtimeState, MessagingRealtimeState.detached);
     });
   });
 }

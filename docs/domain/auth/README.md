@@ -1,6 +1,6 @@
 # Contesto: auth
 
-**Stato modellazione:** `implemented`
+**Stato modellazione:** `verified`
 
 Vedi [glossary.md](./glossary.md) · [commands-and-events.md](./commands-and-events.md) · [UML](../../model/uml/auth/)
 

@@ -18,32 +18,46 @@ class _RecordingEffects implements MultiAccountEffects {
   int reconnectCalls = 0;
   int closeCalls = 0;
   bool focusShouldThrow = false;
+  @override
+  String? focusUserId = 'user-a';
 
   @override
-  Future<void> focusAccount(String accountUserId) async {
+  Future<ManifestBootstrap> loadManifestBootstrap() async {
+    return ManifestBootstrap(
+      openAccountUserIds: hasOpenAccounts ? const ['user-a'] : const [],
+      persistedFocusUserId: hasOpenAccounts ? 'user-a' : null,
+    );
+  }
+
+  @override
+  Future<void> executeFocus(String accountUserId) async {
     focusCalls++;
     lastFocusUserId = accountUserId;
     if (focusShouldThrow) {
+      focusUserId = 'user-a';
       throw StateError('focus failed');
     }
+    focusUserId = accountUserId;
   }
 
   @override
-  Future<void> reconnectFocusedSession() async {
+  Future<void> reconnectFocusedSession(String focusUserId) async {
     reconnectCalls++;
+    lastFocusUserId = focusUserId;
   }
 
   @override
-  Future<void> openAccountWithPassword({
+  Future<String> openAccountWithPassword({
     required String email,
     required String password,
   }) async {
     hasOpenAccounts = true;
     hasFocusedSession = true;
+    return 'user-new';
   }
 
   @override
-  Future<void> openAccountWithSignUp({
+  Future<String> openAccountWithSignUp({
     required String email,
     required String password,
     required String username,
@@ -52,63 +66,116 @@ class _RecordingEffects implements MultiAccountEffects {
   }) async {
     hasOpenAccounts = true;
     hasFocusedSession = true;
+    return 'user-new';
   }
 
   @override
-  Future<void> closeAccount(String accountUserId) async {
+  Future<CloseAccountResult> closeAccount(String accountUserId) async {
     closeCalls++;
     hasOpenAccounts = false;
     hasFocusedSession = false;
+    return const CloseAccountResult(
+      wasLastAccount: true,
+      wasFocused: true,
+      remainingUserIds: [],
+    );
   }
 }
 
 void main() {
-  group('MultiAccountMachine InitializeManifest', () {
-    test('manifest empty → NoOpenAccounts', () {
+  group('MultiAccountMachine resolveFocusUserId', () {
+    test('empty manifest → null', () {
+      expect(
+        MultiAccountMachine.resolveFocusUserId(
+          openAccountUserIds: const [],
+          persistedFocusUserId: 'user-a',
+        ),
+        isNull,
+      );
+    });
+
+    test('valid persisted focus → persisted', () {
+      expect(
+        MultiAccountMachine.resolveFocusUserId(
+          openAccountUserIds: const ['user-a', 'user-b'],
+          persistedFocusUserId: 'user-b',
+        ),
+        'user-b',
+      );
+    });
+
+    test('stale persisted focus → first account', () {
+      expect(
+        MultiAccountMachine.resolveFocusUserId(
+          openAccountUserIds: const ['user-a', 'user-b'],
+          persistedFocusUserId: 'missing',
+        ),
+        'user-a',
+      );
+    });
+  });
+
+  group('MultiAccountMachine ManifestLoaded', () {
+    test('manifest empty → NoOpenAccounts', () async {
       final machine = MultiAccountMachine();
-      machine.send(
-        const ManifestInitialized(
-          hasOpenAccounts: false,
-          hasFocusedSession: false,
+      await machine.send(
+        const ManifestLoaded(
+          openAccountUserIds: [],
+          persistedFocusUserId: null,
         ),
       );
       expect(machine.focusState, MultiAccountFocusState.noOpenAccounts);
+      expect(machine.focusUserId, isNull);
     });
 
-    test('manifest + session → FocusedWithSession', () {
+    test('manifest + session → FocusedWithSession', () async {
       final machine = MultiAccountMachine();
-      machine.send(
-        const ManifestInitialized(
-          hasOpenAccounts: true,
-          hasFocusedSession: true,
+      await machine.send(
+        const ManifestLoaded(
+          openAccountUserIds: ['user-a'],
+          persistedFocusUserId: 'user-a',
         ),
+      );
+      await machine.send(
+        const FocusActivationCompleted(hasFocusedSession: true),
       );
       expect(machine.focusState, MultiAccountFocusState.focusedWithSession);
+      expect(machine.focusUserId, 'user-a');
     });
 
-    test('manifest without session → FocusedAwaitingSession', () {
+    test('manifest without session → FocusedAwaitingSession', () async {
       final machine = MultiAccountMachine();
-      machine.send(
-        const ManifestInitialized(
-          hasOpenAccounts: true,
-          hasFocusedSession: false,
+      await machine.send(
+        const ManifestLoaded(
+          openAccountUserIds: ['user-a'],
+          persistedFocusUserId: 'user-a',
         ),
       );
+      await machine.send(
+        const FocusActivationCompleted(hasFocusedSession: false),
+      );
       expect(machine.focusState, MultiAccountFocusState.focusedAwaitingSession);
+      expect(machine.focusUserId, 'user-a');
     });
   });
 
   group('MultiAccountMachine AccountOpened', () {
-    test('from NoOpenAccounts with session → FocusedWithSession', () {
+    test('from NoOpenAccounts with session → FocusedWithSession', () async {
       final machine = MultiAccountMachine();
-      machine.send(const AccountOpened(sessionReady: true));
+      await machine.send(
+        const AccountOpened(accountUserId: 'user-a', sessionReady: true),
+      );
       expect(machine.focusState, MultiAccountFocusState.focusedWithSession);
+      expect(machine.focusUserId, 'user-a');
     });
 
-    test('from NoOpenAccounts without session → HasOpenAccounts', () {
+    test('from NoOpenAccounts without session → HasOpenAccounts', () async {
       final machine = MultiAccountMachine();
-      machine.send(const AccountOpened(sessionReady: false));
+      await machine.send(
+        const AccountOpened(accountUserId: 'user-a', sessionReady: false),
+      );
       expect(machine.focusState, MultiAccountFocusState.hasOpenAccounts);
+      expect(machine.focusUserId, 'user-a');
     });
   });
 
@@ -117,14 +184,18 @@ void main() {
       final effects = _RecordingEffects()..hasFocusedSession = true;
       final machine = MultiAccountMachine(effects: effects)
         ..send(
-          const ManifestInitialized(
-            hasOpenAccounts: true,
-            hasFocusedSession: true,
+          const ManifestLoaded(
+            openAccountUserIds: ['user-a'],
+            persistedFocusUserId: 'user-a',
           ),
         );
+      await machine.send(
+        const FocusActivationCompleted(hasFocusedSession: true),
+      );
 
       final future = machine.send(const FocusAccount('user-b'));
       expect(machine.focusState, MultiAccountFocusState.focusSwitching);
+      expect(machine.focusUserId, 'user-b');
       await future;
 
       expect(machine.focusState, MultiAccountFocusState.focusedWithSession);
@@ -137,14 +208,18 @@ void main() {
         ..hasFocusedSession = false;
       final machine = MultiAccountMachine(effects: effects)
         ..send(
-          const ManifestInitialized(
-            hasOpenAccounts: true,
-            hasFocusedSession: true,
+          const ManifestLoaded(
+            openAccountUserIds: ['user-a'],
+            persistedFocusUserId: 'user-a',
           ),
         );
+      await machine.send(
+        const FocusActivationCompleted(hasFocusedSession: true),
+      );
 
       await machine.send(const FocusAccount('user-b'));
       expect(machine.focusState, MultiAccountFocusState.focusedAwaitingSession);
+      expect(machine.focusUserId, 'user-b');
     });
 
     test('ignored from NoOpenAccounts', () async {
@@ -154,6 +229,7 @@ void main() {
       await machine.send(const FocusAccount('user-a'));
 
       expect(machine.focusState, MultiAccountFocusState.noOpenAccounts);
+      expect(machine.focusUserId, isNull);
       expect(effects.focusCalls, 0);
     });
 
@@ -162,7 +238,7 @@ void main() {
         ..hasOpenAccounts = true
         ..hasFocusedSession = true;
       final machine = MultiAccountMachine(effects: effects)
-        ..send(const AccountOpened(sessionReady: false));
+        ..send(const AccountOpened(accountUserId: 'user-a', sessionReady: false));
 
       await machine.send(const FocusAccount('user-a'));
       expect(machine.focusState, MultiAccountFocusState.focusedWithSession);
@@ -175,17 +251,21 @@ void main() {
         ..focusShouldThrow = true;
       final machine = MultiAccountMachine(effects: effects)
         ..send(
-          const ManifestInitialized(
-            hasOpenAccounts: true,
-            hasFocusedSession: true,
+          const ManifestLoaded(
+            openAccountUserIds: ['user-a'],
+            persistedFocusUserId: 'user-a',
           ),
         );
+      await machine.send(
+        const FocusActivationCompleted(hasFocusedSession: true),
+      );
 
       await expectLater(
         machine.send(const FocusAccount('user-b')),
         throwsStateError,
       );
       expect(machine.focusState, MultiAccountFocusState.focusedAwaitingSession);
+      expect(machine.focusUserId, 'user-a');
     });
   });
 
@@ -194,16 +274,20 @@ void main() {
       final effects = _RecordingEffects()..hasOpenAccounts = true;
       final machine = MultiAccountMachine(effects: effects)
         ..send(
-          const ManifestInitialized(
-            hasOpenAccounts: true,
-            hasFocusedSession: false,
+          const ManifestLoaded(
+            openAccountUserIds: ['user-a'],
+            persistedFocusUserId: 'user-a',
           ),
         );
+      await machine.send(
+        const FocusActivationCompleted(hasFocusedSession: false),
+      );
 
       effects.hasFocusedSession = true;
       await machine.send(const ReconnectFocusedSession());
 
       expect(effects.reconnectCalls, 1);
+      expect(effects.lastFocusUserId, 'user-a');
       expect(machine.focusState, MultiAccountFocusState.focusedWithSession);
     });
 
@@ -211,11 +295,14 @@ void main() {
       final effects = _RecordingEffects();
       final machine = MultiAccountMachine(effects: effects)
         ..send(
-          const ManifestInitialized(
-            hasOpenAccounts: true,
-            hasFocusedSession: true,
+          const ManifestLoaded(
+            openAccountUserIds: ['user-a'],
+            persistedFocusUserId: 'user-a',
           ),
         );
+      await machine.send(
+        const FocusActivationCompleted(hasFocusedSession: true),
+      );
 
       await machine.send(const ReconnectFocusedSession());
       expect(effects.reconnectCalls, 0);
@@ -224,46 +311,56 @@ void main() {
   });
 
   group('MultiAccountMachine AccountClosed', () {
-    test('last account → NoOpenAccounts', () {
+    test('last account → NoOpenAccounts', () async {
       final machine = MultiAccountMachine()
         ..send(
-          const ManifestInitialized(
-            hasOpenAccounts: true,
-            hasFocusedSession: true,
+          const ManifestLoaded(
+            openAccountUserIds: ['user-a'],
+            persistedFocusUserId: 'user-a',
           ),
         );
+      await machine.send(
+        const FocusActivationCompleted(hasFocusedSession: true),
+      );
 
-      machine.send(
+      await machine.send(
         const AccountClosed(wasLastAccount: true, sessionReady: false),
       );
       expect(machine.focusState, MultiAccountFocusState.noOpenAccounts);
+      expect(machine.focusUserId, isNull);
     });
 
-    test('non-last with session → FocusedWithSession', () {
+    test('non-last with session → FocusedWithSession', () async {
       final machine = MultiAccountMachine()
         ..send(
-          const ManifestInitialized(
-            hasOpenAccounts: true,
-            hasFocusedSession: true,
+          const ManifestLoaded(
+            openAccountUserIds: ['user-a'],
+            persistedFocusUserId: 'user-a',
           ),
         );
+      await machine.send(
+        const FocusActivationCompleted(hasFocusedSession: true),
+      );
 
-      machine.send(
+      await machine.send(
         const AccountClosed(wasLastAccount: false, sessionReady: true),
       );
       expect(machine.focusState, MultiAccountFocusState.focusedWithSession);
     });
 
-    test('non-last without session → FocusedAwaitingSession', () {
+    test('non-last without session → FocusedAwaitingSession', () async {
       final machine = MultiAccountMachine()
         ..send(
-          const ManifestInitialized(
-            hasOpenAccounts: true,
-            hasFocusedSession: true,
+          const ManifestLoaded(
+            openAccountUserIds: ['user-a'],
+            persistedFocusUserId: 'user-a',
           ),
         );
+      await machine.send(
+        const FocusActivationCompleted(hasFocusedSession: true),
+      );
 
-      machine.send(
+      await machine.send(
         const AccountClosed(wasLastAccount: false, sessionReady: false),
       );
       expect(machine.focusState, MultiAccountFocusState.focusedAwaitingSession);
@@ -280,6 +377,7 @@ void main() {
       );
 
       expect(machine.focusState, MultiAccountFocusState.focusedWithSession);
+      expect(machine.focusUserId, 'user-new');
     });
 
     test('OpenAccountWithSignUp → FocusedWithSession', () async {
@@ -296,20 +394,23 @@ void main() {
       );
 
       expect(machine.focusState, MultiAccountFocusState.focusedWithSession);
+      expect(machine.focusUserId, 'user-new');
     });
   });
 
-  group('MultiAccountAdapters', () {
-    test('syncFromEffects mirrors manager snapshot', () {
+  group('MultiAccountAdapters bootstrapManifest', () {
+    test('loads manifest and sets machine focus', () async {
       final effects = _RecordingEffects()
         ..hasOpenAccounts = true
         ..hasFocusedSession = false;
       final machine = MultiAccountMachine(effects: effects);
       final adapters = MultiAccountAdapters(machine, effects: effects);
 
-      adapters.syncFromEffects();
+      await adapters.bootstrapManifest();
 
+      expect(machine.focusUserId, 'user-a');
       expect(machine.focusState, MultiAccountFocusState.focusedAwaitingSession);
+      expect(effects.focusCalls, 1);
     });
   });
 }

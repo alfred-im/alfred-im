@@ -1,6 +1,6 @@
 # Contesto: notifications
 
-**Stato modellazione:** `implemented` (client open chat + sync; SW documentato in UML)
+**Stato modellazione:** `verified` (client open chat + sync; SW documentato in UML + test)
 
 Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.md).
 

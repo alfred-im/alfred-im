@@ -1,6 +1,7 @@
 @startuml seq-push-received
 ' Context: notifications
 ' Command: HandlePushPayload
+' Contract: docs/specs/contracts/push-payload.md §2–3
 ' SDD: PROM-PUSH-NOTIFY-022, SURF-NOTIFICATIONS-005–008
 ' Revision: 2026-07-18
 

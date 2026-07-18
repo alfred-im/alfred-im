@@ -160,7 +160,7 @@ void main() {
       );
 
       final manager = AccountManager(storage: storage);
-      await manager.initialize();
+      await manager.initialize(focusUserId: null);
 
       final stored = await storage.loadAccounts();
       expect(stored, isEmpty);

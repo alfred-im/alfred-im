@@ -1,6 +1,6 @@
 # Contesto: media
 
-**Stato modellazione:** `implemented` (sotto-contesto di messaging)
+**Stato modellazione:** `documented` (sotto-contesto di messaging)
 
 Vedi [bounded-contexts.md](../bounded-contexts.md) e [metodo dominio](../README.md).
 

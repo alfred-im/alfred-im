@@ -3,7 +3,7 @@
 ' SDD: PROM-MULTI-ACCOUNT
 ' Revision: 2026-07-18
 
-title Multi-account — client state machine
+title Multi-account — client state machine\nfocusUserId owned by MultiAccountMachine
 
 state NoOpenAccounts
 state HasOpenAccounts
