@@ -1,10 +1,12 @@
 # Spec-Driven Development (SDD) — Alfred
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-12  
-**Versione metodo**: SDD — unico metodo di specifica
+**Ultima revisione**: 2026-07-18  
+**Versione metodo**: SDD — registro promesse prodotto
 
-Alfred è software stabile: il metodo governa **tutto ciò che il prodotto promette** — schema, RPC, comportamento riusabile e binding per superficie.
+Alfred è software stabile: la SDD governa **ciò che il prodotto promette** all'utente — schema, RPC, comportamento riusabile e binding per superficie.
+
+**Il centro del processo ingegneristico è il modello** (dominio → UML → statechart → codice). Vedi [docs/domain/README.md](../domain/README.md). La SDD **non duplica** il modello: registra solo il **confine osservabile** verso l'utente, con riferimenti a comandi/stati UML quando serve.
 
 ---
 
@@ -105,13 +107,24 @@ docs/specs/
 
 | Layer | Dove | Ruolo |
 |-------|------|--------|
+| **Modello** | `docs/domain/`, `docs/model/uml/`, `client/lib/machines/` | Rappresentazione astratta — **centro ingegneristico** |
 | **Ingresso pubblico** | `README.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md` | GitHub — panoramica, sicurezza, community |
 | **ADR** | `docs/decisions/` | Perché architetturale |
-| **Promesse** | `promises/`, `surfaces/`, `contracts/`, `registry.md` | Contratto — cosa è garantito |
+| **Promesse** | `promises/`, `surfaces/`, `contracts/`, `registry.md` | Confine prodotto — cosa l'utente osserva |
 | **Panoramica** | `PROJECT_MAP.md`, `full-stack.md` | Orientamento |
-| **Guide** | `docs/guides/` | Dettaglio implementativo |
+| **Guide** | `docs/guides/` | Dettaglio operativo post-implementazione |
 | **Cronologia** | `CHANGELOG.md` | Merge e revisioni |
 | **Test** | `client/test/`, `supabase/tests/` | Verifica; citati in tracciabilità |
+
+### SDD e modello (non duplicare)
+
+| Cambio | Modello | SDD |
+|--------|---------|-----|
+| Refactor interno, utente non vede | dominio + UML (+ statechart) | no |
+| Comportamento osservabile | dominio + UML (+ statechart) | amend `PROM-*` / `SURF-*` / `SYS-*` |
+| Solo theme | no | no |
+
+Nelle promesse: **riferire** comandi/eventi/stati del modello (es. `OpenFromPushTap` → `seq-push-tap`), non riscrivere flussi in prosa.
 
 ---
 
@@ -154,19 +167,19 @@ Solo token theme: colori, padding, font, animazioni non legate a semantica. Refa
 ```
 Richiesta (anche «implementa», issue, Cloud Agent)
     ↓
-Quale promessa creo, estendo o rompo?
-    ↓ Solo cosmetica theme
-Regola 0 + implementazione
+Quale bounded context?  → vedi docs/domain/bounded-contexts.md
+    ↓
+Solo cosmetica theme / refactor 1:1?
+    ↓ No
+Aggiornare dominio + UML (+ statechart se UI) — vedi docs/domain/README.md
+    ↓
+Quale promessa creo, estendo o rompo?  (solo se utente osserva)
     ↓ Promessa toccata
-Classificare: SYSTEM | PRODUCT | SURFACE
-    ↓
-Bozza in registry + file promessa (draft) — SENZA codice prodotto
-    ↓
-approved (accordo esplicito sul contratto)
+Classificare: SYSTEM | PRODUCT | SURFACE → draft → approved
     ↓
 «Vuoi che proceda con le modifiche?» → conferma (regola 0)
     ↓
-Implementazione + test mappati agli ID promessa
+Implementazione + test (transizioni modello + ID promessa)
     ↓
 check-spec-sync.sh + verify.sh
     ↓
@@ -208,7 +221,8 @@ Verifica: registry, promesse PRODUCT/SURFACE/SYSTEM, contratti `contracts/`, coe
 
 ## Riferimenti rapidi
 
+- **Modello**: [docs/domain/README.md](../domain/README.md) · [docs/model/uml/README.md](../model/uml/README.md)
 - **Registro**: [registry.md](./registry.md)
 - **Navigazione**: [INDICE.md](../INDICE.md)
-- **Regole agente**: [`.cursor-rules.md`](../../.cursor-rules.md) § SDD
+- **Regole agente**: [`.cursor-rules.md`](../../.cursor-rules.md) § SDD · § Modello
 - **PR**: [`.github/PULL_REQUEST_TEMPLATE.md`](../../.github/PULL_REQUEST_TEMPLATE.md)

@@ -1,6 +1,6 @@
 # Indice documentazione
 
-Navigazione per AI. **Contratti**: [specs/registry.md](./specs/registry.md) · **Metodo SDD**: [specs/README.md](./specs/README.md)
+Navigazione per AI. **Modello**: [domain/README.md](./domain/README.md) · **Promesse**: [specs/registry.md](./specs/registry.md) · **SDD**: [specs/README.md](./specs/README.md)
 
 ---
 
@@ -20,7 +20,9 @@ Navigazione per AI. **Contratti**: [specs/registry.md](./specs/registry.md) · *
 |------|-----|
 | [README.md](../README.md) | Panoramica pubblica e link rapidi |
 | [PROJECT_MAP.md](../PROJECT_MAP.md) | Mappa progetto — leggere all'inizio di ogni sessione |
-| [specs/registry.md](./specs/registry.md) | Catalogo unico promesse SYSTEM / PRODUCT / SURFACE |
+| [domain/README.md](./domain/README.md) | Metodo modello (DDD → UML → statechart) |
+| [domain/bounded-contexts.md](./domain/bounded-contexts.md) | Bounded context Alfred |
+| [specs/registry.md](./specs/registry.md) | Catalogo promesse SYSTEM / PRODUCT / SURFACE |
 | [CHANGELOG.md](../CHANGELOG.md) | Cronologia merge e modifiche |
 
 ---
@@ -31,6 +33,17 @@ Navigazione per AI. **Contratti**: [specs/registry.md](./specs/registry.md) · *
 - **Codice**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 - [client/README.md](../client/README.md) · [.cursor-rules.md](../.cursor-rules.md) · [AGENTS.md](../AGENTS.md)
 - [AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md) — account agente; non toccare test1–4
+
+---
+
+## Modello (DDD / UML / Statechart)
+
+- [domain/README.md](./domain/README.md) — metodo, workflow, relazione con SDD
+- [domain/bounded-contexts.md](./domain/bounded-contexts.md) — contesti e stato modellazione
+- [model/uml/README.md](./model/uml/README.md) — convenzioni PlantUML
+- `domain/<context>/` — glossario, comandi, eventi per contesto
+- `model/uml/<context>/` — diagrammi stati e sequenza
+- [../client/lib/machines/README.md](../client/lib/machines/README.md) — statechart client
 
 ---
 
@@ -72,4 +85,4 @@ Navigazione per AI. **Contratti**: [specs/registry.md](./specs/registry.md) · *
 - [WISHLIST.md](./WISHLIST.md) — backlog futuro
 - [specs/contracts/schema.md](./specs/contracts/schema.md) · [rpc.md](./specs/contracts/rpc.md)
 
-**Ultimo aggiornamento**: 2026-07-12
+**Ultimo aggiornamento**: 2026-07-18

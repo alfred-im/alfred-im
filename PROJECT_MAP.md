@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-14  
+**Ultimo aggiornamento**: 2026-07-18  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 ---
@@ -29,7 +29,8 @@
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
 | **Cronologia merge** | `CHANGELOG.md` |
-| **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — `SYS-PUSH` `approved`, `PROM-PUSH-NOTIFY`, `SURF-NOTIFICATIONS` |
+| **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — confine prodotto |
+| **Modello** | `docs/domain/` · `docs/model/uml/` · `client/lib/machines/` — rappresentazione astratta (DDD → UML → statechart) |
 
 **Non deducibile — URL live ≠ branch `main`**: https://alfred-im.github.io/alfred-im/ pubblica l’**ultimo** `deploy-pages` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-dev-demo` → ultimo vince). Panoramica pubblica: `README.md`.
 
@@ -105,6 +106,8 @@
 ├── bridge-matrix/          # Demone bridge Matrix (stub)
 ├── deploy/                 # Manifest deploy (supabase.json, fly-bridges.json)
 ├── docs/                   # Documentazione tecnica AI
+│   ├── domain/             # DDD + Event Storming (significato)
+│   └── model/uml/          # UML 2.5 PlantUML (forma)
 ├── fly.toml, Dockerfile    # Deploy bridge Fly.io
 ├── PROJECT_MAP.md          # Questo file
 └── .cursor-rules.md        # Regole sviluppo AI

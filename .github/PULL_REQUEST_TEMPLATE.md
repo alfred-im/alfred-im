@@ -2,6 +2,20 @@
 
 <!-- Cosa cambia e perché -->
 
+## Modello (DDD / UML / Statechart)
+
+- [ ] **Solo theme / refactor 1:1** — nessun cambio di comportamento nel modello
+- [ ] **Modello aggiornato** — metodo: `docs/domain/README.md`
+
+| Campo | Valore |
+|-------|--------|
+| Bounded context | <!-- es. navigation, messaging --> |
+| `docs/domain/<context>/` | <!-- glossary, commands-and-events --> |
+| `docs/model/uml/<context>/` | <!-- *-state.puml, seq-*.puml --> |
+| `client/lib/machines/<context>/` | <!-- se UI a stati; altrimenti N/A --> |
+
+Comandi / stati / transizioni toccati: <!-- es. FocusAccount, InboxVisible; oppure N/A -->
+
 ## Spec-Driven Development (SDD)
 
 - [ ] **Solo cosmetica theme** (colori, spacing, font — nessuna promessa toccata)

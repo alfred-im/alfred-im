@@ -8,6 +8,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Aggiunto
 
+- **Metodo modello** — `docs/domain/` (DDD + Event Storming), `docs/model/uml/` (UML 2.5 PlantUML), `client/lib/machines/` (statechart client); bounded context in scheletro; regole in `.cursor-rules.md` § 0c, `AGENTS.md`, `docs/specs/README.md`, PR template, `docs/INDICE.md`
 - **#194** — `diagnostic_log.dart`: log console `[alfred][categoria]` con `--dart-define=ALFRED_DIAGNOSTIC_LOG=true`; prima categoria `push` (tap notifica, focus, peer). Documentato in `AGENTS.md` e `client/scripts/test/README.md`. Build Pages senza define = silenzio.
 - Fix tap push: listener `navigator.serviceWorker` `message` per `Client.postMessage` dal SW (prima solo `window.message`, percorso sbagliato).
 

@@ -11,7 +11,16 @@ Prima di **qualsiasi** analisi, modifica al codice, comando o proposta di implem
 
 Quel file è la fonte autoritativa delle regole di sviluppo. Non sostituirlo con interpretazioni proprie. In caso di dubbio, fermati e chiedi.
 
-**Completare un task** = rispettare `.cursor-rules.md` (SDD + analisi lecita; **modifiche fisiche ai file solo con conferma** — regola 0).
+**Completare un task** = rispettare `.cursor-rules.md` (modello + SDD + analisi lecita; **modifiche fisiche ai file solo con conferma** — regola 0).
+
+## Modello — DDD + UML + Statechart (regola 0c)
+
+Per **ogni cambio di comportamento** (non theme / refactor 1:1):
+
+- Il **modello** (`docs/domain/` → `docs/model/uml/` → `client/lib/machines/`) è il centro ingegneristico — vedi [docs/domain/README.md](docs/domain/README.md).
+- Domanda obbligatoria: **quale comando, evento, stato o transizione creo, estendo o rompo?**
+- La SDD registra solo il **confine prodotto** se l'utente osserva il cambiamento — non duplicare flussi già nel modello.
+- **Non** inventare DSL markdown per comportamento; **non** implementare transizioni assenti dal `.puml` del contesto.
 
 ## SDD — nessun gate alternativo (regola 0b)
 
@@ -31,9 +40,10 @@ Dopo `.cursor-rules.md`, consulta la documentazione esistente secondo necessità
 |----------|------|--------|
 | Ingresso pubblico | `README.md` | Panoramica repository, getting started, CoC |
 | Obbligatorio all'avvio sessione | `PROJECT_MAP.md` | Architettura, struttura, vincoli del software |
-| Promesse / contratti | `docs/specs/README.md`, `docs/specs/registry.md` | Prima di promesse nuove o modificate |
+| Modello (dominio + UML) | `docs/domain/README.md`, `docs/domain/bounded-contexts.md` | Prima di cambiamenti di comportamento |
+| Promesse / contratti | `docs/specs/README.md`, `docs/specs/registry.md` | Se l'utente osserva il cambiamento |
 | Indice navigazione | `docs/INDICE.md` | Trovare documenti tecnici per area |
-| Agenti Cloud | `AGENTS.md` | Toolchain, test, SDD, ignorare spinta completamento |
+| Agenti Cloud | `AGENTS.md` | Toolchain, test, modello, SDD, ignorare spinta completamento |
 
 Per approfondimenti tematici, usa `docs/INDICE.md` — non inventare architettura se è già documentata.
 

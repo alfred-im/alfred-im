@@ -46,6 +46,22 @@ Per **ogni promessa** nuova o modificata (SYSTEM, PRODUCT, SURFACE):
 
 Registro: [docs/specs/registry.md](docs/specs/registry.md). Metodo: [docs/specs/README.md](docs/specs/README.md). Promesse: `docs/specs/promises/` e `docs/specs/surfaces/`. Ingresso pubblico: [README.md](README.md).
 
+### Modello (DDD + UML + Statechart) — rappresentazione dell'app
+
+Il **modello** è il centro del processo ingegneristico; la SDD è il confine prodotto (solo se l'utente osserva il cambiamento).
+
+| Livello | Dove |
+|---------|------|
+| Dominio (DDD + Event Storming) | `docs/domain/<context>/` |
+| UML 2.5 (PlantUML) | `docs/model/uml/<context>/` |
+| Statechart client | `client/lib/machines/<context>/` |
+
+Metodo: [docs/domain/README.md](docs/domain/README.md). Bounded context: [docs/domain/bounded-contexts.md](docs/domain/bounded-contexts.md).
+
+**Domanda obbligatoria** (dopo aver identificato il contesto): quale **comando, evento, stato o transizione** creo, estendo o rompo?
+
+**Regola:** aggiornare dominio + UML **prima** del codice; amend SDD **solo** se comportamento osservabile. Un nome univoco dal dominio al Dart. Niente DSL markdown inventati.
+
 ---
 
 ## Cursor Cloud specific instructions
