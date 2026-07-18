@@ -78,10 +78,9 @@ class NavigationMachine {
             ? NavigationShellState.chatOpen
             : NavigationShellState.inboxVisible;
       case OpenFromPushTap(:final accountUserId, :final peerProfileId):
-        final ok = await _effects.openConversationOnAccount(
+        final ok = await _effects.openConversationFromPushTap(
           accountUserId: accountUserId,
           peerProfileId: peerProfileId,
-          allowProfileFallback: false,
         );
         shellState = ok
             ? NavigationShellState.chatOpen

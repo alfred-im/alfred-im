@@ -4,7 +4,7 @@
 |-------|--------|
 | **Superficie ID** | `SURF-NOTIFICATIONS` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-15 |
+| **Ultima revisione** | 2026-07-18 |
 | **Promesse** | [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) |
 
 Binding UX e service worker per notifiche Web Push VAPID: permesso browser, registrazione subscription, visualizzazione notifica, tap → chat.
@@ -34,7 +34,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | **SURF-NOTIFICATIONS-004** | «Chiudi account»: DELETE subscription server + `unsubscribe` locale se ultimo account sul device |
 | **SURF-NOTIFICATIONS-005** | Handler SW `push`: mostra `Notification` con titolo e anteprima ([PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) PROM-PUSH-NOTIFY-010) |
 | **SURF-NOTIFICATIONS-006** | Handler SW `notificationclick`: focus finestra app + messaggio client `{ type: 'open_chat', recipientUserId, peerProfileId }` — **entrambi** obbligatori |
-| **SURF-NOTIFICATIONS-007** | Client riceve `open_chat` → parse [`PushConversationKey`](../../client/lib/models/push_conversation_key.dart) → focus `recipientUserId` + apre chat `peerProfileId` |
+| **SURF-NOTIFICATIONS-007** | Client riceve `open_chat` → parse [`PushConversationKey`](../../client/lib/models/push_conversation_key.dart) → focus `recipientUserId` + apre chat `peerProfileId`; azzera chat stale sull'account destinatario; retry inbox + fallback profilo se il peer non è ancora in lista |
 | **SURF-NOTIFICATIONS-008** | Soppressione: SW consulta stato client (focus + peer attivo) e confronta la **coppia** account+peer del payload prima di `showNotification` |
 | **SURF-NOTIFICATIONS-009** | Icona notifica: `icons/Icon-192.png`; `badge` coerente brand `#2D2926` |
 | **SURF-NOTIFICATIONS-010** | Payload push incompleto (manca `recipientUserId` o `peerProfileId`) → nessuna notifica visibile e nessun `open_chat` |
@@ -53,6 +53,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | **SURF-NOTIFICATIONS-030** | Richiedere permesso ripetutamente dopo `denied` |
 | **SURF-NOTIFICATIONS-031** | Mostrare notifica senza controllare soppressione |
 | **SURF-NOTIFICATIONS-032** | Service worker che bypassa RLS o invia push autonomamente |
+| **SURF-NOTIFICATIONS-033** | Tap `open_chat` che lascia visibile chat con peer diverso da `peerProfileId` del payload |
 
 ### Note piattaforma
 
@@ -70,7 +71,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | SURF-NOTIFICATIONS-001–002 | `client/test/unit/notification_permission_test.dart`; `client/e2e/push-registration.spec.ts` |
 | SURF-NOTIFICATIONS-003–004 | `client/test/unit/push_subscription_service_test.dart` |
 | SURF-NOTIFICATIONS-005–008 | `client/test/unit/push_suppression_test.dart`; `client/test/unit/push_conversation_key_test.dart`; `client/e2e/push-full.spec.ts` |
-| SURF-NOTIFICATIONS-006–007 | `client/test/widget/push_notification_listener_test.dart`; `client/e2e/push-full.spec.ts` |
+| SURF-NOTIFICATIONS-006–007 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/push-full.spec.ts` |
 | SURF-NOTIFICATIONS-008 | `client/test/unit/push_suppression_test.dart` |
 | PROM-PUSH-NOTIFY-022 | Scenario manuale in [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) §6 |
 

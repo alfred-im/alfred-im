@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-PUSH-NOTIFY` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-15 |
+| **Ultima revisione** | 2026-07-18 |
 
 Promessa di prodotto: notifiche Web Push su tutti i dispositivi attivi per account e per tutti gli account aperti sullo stesso dispositivo; anteprima testo; soppressione in chat attiva.
 
@@ -64,8 +64,9 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PUSH-NOTIFY-030** | Tap notifica → focus account destinatario + apre chat con `peer_profile_id` |
+| **PROM-PUSH-NOTIFY-030** | Tap notifica → focus account destinatario + apre chat con `peer_profile_id`; **non** mostrare chat precedente con altro peer su quell'account |
 | **PROM-PUSH-NOTIFY-031** | Deep link coerente con [PROM-SHAREABLE-LINK](./PROM-SHAREABLE-LINK.md) dove applicabile |
+| **PROM-PUSH-NOTIFY-036** | Tap notifica: prima di aprire, azzera `activePeer` stale sull'account destinatario; se il peer non è ancora in inbox → retry caricamento + `profile_fallback` sul `peer_profile_id` del payload (messaggio già recapitato) |
 
 ### MUST NOT
 
@@ -75,6 +76,7 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 | **PROM-PUSH-NOTIFY-041** | Notifica duplicata visibile in chat già aperta e visibile (soppressione) |
 | **PROM-PUSH-NOTIFY-042** | Subscription di un account associata al `user_id` di un altro |
 | **PROM-PUSH-NOTIFY-043** | Handler push che apre chat o sopprime notifica usando solo `peer_profile_id` senza `recipient_user_id` |
+| **PROM-PUSH-NOTIFY-044** | Tap notifica che lascia visibile chat con peer diverso da `peer_profile_id` del payload (stale UI) |
 
 ### Fuori scope (v1)
 
@@ -119,7 +121,7 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 | PROM-PUSH-NOTIFY-022–024 | `client/test/unit/push_suppression_test.dart` |
 | PROM-PUSH-NOTIFY-005–006 | `client/e2e/push-full.spec.ts` (stack locale) |
 | PROM-PUSH-NOTIFY-002–003 | `client/e2e/push-registration.spec.ts`; `client/e2e/push-full.spec.ts` |
-| PROM-PUSH-NOTIFY-030 | `client/test/widget/push_notification_listener_test.dart`; `client/e2e/push-full.spec.ts` |
+| PROM-PUSH-NOTIFY-030 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/push-full.spec.ts` |
 | PROM-PUSH-NOTIFY-022 | Scenario manuale §6 |
 
 **Gate**: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` + smoke SQL + `bash scripts/test.sh e2e-push-local`

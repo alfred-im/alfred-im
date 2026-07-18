@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-SHAREABLE-LINK` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-09 |
+| **Ultima revisione** | 2026-07-18 |
 | **PR origine** | #178 |
 
 Promessa di prodotto: **formato URL condivisibile e stabile** verso profilo pubblico di un peer Alfred (account utente o gruppo) e verso la conversazione con quel peer. Il contratto è il **fragment `#`**; come la app naviga internamente è conseguenza, non oggetto della promessa.
@@ -61,7 +61,7 @@ Navigazione personale **senza** link pubblici: rubrica, allow list, **schermata 
 | **PROM-SHAREABLE-LINK-001** | Fragment `#` obbligatorio per ogni link condivisibile |
 | **PROM-SHAREABLE-LINK-002** | `{indirizzo}` accetta **sia** `username` **sia** `username@server` — nessuna distinzione semantica tra i due formati |
 | **PROM-SHAREABLE-LINK-003** | `#indirizzo` → profilo pubblico del peer (scheda identità: allow, rubrica, ecc. — vedi [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md)) |
-| **PROM-SHAREABLE-LINK-004** | `#indirizzo/chat` → conversazione con quel peer sull'account in focus — [PROM-CHAT-PEER-KEY](./PROM-CHAT-PEER-KEY.md) |
+| **PROM-SHAREABLE-LINK-004** | `#indirizzo/chat` → conversazione con quel peer sull'account in focus — [PROM-CHAT-PEER-KEY](./PROM-CHAT-PEER-KEY.md); **non** lasciare visibile chat con altro peer |
 | **PROM-SHAREABLE-LINK-005** | Il link identifica la **risorsa**, non l'account Alfred del visitatore — nessun segmento «account viewer» nell'URL |
 | **PROM-SHAREABLE-LINK-006** | Peer/gruppo **inesistente** o indirizzo non risolvibile → **risorsa non trovata** (404 o equivalente UI) |
 | **PROM-SHAREABLE-LINK-007** | Link condivisibile **non** espone `profile_id`, `thread_id` né altri id interni |
@@ -98,6 +98,7 @@ Navigazione personale **senza** link pubblici: rubrica, allow list, **schermata 
 | **PROM-SHAREABLE-LINK-041** | Path senza `#` come contratto condivisibile |
 | **PROM-SHAREABLE-LINK-042** | Segmento URL legato all'account in focus del visitatore |
 | **PROM-SHAREABLE-LINK-043** | Usare **solo** clipboard al posto del foglio Condividi di sistema |
+| **PROM-SHAREABLE-LINK-044** | `#indirizzo/chat` che lascia visibile chat con peer diverso da quello linkato |
 
 ### Federazione
 
@@ -141,7 +142,7 @@ Federazione **in pausa** — vedi [address-based-messaging.md](../../../decision
 |---------|----------|
 | PROM-SHAREABLE-LINK-001, 002 | `shareable_link_test.dart` — parse fragment, equivalenza formati |
 | PROM-SHAREABLE-LINK-003, 006 | Scenario manuale / widget — `#test2` apre profilo; indirizzo assente → non trovato |
-| PROM-SHAREABLE-LINK-004 | Scenario manuale — `#test2/chat` apre chat |
+| PROM-SHAREABLE-LINK-004 | Scenario manuale — `#test2/chat` apre chat; `shareable_link_stale_chat_verification_test.dart` |
 | PROM-SHAREABLE-LINK-010, 011 | Scenario manuale — 0 account → auth → profilo linkato |
 | PROM-SHAREABLE-LINK-020, 021, 022 | `peer_profile_overlay_test.dart` — Condividi → `ShareParams` |
 | PROM-SHAREABLE-LINK-023 | `account_sidebar_test.dart` — Condividi account attivo → `ShareParams` |

@@ -39,7 +39,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | **SURF-CHAT-007** | Stati client `pending`/`failed` solo lato mittente pre-ACK server — non persistiti come enum DB |
 | **SURF-CHAT-008** | Preview inbox per tipo: testo troncato, `[GIF]`, `🎤`, `📍 Posizione`, `📷 Foto`, `🎬 Video` (con didascalia se presente) |
 | **SURF-CHAT-013** | Allegato: galleria foto, fotocamera, video (picker); didascalia opzionale nel composer — [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md) |
-| **SURF-CHAT-012** | Apertura conversazione da fragment `#indirizzo/chat` — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) via `ShareableLinkController` (non pulsante Condividi in chat) |
+| **SURF-CHAT-012** | Apertura conversazione da fragment `#indirizzo/chat` — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) via `ShareableLinkController`; azzera chat stale se peer diverso; fallback profilo consentito |
 
 ### SHOULD
 
@@ -67,7 +67,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | SURF-CHAT-005 | `message_bubble_test.dart` |
 | SURF-CHAT-006 | `messages_controller_multi_account_test.dart`, `multi_account_scope_test.dart` |
 | SURF-CHAT-008 | `inbox_controller.dart` preview helpers |
-| SURF-CHAT-012 | `shareable_link_controller.dart`; scenario manuale `#peer/chat` |
+| SURF-CHAT-012 | `shareable_link_controller.dart`; `shareable_link_stale_chat_verification_test.dart` |
 | SURF-CHAT-011 | `client/test/unit/models_and_utils_test.dart` |
 | SURF-CHAT-013 | `messages_controller_media_test.dart`, `message_bubble_test.dart`, `chat_media_support_test.dart` |
 

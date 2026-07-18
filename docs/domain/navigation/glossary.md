@@ -14,7 +14,8 @@
 | **InboxVisible** | Area inbox mostrata (mobile o desktop). |
 | **ChatOpen** | Conversazione 1:1 o gruppo aperta per account in focus. |
 | **OpenConversationOnAccount** | Focus account + risolvi peer in inbox + apri chat. |
-| **allowProfileFallback** | Se peer non in inbox, lookup profilo (solo link/compose; **no** push). |
+| **allowProfileFallback** | Se peer non in inbox, lookup profilo — link/compose sempre; tap push solo dopo recapito (`peer_profile_id` server). |
+| **OpenFromPushTap** | Tap notifica: azzera chat stale sull'account destinatario, retry inbox, poi fallback profilo se necessario. |
 | **Adapter** | Ingresso esterno che traduce in comando navigation (`OpenFromPushTap`, `OpenFromShareableLink`). |
 
 ---
@@ -24,8 +25,8 @@
 | Contesto | Relazione |
 |----------|-----------|
 | **multi-account** | `FocusAccount` prima di aprire chat su altro account. |
-| **notifications** | `OpenFromPushTap` → `OpenConversationOnAccount(fallback: false)`. |
-| **shareable-link** | `OpenFromShareableLink` → stesso percorso composito. |
+| **notifications** | `OpenFromPushTap` → percorso dedicato `openConversationFromPushTap` (clear stale + retry + fallback profilo). |
+| **shareable-link** | `OpenFromShareableLink` → `openConversationOnAccount` (clear stale se peer diverso, fallback profilo). |
 
 ---
 

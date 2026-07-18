@@ -34,7 +34,7 @@
 | `OpenChatIntentReceived` | SW `postMessage` o pending drain | Client ha `PushOpenChatIntent` valido. |
 | `OpenChatDeferred` | `sessionNotReady` | Intent in `alfred_pending_open_chat`. |
 | `OpenChatForwarded` | handler ok | Comando delegato a navigation (`OpenFromPushTap`). |
-| `OpenChatRejected` | account non aperto / peer non in inbox | Intent scartato. |
+| `OpenChatRejected` | account non aperto / peer irrisolvibile dopo retry | Intent scartato; **nessuna** chat stale su altro peer |
 
 ---
 

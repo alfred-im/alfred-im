@@ -37,8 +37,8 @@ else account non nel manifest
   Listener --> Listener : OpenChatRejected
 else ok
   Listener -> Auth : openConversationAfterPushTap
-  Auth -> Nav : openConversationOnAccount\n(allowProfileFallback: false)
-  Nav -> AM : setFocus + openConversation
+  Auth -> Nav : openConversationFromPushTap
+  Nav -> AM : clear stale + setFocus + openConversation
   Nav --> Auth : ok
   Auth --> Listener : OpenChatForwarded
   Listener -> Plat : clearPendingOpenChat

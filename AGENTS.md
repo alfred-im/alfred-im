@@ -4,6 +4,10 @@
 
 In questa repository, **completare un task** (issue, PR, richiesta Cloud Agent) significa **seguire integralmente** [`.cursor-rules.md`](.cursor-rules.md) — **non** modificare il codice al primo turno e **non** saltare la SDD.
 
+### Utente senza PC — mai chiedere debug manuale
+
+L'utente usa Alfred da **cellulare** (PWA), **senza accesso a PC**. **Non chiedere mai**: DevTools, log console, filtri `[alfred]`, riproduzione con passi da sviluppatore, «hai i log?». Diagnosi e test (gate, e2e, integrazione) vanno eseguiti **in autonomia** dall'agente sulla VM — vedi `.cursor-rules.md` § Debug e Testing.
+
 | Fase | Consentito senza ok per le modifiche | Richiede conferma |
 |------|--------------------------------------|-------------------|
 | Discussione, analisi, diagnosi | Leggere codice/docs, grep, test diagnostici se richiesti | — |
