@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-SHAREABLE-LINK` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-18 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #178 |
 
 Promessa di prodotto: **formato URL condivisibile e stabile** verso profilo pubblico di un peer Alfred (account utente o gruppo) e verso la conversazione con quel peer. Il contratto è il **fragment `#`**; come la app naviga internamente è conseguenza, non oggetto della promessa.
@@ -79,7 +79,7 @@ Navigazione personale **senza** link pubblici: rubrica, allow list, **schermata 
 | ID | Promessa |
 |----|----------|
 | **PROM-SHAREABLE-LINK-020** | Pulsante **Condividi** in alto a destra sulla **scheda profilo peer** (overlay) — utenti e gruppi |
-| **PROM-SHAREABLE-LINK-021** | Tap Condividi → **condivisione di sistema** (`share_plus` / foglio Share nativo / Web Share API) con URL completo `#indirizzo` (link **profilo**, senza `/chat`) — **non** copia negli appunti come azione primaria |
+| **PROM-SHAREABLE-LINK-021** | Tap Condividi → **condivisione di sistema** (foglio Share nativo / Web Share API) con URL completo `#indirizzo` (link **profilo**, senza `/chat`) — **non** copia negli appunti come azione primaria |
 | **PROM-SHAREABLE-LINK-022** | Condividi **solo** su scheda profilo peer e sidebar account attivo — **nessun** pulsante Condividi in chat |
 | **PROM-SHAREABLE-LINK-023** | Sidebar account in focus: pulsante **Condividi** a sinistra di «Chiudi account» — share di sistema del link profilo attivo (`#indirizzo`) |
 
@@ -106,26 +106,20 @@ Federazione **in pausa** — vedi [address-based-messaging.md](../../../decision
 
 ---
 
-## 4. Contratto implementativo (orientativo)
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `shareable_link.dart` | Parse/build URL; `shareShareableProfileLink` → `SharePlus.instance.share` |
-| `shareable_link_platform_*` | Lettura fragment e `hashchange` (web) |
-| `ShareableLinkController` | Pending target, risoluzione profilo, stato `notFound` |
-| `ShareableLinkListener` | Applica fragment; `handleIfReady` dopo `sessionReady` |
-| `app_shell.dart` | Mostra `ShareableLinkNotFoundScreen` o shell con listener |
-| Risoluzione indirizzo | `ProfileService.findByUsername` — `username` e `username@alfred.app` locale |
-| Pending link | Conservare fragment fino a manifest con ≥1 account |
-| `PeerProfileOverlay` | Pulsante Condividi alto a destra → share di sistema URL profilo |
-| `AccountSidebar` | Condividi account attivo a sinistra di «Chiudi account» |
-| Risorsa assente | `ShareableLinkNotFoundScreen` — «Risorsa non trovata» |
+## 4. Modello (riferimento)
 
-**Non vincolante:** sincronizzazione URL ↔ navigazione interna quando l'utente naviga senza Condividi.
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/shareable-link/](../../../domain/shareable-link/) |
+| UML | [docs/model/uml/shareable-link/](../../model/uml/shareable-link/) — [seq-open-from-fragment.puml](../../model/uml/shareable-link/seq-open-from-fragment.puml) |
+| Statechart client | [client/lib/machines/shareable-link/](../../../client/lib/machines/shareable-link/) |
+| Apertura chat da link | `OpenSharedChat` → `OpenFromShareableLink` (navigation) — vedi [docs/domain/shareable-link/README.md](../../../domain/shareable-link/README.md) |
 
----
+**Implementazione (non vincolante):** [docs/guides/shareable-link.md](../../../guides/shareable-link.md)
 
-## 5. Superfici conformi
+
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -136,7 +130,7 @@ Federazione **in pausa** — vedi [address-based-messaging.md](../../../decision
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -152,7 +146,7 @@ Gate (post-implementazione): `bash scripts/check-spec-sync.sh` + `cd client && b
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

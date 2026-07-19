@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-RECEPTION-FILTER` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-11 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #161, #179 |
 
 Promessa di prodotto: il destinatario controlla chi può **consegnargli** messaggi; filtro **sempre attivo**; rifiuto **silenzioso** verso il mittente (stile blocco XMPP).
@@ -62,25 +62,20 @@ Su rifiuto allow list: il mittente resta al livello **1** per sempre — come bl
 
 ---
 
-## 4. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `alfred_delivery.deliver_internal` | Gate allow list destinatario prima di INSERT copia destinatario |
-| `is_sender_allowed_for_reception` | Helper SECURITY DEFINER (solo worker / RPC interne) |
-| `reception_allowlist` | Tabella allow list per `owner_id` |
-| UI gestione lista | [SURF-ALLOWLIST](../../surfaces/SURF-ALLOWLIST.md), toggle in [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md) |
+## 3. Modello (riferimento)
 
-### Comportamento osservabile
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/reception/](../../../domain/reception/), [docs/domain/delivery/](../../../domain/delivery/) |
+| UML | [docs/model/uml/reception/](../../model/uml/reception/), [docs/model/uml/delivery/seq-reception-gate.puml](../../model/uml/delivery/seq-reception-gate.puml) |
+| Statechart client | [client/lib/machines/reception/](../../../client/lib/machines/reception/) |
+| Gate recapito | `CheckSenderAllowed` — [seq-reception-delivery-gate.puml](../../model/uml/reception/seq-reception-delivery-gate.puml) |
 
-| Ruolo | Rifiuto allow list |
-|-------|-------------------|
-| Mittente | RPC ok; ✓ permanente; mai ✓✓ |
-| Destinatario | Messaggio assente da inbox |
+**Implementazione (non vincolante):** [docs/domain/reception/README.md](../../../domain/reception/README.md) · schema: [SYS-RECEPTION](../system/SYS-RECEPTION.md)
 
----
 
-## 5. Superfici conformi
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -90,7 +85,7 @@ Su rifiuto allow list: il mittente resta al livello **1** per sempre — come bl
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -105,7 +100,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `verify.sh` + smoke SQL + `integration
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

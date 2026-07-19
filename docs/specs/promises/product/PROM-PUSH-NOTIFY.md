@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-PUSH-NOTIFY` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-18 |
+| **Ultima revisione** | 2026-07-19 |
 
 Promessa di prodotto: notifiche Web Push su tutti i dispositivi attivi per account e per tutti gli account aperti sullo stesso dispositivo; anteprima testo; soppressione in chat attiva.
 
@@ -47,7 +47,7 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 | ID | Promessa |
 |----|----------|
 | **PROM-PUSH-NOTIFY-033** | Identità push = coppia **`(recipient_user_id, peer_profile_id)`** — stessa semantica di archivio `(owner_id, peer_profile_id)`; **mai** interpretare target, soppressione, tap o tag come «solo peer» |
-| **PROM-PUSH-NOTIFY-034** | Chiave canonica client/SW: `recipient_user_id|peer_profile_id` ([`PushConversationKey`](../../../client/lib/models/push_conversation_key.dart)); payload incompleto → nessuna UI, nessun `open_chat` |
+| **PROM-PUSH-NOTIFY-034** | Chiave canonica client/SW: `recipient_user_id|peer_profile_id`; payload incompleto → nessuna UI, nessuna apertura chat |
 | **PROM-PUSH-NOTIFY-035** | Tag notifica browser = `recipient_user_id|peer_profile_id|logical_message_id` — distinto per account anche con stesso peer o stesso messaggio logico su altro account |
 
 ### MUST — soppressione e permesso
@@ -88,15 +88,16 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 
 ---
 
-## 3. Contratto implementativo
+## 3. Modello (riferimento)
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `PushSubscriptionService` | `device_id`, register/unregister, sync manifest |
-| `PushConversationKey` | Chiave univoca `owner|peer` — parse, tag, soppressione |
-| `PushSuppressionState` | Espone focus + peer attivo al SW |
-| `client/web/push_sw.js` o estensione SW | Handler `push`, `notificationclick` |
-| JS interop | `registerPushSubscription`, permesso browser |
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/notifications/](../../../domain/notifications/) |
+| UML | [docs/model/uml/notifications/](../../model/uml/notifications/) |
+| Statechart client | [client/lib/machines/notifications/](../../../client/lib/machines/notifications/) |
+| Tap → chat | `OpenChatFromNotification` → [seq-notification-click.puml](../../model/uml/notifications/seq-notification-click.puml) → contesto `navigation` |
+
+**Implementazione (non vincolante):** [docs/domain/notifications/README.md](../../../domain/notifications/README.md) · payload: [contracts/push-payload.md](../../contracts/push-payload.md)
 
 ---
 
@@ -139,18 +140,7 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 
 ---
 
-## 7. Modello (riferimento)
-
-| Elemento | Artefatto |
-|----------|-----------|
-| Glossario / comandi | [docs/domain/notifications/](../../domain/notifications/) |
-| UML | [docs/model/uml/notifications/](../../model/uml/notifications/) |
-| Statechart client | [client/lib/machines/notifications/](../../../client/lib/machines/notifications/) |
-| Tap → chat | `OpenFromPushTap` → `seq-notification-click.puml` → contesto `navigation` |
-
----
-
-## 8. Riferimenti
+## 7. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

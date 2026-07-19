@@ -1,6 +1,6 @@
 # Registro promesse — Alfred
 
-**Ultima revisione**: 2026-07-14  
+**Ultima revisione**: 2026-07-19  
 **Metodo**: [README.md](./README.md) (SDD)
 
 **Catalogo unico** di promesse SYSTEM, PRODUCT e SURFACE. Per navigazione generale: [INDICE.md](../INDICE.md). Per cronologia merge: [CHANGELOG.md](../../CHANGELOG.md).

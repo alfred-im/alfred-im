@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-CHAT-MEDIA` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-14 |
+| **Ultima revisione** | 2026-07-19 |
 
 Promessa di prodotto: invio e visualizzazione di **foto** (`image`) e **video** (`video`) in chat, con didascalia opzionale, upload su bucket `chat-media`, coda/retry allineata a GIF/voice.
 
@@ -42,21 +42,17 @@ L'utente può condividere foto e video nelle conversazioni 1:1 e nei broadcast d
 
 ---
 
-## 3. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `ChatMediaConfig` | Limiti byte, MIME, estensioni |
-| `MessageMediaService` | `uploadImage`, `uploadVideo` |
-| `MessageService` | `sendImageToProfile`, `sendVideoToProfile`, broadcast analoghi |
-| `MessagesController` | Optimistic + retry con didascalia; bolla **prima** di conversione HEIC / lettura byte video |
-| `GroupMessagesController` | Broadcast image/video |
-| `ChatInputBar` | Menu allegati: galleria, fotocamera, video |
-| `MessageBubble` | Rendering foto + player video inline; preview da `OutboundMediaCache` su `pending://` |
-| `prepareImageForUpload` | HEIC/HEIF → JPEG (web: `heic2any`; IO: `flutter_image_compress`) |
-| `ChatMediaConfig.webOutboundPersistMaxBytes` | Su web, blob outbound > 4 MB restano solo in RAM (no SharedPreferences) |
+## 3. Modello (riferimento)
 
----
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/media/](../../../domain/media/), [docs/domain/messaging/](../../../domain/messaging/) |
+| UML | [docs/model/uml/media/media-state.puml](../../model/uml/media/media-state.puml) |
+| Invio media | `PrepareImage` / `PrepareVideo` → `SendContent` (messaging) |
+
+**Implementazione (non vincolante):** [docs/domain/media/README.md](../../../domain/media/README.md) · [docs/guides/media.md](../../../guides/media.md)
+
 
 ## 4. Superfici conformi
 

@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-PERSONAL-CONTACTS` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #109 (schema + CRUD), #134 (profili in ricerca) |
 
 Promessa di prodotto: rubrica personale come scorciatoie opzionali — **non** prerequisito per inviare/ricevere, **non** allow list di ricezione, **non** fonte inbox.
@@ -36,8 +36,8 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PERSONAL-CONTACTS-006** | «Scrivi» da rubrica (icona chat): **Internal** → `ComposeService.peerFromContact` → `ChatPeer`; **Esterno** → errore «Indirizzo esterno non ancora supportato» (scope attuale) |
-| **PROM-PERSONAL-CONTACTS-007** | `ContactsController` legato all'account in **focus** — [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) |
+| **PROM-PERSONAL-CONTACTS-006** | «Scrivi» da rubrica: contatto interno → apre chat con quel peer; contatto esterno → errore «Indirizzo esterno non ancora supportato» (scope attuale) |
+| **PROM-PERSONAL-CONTACTS-007** | Rubrica scoped all'account in **focus** — [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) |
 | **PROM-PERSONAL-CONTACTS-008** | Filtro lista: conforme a [PROM-LIST-FILTER](./PROM-LIST-FILTER.md) + [SURF-CONTACTS](../../surfaces/SURF-CONTACTS.md) |
 
 ### SHOULD
@@ -57,26 +57,20 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 
 ---
 
-## 4. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `ContactService` | fetch, search, add internal/external, delete |
-| `ContactsController` | Stato lista, filtro, delega add/search; `ownerId` = focus |
-| `ContactsScreen` | Lista + ricerca + sheet aggiunta |
-| `ComposeService.peerFromContact` | Contatto internal → `ChatPeer`; esterno → errore contatto esterno |
+## 3. Modello (riferimento)
 
-### Relazione con messaggistica
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/contacts/](../../../domain/contacts/) |
+| UML | [docs/model/uml/contacts/](../../model/uml/contacts/) — [seq-compose-from-contact.puml](../../model/uml/contacts/seq-compose-from-contact.puml) |
+| Statechart client | [client/lib/machines/contacts/](../../../client/lib/machines/contacts/) |
+| Compose da rubrica | `StartChatFromContact` → `OpenFromCompose` (navigation) |
 
-| Azione | Rubrica richiesta? |
-|--------|-------------------|
-| FAB nuova chat per username | No |
-| Messaggio ricevuto da sconosciuto | No (compare in inbox) |
-| Tap «Scrivi» in rubrica | Scorciatoia — apre chat esistente/vuota per quel peer |
+**Implementazione (non vincolante):** [docs/domain/contacts/README.md](../../../domain/contacts/README.md) · schema: [SYS-CONTACTS](../system/SYS-CONTACTS.md)
 
----
 
-## 5. Superfici conformi
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -85,7 +79,7 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -101,7 +95,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

@@ -1,7 +1,7 @@
 # Spec-Driven Development (SDD) — Alfred
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-18  
+**Ultima revisione**: 2026-07-19  
 **Versione metodo**: SDD — registro promesse prodotto
 
 Alfred è software stabile: la SDD governa **ciò che il prodotto promette** all'utente — schema, RPC, comportamento riusabile e binding per superficie.
@@ -124,7 +124,7 @@ docs/specs/
 | Comportamento osservabile | dominio + UML (+ statechart) | amend `PROM-*` / `SURF-*` / `SYS-*` |
 | Solo theme | no | no |
 
-Nelle promesse: **riferire** comandi/eventi/stati del modello (es. `OpenFromPushTap` → `seq-push-tap`), non riscrivere flussi in prosa.
+Nelle promesse PRODUCT: sezione **Modello (riferimento)** verso dominio/UML/statechart; **non** sezione «Contratto implementativo» (dettaglio in `docs/domain/<context>/README.md` e `docs/guides/`). Nelle promesse: **riferire** comandi/eventi/stati del modello (es. `OpenFromPushTap` → `seq-notification-click.puml`), non riscrivere flussi in prosa.
 
 ---
 

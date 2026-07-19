@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-PEER-PROFILE` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-09 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #163, #176 |
 
 Promessa di prodotto: tap avatar peer Alfred → overlay fullscreen con identità pubblica, toggle allow list, azione rubrica e CTA «Inizia a chattare» — **indipendenti** e **immediati**.
@@ -26,7 +26,7 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PEER-PROFILE-001** | Tap avatar peer Alfred → overlay fullscreen (`showPeerProfileOverlay`) |
+| **PROM-PEER-PROFILE-001** | Tap avatar peer Alfred → overlay fullscreen profilo peer |
 | **PROM-PEER-PROFILE-002** | Overlay mostra: avatar grande, `display_name`, `@username` se presente, pronomi se presenti — vedi [PROM-PROFILE-IDENTITY](./PROM-PROFILE-IDENTITY.md) |
 | **PROM-PEER-PROFILE-003** | Profilo proprio (`profile.id == auth.userId`): **non** aprire overlay peer |
 | **PROM-PEER-PROFILE-004** | Punti attivazione: tile inbox (solo avatar), header chat, autore messaggio gruppo, lista «Persone consentite», rubrica (solo internal) |
@@ -41,7 +41,7 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 | **PROM-PEER-PROFILE-008** | Allow e rubrica: azione **immediata**, **senza** dialog di conferma |
 | **PROM-PEER-PROFILE-009** | Controller legati all'account in **focus** — [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) |
 | **PROM-PEER-PROFILE-013** | Pulsante fisso «Inizia a chattare» in basso nell'overlay peer — fuori dall'area scrollabile |
-| **PROM-PEER-PROFILE-014** | Tap «Inizia a chattare» → chiude overlay e apre chat con quel peer (`ChatPeer.fromProfile`) sull'account in focus — stesso effetto di scorciatoia compose da rubrica ([PROM-PERSONAL-CONTACTS](./PROM-PERSONAL-CONTACTS.md)) |
+| **PROM-PEER-PROFILE-014** | Tap «Inizia a chattare» → chiude overlay e apre chat con quel peer sull'account in focus — stesso effetto di scorciatoia compose da rubrica ([PROM-PERSONAL-CONTACTS](./PROM-PERSONAL-CONTACTS.md)) |
 
 ### SHOULD
 
@@ -63,32 +63,20 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 
 ---
 
-## 4. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `showPeerProfileOverlay` | Entry point; skip self; `showGeneralDialog` fullscreen |
-| `PeerProfileOverlay` | UI identità + switch Allow + pulsante rubrica + CTA «Inizia a chattare» sticky in basso + **Condividi** (share di sistema — [PROM-SHAREABLE-LINK](./PROM-SHAREABLE-LINK.md)) |
-| `ProfileAvatar.onTap` | Tap avatar riusabile |
-| `ContactsController` | `contactForProfileId`, `removeInternalByProfileId` |
-| `ReceptionAllowlistController` | `removeByProfileId`, `addProfile` |
-| `ChatMessage.toAuthorProfileSummary` | Profilo parziale da messaggio gruppo |
+## 3. Modello (riferimento)
 
-### UX attese
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/profile/](../../../domain/profile/), [docs/domain/reception/](../../../domain/reception/), [docs/domain/contacts/](../../../domain/contacts/) |
+| UML | [docs/model/uml/profile/seq-peer-profile-overlay.puml](../../model/uml/profile/seq-peer-profile-overlay.puml) |
+| Statechart client | [client/lib/machines/profile/](../../../client/lib/machines/profile/), [client/lib/machines/reception/](../../../client/lib/machines/reception/) |
+| Overlay dismiss | [PROM-OVERLAY-DISMISS](./PROM-OVERLAY-DISMISS.md) |
 
-| Condizione | Comportamento |
-|------------|---------------|
-| Tap avatar inbox | Overlay; tap resto tile → apre chat |
-| Switch Allow ON | `addProfile` immediato |
-| Switch Allow OFF | `removeByProfileId` immediato |
-| In rubrica | Pulsante «Rimuovi dalla rubrica» |
-| Non in rubrica | Pulsante «Aggiungi alla rubrica» |
-| Contatto esterno rubrica | Nessun overlay al tap avatar |
-| Tap «Inizia a chattare» | Chiude overlay; `AuthController.openConversation(ChatPeer.fromProfile(...))` |
+**Implementazione (non vincolante):** [docs/guides/peer-profile.md](../../../guides/peer-profile.md) · binding: [SURF-PEER-PROFILE](../../surfaces/SURF-PEER-PROFILE.md)
 
----
 
-## 5. Superfici conformi
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -99,7 +87,7 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -116,7 +104,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

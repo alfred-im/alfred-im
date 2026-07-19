@@ -42,11 +42,15 @@ Ogni promessa vincolante: `PROM-{NAME}-NNN`.
 
 ---
 
-## 3. Contratto implementativo
+## 3. Modello (riferimento)
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| … | … |
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/<context>/](../../domain/<context>/) |
+| UML | [docs/model/uml/<context>/](../../model/uml/<context>/) |
+| Statechart client | [client/lib/machines/<context>/](../../../client/lib/machines/<context>/) (se applicabile) |
+
+**Implementazione (non vincolante):** [docs/domain/<context>/README.md](../../domain/<context>/README.md) · guide operative se presenti.
 
 ---
 

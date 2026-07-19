@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-MESSAGE-STATUS` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-11 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #159, #179 |
 
 Promessa di prodotto: spunte mittente (✓ / ✓✓ grigie / ✓✓ blu) derivate da `delivered_at` e `read_at` sulla copia in uscita; stati `pending`/`failed` solo client pre-ACK.
@@ -31,7 +31,7 @@ Il mittente interpreta lo stato del proprio messaggio da date nullable sulla **p
 | **PROM-MESSAGE-STATUS-001** | UI mittente: `delivered_at` null → **✓** (accettato server) |
 | **PROM-MESSAGE-STATUS-002** | UI mittente: `delivered_at` set e `read_at` null → **✓✓ grigie** (consegnato) |
 | **PROM-MESSAGE-STATUS-003** | UI mittente: `read_at` set → **✓✓ blu** (letto) |
-| **PROM-MESSAGE-STATUS-004** | Helper `messageStatusFromMailbox` da `delivered_at` / `read_at` / `failed_at` |
+| **PROM-MESSAGE-STATUS-004** | Mapping UI da sole date `delivered_at` / `read_at` / `failed_at` sulla copia mittente |
 
 ### MUST — stati client
 
@@ -44,7 +44,7 @@ Il mittente interpreta lo stato del proprio messaggio da date nullable sulla **p
 
 | ID | Promessa |
 |----|----------|
-| **PROM-MESSAGE-STATUS-010** | Checkmarks solo bolle `isMine` (`author_id = io`) |
+| **PROM-MESSAGE-STATUS-010** | Spunte solo su messaggi inviati dall'utente corrente |
 
 ### MUST NOT
 
@@ -56,27 +56,20 @@ Il mittente interpreta lo stato del proprio messaggio da date nullable sulla **p
 
 ---
 
-## 4. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `messageStatusFromMailbox` | Mapping date → stato UI in `message.dart` |
-| `MessageBubble` | Rendering checkmarks da stato |
-| `delivered_at` | Valorizzato dal worker `deliver` dopo materializzazione copia destinatario ([SYS-DELIVERY](../system/SYS-DELIVERY.md)) |
-| `read_at` | Aggiornato su lettura destinatario (archivio locale) + propagazione a copia mittente via worker `read_receipt` |
+## 3. Modello (riferimento)
 
-### Tabella stati UI mittente
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/), [docs/domain/delivery/](../../../domain/delivery/) |
+| UML | [docs/model/uml/messaging/](../../model/uml/messaging/), [docs/model/uml/delivery/seq-process-outbox.puml](../../model/uml/delivery/seq-process-outbox.puml) |
+| Statechart client | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/) |
+| Spunte server | `DeliverInternal`, `ProcessReadReceipt` — [SYS-DELIVERY](../system/SYS-DELIVERY.md) |
 
-| `delivered_at` | `read_at` | UI | Significato |
-|----------------|-----------|-----|-------------|
-| null | null | ✓ | Accettato server; può essere in attesa recapito o blocco allow list permanente |
-| set | null | ✓✓ grigie | Consegnato — copia destinatario materializzata |
-| set | set | ✓✓ blu | Letto dal destinatario |
-| (pre-ACK) | — | pending/failed | Solo client — [PROM-OUTBOUND-SEND](./PROM-OUTBOUND-SEND.md) |
+**Implementazione (non vincolante):** [docs/domain/messaging/README.md](../../../domain/messaging/README.md) · [docs/domain/delivery/README.md](../../../domain/delivery/README.md)
 
----
 
-## 5. Superfici conformi
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -85,7 +78,7 @@ Il mittente interpreta lo stato del proprio messaggio da date nullable sulla **p
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -100,7 +93,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

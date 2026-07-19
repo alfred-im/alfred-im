@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-REALTIME-OWNER` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-11 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #159, #179 |
 
 Promessa di prodotto: subscribe Realtime Postgres su `messages` filtrato per `owner_id = io` — inbox, chat per peer e aggiornamento spunte mittente.
@@ -58,29 +58,20 @@ Multi-account: realtime solo sull'account in focus — [PROM-MULTI-ACCOUNT](./PR
 
 ---
 
-## 4. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `InboxService` | RPC `list_inbox()` + canale Realtime `owner_id` |
-| `InboxController` | `load()` su evento Realtime inbox |
-| `MessageService.subscribeToPeerMessages` | Filtro `owner_id` + `peer_profile_id` |
-| `MessagesController` | Ascolta UPDATE per spunte su bolle `isMine` |
-| `HomeScreen` | Binding `InboxController` alla sessione focus |
+## 3. Modello (riferimento)
 
-### Flusso lettura → spunta mittente
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/), [docs/domain/multi-account/](../../../domain/multi-account/) |
+| UML | [docs/model/uml/messaging/](../../model/uml/messaging/) |
+| Statechart client | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/) |
+| Eventi realtime | `ConversationUpdated`, `DeliveryTickReceived` |
 
-```
-Destinatario apre chat → mark_peer_read(peer)
-  → UPDATE read_at su righe destinatario (entrata, solo confine lettore)
-  → INSERT outbox event_kind=read_receipt per ogni λ
-  → alfred_delivery.process_outbox → UPDATE read_at copia mittente
-  → Realtime UPDATE su mittente → ✓✓ blu
-```
+**Implementazione (non vincolante):** [docs/domain/messaging/README.md](../../../domain/messaging/README.md)
 
----
 
-## 5. Superfici conformi
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -90,7 +81,7 @@ Destinatario apre chat → mark_peer_read(peer)
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -105,7 +96,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

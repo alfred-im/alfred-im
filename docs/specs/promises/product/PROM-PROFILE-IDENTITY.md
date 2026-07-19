@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-PROFILE-IDENTITY` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #118 (username/email), #134 (avatar, pronomi, `ProfileSummary`) |
 
 Promessa di prodotto: modello e widget condivisi per identità pubblica (`ProfileSummary`) su sidebar, inbox, chat, manifest multi-account e rubrica.
@@ -26,9 +26,9 @@ Schema backend (`profiles`, bucket `avatars`): [SYS-PROFILE](../system/SYS-PROFI
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PROFILE-IDENTITY-001** | Modello UI unificato **`ProfileSummary`**: `id`, `displayName`, `username?`, `avatarUrl?`, `pronouns?` — usato da sidebar, inbox (`ChatPeer`), `OpenAccount`, rubrica |
-| **PROM-PROFILE-IDENTITY-002** | Widget condivisi: `ProfileAvatar` (foto o iniziale colorata), `ProfileIdentityLines` (nome, `@username`, pronomi) |
-| **PROM-PROFILE-IDENTITY-003** | Dopo salvataggio profilo proprio: `AuthController.refreshProfile()` → aggiorna manifest account (`OpenAccount.profile`) |
+| **PROM-PROFILE-IDENTITY-001** | Identità pubblica unificata (id, nome, username opzionale, avatar, pronomi) — coerente in sidebar, inbox, manifest multi-account e rubrica |
+| **PROM-PROFILE-IDENTITY-002** | Widget condivisi per avatar (foto o iniziale) e righe identità (nome, username, pronomi) |
+| **PROM-PROFILE-IDENTITY-003** | Dopo salvataggio profilo proprio: identità aggiornata in sidebar e manifest senza riavvio app |
 | **PROM-PROFILE-IDENTITY-004** | Peer in inbox: campi profilo peer (`peer_avatar_url`, `peer_pronouns`) da `list_inbox()` |
 | **PROM-PROFILE-IDENTITY-005** | Risoluzione username → profilo: `find_profile_by_username` ritorna `avatar_url`, `pronouns` |
 
@@ -49,30 +49,19 @@ Schema backend (`profiles`, bucket `avatars`): [SYS-PROFILE](../system/SYS-PROFI
 
 ---
 
-## 4. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `ProfileSummary` | DTO unificato identità pubblica |
-| `UserProfile` | Profilo completo (`summary` + `bio` + timestamp) |
-| `ProfileService` | `updateProfile`, `findByUsername`, `fetchSummariesByIds` |
-| `ProfileAvatarService` | `uploadAvatar` → URL pubblico |
-| `ProfileController` | Stato save/upload |
-| `ProfileScreen` | Form edit; email/username read-only |
-| `profile_identity.dart` | `ProfileAvatar`, `ProfileIdentityLines` |
-| `OpenAccount.profile` | Snapshot in manifest multi-account |
+## 3. Modello (riferimento)
 
-### Dove appare `ProfileSummary`
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/profile/](../../../domain/profile/) |
+| UML | [docs/model/uml/profile/](../../model/uml/profile/) |
+| Statechart client | [client/lib/machines/profile/](../../../client/lib/machines/profile/) |
 
-- `AccountSidebar` — account in focus e lista account
-- `InboxPeerTile` — avatar + nome peer
-- `ChatPanel` header — identità controparte
-- `ChatPeer` — identità chat
-- Overlay peer — [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md)
+**Implementazione (non vincolante):** [docs/domain/profile/README.md](../../../domain/profile/README.md) · schema: [SYS-PROFILE](../system/SYS-PROFILE.md)
 
----
 
-## 5. Superfici conformi
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -84,7 +73,7 @@ Schema backend (`profiles`, bucket `avatars`): [SYS-PROFILE](../system/SYS-PROFI
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -101,7 +90,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

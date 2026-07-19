@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-LIST-FILTER` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-09 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #132 (inbox); #171 (contatti e persone consentite) |
 
 Promessa di prodotto riusabile: filtrare una lista già caricata in memoria, con barra di ricerca **on-demand** (icona lente).
@@ -29,24 +29,24 @@ Le superfici ([SURF-*](../../registry.md)) dichiarano campi filtrabili, hint e c
 | **PROM-LIST-FILTER-001** | Filtro: substring case-insensitive sui campi dichiarati dalla SURFACE |
 | **PROM-LIST-FILTER-002** | Query vuota → lista completa (nessun elemento escluso) |
 | **PROM-LIST-FILTER-003** | Aggiornamento filtro in tempo reale su ogni keystroke (`onChanged`) |
-| **PROM-LIST-FILTER-004** | Implementazione condivisa: `filterByQuery` / `filterByQueryFields` in `client/lib/utils/list_filter.dart` |
+| **PROM-LIST-FILTER-004** | Un solo modulo condiviso di filtro substring case-insensitive — le SURF non duplicano la logica |
 
 ### MUST — ricerca on-demand (UI)
 
 | ID | Promessa |
 |----|----------|
 | **PROM-LIST-FILTER-010** | Barra di ricerca **nascosta** di default |
-| **PROM-LIST-FILTER-011** | Apertura: tap icona lente (`Icons.search`) → barra visibile + `requestFocus` sul campo |
-| **PROM-LIST-FILTER-012** | Chiusura unificata: **un solo** metodo `dismissSearch()` (o equivalente esposto dal widget condiviso) — nasconde barra, svuota controller, `onSearchChanged('')` se testo presente, `unfocus` |
-| **PROM-LIST-FILTER-013** | Trigger chiusura: secondo tap lente (toggle); `TapRegion.onTapOutside` (barra + lente stesso `groupId`); `dispose` se filtro attivo |
+| **PROM-LIST-FILTER-011** | Apertura: tap icona lente → barra visibile + focus sul campo di ricerca |
+| **PROM-LIST-FILTER-012** | Chiusura unificata: **un solo** punto di dismiss — nasconde barra, svuota query, toglie focus |
+| **PROM-LIST-FILTER-013** | Trigger chiusura: secondo tap lente (toggle); tap fuori dall'area ricerca+lente; reset allo smontaggio se filtro attivo |
 | **PROM-LIST-FILTER-014** | Tooltip icona lente = hint del campo (testo definito dalla SURFACE) |
 
 ### SHOULD
 
 | ID | Promessa |
 |----|----------|
-| **PROM-LIST-FILTER-020** | Widget condiviso `CollapsibleListSearch` (o nome equivalente) in `client/lib/widgets/` — superfici non duplicano stato `_searchVisible` / `_dismissSearch` |
-| **PROM-LIST-FILTER-021** | Cambio account / smontaggio schermata: stato ricerca reset (es. `ValueKey(ownerId)` o `dispose`) |
+| **PROM-LIST-FILTER-020** | Widget condiviso per ricerca collassabile — superfici non duplicano stato visibilità/dismiss |
+| **PROM-LIST-FILTER-021** | Cambio account / smontaggio schermata: stato ricerca reset |
 
 ### MUST NOT
 
@@ -65,16 +65,13 @@ Le superfici ([SURF-*](../../registry.md)) dichiarano campi filtrabili, hint e c
 
 ---
 
-## 3. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `list_filter.dart` | `filterByQuery`, `filterByQueryFields` |
-| Widget ricerca (condiviso o per-superficie conforme) | Stato visibilità, lente, `TapRegion`, `dismissSearch` |
-| Controller per superficie | `_searchQuery`, `setSearchQuery`, getter lista filtrata |
-| SURFACE | Campi filtro, hint, tooltip, layout header |
+## 3. Modello (riferimento)
 
----
+Pattern UI trasversale — nessun bounded context dedicato. Binding per superficie: [SURF-INBOX](../../surfaces/SURF-INBOX.md), [SURF-CONTACTS](../../surfaces/SURF-CONTACTS.md), [SURF-ALLOWLIST](../../surfaces/SURF-ALLOWLIST.md).
+
+**Implementazione (non vincolante):** tracciabilità §5; dettaglio widget in [docs/guides/inbox.md](../../../guides/inbox.md).
+
 
 ## 4. Superfici conformi
 

@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-MULTI-ACCOUNT` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #140 (UX/shell), #147 (persistenza), #152 (single-active GoTrue) |
 
 Promessa di prodotto: una o più identità messaggistica sulla stessa shell, focus istantaneo, una sessione GoTrue attiva in RAM, overlay auth non invasivo.
@@ -76,23 +76,20 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 
 ---
 
-## 4. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `AccountManager` | Manifest, focus, swap GoTrue |
-| `AccountSession` | Client Supabase, servizi, persistenza dichiarativa |
-| `AccountStorageService` | SharedPreferences (`alfred_saved_accounts`, `alfred_focus_user_id`, `alfred_auth_*`) |
-| `AuthController` | Overlay, errori user-friendly |
-| `AuthOverlay`, `NoAccountPlaceholder` | UX gate |
-| `HomeScreen` | `ListenableBuilder` su inbox focus; `ValueKey(accountUserId)` su pannelli |
-| `client/lib/screens/app_shell.dart` | Loading `sessionReady` → sempre `HomeScreen` |
+## 3. Modello (riferimento)
 
-Layout overlay: `Stack` — `HomeScreen` sotto, `AuthOverlay` (45% nero) + `AuthScreen` card sopra.
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/multi-account/](../../../domain/multi-account/), [docs/domain/auth/](../../../domain/auth/) |
+| UML | [docs/model/uml/multi-account/](../../model/uml/multi-account/), [docs/model/uml/auth/](../../model/uml/auth/) |
+| Statechart client | [client/lib/machines/multi-account/](../../../client/lib/machines/multi-account/), [client/lib/machines/auth/](../../../client/lib/machines/auth/) |
+| Focus account | `FocusAccount` · [seq-focus-switch.puml](../../model/uml/multi-account/seq-focus-switch.puml) |
 
----
+**Implementazione (non vincolante):** [docs/domain/multi-account/README.md](../../../domain/multi-account/README.md) · [docs/guides/multi-account.md](../../../guides/multi-account.md)
 
-## 5. Superfici conformi
+
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -101,7 +98,7 @@ Layout overlay: `Stack` — `HomeScreen` sotto, `AuthOverlay` (45% nero) + `Auth
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -121,7 +118,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` 
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

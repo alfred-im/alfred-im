@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-OUTBOUND-SEND` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #159 |
 
 Promessa di prodotto: messaggi in uscita accodati client-side con UI optimistic fino ad ACK server; merge per `client_message_id`.
@@ -26,11 +26,11 @@ L'utente vede il proprio messaggio subito in chat (stato pending) mentre il clie
 
 | ID | Promessa |
 |----|----------|
-| **PROM-OUTBOUND-SEND-001** | Coda client `OutboundMessageQueue` per messaggi in uscita |
+| **PROM-OUTBOUND-SEND-001** | Coda client per messaggi in uscita con retry |
 | **PROM-OUTBOUND-SEND-002** | Chiave coda: `userId\|peerProfileId` — scoped per account e peer |
 | **PROM-OUTBOUND-SEND-003** | Merge optimistic su `client_message_id` — una sola bolla per id client |
-| **PROM-OUTBOUND-SEND-004** | `MessagesController`: stato `pending` client-side fino a risposta server |
-| **PROM-OUTBOUND-SEND-005** | `ChatMessage.isMine` da `author_id == currentUserId` |
+| **PROM-OUTBOUND-SEND-004** | UI mittente: stato «in invio» fino a risposta server |
+| **PROM-OUTBOUND-SEND-005** | Bolle mittente identificate dall'account in focus corrente |
 | **PROM-OUTBOUND-SEND-006** | Multi-account: coda e controller scoped alla sessione in focus — [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) |
 
 ### MUST NOT
@@ -42,26 +42,20 @@ L'utente vede il proprio messaggio subito in chat (stato pending) mentre il clie
 
 ---
 
-## 4. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `OutboundMessageQueue` | Retry; chiave `userId\|peerProfileId`; merge per `client_message_id` |
-| `MessagesController` | Optimistic `pending` fino a risposta; integrazione coda |
-| `MessageService.send*` | RPC `send_message_to_profile` invariato |
-| `ChatMessage` | `clientMessageId`, `isMine`, stati pre-ACK |
+## 3. Modello (riferimento)
 
-### Stati UI mittente (pre/post server)
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/) |
+| UML | [docs/model/uml/messaging/messaging-state.puml](../../model/uml/messaging/messaging-state.puml) |
+| Statechart client | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/) |
+| Invio contenuto | `SendContent` → `ContentSent` / `ContentSendFailed` |
 
-| Fase | UI | Origine |
-|------|-----|---------|
-| Pre-ACK | `pending` | Solo client |
-| Post-ACK | date `delivered_at`/`read_at` | [PROM-MESSAGE-STATUS](./PROM-MESSAGE-STATUS.md) |
-| Fallito | `failed` | Client fino a retry o `failed_at` server |
+**Implementazione (non vincolante):** [docs/domain/messaging/README.md](../../../domain/messaging/README.md) · RPC: [contracts/rpc.md](../../contracts/rpc.md)
 
----
 
-## 5. Superfici conformi
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -70,7 +64,7 @@ L'utente vede il proprio messaggio subito in chat (stato pending) mentre il clie
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -84,7 +78,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

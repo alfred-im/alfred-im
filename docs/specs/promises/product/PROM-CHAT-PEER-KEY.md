@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-CHAT-PEER-KEY` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #159 |
 
 Promessa di prodotto: una chat è identificata da `(io, peer_profile_id)` — nessun `thread_id` esposto; stessa UI con storico vuoto o pieno.
@@ -25,10 +25,10 @@ L'utente apre e naviga conversazioni per **indirizzo peer** (username interno / 
 | ID | Promessa |
 |----|----------|
 | **PROM-CHAT-PEER-KEY-001** | Chat client = `(io, indirizzo peer)` — `username` interno; **nessun** `thread_id` esposto |
-| **PROM-CHAT-PEER-KEY-002** | Modello UI `ChatPeer.profileId` — chiave canonica conversazione 1:1 |
+| **PROM-CHAT-PEER-KEY-002** | Chiave canonica conversazione 1:1 = identificativo profilo del peer |
 | **PROM-CHAT-PEER-KEY-003** | Stessa schermata chat con storico **vuoto** o **pieno** per lo stesso `profileId` |
 | **PROM-CHAT-PEER-KEY-004** | Prima riga inbox solo dopo primo messaggio nel mio archivio con quel peer |
-| **PROM-CHAT-PEER-KEY-005** | `HomeScreen`: `_activePeer`; `ValueKey(peer.profileId)` su pannello messaggi per reset stato al cambio peer |
+| **PROM-CHAT-PEER-KEY-005** | Cambio peer attivo: stato chat reset — nessuna bolla/stato del peer precedente visibile |
 
 ### MUST NOT
 
@@ -40,23 +40,20 @@ L'utente apre e naviga conversazioni per **indirizzo peer** (username interno / 
 
 ---
 
-## 4. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `ChatPeer` | `profileId`, `displayName`, identità da [PROM-PROFILE-IDENTITY](./PROM-PROFILE-IDENTITY.md) |
-| `MessagesController` | `peerProfileId`; `load()` anche lista vuota |
-| `ComposeService` | Risoluzione username → `ChatPeer` via `find_profile_by_username` |
-| `HomeScreen` | `_activePeer`; binding chat panel |
-| `list_peer_messages(peer)` | Storico WHERE `owner_id = io` AND `peer_profile_id = peer` |
+## 3. Modello (riferimento)
 
-### Semantica «inbox»
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/), [docs/domain/navigation/](../../../domain/navigation/) |
+| UML | [docs/model/uml/messaging/](../../model/uml/messaging/), [docs/model/uml/navigation/](../../model/uml/navigation/) |
+| Statechart client | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/), [client/lib/machines/navigation/](../../../client/lib/machines/navigation/) |
+| Apertura conversazione | `OpenConversation` · [navigation-shell-state.puml](../../model/uml/navigation/navigation-shell-state.puml) |
 
-L'inbox è **organizzazione UI** della chat: messaggi inviati e ricevuti convivono in `messages` con `owner_id = io`, raggruppati per `peer_profile_id`.
+**Implementazione (non vincolante):** [docs/domain/messaging/README.md](../../../domain/messaging/README.md) · schema: [SYS-MAILBOX](../system/SYS-MAILBOX.md)
 
----
 
-## 5. Superfici conformi
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -66,7 +63,7 @@ L'inbox è **organizzazione UI** della chat: messaggi inviati e ricevuti convivo
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -81,7 +78,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` 
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|

@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-GROUP-TICKS` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-11 |
+| **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #162, #179 |
 
 Promessa di prodotto: spunte del messaggio umano→gruppo riflettono solo recapito al **gruppo**; erogazione verso terzi non modifica le spunte originali; nessuna visibilità al mittente su chi ha ricevuto l'erogazione.
@@ -47,26 +47,19 @@ Quando un utente invia a un gruppo, le spunte sulla **propria** copia indicano s
 
 ---
 
-## 4. Contratto implementativo
 
-| Elemento | Responsabilità |
-|----------|----------------|
-| `send_message_to_profile` (dest = group) | INSERT copia mittente + outbox; worker `deliver` valorizza `delivered_at` se storico gruppo INSERT |
-| `alfred_delivery.erogate_group_message` | Loop allow list — skip silenzioso; no touch copia U |
-| `MessageBubble` | Checkmarks da [PROM-MESSAGE-STATUS](./PROM-MESSAGE-STATUS.md) |
-| UI mittente umano | Mai lista destinatari erogazione |
+## 3. Modello (riferimento)
 
-### Tabella spunte (v1)
+| Elemento | Artefatto |
+|----------|-----------|
+| Glossario / comandi | [docs/domain/groups/](../../../domain/groups/), [docs/domain/delivery/](../../../domain/delivery/) |
+| UML | [docs/model/uml/groups/](../../model/uml/groups/) — [seq-broadcast.puml](../../model/uml/groups/seq-broadcast.puml) |
+| Erogazione | `ErogateGroupMessage` — [seq-process-outbox.puml](../../model/uml/delivery/seq-process-outbox.puml) |
 
-| Copia | `delivered_at` significa |
-|-------|-------------------------|
-| Umano → gruppo | Recapitato al **gruppo** |
-| Erogazione su persona | Non tocca copia umano originale |
-| Persona legge chat con gruppo | `mark_peer_read(gruppo)` — spunte indipendenti |
+**Implementazione (non vincolante):** [docs/domain/groups/README.md](../../../domain/groups/README.md) · [docs/guides/groups.md](../../../guides/groups.md)
 
----
 
-## 5. Superfici conformi
+## 4. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
@@ -76,7 +69,7 @@ Quando un utente invia a un gruppo, le spunte sulla **propria** copia indicano s
 
 ---
 
-## 6. Tracciabilità
+## 5. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
@@ -90,7 +83,7 @@ Gate: `bash scripts/check-spec-sync.sh` + `verify.sh` + smoke SQL + `integration
 
 ---
 
-## 7. Riferimenti
+## 6. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|
