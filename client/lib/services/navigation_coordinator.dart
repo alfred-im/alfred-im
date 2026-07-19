@@ -9,7 +9,6 @@ import '../machines/multi-account/multi_account_adapters.dart';
 import '../machines/navigation/account_navigation_effects.dart';
 import '../machines/navigation/navigation_adapters.dart';
 import '../machines/navigation/navigation_machine.dart';
-import '../machines/navigation/navigation_scope_host.dart';
 import '../models/chat_peer.dart';
 import '../models/conversation_scope.dart';
 import '../services/account_manager.dart';
@@ -22,19 +21,15 @@ class _ManagerFocusCommand implements AccountFocusCommand {
   final AccountManager _manager;
 
   @override
-  Future<void> focusAccount(
-    String accountUserId, {
-    bool restoreScopeFromViewState = true,
-  }) {
+  Future<void> focusAccount(String accountUserId) {
     return _manager.executeFocus(accountUserId);
   }
 }
 
 /// Unico ingresso per navigazione account → inbox → conversazione.
 ///
-/// Implementazione: [NavigationMachine] + [AccountNavigationEffects].
-/// Sidebar, tap inbox, push, link condivisibili passano da qui (via [AuthController]).
-class NavigationCoordinator implements NavigationScopeHost {
+/// Tutti i cambi account (sidebar, push, link) passano da [NavigationMachine].
+class NavigationCoordinator {
   NavigationCoordinator(
     this._manager, {
     AccountFocusCommand? focusCommand,
@@ -61,6 +56,9 @@ class NavigationCoordinator implements NavigationScopeHost {
 
   ConversationScope? get committedScope => _machine.committedScope;
 
+  bool get isChatShellOpen =>
+      _machine.shellState == NavigationShellState.chatOpen;
+
   bool isConversationReady({
     required AccountSession session,
     required ChatPeer peer,
@@ -70,14 +68,14 @@ class NavigationCoordinator implements NavigationScopeHost {
 
   void _notifyStateChanged() => onStateChanged?.call();
 
-  @override
   void invalidateCommittedScope() {
     _machine.invalidateCommittedScope();
   }
 
-  @override
+  /// Bootstrap / reconnect: riallinea scope da view-state e shell.
   void restoreCommittedScopeAfterFocusSettled() {
-    _machine.restoreCommittedScopeFromViewState(_manager);
+    _machine.restoreCommittedScopeFromViewState();
+    _machine.syncShellFromCommittedScope();
     _notifyStateChanged();
   }
 

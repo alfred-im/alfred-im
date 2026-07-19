@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 
 import '../../models/profile_summary.dart';
 import '../../services/account_manager.dart';
-import '../navigation/navigation_scope_host.dart';
 import 'multi_account_effects.dart';
 
 /// Effetti multi-account → [AccountManager] (solo I/O).
@@ -14,9 +13,6 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
   AccountMultiAccountEffects(this._manager);
 
   final AccountManager _manager;
-
-  /// Impostato da [AuthController] dopo creazione [NavigationCoordinator].
-  NavigationScopeHost? scopeHost;
 
   /// Notifica UI quando l'identità focus cambia prima che la sessione GoTrue sia pronta.
   VoidCallback? onFocusIdentityChanged;
@@ -37,9 +33,6 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
 
   @override
   Future<void> executeFocus(String userId) async {
-    if (_manager.focusUserId != userId) {
-      scopeHost?.invalidateCommittedScope();
-    }
     await _manager.executeFocus(
       userId,
       onFocusIdentityChanged: onFocusIdentityChanged,
@@ -49,12 +42,6 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
   @override
   Future<void> reconnectFocusedSession(String focusUserId) {
     return _manager.reconnectFocusedSession(focusUserId);
-  }
-
-  @override
-  void onFocusSettled({bool restoreScopeFromViewState = true}) {
-    if (!restoreScopeFromViewState) return;
-    scopeHost?.restoreCommittedScopeAfterFocusSettled();
   }
 
   @override

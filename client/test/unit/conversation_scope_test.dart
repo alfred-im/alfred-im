@@ -22,10 +22,7 @@ class _ImmediateFocus implements AccountFocusCommand {
   final AccountManager _manager;
 
   @override
-  Future<void> focusAccount(
-    String accountUserId, {
-    bool restoreScopeFromViewState = true,
-  }) async {
+  Future<void> focusAccount(String accountUserId) async {
     final session = _manager.focusedSession;
     if (session != null && session.userId == accountUserId) return;
   }

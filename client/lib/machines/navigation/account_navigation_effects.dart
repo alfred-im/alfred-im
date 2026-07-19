@@ -32,14 +32,8 @@ class AccountNavigationEffects implements NavigationEffects {
   static const _inboxRetryDelay = Duration(milliseconds: 100);
 
   @override
-  Future<void> focusAccount(
-    String accountUserId, {
-    bool restoreScopeFromViewState = true,
-  }) async {
-    await _focusCommand.focusAccount(
-      accountUserId,
-      restoreScopeFromViewState: restoreScopeFromViewState,
-    );
+  Future<void> focusAccount(String accountUserId) async {
+    await _focusCommand.focusAccount(accountUserId);
   }
 
   @override
@@ -47,10 +41,10 @@ class AccountNavigationEffects implements NavigationEffects {
       _manager.focusedSession?.profile.isGroup ?? false;
 
   @override
-  void restoreCommittedScopeFromViewState(AccountManager manager) {
-    final userId = manager.focusUserId;
-    final session = manager.focusedSession;
-    final peer = userId == null ? null : manager.viewStateFor(userId).activePeer;
+  void restoreCommittedScopeFromViewState() {
+    final userId = _manager.focusUserId;
+    final session = _manager.focusedSession;
+    final peer = userId == null ? null : _manager.viewStateFor(userId).activePeer;
     if (userId == null || session == null || peer == null) {
       navigationMachine?.invalidateCommittedScope();
       return;
@@ -251,10 +245,7 @@ class AccountNavigationEffects implements NavigationEffects {
       return false;
     }
 
-    await _focusCommand.focusAccount(
-      accountUserId,
-      restoreScopeFromViewState: false,
-    );
+    await _focusCommand.focusAccount(accountUserId);
 
     final session = _manager.focusedSession;
     final ok = _manager.focusUserId == accountUserId &&

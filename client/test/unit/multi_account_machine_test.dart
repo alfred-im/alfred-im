@@ -81,8 +81,6 @@ class _RecordingEffects implements MultiAccountEffects {
     );
   }
 
-  @override
-  void onFocusSettled({bool restoreScopeFromViewState = true}) {}
 }
 
 void main() {

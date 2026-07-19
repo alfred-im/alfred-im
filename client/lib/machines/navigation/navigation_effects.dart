@@ -4,14 +4,10 @@
 
 import '../../models/chat_peer.dart';
 import '../../models/open_conversation_source.dart';
-import '../../services/account_manager.dart';
 
 /// Effetti navigation → account manager + commit scope su [NavigationMachine].
 abstract class NavigationEffects {
-  Future<void> focusAccount(
-    String accountUserId, {
-    bool restoreScopeFromViewState = true,
-  });
+  Future<void> focusAccount(String accountUserId);
 
   /// Transazione unica OpenConversation — policy per [OpenConversationSource].
   Future<bool> openConversation({
@@ -35,5 +31,5 @@ abstract class NavigationEffects {
   bool get focusedAccountIsGroup;
 
   /// Dopo focus settled: riallinea scope da view-state account in focus.
-  void restoreCommittedScopeFromViewState(AccountManager manager);
+  void restoreCommittedScopeFromViewState();
 }

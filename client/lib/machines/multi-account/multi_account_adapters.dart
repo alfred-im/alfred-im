@@ -6,12 +6,9 @@ import '../../models/profile_summary.dart';
 import 'multi_account_effects.dart';
 import 'multi_account_machine.dart';
 
-/// Comando focus account — implementato da [MultiAccountAdapters] per navigation.
+/// Comando focus account — solo I/O GoTrue; scope/navigation restano in [NavigationMachine].
 abstract class AccountFocusCommand {
-  Future<void> focusAccount(
-    String accountUserId, {
-    bool restoreScopeFromViewState = true,
-  });
+  Future<void> focusAccount(String accountUserId);
 }
 
 /// Mappa ingressi attuali → eventi macchina multi-account.
@@ -24,6 +21,7 @@ class MultiAccountAdapters implements AccountFocusCommand {
   final MultiAccountEffects effects;
 
   /// F5 / avvio: carica manifest, macchina decide focus, effetti attivano sessione.
+  /// Ripristino scope conversazione: [NavigationCoordinator] dopo bootstrap.
   Future<void> bootstrapManifest() async {
     final bootstrap = await effects.loadManifestBootstrap();
     await _machine.send(
@@ -36,7 +34,6 @@ class MultiAccountAdapters implements AccountFocusCommand {
     final focus = _machine.focusUserId;
     if (focus != null) {
       await effects.executeFocus(focus);
-      effects.onFocusSettled();
     }
 
     await _machine.send(
@@ -45,16 +42,8 @@ class MultiAccountAdapters implements AccountFocusCommand {
   }
 
   @override
-  Future<void> focusAccount(
-    String accountUserId, {
-    bool restoreScopeFromViewState = true,
-  }) {
-    return _machine.send(
-      FocusAccount(
-        accountUserId,
-        restoreScopeFromViewState: restoreScopeFromViewState,
-      ),
-    );
+  Future<void> focusAccount(String accountUserId) {
+    return _machine.send(FocusAccount(accountUserId));
   }
 
   Future<void> reconnectFocusedSession() {

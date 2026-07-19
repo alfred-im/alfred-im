@@ -33,10 +33,7 @@ class _RecordingNavigationEffects implements NavigationEffects {
   bool get focusedAccountIsGroup => focusedIsGroup;
 
   @override
-  Future<void> focusAccount(
-    String accountUserId, {
-    bool restoreScopeFromViewState = true,
-  }) async {
+  Future<void> focusAccount(String accountUserId) async {
     lastFocusAccountId = accountUserId;
   }
 
@@ -55,7 +52,7 @@ class _RecordingNavigationEffects implements NavigationEffects {
   }
 
   @override
-  void restoreCommittedScopeFromViewState(AccountManager manager) {}
+  void restoreCommittedScopeFromViewState() {}
 
   @override
   void openPeerOnFocusedAccount(ChatPeer peer) {
@@ -281,6 +278,21 @@ void main() {
       await nav.backToGroupHome();
       expect(manager.viewState.groupChatOpen, isFalse);
       expect(manager.viewState.showInboxOnMobile, isTrue);
+    });
+
+    test('SwitchToAccount ripristina scope e shell chat da view-state', () async {
+      manager.applyAccountViewState(
+        'account-b',
+        (view) => view.openChat(_peer('peer-x')),
+      );
+      manager.injectTestSession(await _testSession('account-a'));
+      manager.injectTestSession(await _testSession('account-b'));
+      manager.focusTestSession(await _testSession('account-a'));
+
+      await nav.switchToAccount('account-b');
+
+      expect(nav.committedScope?.peerProfileId, 'peer-x');
+      expect(nav.machine.shellState, NavigationShellState.chatOpen);
     });
 
     test('setFocus preserva view state per account', () async {

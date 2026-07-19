@@ -45,7 +45,6 @@ class AuthController extends ChangeNotifier {
           _manager,
           focusCommand: multiAccountAdapters,
         );
-    multiAccountEffects.scopeHost = _navigation;
     multiAccountEffects.onFocusIdentityChanged = notifyListeners;
     _navigation.onStateChanged = notifyListeners;
     _manager.onFocusedProfileSynced = notifyListeners;
@@ -107,6 +106,8 @@ class AuthController extends ChangeNotifier {
 
   ConversationScope? get committedScope => _navigation.committedScope;
 
+  bool get isChatShellOpen => _navigation.isChatShellOpen;
+
   bool isConversationReady({
     required AccountSession session,
     required ChatPeer peer,
@@ -131,7 +132,10 @@ class AuthController extends ChangeNotifier {
   Future<void> syncPushSubscriptions() =>
       _pushCoordinator.syncPushSubscriptions();
 
-  Future<void> initialize() => _sessionCoordinator.initialize();
+  Future<void> initialize() async {
+    await _sessionCoordinator.initialize();
+    _navigation.restoreCommittedScopeAfterFocusSettled();
+  }
 
   void openAuthOverlay({required bool dismissible}) =>
       _sessionCoordinator.openAuthOverlay(dismissible: dismissible);
@@ -142,7 +146,7 @@ class AuthController extends ChangeNotifier {
 
   Future<void> setFocus(String userId) async {
     try {
-      await multiAccountAdapters.focusAccount(userId);
+      await _navigation.switchToAccount(userId);
       error = null;
     } catch (e) {
       error = friendlyAuthError(e);
@@ -154,6 +158,7 @@ class AuthController extends ChangeNotifier {
     if (!hasOpenAccounts || focusedSession != null) return;
     try {
       await multiAccountAdapters.reconnectFocusedSession();
+      _navigation.restoreCommittedScopeAfterFocusSettled();
       error = null;
     } catch (e) {
       error = friendlyAuthError(e);

@@ -228,7 +228,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= _breakpoint;
-    final showChatOnMobile = auth.activePeer != null;
+    final showChatOnMobile =
+        auth.isChatShellOpen && auth.committedScope != null;
     final sidebarWidth = width >= 1100 ? 380.0 : 320.0;
 
     final inboxArea = !auth.hasOpenAccounts

@@ -5,7 +5,6 @@
 import '../../models/chat_peer.dart';
 import '../../models/conversation_scope.dart';
 import '../../models/open_conversation_source.dart';
-import '../../services/account_manager.dart';
 import '../../services/account_session.dart';
 import 'navigation_effects.dart';
 
@@ -153,8 +152,22 @@ class NavigationMachine {
     return true;
   }
 
-  void restoreCommittedScopeFromViewState(AccountManager manager) {
-    _effects.restoreCommittedScopeFromViewState(manager);
+  void restoreCommittedScopeFromViewState() {
+    _effects.restoreCommittedScopeFromViewState();
+  }
+
+  void syncShellFromCommittedScope() {
+    _syncShellStateFromCommittedScope();
+  }
+
+  void _syncShellStateFromCommittedScope() {
+    if (_effects.focusedAccountIsGroup) {
+      shellState = NavigationShellState.groupShell;
+      return;
+    }
+    shellState = committedScope != null
+        ? NavigationShellState.chatOpen
+        : NavigationShellState.inboxVisible;
   }
 
   Future<void> send(NavigationEvent event) async {
@@ -162,9 +175,8 @@ class NavigationMachine {
       case SwitchToAccount(:final accountUserId):
         invalidateCommittedScope();
         await _effects.focusAccount(accountUserId);
-        shellState = _effects.focusedAccountIsGroup
-            ? NavigationShellState.groupShell
-            : NavigationShellState.inboxVisible;
+        restoreCommittedScopeFromViewState();
+        _syncShellStateFromCommittedScope();
       case OpenPeerOnFocusedAccount(:final peer):
         invalidateCommittedScope();
         _effects.openPeerOnFocusedAccount(peer);

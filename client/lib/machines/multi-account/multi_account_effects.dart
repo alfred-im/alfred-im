@@ -52,9 +52,6 @@ abstract class MultiAccountEffects {
 
   Future<CloseAccountResult> closeAccount(String accountUserId);
 
-  /// Dopo focus stabile (bootstrap/reconnect/switch esplicito): riallinea scope conversazione.
-  void onFocusSettled({bool restoreScopeFromViewState = true});
-
   /// Dopo init o sync: sessione GoTrue attiva per il focus corrente.
   bool get hasFocusedSession;
 
