@@ -8,10 +8,14 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Documentazione
 
-- Sync guide e architettura: composer [SURF-CHAT-014](./docs/specs/surfaces/SURF-CHAT.md) (graffetta + pannello icone scrollabile, microfono a destra) in [guides/media.md](./docs/guides/media.md), [guides/chat-scroll.md](./docs/guides/chat-scroll.md) (pulsante ↓ + badge pending)
+- Sync guide e architettura: composer [SURF-CHAT-014](./docs/specs/surfaces/SURF-CHAT.md) (graffetta + pannello icone scrollabile, microfono a destra) in [guides/media.md](./docs/guides/media.md), [guides/chat-scroll.md](./docs/guides/chat-scroll.md) (pulsante ↓ + badge pending; storico paginato verso l'alto — SURF-CHAT-015)
 - [full-stack.md](./docs/architecture/full-stack.md): chat include image/video; push Web `implemented` (non più solo spec approved)
-- [PROM-CHAT-MEDIA](./docs/specs/promises/product/PROM-CHAT-MEDIA.md): superfici `implemented`; gate **377** test; **38** migrazioni Supabase
+- [PROM-CHAT-MEDIA](./docs/specs/promises/product/PROM-CHAT-MEDIA.md): superfici `implemented`; gate **393** test; **39** migrazioni Supabase
 - [WISHLIST.md](./docs/WISHLIST.md), [INDICE.md](./docs/INDICE.md): date e righe foto/video + SYS-PUSH
+
+### Corretto
+
+- **#210** — `list_peer_messages`: finestra **recente** (non i primi 100 cronologici); cursore `p_before_created_at` per pagine più vecchie; anteprima inbox sempre nella prima finestra (SYS-MAILBOX-036/057, SURF-CHAT-015); client `loadOlderMessages` + scroll-up in `AnchoredMessageList`; smoke `mailbox_peer_messages_window_smoke.sql`
 
 > I conteggi gate nelle sezioni storiche sotto sono **point-in-time** al merge indicato.
 

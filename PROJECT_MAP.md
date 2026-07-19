@@ -134,7 +134,7 @@
 
 **Non deducibile — layout inbox**: `HomeScreen` — mobile drawer `AccountSidebar`; desktop colonna sinistra account + inbox. `AccountSidebar`: chiusura account in card profilo. `InboxPanel`: ricerca on-demand ([PROM-LIST-FILTER](docs/specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](docs/specs/surfaces/SURF-INBOX.md)), `ValueKey(userId)` al cambio focus. Doc: `docs/guides/inbox.md`.
 
-**Non deducibile — chat**: `AnchoredMessageList` (`ListView` reverse, soglia 48 px). Doc: `docs/guides/chat-scroll.md`.
+**Non deducibile — chat**: `AnchoredMessageList` (`ListView` reverse, soglia 48 px). Storico iniziale = ultimi 100 messaggi (`list_peer_messages` senza cursore); scroll verso l'alto → `loadOlderMessages()` + `p_before_created_at`; anteprima inbox sempre nella prima finestra (SYS-MAILBOX-057 / SURF-CHAT-015). Doc: `docs/guides/chat-scroll.md`, `docs/specs/contracts/rpc.md`.
 
 **Non deducibile — voice / location**: hold-to-send WebM/Opus; posizione statica con anteprima mappa OSM. Doc: `docs/guides/media.md`.
 

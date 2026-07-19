@@ -64,7 +64,7 @@ BEGIN
   IF to_regprocedure('public.list_inbox()') IS NULL THEN
     RAISE EXCEPTION 'Missing RPC list_inbox';
   END IF;
-  IF to_regprocedure('public.list_peer_messages(uuid,integer)') IS NULL THEN
+  IF to_regprocedure('public.list_peer_messages(uuid,integer,timestamptz)') IS NULL THEN
     RAISE EXCEPTION 'Missing RPC list_peer_messages';
   END IF;
   IF to_regprocedure('public.find_profile_by_username(text)') IS NULL THEN

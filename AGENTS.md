@@ -90,7 +90,7 @@ backend out of the box.
   `--dart-define=SUPABASE_URL=http://localhost:54321 --dart-define=SUPABASE_ANON_KEY=<local anon>`
   (get the anon key from `supabase status`). Prefer local for anything that writes, so you never touch the
   user's live/test data.
-- **`supabase start` works on a fresh apply** (all 38 migrations + `seed.sql`). It needs the Docker daemon
+- **`supabase start` works on a fresh apply** (all 39 migrations + `seed.sql`). It needs the Docker daemon
   running (see below). Local users can be created confirmed via the GoTrue admin API with the `service_role`
   key (`POST /auth/v1/admin/users`, `email_confirm:true`, `user_metadata.username`); the `handle_new_user`
   trigger then creates the `profiles` row. Note: the async delivery worker (`alfred_delivery.process_outbox`)

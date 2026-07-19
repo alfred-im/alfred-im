@@ -160,13 +160,21 @@ Preview per tipo: testo troncato, `[GIF]`, `format_voice_preview`, `format_locat
 ```sql
 list_peer_messages(
   p_peer_profile_id uuid,
-  p_limit integer default 100
+  p_limit integer default 100,
+  p_before_created_at timestamptz default null
 ) → setof messages
 ```
 
-Righe WHERE `owner_id = auth.uid()` AND `peer_profile_id = p_peer_profile_id` AND `mailbox_has_renderable_content(...)` ORDER BY `created_at` ASC.
+Righe WHERE `owner_id = auth.uid()` AND `peer_profile_id = p_peer_profile_id` AND `mailbox_has_renderable_content(...)`.
+
+- Senza cursore: **ultimi** `p_limit` messaggi (finestra recente), restituiti in ordine cronologico ASC.
+- Con `p_before_created_at`: fino a `p_limit` messaggi con `created_at < p_before_created_at` (pagina più vecchia), ordine ASC.
 
 `LIMIT greatest(1, least(coalesce(p_limit, 100), 500))`.
+
+L'anteprima `list_inbox` per un peer deve cadere nella finestra senza cursore quando esiste storico.
+
+**Migrazioni**: `20260704120000`, `20260719220000_list_peer_messages_recent_window.sql` (SYS-MAILBOX-036/057, SURF-CHAT-015).
 
 ---
 

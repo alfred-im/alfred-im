@@ -2,9 +2,25 @@
 
 **Backlog SDD**: `PROM-BOTTOM-ANCHOR` in [registry.md](../specs/registry.md) — non ancora promessa PRODUCT.
 
+**Implementato (SURF-CHAT-015)**: caricamento storico verso l'alto — vedi sezione sotto.
+
 ---
 
-## Comportamento
+## Caricamento storico verso l'alto (SURF-CHAT-015)
+
+| Aspetto | Valore |
+|---------|--------|
+| Apertura chat | Ultimi 100 messaggi (`list_peer_messages` senza cursore) — allineati all'anteprima inbox |
+| Trigger | Scroll verso messaggi più vecchi; `AnchoredMessageList` chiama `onLoadOlder` entro ~120 px dal bordo alto |
+| RPC | `list_peer_messages` con `p_before_created_at` = `created_at` del messaggio più vecchio già in lista |
+| Pagina | 100 messaggi; `hasMoreOlder` finché la pagina restituita è piena |
+| UX | Prepend senza saltare la posizione visibile (`prependOlderMessages` / `fetchAndPrependOlderMessages`) |
+
+Promesse: [SURF-CHAT-015](../specs/surfaces/SURF-CHAT.md), [SYS-MAILBOX-036/057](../specs/promises/system/SYS-MAILBOX.md).
+
+---
+
+## Aggancio al fondo (PROM-BOTTOM-ANCHOR backlog)
 
 | Stato | Condizione | Effetto |
 |-------|------------|---------|

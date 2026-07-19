@@ -17,6 +17,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _RecordingEffects implements MessagingEffects {
   int fetchCount = 0;
+  int prependCount = 0;
   int markReadCount = 0;
   int attachCount = 0;
 
@@ -29,6 +30,12 @@ class _RecordingEffects implements MessagingEffects {
   @override
   Future<bool> fetchAndSetMessages() async {
     fetchCount++;
+    return true;
+  }
+
+  @override
+  Future<bool> fetchAndPrependOlderMessages() async {
+    prependCount++;
     return true;
   }
 
@@ -170,6 +177,21 @@ void main() {
       expect(effects.fetchCount, 1);
       expect(effects.markReadCount, 1);
       expect(effects.attachCount, 1);
+    });
+
+    test('loadOlderMessages delegates to effects when more history exists', () async {
+      final effects = _RecordingEffects();
+      final state = MessagingConversationState()..hasMoreOlder = true;
+      final coordinator = MessagingCoordinator(
+        state: state,
+        effects: effects,
+        onChanged: () {},
+      );
+      coordinator.loadMachine.send(const ConversationReady());
+
+      await coordinator.loadOlderMessages();
+
+      expect(effects.prependCount, 1);
     });
   });
 }

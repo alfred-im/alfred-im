@@ -58,6 +58,11 @@ class ChatPanel extends StatelessWidget {
                 messages: messages,
                 isLoading: messagesController.isLoading,
                 showAuthorLabels: showAuthorLabels,
+                hasMoreOlder: messagesController.hasMoreOlder,
+                isLoadingOlder: messagesController.isLoadingOlder,
+                onLoadOlder: messagesController.hasMoreOlder
+                    ? () => unawaited(messagesController.loadOlderMessages())
+                    : null,
                 onRetryMessage: messagesController.retryMessage,
               ),
             ),

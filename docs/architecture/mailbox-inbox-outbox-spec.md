@@ -1,6 +1,6 @@
 # Modello caselle (mailbox) — implementato
 
-**Ultima revisione**: 2026-07-11  
+**Ultima revisione**: 2026-07-19  
 **Status**: ✅ **Implementato su `main`** (PR #159; gruppi #162; delivery plane #179) — promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` `implemented`  
 **Audience**: AI / implementazione
 
@@ -16,6 +16,7 @@
 | **Confine account** | RPC account toccano **solo** il proprio archivio — [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) |
 | **Consegna** | **Outbox sempre** → worker `alfred_delivery.process_outbox` materializza destinatario e date spunte mittente — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) |
 | **Inbox** | Lista derivata dal **mio** archivio via `list_inbox()` |
+| **Storico chat** | Finestra recente via `list_peer_messages` (ultimi N, default 100); pagine più vecchie con cursore `p_before_created_at`; anteprima inbox ⊆ prima finestra (SYS-MAILBOX-057) |
 | **Identità chat** | `(io, peer_profile_id)` — indirizzo `username` o `username@server` in compose |
 
 Tutto il resto (UI, realtime, spunte, tipi messaggio, rubrica) si deduce dall’implementazione attuale salvo quanto sotto.
@@ -204,6 +205,7 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 - 2026-07-04: discovery chiuso; promessa `SYS-MAILBOX` approved; spunte = `delivered_at`/`read_at` (no enum status).
 - 2026-07-04: gate `SYS-RECEPTION` (#161) nel driver internal — recapito condizionato.
 - 2026-07-11: **#179** — `SYS-ACCOUNT-BOUNDARY` + `SYS-DELIVERY`; worker `alfred_delivery`; RPC account solo confine proprio.
+- 2026-07-19: **#210** — `list_peer_messages` finestra recente + cursore paginazione; SYS-MAILBOX-036/057; SURF-CHAT-015.
 
 ---
 

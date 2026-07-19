@@ -18,6 +18,7 @@
 | `SendContent` | `SendStarted` → `ContentSent` / `ContentSendFailed` | `SendMessage`, `SendGif`, `SendVoice`, … |
 | `RetryFailedSend` | `RetryFailedSend` | `RetryMessage` |
 | `RefreshConversation` | `RefreshConversation` | reload su `ConversationLoadMachine` |
+| `LoadOlderMessages` | side-effect in `Ready` (no transizione macchina) | `MessagingCoordinator.loadOlderMessages` / `MessageService.fetchPeerMessages(beforeCreatedAt: …)` |
 | `ConversationReady` | `ConversationReady` / stato `ready` | lista messaggi in UI |
 | `ContentSent` | `ContentSent` | merge riga server |
 | `ContentSendFailed` | `ContentSendFailed` | coda `OutboundMessageQueue` |

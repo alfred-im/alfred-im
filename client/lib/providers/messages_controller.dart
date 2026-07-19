@@ -88,6 +88,8 @@ class MessagesController extends ChangeNotifier {
   set messages(List<ChatMessage> value) => _state.messages = value;
   bool get isLoading => _coordinator.isLoading;
   bool get isSending => _coordinator.isSending;
+  bool get hasMoreOlder => _coordinator.hasMoreOlder;
+  bool get isLoadingOlder => _coordinator.isLoadingOlder;
   @visibleForTesting
   set isSending(bool value) {
     if (value) {
@@ -105,6 +107,8 @@ class MessagesController extends ChangeNotifier {
       '$userId|$peerProfileId';
 
   Future<void> reload() => _adapters.reload();
+
+  Future<void> loadOlderMessages() => _adapters.loadOlderMessages();
 
   Future<void> load() => _adapters.load();
 

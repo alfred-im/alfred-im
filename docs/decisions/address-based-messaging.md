@@ -81,7 +81,7 @@ Equivalente concettuale: una `VIEW` SQL normale (non `MATERIALIZED`). L’RPC è
 | RPC | Responsabilità |
 |-----|----------------|
 | `list_inbox()` | Aggregazione on-read sul mio archivio |
-| `list_peer_messages(peer_profile_id)` | Storico nel mio archivio con un peer |
+| `list_peer_messages(peer_profile_id, limit?, before_created_at?)` | Ultimi `limit` messaggi (default 100, max 500) nel mio archivio con un peer, ordine cronologico ASC; `before` = cursore `created_at` per pagine più vecchie; anteprima inbox sempre nella prima finestra (SYS-MAILBOX-057) |
 | `mark_peer_read(peer_profile_id)` | `read_at` su entrata + propagazione su copia mittente (λ) |
 | `send_message_to_profile` | Outbox + copie mittente/destinatario in transazione |
 | `find_profile_by_username` | Risoluzione indirizzo → profilo |
@@ -93,7 +93,7 @@ Equivalente concettuale: una `VIEW` SQL normale (non `MATERIALIZED`). L’RPC è
 ### Client
 
 - `ChatPeer` — identificato da `profileId`
-- `MessagesController` — sempre `peerProfileId`; carica subito (lista vuota se nessun messaggio)
+- `MessagesController` — sempre `peerProfileId`; carica subito la **finestra recente** (lista vuota se nessun messaggio); scroll verso l'alto → `loadOlderMessages()` con cursore `p_before_created_at`
 - `HomeScreen` — `_activePeer`; nessuna distinzione bozza/thread
 - Realtime inbox: subscribe su `messages` (`owner_id = io`)
 
@@ -106,6 +106,7 @@ Equivalente concettuale: una `VIEW` SQL normale (non `MATERIALIZED`). L’RPC è
 - `20260627220000_fix_send_message_to_profile_overload.sql` — PostgREST overload
 - `20260627230000_messages_only_inbox.sql` — drop `inbox_threads` (storico)
 - `20260704120000_mailbox_per_owner_archive.sql` — modello caselle (PR #159)
+- `20260719220000_list_peer_messages_recent_window.sql` — finestra recente + cursore paginazione (PR #210)
 
 ---
 

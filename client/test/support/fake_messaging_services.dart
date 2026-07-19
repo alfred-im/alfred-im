@@ -127,14 +127,33 @@ class FakeMessageService extends MessageService {
     required String peerProfileId,
     required String currentUserId,
     int limit = 100,
+    DateTime? beforeCreatedAt,
   }) async {
-    return List<ChatMessage>.from(
+    final all = List<ChatMessage>.from(
       messagesByConversation[conversationKey(
             userId: currentUserId,
             peerProfileId: peerProfileId,
           )] ??
           const [],
-    );
+    )..sort((a, b) {
+        final aAt = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bAt = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return aAt.compareTo(bAt);
+      });
+
+    final filtered = beforeCreatedAt == null
+        ? all
+        : all
+            .where(
+              (m) =>
+                  m.createdAt != null && m.createdAt!.isBefore(beforeCreatedAt),
+            )
+            .toList();
+
+    if (filtered.isEmpty) return const [];
+
+    final start = filtered.length > limit ? filtered.length - limit : 0;
+    return filtered.sublist(start);
   }
 
   @override
@@ -341,12 +360,14 @@ class DelayedFakeMessageService extends FakeMessageService {
     required String peerProfileId,
     required String currentUserId,
     int limit = 100,
+    DateTime? beforeCreatedAt,
   }) async {
     await Future<void>.delayed(fetchDelay);
     return super.fetchPeerMessages(
       peerProfileId: peerProfileId,
       currentUserId: currentUserId,
       limit: limit,
+      beforeCreatedAt: beforeCreatedAt,
     );
   }
 }

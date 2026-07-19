@@ -204,6 +204,7 @@ class _BrokenMessageService extends FakeMessageService {
     required String peerProfileId,
     required String currentUserId,
     int limit = 100,
+    DateTime? beforeCreatedAt,
   }) {
     throw Exception('RPC timeout simulato');
   }

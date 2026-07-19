@@ -10,6 +10,6 @@ Dettaglio implementativo per AI. I contratti vivono in [specs/registry.md](../sp
 | [shareable-link.md](./shareable-link.md) | PROM-SHAREABLE-LINK |
 | [media.md](./media.md) | SYS-MAILBOX, PROM-CHAT-MEDIA, SURF-CHAT-014 |
 | [inbox.md](./inbox.md) | PROM-LIST-FILTER, SURF-INBOX |
-| [chat-scroll.md](./chat-scroll.md) | backlog PROM-BOTTOM-ANCHOR |
+| [chat-scroll.md](./chat-scroll.md) | Aggancio fondo (PROM-BOTTOM-ANCHOR backlog) + storico paginato verso l'alto (SURF-CHAT-015) |
 
 Cronologia merge: [CHANGELOG.md](../../CHANGELOG.md).

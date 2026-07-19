@@ -12,7 +12,8 @@
 | `OpenConversation` | Policy (navigazione apre chat) | Carica e sincronizza la conversazione con il peer. |
 | `SendContent` | Utente | Invia testo, media o posizione al peer. |
 | `RetryFailedSend` | Utente | Ritenta un invio fallito. |
-| `RefreshConversation` | Utente | Aggiorna lo storico messaggi. |
+| `RefreshConversation` | Utente | Aggiorna lo storico messaggi (finestra recente). |
+| `LoadOlderMessages` | Utente (scroll verso l'alto) | Carica la pagina precedente dello storico senza cambiare il messaggio visibile. |
 
 ---
 
@@ -24,7 +25,7 @@
 | `ConversationUnavailable` | Sessione non valida o caricamento fallito. |
 | `ContentSent` | Invio accettato dal server. |
 | `ContentSendFailed` | Invio non riuscito; resta in coda retry. |
-| `ConversationUpdated` | Nuovi messaggi o aggiornamento spunte in conversazione. |
+| `ConversationUpdated` | Nuovi messaggi, pagina storico precedente caricata, o aggiornamento spunte in conversazione. |
 
 ---
 

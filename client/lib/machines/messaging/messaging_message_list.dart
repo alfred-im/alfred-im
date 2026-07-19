@@ -41,6 +41,14 @@ List<ChatMessage> dedupeMessages(List<ChatMessage> source) {
   return deduped;
 }
 
+List<ChatMessage> prependOlderMessages({
+  required List<ChatMessage> existing,
+  required List<ChatMessage> older,
+}) {
+  if (older.isEmpty) return existing;
+  return dedupeMessages([...older, ...existing]);
+}
+
 ChatMessage withTimeLabel(ChatMessage message) {
   final at = message.createdAt ?? DateTime.now();
   return message.copyWith(timeLabel: formatMessageTime(at), createdAt: at);

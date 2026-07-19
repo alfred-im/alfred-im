@@ -38,6 +38,8 @@ abstract class MessagingEffects {
   bool ensureValidSession();
   /// Carica messaggi; `false` se scope non più attivo (il coordinator può ritentare).
   Future<bool> fetchAndSetMessages();
+  /// Carica pagina più vecchia; `false` se scope non più attivo.
+  Future<bool> fetchAndPrependOlderMessages();
   Future<void> enrichAuthorNamesIfNeeded();
   Future<void> markRead();
   RealtimeChannel? attachRealtime(void Function(ChatMessage message) onMessage);
@@ -75,6 +77,7 @@ class MessagesControllerEffects implements MessagingEffects {
     required this._onChanged,
   }) : _outboundQueue = outboundQueue ?? OutboundMessageQueue();
   static const sessionExpiredMessage = 'Sessione scaduta — accedi di nuovo';
+  static const _peerMessagesPageSize = 100;
 
   final ConversationScope scope;
   final String userId;
@@ -117,6 +120,7 @@ class MessagesControllerEffects implements MessagingEffects {
     final loaded = await messageService.fetchPeerMessages(
       peerProfileId: peerProfileId,
       currentUserId: userId,
+      limit: _peerMessagesPageSize,
     );
     if (gen != _fetchGeneration || _disposed) return false;
     if (!_scopeIsActive()) {
@@ -131,6 +135,47 @@ class MessagesControllerEffects implements MessagingEffects {
     _state.messages = dedupeMessages(
       await _enrichMessages(loaded.map(withTimeLabel).toList()),
     );
+    _state.hasMoreOlder = loaded.length >= _peerMessagesPageSize;
+    _state.isLoadingOlder = false;
+    return true;
+  }
+
+  @override
+  Future<bool> fetchAndPrependOlderMessages() async {
+    if (!_state.hasMoreOlder || _state.isLoadingOlder || _state.messages.isEmpty) {
+      return true;
+    }
+    final oldest = _state.messages.firstWhere(
+      (m) => m.createdAt != null,
+      orElse: () => _state.messages.first,
+    );
+    final before = oldest.createdAt;
+    if (before == null) {
+      _state.hasMoreOlder = false;
+      return true;
+    }
+
+    final gen = _fetchGeneration;
+    _state.isLoadingOlder = true;
+    _onChanged();
+
+    final loaded = await messageService.fetchPeerMessages(
+      peerProfileId: peerProfileId,
+      currentUserId: userId,
+      limit: _peerMessagesPageSize,
+      beforeCreatedAt: before,
+    );
+
+    if (gen != _fetchGeneration || _disposed) return false;
+    if (!_scopeIsActive()) return false;
+
+    final enriched = await _enrichMessages(loaded.map(withTimeLabel).toList());
+    _state.messages = prependOlderMessages(
+      existing: _state.messages,
+      older: enriched,
+    );
+    _state.hasMoreOlder = loaded.length >= _peerMessagesPageSize;
+    _state.isLoadingOlder = false;
     return true;
   }
 

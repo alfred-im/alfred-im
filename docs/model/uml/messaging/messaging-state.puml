@@ -41,6 +41,8 @@ state RealtimeAttachment {
 
 note right of Ready
   ConversationUpdated mentre Attached
+  LoadOlderMessages: side-effect in Ready
+  (hasMoreOlder / isLoadingOlder)
 end note
 
 @enduml

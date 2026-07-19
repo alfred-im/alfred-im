@@ -167,13 +167,19 @@ class MessageService {
     required String peerProfileId,
     required String currentUserId,
     int limit = 100,
+    DateTime? beforeCreatedAt,
   }) async {
+    final params = <String, dynamic>{
+      'p_peer_profile_id': peerProfileId,
+      'p_limit': limit,
+    };
+    if (beforeCreatedAt != null) {
+      params['p_before_created_at'] = beforeCreatedAt.toUtc().toIso8601String();
+    }
+
     final rows = await _client.rpc(
       'list_peer_messages',
-      params: {
-        'p_peer_profile_id': peerProfileId,
-        'p_limit': limit,
-      },
+      params: params,
     );
 
     return (rows as List<dynamic>)

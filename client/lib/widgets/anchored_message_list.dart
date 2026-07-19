@@ -17,18 +17,26 @@ class AnchoredMessageList extends StatefulWidget {
     required this.isLoading,
     this.onRetryMessage,
     this.showAuthorLabels = false,
+    this.hasMoreOlder = false,
+    this.isLoadingOlder = false,
+    this.onLoadOlder,
   });
 
   final List<ChatMessage> messages;
   final bool isLoading;
   final void Function(String messageId)? onRetryMessage;
   final bool showAuthorLabels;
+  final bool hasMoreOlder;
+  final bool isLoadingOlder;
+  final VoidCallback? onLoadOlder;
 
   @override
   State<AnchoredMessageList> createState() => _AnchoredMessageListState();
 }
 
 class _AnchoredMessageListState extends State<AnchoredMessageList> {
+  static const _loadOlderThreshold = 120.0;
+
   final _scrollController = ScrollController();
   bool _isAttached = true;
   int _pendingBelow = 0;
@@ -56,6 +64,13 @@ class _AnchoredMessageListState extends State<AnchoredMessageList> {
     final previousCount = _renderedCount;
     final currentCount = widget.messages.length;
     if (currentCount == previousCount) return;
+
+    final prepended = _didPrependMessages(oldWidget.messages, widget.messages);
+    if (prepended) {
+      _preserveScrollAfterPrepend();
+      _renderedCount = currentCount;
+      return;
+    }
 
     if (currentCount < previousCount) {
       setState(() {
@@ -95,19 +110,53 @@ class _AnchoredMessageListState extends State<AnchoredMessageList> {
     super.dispose();
   }
 
+  bool _didPrependMessages(
+    List<ChatMessage> previous,
+    List<ChatMessage> current,
+  ) {
+    if (current.length <= previous.length) return false;
+    if (previous.isEmpty || current.isEmpty) return false;
+    return previous.last.id == current.last.id &&
+        previous.first.id != current.first.id;
+  }
+
+  void _preserveScrollAfterPrepend() {
+    if (!_scrollController.hasClients) return;
+    final oldMaxExtent = _scrollController.position.maxScrollExtent;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final newMaxExtent = _scrollController.position.maxScrollExtent;
+      final delta = newMaxExtent - oldMaxExtent;
+      if (delta > 0) {
+        _scrollController.jumpTo(_scrollController.position.pixels + delta);
+      }
+    });
+  }
+
   void _onScroll() {
     if (!_scrollController.hasClients) return;
 
-    final attached = ConversationScrollAnchor.isAttached(
-      _scrollController.position.pixels,
-    );
+    final position = _scrollController.position;
+    final attached = ConversationScrollAnchor.isAttached(position.pixels);
 
-    if (attached == _isAttached) return;
+    if (attached != _isAttached) {
+      setState(() {
+        _isAttached = attached;
+        if (attached) _pendingBelow = 0;
+      });
+    }
 
-    setState(() {
-      _isAttached = attached;
-      if (attached) _pendingBelow = 0;
-    });
+    if (!widget.hasMoreOlder ||
+        widget.isLoadingOlder ||
+        widget.onLoadOlder == null) {
+      return;
+    }
+
+    final remaining = position.maxScrollExtent - position.pixels;
+    if (remaining <= _loadOlderThreshold) {
+      widget.onLoadOlder!();
+    }
   }
 
   void _scheduleScrollToBottom({required bool animate}) {
@@ -148,9 +197,24 @@ class _AnchoredMessageListState extends State<AnchoredMessageList> {
           controller: _scrollController,
           reverse: true,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          itemCount: widget.messages.length,
+          itemCount: widget.messages.length + (widget.isLoadingOlder ? 1 : 0),
           itemBuilder: (context, index) {
-            final message = widget.messages[widget.messages.length - 1 - index];
+            if (widget.isLoadingOlder &&
+                index == widget.messages.length) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            }
+
+            final message =
+                widget.messages[widget.messages.length - 1 - index];
             return MessageBubble(
               message: message,
               showAuthorLabel: widget.showAuthorLabels,
