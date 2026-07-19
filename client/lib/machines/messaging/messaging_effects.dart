@@ -26,6 +26,7 @@ import '../../utils/date_format.dart';
 import '../../utils/image_bytes.dart';
 import '../../utils/picked_file_bytes.dart';
 import '../../utils/prepare_image_for_upload.dart';
+import '../../utils/diagnostic_log.dart';
 import '../../utils/video_duration.dart';
 import '../../utils/video_file_extension.dart';
 import 'messaging_conversation_state.dart';
@@ -101,10 +102,28 @@ class MessagesControllerEffects implements MessagingEffects {
   @override
   bool ensureValidSession() {
     if (hasValidSession != null && !hasValidSession!()) {
+      diagLogFail(
+        'messaging',
+        'session.check',
+        'jwt_missing',
+        data: {
+          'userId': userId,
+          'peerProfileId': peerProfileId,
+        },
+      );
       _state.error = sessionExpiredMessage;
       _onChanged();
       return false;
     }
+    diagLog(
+      'messaging',
+      'session.check',
+      data: {
+        'userId': userId,
+        'peerProfileId': peerProfileId,
+        'ok': true,
+      },
+    );
     return true;
   }
 

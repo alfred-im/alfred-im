@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../models/profile_summary.dart';
 import '../providers/group_messages_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/session_scope_keys.dart';
 import '../widgets/anchored_message_list.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/peer_profile_overlay.dart';
@@ -36,6 +37,7 @@ class GroupConversationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
+      key: groupSessionKey(session, 'group-messages'),
       create: (_) => GroupMessagesController(
         userId: session.userId,
         messageService: session.messageService,

@@ -5,6 +5,10 @@
 import { test, expect } from '@playwright/test';
 
 import {
+  attachDiagnosticLogCollector,
+  dumpDiagnosticLogsOnFailure,
+} from './helpers/diagnostic-logs';
+import {
   backToInboxFromChat,
   ACCOUNT1,
   ACCOUNT2,
@@ -30,6 +34,16 @@ import {
  */
 test.use({ viewport: { width: 390, height: 844 } });
 test.setTimeout(90_000);
+
+let diagLogs: string[] = [];
+
+test.beforeEach(({ page }) => {
+  diagLogs = attachDiagnosticLogCollector(page);
+});
+
+test.afterEach(({}, testInfo) => {
+  dumpDiagnosticLogsOnFailure(diagLogs, testInfo);
+});
 
 test('multi-account mobile: messaggio in DB e visibile dall’altro account', async ({
   page,

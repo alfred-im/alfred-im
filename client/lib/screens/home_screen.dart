@@ -25,6 +25,7 @@ import 'allowed_people_screen.dart';
 import 'contacts_screen.dart';
 import 'profile_screen.dart';
 import 'group_conversation_screen.dart';
+import '../utils/session_scope_keys.dart';
 
 /// Layout principale stile WhatsApp Web: sidebar (profilo + inbox) + chat.
 class HomeScreen extends StatefulWidget {
@@ -165,7 +166,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return _ChatWithMessages(
-      key: ValueKey('${session.userId}-${peer.profileId}'),
+      key: messagesSessionKey(session, peer.profileId),
+      auth: auth,
       session: session,
       peer: peer,
       showBackButton: showBackButton,
@@ -183,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (isGroupAccount && session != null) {
       return ChangeNotifierProvider(
-        key: ValueKey(session.userId),
+        key: groupSessionKey(session, 'group-home'),
         create: (_) => GroupHomeController(
           session: session,
           profile: session.profile,
@@ -369,7 +371,7 @@ class _GroupAccountLayout extends StatelessWidget {
 
     final groupChatArea = auth.groupChatOpen
         ? _GroupChatWithMessages(
-            key: ValueKey('${session.userId}-chat'),
+            key: groupSessionKey(session, 'group-chat-wide'),
             session: session,
             profile: session.profile,
             showBackButton: !isWide,
@@ -409,7 +411,7 @@ class _GroupAccountLayout extends StatelessWidget {
       ),
       body: auth.groupChatOpen
           ? _GroupChatWithMessages(
-              key: ValueKey('${session.userId}-chat-mobile'),
+              key: groupSessionKey(session, 'group-chat-mobile'),
               session: session,
               profile: session.profile,
               showBackButton: true,
@@ -452,6 +454,7 @@ class _GroupChatWithMessages extends StatelessWidget {
 class _ChatWithMessages extends StatelessWidget {
   const _ChatWithMessages({
     super.key,
+    required this.auth,
     required this.session,
     required this.peer,
     this.showBackButton = false,
@@ -459,25 +462,39 @@ class _ChatWithMessages extends StatelessWidget {
     required this.onMessagesChanged,
   });
 
+  final AuthController auth;
   final AccountSession session;
   final ChatPeer peer;
   final bool showBackButton;
   final VoidCallback? onBack;
   final Future<void> Function() onMessagesChanged;
 
+  bool _focusedSessionValid() {
+    final live = auth.focusedSession;
+    return live != null && live.userId == session.userId && live.hasValidJwt();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final liveSession = auth.focusedSession;
+    if (liveSession == null || liveSession.userId != session.userId) {
+      return const ColoredBox(
+        color: AlfredColors.surface,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return ChangeNotifierProvider(
       create: (_) => MessagesController(
-        userId: session.userId,
+        userId: liveSession.userId,
         peerProfileId: peer.profileId,
-        messageService: session.messageService,
-        messageMediaService: session.messageMediaService,
-        inboxService: session.inboxService,
-        profileService: session.profileService,
+        messageService: liveSession.messageService,
+        messageMediaService: liveSession.messageMediaService,
+        inboxService: liveSession.inboxService,
+        profileService: liveSession.profileService,
         peerIsGroup: peer.isGroup,
         onMessagesChanged: onMessagesChanged,
-        hasValidSession: session.hasValidJwt,
+        hasValidSession: _focusedSessionValid,
       ),
       child: ChatPanel(
         peer: peer,
