@@ -56,7 +56,7 @@ class MessagingCoordinator {
   }
 
   Future<void> reload() async {
-    loadMachine.send(const ReloadMessages());
+    loadMachine.send(const RefreshConversation());
     state.error = null;
     _notify();
     await load();
@@ -73,7 +73,7 @@ class MessagingCoordinator {
     try {
       await effects.fetchAndSetMessages();
       state.error = null;
-      loadMachine.send(const MessagesLoaded());
+      loadMachine.send(const ConversationReady());
     } catch (e) {
       state.error = e.toString();
       loadMachine.send(const LoadFailed());
@@ -198,7 +198,7 @@ class MessagingCoordinator {
   }
 
   void notifySendEnded(bool failed) {
-    sendMachine.send(failed ? const SendFailed() : const SendAcknowledged());
+    sendMachine.send(failed ? const ContentSendFailed() : const ContentSent());
     _notify();
   }
 

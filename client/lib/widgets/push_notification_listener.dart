@@ -69,7 +69,7 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
         'peerProfileId': conversation.peerProfileId,
       },
     );
-    auth.notificationsAdapters.onOpenChatIntent(
+    auth.notificationsAdapters.onOpenChatFromNotification(
       conversation: conversation,
       sessionReady: auth.sessionReady,
       hasOpenAccount: auth.accountManager.hasOpenAccount(conversation.ownerUserId),

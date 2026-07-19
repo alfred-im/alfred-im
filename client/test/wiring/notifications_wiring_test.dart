@@ -109,7 +109,7 @@ void main() {
       final auth = await createWiredAuthController(manager: manager);
       await auth.initialize();
 
-      auth.notificationsAdapters.onOpenChatIntent(
+      auth.notificationsAdapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           ownerUserId: 'account-b',
           peerProfileId: 'account-a',
@@ -138,7 +138,7 @@ void main() {
       final auth = await createWiredAuthController(manager: manager);
       await auth.initialize();
 
-      auth.notificationsAdapters.onOpenChatIntent(
+      auth.notificationsAdapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           ownerUserId: 'account-b',
           peerProfileId: 'account-a',

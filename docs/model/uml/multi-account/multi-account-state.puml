@@ -11,13 +11,13 @@ state FocusSwitching
 state FocusedWithSession
 state FocusedAwaitingSession : focus impostato,\nsessione in ripristino
 
-[*] --> NoOpenAccounts : InitializeManifest\n[manifest empty]
-[*] --> FocusedWithSession : InitializeManifest\n[session ok]
-[*] --> FocusedAwaitingSession : InitializeManifest\n[focus but no session]
+[*] --> NoOpenAccounts : ManifestLoaded\n[manifest empty]
+[*] --> FocusedWithSession : ManifestLoaded\n[session ok]
+[*] --> FocusedAwaitingSession : ManifestLoaded\n[focus but no session]
 
 NoOpenAccounts --> HasOpenAccounts : AccountOpened\n[no session yet]
 NoOpenAccounts --> FocusedWithSession : AccountOpened\n[session ok]
-NoOpenAccounts --> FocusedWithSession : OpenAccountWithPassword\n/ OpenAccountWithSignUp
+NoOpenAccounts --> FocusedWithSession : OpenAccount\n[session ok]
 
 HasOpenAccounts --> FocusSwitching : FocusAccount
 HasOpenAccounts --> FocusedWithSession : AccountFocused

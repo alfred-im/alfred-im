@@ -47,13 +47,13 @@ class NotificationsAdapters {
     _machine.send(const UnregisterSubscriptionRequested());
   }
 
-  void onOpenChatIntent({
+  void onOpenChatFromNotification({
     required PushConversationKey conversation,
     required bool sessionReady,
     required bool hasOpenAccount,
   }) {
     _machine.send(
-      OpenChatIntentReceived(
+      OpenChatFromNotification(
         recipientUserId: conversation.ownerUserId,
         peerProfileId: conversation.peerProfileId,
         sessionReady: sessionReady,

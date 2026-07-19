@@ -2,10 +2,11 @@
 ' Context: messaging
 ' Profile: client
 ' Revision: 2026-07-19
+' Statechart: ConversationLoadMachine, OutboundSendMachine, RealtimeAttachmentMachine
 
 title Messaging — stato conversazione (composite)
 
-state "Caricamento" as CL {
+state ConversationLoad {
   state Loading
   state Ready
   state SessionBlocked
@@ -17,7 +18,7 @@ state "Caricamento" as CL {
   SessionBlocked --> Loading : RefreshConversation
 }
 
-state "Invio" as OS {
+state OutboundSend {
   state Idle
   state Sending
   state FailedQueue
@@ -29,7 +30,7 @@ state "Invio" as OS {
   FailedQueue --> Sending : RetryFailedSend
 }
 
-state "Realtime" as RT {
+state RealtimeAttachment {
   state Detached
   state Attached
 

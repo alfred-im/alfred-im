@@ -54,8 +54,8 @@ final class UnregisterSubscriptionRequested extends NotificationsEvent {
   const UnregisterSubscriptionRequested();
 }
 
-final class OpenChatIntentReceived extends NotificationsEvent {
-  const OpenChatIntentReceived({
+final class OpenChatFromNotification extends NotificationsEvent {
+  const OpenChatFromNotification({
     required this.recipientUserId,
     required this.peerProfileId,
     required this.sessionReady,
@@ -117,14 +117,14 @@ class NotificationsMachine {
         if (subscriptionState == NotificationsSubscriptionState.active) {
           subscriptionState = NotificationsSubscriptionState.idle;
         }
-      case OpenChatIntentReceived():
-        _handleOpenChatIntent(event);
+      case OpenChatFromNotification():
+        _handleOpenChatFromNotification(event);
       case SessionBecameReady():
         _drainQueuedOpenChat();
     }
   }
 
-  void _handleOpenChatIntent(OpenChatIntentReceived event) {
+  void _handleOpenChatFromNotification(OpenChatFromNotification event) {
     if (_openChatChainBusy) {
       _pendingWhileBusy.add((
         recipientUserId: event.recipientUserId,

@@ -2,29 +2,30 @@
 ' Context: auth
 ' Profile: client
 ' Revision: 2026-07-19
+' Statechart: AuthUiState (bootstrapping, noSession, sessionActive, overlayVisible, authOperationInProgress)
 
 title Auth — overlay credenziali
 
 state Bootstrapping
-state CredentialOverlayRequired
+state NoSession
 state SessionActive
-state CredentialOverlayOptional
-state Authenticating
+state OverlayVisible
+state AuthOperationInProgress
 
 [*] --> Bootstrapping
 
-Bootstrapping --> CredentialOverlayRequired : CredentialOverlayRequired
+Bootstrapping --> NoSession : CredentialOverlayRequired
 Bootstrapping --> SessionActive : SessionEstablished
 
-CredentialOverlayRequired --> Authenticating : SignIn / SignUp / RequestPasswordReset
-CredentialOverlayOptional --> SessionActive : DismissCredentialOverlay
-CredentialOverlayOptional --> Authenticating : SignIn / SignUp
+NoSession --> AuthOperationInProgress : SignIn / SignUp / RequestPasswordReset
+OverlayVisible --> SessionActive : DismissCredentialOverlay
+OverlayVisible --> AuthOperationInProgress : SignIn / SignUp
 
-SessionActive --> CredentialOverlayOptional : ShowCredentialOverlay
-SessionActive --> CredentialOverlayRequired : NoOpenAccounts
+SessionActive --> OverlayVisible : ShowCredentialOverlay
+SessionActive --> NoSession : NoOpenAccounts
 
-Authenticating --> SessionActive : SessionEstablished
-Authenticating --> CredentialOverlayRequired : AuthenticationFailed
-Authenticating --> CredentialOverlayOptional : AuthenticationFailed
+AuthOperationInProgress --> SessionActive : SessionEstablished
+AuthOperationInProgress --> NoSession : AuthenticationFailed
+AuthOperationInProgress --> OverlayVisible : AuthenticationFailed
 
 @enduml

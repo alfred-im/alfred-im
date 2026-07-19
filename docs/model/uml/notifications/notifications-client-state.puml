@@ -20,10 +20,10 @@ state OpenChatProcessing : handler serializzato
 [*] --> Idle : CheckPushSupport\n[supported, not denied]
 
 Idle --> Syncing : SyncSubscriptions
-Syncing --> Active : SubscriptionRegistered
-Syncing --> Idle : SubscriptionSyncFailed
+Syncing --> Active : PushRegistrationSucceeded
+Syncing --> Idle : PushRegistrationSkipped
 Active --> Syncing : SyncSubscriptions\n(login, resume, add account)
-Active --> Idle : UnregisterSubscription\n(ultimo account)
+Active --> Idle : UnregisterDeviceFromPush\n(ultimo account)
 
 state c_subscription {
   PushUnsupported
@@ -34,12 +34,12 @@ state c_subscription {
 }
 
 state c_openchat {
-  OpenChatIdle --> OpenChatQueued : OpenChatIntentReceived\n[!sessionReady]
-  OpenChatIdle --> OpenChatProcessing : OpenChatIntentReceived\n[sessionReady]
+  OpenChatIdle --> OpenChatQueued : OpenChatFromNotification\n[!sessionReady]
+  OpenChatIdle --> OpenChatProcessing : OpenChatFromNotification\n[sessionReady]
   OpenChatQueued --> OpenChatProcessing : SessionBecameReady\n/ DrainPendingOpenChat
-  OpenChatProcessing --> OpenChatIdle : OpenChatForwarded
-  OpenChatProcessing --> OpenChatIdle : OpenChatRejected
-  OpenChatProcessing --> OpenChatQueued : OpenChatDeferred
+  OpenChatProcessing --> OpenChatIdle : ChatOpenFromNotificationSucceeded
+  OpenChatProcessing --> OpenChatIdle : ChatOpenFromNotificationFailed
+  OpenChatProcessing --> OpenChatQueued : ChatOpenFromNotificationDeferred
 }
 
 note right of OpenChatProcessing

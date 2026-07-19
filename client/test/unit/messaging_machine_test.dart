@@ -105,6 +105,13 @@ void main() {
       expect(machine.state, ConversationLoadState.loading);
     });
 
+    test('RefreshConversation → loading', () {
+      final machine = ConversationLoadMachine()
+        ..state = ConversationLoadState.ready;
+      machine.send(const RefreshConversation());
+      expect(machine.state, ConversationLoadState.loading);
+    });
+
     test('SessionExpired → sessionBlocked', () {
       final machine = ConversationLoadMachine();
       machine.send(const SessionExpired());
@@ -113,17 +120,17 @@ void main() {
   });
 
   group('OutboundSendMachine', () {
-    test('SendStarted → sending → SendAcknowledged → idle', () {
+    test('SendStarted → sending → ContentSent → idle', () {
       final machine = OutboundSendMachine();
       machine.send(const SendStarted());
       expect(machine.state, OutboundSendState.sending);
-      machine.send(const SendAcknowledged());
+      machine.send(const ContentSent());
       expect(machine.state, OutboundSendState.idle);
     });
 
-    test('SendFailed → failedQueue', () {
+    test('ContentSendFailed → failedQueue', () {
       final machine = OutboundSendMachine()..state = OutboundSendState.sending;
-      machine.send(const SendFailed());
+      machine.send(const ContentSendFailed());
       expect(machine.state, OutboundSendState.failedQueue);
     });
   });

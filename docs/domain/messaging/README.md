@@ -7,20 +7,20 @@
 | Livello | File |
 |---------|------|
 | Dominio | [glossary.md](./glossary.md), [commands-and-events.md](./commands-and-events.md) |
-| UML | [messaging-state.puml](../../model/uml/messaging/messaging-state.puml), sotto-macchine in `messaging/` |
+| UML | [messaging-state.puml](../../model/uml/messaging/messaging-state.puml) |
 | Statechart | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/) |
 
 ## Mapping dominio → implementazione
 
-| Dominio (DDD) | UML / statechart | Codice |
-|---------------|------------------|--------|
+| Dominio (DDD) | Statechart | Codice |
+|---------------|------------|--------|
 | `OpenConversation` | `LoadMessages`, `AttachRealtime`, `MarkRead` | `MessagingCoordinator` init ciclo |
-| `SendContent` | `SendStarted` → `SendAcknowledged` / `SendFailed` | `SendMessage`, `SendGif`, `SendVoice`, … |
-| `RetryFailedSend` | `RetryStarted` | `RetryMessage` |
-| `RefreshConversation` | `ReloadMessages` | reload su `ConversationLoadMachine` |
-| `ConversationReady` | `MessagesLoaded` / stato `Ready` | lista messaggi in UI |
-| `ContentSent` | `SendAcknowledged` | merge riga server |
-| `ContentSendFailed` | `SendFailed` | coda `OutboundMessageQueue` |
+| `SendContent` | `SendStarted` → `ContentSent` / `ContentSendFailed` | `SendMessage`, `SendGif`, `SendVoice`, … |
+| `RetryFailedSend` | `RetryFailedSend` | `RetryMessage` |
+| `RefreshConversation` | `RefreshConversation` | reload su `ConversationLoadMachine` |
+| `ConversationReady` | `ConversationReady` / stato `ready` | lista messaggi in UI |
+| `ContentSent` | `ContentSent` | merge riga server |
+| `ContentSendFailed` | `ContentSendFailed` | coda `OutboundMessageQueue` |
 | `ConversationUpdated` | `RealtimeReceived`, `DeliveryTickReceived` | merge realtime |
 
 | Componente | Ruolo |

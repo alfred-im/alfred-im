@@ -5,22 +5,39 @@
 enum OutboundSendState { idle, sending, failedQueue }
 
 sealed class OutboundSendEvent { const OutboundSendEvent(); }
+
+/// Adapter interno — inizio invio (`SendContent`).
 final class SendStarted extends OutboundSendEvent { const SendStarted(); }
-final class SendAcknowledged extends OutboundSendEvent { const SendAcknowledged(); }
-final class SendFailed extends OutboundSendEvent { const SendFailed(); }
-final class RetryStarted extends OutboundSendEvent { const RetryStarted(); }
+
+/// Dominio: evento `ContentSent`.
+final class ContentSent extends OutboundSendEvent { const ContentSent(); }
+
+/// Dominio: evento `ContentSendFailed`.
+final class ContentSendFailed extends OutboundSendEvent { const ContentSendFailed(); }
+
+/// Dominio: `RetryFailedSend`.
+final class RetryFailedSend extends OutboundSendEvent { const RetryFailedSend(); }
+
 final class QueueEmptied extends OutboundSendEvent { const QueueEmptied(); }
-final class FailedQueueRestored extends OutboundSendEvent { const FailedQueueRestored(); }
+final class FailedQueueRestored extends OutboundSendEvent {
+  const FailedQueueRestored();
+}
 
 class OutboundSendMachine {
   OutboundSendState state = OutboundSendState.idle;
   void send(OutboundSendEvent event) {
     switch (event) {
-      case SendStarted(): case RetryStarted(): state = OutboundSendState.sending;
-      case SendAcknowledged(): state = OutboundSendState.idle;
-      case SendFailed(): state = OutboundSendState.failedQueue;
+      case SendStarted():
+      case RetryFailedSend():
+        state = OutboundSendState.sending;
+      case ContentSent():
+        state = OutboundSendState.idle;
+      case ContentSendFailed():
+        state = OutboundSendState.failedQueue;
       case FailedQueueRestored():
-        if (state != OutboundSendState.sending) state = OutboundSendState.failedQueue;
+        if (state != OutboundSendState.sending) {
+          state = OutboundSendState.failedQueue;
+        }
       case QueueEmptied():
         if (state != OutboundSendState.sending) state = OutboundSendState.idle;
     }

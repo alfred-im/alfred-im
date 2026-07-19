@@ -67,7 +67,7 @@ void main() {
       final machine = NotificationsMachine(effects: effects);
       final adapters = NotificationsAdapters(machine);
 
-      adapters.onOpenChatIntent(
+      adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           ownerUserId: 'user-a',
           peerProfileId: 'peer-b',
@@ -86,7 +86,7 @@ void main() {
       final machine = NotificationsMachine(effects: effects);
       final adapters = NotificationsAdapters(machine);
 
-      adapters.onOpenChatIntent(
+      adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           ownerUserId: 'user-a',
           peerProfileId: 'peer-b',
@@ -106,7 +106,7 @@ void main() {
       final machine = NotificationsMachine(effects: effects);
       final adapters = NotificationsAdapters(machine);
 
-      adapters.onOpenChatIntent(
+      adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           ownerUserId: 'user-a',
           peerProfileId: 'peer-b',

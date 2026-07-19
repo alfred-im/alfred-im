@@ -1,6 +1,6 @@
 @startuml context-map
 ' Alfred — bounded context map (relazioni principali)
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 ' Metodo: docs/domain/bounded-contexts.md
 
 title Alfred — bounded context map
@@ -16,16 +16,16 @@ package "Client (statechart)" #E8F4FD {
   component [navigation\nverified] as navigation
   component [notifications\nverified] as notifications
   component [shareable-link\nverified] as shareablelink
-  component [messaging\ndocumented] as messaging
-  component [contacts\ndocumented] as contacts
-  component [profile\ndocumented] as profile
-  component [reception\ndocumented] as reception
+  component [messaging\nverified] as messaging
+  component [contacts\nverified] as contacts
+  component [profile\nverified] as profile
+  component [reception\nverified] as reception
   component [media\ndocumented] as media
 }
 
 package "Server / infrastruttura" #F5F5F5 {
   component [delivery\ndocumented] as delivery
-  component [groups\ndocumented] as groups
+  component [groups\nverified] as groups
   component [federation\ndocumented] as federation
 }
 
@@ -38,34 +38,35 @@ navigation --> multiaccount : FocusAccount
 multiaccount --> auth : sessione / token
 
 ' Messaggistica e rubrica
-messaging --> reception : RPC gate allowlist
-messaging --> delivery : RPC outbox
-media ..> messaging : allegati / voice\n(sotto-contesto)
+messaging --> reception : gate allow list
+messaging --> delivery : outbox recapito
+media ..> messaging : Prepare* → SendContent
 
 ' Gruppi
 groups --> delivery : broadcast / erogazione
 groups --> reception : allow list bidirezionale
-groups ..> navigation : OpenGroupChat\n/ BackToGroupHome
+groups ..> navigation : OpenGroupConversation\n/ LeaveGroupConversation
 
 ' Federazione futura
 federation --> delivery : outbox queued\n(consumer bridge stub)
 
 note right of notifications
-  Adapter → NavigationMachine
+  OpenChatFromNotification
+  → OpenFromPushTap (navigation)
 end note
 
 note right of shareablelink
-  Fragment URL → NavigationMachine
+  Fragment URL → navigation
 end note
 
 note bottom of messaging
-  Mirror statechart;
-  produzione = MessagesController
+  MessagingCoordinator
+  (3 regioni: load / send / realtime)
 end note
 
 note bottom of delivery
-  Worker SQL alfred_delivery
-  (nessuno statechart client)
+  DeliveryWorker (platform)
+  — nessuno statechart client
 end note
 
 @enduml

@@ -2,22 +2,22 @@
 ' Context: navigation
 ' Profile: client
 ' Revision: 2026-07-19
+' Statechart: NavigationShellState (inboxVisible, chatOpen, groupShell)
 
 title Navigation — shell
 
 state InboxVisible
-state ConversationVisible
-state GroupHomeVisible
-state GroupConversationVisible
+state ChatOpen
+state GroupShell
 
 [*] --> InboxVisible
 
-InboxVisible --> ConversationVisible : OpenConversation
-InboxVisible --> GroupHomeVisible : EnterGroupShell
+InboxVisible --> ChatOpen : OpenConversation
+InboxVisible --> GroupShell : EnterGroupShell
 
-ConversationVisible --> InboxVisible : CloseConversation
+ChatOpen --> InboxVisible : CloseConversation
 
-GroupHomeVisible --> GroupConversationVisible : OpenGroupConversation
-GroupConversationVisible --> GroupHomeVisible : LeaveGroupConversation
+GroupShell --> GroupShell : OpenGroupConversation
+GroupShell --> GroupShell : LeaveGroupConversation
 
 @enduml

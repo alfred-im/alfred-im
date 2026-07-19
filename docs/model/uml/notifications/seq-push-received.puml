@@ -25,8 +25,7 @@ SW -> SW : shouldSuppress?
 alt soppresso (chat attiva stessa coppia)
   SW -> SW : PushNotificationSuppressed\n(nessuna UI)
 else mostra
-  SW -> SW : PushNotificationShown
-  SW -> UI : OpenChatIntentReceived
+  SW -> SW : NotificationShown
 end
 
 @enduml

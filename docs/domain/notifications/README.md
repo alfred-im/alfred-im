@@ -6,10 +6,10 @@
 
 | Dominio | Statechart / SW | Codice |
 |---------|-----------------|--------|
-| `RegisterDeviceForPush` | `SyncSubscriptions` | `PushSubscriptionService` |
-| `UnregisterDeviceFromPush` | `UnregisterSubscription` | cleanup account |
+| `RegisterDeviceForPush` | `SyncSubscriptionsRequested` | `PushSubscriptionService` |
+| `UnregisterDeviceFromPush` | `UnregisterSubscriptionRequested` | cleanup account |
 | `UpdateInChatSuppression` | `UpdateSuppressionState` | `PushSuppressionBinder` → SW |
 | `PresentPushNotification` | `HandlePushPayload` | service worker |
-| `OpenChatFromNotification` | `OpenFromPushTap` → navigation | `NotificationsMachine` |
+| `OpenChatFromNotification` | `OpenChatFromNotification` → `OpenFromPushTap` (navigation) | `NotificationsMachine` |
 
 Statechart: `client/lib/machines/notifications/`
