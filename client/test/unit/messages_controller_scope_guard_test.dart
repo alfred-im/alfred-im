@@ -7,6 +7,7 @@ import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
 import 'package:alfred_client/services/message_media_service.dart';
+import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/utils/conversation_scope_guard.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -120,6 +121,61 @@ void main() {
 
       await waitForMessagesController(controller);
       expect(controller.messages.map((m) => m.body), contains(_poisonBody));
+      controller.dispose();
+    });
+
+    test('epoch stale su scope congelato non blocca se conversation ready', () async {
+      final client = createTestSupabaseClient();
+      final service = DelayedFakeMessageService(
+        client,
+        fetchDelay: const Duration(milliseconds: 80),
+      );
+      service.messagesByConversation[conversationKey(
+        userId: _accountA,
+        peerProfileId: _accountB,
+      )] = [
+        ChatMessage(
+          id: 'msg-1',
+          body: 'ciao inbox-chat parity',
+          timeLabel: '12:00',
+          isMine: false,
+          senderId: _accountB,
+          createdAt: DateTime.utc(2026, 7, 19, 12),
+        ),
+      ];
+
+      final staleScope = testConversationScope(
+        userId: _accountA,
+        peerProfileId: _accountB,
+        sessionEpoch: 1,
+      );
+      final peerB = ChatPeer(profile: _profile(_accountB));
+      final liveSession = await AccountSession.createForTest(
+        profile: _profile(_accountA),
+        client: client,
+        messageService: service,
+      );
+
+      final controller = MessagesController(
+        scope: staleScope,
+        userId: _accountA,
+        peerProfileId: _accountB,
+        messageService: service,
+        messageMediaService: MessageMediaService(client),
+        inboxService: FakeInboxService(),
+        isScopeCommitted: () => isMessagesScopeActive(
+          scope: staleScope,
+          peer: peerB,
+          liveSession: liveSession,
+          isConversationReady: (_, _) => true,
+        ),
+      );
+
+      await waitForMessagesController(controller);
+      expect(
+        controller.messages.map((m) => m.body),
+        contains('ciao inbox-chat parity'),
+      );
       controller.dispose();
     });
   });

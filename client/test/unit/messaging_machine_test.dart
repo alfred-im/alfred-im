@@ -27,7 +27,10 @@ class _RecordingEffects implements MessagingEffects {
   bool ensureValidSession() => true;
 
   @override
-  Future<void> fetchAndSetMessages() async => fetchCount++;
+  Future<bool> fetchAndSetMessages() async {
+    fetchCount++;
+    return true;
+  }
 
   @override
   Future<void> enrichAuthorNamesIfNeeded() async {}

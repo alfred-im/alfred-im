@@ -66,6 +66,9 @@ class MessagingCoordinator {
     await load();
   }
 
+  static const _fetchScopeRetryAttempts = 8;
+  static const _fetchScopeRetryDelay = Duration(milliseconds: 50);
+
   Future<void> load() async {
     if (!effects.ensureValidSession()) {
       loadMachine.send(const SessionExpired());
@@ -75,8 +78,26 @@ class MessagingCoordinator {
     loadMachine.send(const LoadMessages());
     _notify();
     try {
-      await effects.fetchAndSetMessages();
-      if (effects.isDisposed) return;
+      var applied = false;
+      for (var attempt = 0; attempt < _fetchScopeRetryAttempts; attempt++) {
+        applied = await effects.fetchAndSetMessages();
+        if (effects.isDisposed) return;
+        if (applied) break;
+        if (attempt < _fetchScopeRetryAttempts - 1) {
+          await Future<void>.delayed(_fetchScopeRetryDelay);
+          if (!effects.ensureValidSession()) {
+            loadMachine.send(const SessionExpired());
+            _notify();
+            return;
+          }
+        }
+      }
+      if (!applied && !effects.isDisposed) {
+        state.error = MessagesControllerEffects.sessionExpiredMessage;
+        loadMachine.send(const SessionExpired());
+        _notify();
+        return;
+      }
       state.error = null;
       loadMachine.send(const ConversationReady());
     } catch (e) {

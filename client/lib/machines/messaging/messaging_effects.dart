@@ -36,7 +36,8 @@ import 'messaging_message_list.dart';
 abstract class MessagingEffects {
   bool get isDisposed;
   bool ensureValidSession();
-  Future<void> fetchAndSetMessages();
+  /// Carica messaggi; `false` se scope non più attivo (il coordinator può ritentare).
+  Future<bool> fetchAndSetMessages();
   Future<void> enrichAuthorNamesIfNeeded();
   Future<void> markRead();
   RealtimeChannel? attachRealtime(void Function(ChatMessage message) onMessage);
@@ -111,16 +112,26 @@ class MessagesControllerEffects implements MessagingEffects {
   }
 
   @override
-  Future<void> fetchAndSetMessages() async {
+  Future<bool> fetchAndSetMessages() async {
     final gen = ++_fetchGeneration;
     final loaded = await messageService.fetchPeerMessages(
       peerProfileId: peerProfileId,
       currentUserId: userId,
     );
-    if (gen != _fetchGeneration || !_scopeIsActive()) return;
+    if (gen != _fetchGeneration || _disposed) return false;
+    if (!_scopeIsActive()) {
+      diagLogFail(
+        'messaging',
+        'fetch',
+        'scope_inactive',
+        data: {'userId': userId, 'peerProfileId': peerProfileId},
+      );
+      return false;
+    }
     _state.messages = dedupeMessages(
       await _enrichMessages(loaded.map(withTimeLabel).toList()),
     );
+    return true;
   }
 
   @override Future<void> enrichAuthorNamesIfNeeded() async { _state.messages = await _enrichMessages(_state.messages); _onChanged(); }

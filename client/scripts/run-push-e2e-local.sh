@@ -68,14 +68,12 @@ SQL
 }
 
 ensure_flutter_local() {
-  export ALFRED_BASE_URL="${ALFRED_BASE_URL:-http://localhost:8080/}"
-  local base="${ALFRED_BASE_URL%/}/"
+  # shellcheck source=lib/e2e-flutter-port.sh
+  source "$ROOT/scripts/lib/e2e-flutter-port.sh"
 
-  if [[ "${E2E_PUSH_REUSE_FLUTTER:-}" != "1" ]] && lsof -ti :8080 >/dev/null 2>&1; then
-    echo "==> Libero :8080 (usa E2E_PUSH_REUSE_FLUTTER=1 per riusare il dev server)"
-    lsof -ti :8080 | xargs -r kill
-    sleep 1
-  elif curl -sf -m 3 "$base" | grep -q 'flutter_bootstrap.js'; then
+  export ALFRED_BASE_URL="${ALFRED_BASE_URL:-http://localhost:8080/}"
+
+  if e2e_resolve_flutter_port; then
     return 0
   fi
 
@@ -83,6 +81,11 @@ ensure_flutter_local() {
   SESSION_NAME="flutter-push-e2e"
   tmux -f /exec-daemon/tmux.portal.conf has-session -t "=$SESSION_NAME" 2>/dev/null || \
     tmux -f /exec-daemon/tmux.portal.conf new-session -d -s "$SESSION_NAME" -c "$ROOT" -- "${SHELL:-bash}" -l
+
+  if [[ -n "$(_e2e_flutter_port_pids)" ]]; then
+    echo "e2e: :${E2E_FLUTTER_PORT} ancora occupata prima di avviare Flutter" >&2
+    exit 1
+  fi
 
   local flutter_cmd
   flutter_cmd="cd $ROOT && /opt/flutter/bin/flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0"
@@ -92,16 +95,7 @@ ensure_flutter_local() {
   flutter_cmd+=" --dart-define=ALFRED_DIAGNOSTIC_LOG=true"
 
   tmux -f /exec-daemon/tmux.portal.conf send-keys -t "$SESSION_NAME:0.0" "$flutter_cmd" C-m
-  for _ in $(seq 1 120); do
-    if curl -sf -m 3 "$base" | grep -q 'flutter_bootstrap.js'; then
-      if curl -sf -m 3 "$base" | grep -q 'main.dart.js'; then
-        return 0
-      fi
-    fi
-    sleep 5
-  done
-  echo "flutter web-server non risponde su ${base}" >&2
-  exit 1
+  e2e_wait_flutter_ready
 }
 
 ensure_supabase
