@@ -9,8 +9,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../machines/multi-account/multi_account_effects.dart';
 import '../models/account_view_state.dart';
-import '../models/chat_peer.dart';
-import '../models/conversation_scope.dart';
 import '../models/open_account.dart';
 import '../models/profile_summary.dart';
 import '../utils/auth_redirect_url.dart';
@@ -41,96 +39,6 @@ class AccountManager {
   List<OpenAccount> _manifestAccounts = [];
   String? _focusUserId;
   Future<void> _focusOperationChain = Future<void>.value();
-  ConversationScope? _committedScope;
-
-  /// Ambito conversazione attivo — unica fonte di verità per messaging UI.
-  ConversationScope? get committedScope => _committedScope;
-
-  bool isScopeCommitted(ConversationScope scope) =>
-      isConversationReadyFor(
-        ownerUserId: scope.ownerUserId,
-        peerProfileId: scope.peerProfileId,
-        session: _sessions[scope.ownerUserId],
-      );
-
-  /// True se l'ambito commesso coincide con account+peer in UI e sessione viva.
-  bool isConversationReady({
-    required AccountSession session,
-    required ChatPeer peer,
-  }) {
-    return isConversationReadyFor(
-      ownerUserId: session.userId,
-      peerProfileId: peer.profileId,
-      session: session,
-    );
-  }
-
-  bool isConversationReadyFor({
-    required String ownerUserId,
-    required String peerProfileId,
-    AccountSession? session,
-  }) {
-    final committed = _committedScope;
-    if (committed == null) return false;
-    if (_focusUserId != ownerUserId) return false;
-    if (committed.ownerUserId != ownerUserId ||
-        committed.peerProfileId != peerProfileId) {
-      return false;
-    }
-    final live = session ?? _sessions[ownerUserId];
-    if (live == null || live.userId != ownerUserId) return false;
-    if (committed.matchesSession(live)) return true;
-    // Stessa conversazione, sessione ricreata (epoch nuovo) — riallinea.
-    _committedScope = ConversationScope(
-      ownerUserId: ownerUserId,
-      peerProfileId: peerProfileId,
-      sessionEpoch: live.epoch,
-    );
-    return true;
-  }
-
-  /// Dopo bootstrap / reconnect: riallinea scope da view-state (peer ricordato).
-  void onFocusSettled() {
-    syncCommittedScopeFromViewState();
-  }
-
-  /// Invalida scope se appartiene all'account indicato.
-  void invalidateScopeForAccount(String accountUserId) {
-    if (_committedScope?.ownerUserId == accountUserId) {
-      invalidateCommittedScope();
-    }
-  }
-
-  /// Invalida l'ambito (focus switch, chiusura chat, sessione dispose).
-  void invalidateCommittedScope() {
-    _committedScope = null;
-  }
-
-  /// Registra ambito dopo apertura validata (account + peer + sessione viva).
-  void commitScope(ConversationScope scope) {
-    final session = _sessions[scope.ownerUserId];
-    if (session == null || !scope.matchesSession(session)) {
-      invalidateCommittedScope();
-      return;
-    }
-    _committedScope = scope;
-  }
-
-  /// Dopo restore focus: riallinea scope se c'è un peer ricordato in view-state.
-  void syncCommittedScopeFromViewState() {
-    final userId = _focusUserId;
-    final session = focusedSession;
-    final peer = _viewFor(userId).activePeer;
-    if (userId == null || session == null || peer == null) {
-      invalidateCommittedScope();
-      return;
-    }
-    if (peer.profileId == userId) {
-      invalidateCommittedScope();
-      return;
-    }
-    commitScope(ConversationScope.fromSession(session, peer));
-  }
 
   /// Tutti gli account aperti (manifest); il focus può avere profilo aggiornato
   /// dalla sessione viva.
@@ -455,10 +363,6 @@ class AccountManager {
     }
 
     final previousFocus = _focusUserId;
-
-    if (previousFocus != userId) {
-      invalidateCommittedScope();
-    }
 
     final keepTestSessions = _testOnlyAccountIds.isEmpty
         ? <String, AccountSession>{}

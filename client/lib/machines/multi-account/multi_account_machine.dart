@@ -195,6 +195,7 @@ class MultiAccountMachine {
     try {
       await effects.executeFocus(accountUserId);
       if (effects.hasFocusedSession) {
+        effects.onFocusSettled();
         _applyAccountFocused();
       } else {
         _applySessionRestoreFailed();
@@ -202,6 +203,7 @@ class MultiAccountMachine {
     } catch (_) {
       focusUserId = effects.focusUserId;
       if (effects.hasFocusedSession) {
+        effects.onFocusSettled();
         _applyAccountFocused();
       } else {
         _applySessionRestoreFailed();

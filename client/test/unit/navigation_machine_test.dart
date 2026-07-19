@@ -6,6 +6,7 @@ import 'package:alfred_client/machines/navigation/navigation_adapters.dart';
 import 'package:alfred_client/machines/navigation/navigation_effects.dart';
 import 'package:alfred_client/machines/navigation/navigation_machine.dart';
 import 'package:alfred_client/models/chat_peer.dart';
+import 'package:alfred_client/models/open_conversation_source.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
@@ -20,9 +21,9 @@ class _RecordingNavigationEffects implements NavigationEffects {
   ChatPeer? lastPeer;
   String? lastOpenAccountId;
   String? lastOpenPeerId;
+  OpenConversationSource? lastSource;
   bool? lastAllowFallback;
   bool openResult = true;
-  bool pushOpenResult = true;
   bool focusedIsGroup = false;
   int closeCount = 0;
   int openGroupChatCount = 0;
@@ -37,28 +38,21 @@ class _RecordingNavigationEffects implements NavigationEffects {
   }
 
   @override
-  Future<bool> openConversationOnAccount({
+  Future<bool> openConversation({
     required String accountUserId,
     required String peerProfileId,
-    required bool allowProfileFallback,
-    int inboxRetryAttempts = 10,
-    bool skipStaleClear = false,
+    required OpenConversationSource source,
+    bool allowProfileFallback = true,
   }) async {
     lastOpenAccountId = accountUserId;
     lastOpenPeerId = peerProfileId;
+    lastSource = source;
     lastAllowFallback = allowProfileFallback;
     return openResult;
   }
 
   @override
-  Future<bool> openConversationFromPushTap({
-    required String accountUserId,
-    required String peerProfileId,
-  }) async {
-    lastOpenAccountId = accountUserId;
-    lastOpenPeerId = peerProfileId;
-    return pushOpenResult;
-  }
+  void restoreCommittedScopeFromViewState(AccountManager manager) {}
 
   @override
   void openPeerOnFocusedAccount(ChatPeer peer) {
@@ -154,7 +148,7 @@ void main() {
       expect(machine.shellState, NavigationShellState.inboxVisible);
     });
 
-    test('OpenFromShareableLink usa fallback profilo', () async {
+    test('OpenFromShareableLink usa source shareableLink', () async {
       final effects = _RecordingNavigationEffects();
       final machine = NavigationMachine(effects);
 
@@ -166,6 +160,7 @@ void main() {
       );
 
       expect(machine.shellState, NavigationShellState.chatOpen);
+      expect(effects.lastSource, OpenConversationSource.shareableLink);
       expect(effects.lastAllowFallback, isTrue);
     });
 
@@ -196,8 +191,7 @@ void main() {
       );
 
       expect(machine.shellState, NavigationShellState.chatOpen);
-      expect(effects.lastOpenAccountId, 'user-a');
-      expect(effects.lastOpenPeerId, 'peer-b');
+      expect(effects.lastSource, OpenConversationSource.push);
     });
 
     test('CloseConversation → inboxVisible', () async {

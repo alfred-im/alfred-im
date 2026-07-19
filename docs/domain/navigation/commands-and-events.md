@@ -10,7 +10,7 @@
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
 | `ShowInbox` | Utente | Mostra inbox dell'account in focus. |
-| `OpenConversation` | Utente / Policy | Apre chat con un peer (inbox, compose, push, link). |
+| `OpenConversation` | Utente / Policy | Transazione unica: focus (se serve) + risolvi peer + commit scope. Sorgente: inbox, push, link, compose. |
 | `CloseConversation` | Utente | Chiude chat; torna a inbox o home gruppo. |
 | `EnterGroupShell` | Utente / Policy | Focus su account gruppo — home gruppo. |
 | `OpenGroupConversation` | Utente | Apre chat del gruppo. |
@@ -23,7 +23,9 @@
 | Evento | Descrizione |
 |--------|-------------|
 | `InboxVisible` | Inbox dell'account in focus visibile. |
-| `ConversationVisible` | Chat 1:1 aperta con peer risolto. |
+| `ConversationVisible` | Chat 1:1 aperta con peer risolto e [ConversationScope] commesso. |
+| `ConversationScopeCommitted` | Ambito `(owner, peer, epoch)` registrato — messaging autorizzato. |
+| `ConversationScopeInvalidated` | Ambito azzerato — messaging non mostra dati fino a nuovo commit. |
 | `GroupHomeVisible` | Home gruppo visibile. |
 | `GroupConversationVisible` | Chat gruppo visibile. |
 | `NavigationFailed` | Peer irrisolvibile o account non disponibile. |
@@ -34,7 +36,9 @@
 
 | Policy | Descrizione |
 |--------|-------------|
-| **Un solo orchestratore** | Ogni ingresso UI passa da qui. |
+| **Un solo orchestratore** | Ogni ingresso UI passa da [NavigationMachine]. |
+| **Una transazione OpenConversation** | Push, link, compose, inbox convergono sulla stessa transazione con policy per sorgente. |
+| **Scope in navigation** | Solo [NavigationMachine] commette/invalida [ConversationScope]; messaging non legge `activePeer` come autorità. |
 | **Focus prima della chat** | Push e link cambiano account se necessario. |
-| **Nessuna chat stale** | Aprendo un peer diverso, la chat precedente si chiude. |
+| **Nessuna chat stale** | Aprendo un peer diverso, la chat precedente si chiude e lo scope si invalida. |
 | **Account gruppo** | Nessuna inbox classica — shell gruppo dedicata. |

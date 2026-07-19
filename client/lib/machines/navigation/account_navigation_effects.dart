@@ -4,12 +4,14 @@
 
 import '../../models/chat_peer.dart';
 import '../../models/conversation_scope.dart';
+import '../../models/open_conversation_source.dart';
 import '../../services/account_manager.dart';
 import '../../services/account_session.dart';
 import '../../utils/diagnostic_log.dart';
 import '../multi-account/multi_account_adapters.dart';
 import 'account_view_state_store.dart';
 import 'navigation_effects.dart';
+import 'navigation_machine.dart';
 
 /// Implementazione effetti navigation — logica ex-[NavigationCoordinator].
 class AccountNavigationEffects implements NavigationEffects {
@@ -21,6 +23,9 @@ class AccountNavigationEffects implements NavigationEffects {
   final AccountManager _manager;
   final AccountFocusCommand _focusCommand;
   final AccountViewStateStore _viewState;
+
+  /// Impostato da [NavigationCoordinator] dopo creazione macchina.
+  NavigationMachine? navigationMachine;
 
   static const _defaultInboxRetryAttempts = 10;
   static const _pushInboxRetryAttempts = 12;
@@ -36,8 +41,24 @@ class AccountNavigationEffects implements NavigationEffects {
       _manager.focusedSession?.profile.isGroup ?? false;
 
   @override
+  void restoreCommittedScopeFromViewState(AccountManager manager) {
+    final userId = manager.focusUserId;
+    final session = manager.focusedSession;
+    final peer = userId == null ? null : manager.viewStateFor(userId).activePeer;
+    if (userId == null || session == null || peer == null) {
+      navigationMachine?.invalidateCommittedScope();
+      return;
+    }
+    if (peer.profileId == userId) {
+      navigationMachine?.invalidateCommittedScope();
+      return;
+    }
+    _commitScope(ConversationScope.fromSession(session, peer));
+  }
+
+  @override
   void closeConversation() {
-    _manager.invalidateCommittedScope();
+    navigationMachine?.invalidateCommittedScope();
     if (focusedAccountIsGroup) {
       backToGroupHome();
       return;
@@ -47,6 +68,7 @@ class AccountNavigationEffects implements NavigationEffects {
 
   @override
   void openGroupChat() {
+    navigationMachine?.invalidateCommittedScope();
     _viewState.openGroupChat();
   }
 
@@ -70,12 +92,13 @@ class AccountNavigationEffects implements NavigationEffects {
         focus == null ? 'no_focus' : 'self_peer',
         data: {'peerProfileId': peer.profileId},
       );
+      navigationMachine?.invalidateCommittedScope();
       return;
     }
     _viewState.openConversationOnFocusedAccount(peer);
     final session = _manager.focusedSession;
     if (session != null) {
-      _manager.commitScope(ConversationScope.fromSession(session, peer));
+      _commitScope(ConversationScope.fromSession(session, peer));
     }
     diagLog(
       'nav',
@@ -85,19 +108,19 @@ class AccountNavigationEffects implements NavigationEffects {
   }
 
   @override
-  Future<bool> openConversationOnAccount({
+  Future<bool> openConversation({
     required String accountUserId,
     required String peerProfileId,
-    required bool allowProfileFallback,
-    int inboxRetryAttempts = _defaultInboxRetryAttempts,
-    bool skipStaleClear = false,
+    required OpenConversationSource source,
+    bool allowProfileFallback = true,
   }) async {
     diagLog(
       'nav',
-      'open_on_account.start',
+      'open_conversation.start',
       data: {
         'accountUserId': accountUserId,
         'peerProfileId': peerProfileId,
+        'source': source.name,
         'focusBefore': _manager.focusUserId,
       },
     );
@@ -105,15 +128,24 @@ class AccountNavigationEffects implements NavigationEffects {
     if (accountUserId == peerProfileId) {
       diagLogFail(
         'nav',
-        'open_on_account',
+        'open_conversation',
         'self_peer',
         data: {'accountUserId': accountUserId},
       );
       return false;
     }
 
-    if (!skipStaleClear) {
-      _viewState.clearStaleConversationUnlessPeer(accountUserId, peerProfileId);
+    switch (source) {
+      case OpenConversationSource.push:
+        _viewState.clearConversationForAccount(accountUserId);
+      case OpenConversationSource.shareableLink:
+      case OpenConversationSource.compose:
+        _viewState.clearStaleConversationUnlessPeer(
+          accountUserId,
+          peerProfileId,
+        );
+      case OpenConversationSource.inbox:
+        break;
     }
 
     if (!await _ensureAccountFocused(accountUserId)) {
@@ -124,7 +156,7 @@ class AccountNavigationEffects implements NavigationEffects {
     if (session == null || session.userId != accountUserId) {
       diagLogFail(
         'nav',
-        'open_on_account',
+        'open_conversation',
         'wrong_session',
         data: {
           'expected': accountUserId,
@@ -134,18 +166,22 @@ class AccountNavigationEffects implements NavigationEffects {
       return false;
     }
 
+    final inboxRetryAttempts = source == OpenConversationSource.push
+        ? _pushInboxRetryAttempts
+        : _defaultInboxRetryAttempts;
+
     final peer = await _resolvePeer(
       session: session,
       peerProfileId: peerProfileId,
       allowProfileFallback: allowProfileFallback,
       inboxRetryAttempts: inboxRetryAttempts,
-      logSource: 'resolve_peer',
+      logSource: 'resolve_peer_${source.name}',
     );
 
     if (peer == null) {
       diagLogFail(
         'nav',
-        'open_on_account',
+        'open_conversation',
         'peer_not_found',
         data: {'peerProfileId': peerProfileId},
       );
@@ -153,47 +189,26 @@ class AccountNavigationEffects implements NavigationEffects {
     }
 
     _viewState.openConversationOnFocusedAccount(peer);
-    _manager.commitScope(ConversationScope.fromSession(session, peer));
+    _commitScope(ConversationScope.fromSession(session, peer));
     diagLog(
       'nav',
-      'open_on_account.ok',
-      data: {'accountUserId': accountUserId, 'peerProfileId': peerProfileId},
+      'open_conversation.ok',
+      data: {
+        'accountUserId': accountUserId,
+        'peerProfileId': peerProfileId,
+        'source': source.name,
+      },
     );
     return true;
   }
 
-  @override
-  Future<bool> openConversationFromPushTap({
-    required String accountUserId,
-    required String peerProfileId,
-  }) async {
-    _manager.invalidateCommittedScope();
-    _viewState.clearConversationForAccount(accountUserId);
-
-    if (!await _ensureAccountFocused(accountUserId)) {
-      return false;
-    }
-
+  void _commitScope(ConversationScope scope) {
     final session = _manager.focusedSession;
-    if (session == null || session.userId != accountUserId) {
-      return false;
+    if (session == null || !scope.matchesSession(session)) {
+      navigationMachine?.invalidateCommittedScope();
+      return;
     }
-
-    final peer = await _resolvePeer(
-      session: session,
-      peerProfileId: peerProfileId,
-      allowProfileFallback: true,
-      inboxRetryAttempts: _pushInboxRetryAttempts,
-      logSource: 'resolve_peer_push',
-    );
-
-    if (peer == null) {
-      return false;
-    }
-
-    _viewState.openConversationOnFocusedAccount(peer);
-    _manager.commitScope(ConversationScope.fromSession(session, peer));
-    return true;
+    navigationMachine?.commitScope(scope);
   }
 
   Future<bool> _ensureAccountFocused(String accountUserId) async {

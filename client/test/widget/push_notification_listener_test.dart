@@ -366,7 +366,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 10));
         if (auth.userId == 'account-b' &&
             auth.activePeer?.profile.id == 'account-a' &&
-            auth.accountManager.isConversationReady(
+            auth.isConversationReady(
               session: auth.focusedSession!,
               peer: auth.activePeer!,
             )) {
@@ -378,15 +378,15 @@ void main() {
       expect(auth.userId, 'account-b');
       expect(auth.activePeer?.profile.id, 'account-a');
       expect(
-        auth.accountManager.committedScope?.ownerUserId,
+        auth.committedScope?.ownerUserId,
         'account-b',
       );
       expect(
-        auth.accountManager.committedScope?.peerProfileId,
+        auth.committedScope?.peerProfileId,
         'account-a',
       );
       expect(
-        auth.accountManager.isConversationReady(
+        auth.isConversationReady(
           session: auth.focusedSession!,
           peer: auth.activePeer!,
         ),

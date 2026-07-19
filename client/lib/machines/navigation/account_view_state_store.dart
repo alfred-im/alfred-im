@@ -20,7 +20,6 @@ class AccountViewStateStore {
   }
 
   void clearConversationForAccount(String accountUserId) {
-    _manager.invalidateScopeForAccount(accountUserId);
     _manager.applyAccountViewState(
       accountUserId,
       (view) => view.clearConversation(),

@@ -1,0 +1,31 @@
+@startuml seq-open-conversation-unified
+' Context: navigation
+' Profile: client
+' Revision: 2026-07-19
+
+title OpenConversation — transazione unica (inbox, push, link, compose)
+
+participant "Ingresso" as In
+participant "NavigationMachine" as Nav
+participant "MultiAccountMachine" as MAM
+participant "AccountViewState" as VS
+
+In -> Nav : OpenConversation(account, peer, source)
+Nav -> Nav : InvalidateConversationScope
+alt source == push
+  Nav -> VS : ClearConversation(account)
+else source == link | compose
+  Nav -> VS : ClearStaleUnlessPeer(account, peer)
+end
+Nav -> MAM : FocusAccount (se necessario)
+MAM --> Nav : FocusSettled
+Nav -> Nav : ResolvePeer
+alt peer risolto
+  Nav -> VS : OpenChat(peer)
+  Nav -> Nav : CommitConversationScope
+  Nav --> In : ConversationVisible
+else fallito
+  Nav --> In : NavigationFailed
+end
+
+@enduml

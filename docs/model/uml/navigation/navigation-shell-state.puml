@@ -2,22 +2,29 @@
 ' Context: navigation
 ' Profile: client
 ' Revision: 2026-07-19
-' Statechart: NavigationShellState (inboxVisible, chatOpen, groupShell)
+' Statechart: NavigationShellState + ConversationScope
 
-title Navigation — shell
+title Navigation — shell e ambito conversazione
 
-state InboxVisible
-state ChatOpen
-state GroupShell
+state InboxVisible : committedScope = null
+state ChatOpen : committedScope = (owner, peer, epoch)
+state GroupShell : committedScope = null
 
 [*] --> InboxVisible
 
-InboxVisible --> ChatOpen : OpenConversation
-InboxVisible --> GroupShell : EnterGroupShell
+InboxVisible --> ChatOpen : OpenConversation\nCommitConversationScope
+InboxVisible --> GroupShell : EnterGroupShell\nInvalidateConversationScope
 
-ChatOpen --> InboxVisible : CloseConversation
+ChatOpen --> InboxVisible : CloseConversation\nInvalidateConversationScope
+ChatOpen --> ChatOpen : OpenConversation (altro account/peer)\nInvalidate → Commit
 
 GroupShell --> GroupShell : OpenGroupConversation
 GroupShell --> GroupShell : LeaveGroupConversation
+
+note right of ChatOpen
+  Un solo [ConversationScope] commesso.
+  Messaging legge solo da qui.
+  activePeer in view-state è proiezione UI.
+end note
 
 @enduml

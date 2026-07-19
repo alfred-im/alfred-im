@@ -4,6 +4,7 @@
 
 import '../../models/profile_summary.dart';
 import '../../services/account_manager.dart';
+import '../navigation/navigation_scope_host.dart';
 import 'multi_account_effects.dart';
 
 /// Effetti multi-account → [AccountManager] (solo I/O).
@@ -11,6 +12,9 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
   AccountMultiAccountEffects(this._manager);
 
   final AccountManager _manager;
+
+  /// Impostato da [AuthController] dopo creazione [NavigationCoordinator].
+  NavigationScopeHost? scopeHost;
 
   @override
   bool get hasFocusedSession => _manager.focusedSession != null;
@@ -27,8 +31,11 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
   }
 
   @override
-  Future<void> executeFocus(String userId) {
-    return _manager.executeFocus(userId);
+  Future<void> executeFocus(String userId) async {
+    if (_manager.focusUserId != userId) {
+      scopeHost?.invalidateCommittedScope();
+    }
+    await _manager.executeFocus(userId);
   }
 
   @override
@@ -38,7 +45,7 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
 
   @override
   void onFocusSettled() {
-    _manager.onFocusSettled();
+    scopeHost?.restoreCommittedScopeAfterFocusSettled();
   }
 
   @override

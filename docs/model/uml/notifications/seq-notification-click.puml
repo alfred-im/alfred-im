@@ -19,8 +19,10 @@ alt sessione non pronta
 else account non disponibile
   NM --> NM : ChatOpenFromNotificationFailed
 else ok
-  NM -> Nav : OpenConversation
+  NM -> Nav : OpenConversation(source=push)
+  Nav -> Nav : InvalidateConversationScope
   Nav -> MAM : FocusAccount (se necessario)
+  Nav -> Nav : CommitConversationScope
   Nav --> NM : ChatOpenFromNotificationSucceeded
 end
 

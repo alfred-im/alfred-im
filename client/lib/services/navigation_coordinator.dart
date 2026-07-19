@@ -9,9 +9,11 @@ import '../machines/multi-account/multi_account_adapters.dart';
 import '../machines/navigation/account_navigation_effects.dart';
 import '../machines/navigation/navigation_adapters.dart';
 import '../machines/navigation/navigation_machine.dart';
+import '../machines/navigation/navigation_scope_host.dart';
 import '../models/chat_peer.dart';
-import 'account_manager.dart';
-import 'account_session.dart';
+import '../models/conversation_scope.dart';
+import '../services/account_manager.dart';
+import '../services/account_session.dart';
 
 /// Fallback test: focus diretto su manager senza macchina.
 class _ManagerFocusCommand implements AccountFocusCommand {
@@ -29,7 +31,7 @@ class _ManagerFocusCommand implements AccountFocusCommand {
 ///
 /// Implementazione: [NavigationMachine] + [AccountNavigationEffects].
 /// Sidebar, tap inbox, push, link condivisibili passano da qui (via [AuthController]).
-class NavigationCoordinator {
+class NavigationCoordinator implements NavigationScopeHost {
   NavigationCoordinator(
     this._manager, {
     AccountFocusCommand? focusCommand,
@@ -37,6 +39,7 @@ class NavigationCoordinator {
     final command = focusCommand ?? _ManagerFocusCommand(_manager);
     _effects = AccountNavigationEffects(_manager, focusCommand: command);
     _machine = NavigationMachine(_effects);
+    _effects.navigationMachine = _machine;
     adapters = NavigationAdapters(_machine);
     externalIntents = ExternalIntentAdapter(adapters);
   }
@@ -49,6 +52,25 @@ class NavigationCoordinator {
   late final ExternalIntentAdapter externalIntents;
 
   NavigationMachine get machine => _machine;
+
+  ConversationScope? get committedScope => _machine.committedScope;
+
+  bool isConversationReady({
+    required AccountSession session,
+    required ChatPeer peer,
+  }) {
+    return _machine.isConversationReady(session: session, peer: peer);
+  }
+
+  @override
+  void invalidateCommittedScope() {
+    _machine.invalidateCommittedScope();
+  }
+
+  @override
+  void restoreCommittedScopeAfterFocusSettled() {
+    _machine.restoreCommittedScopeFromViewState(_manager);
+  }
 
   Future<void> switchToAccount(String accountUserId) {
     return adapters.switchToAccount(accountUserId);

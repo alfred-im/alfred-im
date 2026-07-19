@@ -167,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final scope = ConversationScope.fromSession(session, peer);
-    if (!auth.accountManager.isConversationReady(
+    if (!auth.isConversationReady(
       session: session,
       peer: peer,
     )) {
@@ -495,7 +495,7 @@ class _ChatWithMessages extends StatelessWidget {
     if (liveSession == null ||
         liveSession.userId != session.userId ||
         !scope.matches(liveSession, peer) ||
-        !auth.accountManager.isConversationReady(
+        !auth.isConversationReady(
           session: liveSession,
           peer: peer,
         )) {
@@ -521,7 +521,7 @@ class _ChatWithMessages extends StatelessWidget {
           final live = auth.focusedSession;
           final active = auth.activePeer;
           if (live == null || active == null) return false;
-          return auth.accountManager.isConversationReady(
+          return auth.isConversationReady(
             session: live,
             peer: active,
           );

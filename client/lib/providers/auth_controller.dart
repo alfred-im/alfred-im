@@ -21,6 +21,7 @@ import '../models/open_account.dart';
 import '../models/profile_summary.dart';
 import '../models/account_view_state.dart';
 import '../models/chat_peer.dart';
+import '../models/conversation_scope.dart';
 import '../models/profile.dart';
 import '../services/account_manager.dart';
 import '../services/account_session.dart';
@@ -44,6 +45,7 @@ class AuthController extends ChangeNotifier {
           _manager,
           focusCommand: multiAccountAdapters,
         );
+    multiAccountEffects.scopeHost = _navigation;
     _manager.onFocusedProfileSynced = notifyListeners;
     final notificationEffects = AuthNotificationsEffects(this);
     notificationsMachine = NotificationsMachine(effects: notificationEffects);
@@ -100,6 +102,15 @@ class AuthController extends ChangeNotifier {
       _sessionState.authOverlayDismissible = value;
 
   AccountManager get accountManager => _manager;
+
+  ConversationScope? get committedScope => _navigation.committedScope;
+
+  bool isConversationReady({
+    required AccountSession session,
+    required ChatPeer peer,
+  }) {
+    return _navigation.isConversationReady(session: session, peer: peer);
+  }
 
   List<OpenAccount> get openAccounts => _manager.openAccounts;
   AccountSession? get focusedSession => _manager.focusedSession;

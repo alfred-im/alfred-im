@@ -3,23 +3,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import '../../models/chat_peer.dart';
+import '../../models/open_conversation_source.dart';
+import '../../services/account_manager.dart';
 
-/// Effetti navigation → [AccountManager] (unico punto verso il dominio account).
+/// Effetti navigation → account manager + commit scope su [NavigationMachine].
 abstract class NavigationEffects {
   Future<void> focusAccount(String accountUserId);
 
-  Future<bool> openConversationOnAccount({
+  /// Transazione unica OpenConversation — policy per [OpenConversationSource].
+  Future<bool> openConversation({
     required String accountUserId,
     required String peerProfileId,
-    required bool allowProfileFallback,
-    int inboxRetryAttempts = 10,
-    bool skipStaleClear = false,
-  });
-
-  /// Tap notifica push — PROM-PUSH-NOTIFY-030/036, SURF-NOTIFICATIONS-007.
-  Future<bool> openConversationFromPushTap({
-    required String accountUserId,
-    required String peerProfileId,
+    required OpenConversationSource source,
+    bool allowProfileFallback = true,
   });
 
   void openPeerOnFocusedAccount(ChatPeer peer);
@@ -34,4 +30,7 @@ abstract class NavigationEffects {
 
   /// Account in focus con `profileKind == group`.
   bool get focusedAccountIsGroup;
+
+  /// Dopo focus settled: riallinea scope da view-state account in focus.
+  void restoreCommittedScopeFromViewState(AccountManager manager);
 }
