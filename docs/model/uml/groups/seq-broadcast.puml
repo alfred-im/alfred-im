@@ -1,58 +1,43 @@
 @startuml seq-broadcast
 ' Context: groups
-' Command: BroadcastMessage (and media variants)
+' Command: BroadcastRequested
 ' SDD: SYS-GROUP-023–024, SYS-DELIVERY-004
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title seq-broadcast — gruppo invia a allow list
 
-actor "Operatore gruppo" as U
-participant "GroupConversationScreen" as UI
-participant "GroupMessagesController" as GMC
-participant "MessageMediaService" as MMS
+actor Utente
+participant "UI" as UI
+participant "GroupMessagesMachine" as GMM
 participant "MessageService" as MS
-participant "RPC broadcast_message_to_allowlist" as RPC
-participant "alfred_delivery.process_outbox" as W
-participant "alfred_delivery.group_erogate" as GE
-participant "alfred_delivery.erogate_group_message" as EG
-database "messages (archivio gruppo)" as GA
-database "messages (archivi partecipanti)" as PA
+participant "Supabase" as SB
+participant "Delivery worker" as W
 
-U -> UI : invia messaggio / media
-UI -> GMC : Broadcast*
+Utente -> UI : invia messaggio / media
+UI -> GMM : BroadcastRequested
+GMM --> UI : broadcast in corso
 
-GMC -> GMC : isSending = true
-
-alt media (gif, voice, image, video)
-  GMC -> MMS : upload*
-  MMS --> GMC : mediaUrl
+alt media
+  GMM -> MS : upload media
+  MS -> SB : storage
+  SB --> MS : public URL
 end
 
-GMC -> MS : broadcast*ToAllowlist(clientMessageId)
-MS -> RPC : broadcast_message_to_allowlist
-RPC -> GA : INSERT riga gruppo\nauthor=gruppo, original_author=gruppo
-RPC -> W : INSERT outbox event_kind=group_erogate
-W -> GE : group_erogate(outbox_id)
-GE -> EG : erogate_group_message(group_id, ...)
-loop ogni partecipante allow list
-  EG -> EG : gate is_sender_allowed_for_reception
-  alt gate ok
-    EG -> PA : INSERT copia\nauthor=gruppo, peer=gruppo, stesso λ
-  else gate fail
-    EG -> EG : skip silenzioso
-  end
-end
-GE --> W : outbox completed
-RPC --> MS : row gruppo
-MS --> GMC : ChatMessage ack
+GMM -> MS : broadcast to allowlist
+MS -> SB : RPC broadcast + outbox group_erogate
+SB -> W : ProcessOutbox
+W -> W : ErogateGroupMessage\n(gate per partecipante)
+W --> SB : participant copies (or silent skip)
+SB --> MS : group archive row
+MS --> GMM : BroadcastAcknowledged
 
-GMC -> GMC : load() — ricarica storico
-GMC -> UI : RefreshGroupHome callback
-GMC -> GMC : isSending = false
+GMM -> GMM : LoadGroupMessages
+GMM --> UI : RefreshGroupHome
 
-note over GA, PA
-  Realtime: subscribeToOwnerMessages
-  su owner_id = gruppo (INSERT/UPDATE)
+note over GMM
+  AttachOwnerRealtime on init —
+  OwnerRealtimeReceived merges
+  INSERT/UPDATE on group archive
 end note
 
 @enduml

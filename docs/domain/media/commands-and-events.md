@@ -1,29 +1,29 @@
 # Comandi ed eventi — contesto media
 
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **UML:** [docs/model/uml/media/](../../model/uml/media/)  
 **Guida:** [docs/guides/media.md](../../guides/media.md)
 
 ---
 
-## Comandi (UI → MessagesController)
+## Comandi (intento)
 
-| Comando | Emesso da | Pipeline |
-|---------|-----------|----------|
-| `RecordVoiceStart` | Long-press mic | `VoiceRecordingService.start` |
-| `RecordVoiceStop` | Release mic (≥1 s) | Stop → bytes → `sendVoice` |
-| `RecordVoiceLock` | Swipe ↑ | Fase locked — mani libere |
-| `RecordVoiceCancel` | Swipe ← / discard | Annulla senza send |
-| `SendVoice` | Stop / conferma preview | persist → optimistic → upload → RPC |
-| `PickImage` | Menu allegati | Galleria o fotocamera → `sendImage` |
-| `SendImage` | Conferma caption | cache preview → normalize → upload → RPC |
-| `PickVideo` | Menu allegati | File picker → `sendVideoFromPicker` |
-| `SendVideo` | Dopo lettura byte | probe durata → upload → RPC |
-| `SendGif` | Picker GIF | upload → RPC (via `_sendOptimistic`) |
-| `PickLocation` | Tap pin | `LocationService` → anteprima mappa |
-| `RefineLocation` | GPS in preview | Aggiorna coordinate fino a soglia accuratezza |
-| `SendLocation` | Conferma invio | RPC senza upload |
-| `UploadMedia` | Interno retry/send | `MessageMediaService.upload*` → public URL |
+| Comando | Emesso da | Descrizione |
+|---------|-----------|-------------|
+| `RecordVoiceStart` | Utente | Inizia registrazione vocale (long-press). |
+| `RecordVoiceStop` | Utente | Termina registrazione (durata minima 1 s). |
+| `RecordVoiceLock` | Utente | Blocca registrazione per invio a mani libere. |
+| `RecordVoiceCancel` | Utente | Annulla registrazione senza invio. |
+| `SendVoice` | Utente | Conferma invio messaggio vocale. |
+| `PickImage` | Utente | Seleziona immagine da galleria o fotocamera. |
+| `SendImage` | Utente | Conferma invio immagine (con caption opzionale). |
+| `PickVideo` | Utente | Seleziona file video. |
+| `SendVideo` | Utente | Conferma invio video. |
+| `SendGif` | Utente | Seleziona e invia GIF. |
+| `PickLocation` | Utente | Avvia acquisizione posizione. |
+| `RefineLocation` | Utente | Affina coordinate in anteprima mappa. |
+| `SendLocation` | Utente | Conferma invio posizione. |
+| `UploadMedia` | Policy (invio/retry) | Carica blob su storage e ottiene URL pubblico. |
 
 ---
 
@@ -31,29 +31,30 @@
 
 | Evento | Descrizione |
 |--------|-------------|
-| `VoiceRecordingStarted` | `_VoicePhase.recording` |
-| `VoiceRecordingLocked` | `_VoicePhase.locked` |
-| `VoicePreviewReady` | Bytes e durata disponibili in preview |
-| `VoiceRecordingCancelled` | Ritorno a idle senza messaggio |
-| `ImageFormatRejected` | Magic bytes non JPEG/PNG/WebP/HEIC |
-| `ImageNormalized` | HEIC convertito; path coda aggiornato |
-| `MediaCached` | `OutboundMediaCache.put(clientId, bytes)` |
-| `MediaPersisted` | File disco o web base64 sotto soglia |
-| `MediaUploaded` | URL pubblico da `chat-media` bucket |
-| `MediaUploadFailed` | Eccezione size/MIME/rete — bolla `failed` |
-| `LocationPreviewShown` | Coordinate arrotondate in anteprima OSM |
-| `LocationSent` | RPC `content_type=location` ack |
+| `VoiceRecordingStarted` | Registrazione vocale attiva. |
+| `VoiceRecordingLocked` | Registrazione bloccata (mani libere). |
+| `VoicePreviewReady` | Anteprima vocale disponibile. |
+| `VoiceRecordingCancelled` | Registrazione annullata. |
+| `ImageFormatRejected` | Formato immagine non supportato. |
+| `ImageNormalized` | Immagine convertita in formato canonico (es. HEIC → JPEG). |
+| `MediaCached` | Bytes media in cache RAM per anteprima pending. |
+| `MediaPersisted` | Media salvato localmente per retry coda. |
+| `MediaUploaded` | URL pubblico disponibile su storage. |
+| `MediaUploadFailed` | Upload fallito — messaggio marcato failed. |
+| `LocationPreviewShown` | Coordinate arrotondate in anteprima mappa. |
+| `LocationSent` | Posizione inviata (nessun upload blob). |
 
 ---
 
-## Servizi
+## Policy
 
-| Servizio | Metodi |
-|----------|--------|
-| `MessageMediaService` | `uploadGif`, `uploadImage`, `uploadVoice`, `uploadVideo` |
-| `VoiceRecordingService` | Registrazione WebM/Opus (web nativo; IO FFmpeg) |
-| `LocationService` | Permessi + posizione corrente |
-| `OutboundMessageQueue` | `persistMediaBytes`, `readMediaBytes`, `deleteMediaFile` |
+| Policy | Trigger | Azione |
+|--------|---------|--------|
+| **Upload prima di send** | Tipi con allegato | `UploadMedia` prima di RPC invio |
+| **Location senza upload** | `SendLocation` | Solo coordinate in RPC |
+| **Limiti dimensione** | Pre-upload | Rifiuto client se oltre soglia |
+| **Voice minima** | `RecordVoiceStop` < 1 s | `VoiceRecordingCancelled` |
+| **Web blob grande** | Persistenza locale | Solo cache RAM, non storage prefs |
 
 ---
 
@@ -63,4 +64,4 @@
 |----------|----------|
 | Foto/video limiti e HEIC | PROM-CHAT-MEDIA-001, 001b |
 | Coda image/video | PROM-CHAT-MEDIA-007, PROM-OUTBOUND-SEND |
-| Voice hold-to-send | SURF-CHAT (UX documentata in media.md) |
+| Voice hold-to-send | SURF-CHAT (UX in media.md) |

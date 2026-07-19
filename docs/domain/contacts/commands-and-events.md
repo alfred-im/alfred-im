@@ -1,21 +1,21 @@
 # Comandi ed eventi — contesto contacts
 
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **UML:** [docs/model/uml/contacts/](../../model/uml/contacts/)
 
 ---
 
-## Comandi
+## Comandi (intento)
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `LoadContacts` | Init `ContactsController` | `ContactService.fetchContacts(ownerId)` ordinati per `display_name`. |
-| `SetSearchQuery` | `CollapsibleListSearch` | Filtra `filteredContacts` per `displayName` (locale, sync). |
-| `SearchProfiles` | Sheet aggiunta tab Alfred | RPC `search_profiles` se query ≥ 2 caratteri. |
-| `AddInternalContact` | Tap risultato ricerca / overlay peer | INSERT `contacts` internal + `load()`. |
-| `AddExternalContact` | Sheet tab Esterno | INSERT `contacts` xmpp/matrix + `load()`. |
-| `RemoveInternalContact` | Overlay peer «Rimuovi dalla rubrica» | `deleteContact` per `contactForProfileId` + `load()`. |
-| `ComposeFromContact` | Icona chat in `ContactsScreen` | `peerFromContact` → internal ok; esterno → `StateError`. |
+| `LoadContacts` | Policy (init / post-modifica) | Carica rubrica dell'account in focus. |
+| `SetSearchQuery` | Utente | Filtra la rubrica per nome visualizzato (locale). |
+| `SearchProfiles` | Utente | Cerca profili Alfred per aggiunta contatto internal. |
+| `AddInternalContact` | Utente | Aggiunge profilo Alfred alla rubrica. |
+| `AddExternalContact` | Utente | Aggiunge contatto esterno (xmpp/matrix) alla rubrica. |
+| `RemoveInternalContact` | Utente | Rimuove contatto internal dalla rubrica. |
+| `ComposeFromContact` | Utente | Avvia conversazione da contatto internal. |
 
 ---
 
@@ -23,37 +23,24 @@
 
 | Evento | Descrizione |
 |--------|-------------|
-| `ContactsLoaded` | Lista pronta; `isLoading = false`. |
-| `ContactsLoadFailed` | Eccezione in `load()`; `error` valorizzato. |
-| `ContactAdded` | Riga inserita; lista ricaricata. |
-| `ContactRemoved` | Riga eliminata; lista ricaricata. |
-| `ProfileSearchResults` | Risultati `search_profiles` nel sheet (UI locale). |
-| `ComposePeerResolved` | `ChatPeer` restituito al navigator (internal). |
-| `ComposeRejected` | Contatto esterno o internal invalido — snackbar errore. |
+| `ContactsLoaded` | Rubrica disponibile. |
+| `ContactsLoadFailed` | Caricamento fallito; errore esposto. |
+| `ContactAdded` | Contatto inserito; rubrica aggiornata. |
+| `ContactRemoved` | Contatto eliminato; rubrica aggiornata. |
+| `ProfileSearchResults` | Risultati ricerca profili disponibili per aggiunta. |
+| `ComposePeerResolved` | Peer conversazione risolto da contatto internal. |
+| `ComposeRejected` | Contatto esterno o internal invalido — nessuna conversazione avviata. |
 
 ---
 
-## Stati UI (ContactsController)
+## Policy
 
-| Stato | Campo / condizione |
-|-------|-------------------|
-| `Loading` | `isLoading == true` (solo init/primo load) |
-| `Ready` | `isLoading == false`, lista in memoria |
-| `Error` | `error != null` (coesiste con Ready dopo primo load) |
-
-Ricerca lista: stato ortogonale (`_searchQuery`), non blocca CRUD.
-
----
-
-## Transizioni principali
-
-| Da | Comando | A |
-|----|---------|---|
-| `Loading` | `ContactsLoaded` | `Ready` |
-| `Loading` | `ContactsLoadFailed` | `Ready` + `error` |
-| `Ready` | `AddInternalContact` / `AddExternalContact` | `Ready` (reload) |
-| `Ready` | `RemoveInternalContact` | `Ready` (reload) |
-| `Ready` | `SetSearchQuery` | `Ready` (vista filtrata) |
+| Policy | Trigger | Azione |
+|--------|---------|--------|
+| **Reload post-CRUD** | `ContactAdded` / `ContactRemoved` | `LoadContacts` |
+| **Ricerca minima** | `SearchProfiles` con query corta | Nessuna chiamata server |
+| **Compose solo internal** | `ComposeFromContact` su esterno | `ComposeRejected` |
+| **Scope per focus** | Cambio account | Rubrica ricaricata per nuovo owner |
 
 ---
 
@@ -63,7 +50,7 @@ Ricerca lista: stato ortogonale (`_searchQuery`), non blocca CRUD.
 |----------|----------|
 | Isolamento rubrica / inbox | PROM-PERSONAL-CONTACTS-001–005 |
 | Compose internal / reject external | PROM-PERSONAL-CONTACTS-006, 021 |
-| Controller per focus | PROM-PERSONAL-CONTACTS-007 |
+| Rubrica per account in focus | PROM-PERSONAL-CONTACTS-007 |
 | Filtro lista | PROM-PERSONAL-CONTACTS-008 |
 | Reload post-add | PROM-PERSONAL-CONTACTS-011 |
-| Azione rubrica da overlay | PROM-PEER-PROFILE-006 |
+| Azione rubrica da overlay peer | PROM-PEER-PROFILE-006 |

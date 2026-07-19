@@ -1,22 +1,23 @@
 @startuml seq-close-conversation
 ' Command: CloseConversation
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title seq-close-conversation — back mobile / chiudi chat
 
-participant "HomeScreen" as UI
-participant "AuthController" as Auth
+actor Utente
+participant "UI" as UI
 participant "NavigationMachine" as Nav
-participant "AccountManager" as AM
+participant "MultiAccountMachine" as MAM
 
-UI -> Auth : backToInboxOnMobile()\n(o backToGroupHome)
-Auth -> Nav : CloseConversation\n(o BackToGroupHome)
+Utente -> UI : back / chiudi chat
+UI -> Nav : CloseConversation\n(o BackToGroupHome)
+
 alt account utente
-  Nav -> AM : showInboxOnMobile()
-  Nav --> Auth : NavigationIdle\n(InboxVisible)
+  Nav -> MAM : update view state (inbox visible)
+  Nav --> UI : NavigationIdle
 else account gruppo
-  Nav -> AM : backToGroupHome()
-  Nav --> Auth : GroupShellEntered
+  Nav -> MAM : update view state (group home)
+  Nav --> UI : GroupShellEntered
 end
 
 @enduml

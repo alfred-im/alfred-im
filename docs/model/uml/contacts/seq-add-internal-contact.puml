@@ -1,36 +1,36 @@
 @startuml seq-add-internal-contact
 ' Context: contacts
 ' SDD: PROM-PERSONAL-CONTACTS-011
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title Contacts — aggiunta contatto internal (Alfred)
 
-actor User
-participant "ContactsScreen\n_AddContactSheet" as UI
-participant "ContactsController" as Ctrl
+actor Utente
+participant "UI" as UI
+participant "ContactsMachine" as CM
 participant "ContactService" as Svc
-database "Supabase\ncontacts + search_profiles" as DB
+participant "Supabase" as DB
 
-User -> UI : cerca utente (≥2 char)
-UI -> Ctrl : SearchProfiles(query)
-Ctrl -> Svc : searchProfiles(query)
-Svc -> DB : RPC search_profiles
-DB --> Svc : ProfileSummary[]
-Svc --> Ctrl : results
-Ctrl --> UI : results
+Utente -> UI : cerca utente
+UI -> CM : SearchProfiles(query)
+CM -> Svc : searchProfiles(query)
+Svc -> DB : search_profiles
+DB --> Svc : profile summaries
+Svc --> CM : results
+CM --> UI : ProfileSearchResults
 
-User -> UI : tap profilo
-UI -> Ctrl : AddInternalContact(profile)
-Ctrl -> Svc : addInternalContact(ownerId, profile)
-Svc -> DB : INSERT contacts\n(protocol=internal,\nlinked_profile_id, display_name, avatar_url)
+Utente -> UI : seleziona profilo
+UI -> CM : AddInternalContact(profile)
+CM -> Svc : addInternalContact(owner, profile)
+Svc -> DB : INSERT contact (internal)
 DB --> Svc : row
-Svc --> Ctrl : Contact
+Svc --> CM : ContactAdded
 
-Ctrl -> Ctrl : LoadContacts
-Ctrl -> Svc : fetchContacts(ownerId)
-Svc -> DB : SELECT contacts\nWHERE owner_id
+CM -> CM : LoadContacts
+CM -> Svc : fetchContacts(owner)
+Svc -> DB : SELECT contacts
 DB --> Svc : rows
-Svc --> Ctrl : Contact[]
-Ctrl --> UI : notifyListeners\nContactsLoaded
+Svc --> CM : ContactsLoaded
+CM --> UI : rubrica aggiornata
 
 @enduml

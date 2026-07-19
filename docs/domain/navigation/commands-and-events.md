@@ -1,22 +1,23 @@
 # Comandi ed eventi — contesto navigation
 
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **UML:** [docs/model/uml/navigation/](../../model/uml/navigation/)
 
 ---
 
-## Comandi
+## Comandi (intento)
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `SwitchToAccount` | Sidebar | Solo focus + inbox (no chat). Se account gruppo → `GroupShell`. |
-| `OpenPeerOnFocusedAccount` | Tap riga inbox / contatto | Chat su account già in focus. |
-| `OpenConversationOnAccount` | Compose | Focus + resolve peer + open chat. |
-| `OpenFromPushTap` | Adapter notifications | `openConversationFromPushTap`: clear stale, focus, retry inbox, fallback profilo. |
-| `OpenFromShareableLink` | Adapter shareable-link | `openConversationOnAccount` con clear stale + fallback profilo. |
-| `CloseConversation` | Back mobile / chiudi chat | Torna a inbox (`InboxVisible`) o group home (`GroupShell`). |
-| `OpenGroupChat` | Tap conversazione in group home | Apre chat gruppo (resta in `GroupShell`). |
-| `BackToGroupHome` | Back da chat gruppo | Torna al pannello home gruppo. |
+| `SwitchToAccount` | Utente | Cambia account in focus (solo inbox, senza aprire chat). |
+| `OpenPeerOnFocusedAccount` | Utente | Apre chat con peer su account già in focus. |
+| `OpenConversationOnAccount` | Utente | Focus account + risolve peer + apre chat. |
+| `OpenFromPushTap` | Policy (tap notifica) | Apre chat da push: clear stale, focus, retry inbox, fallback profilo. |
+| `OpenFromShareableLink` | Policy (link condiviso) | Apre chat da fragment URL con clear stale e fallback profilo. |
+| `OpenFromCompose` | Utente | Apre chat da compose (contatti, ricerca). |
+| `CloseConversation` | Utente | Chiude chat aperta; torna a inbox o home gruppo. |
+| `OpenGroupChat` | Utente | Apre conversazione gruppo (resta in shell gruppo). |
+| `BackToGroupHome` | Utente | Torna al pannello home gruppo da chat gruppo. |
 
 ---
 
@@ -24,25 +25,27 @@
 
 | Evento | Descrizione |
 |--------|-------------|
-| `NavigationIdle` | Inbox visibile, nessuna chat aperta (`InboxVisible`). |
-| `ConversationOpened` | Chat 1:1 aperta con peer risolto (`ChatOpen`). |
+| `NavigationIdle` | Inbox visibile, nessuna chat aperta. |
+| `ConversationOpened` | Chat 1:1 aperta con peer risolto. |
 | `GroupShellEntered` | Account gruppo in focus — home gruppo visibile. |
-| `GroupChatOpened` | Chat gruppo aperta dentro `GroupShell`. |
+| `GroupChatOpened` | Chat gruppo aperta dentro shell gruppo. |
 | `NavigationRejected` | Peer non trovato, self-peer, account non aperto. |
 | `AccountFocusRequired` | Delega `FocusAccount` a multi-account. |
 
 ---
 
-## Transizioni shell (per account in focus)
+## Policy
 
-| Da | Comando / condizione | A |
-|----|----------------------|---|
-| `InboxVisible` | `OpenPeerOnFocusedAccount` / `OpenConversationOnAccount` ok | `ChatOpen` |
-| `ChatOpen` | `CloseConversation` | `InboxVisible` |
-| `*` | `SwitchToAccount` su account gruppo | `GroupShell` |
-| `GroupShell` | `OpenGroupChat` | `GroupShell` (chat gruppo) |
-| `GroupShell` | `BackToGroupHome` / `CloseConversation` | `GroupShell` (home) |
-| `InboxVisible` | `SwitchToAccount` su account utente | `InboxVisible` |
+| Policy | Trigger | Azione |
+|--------|---------|--------|
+| **Un solo orchestratore** | Qualsiasi ingresso navigazione | Tutti i percorsi passano da `NavigationMachine`. |
+| **Push/link non bypassano multi-account** | `OpenFromPushTap` / `OpenFromShareableLink` | `FocusAccount` se account destinatario ≠ focus. |
+| **Clear stale chat** | Push/link con peer diverso da chat aperta | Chiude chat stale prima di aprire target. |
+| **Fallback profilo** | Peer assente da inbox | Lookup profilo + apertura conversazione. |
+| **Tap inbox su focus corrente** | `OpenPeerOnFocusedAccount` | Nessun switch account. |
+| **Account gruppo** | `SwitchToAccount` su gruppo | Entra in `GroupShell` senza inbox classica. |
+
+Transizioni shell: [navigation-shell-state.puml](../../model/uml/navigation/navigation-shell-state.puml).
 
 ---
 
@@ -51,7 +54,7 @@
 | Elemento | Promessa |
 |----------|----------|
 | Shell sempre visibile | PROM-MULTI-ACCOUNT-001 |
-| `OpenFromPushTap` | PROM-PUSH-NOTIFY-030/036, seq-notification-click |
+| `OpenFromPushTap` | PROM-PUSH-NOTIFY-030/036 |
 | `OpenFromShareableLink` | PROM-SHAREABLE-LINK-004 |
 | `CloseConversation` | PROM-MULTI-ACCOUNT-010 (AccountViewState) |
 | `GroupShell` | SURF-GROUP-SHELL |

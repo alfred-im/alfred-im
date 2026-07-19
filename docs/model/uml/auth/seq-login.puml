@@ -1,47 +1,34 @@
 @startuml seq-login
 ' Context: auth
 ' SDD: SURF-AUTH-004, SURF-AUTH-007
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title Auth — login (password)
 
-actor User
-participant "AuthScreen" as UI
-participant "AuthController" as AC
+actor Utente
+participant "UI" as UI
 participant "AuthMachine" as AM
+participant "MultiAccountMachine" as MAM
 participant "AccountManager" as Mgr
-participant "AccountSession" as Sess
-participant "EphemeralBootstrap" as Boot
-participant "GoTrue" as GT
+participant "Supabase GoTrue" as GT
 
-User -> UI : Accedi (email, password)
-UI -> AC : signIn(email, password)
-AC -> AM : SignInRequested
-AM --> AC : AuthOperationStarted
+Utente -> UI : Accedi (email, password)
+UI -> AM : SignInRequested
+AM --> UI : AuthOperationStarted
 
-AC -> AC : validateEmail
+AM -> AM : validate email
 alt email non valida
-  AC -> AM : ValidationRejected
-  AC --> UI : error
+  AM --> UI : ValidationRejected
 else email ok
-  AC -> Mgr : openWithPassword
-  Mgr -> Sess : signInOpenAccount
-  Sess -> Boot : createBootstrapClient()
-  Sess -> GT : signInWithPassword
-  GT --> Sess : AuthResponse
-  Sess -> Sess : openAccountFromAuthResponse\n(SessionAdoption)
-  note right of Sess
-    setSession su client dedicato
-    alfred_auth_{userId}
-    **no signOut** sul bootstrap
-  end note
-  Sess --> Mgr : OpenAccount
-  Mgr -> Mgr : upsertAccount + _rebuildFromManifest
-  Mgr --> AC : AccountSession
-  AC -> AM : AuthOperationCompleted(success)
-  AM --> AC : SessionEstablished
-  AC -> AC : showAuthOverlay = false
-  AC --> UI : overlay chiuso
+  UI -> MAM : OpenAccountWithPassword
+  MAM -> Mgr : sign in + open account
+  Mgr -> GT : signInWithPassword
+  GT --> Mgr : session
+  Mgr -> Mgr : adopt session per account
+  Mgr --> MAM : AccountOpened
+  MAM --> MAM : AccountFocused
+  MAM --> AM : AuthOperationCompleted
+  AM --> UI : SessionEstablished\noverlay chiuso
 end
 
 @enduml

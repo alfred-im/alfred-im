@@ -2,44 +2,44 @@
 ' Context: media
 ' Commands: RecordVoiceStart, RecordVoiceStop, SendVoice
 ' SDD: PROM-CHAT-MEDIA (voice), PROM-OUTBOUND-SEND
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title seq-voice-hold-send — registrazione hold-to-send
 
 actor Utente
-participant "ChatInputBar" as UI
+participant "UI" as UI
 participant "VoiceRecordingService" as VRS
-participant "MessagesController" as MC
-participant "OutboundMessageQueue" as Q
+participant "MessagingCoordinator" as Coord
+participant "OutboundQueue" as Q
 participant "MessageMediaService" as MMS
 participant "MessageService" as MS
 
 Utente -> UI : long-press mic
-UI -> VRS : start()
-UI -> UI : VoicePhase = recording
+UI -> VRS : RecordVoiceStart
+UI --> UI : VoiceRecordingStarted
 
 alt swipe up (lock)
-  UI -> UI : VoicePhase = locked
-  Utente -> UI : tap stop
-  UI -> VRS : stop()
-  UI -> UI : VoicePhase = preview
+  UI --> UI : VoiceRecordingLocked
+  Utente -> UI : stop
+  UI -> VRS : RecordVoiceStop
+  UI --> UI : VoicePreviewReady
   Utente -> UI : conferma invio
 else release (≥ min 1s)
   Utente -> UI : release
-  UI -> VRS : stop()
-  VRS --> UI : bytes, durationMs
+  UI -> VRS : RecordVoiceStop
+  VRS --> UI : bytes, duration
 else release (< 1s)
-  UI -> VRS : cancel()
-  UI -> UI : VoicePhase = idle
+  UI -> VRS : RecordVoiceCancel
+  UI --> UI : VoiceRecordingCancelled
 end
 
-UI -> MC : sendVoice(bytes, durationMs)
-MC -> Q : persistMediaBytes(.webm)
-MC -> MC : optimistic voice bubble\npending://clientId
-MC -> MMS : uploadVoice
-MMS --> MC : mediaUrl
-MC -> MS : sendVoiceToProfile
-MS --> MC : ack ChatMessage
-MC -> MC : merge + dequeue
+UI -> Coord : SendVoice
+Coord -> Q : persist media
+Coord --> UI : optimistic voice bubble
+Coord -> MMS : UploadMedia
+MMS --> Coord : MediaUploaded
+Coord -> MS : send voice to profile
+MS --> Coord : SendAcknowledged
+Coord -> Q : dequeue
 
 @enduml

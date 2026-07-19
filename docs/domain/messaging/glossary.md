@@ -1,7 +1,7 @@
 # Glossario — contesto messaging
 
 **Bounded context:** `messaging`  
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **Promesse SDD:** [PROM-OUTBOUND-SEND](../../specs/promises/product/PROM-OUTBOUND-SEND.md), [PROM-MESSAGE-STATUS](../../specs/promises/product/PROM-MESSAGE-STATUS.md), [PROM-REALTIME-OWNER](../../specs/promises/product/PROM-REALTIME-OWNER.md)
 
 ---
@@ -10,21 +10,21 @@
 
 | Termine | Definizione |
 |---------|-------------|
-| **Mailbox archive** | Riga in `messages` con `owner_id` = utente corrente; ogni utente vede solo la propria copia. |
-| **Peer conversation** | Scambio 1:1 (o gruppo) tra `owner_id` e `peer_profile_id`; lista caricata via RPC `list_peer_messages`. |
-| **ChatMessage** | Modello UI (`message.dart`): corpo, media, coordinate, stato spunte, `clientMessageId`. |
-| **Optimistic bubble** | Bolla inserita client-side con `status: pending` e `id == clientMessageId` prima dell'ACK RPC. |
-| **client_message_id** | UUID client per idempotenza; chiave di merge tra bolla optimistic e riga server. |
-| **OutboundMessageQueue** | Coda persistente (`SharedPreferences` + file media) per retry dopo fallimento rete/upload. |
-| **queueKey** | `userId\|peerProfileId` — scope coda per account e peer ([PROM-OUTBOUND-SEND-002]). |
-| **mergeChatMessage** | Unisce riga realtime/RPC in bolla esistente senza perdere media né `retryPayloadPath`. |
-| **Tick-only update** | UPDATE Realtime con sole date `delivered_at`/`read_at` — merge preserva `content_type` e `media_url`. |
-| **isMine** | `author_id == currentUserId` — abilita spunte mittente ([PROM-MESSAGE-STATUS-010]). |
-| **MessageStatus** | `pending`/`failed` solo pre-ACK client; post-ACK da `messageStatusFromMailbox`. |
-| **Realtime owner filter** | Subscribe Postgres su `messages` con `owner_id = io`; peer filtrato in callback. |
-| **Delivery tick** | UPDATE su riga mittente quando worker valorizza `delivered_at` o `read_at`. |
-| **Retry backoff** | `retryDelayForAttempts`: `2^attempts` secondi (cap 64 s), timer ogni 15 s. |
-| **pending://** | URL fittizio in bolla media pre-upload; preview da `OutboundMediaCache`. |
+| **Mailbox archive** | Copia messaggio nell'archivio dell'utente corrente; ogni utente vede solo la propria copia. |
+| **Peer conversation** | Scambio 1:1 (o gruppo) tra utente corrente e peer; storico caricato per coppia owner–peer. |
+| **Chat message** | Messaggio in conversazione: corpo, media, coordinate, stato spunte, identificatore client. |
+| **Optimistic message** | Messaggio pending inserito lato client prima della conferma server. |
+| **Client message id** | Identificatore client per idempotenza; chiave di merge tra optimistic e riga server. |
+| **Outbound queue** | Coda persistente per retry dopo fallimento rete o upload media. |
+| **Queue scope** | Ambito coda per account e peer ([PROM-OUTBOUND-SEND-002]). |
+| **Message merge** | Unione riga realtime/RPC in bolla esistente senza perdere media né payload retry. |
+| **Tick-only update** | Aggiornamento realtime con sole date spunte — merge preserva contenuto e media. |
+| **Sender message** | Messaggio scritto dall'utente corrente — abilita spunte mittente ([PROM-MESSAGE-STATUS-010]). |
+| **Message status** | `pending`/`failed` solo pre-ACK client; post-ACK derivato dall'archivio mailbox. |
+| **Realtime owner filter** | Sottoscrizione su archivio dell'utente corrente; peer filtrato in elaborazione. |
+| **Delivery tick** | Aggiornamento spunte sulla copia mittente quando il recapito avanza. |
+| **Retry backoff** | Ritardo crescente tra tentativi retry (cap massimo, timer periodico). |
+| **Pending media preview** | Anteprima media locale prima che l'URL pubblico sia disponibile. |
 
 ---
 
@@ -32,18 +32,18 @@
 
 | Contesto | Relazione |
 |----------|-----------|
-| **media** | Upload blob (`MessageMediaService`) prima di `send*ToProfile` per tipi con `media_url`. |
-| **delivery** | Worker server valorizza `delivered_at`/`read_at` sulla copia mittente. |
-| **reception** | `delivered_at` null permanente se blocco allow list — non errore invio. |
-| **multi-account** | Controller e coda scoped a `userId`; realtime solo account in focus. |
-| **navigation** | Apertura chat crea `MessagesController` per `(userId, peerProfileId)`. |
+| **media** | Upload blob prima dell'invio per tipi con allegato. |
+| **delivery** | Worker server valorizza spunte sulla copia mittente. |
+| **reception** | Recapito bloccato se allow list fallisce — non errore invio al mittente. |
+| **multi-account** | Conversazione e coda scoped all'account in focus; realtime solo per focus attivo. |
+| **navigation** | Apertura chat avvia il ciclo di vita della conversazione per (account, peer). |
 
 ---
 
 ## Invarianti
 
-1. Una sola bolla per `client_message_id` — merge su `id`, `clientMessageId` incrociati.
-2. `isSending` serializza invii e retry automatici nella stessa chat.
-3. All'init: `load` → `restoreFailedFromQueue` → `markRead` → `attachRealtime` → timer retry.
-4. Realtime non duplica: `_replaceOrInsertMessage` + `mergeChatMessage`.
-5. Sessione scaduta: nessun load/send; `error = sessionExpiredMessage`.
+1. Una sola bolla per `client_message_id` — merge su id incrociati.
+2. Un solo invio (o retry automatico) alla volta nella stessa conversazione.
+3. All'apertura: load → restore coda → mark read → attach realtime → timer retry.
+4. Realtime non duplica messaggi già presenti — merge in place.
+5. Sessione scaduta: nessun load né send.

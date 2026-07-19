@@ -1,39 +1,39 @@
 @startuml groups-state
 ' Context: groups
 ' SDD: SYS-GROUP, SYS-DELIVERY (erogazione)
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
-title Groups — UI state machines (GroupHome + GroupMessages)
+title Groups — GroupHomeMachine + GroupMessagesMachine
 
-state "GroupHomeController" as GH {
-  state GH_Loading : isLoading = true
-  state GH_Ready : summary + authors + tile
-  state GH_Error : error != null
+state "GroupHomeMachine" as GH {
+  state GH_Loading
+  state GH_Ready
+  state GH_Error
 
   [*] --> GH_Loading : LoadGroupHome
   GH_Loading --> GH_Ready : GroupHomeLoaded
   GH_Loading --> GH_Error : GroupHomeLoadFailed
-  GH_Error --> GH_Loading : LoadGroupHome\n/reload()
-  GH_Ready --> GH_Loading : LoadGroupHome\n/reload()
+  GH_Error --> GH_Loading : LoadGroupHome
+  GH_Ready --> GH_Loading : LoadGroupHome
 }
 
-state "GroupMessagesController" as GM {
-  state GM_Loading : isLoading = true
-  state GM_Ready : isSending = false
-  state GM_Sending : isSending = true
-  state GM_Error : error != null
+state "GroupMessagesMachine" as GM {
+  state GM_Loading
+  state GM_Ready
+  state GM_Sending
+  state GM_Error
 
-  [*] --> GM_Loading : LoadGroupMessages\n+ AttachOwnerRealtime
+  [*] --> GM_Loading : InitGroupMessages\nLoadGroupMessages
 
   GM_Loading --> GM_Ready : GroupMessagesLoaded
   GM_Loading --> GM_Error : GroupMessagesLoadFailed
-  GM_Error --> GM_Loading : LoadGroupMessages\n/reload()
+  GM_Error --> GM_Loading : LoadGroupMessages
 
-  GM_Ready --> GM_Sending : BroadcastMessage\nBroadcastGif BroadcastVoice\nBroadcastImage BroadcastVideo\nBroadcastLocation
-  GM_Sending --> GM_Ready : BroadcastAcknowledged\n/ load()
+  GM_Ready --> GM_Sending : BroadcastRequested
+  GM_Sending --> GM_Ready : BroadcastAcknowledged
   GM_Sending --> GM_Error : BroadcastFailed
 
-  GM_Ready --> GM_Ready : OwnerRealtimeReceived\n/ merge or append
+  GM_Ready --> GM_Ready : OwnerRealtimeReceived
 }
 
 state c_nav {
@@ -46,12 +46,7 @@ state c_nav {
 
 note right of GM_Sending
   No optimistic bubble —
-  serializes via isSending
-end note
-
-note bottom of GH
-  Production: GroupHomeController
-  + GroupHomePanel (no inbox)
+  serializes broadcast
 end note
 
 @enduml

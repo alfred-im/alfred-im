@@ -1,7 +1,7 @@
 # Modello di dominio — Alfred
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-18
+**Ultima revisione**: 2026-07-19
 
 Questo documento definisce il **metodo di rappresentazione** dell'applicazione Alfred a strati di astrazione crescente. È la fonte di verità **ingegneristica**; non duplica le promesse SDD.
 

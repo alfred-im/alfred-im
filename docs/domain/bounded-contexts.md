@@ -1,6 +1,6 @@
 # Bounded context — Alfred
 
-**Ultima revisione**: 2026-07-18
+**Ultima revisione**: 2026-07-19
 
 Ogni riga è un **contesto delimitato** (DDD): propri glossario, comandi/eventi e diagrammi UML. I contesti comunicano tramite comandi ed eventi espliciti, non logica condivisa implicita nel codice.
 
@@ -16,7 +16,7 @@ Ogni riga è un **contesto delimitato** (DDD): propri glossario, comandi/eventi 
 | **profile** | `verified` | [profile/](./profile/) | `docs/model/uml/profile/` | `client/lib/machines/profile/` | PROM-PROFILE-IDENTITY, SURF-PROFILE |
 | **reception** | `verified` | [reception/](./reception/) | `docs/model/uml/reception/` | `client/lib/machines/reception/` | SYS-RECEPTION, PROM-RECEPTION-FILTER |
 | **groups** | `verified` | [groups/](./groups/) | `docs/model/uml/groups/` | `client/lib/machines/groups/` | SYS-GROUP |
-| **media** | `documented` | [media/](./media/) | `docs/model/uml/media/` | no (UI in ChatInputBar) | PROM-CHAT-MEDIA |
+| **media** | `documented` | [media/](./media/) | `docs/model/uml/media/` | no (UI allegati chat) | PROM-CHAT-MEDIA |
 | **delivery** | `documented` | [delivery/](./delivery/) | `docs/model/uml/delivery/` | no | SYS-DELIVERY |
 | **federation** | `documented` | [federation/](./federation/) | `docs/model/uml/federation/` | no | bridge futuri |
 

@@ -1,0 +1,21 @@
+@startuml conversation-load-state
+' Context: messaging
+' Machine: ConversationLoadMachine
+' SDD: PROM-REALTIME-OWNER, PROM-MESSAGE-STATUS
+' Revision: 2026-07-19
+
+title Messaging — ConversationLoadMachine
+
+state Loading
+state Ready
+state SessionBlocked
+
+[*] --> Loading : LoadMessages
+
+Loading --> Ready : MessagesLoaded
+Loading --> SessionBlocked : SessionExpired
+Loading --> Ready : LoadFailed
+
+Ready --> Loading : ReloadMessages
+
+@enduml

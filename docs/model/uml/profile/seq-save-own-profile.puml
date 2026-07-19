@@ -1,28 +1,26 @@
 @startuml seq-save-own-profile
 ' Context: profile
 ' SDD: PROM-PROFILE-IDENTITY-003
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title Profile — salvataggio profilo proprio
 
-actor User
-participant "ProfileScreen" as UI
-participant "ProfileController" as Ctrl
+actor Utente
+participant "UI" as UI
+participant "ProfileMachine" as PM
 participant "ProfileService" as Svc
-participant "AuthController" as Auth
-database "Supabase\nprofiles" as DB
+participant "MultiAccountMachine" as MAM
+participant "Supabase" as DB
 
-User -> UI : tap Salva
-UI -> Ctrl : SaveProfile(displayName, bio, pronouns, avatarUrl)
-Ctrl -> Svc : updateProfile(userId, ...)
-Svc -> DB : UPDATE profiles\nWHERE id = userId
+Utente -> UI : Salva
+UI -> PM : SaveProfile
+PM -> Svc : updateProfile(userId, fields)
+Svc -> DB : UPDATE profiles
 DB --> Svc : row
-Svc --> Ctrl : UserProfile
-Ctrl --> UI : ProfileSaved
+Svc --> PM : ProfileSaved
+PM --> UI : profilo aggiornato
 
-UI -> Auth : refreshProfile()
-Auth -> Svc : fetch own profile
-Svc --> Auth : UserProfile
-Auth --> UI : AuthProfileRefreshed\n(manifest + sidebar)
+PM -> MAM : RefreshAuthProfile
+MAM --> UI : AuthProfileRefreshed
 
 @enduml

@@ -1,51 +1,40 @@
 @startuml seq-signup
 ' Context: auth
 ' SDD: SURF-AUTH-004, SURF-AUTH-006, SURF-AUTH-008
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title Auth — registrazione
 
-actor User
-participant "AuthScreen" as UI
-participant "AuthController" as AC
+actor Utente
+participant "UI" as UI
 participant "AuthMachine" as AM
+participant "MultiAccountMachine" as MAM
 participant "AccountManager" as Mgr
-participant "AccountSession" as Sess
-participant "EphemeralBootstrap" as Boot
-participant "GoTrue" as GT
+participant "Supabase GoTrue" as GT
 
-User -> UI : Registrati (email, username, …)
-UI -> AC : signUp(...)
-AC -> AM : SignUpRequested
-AM --> AC : AuthOperationStarted
+Utente -> UI : Registrati
+UI -> AM : SignUpRequested
+AM --> UI : AuthOperationStarted
 
-AC -> AC : validateEmail, username, displayName
+AM -> AM : validate email, username, displayName
 alt validazione fallita
-  AC -> AM : ValidationRejected
-  AC --> UI : error
+  AM --> UI : ValidationRejected
 else validazione ok
-  AC -> Mgr : isUsernameAvailable
+  UI -> Mgr : isUsernameAvailable
   alt username occupato
-    AC -> AM : AuthOperationFailed
-    AC --> UI : error
+    AM --> UI : AuthOperationFailed
   else username libero
-    AC -> Mgr : openWithSignUp
-    Mgr -> Sess : signUpOpenAccount
-    Sess -> Boot : createBootstrapClient()\n+ EphemeralPkceStorage
-    Sess -> GT : rpc is_username_available
-    Sess -> GT : signUp(emailRedirectTo)
-    alt email non confermata (session null)
-      GT --> Sess : AuthResponse (no session)
-      Sess --> AC : AuthException conferma email
-      AC -> AM : AuthOperationFailed
+    UI -> MAM : OpenAccountWithSignUp
+    MAM -> Mgr : sign up + open account
+    Mgr -> GT : signUp
+    alt email non confermata
+      GT --> Mgr : no session
+      AM --> UI : AuthOperationFailed\n(conferma email)
     else session ok
-      Sess -> Sess : openAccountFromAuthResponse
-      Sess --> Mgr : OpenAccount
-      Mgr -> Mgr : upsertAccount + _rebuildFromManifest
-      Mgr --> AC : AccountSession
-      AC -> AM : AuthOperationCompleted(success)
-      AM --> AC : SessionEstablished
-      AC --> UI : overlay chiuso
+      Mgr -> Mgr : adopt session per account
+      Mgr --> MAM : AccountOpened
+      MAM --> MAM : AccountFocused
+      AM --> UI : SessionEstablished
     end
   end
 end

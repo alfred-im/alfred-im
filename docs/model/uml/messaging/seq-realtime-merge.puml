@@ -1,34 +1,27 @@
 @startuml seq-realtime-merge
 ' Context: messaging
-' Event: RealtimeReceived, DeliveryTickReceived
+' Events: RealtimeReceived, DeliveryTickReceived
 ' SDD: PROM-REALTIME-OWNER-003–005, PROM-MESSAGE-STATUS
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title seq-realtime-merge — INSERT/UPDATE peer messages
 
 participant "Supabase Realtime" as RT
 participant "MessageService" as MS
-participant "MessagesController" as MC
-participant "mergeChatMessage" as Merge
-participant "Flutter UI" as UI
+participant "RealtimeAttachmentMachine" as RAM
+participant "MessagingCoordinator" as Coord
+participant "UI" as UI
 
-MC -> MS : subscribeToPeerMessages\n(owner_id + peer filter)
-MS -> RT : channel messages-peer-{user}-{peer}
+Coord -> RAM : AttachRealtime
+RAM -> MS : subscribe peer channel
+MS -> RT : channel owner + peer filter
 
 RT -> MS : PostgresChange INSERT|UPDATE
-MS -> MS : isMailboxPeerMessageRelevant?
-MS -> MS : ChatMessage.fromJson
-MS -> MS : hasRenderableContent\nor delivery tick?
+MS -> MS : filter peer relevance
+MS -> MS : parse message\nrenderable or tick-only?
 
-MS -> MC : onMessage(message)
-MC -> MC : _indexForMessage\n(id, clientMessageId)
-MC -> Merge : mergeChatMessage(existing, incoming)
-note right of Merge
-  Tick-only: preserve media_url,
-  content_type, retryPayloadPath
-end note
-Merge --> MC : merged ChatMessage
-MC -> MC : _replaceOrInsertMessage
-MC -> UI : notifyListeners
+MS -> Coord : RealtimeReceived / DeliveryTickReceived
+Coord -> Coord : merge message\n(preserve media on tick-only)
+Coord --> UI : list updated
 
 @enduml

@@ -1,25 +1,27 @@
 @startuml reception-allowlist-state
 ' Context: reception
 ' SDD: PROM-RECEPTION-FILTER, SYS-RECEPTION
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
-title Reception — ReceptionAllowlistController state machine
+title Reception — ReceptionMachine
 
-state Loading : isLoading = true
-state Ready : allowedPeople in memory\nisLoading = false
+state Loading
+state Ready
 
-[*] --> Loading : LoadAllowlist\n[constructor]
+[*] --> Loading : LoadAllowlist
 
 Loading --> Ready : AllowlistLoaded
-Loading --> Ready : AllowlistLoadFailed\n[error set]
+Loading --> Ready : AllowlistLoadFailed
 
-Ready --> Ready : SetSearchQuery\n/ filteredAllowedPeople
-Ready --> Ready : AddAllowedProfile\n/ reload (skip self|dup)
-Ready --> Ready : RemoveAllowedPerson\n/ reload
+Ready --> Loading : LoadAllowlist\n[after CRUD]
+Ready --> Ready : SetSearchQuery
+Ready --> Ready : AddAllowedProfile
+Ready --> Ready : RemoveAllowedPerson
 
 note right of Ready
-  allowedPeople.isEmpty → UI Empty
-  (copy informativo, stesso stato Ready)
+  Empty list is still Ready —
+  UI shows informational copy.
+  allowedProfileIds is a derived view.
 end note
 
 @enduml

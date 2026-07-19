@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto profile
 
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **UML:** [docs/model/uml/profile/](../../model/uml/profile/)
 
 ---
@@ -9,12 +9,12 @@
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `SaveProfile` | `ProfileScreen` Salva | `ProfileService.updateProfile` con campi normalizzati. |
-| `UploadAvatar` | Tap camera su `ProfileScreen` | `ProfileAvatarService.uploadAvatar` → URL pubblico. |
-| `RefreshAuthProfile` | Post save/upload | `AuthController.refreshProfile()` — aggiorna sidebar/manifest. |
-| `FindByUsername` | Compose / link | RPC `find_profile_by_username` (min 3 caratteri client). |
-| `FetchSummariesByIds` | Batch lookup | SELECT profili pubblici per lista id. |
-| `FindById` | Overlay hydrate | Singolo profilo per arricchire `ProfileSummary` parziale. |
+| `SaveProfile` | Utente | Salva campi profilo proprio (nome, bio, pronomi, avatar). |
+| `UploadAvatar` | Utente | Carica nuova immagine avatar. |
+| `RefreshAuthProfile` | Policy (post save/upload) | Allinea identità in sessione e manifest multi-account. |
+| `FindByUsername` | Utente / Policy | Risolve profilo per username (compose, link). |
+| `FetchSummariesByIds` | Policy | Lookup batch profili pubblici per liste. |
+| `FindById` | Policy | Lookup singolo profilo per arricchimento parziale. |
 
 ---
 
@@ -22,13 +22,13 @@
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `OpenPeerProfile` | Tap avatar peer | `showPeerProfileOverlay`; skip se self. |
-| `HydratePeerProfile` | `didChangeDependencies` overlay | `findById` + `mergeDisplay`. |
-| `ToggleAllowMessages` | Switch overlay | `addProfile` / `removeByProfileId` su reception. |
-| `ToggleRubrica` | Pulsante overlay | `addInternal` / `removeInternalByProfileId` su contacts. |
-| `StartChatFromProfile` | CTA «Inizia a chattare» | Chiude overlay; `openConversation(ChatPeer.fromProfile)`. |
-| `ShareProfileLink` | Icona share hero | `shareShareableProfileLink`. |
-| `ClosePeerProfile` | Back / barrier tap | `Navigator.pop`. |
+| `OpenPeerProfile` | Utente | Mostra scheda identità peer. |
+| `HydratePeerProfile` | Policy (apertura overlay) | Completa campi mancanti da server. |
+| `ToggleAllowMessages` | Utente | Consente/revoca recapito da peer (contesto reception). |
+| `ToggleRubrica` | Utente | Aggiunge/rimuove peer dalla rubrica (contesto contacts). |
+| `StartChatFromProfile` | Utente | Avvia conversazione con peer dall'overlay. |
+| `ShareProfileLink` | Utente | Condivide link profilo peer. |
+| `ClosePeerProfile` | Utente | Chiude overlay peer. |
 
 ---
 
@@ -36,38 +36,27 @@
 
 | Evento | Descrizione |
 |--------|-------------|
-| `ProfileSaved` | UPDATE ok; `isSaving = false`. |
-| `ProfileSaveFailed` | Eccezione save; `error` + rethrow. |
-| `AvatarUploaded` | Storage ok; URL restituito. |
-| `AvatarUploadFailed` | File troppo grande o errore storage. |
-| `AuthProfileRefreshed` | Manifest e `auth.profile` allineati. |
-| `PeerProfileOpened` | Dialog fullscreen visibile. |
-| `PeerProfileHydrated` | Campi server uniti a snapshot parziale. |
-| `AllowToggled` | Allow list aggiornata (overlay o screen). |
-| `RubricaToggled` | Contatto internal aggiunto/rimosso. |
-| `ConversationOpenRequested` | Navigation verso peer da overlay. |
+| `ProfileSaved` | Profilo proprio aggiornato con successo. |
+| `ProfileSaveFailed` | Salvataggio profilo fallito. |
+| `AvatarUploaded` | Avatar caricato; URL disponibile. |
+| `AvatarUploadFailed` | Upload avatar fallito (dimensione o rete). |
+| `AuthProfileRefreshed` | Identità sessione e manifest allineati. |
+| `PeerProfileOpened` | Overlay peer visibile. |
+| `PeerProfileHydrated` | Profilo peer completo da server. |
+| `AllowToggled` | Allow list aggiornata da overlay. |
+| `RubricaToggled` | Rubrica aggiornata da overlay. |
+| `ConversationOpenRequested` | Richiesta apertura chat verso peer. |
 
 ---
 
-## Stati UI
+## Policy
 
-### ProfileController (profilo proprio)
-
-| Stato | Campo / condizione |
-|-------|-------------------|
-| `Idle` | `isSaving == false`, `isUploadingAvatar == false` |
-| `Saving` | `isSaving == true` |
-| `UploadingAvatar` | `isUploadingAvatar == true` |
-
-Save e upload sono mutuamente esclusivi nell'uso attuale (`_pickAvatar` fa upload poi save).
-
-### PeerProfileOverlay (locale)
-
-| Stato | Campo / condizione |
-|-------|-------------------|
-| `Displaying` | Profilo in `_profile` (parziale o idratato) |
-| `AllowBusy` | `_allowBusy` durante toggle allow |
-| `RubricaBusy` | `_rubricaBusy` durante toggle rubrica |
+| Policy | Trigger | Azione |
+|--------|---------|--------|
+| **No self overlay** | `OpenPeerProfile` su profilo proprio | Ignorato |
+| **Username read-only** | `SaveProfile` | Username non modificabile (scope attuale) |
+| **Campi opzionali vuoti** | `SaveProfile` | Bio/pronomi → null se vuoti dopo trim |
+| **Toggle immediati** | Allow / rubrica in overlay | Nessun dialog di conferma |
 
 ---
 

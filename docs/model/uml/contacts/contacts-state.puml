@@ -1,28 +1,30 @@
 @startuml contacts-state
 ' Context: contacts
 ' SDD: PROM-PERSONAL-CONTACTS, SYS-CONTACTS
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
-title Contacts — ContactsController state machine
+title Contacts — ContactsMachine
 
-state Loading : isLoading = true
-state Ready : contacts in memory\nisLoading = false
+state Loading
+state Ready
 
-[*] --> Loading : LoadContacts\n[constructor]
+[*] --> Loading : LoadContacts
 
 Loading --> Ready : ContactsLoaded
-Loading --> Ready : ContactsLoadFailed\n[error set]
+Loading --> Ready : ContactsLoadFailed
 
-Ready --> Ready : SetSearchQuery\n/ filteredContacts
-Ready --> Ready : AddInternalContact\n/ reload LoadContacts
-Ready --> Ready : AddExternalContact\n/ reload LoadContacts
-Ready --> Ready : RemoveInternalContact\n/ reload LoadContacts
+Ready --> Loading : LoadContacts\n[after CRUD]
+Ready --> Ready : SetSearchQuery
+Ready --> Ready : AddInternalContact
+Ready --> Ready : AddExternalContact
+Ready --> Ready : RemoveInternalContact
 
 note right of Ready
-  Ricerca lista: filtro locale
-  (filterByQuery), non cambia stato.
-  Sheet aggiunta: SearchProfiles
-  è UI locale nel bottom sheet.
+  SearchProfiles is a command
+  handled in UI sheet; results are
+  local until AddInternalContact.
+  List filter (SetSearchQuery) does
+  not change machine state.
 end note
 
 @enduml

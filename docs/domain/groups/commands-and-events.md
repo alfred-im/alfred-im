@@ -1,43 +1,39 @@
 # Comandi ed eventi — contesto groups
 
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **UML:** [docs/model/uml/groups/](../../model/uml/groups/)
 
 ---
 
-## Comandi — home (`GroupHomeController`)
+## Comandi — home gruppo
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `LoadGroupHome` | Init / `reload()` | `fetchFullProfile` + `fetchOwnerMessages`; aggrega conteggi e autori attivi. |
-| `BuildConversationTile` | Post-load | Deriva `ChatPeer` da ultimo messaggio storico (o profilo vuoto). |
-| `BuildActiveAuthors` | Post-load | Conta messaggi per `contentAuthorId` / `authorId` escluso gruppo; ordina per count. |
+| `LoadGroupHome` | Policy (init / refresh) | Carica riepilogo home: conteggi, autori attivi, tile conversazione. |
+| `BuildConversationTile` | Policy (post-load) | Deriva anteprima conversazione dallo storico gruppo. |
+| `BuildActiveAuthors` | Policy (post-load) | Aggrega autori umani attivi nello storico. |
 
 ---
 
-## Comandi — conversazione (`GroupMessagesController`)
+## Comandi — conversazione gruppo
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `LoadGroupMessages` | Init / `reload()` | RPC `list_owner_messages`; enrich autori e `timeLabel`. |
-| `AttachOwnerRealtime` | Init | `subscribeToOwnerMessages` su `owner_id = gruppo`. |
-| `BroadcastMessage` | ChatInputBar | Testo → `broadcastToAllowlist` + `clientMessageId`. |
-| `BroadcastGif` | ChatInputBar | Upload GIF + `broadcastGifToAllowlist`. |
-| `BroadcastVoice` | ChatInputBar | Upload voice + `broadcastVoiceToAllowlist`. |
-| `BroadcastImage` | ChatInputBar | Upload image + `broadcastImageToAllowlist`. |
-| `BroadcastVideo` | ChatInputBar | Upload video + `broadcastVideoToAllowlist`. |
-| `BroadcastLocation` | ChatInputBar | `broadcastLocationToAllowlist` con coordinate arrotondate. |
-| `DisposeGroupMessages` | Dispose screen | `disposeChannel` realtime. |
+| `InitGroupMessages` | Policy (apertura chat gruppo) | Avvia ciclo di vita conversazione gruppo. |
+| `LoadGroupMessages` | Policy (init / refresh) | Carica storico archivio gruppo. |
+| `AttachOwnerRealtime` | Policy (post-load) | Sottoscrive aggiornamenti sull'archivio owner del gruppo. |
+| `BroadcastRequested` | Utente | Invia contenuto (testo, media, posizione) a tutta l'allow list. |
+| `DisposeGroupMessages` | Policy (chiusura chat) | Termina sottoscrizione realtime gruppo. |
 
 ---
 
-## Comandi — shell / navigazione
+## Comandi — navigazione shell gruppo
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `OpenGroupChat` | Tap tile home / mobile | `AccountViewState.groupChatOpen = true` — mostra `GroupConversationScreen`. |
-| `BackToGroupHome` | Back header mobile | Ripristina home gruppo. |
-| `RefreshGroupHome` | Callback post-broadcast | `GroupHomeController.reload()` dopo messaggio inviato. |
+| `OpenGroupChat` | Utente | Apre conversazione gruppo dalla home. |
+| `BackToGroupHome` | Utente | Torna alla home gruppo da chat aperta. |
+| `RefreshGroupHome` | Policy (post-broadcast) | Aggiorna riepilogo home dopo invio riuscito. |
 
 ---
 
@@ -45,48 +41,36 @@
 
 | Evento | Descrizione |
 |--------|-------------|
-| `GroupHomeLoaded` | Conteggi, autori, tile pronti; `isLoading = false`. |
-| `GroupHomeLoadFailed` | Errore fetch; `error` valorizzato. |
-| `GroupMessagesLoaded` | Storico pronto. |
-| `GroupMessagesLoadFailed` | Errore load storico. |
-| `BroadcastStarted` | `isSending = true`. |
-| `BroadcastAcknowledged` | RPC ok; `load()` + callback home. |
-| `BroadcastFailed` | Eccezione RPC/upload; `error` valorizzato. |
-| `OwnerRealtimeReceived` | INSERT/UPDATE su archivio gruppo — merge o append + sort. |
-| `AuthorNamesEnriched` | `fetchSummariesByIds` completato per etichette autore. |
+| `GroupHomeLoaded` | Home gruppo pronta. |
+| `GroupHomeLoadFailed` | Caricamento home fallito. |
+| `GroupMessagesLoaded` | Storico gruppo disponibile. |
+| `GroupMessagesLoadFailed` | Caricamento storico fallito. |
+| `BroadcastAcknowledged` | Broadcast confermato dal server. |
+| `BroadcastFailed` | Broadcast fallito. |
+| `OwnerRealtimeReceived` | Nuovo messaggio o aggiornamento su archivio gruppo. |
+| `AuthorNamesEnriched` | Etichette autore disponibili per messaggi gruppo. |
 
 ---
 
-## Stati UI
+## Policy
 
-### `GroupHomeController`
-
-| Stato | Condizione |
-|-------|------------|
-| `Loading` | `isLoading == true` |
-| `Ready` | `isLoading == false`, `error == null` |
-| `Error` | `error != null` |
-
-### `GroupMessagesController`
-
-| Stato | Condizione |
-|-------|------------|
-| `Loading` | `isLoading == true` |
-| `Ready` | `isLoading == false`, `isSending == false` |
-| `Sending` | `isSending == true` (broadcast in corso) |
-| `Error` | `error != null` |
-| `RealtimeAttached` | `_channel != null` |
+| Policy | Trigger | Azione |
+|--------|---------|--------|
+| **Broadcast serializzato** | `BroadcastRequested` in corso | Nessun secondo broadcast parallelo. |
+| **Nessun optimistic** | Broadcast riuscito | Ricarica storico — nessuna bolla pending client. |
+| **Refresh home** | `BroadcastAcknowledged` | `RefreshGroupHome` |
+| **Gate allow list** | Recapito / erogazione | Solo partecipanti con consenso bidirezionale ricevono copie. |
 
 ---
 
-## Backend (riferimento worker)
+## Sistemi esterni
 
-| Comando RPC | Evento worker | Effetto |
-|-------------|---------------|---------|
-| `send_message_to_profile` (dest = gruppo) | `deliver` → `deliver_internal` | INSERT storico gruppo + `erogate_group_message` |
-| `broadcast_message_to_allowlist` | `group_erogate` → `group_erogate` | Fan-out allow list da riga archivio gruppo |
+| Sistema | Ruolo |
+|---------|------|
+| **Supabase** | RPC broadcast, storico owner, Realtime archivio gruppo. |
+| **delivery** | Fan-out erogazione verso partecipanti allow list. |
 
-Dettaglio sequenze: contesto **delivery** e [SYS-GROUP](../../specs/promises/system/SYS-GROUP.md).
+Dettaglio sequenze worker: contesto **delivery** e [SYS-GROUP](../../specs/promises/system/SYS-GROUP.md).
 
 ---
 
@@ -95,5 +79,5 @@ Dettaglio sequenze: contesto **delivery** e [SYS-GROUP](../../specs/promises/sys
 | Elemento | Promessa |
 |----------|----------|
 | Account gruppo, allow list, erogazione | SYS-GROUP |
-| Outbox `group_erogate`, worker | SYS-DELIVERY |
+| Outbox gruppo, worker | SYS-DELIVERY |
 | Shell senza inbox, autore in bolla | SURF-GROUP-*, PROM-GROUP-AUTHOR-DISPLAY |

@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto notifications
 
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **Diagrammi:** [docs/model/uml/notifications/](../../model/uml/notifications/)
 
 ---
@@ -9,32 +9,32 @@
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `CheckPushSupport` | App bootstrap | Verifica `PushManager` + `serviceWorker`. |
-| `SyncSubscriptions` | `sessionReady`, login, add account, resume app | Registra/aggiorna subscription per tutti gli account nel manifest. |
-| `UnregisterSubscription` | Chiudi account | DELETE server + `unsubscribe` locale se ultimo account. |
-| `UpdateSuppressionState` | `PushSuppressionBinder` | Invia focus + peer attivo + visibilità app al SW. |
-| `HandlePushPayload` | Service worker (`push`) | Valuta soppressione; mostra `Notification` o ignora. |
-| `OpenFromPushTap` | Service worker (`notificationclick`) | Focus finestra + `open_chat` verso client (→ navigation). |
-| `EnqueueOpenChat` | `PushNotificationListener` | Accoda intent tap; serializza handler. |
-| `DrainPendingOpenChat` | `sessionReady`, `hashchange` | Consuma pending / fragment launch. |
+| `CheckPushSupport` | Policy (bootstrap app) | Verifica supporto Web Push nel browser. |
+| `SyncSubscriptions` | Policy (sessione pronta, login, resume) | Registra/aggiorna subscription per tutti gli account nel manifest. |
+| `UnregisterSubscription` | Policy (chiusura account) | Rimuove subscription server e locale se ultimo account. |
+| `UpdateSuppressionState` | Policy (focus/visibilità chat) | Invia stato soppressione al service worker. |
+| `HandlePushPayload` | Service worker (`push`) | Valuta soppressione; mostra notifica o ignora. |
+| `OpenFromPushTap` | Service worker (`notificationclick`) | Focus finestra + intent chat verso client (→ navigation). |
+| `EnqueueOpenChat` | Policy (intent tap ricevuto) | Accoda intent apertura chat; serializza handler. |
+| `DrainPendingOpenChat` | Policy (sessione pronta, hashchange) | Consuma intent pending o fragment launch. |
 
 ---
 
-## Eventi di dominio (cosa è successo)
+## Eventi di dominio
 
 | Evento | Dopo | Descrizione |
 |--------|------|-------------|
 | `PushUnsupported` | `CheckPushSupport` | Ambiente senza Web Push. |
-| `PermissionDenied` | subscribe / permesso browser | `Notification.permission === denied`. |
-| `SubscriptionRegistered` | `SyncSubscriptions` ok | Chiavi VAPID + UPSERT `push_subscriptions`. |
+| `PermissionDenied` | subscribe / permesso browser | Permesso notifiche negato. |
+| `SubscriptionRegistered` | `SyncSubscriptions` ok | Subscription registrata per device e account. |
 | `SubscriptionSyncFailed` | errore rete/SW | Subscription locale o server non aggiornata. |
-| `SuppressionStateApplied` | SW riceve `alfred_push_suppression` | RAM SW aggiornata. |
+| `SuppressionStateApplied` | SW riceve stato soppressione | RAM service worker aggiornata. |
 | `PushNotificationSuppressed` | `HandlePushPayload` + soppressione attiva | Nessuna notifica visibile. |
-| `PushNotificationShown` | `showNotification` | Notifica visibile con titolo/anteprima. |
-| `OpenChatIntentReceived` | SW `postMessage` o pending drain | Client ha `PushOpenChatIntent` valido. |
-| `OpenChatDeferred` | `sessionNotReady` | Intent in `alfred_pending_open_chat`. |
+| `PushNotificationShown` | notifica mostrata | Notifica visibile con titolo/anteprima. |
+| `OpenChatIntentReceived` | SW postMessage o pending drain | Client ha intent chat valido. |
+| `OpenChatDeferred` | sessione non pronta | Intent persistito fino a `sessionReady`. |
 | `OpenChatForwarded` | handler ok | Comando delegato a navigation (`OpenFromPushTap`). |
-| `OpenChatRejected` | account non aperto / peer irrisolvibile dopo retry | Intent scartato; **nessuna** chat stale su altro peer |
+| `OpenChatRejected` | account non aperto / peer irrisolvibile | Intent scartato; nessuna chat stale su altro peer. |
 
 ---
 
@@ -42,26 +42,26 @@
 
 | Policy | Trigger | Azione |
 |--------|---------|--------|
-| **Sopprimi in chat attiva** | `PushNotificationReceived` + `shouldSuppress` | `PushNotificationSuppressed` |
-| **Persisti se sessione non pronta** | `OpenChatIntentReceived` + `!sessionReady` | `OpenChatDeferred` |
-| **Serializza tap** | Più `OpenChatIntentReceived` rapidi | Coda `_openChatChain` |
-| **No push su denied** | `permission === denied` | Skip `SyncSubscriptions` |
-| **Re-sync on resume** | `AppLifecycleState.resumed` | `SyncSubscriptions` |
+| **Sopprimi in chat attiva** | Push ricevuta + soppressione attiva | `PushNotificationSuppressed` |
+| **Persisti se sessione non pronta** | `OpenChatIntentReceived` + sessione non pronta | `OpenChatDeferred` |
+| **Serializza tap** | Più intent rapidi | Coda handler |
+| **No push su denied** | permesso negato | Skip `SyncSubscriptions` |
+| **Re-sync on resume** | App torna in foreground | `SyncSubscriptions` |
 
 ---
 
 ## Sistemi esterni
 
 | Sistema | Ruolo |
-|---------|--------|
-| **Browser Push API** | `pushManager.subscribe`, `Notification.permission` |
-| **Service worker** (`push_sw.js`) | `push`, `notificationclick`, soppressione RAM |
-| **Supabase** | `push_subscriptions`, Edge Function `send-push` |
-| **Delivery worker** | Evento `push_notify` post-recapito |
+|---------|------|
+| **Browser Push API** | Subscription, permesso, visualizzazione notifica |
+| **Service worker** | Ricezione push, click, soppressione RAM |
+| **Supabase** | Registro subscription, Edge Function invio push |
+| **Delivery worker** | Evento push post-recapito riuscito |
 
 ---
 
-## Tracciabilità SDD (riferimento, non duplicazione)
+## Tracciabilità SDD
 
 | Elemento modello | Promessa |
 |------------------|----------|
@@ -69,4 +69,4 @@
 | `SyncSubscriptions` | PROM-PUSH-NOTIFY-001–004, SURF-NOTIFICATIONS-001–004 |
 | Soppressione | PROM-PUSH-NOTIFY-022–024, SURF-NOTIFICATIONS-008 |
 | `OpenFromPushTap` | PROM-PUSH-NOTIFY-030, SURF-NOTIFICATIONS-006–007 |
-| Server `push_notify` | SYS-PUSH-020–026 |
+| Server push | SYS-PUSH-020–026 |

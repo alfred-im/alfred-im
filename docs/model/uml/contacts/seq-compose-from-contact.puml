@@ -1,29 +1,25 @@
 @startuml seq-compose-from-contact
 ' Context: contacts
 ' SDD: PROM-PERSONAL-CONTACTS-006
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title Contacts — scorciatoia «Scrivi» da rubrica
 
-actor User
-participant "ContactsScreen" as UI
-participant "ComposeService" as Compose
-participant "Navigation" as Nav
+actor Utente
+participant "UI" as UI
+participant "ContactsMachine" as CM
+participant "NavigationMachine" as Nav
 
-User -> UI : tap icona chat su contatto
+Utente -> UI : tap scrivi su contatto
 
-alt protocol == internal
-  UI -> Compose : peerFromContact(contact)
-  Compose --> UI : ChatPeer.fromProfile
-  UI -> Nav : Navigator.pop(peer)
-  note right of Nav
-    Chiamante apre conversazione
-    (stesso percorso compose)
-  end note
-else protocol == xmpp | matrix
-  UI -> Compose : peerFromContact(contact)
-  Compose --> UI : StateError\n«Indirizzo esterno non ancora supportato»
-  UI -> User : SnackBar errore
+alt contatto internal
+  UI -> CM : ComposeFromContact(contact)
+  CM --> UI : ComposePeerResolved\n(ChatPeer)
+  UI -> Nav : OpenFromCompose(peer)
+else contatto esterno
+  UI -> CM : ComposeFromContact(contact)
+  CM --> UI : ComposeRejected
+  UI -> Utente : messaggio errore
 end
 
 @enduml

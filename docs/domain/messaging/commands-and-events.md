@@ -1,27 +1,28 @@
 # Comandi ed eventi — contesto messaging
 
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **UML:** [docs/model/uml/messaging/](../../model/uml/messaging/)
 
 ---
 
-## Comandi
+## Comandi (intento)
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `LoadMessages` | Init / `reload()` | RPC `list_peer_messages`; dedupe + enrich autori gruppo. |
-| `MarkRead` | Init chat | RPC `mark_peer_read` sul peer aperto. |
-| `AttachRealtime` | Init chat | `MessageService.subscribeToPeerMessages` — canale `owner_id` + filtro peer. |
-| `SendMessage` | ChatInputBar | Testo: optimistic + coda + `send_message_to_profile`. |
-| `SendGif` | ChatInputBar | Upload GIF + RPC `content_type=gif`. |
-| `SendVoice` | ChatInputBar (hold) | Upload voice + RPC `content_type=voice` — vedi contesto **media**. |
-| `SendLocation` | ChatInputBar (pin) | RPC `content_type=location` — coordinate arrotondate. |
-| `SendImage` | ChatInputBar | Upload image + RPC — flusso dedicato (no `_sendOptimistic`). |
-| `SendVideo` | ChatInputBar | Upload video + RPC — flusso dedicato con probe durata. |
-| `RetryMessage` | Tap bolla failed | Ricarica item da coda e `_dispatchQueueItem`. |
-| `QueueRetry` | Timer 15 s | `_processRetries` — backoff esponenziale per item in coda. |
-| `RestoreFailedQueue` | Init post-load | Reidrata bolle `failed` da `OutboundMessageQueue`. |
-| `DisposeMessaging` | Chiudi chat | Cancel timer, `disposeChannel`, `outboundQueue.dispose`. |
+| `LoadMessages` | Policy (apertura conversazione) | Carica storico messaggi del peer aperto. |
+| `ReloadMessages` | Utente | Aggiorna la lista messaggi. |
+| `MarkRead` | Policy (apertura conversazione) | Segna come letti i messaggi del peer aperto. |
+| `AttachRealtime` | Policy (post-load) | Attiva aggiornamenti realtime sulla conversazione. |
+| `DetachRealtime` | Policy (chiusura conversazione) | Disattiva sottoscrizione realtime. |
+| `SendMessage` | Utente | Invia contenuto testuale. |
+| `SendGif` | Utente | Invia GIF. |
+| `SendVoice` | Utente | Invia messaggio vocale — vedi contesto **media**. |
+| `SendLocation` | Utente | Invia posizione — vedi contesto **media**. |
+| `SendImage` | Utente | Invia immagine — vedi contesto **media**. |
+| `SendVideo` | Utente | Invia video — vedi contesto **media**. |
+| `RetryMessage` | Utente | Ritenta invio di un messaggio fallito. |
+| `ProcessOutboundRetries` | Policy (timer) | Riprocessa la coda outbound con backoff. |
+| `RestoreFailedOutbound` | Policy (post-load) | Reidrata messaggi falliti dalla coda persistente. |
 
 ---
 
@@ -29,38 +30,37 @@
 
 | Evento | Descrizione |
 |--------|-------------|
-| `MessagesLoaded` | Lista pronta; `isLoading = false`. |
-| `LoadFailed` | Errore fetch; `error` valorizzato. |
-| `OptimisticInserted` | Bolla `pending` aggiunta alla lista. |
-| `SendAcknowledged` | RPC ok — merge bolla con riga server; rimozione da coda. |
-| `SendFailed` | Eccezione — `status: failed`, item aggiornato in coda. |
-| `RealtimeReceived` | INSERT/UPDATE peer-relevant — merge in lista. |
-| `DeliveryTickReceived` | UPDATE con sole date spunte su bolla `isMine`. |
-| `RetryDispatched` | `_dispatchQueueItem` completato o fallito. |
-| `SessionExpired` | `hasValidSession()` false — blocca load/send. |
-| `InboxRefreshRequested` | Callback `onMessagesChanged` dopo invio riuscito. |
+| `MessagesLoaded` | Storico conversazione disponibile. |
+| `LoadFailed` | Caricamento fallito; errore esposto all'utente. |
+| `SessionExpired` | Sessione non valida — nessun load né invio. |
+| `OptimisticInserted` | Messaggio pending inserito in lista prima dell'ACK. |
+| `SendAcknowledged` | Invio confermato dal server; merge con riga archivio. |
+| `SendFailed` | Invio fallito; messaggio marcato failed in coda. |
+| `RealtimeReceived` | Nuovo messaggio o aggiornamento contenuto da realtime. |
+| `DeliveryTickReceived` | Aggiornamento sole spunte su messaggio mittente. |
+| `RetryDispatched` | Tentativo retry outbound completato o fallito. |
+| `InboxRefreshRequested` | Richiesta aggiornamento anteprima inbox dopo invio riuscito. |
 
 ---
 
-## Stati UI (MessagesController)
+## Policy
 
-| Stato | Campo / condizione |
-|-------|-------------------|
-| `Loading` | `isLoading == true` |
-| `Ready` | `isLoading == false`, `isSending == false` |
-| `Sending` | `isSending == true` |
-| `Error` | `error != null` (coesiste con Ready) |
-| `RealtimeAttached` | `_channel != null` |
+| Policy | Trigger | Azione |
+|--------|---------|--------|
+| **Init conversazione** | Apertura chat | `LoadMessages` → `RestoreFailedOutbound` → `MarkRead` → `AttachRealtime` → avvio timer retry. |
+| **Invio serializzato** | `Send*` in corso | Blocca invii paralleli e retry automatici nella stessa conversazione. |
+| **Merge senza duplicati** | `RealtimeReceived` o ACK | Una sola bolla per `client_message_id`; preserva media su tick-only. |
+| **Sessione scaduta** | `SessionExpired` | Nessun load né send; errore sessione all'utente. |
+| **Realtime per focus** | Cambio account in focus | Solo conversazione dell'account attivo resta sottoscritta. |
 
 ---
 
-## Merge e deduplica
+## Sistemi esterni
 
-| Regola | Implementazione |
-|--------|-----------------|
-| Chiave merge | `id`, `clientMessageId`, incrocio id ↔ clientMessageId |
-| Tick-only | `mergeChatMessage` preserva media se incoming senza contenuto renderizzabile |
-| Dedupe load | `_dedupeMessages` su batch RPC |
+| Sistema | Ruolo |
+|---------|------|
+| **Supabase** | RPC mailbox, storage media, canale Realtime owner. |
+| **Coda outbound persistente** | Retry messaggi e media dopo fallimento rete/upload. |
 
 ---
 

@@ -1,34 +1,34 @@
 # Comandi ed eventi — contesto delivery
 
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **UML:** [docs/model/uml/delivery/](../../model/uml/delivery/)  
 **Nota:** nessuno statechart client — solo sequenze worker.
 
 ---
 
-## Comandi (account RPC → accodano outbox)
+## Comandi (accodamento da RPC account)
 
-| Comando | Emesso da | Outbox `event_kind` | Descrizione |
-|---------|-----------|---------------------|-------------|
-| `EnqueueDeliver` | `send_message_to_profile` | `deliver` | INSERT copia mittente + payload λ, recipient, snapshot contenuto. |
-| `EnqueueGroupErogate` | `broadcast_message_to_allowlist` | `group_erogate` | INSERT riga archivio gruppo + payload broadcast. |
-| `EnqueueReadReceipt` | `mark_peer_read` | `read_receipt` | Per ogni λ letto: payload `sender_profile_id`, `reader_id`. |
+| Comando | Emesso da | Tipo outbox | Descrizione |
+|---------|-----------|-------------|-------------|
+| `EnqueueDeliver` | Policy (invio messaggio) | `deliver` | Accoda recapito copia mittente verso destinatario. |
+| `EnqueueGroupErogate` | Policy (broadcast gruppo) | `group_erogate` | Accoda erogazione fan-out da archivio gruppo. |
+| `EnqueueReadReceipt` | Policy (mark read) | `read_receipt` | Accoda propagazione spunta lettura al mittente. |
 
-Ogni accodamento termina con `perform alfred_delivery.process_outbox(outbox_id)` nella stessa transazione (internal).
+Ogni accodamento attiva il worker nella stessa transazione (internal).
 
 ---
 
-## Comandi worker (`alfred_delivery`)
+## Comandi worker
 
-| Comando | Handler | Descrizione |
-|---------|---------|-------------|
-| `ProcessOutbox` | `process_outbox(uuid)` | Legge `event_kind`; delega a handler. |
-| `DeliverInternal` | `deliver_internal(uuid)` | Gate + INSERT destinatario/gruppo + `delivered_at` + eventuale erogazione. |
-| `GroupErogate` | `group_erogate(uuid)` | Fan-out da riga archivio gruppo. |
-| `ErogateGroupMessage` | `erogate_group_message(...)` | Loop allow list partecipanti con gate per-partecipante. |
-| `ProcessReadReceipt` | `process_read_receipt(uuid)` | Chiama `propagate_read_receipt`. |
-| `PropagateReadReceipt` | `propagate_read_receipt(λ, sender)` | UPDATE `read_at` copia mittente. |
-| `CompleteOutbox` | tutti gli handler | `outbox.status = completed`, `updated_at = now()`. |
+| Comando | Descrizione |
+|---------|-------------|
+| `ProcessOutbox` | Legge tipo evento outbox e delega all'handler. |
+| `DeliverInternal` | Applica gate reception e materializza copia destinatario. |
+| `GroupErogate` | Fan-out da riga archivio gruppo. |
+| `ErogateGroupMessage` | Eroga messaggio a ogni partecipante allow list. |
+| `ProcessReadReceipt` | Propaga `read_at` sulla copia mittente. |
+| `PropagateReadReceipt` | Aggiorna spunta lettura sul messaggio originale. |
+| `CompleteOutbox` | Marca outbox completata. |
 
 ---
 
@@ -36,28 +36,28 @@ Ogni accodamento termina con `perform alfred_delivery.process_outbox(outbox_id)`
 
 | Evento | Descrizione |
 |--------|-------------|
-| `OutboxQueued` | Riga outbox INSERT con `status = queued`. |
-| `DeliveryGatePassed` | `is_sender_allowed_for_reception` (e bidirezionale se gruppo) true. |
-| `DeliveryGateRejected` | Gate fallito; payload `reception_rejected: true`; nessuna copia destinatario. |
-| `RecipientCopyMaterialized` | INSERT `messages` su archivio destinatario o gruppo. |
-| `SenderDeliveredAtSet` | UPDATE `delivered_at` su copia mittente (✓✓ grigie). |
-| `GroupArchiveUpdated` | Messaggio umano inserito in storico gruppo (`owner_id = gruppo`). |
-| `ParticipantCopyErogated` | INSERT copia proxy su archivio partecipante (stesso λ). |
-| `ReadAtPropagated` | UPDATE `read_at` su copia mittente da read receipt. |
-| `OutboxCompleted` | Handler terminato; outbox `completed`. |
-| `PushNotifyEnqueued` | (SYS-PUSH) Post-recapito riuscito — `event_kind = push_notify`. |
+| `OutboxQueued` | Evento accodato per elaborazione asincrona. |
+| `DeliveryGatePassed` | Mittente autorizzato per recapito al destinatario. |
+| `DeliveryGateRejected` | Gate fallito; nessuna copia destinatario. |
+| `RecipientCopyMaterialized` | Copia destinatario creata in archivio. |
+| `SenderDeliveredAtSet` | Spunta doppia valorizzata su copia mittente. |
+| `GroupArchiveUpdated` | Messaggio inserito in storico gruppo. |
+| `ParticipantCopyErogated` | Copia proxy su archivio partecipante. |
+| `ReadAtPropagated` | Spunta lettura propagata al mittente. |
+| `OutboxCompleted` | Handler terminato con successo. |
+| `PushNotifyEnqueued` | Push accodata post-recapito riuscito. |
 
 ---
 
-## Policy (Event Storming)
+## Policy
 
 | Policy | Trigger | Azione |
 |--------|---------|--------|
-| **Gate before deliver** | `ProcessOutbox` + `event_kind = deliver` | Valuta reception allow list destinatario prima di INSERT. |
-| **Bidirectional group gate** | Destinatario o mittente è gruppo | Richiede allow list in **entrambe** le direzioni. |
-| **Auto-erogate on group receive** | INSERT storico gruppo da umano | `erogate_group_message` nella stessa transazione. |
-| **Silent skip erogation** | Partecipante non passa gate | `continue` nel loop — nessun effetto su spunte originali. |
-| **No cross-boundary RPC** | Qualsiasi account RPC | Vietato INSERT/UPDATE su archivio altrui. |
+| **Gate before deliver** | `ProcessOutbox` tipo deliver | Valuta allow list destinatario prima di INSERT. |
+| **Bidirectional group gate** | Mittente o destinatario è gruppo | Allow list richiesta in entrambe le direzioni. |
+| **Auto-erogate on group receive** | Messaggio umano in storico gruppo | Erogazione nella stessa transazione. |
+| **Silent skip erogation** | Partecipante non passa gate | Nessun effetto su spunte originali. |
+| **No cross-boundary write** | Qualsiasi RPC account | Vietato scrivere su archivio altrui. |
 
 ---
 
@@ -65,10 +65,10 @@ Ogni accodamento termina con `perform alfred_delivery.process_outbox(outbox_id)`
 
 | Stato | Significato |
 |-------|-------------|
-| `queued` | In attesa di consumer (`process_outbox` o bridge). |
+| `queued` | In attesa di consumer. |
 | `processing` | (futuro async) Consumer ha claimato la riga. |
 | `completed` | Handler terminato (anche su rejection silenziosa). |
-| `failed` | Errore transazione; `last_error` valorizzato. |
+| `failed` | Errore transazione; ultimo errore registrato. |
 
 Su internal sincrono, transizione `queued` → `completed` è atomica nella RPC account.
 
@@ -81,5 +81,5 @@ Su internal sincrono, transizione `queued` → `completed` è atomica nella RPC 
 | Outbox bus, event_kind | SYS-DELIVERY-001–009 |
 | Worker schema e handler | SYS-DELIVERY-010–017 |
 | Spunte via worker | SYS-DELIVERY-018–020 |
-| Gate in deliver_internal | SYS-RECEPTION + SYS-DELIVERY-012 |
+| Gate in deliver | SYS-RECEPTION + SYS-DELIVERY-012 |
 | Gruppo / erogazione | SYS-GROUP-015–026 |

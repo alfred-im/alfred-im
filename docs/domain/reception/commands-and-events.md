@@ -1,30 +1,30 @@
 # Comandi ed eventi — contesto reception
 
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **UML:** [docs/model/uml/reception/](../../model/uml/reception/)
 
 ---
 
-## Comandi — client UI
+## Comandi — gestione allow list (client)
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `LoadAllowlist` | Init `ReceptionAllowlistController` | `fetchAllowedPeople` con join `profiles`. |
-| `SetSearchQuery` | `AllowedPeopleScreen` | Filtra `filteredAllowedPeople` per `displayName`. |
-| `SearchProfiles` | Sheet aggiunta | RPC `search_profiles` (≥ 2 caratteri). |
-| `AddAllowedProfile` | Tap risultato / switch overlay ON | INSERT `reception_allowlist`; skip self e duplicati. |
-| `RemoveAllowedPerson` | Dialog conferma screen / switch overlay OFF | DELETE per `entryId` o `removeByProfileId`. |
+| `LoadAllowlist` | Policy (init / post-modifica) | Carica persone consentite a consegnare messaggi. |
+| `SetSearchQuery` | Utente | Filtra la lista per nome visualizzato. |
+| `SearchProfiles` | Utente | Cerca profili da aggiungere all'allow list. |
+| `AddAllowedProfile` | Utente | Consente recapito da un profilo. |
+| `RemoveAllowedPerson` | Utente | Revoca consenso recapito da un profilo. |
 
 ---
 
-## Comandi — server (delivery gate)
+## Comandi — gate recapito (server)
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `DeliverInternal` | Worker outbox | Dopo INSERT copia mittente, verifica allow list destinatario. |
-| `CheckSenderAllowed` | `is_sender_allowed_for_reception` | EXISTS riga `(owner=dest, allowed=sender)`. |
-| `MaterializeRecipientCopy` | Gate pass | INSERT copia destinatario + `delivered_at` su mittente. |
-| `SkipRecipientCopy` | Gate fail | Nessuna copia destinatario; `reception_rejected` solo audit server. |
+| `DeliverInternal` | Worker delivery | Valuta gate prima di materializzare copia destinatario. |
+| `CheckSenderAllowed` | Policy (gate) | Verifica che il mittente sia nell'allow list del destinatario. |
+| `MaterializeRecipientCopy` | Policy (gate pass) | Crea copia destinatario e aggiorna spunte mittente. |
+| `SkipRecipientCopy` | Policy (gate fail) | Nessuna copia destinatario; nessun errore al mittente. |
 
 ---
 
@@ -32,26 +32,25 @@
 
 | Evento | Descrizione |
 |--------|-------------|
-| `AllowlistLoaded` | Lista pronta; `isLoading = false`. |
-| `AllowlistLoadFailed` | Eccezione fetch; `error` valorizzato. |
-| `ProfileAllowed` | Riga inserita; lista ricaricata. |
-| `ProfileDisallowed` | Riga eliminata; lista ricaricata. |
-| `AddSkipped` | Self o duplicato — no-op client. |
-| `DeliveryAccepted` | Gate pass — mittente riceve ✓✓ (`delivered_at`). |
-| `DeliverySilentlyRejected` | Gate fail — mittente resta ✓; destinatario ignora. |
+| `AllowlistLoaded` | Allow list disponibile. |
+| `AllowlistLoadFailed` | Caricamento fallito. |
+| `ProfileAllowed` | Profilo aggiunto all'allow list. |
+| `ProfileDisallowed` | Profilo rimosso dall'allow list. |
+| `AddSkipped` | Self o duplicato — nessuna modifica. |
+| `DeliveryAccepted` | Gate superato — mittente riceve spunta doppia. |
+| `DeliverySilentlyRejected` | Gate fallito — mittente resta con spunta singola; destinatario ignora. |
 
 ---
 
-## Stati UI (ReceptionAllowlistController)
+## Policy
 
-| Stato | Campo / condizione |
-|-------|-------------------|
-| `Loading` | `isLoading == true` |
-| `Ready` | `isLoading == false` |
-| `Empty` | `allowedPeople.isEmpty` — copy «nessuno può consegnarti…» |
-| `Error` | `error != null` |
-
-`allowedProfileIds` è vista derivata (`Set<String>`) per lookup O(1) in overlay.
+| Policy | Trigger | Azione |
+|--------|---------|--------|
+| **Filtro sempre attivo** | Qualsiasi recapito | Gate obbligatorio — nessun toggle globale off. |
+| **Lista vuota** | Allow list senza voci | Nessun mittente passa il gate. |
+| **No retro-delivery** | `ProfileAllowed` tardivo | Solo messaggi nuovi recapitati. |
+| **Retention archivio** | `ProfileDisallowed` | Messaggi già in inbox destinatario restano. |
+| **Skip self** | `AddAllowedProfile` su profilo proprio | `AddSkipped` |
 
 ---
 
@@ -59,7 +58,7 @@
 
 | Ruolo | Gate fail |
 |-------|-----------|
-| Mittente | RPC ok; spunta singola permanente |
+| Mittente | Invio accettato; spunta singola permanente |
 | Destinatario | Messaggio assente da inbox |
 | Dopo rimozione da lista | Solo messaggi **nuovi** rifiutati |
 | Dopo aggiunta a lista | Nessuna retro-consegna |
@@ -75,4 +74,4 @@
 | Rifiuto silenzioso | PROM-RECEPTION-FILTER-005, 006 |
 | Isolamento rubrica | PROM-RECEPTION-FILTER-010 |
 | Gate server | SYS-RECEPTION-005–010 |
-| Toggle overlay | PROM-PEER-PROFILE-005 |
+| Toggle overlay peer | PROM-PEER-PROFILE-005 |

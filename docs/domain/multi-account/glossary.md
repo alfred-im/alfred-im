@@ -1,7 +1,7 @@
 # Glossario — contesto multi-account
 
 **Bounded context:** `multi-account`  
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **Promesse SDD:** [PROM-MULTI-ACCOUNT](../../specs/promises/product/PROM-MULTI-ACCOUNT.md), [SURF-AUTH](../../specs/surfaces/SURF-AUTH.md)
 
 ---
@@ -10,18 +10,18 @@
 
 | Termine | Definizione |
 |---------|-------------|
-| **Manifest** | Lista persistita `alfred_saved_accounts` — account **aperti**, non bookmark. |
-| **Focus** | `alfred_focus_user_id` — quale account mostra inbox/chat in UI. |
+| **Manifest** | Lista persistita account **aperti**, non bookmark. |
+| **Focus** | Account attivo in UI — quale inbox/chat è visibile. |
 | **Account aperto** | Voce nel manifest con refresh token valido. |
-| **AccountSession** | Connessione GoTrue + servizi in RAM; **al massimo una** attiva. |
+| **Account session** | Connessione auth + servizi in RAM; **al massimo una** attiva. |
 | **Switch focus** | Cambio account UI: dispose sessione corrente, restore nuova da manifest. |
-| **AccountViewState** | Stato UI per `userId` (chat aperta, inbox mobile) — persiste al cambio focus. |
-| **Auth overlay** | Login/registrazione sopra `HomeScreen`, non full-screen. |
-| **Sessione mancante** | Manifest + focus impostati ma `focusedSession == null` (ripristino in corso o fallito). |
-| **HasOpenAccounts** | Stato client: manifest non vuoto, sessione focus non ancora attiva (es. dopo `AccountOpened` senza restore). |
+| **Account view state** | Stato UI per account (chat aperta, inbox mobile) — persiste al cambio focus. |
+| **Auth overlay** | Login/registrazione sopra shell, non full-screen. |
+| **Sessione mancante** | Manifest + focus impostati ma sessione assente (ripristino in corso o fallito). |
+| **HasOpenAccounts** | Manifest non vuoto, sessione focus non ancora attiva. |
 | **FocusSwitching** | Stato transitorio: dispose sessione precedente + restore nuovo focus. |
-| **FocusedWithSession** | Focus persistito + `AccountSession` GoTrue in RAM. |
-| **FocusedAwaitingSession** | Focus persistito ma restore sessione non riuscito (ritentabile con `ReconnectFocusedSession`). |
+| **FocusedWithSession** | Focus persistito + sessione attiva in RAM. |
+| **FocusedAwaitingSession** | Focus persistito ma restore sessione non riuscito (ritentabile con reconnect). |
 
 ---
 
@@ -37,7 +37,7 @@
 
 ## Invarianti
 
-1. Una sola `AccountSession` GoTrue attiva in RAM.
+1. Una sola sessione auth attiva in RAM.
 2. Account in sidebar = account nel manifest.
-3. `setFocus` non usa `setSession` tra account già in RAM — dispose + restore.
-4. Storage auth per account: `alfred_auth_{userId}`.
+3. Cambio focus: dispose + restore — non scambio sessione in RAM tra account già aperti.
+4. Storage auth dedicato per ogni account.

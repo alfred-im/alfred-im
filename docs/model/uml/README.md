@@ -1,7 +1,7 @@
 # UML 2.5 — Alfred
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-18
+**Ultima revisione**: 2026-07-19
 
 Formalizzazione del modello di dominio in **UML 2.5** (PlantUML). È il livello **forma** tra significato (DDD) ed esecuzione (statechart / codice).
 

@@ -1,51 +1,51 @@
 @startuml seq-peer-profile-overlay
 ' Context: profile
 ' SDD: PROM-PEER-PROFILE
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title Profile — overlay peer (apertura e azioni)
 
-actor User
-participant "ProfileAvatar\n(tap)" as Tap
-participant "showPeerProfileOverlay" as Entry
-participant "PeerProfileOverlay" as Overlay
+actor Utente
+participant "UI" as UI
+participant "ProfileMachine" as PM
 participant "ProfileService" as ProfSvc
-participant "ReceptionAllowlistController" as Allow
-participant "ContactsController" as Contacts
-participant "AuthController" as Auth
+participant "ReceptionMachine" as RM
+participant "ContactsMachine" as CM
+participant "NavigationMachine" as Nav
 
-User -> Tap : tap avatar peer
-Tap -> Entry : showPeerProfileOverlay(context, profile)
+Utente -> UI : tap avatar peer
+UI -> PM : OpenPeerProfile(profile)
 
-alt profile.id == auth.userId
-  Entry --> Tap : return (no overlay)
+alt profilo proprio
+  PM --> UI : ignorato
 else peer Alfred
-  Entry -> Overlay : showGeneralDialog
-  Overlay -> ProfSvc : findById(profile.id)\n[HydratePeerProfile]
-  ProfSvc --> Overlay : ProfileSummary
-  Overlay -> Overlay : mergeDisplay
+  PM --> UI : PeerProfileOpened
+  PM -> ProfSvc : FindById
+  ProfSvc --> PM : PeerProfileHydrated
 
-  opt switch «Consenti messaggi» ON
-    User -> Overlay : ToggleAllowMessages(true)
-    Overlay -> Allow : addProfile(profile)
-    Allow -> Allow : LoadAllowlist
+  opt consente messaggi ON
+    Utente -> UI : ToggleAllowMessages(true)
+    UI -> RM : AddAllowedProfile
+    RM --> UI : AllowToggled
   end
 
-  opt switch OFF
-    User -> Overlay : ToggleAllowMessages(false)
-    Overlay -> Allow : removeByProfileId(profile.id)
+  opt consente messaggi OFF
+    Utente -> UI : ToggleAllowMessages(false)
+    UI -> RM : RemoveAllowedPerson
+    RM --> UI : AllowToggled
   end
 
   opt rubrica
-    User -> Overlay : ToggleRubrica
-    Overlay -> Contacts : addInternal / removeInternalByProfileId
-    Contacts -> Contacts : LoadContacts
+    Utente -> UI : ToggleRubrica
+    UI -> CM : AddInternalContact / RemoveInternalContact
+    CM --> UI : RubricaToggled
   end
 
-  opt «Inizia a chattare»
-    User -> Overlay : StartChatFromProfile
-    Overlay -> Auth : openConversation(ChatPeer.fromProfile)
-    Overlay -> Overlay : Navigator.pop
+  opt inizia a chattare
+    Utente -> UI : StartChatFromProfile
+    UI -> PM : ConversationOpenRequested
+    PM -> Nav : OpenFromCompose(peer)
+    PM --> UI : overlay chiuso
   end
 end
 

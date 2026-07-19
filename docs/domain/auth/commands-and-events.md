@@ -1,22 +1,22 @@
 # Comandi ed eventi — contesto auth
 
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **UML:** [docs/model/uml/auth/](../../model/uml/auth/)
 
 ---
 
-## Comandi
+## Comandi (intento)
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `BootstrapStarted` | `AuthController.initialize` | Avvio caricamento manifest / sessione focus. |
-| `BootstrapCompleted` | Fine `initialize` | `hasOpenAccounts` determina `NoSession` vs `SessionActive`. |
-| `OverlayOpenRequested` | «Aggiungi account», bootstrap senza account | `dismissible`: true se ≥1 account (`SURF-AUTH-003`). |
-| `OverlayCloseRequested` | Annulla su overlay dismissibile | Chiusura consentita solo se dismissibile o manifest non vuoto. |
-| `SignInRequested` | `AuthScreen` submit (modalità accedi) | Validazione email → `AccountManager.openWithPassword`. |
-| `SignUpRequested` | `AuthScreen` submit (modalità registrati) | Validazione + username disponibile → `openWithSignUp`. |
-| `ResetPasswordRequested` | Dialog recupero password | `AccountManager.resetPassword` via `EphemeralBootstrap`. |
-| `LastAccountRemoved` | `removeAccount` su ultimo account | Overlay obbligatorio (`SURF-AUTH-005`). |
+| `BootstrapStarted` | Policy (avvio app) | Inizia caricamento manifest e ripristino focus. |
+| `BootstrapCompleted` | Policy (fine bootstrap) | Determina se esiste almeno un account aperto. |
+| `OverlayOpenRequested` | Utente / Policy | Mostra overlay credenziali (aggiungi account o primo accesso). |
+| `OverlayCloseRequested` | Utente | Chiude overlay quando consentito. |
+| `SignInRequested` | Utente | Accesso con email e password. |
+| `SignUpRequested` | Utente | Registrazione nuovo account. |
+| `ResetPasswordRequested` | Utente | Richiesta recupero password. |
+| `LastAccountRemoved` | Policy (ultimo account chiuso) | Nessun account aperto — overlay obbligatorio. |
 
 ---
 
@@ -24,16 +24,28 @@
 
 | Evento | Descrizione |
 |--------|-------------|
-| `BootstrapReady` | `sessionReady = true`; overlay impostato se manifest vuoto. |
-| `OverlayMandatoryShown` | 0 account — overlay non dismissibile. |
+| `BootstrapReady` | App pronta; sessione utilizzabile o overlay impostato. |
+| `OverlayMandatoryShown` | Zero account — overlay non dismissibile. |
 | `OverlayDismissibleShown` | Aggiunta account — overlay chiudibile. |
 | `OverlayClosed` | Overlay nascosto; shell invariata. |
-| `OverlayCloseBlocked` | Tentativo chiusura con 0 account — ignorato. |
-| `AuthOperationStarted` | Rotella su card (`isLoading`). |
-| `AuthOperationCompleted` | Operazione riuscita; overlay chiuso se login/sign-up. |
-| `AuthOperationFailed` | Errore user-friendly su card; overlay invariato. |
-| `SessionEstablished` | Account nel manifest + focus; overlay chiuso (`SURF-AUTH-007`). |
-| `ValidationRejected` | Email/username/display name non validi — nessuna chiamata rete. |
+| `OverlayCloseBlocked` | Tentativo chiusura con zero account — ignorato. |
+| `AuthOperationStarted` | Operazione credenziali in corso. |
+| `AuthOperationCompleted` | Operazione riuscita. |
+| `AuthOperationFailed` | Operazione fallita; errore user-friendly. |
+| `SessionEstablished` | Account nel manifest con focus; overlay chiuso dopo login/sign-up. |
+| `ValidationRejected` | Dati non validi — nessuna chiamata rete. |
+
+---
+
+## Policy
+
+| Policy | Trigger | Azione |
+|--------|---------|--------|
+| **Overlay obbligatorio** | Zero account | Overlay non dismissibile ([SURF-AUTH-002]). |
+| **Overlay dismissibile** | ≥1 account, aggiunta account | Overlay chiudibile ([SURF-AUTH-003]). |
+| **Shell sempre visibile** | Qualsiasi stato auth | Nessuna route full-screen auth ([SURF-AUTH-001]). |
+| **Validazione pre-rete** | `SignIn*` / `SignUp*` | `ValidationRejected` se dati invalidi. |
+| **Chiusura post successo** | Login/sign-up ok | Overlay chiuso ([SURF-AUTH-007]). |
 
 ---
 

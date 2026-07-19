@@ -1,0 +1,23 @@
+@startuml realtime-attachment-state
+' Context: messaging
+' Machine: RealtimeAttachmentMachine
+' SDD: PROM-REALTIME-OWNER
+' Revision: 2026-07-19
+
+title Messaging — RealtimeAttachmentMachine
+
+state Detached
+state Attached
+
+[*] --> Detached
+
+Detached --> Attached : AttachRealtime
+Attached --> Detached : DetachRealtime
+
+note right of Attached
+  RealtimeReceived DeliveryTickReceived
+  are domain events handled while
+  ConversationLoadMachine is Ready
+end note
+
+@enduml

@@ -1,35 +1,33 @@
 @startuml seq-add-allowed-profile
 ' Context: reception
 ' SDD: PROM-RECEPTION-FILTER, SYS-RECEPTION-004
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title Reception — aggiunta profilo consentito
 
-actor User
-participant "AllowedPeopleScreen\nor PeerProfileOverlay" as UI
-participant "ReceptionAllowlistController" as Ctrl
-participant "ReceptionAllowlistService" as Svc
-database "Supabase\nreception_allowlist" as DB
+actor Utente
+participant "UI" as UI
+participant "ReceptionMachine" as RM
+participant "ReceptionService" as Svc
+participant "Supabase" as DB
 
-User -> UI : seleziona profilo / switch ON
-UI -> Ctrl : AddAllowedProfile(profile)
+Utente -> UI : consente profilo
+UI -> RM : AddAllowedProfile(profile)
 
-alt profile.id == ownerId
-  Ctrl --> UI : AddSkipped (no-op)
-else already in allowedProfileIds
-  Ctrl --> UI : AddSkipped (no-op)
+alt self o duplicato
+  RM --> UI : AddSkipped
 else
-  Ctrl -> Svc : addAllowedProfile(ownerId, profile)
-  Svc -> DB : INSERT reception_allowlist\n(owner_id, allowed_profile_id)
-  DB --> Svc : row + join profiles
-  Svc --> Ctrl : AllowedPerson
+  RM -> Svc : addAllowedProfile(owner, profile)
+  Svc -> DB : INSERT reception_allowlist
+  DB --> Svc : row
+  Svc --> RM : ProfileAllowed
 
-  Ctrl -> Ctrl : LoadAllowlist
-  Ctrl -> Svc : fetchAllowedPeople(ownerId)
+  RM -> RM : LoadAllowlist
+  RM -> Svc : fetchAllowedPeople(owner)
   Svc -> DB : SELECT + join profiles
   DB --> Svc : rows
-  Svc --> Ctrl : AllowedPerson[]
-  Ctrl --> UI : AllowlistLoaded
+  Svc --> RM : AllowlistLoaded
+  RM --> UI : lista aggiornata
 end
 
 @enduml

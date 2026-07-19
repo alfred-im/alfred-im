@@ -2,57 +2,51 @@
 ' Context: media
 ' Commands: SendImage, SendVideo, UploadMedia (retry)
 ' SDD: PROM-CHAT-MEDIA-001–007
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title seq-media-upload — foto / video con preview optimistic
 
 actor Utente
-participant "ChatInputBar" as UI
-participant "MessagesController" as MC
+participant "UI" as UI
+participant "MessagingCoordinator" as Coord
 participant "OutboundMediaCache" as Cache
-participant "OutboundMessageQueue" as Q
-participant "prepareImageForUpload" as Prep
+participant "OutboundQueue" as Q
 participant "MessageMediaService" as MMS
 participant "MessageService" as MS
 
 == Image ==
 
-Utente -> UI : pick image + optional caption
-UI -> MC : sendImage(bytes, caption)
-MC -> Cache : put(clientId, bytes)
-MC -> MC : optimistic image\nmediaUrl=pending://clientId
-MC -> UI : notifyListeners (preview)
+Utente -> UI : seleziona immagine
+UI -> Coord : SendImage
+Coord -> Cache : MediaCached
+Coord --> UI : optimistic preview (pending)
 
-MC -> Q : persistMediaBytes
-opt HEIC / resize
-  MC -> Prep : normalize
-  Prep --> MC : jpeg bytes, mime
-  MC -> Q : re-persist if changed
+Coord -> Q : MediaPersisted + enqueue
+opt HEIC / normalize
+  Coord --> Coord : ImageNormalized
 end
-MC -> Q : enqueue(image item)
-MC -> MMS : uploadImage
-MMS --> MC : public mediaUrl
-MC -> MS : sendImageToProfile
-MS --> MC : ack
-MC -> Q : remove + deleteMediaFile
+Coord -> MMS : UploadMedia
+MMS --> Coord : MediaUploaded
+Coord -> MS : send image to profile
+MS --> Coord : SendAcknowledged
+Coord -> Q : dequeue
 
 == Video ==
 
-Utente -> UI : pick video file
-UI -> MC : sendVideoFromPicker
-MC -> MC : optimistic video bubble
-MC -> MC : read bytes, probe duration
-MC -> Cache : put(clientId, bytes)
-MC -> Q : persist + enqueue
-MC -> MMS : uploadVideo
-MMS --> MC : mediaUrl
-MC -> MS : sendVideoToProfile
-MS --> MC : ack
-MC -> Q : remove + deleteMediaFile
+Utente -> UI : seleziona video
+UI -> Coord : SendVideo
+Coord --> UI : optimistic preview
+Coord -> Cache : MediaCached
+Coord -> Q : MediaPersisted + enqueue
+Coord -> MMS : UploadMedia
+MMS --> Coord : MediaUploaded
+Coord -> MS : send video to profile
+MS --> Coord : SendAcknowledged
+Coord -> Q : dequeue
 
 alt failure
-  MC -> Q : update failed item
-  MC -> MC : status=failed, retryPayloadPath
+  Coord --> UI : MediaUploadFailed
+  Coord -> Q : update failed item
 end
 
 @enduml

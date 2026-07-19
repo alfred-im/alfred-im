@@ -1,7 +1,7 @@
 # Glossario — contesto delivery
 
 **Bounded context:** `delivery`  
-**Ultima revisione:** 2026-07-18  
+**Ultima revisione:** 2026-07-19  
 **Promesse SDD:** [SYS-DELIVERY](../../specs/promises/system/SYS-DELIVERY.md), [SYS-ACCOUNT-BOUNDARY](../../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md)
 
 ---

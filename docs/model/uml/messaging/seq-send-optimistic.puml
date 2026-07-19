@@ -1,48 +1,45 @@
 @startuml seq-send-optimistic
 ' Context: messaging
-' Command: SendMessage (text, gif, voice, location via _sendOptimistic)
+' Command: SendMessage (text, gif, voice, location)
 ' SDD: PROM-OUTBOUND-SEND-001–004
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title seq-send-optimistic — testo / GIF / voice / location
 
 actor Utente
-participant "ChatInputBar" as UI
-participant "MessagesController" as MC
-participant "OutboundMessageQueue" as Q
-participant "MessageMediaService" as MMS
+participant "UI" as UI
+participant "MessagingCoordinator" as Coord
+participant "OutboundSendMachine" as OSM
+participant "ConversationLoadMachine" as CLM
+participant "OutboundQueue" as Q
 participant "MessageService" as MS
-participant "Supabase RPC" as RPC
+participant "Supabase" as SB
 
 Utente -> UI : invia contenuto
-UI -> MC : send* / _sendOptimistic
-
-MC -> MC : isSending = true
-MC -> Q : enqueue(OutboundQueueItem)
-MC -> MC : append optimistic bubble\nstatus=pending, id=clientId
-MC -> UI : notifyListeners
+UI -> Coord : SendMessage / SendGif / SendVoice / SendLocation
+Coord -> OSM : SendStarted
+Coord -> Q : enqueue pending item
+Coord -> CLM : OptimisticInserted\n(Ready, merge in list)
 
 alt media (gif, voice)
-  MC -> MMS : upload*
-  MMS -> MMS : storage chat-media
-  MMS --> MC : mediaUrl
+  Coord -> MS : upload media
+  MS -> SB : storage chat-media
+  SB --> MS : public URL
 end
 
-MC -> MS : send*ToProfile(clientMessageId)
-MS -> RPC : send_message_to_profile
-RPC --> MS : row (server id)
-MS --> MC : ChatMessage ack
+Coord -> MS : send to profile (clientMessageId)
+MS -> SB : RPC send_message_to_profile
+SB --> MS : server row
+MS --> Coord : ack message
 
-MC -> MC : mergeChatMessage(optimistic, ack)
-MC -> Q : remove(clientId)
-MC -> Q : deleteMediaFile (if any)
-MC -> MC : isSending = false
-MC -> UI : notifyListeners
+Coord -> OSM : SendAcknowledged
+Coord -> Q : remove item
+Coord --> UI : list updated
 
 alt errore rete/RPC
-  MC -> Q : update(attempts+1, lastError)
-  MC -> MC : bubble status=failed
-  MC -> MC : isSending = false
+  Coord -> OSM : SendFailed
+  Coord -> Q : update retry metadata
+  Coord --> UI : message failed
 end
 
 @enduml

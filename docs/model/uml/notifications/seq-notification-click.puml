@@ -1,54 +1,46 @@
 @startuml seq-notification-click
 ' Context: notifications → navigation (adapter)
 ' Command: OpenFromPushTap
-' Contract: docs/specs/contracts/push-payload.md §3.3–4
 ' SDD: PROM-PUSH-NOTIFY-030, SURF-NOTIFICATIONS-006–007
-' Revision: 2026-07-18
+' Revision: 2026-07-19
 
 title seq-notification-click — tap notifica → chat
 
 actor Utente
 participant "ServiceWorker" as SW
-participant "PushPlatform" as Plat
-participant "PushNotificationListener" as Listener
-participant "AuthController" as Auth
-participant "NavigationCoordinator" as Nav
-participant "AccountManager" as AM
+participant "NotificationsMachine" as NM
+participant "NavigationMachine" as Nav
+participant "MultiAccountMachine" as MAM
 
 Utente -> SW : tap Notification
-SW -> SW : notificationclick
 SW -> SW : parse PushConversationKey
 
 alt finestra app già aperta
-  SW -> Plat : postMessage open_chat
-  Plat -> Listener : OpenChatIntentReceived
+  SW -> NM : OpenChatIntentReceived
 else cold start
-  SW -> SW : openWindow(#push-chat/owner/peer)
-  Plat -> Plat : persist pending + fragment
-  Plat -> Listener : DrainPendingOpenChat
+  SW -> SW : openWindow(fragment push-chat)
+  NM -> NM : DrainPendingOpenChat
 end
 
-activate Listener
-Listener -> Listener : EnqueueOpenChat (coda serializzata)
+activate NM
+NM -> NM : EnqueueOpenChat
 
-alt !sessionReady
-  Listener -> Plat : persistPendingOpenChat
-  Listener --> Listener : OpenChatDeferred
+alt sessione non pronta
+  NM --> NM : OpenChatDeferred
 else account non nel manifest
-  Listener --> Listener : OpenChatRejected
+  NM --> NM : OpenChatRejected
 else ok
-  Listener -> Auth : openConversationAfterPushTap
-  Auth -> Nav : openConversationFromPushTap
-  Nav -> AM : clear stale + setFocus + openConversation
-  Nav --> Auth : ok
-  Auth --> Listener : OpenChatForwarded
-  Listener -> Plat : clearPendingOpenChat
+  NM -> Nav : OpenFromPushTap
+  Nav -> MAM : FocusAccount (se necessario)
+  Nav -> Nav : clear stale + open conversation
+  Nav --> NM : ConversationOpened
+  NM --> NM : OpenChatForwarded
 end
-deactivate Listener
+deactivate NM
 
 note over Nav
-  Adapter verso contesto navigation.
-  Un solo ingresso: OpenFromPushTap.
+  Un solo ingresso navigation:
+  OpenFromPushTap
 end note
 
 @enduml

@@ -1,48 +1,63 @@
 @startuml messaging-state
 ' Context: messaging
 ' SDD: PROM-OUTBOUND-SEND, PROM-MESSAGE-STATUS, PROM-REALTIME-OWNER
-' Revision: 2026-07-18
+' Revision: 2026-07-19
+' Composite: ConversationLoadMachine + OutboundSendMachine + RealtimeAttachmentMachine
 
-title Messaging — per-conversation state machine (MessagesController)
+title Messaging — composite state machines (per conversation)
 
-state Loading : isLoading = true
-state Ready : messages loaded\nisSending = false
-state Sending : isSending = true
-state SessionBlocked : session expired\nno load/send
+state "ConversationLoadMachine" as CL {
+  state Loading
+  state Ready
+  state SessionBlocked
 
-[*] --> Loading : Init\n/ LoadMessages
+  [*] --> Loading : LoadMessages
+  Loading --> Ready : MessagesLoaded
+  Loading --> SessionBlocked : SessionExpired
+  Loading --> Ready : LoadFailed
+  Ready --> Loading : ReloadMessages
+  SessionBlocked --> Loading : ReloadMessages\n[session restored]
+}
 
-Loading --> Ready : MessagesLoaded
-Loading --> SessionBlocked : SessionExpired
-Loading --> Ready : LoadFailed\n[error set, isLoading false]
+state "OutboundSendMachine" as OS {
+  state Idle
+  state Sending
+  state FailedQueue
 
-Ready --> Loading : ReloadMessages
-Ready --> Sending : SendMessage\nSendGif SendVoice SendLocation\nSendImage SendVideo
-Ready --> Ready : RealtimeReceived\n/ mergeChatMessage
-Ready --> Ready : DeliveryTickReceived\n/ merge ticks on isMine
-Ready --> Sending : RetryMessage
-Ready --> Sending : QueueRetry\n[timer, backoff elapsed]
+  [*] --> Idle
+  Idle --> Sending : SendStarted\nRetryStarted
+  Sending --> Idle : SendAcknowledged
+  Sending --> FailedQueue : SendFailed
+  FailedQueue --> Sending : RetryStarted
+  FailedQueue --> Idle : QueueEmptied
+  Idle --> FailedQueue : FailedQueueRestored
+}
 
-Sending --> Ready : SendAcknowledged\n/ remove queue item
-Sending --> Ready : SendFailed\n/ status failed, update queue
+state "RealtimeAttachmentMachine" as RT {
+  state Detached
+  state Attached
 
-state c_realtime {
-  RealtimeDetached
-  RealtimeAttached
-  [*] --> RealtimeDetached
-  RealtimeDetached --> RealtimeAttached : AttachRealtime
-  RealtimeAttached --> RealtimeDetached : DisposeMessaging
+  [*] --> Detached
+  Detached --> Attached : AttachRealtime
+  Attached --> Detached : DetachRealtime
 }
 
 note right of Ready
-  Init side effects (once):
-  MarkRead, RestoreFailedQueue,
-  StartRetryTimer (15s)
+  Policy init (once):
+  RestoreFailedOutbound,
+  MarkRead, AttachRealtime,
+  ProcessOutboundRetries timer
 end note
 
-note bottom of Sending
-  isSending blocks parallel
-  sends and auto QueueRetry
+note right of Sending
+  User commands SendMessage SendGif
+  SendVoice SendLocation SendImage SendVideo
+  map to SendStarted via effects
+end note
+
+note bottom of Attached
+  RealtimeReceived DeliveryTickReceived
+  handled in Ready (merge, no state change)
 end note
 
 @enduml

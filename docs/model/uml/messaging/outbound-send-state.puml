@@ -1,0 +1,27 @@
+@startuml outbound-send-state
+' Context: messaging
+' Machine: OutboundSendMachine
+' SDD: PROM-OUTBOUND-SEND
+' Revision: 2026-07-19
+
+title Messaging — OutboundSendMachine
+
+state Idle
+state Sending
+state FailedQueue
+
+[*] --> Idle
+
+Idle --> Sending : SendStarted\nRetryStarted
+Sending --> Idle : SendAcknowledged
+Sending --> FailedQueue : SendFailed
+FailedQueue --> Sending : RetryStarted
+FailedQueue --> Idle : QueueEmptied
+Idle --> FailedQueue : FailedQueueRestored
+
+note right of Sending
+  Serializes SendMessage SendGif
+  SendVoice SendLocation SendImage SendVideo
+end note
+
+@enduml

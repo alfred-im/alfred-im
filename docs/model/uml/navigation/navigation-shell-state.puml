@@ -1,7 +1,7 @@
 @startuml navigation-shell-state
 ' Context: navigation
 ' SDD: PROM-MULTI-ACCOUNT, PROM-SHAREABLE-LINK
-' Revision: 2026-07-18 — AccountViewState via navigation; ExternalIntentAdapter
+' Revision: 2026-07-19
 
 title Navigation — shell state machine (per account in focus)
 
@@ -25,14 +25,10 @@ GroupShell --> GroupShell : BackToGroupHome\n/ GroupShellEntered
 GroupShell --> GroupShell : CloseConversation\n[chat gruppo aperta]
 
 note right of ChatOpen
-  ExternalIntentAdapter unifica
-  OpenFromPushTap, OpenFromShareableLink,
-  OpenFromCompose → NavigationMachine
-end note
-
-note bottom of GroupShell
-  AccountViewState (per account) mutato solo
-  da AccountViewStateStore via navigation
+  External intents (push, link, compose)
+  converge on NavigationMachine
+  via adapters — never bypass
+  multi-account focus rules
 end note
 
 @enduml
