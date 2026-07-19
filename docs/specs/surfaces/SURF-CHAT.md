@@ -41,6 +41,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | **SURF-CHAT-013** | Allegato: galleria foto, fotocamera, video (picker); didascalia opzionale nel composer — [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md) |
 | **SURF-CHAT-014** | Composer: un solo pulsante graffetta (`attach_file`) apre pannello contenuti ricchi; icone affiancate in riga orizzontale scrollabile (solo icone, tooltip per accessibilità); GIF e posizione nel pannello, non nella barra; microfono/invio restano a destra — `ChatInputBar` |
 | **SURF-CHAT-012** | Apertura conversazione da fragment `#indirizzo/chat` — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) via `ShareableLinkController`; azzera chat stale se peer diverso; fallback profilo consentito |
+| **SURF-CHAT-015** | Storico iniziale = ultimi messaggi (allineato a anteprima inbox); scroll verso messaggi più vecchi carica pagine precedenti senza saltare la posizione visibile |
 
 ### SHOULD
 
@@ -72,6 +73,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | SURF-CHAT-011 | `client/test/unit/models_and_utils_test.dart` |
 | SURF-CHAT-013 | `messages_controller_media_test.dart`, `message_bubble_test.dart`, `chat_media_support_test.dart` |
 | SURF-CHAT-014 | `chat_input_bar_test.dart`; `chat_input_bar.dart` |
+| SURF-CHAT-015 | `mailbox_peer_messages_window_smoke.sql`; `messaging_message_list_test.dart`; `messaging_machine_test.dart` |
 
 Gate: `verify.sh` + `integration` + `e2e-multi`
 

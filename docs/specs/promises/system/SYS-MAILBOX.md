@@ -104,7 +104,8 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | **SYS-MAILBOX-033** | `list_inbox()` aggrega **solo** `messages` WHERE `owner_id = auth.uid()` |
 | **SYS-MAILBOX-034** | GROUP BY `peer_profile_id` (interni (stessa istanza)) |
 | **SYS-MAILBOX-035** | Payload riga: `peer_profile_id`, `display_name`, `last_message_preview`, `last_message_at`, `unread_count`, campi profilo peer |
-| **SYS-MAILBOX-036** | `list_peer_messages(peer)` = righe WHERE `owner_id = auth.uid()` AND `peer_profile_id = peer` ORDER BY `created_at` |
+| **SYS-MAILBOX-036** | `list_peer_messages(peer, limit, before?)` = ultimi `limit` messaggi (default 100, max 500) nel mio archivio con quel peer, in ordine cronologico ASC; `before` opzionale = cursore `created_at` per pagina più vecchia |
+| **SYS-MAILBOX-057** | L'ultimo messaggio usato da `list_inbox` per l'anteprima di un peer è sempre incluso nella prima finestra di `list_peer_messages(peer)` senza cursore |
 | **SYS-MAILBOX-037** | Prima riga inbox solo dopo primo messaggio nel mio archivio con quel peer |
 | **SYS-MAILBOX-038** | `unread_count`: righe in entrata (`author_id <> auth.uid()`) con `read_at IS NULL` |
 
@@ -221,7 +222,7 @@ mark_peer_read(p_peer_profile_id uuid) → void
 | SYS-MAILBOX-018–020 | `delivery_ticks_smoke.sql`, `bash scripts/test.sh integration-ticks` |
 | SYS-MAILBOX-028 | assenza trigger `on_message_inserted` legacy internal delivered |
 | SYS-MAILBOX-030 | `ComposeService` → errore esterno |
-| SYS-MAILBOX-033, 034, 036, 037, 050 | `supabase/tests/mailbox_inbox_smoke.sql` |
+| SYS-MAILBOX-033, 034, 036, 037, 050, 057 | `supabase/tests/mailbox_inbox_smoke.sql`, `mailbox_peer_messages_window_smoke.sql` |
 | SYS-MAILBOX-038 | smoke unread dopo messaggio in entrata non letto |
 | SYS-MAILBOX-041 | `mailbox_schema_smoke.sql` |
 | SYS-MAILBOX-046 | `mailbox_delivery_smoke.sql` |

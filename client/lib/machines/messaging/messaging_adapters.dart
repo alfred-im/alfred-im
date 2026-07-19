@@ -19,6 +19,8 @@ class MessagingAdapters {
 
   Future<void> reload() => _coordinator.reload();
 
+  Future<void> loadOlderMessages() => _coordinator.loadOlderMessages();
+
   Future<void> sendText(String body) => _coordinator.sendText(body);
 
   Future<void> sendGif(Uint8List bytes) => _coordinator.sendGif(bytes);

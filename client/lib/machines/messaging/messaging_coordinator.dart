@@ -40,6 +40,8 @@ class MessagingCoordinator {
   String? get error => state.error;
   bool get isLoading => loadMachine.state == ConversationLoadState.loading;
   bool get isSending => sendMachine.state == OutboundSendState.sending;
+  bool get hasMoreOlder => state.hasMoreOlder;
+  bool get isLoadingOlder => state.isLoadingOlder;
 
   Future<void> init() async {
     await load();
@@ -62,8 +64,17 @@ class MessagingCoordinator {
   Future<void> reload() async {
     loadMachine.send(const RefreshConversation());
     state.error = null;
+    state.hasMoreOlder = false;
+    state.isLoadingOlder = false;
     _notify();
     await load();
+  }
+
+  Future<void> loadOlderMessages() async {
+    if (!hasMoreOlder || isLoadingOlder || isLoading) return;
+    final applied = await effects.fetchAndPrependOlderMessages();
+    if (!applied || effects.isDisposed) return;
+    _notify();
   }
 
   static const _fetchScopeRetryAttempts = 8;
