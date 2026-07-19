@@ -50,6 +50,7 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 | **integration-ticks** | `bash scripts/test.sh integration-ticks` | Solo contratto spunte delivery plane (3 fasi) |
 | **integration-push** | `bash scripts/test.sh integration-push` | Smoke SQL `push_*` su stack locale; oppure delivery plane live con agent1/2 |
 | **e2e-push-local** | `bash scripts/test.sh e2e-push-local` | Playwright push locale: ricezione SW + **tap multi-account** (stack locale) |
+| **e2e-nav-local** | `bash scripts/test.sh e2e-nav-local` | Playwright navigation locale: **tap inbox → chat** + push poison (obbligatorio post-fix scope) |
 | **e2e** | `bash scripts/test.sh e2e` | Tutti i Playwright in `client/e2e/` |
 | **e2e-multi** | `bash scripts/test.sh e2e-multi` | Multi-account mobile: persistenza F5 + messaggi (UI + DB) |
 | **live** | `bash scripts/test.sh live` | Dart con tag `@Tags(['live'])` (es. password reset PKCE) |
@@ -62,6 +63,8 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 | `multi-account-persist.spec.ts` | `e2e-multi` | 2 account, F5, manifest |
 | `multi-account-messages.spec.ts` | `e2e-multi` | Scambio messaggi + verifica DB (`list_peer_messages`) |
 | `inbox-load.spec.ts` | `e2e` | Inbox senza digitare in ricerca |
+| `inbox-open-chat.spec.ts` | `e2e-nav-local` | Tap inbox → input chat visibile (cattura spinner infinito) |
+| `manual-push-poison-repro.spec.ts` | `e2e-nav-local` | Push tap multi-account + mailbox poison |
 | `pages-smoke.spec.ts` | `e2e` | Smoke generico (fragile su canvas Flutter) |
 | `push-registration.spec.ts` | `e2e-push-local` | Solo registrazione subscription (subset) |
 | `push-full.spec.ts` | `e2e-push-local` | Permesso → subscribe → messaggio → notifica in SW |
@@ -71,6 +74,8 @@ Helper riusabili: `e2e/helpers/local-multi-account.ts`, `focus.ts`, `push.ts` (`
 
 Lancio: `bash scripts/test.sh e2e-push-local` (avvia Supabase locale, Flutter su `:8080` con VAPID e2e e `ALFRED_DIAGNOSTIC_LOG=true`).  
 Per riusare un `flutter run` già avviato sullo stack locale: `E2E_PUSH_REUSE_FLUTTER=1 bash scripts/test.sh e2e-push-local`
+
+**Post-fix navigation/scope:** `bash scripts/test.sh e2e-nav-local` (richiede stack locale già avviato; usa `E2E_PUSH_REUSE_FLUTTER=1` se `:8080` è occupato).
 
 #### Log diagnostici push (`ALFRED_DIAGNOSTIC_LOG`)
 
