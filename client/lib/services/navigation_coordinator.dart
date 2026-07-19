@@ -72,6 +72,9 @@ class NavigationCoordinator implements NavigationScopeHost {
     _machine.restoreCommittedScopeFromViewState(_manager);
   }
 
+  @override
+  bool get isOpenConversationInFlight => _effects.isOpenConversationInFlight;
+
   Future<void> switchToAccount(String accountUserId) {
     return adapters.switchToAccount(accountUserId);
   }

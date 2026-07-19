@@ -167,6 +167,13 @@ class _HomeScreenState extends State<HomeScreen> {
       return const EmptyChatPlaceholder();
     }
 
+    if (session.userId != auth.userId) {
+      return const ColoredBox(
+        color: AlfredColors.surface,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final scope = ConversationScope.fromSession(session, peer);
     if (!auth.isConversationReady(
       session: session,

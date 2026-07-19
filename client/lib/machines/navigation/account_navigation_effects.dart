@@ -24,6 +24,10 @@ class AccountNavigationEffects implements NavigationEffects {
   final AccountFocusCommand _focusCommand;
   final AccountViewStateStore _viewState;
 
+  int _openConversationInFlight = 0;
+
+  bool get isOpenConversationInFlight => _openConversationInFlight > 0;
+
   /// Impostato da [NavigationCoordinator] dopo creazione macchina.
   NavigationMachine? navigationMachine;
 
@@ -109,6 +113,25 @@ class AccountNavigationEffects implements NavigationEffects {
 
   @override
   Future<bool> openConversation({
+    required String accountUserId,
+    required String peerProfileId,
+    required OpenConversationSource source,
+    bool allowProfileFallback = true,
+  }) async {
+    _openConversationInFlight++;
+    try {
+      return await _openConversationImpl(
+        accountUserId: accountUserId,
+        peerProfileId: peerProfileId,
+        source: source,
+        allowProfileFallback: allowProfileFallback,
+      );
+    } finally {
+      _openConversationInFlight--;
+    }
+  }
+
+  Future<bool> _openConversationImpl({
     required String accountUserId,
     required String peerProfileId,
     required OpenConversationSource source,

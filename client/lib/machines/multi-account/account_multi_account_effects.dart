@@ -45,6 +45,7 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
 
   @override
   void onFocusSettled() {
+    if (scopeHost?.isOpenConversationInFlight ?? false) return;
     scopeHost?.restoreCommittedScopeAfterFocusSettled();
   }
 

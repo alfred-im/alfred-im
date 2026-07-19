@@ -47,6 +47,7 @@ class AuthController extends ChangeNotifier {
         );
     multiAccountEffects.scopeHost = _navigation;
     _manager.onFocusedProfileSynced = notifyListeners;
+    _manager.onFocusChanged = notifyListeners;
     final notificationEffects = AuthNotificationsEffects(this);
     notificationsMachine = NotificationsMachine(effects: notificationEffects);
     notificationsAdapters = NotificationsAdapters(notificationsMachine);
