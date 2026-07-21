@@ -5,6 +5,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:alfred_client/machines/navigation/navigation_machine.dart';
 import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_manager.dart';
@@ -128,10 +129,12 @@ void main() {
     expect(manager.viewState.activePeer, isNull);
   });
 
-  test('switch focus a B senza tap mostra ancora chat stale', () async {
+  test('switch focus a B senza tap non apre chat commessa', () async {
     await nav.switchToAccount(accountB);
 
     expect(manager.focusUserId, accountB);
     expect(manager.viewState.activePeer?.profileId, stalePeerId);
+    expect(nav.committedScope, isNull);
+    expect(nav.machine.shellState, NavigationShellState.inboxVisible);
   });
 }

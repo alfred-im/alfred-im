@@ -41,20 +41,9 @@ class AccountNavigationEffects implements NavigationEffects {
       _manager.focusedSession?.profile.isGroup ?? false;
 
   @override
-  void restoreCommittedScopeFromViewState() {
-    final userId = _manager.focusUserId;
-    final session = _manager.focusedSession;
-    final peer = userId == null ? null : _manager.viewStateFor(userId).activePeer;
-    if (userId == null || session == null || peer == null) {
-      navigationMachine?.invalidateCommittedScope();
-      return;
-    }
-    if (peer.profileId == userId) {
-      navigationMachine?.invalidateCommittedScope();
-      return;
-    }
-    _commitScope(ConversationScope.fromSession(session, peer));
-    _viewState.revealRestoredConversationOnMobile();
+  void resetShellToAccountHome() {
+    navigationMachine?.invalidateCommittedScope();
+    _viewState.resetShellToAccountHome();
   }
 
   @override

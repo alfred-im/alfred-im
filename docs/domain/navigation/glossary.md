@@ -28,7 +28,7 @@
 
 | Contesto | Relazione |
 |----------|-----------|
-| **multi-account** | `FocusAccount` = solo I/O sessione. `SwitchToAccount` (navigation) invalida/ripristina scope e allinea shell. |
+| **multi-account** | `FocusAccount` = solo I/O sessione. `SwitchToAccount` (navigation) invalida scope e mostra inbox/home gruppo — **non** ripristina chat da view-state. |
 | **notifications** | `OpenConversation(source=push)` — stessa transazione, policy push. |
 | **shareable-link** | `OpenConversation(source=shareableLink)` — clear stale se peer diverso. |
 

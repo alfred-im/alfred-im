@@ -52,7 +52,7 @@ class _RecordingNavigationEffects implements NavigationEffects {
   }
 
   @override
-  void restoreCommittedScopeFromViewState() {}
+  void resetShellToAccountHome() {}
 
   @override
   void openPeerOnFocusedAccount(ChatPeer peer) {
@@ -280,7 +280,7 @@ void main() {
       expect(manager.viewState.showInboxOnMobile, isTrue);
     });
 
-    test('SwitchToAccount ripristina scope e shell chat da view-state', () async {
+    test('SwitchToAccount non committa scope da view-state', () async {
       manager.applyAccountViewState(
         'account-b',
         (view) => view.openChat(_peer('peer-x')),
@@ -291,11 +291,13 @@ void main() {
 
       await nav.switchToAccount('account-b');
 
-      expect(nav.committedScope?.peerProfileId, 'peer-x');
-      expect(nav.machine.shellState, NavigationShellState.chatOpen);
+      expect(nav.committedScope, isNull);
+      expect(nav.machine.shellState, NavigationShellState.inboxVisible);
+      expect(manager.viewState.activePeer?.profileId, 'peer-x');
+      expect(manager.viewState.showInboxOnMobile, isTrue);
     });
 
-    test('SwitchToAccount riapre chat mobile se era su inbox con peer attivo', () async {
+    test('SwitchToAccount con peer attivo su mobile resta su inbox', () async {
       manager.applyAccountViewState(
         'account-b',
         (view) => view.openChat(_peer('peer-x')).backToInboxOnMobile(),
@@ -306,9 +308,9 @@ void main() {
 
       await nav.switchToAccount('account-b');
 
-      expect(nav.committedScope?.peerProfileId, 'peer-x');
-      expect(manager.viewState.showInboxOnMobile, isFalse);
-      expect(nav.machine.shellState, NavigationShellState.chatOpen);
+      expect(nav.committedScope, isNull);
+      expect(manager.viewState.showInboxOnMobile, isTrue);
+      expect(nav.machine.shellState, NavigationShellState.inboxVisible);
     });
 
     test('setFocus preserva view state per account', () async {

@@ -152,8 +152,8 @@ class NavigationMachine {
     return true;
   }
 
-  void restoreCommittedScopeFromViewState() {
-    _effects.restoreCommittedScopeFromViewState();
+  void resetShellToAccountHome() {
+    _effects.resetShellToAccountHome();
   }
 
   void syncShellFromCommittedScope() {
@@ -175,7 +175,7 @@ class NavigationMachine {
       case SwitchToAccount(:final accountUserId):
         invalidateCommittedScope();
         await _effects.focusAccount(accountUserId);
-        restoreCommittedScopeFromViewState();
+        resetShellToAccountHome();
         _syncShellStateFromCommittedScope();
       case OpenPeerOnFocusedAccount(:final peer):
         invalidateCommittedScope();

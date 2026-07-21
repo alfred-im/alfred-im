@@ -19,7 +19,7 @@ MA -> AM : executeFocus(userId)
 AM -> UI : onFocusIdentityChanged
 AM --> MA : sessione pronta
 MA --> Nav : focus ok
-Nav -> Nav : restoreCommittedScopeFromViewState
+Nav -> Nav : resetShellToAccountHome\n(inbox / home gruppo, no scope)
 Nav -> Nav : syncShellFromCommittedScope
 Nav -> UI : onStateChanged
 

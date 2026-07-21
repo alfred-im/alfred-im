@@ -30,6 +30,6 @@ abstract class NavigationEffects {
   /// Account in focus con `profileKind == group`.
   bool get focusedAccountIsGroup;
 
-  /// Dopo focus settled: riallinea scope da view-state account in focus.
-  void restoreCommittedScopeFromViewState();
+  /// Dopo cambio account / bootstrap: inbox o home gruppo, senza aprire chat.
+  void resetShellToAccountHome();
 }

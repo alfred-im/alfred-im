@@ -109,15 +109,15 @@ void main() {
       );
     });
 
-    test('restoreCommittedScopeFromViewState riallinea dopo restore', () {
+    test('syncShellAfterFocusSettled non committa scope da view-state', () {
       manager.applyAccountViewState(
         'user-a',
         (view) => view.openChat(ChatPeer(profile: peer)),
       );
-      navigation.restoreCommittedScopeAfterFocusSettled();
+      navigation.syncShellAfterFocusSettled();
 
-      expect(navigation.committedScope?.peerProfileId, 'peer-z');
-      expect(navigation.committedScope?.sessionEpoch, sessionA.epoch);
+      expect(navigation.committedScope, isNull);
+      expect(navigation.machine.shellState, NavigationShellState.inboxVisible);
     });
 
     test('invalidateCommittedScope su switch account', () {

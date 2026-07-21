@@ -174,16 +174,20 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    final scope = ConversationScope.fromSession(session, peer);
     if (!auth.isConversationReady(
       session: session,
       peer: peer,
     )) {
+      if (auth.committedScope == null) {
+        return const EmptyChatPlaceholder();
+      }
       return const ColoredBox(
         color: AlfredColors.surface,
         child: Center(child: CircularProgressIndicator()),
       );
     }
+
+    final scope = ConversationScope.fromSession(session, peer);
 
     return _ChatWithMessages(
       key: conversationScopeKey(scope),

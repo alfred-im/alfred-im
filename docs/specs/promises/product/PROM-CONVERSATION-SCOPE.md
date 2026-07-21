@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-CONVERSATION-SCOPE` |
 | **Classe** | PRODUCT |
 | **Status** | `approved` |
-| **Ultima revisione** | 2026-07-19 |
+| **Ultima revisione** | 2026-07-21 |
 
 [NavigationMachine](../../client/lib/machines/navigation/navigation_machine.dart) possiede l'unico `ConversationScope` commesso. `activePeer` in view-state è proiezione UI. Messaging legge solo scope commesso.
 
@@ -20,7 +20,7 @@
 | **PROM-CONVERSATION-SCOPE-001** | `ConversationScope` identifica account + peer + generazione sessione GoTrue (cambia su restore/dispose, non su token refresh) |
 | **PROM-CONVERSATION-SCOPE-002** | Solo `NavigationMachine.commitScope` registra ambito se la sessione in RAM corrisponde |
 | **PROM-CONVERSATION-SCOPE-003** | `InvalidateConversationScope` su chiusura chat, switch account, apertura verso altro peer |
-| **PROM-CONVERSATION-SCOPE-004** | Dopo `SwitchToAccount` / bootstrap / reconnect, `NavigationMachine` ripristina scope da view-state; multi-account fa solo I/O focus |
+| **PROM-CONVERSATION-SCOPE-004** | Dopo `SwitchToAccount` / bootstrap / reconnect: **inbox** (o home gruppo), scope **non** commesso; nessun restore implicito da `activePeer` |
 | **PROM-CONVERSATION-SCOPE-005** | UI chat e `MessagesController` non mostrano messaggi se scope non commesso e coerente |
 | **PROM-CONVERSATION-SCOPE-006** | Fetch/realtime ignorano risultati se scope non più attivo (generation guard) |
 | **PROM-CONVERSATION-SCOPE-007** | Inbox, push, link, compose usano la stessa transazione `OpenConversation` con `OpenConversationSource` |

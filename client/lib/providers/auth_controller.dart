@@ -134,7 +134,7 @@ class AuthController extends ChangeNotifier {
 
   Future<void> initialize() async {
     await _sessionCoordinator.initialize();
-    _navigation.restoreCommittedScopeAfterFocusSettled();
+    _navigation.syncShellAfterFocusSettled();
   }
 
   void openAuthOverlay({required bool dismissible}) =>
@@ -158,7 +158,7 @@ class AuthController extends ChangeNotifier {
     if (!hasOpenAccounts || focusedSession != null) return;
     try {
       await multiAccountAdapters.reconnectFocusedSession();
-      _navigation.restoreCommittedScopeAfterFocusSettled();
+      _navigation.syncShellAfterFocusSettled();
       error = null;
     } catch (e) {
       error = friendlyAuthError(e);
