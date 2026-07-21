@@ -72,9 +72,9 @@ class NavigationCoordinator {
     _machine.invalidateCommittedScope();
   }
 
-  /// Bootstrap / reconnect: riallinea scope da view-state e shell.
-  void restoreCommittedScopeAfterFocusSettled() {
-    _machine.restoreCommittedScopeFromViewState();
+  /// Bootstrap / reconnect: allinea shell (inbox); nessun restore chat implicito.
+  void syncShellAfterFocusSettled() {
+    _machine.resetShellToAccountHome();
     _machine.syncShellFromCommittedScope();
     _notifyStateChanged();
   }

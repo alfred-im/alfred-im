@@ -68,21 +68,14 @@ class AccountViewStateStore {
     );
   }
 
-  /// Dopo restore scope su switch account: su mobile torna alla chat se c'è peer attivo.
-  void revealRestoredConversationOnMobile() {
+  /// Dopo cambio account: shell inbox (o home gruppo), senza commettere scope chat.
+  void resetShellToAccountHome() {
     final userId = _manager.focusUserId;
     if (userId == null) return;
-    final view = _manager.viewStateFor(userId);
-    final peer = view.activePeer;
-    if (peer == null || peer.profileId == userId) return;
-    if (!view.showInboxOnMobile) return;
-    _manager.applyAccountViewState(
-      userId,
-      (current) => AccountViewState(
-        activePeer: peer,
-        showInboxOnMobile: false,
-        groupChatOpen: current.groupChatOpen,
-      ),
-    );
+    if (_manager.focusedSession?.profile.isGroup ?? false) {
+      _manager.applyAccountViewState(userId, (view) => view.backToGroupHome());
+      return;
+    }
+    _manager.applyAccountViewState(userId, (view) => view.backToInboxOnMobile());
   }
 }
