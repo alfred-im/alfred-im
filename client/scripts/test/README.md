@@ -25,6 +25,15 @@ Opzione build web: `bash scripts/verify.sh --build`
 
 **Dart gate:** `client/test/unit/`, `client/test/widget/`, `client/test/wiring/`, `client/test/composition/`
 
+### Tier 1b — Conversation scope (gate)
+
+| ID | File | Invariante |
+|----|------|------------|
+| SCOPE-001–004 | `unit/conversation_scope_test.dart` | `ConversationScope`, commit/invalidate, epoch |
+| SCOPE-005–006 | `unit/messages_controller_scope_guard_test.dart`, `unit/multi_account_message_store_test.dart` (INV-R4) | Fetch/render solo con scope attivo |
+| **SCOPE-008** | `unit/conversation_open_session_test.dart` | Consolidamento GoTrue all'ingresso chat |
+| SCOPE-008 wiring | `wiring/navigation_wiring_test.dart` | Stack produzione: open peer + sessione |
+
 **Strategia completa:** [docs/testing/strategy.md](../../docs/testing/strategy.md) — piramide machine → wiring → composition → E2E, catalogo COMP, regole `hasValidSession`.
 
 ### Tier 1c — Composition (gate)

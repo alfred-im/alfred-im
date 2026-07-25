@@ -1,7 +1,7 @@
 # Glossario — contesto navigation
 
 **Bounded context:** `navigation`  
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-25  
 **Promesse SDD:** [PROM-SHAREABLE-LINK](../../specs/promises/product/PROM-SHAREABLE-LINK.md), [PROM-MULTI-ACCOUNT](../../specs/promises/product/PROM-MULTI-ACCOUNT.md)
 
 ---
@@ -16,7 +16,8 @@
 | **ConversationScope** | Ambito atomico commesso `(owner_user_id, peer_profile_id, session_epoch)` — unica autorità per messaging. |
 | **CommitConversationScope** | Registra scope dopo apertura validata (account + peer + sessione viva). |
 | **InvalidateConversationScope** | Azzera scope (chiusura chat, switch account, apertura verso altro peer). |
-| **OpenConversation** | Transazione unica: invalida → focus (se serve) → risolvi peer → commit scope. Sorgenti: inbox, push, link, compose. |
+| **OpenConversation** | Transazione unica: invalida → focus (se serve) → **consolida sessione** → risolvi peer → commit scope. Sorgenti: inbox, push, link, compose. |
+| **ConsolidateSession** | All'ingresso chat: account UI ripristina/verifica GoTrue (JWT + `auth.uid`) — non fidarsi della sola presenza in RAM. |
 | **Profile fallback** | Se peer non in inbox, lookup profilo — link/compose sempre; push dopo retry inbox esteso. |
 | **CloseConversation** | Chiude chat; invalida scope; torna a inbox o home gruppo. |
 | **GroupShell** | Account gruppo in focus — home gruppo al posto dell'inbox classica. |

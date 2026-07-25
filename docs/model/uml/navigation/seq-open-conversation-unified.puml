@@ -20,6 +20,7 @@ else source == link | compose
 end
 Nav -> MAM : FocusAccount (solo I/O, no scope)
 MAM --> Nav : sessione pronta
+Nav -> Nav : ConsolidateSession(account)\nJWT + auth.uid
 Nav -> Nav : ResolvePeer
 alt peer risolto
   Nav -> VS : OpenChat(peer)

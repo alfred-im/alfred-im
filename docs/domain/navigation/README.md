@@ -9,7 +9,7 @@
 | Dominio | Statechart | Codice |
 |---------|------------|--------|
 | `ShowInbox` | `SwitchToAccount` / `InboxVisible` | `NavigationMachine` |
-| `OpenConversation` | `OpenPeerOnFocusedAccount`, `OpenConversationOnAccount`, `OpenFromPushTap`, `OpenFromShareableLink`, `OpenFromCompose` | adapter per ingresso |
+| `OpenConversation` | `OpenPeerOnFocusedAccount`, `OpenConversationOnAccount`, `OpenFromPushTap`, `OpenFromShareableLink`, `OpenFromCompose` | adapter per ingresso; **consolida sessione** prima di `commitScope` |
 | `CloseConversation` | `CloseConversation` | `NavigationMachine` |
 | `EnterGroupShell` | `SwitchToAccount` [gruppo] | `GroupShell` |
 | `OpenGroupConversation` | `OpenGroupChat` | shell gruppo |
