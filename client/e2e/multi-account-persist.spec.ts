@@ -61,7 +61,7 @@ test('multi-account mobile: dopo F5 restano 2 account in lista (live)', async ({
 }) => {
   test.skip(
     isLocalSupabaseStack(),
-    'su stack locale il test locale copre persistenza manifest',
+    'su stack locale usa l’altro test persist',
   );
 
   const errors: string[] = [];

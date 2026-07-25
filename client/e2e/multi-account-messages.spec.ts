@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /**
- * Multi-account mobile — golden path (stack locale) o scambio testo su live.
+ * Multi-account mobile — messaggistica (stack locale o live).
  *
  * Stack locale (default `bash scripts/test.sh e2e-multi`):
  * login UI → testo → switch → foto → read_at backend.
@@ -61,15 +61,15 @@ test.afterEach(({}, testInfo) => {
   dumpDiagnosticLogsOnFailure(diagLogs, testInfo);
 });
 
-test('multi-account: golden path login → testo → switch → foto → spunta blu (stack locale)', async ({
+test('multi-account mobile: testo, foto, switch account e spunte in DB (stack locale)', async ({
   page,
 }) => {
   test.skip(!isLocalSupabaseStack(), 'richiede stack Supabase locale');
 
   const errors = attachPageErrorCollector(page);
   const stamp = Date.now();
-  const textBody = `golden-text-${stamp}`;
-  const photoCaption = `golden-photo-${stamp}`;
+  const textBody = `e2e-text-${stamp}`;
+  const photoCaption = `e2e-photo-${stamp}`;
 
   const { acct1, acct2 } = await prepareLocalMessagingPair('ma1', 'ma2');
 
@@ -131,12 +131,12 @@ test('multi-account: golden path login → testo → switch → foto → spunta 
   expect(errors, `errori JS: ${errors.join('; ')}`).toEqual([]);
 });
 
-test('multi-account mobile: messaggio in DB e visibile dall’altro account (live)', async ({
+test('multi-account mobile: scambio testo bidirezionale in DB e UI (live)', async ({
   page,
 }) => {
   test.skip(
     isLocalSupabaseStack(),
-    'su stack locale il golden path copre messaggistica completa',
+    'su stack locale usa il test testo+foto',
   );
 
   const errors: string[] = [];

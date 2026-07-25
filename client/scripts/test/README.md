@@ -61,7 +61,7 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 | **e2e-push-local** | `bash scripts/test.sh e2e-push-local` | Playwright push locale: ricezione SW + **tap multi-account** (stack locale) |
 | **e2e-nav-local** | `bash scripts/test.sh e2e-nav-local` | Playwright navigation locale: inbox tap, switch account restore, push tap/poison (`--workers=1`) |
 | **e2e** | `bash scripts/test.sh e2e` | Tutti i Playwright in `client/e2e/` |
-| **e2e-multi** | `bash scripts/test.sh e2e-multi` | Multi-account: persistenza F5 + golden path locale (login, testo, foto, spunte) |
+| **e2e-multi** | `bash scripts/test.sh e2e-multi` | Multi-account: persistenza F5 + messaggi (testo/foto locale, testo live) |
 | **live** | `bash scripts/test.sh live` | Dart con tag `@Tags(['live'])` (es. password reset PKCE) |
 | **manual** | `bash scripts/test.sh manual` | integration → e2e-multi → live (in sequenza) |
 
@@ -70,7 +70,7 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 | File | Suite | Note |
 |------|-------|------|
 | `multi-account-persist.spec.ts` | `e2e-multi` | 2 account, F5, manifest |
-| `multi-account-messages.spec.ts` | `e2e-multi` | Golden path locale (login, testo, foto, spunte) o scambio testo live |
+| `multi-account-messages.spec.ts` | `e2e-multi` | Testo, foto, switch e spunte (locale) o scambio testo bidirezionale (live) |
 | `inbox-load.spec.ts` | `e2e` | Inbox senza digitare in ricerca |
 | `inbox-open-chat.spec.ts` | `e2e-nav-local` | Tap inbox → input chat visibile (cattura spinner infinito) |
 | `account-switch-restore.spec.ts` | `e2e-nav-local` | Switch sidebar → chat ripristinata (scope + showInboxOnMobile) |
