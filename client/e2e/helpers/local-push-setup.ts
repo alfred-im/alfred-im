@@ -12,6 +12,7 @@ import {
   LOCAL_VAPID_SUBJECT,
 } from '../fixtures/vapid-local';
 import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
+import { isLocalSupabaseStack } from './local-auth';
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321';
@@ -60,16 +61,56 @@ export function configureLocalPushSettings(): void {
   );
 }
 
+function insertAllowlistLocalSql(ownerUserId: string, allowedProfileId: string) {
+  const sql =
+    `INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id) ` +
+    `VALUES ('${ownerUserId}', '${allowedProfileId}') ` +
+    `ON CONFLICT (owner_id, allowed_profile_id) DO NOTHING;`;
+  execSync(
+    `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
+    { stdio: 'pipe' },
+  );
+}
+
+/** Enum + bucket per media — stack locale a volte fermo a migrazioni vecchie. */
+export function configureLocalMailboxSchema(): void {
+  if (!isLocalSupabaseStack()) return;
+  const sql =
+    `ALTER TYPE public.message_content_type ADD VALUE IF NOT EXISTS 'image'; ` +
+    `ALTER TYPE public.message_content_type ADD VALUE IF NOT EXISTS 'video'; ` +
+    `UPDATE storage.buckets SET file_size_limit = 52428800, allowed_mime_types = ARRAY[` +
+    `'image/gif','image/jpeg','image/png','image/webp','audio/webm','video/mp4','video/webm'` +
+    `]::text[] WHERE id = 'chat-media';`;
+  execSync(
+    `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
+    { stdio: 'pipe' },
+  );
+}
+
+/** Allinea bucket chat-media locale alle migrazioni (image/jpeg, png, …). */
+export function configureLocalChatMediaBucket(): void {
+  configureLocalMailboxSchema();
+}
+
 export function addReceptionAllowlist(options: {
   ownerUserId: string;
   allowedProfileId: string;
   ownerAccessToken: string;
 }): Promise<void> {
+  if (isLocalSupabaseStack() && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    insertAllowlistLocalSql(options.ownerUserId, options.allowedProfileId);
+    return Promise.resolve();
+  }
+
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const authToken = serviceKey ?? options.ownerAccessToken;
+  const apiKey = serviceKey ?? ANON_KEY;
+
   return fetch(`${SUPABASE_URL}/rest/v1/reception_allowlist`, {
     method: 'POST',
     headers: {
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${options.ownerAccessToken}`,
+      apikey: apiKey,
+      Authorization: `Bearer ${authToken}`,
       'Content-Type': 'application/json',
       Prefer: 'resolution=ignore-duplicates',
     },

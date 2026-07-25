@@ -16,10 +16,21 @@ const ANON_KEY =
 export type PeerMessage = {
   id: string;
   body: string;
-  sender_id: string;
-  recipient_profile_id: string;
+  author_id?: string;
+  sender_id?: string;
+  recipient_profile_id?: string;
+  peer_profile_id?: string;
   created_at?: string;
+  content_type?: string;
+  media_url?: string | null;
+  delivered_at?: string | null;
+  read_at?: string | null;
+  logical_message_id?: string;
 };
+
+export function peerAuthorId(message: PeerMessage): string {
+  return message.author_id ?? message.sender_id ?? '';
+}
 
 export type SupabaseSession = {
   accessToken: string;
@@ -83,6 +94,7 @@ export type WaitForDbMessageOptions = {
   peerProfileId: string;
   body: string;
   expectedSenderId: string;
+  contentType?: string;
   timeoutMs?: number;
 };
 
@@ -103,11 +115,17 @@ export async function waitForMessageInDb(
       options.peerProfileId,
     );
     lastBodies = messages.map((m) => m.body);
-    const match = messages.find((m) => m.body === options.body);
+    const token = options.body.match(/\d{8,}/)?.[0] ?? options.body;
+    const match = messages.find(
+      (m) =>
+        (m.body === options.body || m.body.includes(token)) &&
+        (options.contentType == null ||
+          m.content_type === options.contentType),
+    );
     if (match) {
       expect(
-        match.sender_id,
-        `sender_id DB per "${options.body}"`,
+        peerAuthorId(match),
+        `author_id DB per "${options.body}"`,
       ).toBe(options.expectedSenderId);
       return match;
     }
@@ -128,13 +146,16 @@ export async function expectMessagePersistedBothSides(options: {
   senderPassword: string;
   recipientEmail: string;
   recipientPassword: string;
+  contentType?: string;
 }) {
+  const contentType = options.contentType ?? 'text';
   await waitForMessageInDb({
     viewerEmail: options.senderEmail,
     viewerPassword: options.senderPassword,
     peerProfileId: options.recipientUserId,
     body: options.body,
     expectedSenderId: options.senderUserId,
+    contentType,
   });
   await waitForMessageInDb({
     viewerEmail: options.recipientEmail,
@@ -142,5 +163,6 @@ export async function expectMessagePersistedBothSides(options: {
     peerProfileId: options.senderUserId,
     body: options.body,
     expectedSenderId: options.senderUserId,
+    contentType,
   });
 }

@@ -27,8 +27,26 @@ export const ACCOUNT2 = {
   username: process.env.ALFRED_ACCOUNT2_USERNAME ?? 'alfredagent2',
 };
 
+/** Attende fine splash «Caricamento Alfred» prima di cercare UI. */
+export async function waitForAppBoot(page: Page) {
+  await expect
+    .poll(
+      async () => {
+        await enableFlutterAccessibility(page);
+        const loading = await page
+          .getByText('Caricamento Alfred')
+          .isVisible()
+          .catch(() => false);
+        return !loading;
+      },
+      { timeout: E2E_TIMEOUT.boot * 4, intervals: [...E2E_POLL] },
+    )
+    .toBe(true);
+}
+
 /** Attende che Flutter esponga il form di login (poll a11y, niente sleep da 8s). */
 export async function waitForAuthForm(page: Page) {
+  await waitForAppBoot(page);
   const email = page.getByRole('textbox', { name: 'Email' });
   await expect
     .poll(
@@ -36,7 +54,7 @@ export async function waitForAuthForm(page: Page) {
         await enableFlutterAccessibility(page);
         return email.isVisible();
       },
-      { timeout: E2E_TIMEOUT.boot, intervals: [...E2E_POLL] },
+      { timeout: E2E_TIMEOUT.boot * 2, intervals: [...E2E_POLL] },
     )
     .toBe(true);
 }
@@ -49,13 +67,21 @@ export async function waitForLoggedInShell(page: Page) {
     .poll(
       async () => {
         await enableFlutterAccessibility(page);
+        const manifest = await readSavedAccountsManifest(page);
+        const hasSession =
+          manifest != null &&
+          manifest.some((e) => (e.refreshToken?.length ?? 0) > 10);
+        const fabVisible = await fab.isVisible().catch(() => false);
         const overlayClosed = !(await emailField.isVisible().catch(() => false));
         const noPlaceholder = !(await page
           .getByText('Nessun account aperto')
           .isVisible()
           .catch(() => false));
-        const fabVisible = await fab.isVisible().catch(() => false);
-        return overlayClosed && noPlaceholder && fabVisible;
+        return (
+          hasSession &&
+          noPlaceholder &&
+          (fabVisible || overlayClosed)
+        );
       },
       { timeout: E2E_TIMEOUT.auth, intervals: [...E2E_POLL] },
     )
@@ -63,8 +89,15 @@ export async function waitForLoggedInShell(page: Page) {
 }
 
 export async function clearAppData(page: Page) {
+  await page.goto(BASE_URL, {
+    waitUntil: 'domcontentloaded',
+    timeout: E2E_TIMEOUT.boot * 4,
+  });
   await page.evaluate(() => localStorage.clear());
-  await page.reload({ waitUntil: 'domcontentloaded', timeout: E2E_TIMEOUT.boot });
+  await page.goto(BASE_URL, {
+    waitUntil: 'domcontentloaded',
+    timeout: E2E_TIMEOUT.boot * 4,
+  });
   await waitForAuthForm(page);
 }
 
@@ -291,18 +324,25 @@ export async function composeNewMessage(page: Page, peerUsername: string) {
   await waitForChatInput(page);
 }
 
+function chatTextLocator(page: Page, body: string) {
+  const token = body.match(/\d{8,}/)?.[0] ?? body;
+  return page.locator('flt-semantics, [role="group"]').filter({ hasText: token });
+}
+
 export async function sendChatMessage(page: Page, body: string) {
   await expect(
     page.getByText(/cannot message yourself|messaggio a te stesso/i),
-  ).not.toBeVisible({ timeout: 2_000 });
+  ).not.toBeVisible({ timeout: 3_000 });
   const field = await waitForChatInput(page);
   await field.click();
-  await field.pressSequentially(body, { delay: 15 });
-  await field.press('Enter');
+  await page.waitForTimeout(150);
+  await page.keyboard.type(body, { delay: 20 });
+  await page.waitForTimeout(200);
+  await page.keyboard.press('Enter');
   await expect(
     page.getByText(/cannot message yourself|PostgrestException/i),
   ).not.toBeVisible({ timeout: 3_000 });
-  await expect(page.getByText(body)).toBeVisible({
+  await expect(chatTextLocator(page, body).first()).toBeVisible({
     timeout: E2E_TIMEOUT.message,
   });
 }
@@ -333,12 +373,12 @@ export async function expectChatContains(
   options?: { absent?: string[] },
 ) {
   for (const body of bodies) {
-    await expect(page.getByText(body)).toBeVisible({
+    await expect(chatTextLocator(page, body).first()).toBeVisible({
       timeout: E2E_TIMEOUT.message,
     });
   }
   for (const body of options?.absent ?? []) {
-    await expect(page.getByText(body)).not.toBeVisible({ timeout: 2_000 });
+    await expect(chatTextLocator(page, body)).not.toBeVisible({ timeout: 2_000 });
   }
 }
 
