@@ -52,7 +52,8 @@ Estensioni future: **COMP-005** groups (`groupSessionKey` + `GroupMessagesContro
 | Scenario | File | Stato |
 |----------|------|-------|
 | Persistenza manifest + F5 | `e2e/multi-account-persist.spec.ts` | Implementato |
-| Invio + DB + ricezione UI | `e2e/multi-account-messages.spec.ts` | Implementato |
+| Invio + DB + ricezione UI (live) | `e2e/multi-account-messages.spec.ts` | Implementato (override Pages) |
+| Testo, foto, switch e spunte (locale) | `e2e/multi-account-messages.spec.ts` | Implementato (`e2e-multi` default) |
 | **Invio dopo round-trip focus con chat aperta** | `e2e/multi-account-send-after-focus-roundtrip.spec.ts` | Da implementare (tier 2) |
 | Tap push multi-account | `e2e/push-tap-multi-account.spec.ts` | Locale (`e2e-push-local`) |
 

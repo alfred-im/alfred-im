@@ -32,7 +32,7 @@ MANUALE (rete / browser, non in CI):
   integration-ticks Solo contratto spunte (✓ / ✓✓ grigie / ✓✓ blu + allow list)
   integration-push  Delivery plane; smoke SQL push su DB di test (no account utente)
   e2e               tutti i Playwright (client/e2e/)
-  e2e-multi         Playwright multi-account (persist + messages + DB)
+  e2e-multi         Playwright multi-account (persist + messaggi locale / live)
   e2e-push-local    Playwright push locale — ricezione + tap multi-account (stack locale)
   e2e-nav-local     Playwright navigation locale — inbox tap + push poison (stack locale)
   live              flutter test --tags live

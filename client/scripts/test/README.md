@@ -61,7 +61,7 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 | **e2e-push-local** | `bash scripts/test.sh e2e-push-local` | Playwright push locale: ricezione SW + **tap multi-account** (stack locale) |
 | **e2e-nav-local** | `bash scripts/test.sh e2e-nav-local` | Playwright navigation locale: inbox tap, switch account restore, push tap/poison (`--workers=1`) |
 | **e2e** | `bash scripts/test.sh e2e` | Tutti i Playwright in `client/e2e/` |
-| **e2e-multi** | `bash scripts/test.sh e2e-multi` | Multi-account mobile: persistenza F5 + messaggi (UI + DB) |
+| **e2e-multi** | `bash scripts/test.sh e2e-multi` | Multi-account: persistenza F5 + messaggi (testo/foto locale, testo live) |
 | **live** | `bash scripts/test.sh live` | Dart con tag `@Tags(['live'])` (es. password reset PKCE) |
 | **manual** | `bash scripts/test.sh manual` | integration → e2e-multi → live (in sequenza) |
 
@@ -70,7 +70,7 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 | File | Suite | Note |
 |------|-------|------|
 | `multi-account-persist.spec.ts` | `e2e-multi` | 2 account, F5, manifest |
-| `multi-account-messages.spec.ts` | `e2e-multi` | Scambio messaggi + verifica DB (`list_peer_messages`) |
+| `multi-account-messages.spec.ts` | `e2e-multi` | Testo, foto, switch e spunte (locale) o scambio testo bidirezionale (live) |
 | `inbox-load.spec.ts` | `e2e` | Inbox senza digitare in ricerca |
 | `inbox-open-chat.spec.ts` | `e2e-nav-local` | Tap inbox → input chat visibile (cattura spinner infinito) |
 | `account-switch-restore.spec.ts` | `e2e-nav-local` | Switch sidebar → chat ripristinata (scope + showInboxOnMobile) |
@@ -119,10 +119,8 @@ In DevTools (console pagina), filtrare `[alfred][push]`. Fasi attese su tap rius
 | `push_notification_listener_test.dart` | Tap notifica / open_chat → chat peer (mock, gate CI) |
 | `notification_permission_test.dart` | Matrice permesso push + subscribe-first |
 
-Default URL: hosted web client `https://alfred-im.github.io/alfred-im/`  
-Locale: `ALFRED_BASE_URL=http://localhost:8080/ bash scripts/test.sh e2e-multi`
-
-Account: per `e2e-multi` su live usare env `ALFRED_ACCOUNT{1,2}_{EMAIL,PASSWORD}` — **non** usare `test1`–`test4` negli script agente. Push e2e: solo locale (`e2e-push-local`).
+Default `e2e-multi`: stack locale (`supabase start` + Flutter release su `:8080`).  
+Live (override): `ALFRED_BASE_URL=https://alfred-im.github.io/alfred-im/ bash scripts/test.sh e2e-multi` — env `ALFRED_ACCOUNT{1,2}_{EMAIL,PASSWORD}`; **non** usare `test1`–`test4`.
 
 ### Utilità ambiente GUI
 

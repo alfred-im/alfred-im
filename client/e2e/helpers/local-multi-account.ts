@@ -9,7 +9,7 @@ import {
   createLocalConfirmedUser,
   type LocalE2eUser,
 } from './local-auth';
-import { addReceptionAllowlist } from './local-push-setup';
+import { addReceptionAllowlist, configureLocalChatMediaBucket } from './local-push-setup';
 import {
   BASE_URL,
   clearAppData,
@@ -36,6 +36,7 @@ export async function prepareLocalMessagingPair(
   label1: string,
   label2: string,
 ): Promise<LocalMessagingPair> {
+  configureLocalChatMediaBucket();
   const acct1 = await createLocalConfirmedUser(label1);
   const acct2 = await createLocalConfirmedUser(label2);
 
@@ -62,10 +63,6 @@ export async function setupTwoLocalAccounts(
   acct1: LocalE2eUser,
   acct2: LocalE2eUser,
 ): Promise<TwoAccountSetup> {
-  await page.goto(BASE_URL, {
-    waitUntil: 'domcontentloaded',
-    timeout: E2E_TIMEOUT.boot,
-  });
   await clearAppData(page);
   await loginInAuthForm(page, acct1.email, acct1.password);
   expectManifestCount(await readSavedAccountsManifest(page), 1);

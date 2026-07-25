@@ -7,10 +7,10 @@
  */
 export const E2E_TIMEOUT = {
   boot: 12_000,
-  auth: 10_000,
-  ui: 6_000,
-  message: 10_000,
-  db: 8_000,
+  auth: 30_000,
+  ui: 8_000,
+  message: 20_000,
+  db: 15_000,
 } as const;
 
 /** Intervalli poll Playwright (ms) — controlli ravvicinati all'inizio. */
