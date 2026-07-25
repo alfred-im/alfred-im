@@ -6,11 +6,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/allowed_person.dart';
 import '../models/profile_summary.dart';
+import 'profile_search_service.dart';
 
 class ReceptionAllowlistService {
-  ReceptionAllowlistService(this._client);
+  ReceptionAllowlistService(this._client)
+      : _profileSearch = ProfileSearchService(_client);
 
   final SupabaseClient _client;
+  final ProfileSearchService _profileSearch;
 
   Future<List<AllowedPerson>> fetchAllowedPeople(String ownerId) async {
     final rows = await _client
@@ -21,7 +24,7 @@ class ReceptionAllowlistService {
         .eq('owner_id', ownerId)
         .order('created_at');
 
-    return rows.map((row) {
+    final people = rows.map((row) {
       final profileJson = row['profiles'] as Map<String, dynamic>?;
       if (profileJson == null) {
         throw StateError('Profilo consentito mancante per ${row['id']}');
@@ -31,19 +34,17 @@ class ReceptionAllowlistService {
         profile: ProfileSummary.fromProfilesRow(profileJson),
       );
     }).toList();
+
+    people.sort(
+      (a, b) => a.displayName.toLowerCase().compareTo(
+            b.displayName.toLowerCase(),
+          ),
+    );
+    return people;
   }
 
-  Future<List<ProfileSummary>> searchProfiles(String query) async {
-    if (query.trim().length < 2) return [];
-
-    final rows = await _client.rpc(
-      'search_profiles',
-      params: {'p_query': query.trim(), 'p_limit': 20},
-    );
-
-    return (rows as List<dynamic>)
-        .map((r) => ProfileSummary.fromProfilesRow(r as Map<String, dynamic>))
-        .toList();
+  Future<List<ProfileSummary>> searchProfiles(String query) {
+    return _profileSearch.searchProfiles(query);
   }
 
   Future<AllowedPerson> addAllowedProfile({

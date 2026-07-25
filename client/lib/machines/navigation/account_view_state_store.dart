@@ -6,24 +6,43 @@ import '../../models/account_view_state.dart';
 import '../../models/chat_peer.dart';
 import '../../services/account_manager.dart';
 
-/// Applica transizioni [AccountViewState] sullo storage per-account di
-/// [AccountManager]. Unico punto di mutazione view-state (via navigation).
+/// Applica transizioni [AccountViewState] sullo storage per-account.
+/// Unico punto di mutazione view-state (via navigation).
 class AccountViewStateStore {
   AccountViewStateStore(this._manager);
 
   final AccountManager _manager;
+  final Map<String, AccountViewState> _viewsByAccount = {};
+
+  AccountViewState viewStateFor(String? userId) {
+    if (userId == null) return const AccountViewState();
+    return _sanitizeView(userId, _storedViewFor(userId));
+  }
+
+  void apply(
+    String accountUserId,
+    AccountViewState Function(AccountViewState current) transform,
+  ) {
+    if (!_manager.hasOpenAccount(accountUserId)) return;
+    _setViewFor(accountUserId, transform(_storedViewFor(accountUserId)));
+  }
+
+  void clearForAccount(String userId) {
+    _viewsByAccount.remove(userId);
+  }
+
+  void clearAll() {
+    _viewsByAccount.clear();
+  }
 
   void openConversationOnFocusedAccount(ChatPeer peer) {
     final userId = _manager.focusUserId;
     if (userId == null || peer.profileId == userId) return;
-    _manager.applyAccountViewState(userId, (view) => view.openChat(peer));
+    apply(userId, (view) => view.openChat(peer));
   }
 
   void clearConversationForAccount(String accountUserId) {
-    _manager.applyAccountViewState(
-      accountUserId,
-      (view) => view.clearConversation(),
-    );
+    apply(accountUserId, (view) => view.clearConversation());
   }
 
   /// Link / compose: azzera chat solo se il peer attivo è diverso dal target.
@@ -32,7 +51,7 @@ class AccountViewStateStore {
     String peerProfileId,
   ) {
     if (!_manager.hasOpenAccount(accountUserId)) return;
-    final active = _manager.viewStateFor(accountUserId).activePeer?.profileId;
+    final active = viewStateFor(accountUserId).activePeer?.profileId;
     if (active != null && active != peerProfileId) {
       clearConversationForAccount(accountUserId);
     }
@@ -41,31 +60,25 @@ class AccountViewStateStore {
   void showInboxOnMobile() {
     final userId = _manager.focusUserId;
     if (userId == null) return;
-    _manager.applyAccountViewState(
-      userId,
-      (view) => view.backToInboxOnMobile(),
-    );
+    apply(userId, (view) => view.backToInboxOnMobile());
   }
 
   void openGroupChat() {
     final userId = _manager.focusUserId;
     if (userId == null) return;
-    _manager.applyAccountViewState(userId, (view) => view.openGroupChat());
+    apply(userId, (view) => view.openGroupChat());
   }
 
   void backToGroupHome() {
     final userId = _manager.focusUserId;
     if (userId == null) return;
-    _manager.applyAccountViewState(userId, (view) => view.backToGroupHome());
+    apply(userId, (view) => view.backToGroupHome());
   }
 
   void mergeActivePeerFromInbox(ChatPeer inboxRow) {
     final userId = _manager.focusUserId;
     if (userId == null) return;
-    _manager.applyAccountViewState(
-      userId,
-      (view) => view.mergeActivePeer(inboxRow),
-    );
+    apply(userId, (view) => view.mergeActivePeer(inboxRow));
   }
 
   /// Dopo cambio account: shell inbox (o home gruppo), senza commettere scope chat.
@@ -73,9 +86,19 @@ class AccountViewStateStore {
     final userId = _manager.focusUserId;
     if (userId == null) return;
     if (_manager.focusedSession?.profile.isGroup ?? false) {
-      _manager.applyAccountViewState(userId, (view) => view.backToGroupHome());
+      apply(userId, (view) => view.backToGroupHome());
       return;
     }
-    _manager.applyAccountViewState(userId, (view) => view.backToInboxOnMobile());
+    apply(userId, (view) => view.backToInboxOnMobile());
+  }
+
+  AccountViewState _storedViewFor(String userId) =>
+      _viewsByAccount[userId] ?? const AccountViewState();
+
+  AccountViewState _sanitizeView(String userId, AccountViewState view) =>
+      view.sanitizedForAccount(userId);
+
+  void _setViewFor(String userId, AccountViewState view) {
+    _viewsByAccount[userId] = _sanitizeView(userId, view);
   }
 }

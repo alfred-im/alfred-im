@@ -85,7 +85,7 @@ void main() {
       expect(restoreCallsForB, 1);
     });
 
-    test('ensureRecipientAccountActive reactivates session when focus id matches but RAM is empty',
+    test('executeFocus reactivates session when focus id matches but RAM is empty',
         () async {
       await manager.initialize(focusUserId: 'account-a');
       expect(manager.focusUserId, 'account-a');
@@ -93,17 +93,17 @@ void main() {
 
       manager.clearSessionsInRamForTest();
 
-      await manager.ensureRecipientAccountActive('account-a');
+      await manager.executeFocus('account-a');
 
       expect(manager.focusUserId, 'account-a');
       expect(manager.focusedSession?.userId, 'account-a');
       expect(restoreCallsForA, 2);
     });
 
-    test('ensureRecipientAccountActive switches to recipient account', () async {
+    test('executeFocus switches to recipient account', () async {
       await manager.initialize(focusUserId: 'account-a');
 
-      await manager.ensureRecipientAccountActive('account-b');
+      await manager.executeFocus('account-b');
 
       expect(manager.focusUserId, 'account-b');
       expect(manager.focusedSession?.userId, 'account-b');

@@ -61,10 +61,15 @@ class _ShareableLinkListenerState extends State<ShareableLinkListener> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scheduleHandle();
+  }
+
+  @override
   Widget build(BuildContext context) {
     context.watch<AuthController>();
     context.watch<ShareableLinkController>();
-    _scheduleHandle();
     return widget.child;
   }
 }

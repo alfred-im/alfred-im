@@ -155,12 +155,14 @@ void main() {
     });
 
     test('openConversation via effects committa scope su macchina', () async {
+      late final NavigationMachine machine;
       final effects = AccountNavigationEffects(
         manager,
         focusCommand: _ImmediateFocus(manager),
+        onInvalidateCommittedScope: () => machine.invalidateCommittedScope(),
+        onCommitScope: (scope) => machine.commitScope(scope),
       );
-      final machine = NavigationMachine(effects);
-      effects.navigationMachine = machine;
+      machine = NavigationMachine(effects);
 
       final ok = await effects.openConversation(
         accountUserId: 'user-a',

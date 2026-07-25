@@ -2,24 +2,24 @@
 ' Context: contacts
 ' Profile: client
 ' SDD: PROM-PERSONAL-CONTACTS-006
-' Revision: 2026-07-19
+' Revision: 2026-07-25
 
 title Contacts — scorciatoia «Scrivi» da rubrica
 
 actor Utente
 participant "UI" as UI
-participant "ContactsMachine" as CM
+participant "ComposeService" as Compose
 participant "NavigationMachine" as Nav
 
 Utente -> UI : tap scrivi su contatto
 
 alt contatto internal
-  UI -> CM : ComposeFromContact(contact)
-  CM --> UI : ComposePeerResolved\n(ChatPeer)
+  UI -> Compose : peerFromContact(contact)
+  Compose --> UI : ChatPeer
   UI -> Nav : OpenFromCompose(peer)
 else contatto esterno
-  UI -> CM : ComposeFromContact(contact)
-  CM --> UI : ComposeRejected
+  UI -> Compose : peerFromContact(contact)
+  Compose --> UI : errore (esterno non supportato)
   UI -> Utente : messaggio errore
 end
 

@@ -15,6 +15,7 @@ import '../config/voice_config.dart';
 import '../machines/groups/groups_machine.dart';
 import '../models/message.dart';
 import '../models/profile_summary.dart';
+import '../services/group_owner_archive_cache.dart';
 import '../services/message_media_service.dart';
 import '../services/message_service.dart';
 import '../services/profile_service.dart';
@@ -34,6 +35,18 @@ class GroupMessagesUiState {
   String? error;
 }
 
+typedef _GroupBroadcastSend = Future<ChatMessage> Function(String clientId);
+
+class _GroupMediaBroadcastSpec {
+  const _GroupMediaBroadcastSpec({
+    required this.isReady,
+    required this.send,
+  });
+
+  final bool Function() isReady;
+  final _GroupBroadcastSend send;
+}
+
 /// Orchestrazione storico owner, broadcast e realtime gruppo.
 class GroupMessagesCoordinator {
   GroupMessagesCoordinator({
@@ -41,6 +54,7 @@ class GroupMessagesCoordinator {
     required this._messageService,
     required this._messageMediaService,
     required this._profileService,
+    required this._ownerArchiveCache,
     required this._onStateChanged,
     this.onMessagesChanged,
   }) {
@@ -52,11 +66,13 @@ class GroupMessagesCoordinator {
   final MessageService _messageService;
   final MessageMediaService _messageMediaService;
   final ProfileService _profileService;
+  final GroupOwnerArchiveCache _ownerArchiveCache;
   final void Function() _onStateChanged;
   final Future<void> Function()? onMessagesChanged;
   late final GroupMessagesMachine _machine;
   final GroupMessagesUiState state = GroupMessagesUiState();
   final _uuid = const Uuid();
+  final Map<String, ProfileSummary> _knownAuthorProfiles = {};
 
   RealtimeChannel? _channel;
   Future<ChatMessage> Function(String clientId)? _pendingBroadcast;
@@ -79,66 +95,76 @@ class GroupMessagesCoordinator {
     );
   }
 
-  Future<void> sendGif(Uint8List bytes) async {
-    if (bytes.isEmpty || state.isSending) return;
-    await _broadcast((clientId) async {
-      final mediaUrl = await _messageMediaService.uploadGif(
-        bytes: bytes,
-        userId: _userId,
+  Future<void> sendGif(Uint8List bytes) => _runMediaBroadcast(
+        _GroupMediaBroadcastSpec(
+          isReady: () => bytes.isNotEmpty && !state.isSending,
+          send: (clientId) async {
+            final mediaUrl = await _messageMediaService.uploadGif(
+              bytes: bytes,
+              userId: _userId,
+            );
+            return _messageService.broadcastGifToAllowlist(
+              mediaUrl: mediaUrl,
+              currentUserId: _userId,
+              clientMessageId: clientId,
+            );
+          },
+        ),
       );
-      return _messageService.broadcastGifToAllowlist(
-        mediaUrl: mediaUrl,
-        currentUserId: _userId,
-        clientMessageId: clientId,
-      );
-    });
-  }
 
   Future<void> sendVoice({
     required Uint8List bytes,
     required int durationMs,
-  }) async {
-    if (bytes.isEmpty || state.isSending) return;
+  }) {
     final durationSeconds =
         (durationMs / 1000).ceil().clamp(1, VoiceConfig.maxDurationSeconds);
-    await _broadcast((clientId) async {
-      final mediaUrl = await _messageMediaService.uploadVoice(
-        bytes: bytes,
-        userId: _userId,
-      );
-      return _messageService.broadcastVoiceToAllowlist(
-        mediaUrl: mediaUrl,
-        durationSeconds: durationSeconds,
-        mediaSizeBytes: bytes.length,
-        currentUserId: _userId,
-        clientMessageId: clientId,
-      );
-    });
+    return _runMediaBroadcast(
+      _GroupMediaBroadcastSpec(
+        isReady: () => bytes.isNotEmpty && !state.isSending,
+        send: (clientId) async {
+          final mediaUrl = await _messageMediaService.uploadVoice(
+            bytes: bytes,
+            userId: _userId,
+          );
+          return _messageService.broadcastVoiceToAllowlist(
+            mediaUrl: mediaUrl,
+            durationSeconds: durationSeconds,
+            mediaSizeBytes: bytes.length,
+            currentUserId: _userId,
+            clientMessageId: clientId,
+          );
+        },
+      ),
+    );
   }
 
   Future<void> sendImage({
     required Uint8List bytes,
     String? caption,
-  }) async {
-    if (bytes.isEmpty || state.isSending) return;
+  }) {
     final body = caption?.trim() ?? '';
-    await _broadcast((clientId) async {
-      final normalized = await prepareImageForUpload(bytes);
-      final mediaUrl = await _messageMediaService.uploadImage(
-        bytes: normalized.bytes,
-        userId: _userId,
-        extension: normalized.extension,
-        contentType: normalized.mime,
-      );
-      return _messageService.broadcastImageToAllowlist(
-        mediaUrl: mediaUrl,
-        mediaMime: normalized.mime,
-        mediaSizeBytes: normalized.bytes.length,
-        currentUserId: _userId,
-        clientMessageId: clientId,
-        body: body,
-      );
-    });
+    return _runMediaBroadcast(
+      _GroupMediaBroadcastSpec(
+        isReady: () => bytes.isNotEmpty && !state.isSending,
+        send: (clientId) async {
+          final normalized = await prepareImageForUpload(bytes);
+          final mediaUrl = await _messageMediaService.uploadImage(
+            bytes: normalized.bytes,
+            userId: _userId,
+            extension: normalized.extension,
+            contentType: normalized.mime,
+          );
+          return _messageService.broadcastImageToAllowlist(
+            mediaUrl: mediaUrl,
+            mediaMime: normalized.mime,
+            mediaSizeBytes: normalized.bytes.length,
+            currentUserId: _userId,
+            clientMessageId: clientId,
+            body: body,
+          );
+        },
+      ),
+    );
   }
 
   Future<void> sendVideoFromPicker({
@@ -173,26 +199,30 @@ class GroupMessagesCoordinator {
     required String mime,
     required int durationSeconds,
     String? caption,
-  }) async {
-    if (bytes.isEmpty || state.isSending) return;
+  }) {
     final body = caption?.trim() ?? '';
-    await _broadcast((clientId) async {
-      final mediaUrl = await _messageMediaService.uploadVideo(
-        bytes: bytes,
-        userId: _userId,
-        extension: extension,
-        contentType: mime,
-      );
-      return _messageService.broadcastVideoToAllowlist(
-        mediaUrl: mediaUrl,
-        mediaMime: mime,
-        durationSeconds: durationSeconds,
-        mediaSizeBytes: bytes.length,
-        currentUserId: _userId,
-        clientMessageId: clientId,
-        body: body,
-      );
-    });
+    return _runMediaBroadcast(
+      _GroupMediaBroadcastSpec(
+        isReady: () => bytes.isNotEmpty && !state.isSending,
+        send: (clientId) async {
+          final mediaUrl = await _messageMediaService.uploadVideo(
+            bytes: bytes,
+            userId: _userId,
+            extension: extension,
+            contentType: mime,
+          );
+          return _messageService.broadcastVideoToAllowlist(
+            mediaUrl: mediaUrl,
+            mediaMime: mime,
+            durationSeconds: durationSeconds,
+            mediaSizeBytes: bytes.length,
+            currentUserId: _userId,
+            clientMessageId: clientId,
+            body: body,
+          );
+        },
+      ),
+    );
   }
 
   Future<void> sendLocation({
@@ -212,9 +242,12 @@ class GroupMessagesCoordinator {
     );
   }
 
-  Future<void> _broadcast(
-    Future<ChatMessage> Function(String clientId) send,
-  ) async {
+  Future<void> _runMediaBroadcast(_GroupMediaBroadcastSpec spec) async {
+    if (!spec.isReady()) return;
+    await _broadcast(spec.send);
+  }
+
+  Future<void> _broadcast(_GroupBroadcastSend send) async {
     _pendingBroadcast = send;
     await _machine.send(const BroadcastRequested());
   }
@@ -239,10 +272,10 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
   GroupMessagesCoordinator get _c => _coordinator;
 
   @override
-  Future<void> loadMessages() async {
+  Future<void> loadMessages({bool forceRefresh = false}) async {
     try {
-      final loaded = await _c._messageService.fetchOwnerMessages(
-        currentUserId: _c._userId,
+      final loaded = await _c._ownerArchiveCache.fetch(
+        forceRefresh: forceRefresh,
       );
       _c.state.messages = await _enrichMessages(loaded);
       _c.state.error = null;
@@ -285,7 +318,8 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
     _c._pendingBroadcast = null;
     try {
       await send(_c._uuid.v4());
-      await loadMessages();
+      _c._ownerArchiveCache.invalidate();
+      await loadMessages(forceRefresh: true);
       await _c.onMessagesChanged?.call();
       _c.state.error = null;
       await _c._machine.send(const BroadcastAcknowledged());
@@ -301,19 +335,23 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
   @override
   void onRealtimeMessage(ChatMessage message) {
     final index = _c.state.messages.indexWhere((m) => m.id == message.id);
+    final merged = index >= 0
+        ? mergeChatMessage(
+            existing: _c.state.messages[index],
+            incoming: message,
+          )
+        : message;
+
     if (index >= 0) {
-      _c.state.messages[index] = mergeChatMessage(
-        existing: _c.state.messages[index],
-        incoming: message,
-      );
+      _c.state.messages[index] = merged;
     } else {
-      _c.state.messages.add(message);
+      _c.state.messages.add(merged);
       _c.state.messages.sort(
         (a, b) =>
             (a.createdAt ?? DateTime(0)).compareTo(b.createdAt ?? DateTime(0)),
       );
     }
-    unawaited(_enrichAuthorNames());
+    unawaited(_enrichRealtimeMessage(merged));
     _c._notify();
     unawaited(_c.onMessagesChanged?.call());
   }
@@ -326,17 +364,24 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
         .toSet()
         .toList();
 
-    var profilesById = <String, ProfileSummary>{};
     if (authorIds.isNotEmpty) {
-      final profiles = await _c._profileService.fetchSummariesByIds(authorIds);
-      profilesById = {for (final p in profiles) p.id: p};
+      final missingIds = authorIds
+          .where((id) => !_c._knownAuthorProfiles.containsKey(id))
+          .toList();
+      if (missingIds.isNotEmpty) {
+        final profiles =
+            await _c._profileService.fetchSummariesByIds(missingIds);
+        for (final profile in profiles) {
+          _c._knownAuthorProfiles[profile.id] = profile;
+        }
+      }
     }
 
     return source
         .map(
           (m) => enrichMessageAuthor(
             message: m,
-            profilesById: profilesById,
+            profilesById: _c._knownAuthorProfiles,
             currentUserId: _c._userId,
           ).copyWith(
             timeLabel: formatMessageTime(m.createdAt ?? DateTime.now()),
@@ -345,7 +390,32 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
         .toList();
   }
 
-  Future<void> _enrichAuthorNames() async {
-    _c.state.messages = await _enrichMessages(_c.state.messages);
+  Future<void> _enrichRealtimeMessage(ChatMessage message) async {
+    final enriched = await _enrichSingleMessage(message);
+    final index = _c.state.messages.indexWhere((m) => m.id == enriched.id);
+    if (index < 0) return;
+    _c.state.messages[index] = enriched;
+    _c._notify();
+  }
+
+  Future<ChatMessage> _enrichSingleMessage(ChatMessage message) async {
+    final authorId = message.contentAuthorId ?? message.authorId;
+    if (authorId != null &&
+        authorId != _c._userId &&
+        !_c._knownAuthorProfiles.containsKey(authorId)) {
+      final profiles =
+          await _c._profileService.fetchSummariesByIds([authorId]);
+      for (final profile in profiles) {
+        _c._knownAuthorProfiles[profile.id] = profile;
+      }
+    }
+
+    return enrichMessageAuthor(
+      message: message,
+      profilesById: _c._knownAuthorProfiles,
+      currentUserId: _c._userId,
+    ).copyWith(
+      timeLabel: formatMessageTime(message.createdAt ?? DateTime.now()),
+    );
   }
 }

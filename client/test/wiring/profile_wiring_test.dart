@@ -91,6 +91,22 @@ void main() {
       expect(controller.isSaving, isFalse);
     });
 
+    test('uploadAndSaveAvatar attraversa macchina UploadAvatar', () async {
+      final saved = await controller.uploadAndSaveAvatar(
+        bytes: Uint8List.fromList([1, 2, 3]),
+        extension: 'png',
+        contentType: 'image/png',
+        displayName: 'Alice Updated',
+        bio: 'Ciao',
+        pronouns: 'she/her',
+      );
+
+      expect(saved.summary.displayName, 'Alice Updated');
+      expect(saved.avatarUrl, contains('avatar.png'));
+      expect(profileService.lastUpdate?['avatarUrl'], contains('avatar.png'));
+      expect(controller.isUploadingAvatar, isFalse);
+    });
+
     test('uploadAvatar resta sul percorso coordinator', () async {
       final url = await controller.uploadAvatar(
         bytes: Uint8List.fromList([1, 2, 3]),

@@ -65,10 +65,6 @@ class PushPlatform {
     return id;
   }
 
-  static Future<String?> requestPermissionIfNeeded() async {
-    return notificationPermission;
-  }
-
   static Future<PushSubscriptionKeys?> ensureSubscription({
     required String vapidPublicKey,
   }) async {

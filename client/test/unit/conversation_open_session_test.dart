@@ -179,12 +179,14 @@ void main() {
 
     group('AccountNavigationEffects', () {
       test('openConversation via effects dopo consolidate', () async {
+        late final NavigationMachine machine;
         final effects = AccountNavigationEffects(
           manager,
           focusCommand: _NoOpFocus(manager),
+          onInvalidateCommittedScope: () => machine.invalidateCommittedScope(),
+          onCommitScope: (scope) => machine.commitScope(scope),
         );
-        final machine = NavigationMachine(effects);
-        effects.navigationMachine = machine;
+        machine = NavigationMachine(effects);
         manager.clearSessionsInRamForTest();
 
         final ok = await effects.openConversation(

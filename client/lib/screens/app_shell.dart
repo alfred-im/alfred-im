@@ -32,9 +32,9 @@ class AppShell extends StatelessWidget {
                 );
               }
 
-              if (link.notFound) {
+              if (link.invalid) {
                 return ShareableLinkNotFoundScreen(
-                  onDismiss: () => link.dismissNotFound(),
+                  onDismiss: () => link.dismissInvalid(),
                 );
               }
 

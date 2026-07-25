@@ -77,7 +77,6 @@ class ContactsMachine {
         loadState = ContactsLoadState.ready;
       case SetSearchQuery(:final query):
         searchQuery = query;
-        _effects.onSearchQueryChanged(query);
       case AddInternalContact(:final profile):
         await _effects.addInternal(profile);
         await send(const LoadContacts());

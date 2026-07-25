@@ -24,6 +24,7 @@ class _RecordingNavigationEffects implements NavigationEffects {
   OpenConversationSource? lastSource;
   bool? lastAllowFallback;
   bool openResult = true;
+  bool openPeerResult = true;
   bool focusedIsGroup = false;
   int closeCount = 0;
   int openGroupChatCount = 0;
@@ -55,9 +56,9 @@ class _RecordingNavigationEffects implements NavigationEffects {
   void resetShellToAccountHome() {}
 
   @override
-  @override
-  Future<void> openPeerOnFocusedAccount(ChatPeer peer) async {
+  Future<bool> openPeerOnFocusedAccount(ChatPeer peer) async {
     lastPeer = peer;
+    return openPeerResult;
   }
 
   @override
@@ -120,6 +121,15 @@ void main() {
       expect(effects.lastPeer?.profileId, 'peer-b');
     });
 
+    test('OpenPeerOnFocusedAccount rejected → inboxVisible', () async {
+      final effects = _RecordingNavigationEffects()..openPeerResult = false;
+      final machine = NavigationMachine(effects);
+
+      await machine.send(OpenPeerOnFocusedAccount(_peer('peer-b')));
+
+      expect(machine.shellState, NavigationShellState.inboxVisible);
+    });
+
     test('OpenConversationOnAccount ok → chatOpen', () async {
       final effects = _RecordingNavigationEffects();
       final machine = NavigationMachine(effects);
@@ -149,14 +159,15 @@ void main() {
       expect(machine.shellState, NavigationShellState.inboxVisible);
     });
 
-    test('OpenFromShareableLink usa source shareableLink', () async {
+    test('OpenConversationOnAccount con source shareableLink', () async {
       final effects = _RecordingNavigationEffects();
       final machine = NavigationMachine(effects);
 
       await machine.send(
-        const OpenFromShareableLink(
+        const OpenConversationOnAccount(
           accountUserId: 'user-a',
           peerProfileId: 'peer-b',
+          source: OpenConversationSource.shareableLink,
         ),
       );
 
@@ -165,14 +176,15 @@ void main() {
       expect(effects.lastAllowFallback, isTrue);
     });
 
-    test('OpenFromCompose usa stale clear e fallback profilo', () async {
+    test('OpenConversationOnAccount source compose usa fallback profilo', () async {
       final effects = _RecordingNavigationEffects();
       final machine = NavigationMachine(effects);
 
       await machine.send(
-        const OpenFromCompose(
+        const OpenConversationOnAccount(
           accountUserId: 'user-a',
           peerProfileId: 'peer-b',
+          source: OpenConversationSource.compose,
         ),
       );
 
@@ -180,14 +192,15 @@ void main() {
       expect(effects.lastAllowFallback, isTrue);
     });
 
-    test('OpenFromPushTap → chatOpen', () async {
+    test('OpenConversationOnAccount source push → chatOpen', () async {
       final effects = _RecordingNavigationEffects();
       final machine = NavigationMachine(effects);
 
       await machine.send(
-        const OpenFromPushTap(
+        const OpenConversationOnAccount(
           accountUserId: 'user-a',
           peerProfileId: 'peer-b',
+          source: OpenConversationSource.push,
         ),
       );
 

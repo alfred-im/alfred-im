@@ -12,7 +12,7 @@ abstract class ShareableLinkEffects {
 
   Future<ProfileSummary?> findProfileByUsername(String localUsername);
 
-  Future<bool> openChatFromLink({
+  Future<bool> openSharedChat({
     required String accountUserId,
     required String peerProfileId,
   });

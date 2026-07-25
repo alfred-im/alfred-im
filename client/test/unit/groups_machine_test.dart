@@ -4,10 +4,11 @@
 
 import 'package:alfred_client/machines/groups/groups_machine.dart';
 import 'package:alfred_client/models/chat_peer.dart';
-import 'package:alfred_client/models/group_active_author.dart';
 import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../support/fake_messaging_services.dart';
 
 class _RecordingGroupHomeEffects implements GroupHomeEffects {
   int loadCount = 0;
@@ -78,12 +79,23 @@ void main() {
       expect(effects.loadCount, 1);
     });
 
-    test('GroupHomeLoaded → ready', () async {
+    test('GroupHomeLoaded → ready and stores snapshot', () async {
+      const profile = ProfileSummary(
+        id: 'group-1',
+        displayName: 'Famiglia',
+        username: 'famiglia',
+      );
+      final snapshot = GroupHomeSnapshot(
+        createdAt: DateTime.utc(2026, 3, 12),
+        totalMessageCount: 2,
+        conversationTile: ChatPeer.fromProfile(profile: profile),
+      );
       final machine = GroupHomeMachine(_RecordingGroupHomeEffects());
 
-      await machine.send(const GroupHomeLoaded());
+      await machine.send(GroupHomeLoaded(snapshot));
 
       expect(machine.loadState, GroupHomeLoadState.ready);
+      expect(machine.snapshot, snapshot);
     });
 
     test('GroupHomeLoadFailed → ready', () async {
@@ -155,28 +167,50 @@ void main() {
     });
   });
 
-  group('GroupHomeSnapshot', () {
-    test('holds aggregated home data', () {
-      const profile = ProfileSummary(
+  group('buildGroupHomeAggregates', () {
+    test('excludes owner and builds conversation tile from last message', () async {
+      const groupProfile = ProfileSummary(
         id: 'group-1',
         displayName: 'Famiglia',
         username: 'famiglia',
       );
-      final snapshot = GroupHomeSnapshot(
-        createdAt: DateTime.utc(2026, 3, 12),
-        totalMessageCount: 3,
-        activeAuthors: [
-          GroupActiveAuthor(
-            profile: profile,
-            messageCount: 2,
-          ),
-        ],
-        conversationTile: ChatPeer.fromProfile(profile: profile),
+      const mario = ProfileSummary(
+        id: 'mario',
+        displayName: 'Mario',
+        username: 'mario',
       );
 
-      expect(snapshot.totalMessageCount, 3);
-      expect(snapshot.activeAuthors, hasLength(1));
-      expect(snapshot.conversationTile?.profile.id, 'group-1');
+      final client = createTestSupabaseClient();
+      final profileService = FakeProfileService(client)
+        ..profilesById['mario'] = mario;
+
+      final aggregates = await buildGroupHomeAggregates(
+        messages: [
+          ChatMessage(
+            id: 'm1',
+            body: 'ciao',
+            timeLabel: '',
+            isMine: false,
+            originalAuthorId: 'mario',
+            createdAt: DateTime.utc(2026, 7, 1),
+          ),
+          ChatMessage(
+            id: 'm2',
+            body: 'broadcast',
+            timeLabel: '',
+            isMine: true,
+            originalAuthorId: 'group-1',
+            createdAt: DateTime.utc(2026, 7, 2),
+          ),
+        ],
+        profile: groupProfile,
+        currentUserId: 'group-1',
+        profileService: profileService,
+      );
+
+      expect(aggregates.activeAuthors, hasLength(1));
+      expect(aggregates.activeAuthors.single.profile.id, 'mario');
+      expect(aggregates.conversationTile.preview, 'broadcast');
     });
   });
 }

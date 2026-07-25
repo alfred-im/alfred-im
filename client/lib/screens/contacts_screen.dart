@@ -81,15 +81,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                         separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final contact = contacts.filteredContacts[index];
-                          final internalProfile = contact.protocol ==
-                                      ContactProtocol.internal &&
-                                  contact.linkedProfileId != null
-                              ? ProfileSummary(
-                                  id: contact.linkedProfileId!,
-                                  displayName: contact.displayName,
-                                  avatarUrl: contact.avatarUrl,
-                                )
-                              : null;
+                          final internalProfile = contact.internalProfileSummary;
                           return ListTile(
                             leading: internalProfile != null
                                 ? ProfileAvatar(

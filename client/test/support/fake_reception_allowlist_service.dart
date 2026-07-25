@@ -16,7 +16,13 @@ class FakeReceptionAllowlistService extends ReceptionAllowlistService {
 
   @override
   Future<List<AllowedPerson>> fetchAllowedPeople(String ownerId) async {
-    return List.of(people);
+    final copy = List<AllowedPerson>.of(people);
+    copy.sort(
+      (a, b) => a.displayName.toLowerCase().compareTo(
+            b.displayName.toLowerCase(),
+          ),
+    );
+    return copy;
   }
 
   @override

@@ -25,7 +25,7 @@ class ShareableLinkController extends ChangeNotifier {
   bool _liveEffectsBound = false;
 
   ShareableLinkTarget? get target => _machine?.target;
-  bool get notFound => _machine?.state == ShareableLinkState.notFound;
+  bool get invalid => _machine?.state == ShareableLinkState.invalid;
   bool get isHandling => _machine?.handling ?? false;
 
   void _ensureMachine(BuildContext context) {
@@ -55,29 +55,28 @@ class ShareableLinkController extends ChangeNotifier {
       return;
     }
     final hadTarget = _machine!.target != null;
-    final wasNotFound = _machine!.state == ShareableLinkState.notFound;
+    final wasInvalid = _machine!.state == ShareableLinkState.invalid;
     _adapters!.onFragmentChanged(fragment);
-    if (hadTarget || wasNotFound || _machine!.target != null) {
+    if (hadTarget || wasInvalid || _machine!.target != null) {
       notifyListeners();
     }
   }
 
-  void clearNotFound() {
-    if (!notFound) return;
-    _adapters?.onDismissNotFound();
+  void clearInvalid() {
+    if (!invalid) return;
+    _adapters?.onDismissInvalid();
     notifyListeners();
   }
 
   Future<void> handleIfReady(BuildContext context) async {
     _ensureMachine(context);
-    _adapters!.onSessionBecameReady();
     await _adapters!.onHandleRequested();
     notifyListeners();
   }
 
-  void dismissNotFound() {
+  void dismissInvalid() {
     clearShareableFragment();
-    clearNotFound();
+    clearInvalid();
   }
 }
 
@@ -97,7 +96,7 @@ class _NoopShareableLinkEffects implements ShareableLinkEffects {
   }
 
   @override
-  Future<bool> openChatFromLink({
+  Future<bool> openSharedChat({
     required String accountUserId,
     required String peerProfileId,
   }) {

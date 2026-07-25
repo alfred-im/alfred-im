@@ -57,6 +57,7 @@ class AuthController extends ChangeNotifier {
     _sessionState = AuthSessionState();
     _pushCoordinator = PushCoordinator(
       manager: _manager,
+      notificationsAdapters: notificationsAdapters,
       notificationsMachine: notificationsMachine,
     );
     _sessionCoordinator = AuthSessionCoordinator(
@@ -65,6 +66,8 @@ class AuthController extends ChangeNotifier {
       authAdapters: authAdapters,
       multiAccountAdapters: multiAccountAdapters,
       pushCoordinator: _pushCoordinator,
+      notificationsAdapters: notificationsAdapters,
+      navigation: _navigation,
       state: _sessionState,
       onStateChanged: notifyListeners,
     );
@@ -96,12 +99,9 @@ class AuthController extends ChangeNotifier {
   String? get error => _sessionState.error;
   set error(String? value) => _sessionState.error = value;
 
-  bool get showAuthOverlay => _sessionState.showAuthOverlay;
-  set showAuthOverlay(bool value) => _sessionState.showAuthOverlay = value;
+  bool get showAuthOverlay => authMachine.showOverlay;
 
-  bool get authOverlayDismissible => _sessionState.authOverlayDismissible;
-  set authOverlayDismissible(bool value) =>
-      _sessionState.authOverlayDismissible = value;
+  bool get authOverlayDismissible => authMachine.overlayDismissible;
 
   AccountManager get accountManager => _manager;
 
@@ -176,21 +176,6 @@ class AuthController extends ChangeNotifier {
       error = friendlyAuthError(e);
     }
     notifyListeners();
-  }
-
-  Future<bool> focusAccountForPushNotification(String recipientUserId) async {
-    try {
-      final ok = await _navigation.ensureAccountFocused(recipientUserId);
-      if (ok) {
-        error = null;
-      }
-      notifyListeners();
-      return ok;
-    } catch (e) {
-      error = friendlyAuthError(e);
-      notifyListeners();
-      return false;
-    }
   }
 
   Future<bool> openConversationAfterPushTap({

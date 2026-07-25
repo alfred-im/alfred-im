@@ -9,8 +9,6 @@ import '../../models/profile_summary.dart';
 abstract class ReceptionEffects {
   Future<void> loadAllowlist();
 
-  void onSearchQueryChanged(String query);
-
   bool isProfileAllowed(String profileId);
 
   Future<void> addAllowedProfile(ProfileSummary profile);

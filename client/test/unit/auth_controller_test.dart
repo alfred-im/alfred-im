@@ -33,17 +33,17 @@ void main() {
     });
 
     test('closeAuthOverlay is blocked with zero accounts', () async {
-      final auth = AuthController()
-        ..showAuthOverlay = true
-        ..authOverlayDismissible = false;
+      final auth = AuthController();
 
+      await auth.initialize();
       auth.closeAuthOverlay();
 
       expect(auth.showAuthOverlay, isTrue);
     });
 
-    test('openAuthOverlay sets dismissible flag', () {
+    test('openAuthOverlay sets dismissible flag', () async {
       final auth = AuthController();
+      await auth.initialize();
 
       auth.openAuthOverlay(dismissible: true);
 
@@ -65,10 +65,8 @@ void main() {
       final manager = AccountManager();
       manager.focusTestSession(session);
 
-      final auth = AuthController(accountManager: manager)
-        ..showAuthOverlay = true
-        ..authOverlayDismissible = true;
-
+      final auth = AuthController(accountManager: manager);
+      auth.openAuthOverlay(dismissible: true);
       auth.closeAuthOverlay();
 
       expect(auth.showAuthOverlay, isFalse);
@@ -132,7 +130,6 @@ void main() {
       manager.focusTestSession(session);
 
       final auth = AuthController(accountManager: manager)
-        ..showAuthOverlay = false
         ..sessionReady = true;
 
       await auth.removeAccount('user-1');

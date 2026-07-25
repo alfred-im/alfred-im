@@ -4,7 +4,9 @@
 
 import 'package:flutter/material.dart';
 
+import '../models/chat_peer.dart';
 import '../models/conversation_scope.dart';
+import '../models/profile_summary.dart';
 import '../services/account_session.dart';
 
 Key navigationShellKey({
@@ -31,11 +33,14 @@ ConversationScope conversationScopeFor(
   AccountSession session,
   String peerProfileId,
 ) {
-  return ConversationScope(
-    ownerUserId: session.userId,
-    peerProfileId: peerProfileId,
-    sessionEpoch: session.epoch,
-    loadSeq: 0,
+  return ConversationScope.fromSession(
+    session,
+    ChatPeer(
+      profile: ProfileSummary(
+        id: peerProfileId,
+        displayName: peerProfileId,
+      ),
+    ),
   );
 }
 

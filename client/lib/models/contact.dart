@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'profile_summary.dart';
+
 enum ContactProtocol { internal, xmpp, matrix }
 
 ContactProtocol contactProtocolFromString(String value) {
@@ -45,4 +47,15 @@ class Contact {
     );
   }
 
+  /// Profilo Alfred collegato, se contatto interno con `linkedProfileId`.
+  ProfileSummary? get internalProfileSummary {
+    if (protocol != ContactProtocol.internal) return null;
+    final profileId = linkedProfileId;
+    if (profileId == null) return null;
+    return ProfileSummary(
+      id: profileId,
+      displayName: displayName,
+      avatarUrl: avatarUrl,
+    );
+  }
 }

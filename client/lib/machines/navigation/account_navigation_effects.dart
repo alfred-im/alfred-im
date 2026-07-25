@@ -11,21 +11,22 @@ import '../../utils/diagnostic_log.dart';
 import '../multi-account/multi_account_adapters.dart';
 import 'account_view_state_store.dart';
 import 'navigation_effects.dart';
-import 'navigation_machine.dart';
 
 /// Implementazione effetti navigation — logica ex-[NavigationCoordinator].
 class AccountNavigationEffects implements NavigationEffects {
   AccountNavigationEffects(
     this._manager, {
     required this._focusCommand,
-  }) : _viewState = AccountViewStateStore(_manager);
+    required void Function() onInvalidateCommittedScope,
+    required void Function(ConversationScope) onCommitScope,
+  })  : _invalidateCommittedScope = onInvalidateCommittedScope,
+        _commitScopeCallback = onCommitScope;
 
   final AccountManager _manager;
   final AccountFocusCommand _focusCommand;
-  final AccountViewStateStore _viewState;
-
-  /// Impostato da [NavigationCoordinator] dopo creazione macchina.
-  NavigationMachine? navigationMachine;
+  final void Function() _invalidateCommittedScope;
+  final void Function(ConversationScope) _commitScopeCallback;
+  AccountViewStateStore get _viewState => _manager.viewStateStore;
 
   static const _defaultInboxRetryAttempts = 10;
   static const _pushInboxRetryAttempts = 12;
@@ -42,13 +43,11 @@ class AccountNavigationEffects implements NavigationEffects {
 
   @override
   void resetShellToAccountHome() {
-    navigationMachine?.invalidateCommittedScope();
     _viewState.resetShellToAccountHome();
   }
 
   @override
   void closeConversation() {
-    navigationMachine?.invalidateCommittedScope();
     if (focusedAccountIsGroup) {
       backToGroupHome();
       return;
@@ -58,7 +57,6 @@ class AccountNavigationEffects implements NavigationEffects {
 
   @override
   void openGroupChat() {
-    navigationMachine?.invalidateCommittedScope();
     _viewState.openGroupChat();
   }
 
@@ -73,7 +71,7 @@ class AccountNavigationEffects implements NavigationEffects {
   }
 
   @override
-  Future<void> openPeerOnFocusedAccount(ChatPeer peer) async {
+  Future<bool> openPeerOnFocusedAccount(ChatPeer peer) async {
     final focus = _manager.focusUserId;
     if (focus == null || peer.profileId == focus) {
       diagLogFail(
@@ -82,8 +80,7 @@ class AccountNavigationEffects implements NavigationEffects {
         focus == null ? 'no_focus' : 'self_peer',
         data: {'peerProfileId': peer.profileId},
       );
-      navigationMachine?.invalidateCommittedScope();
-      return;
+      return false;
     }
 
     if (!await _ensureAccountSessionReady(focus)) {
@@ -93,8 +90,7 @@ class AccountNavigationEffects implements NavigationEffects {
         'session_not_ready',
         data: {'accountUserId': focus, 'peerProfileId': peer.profileId},
       );
-      navigationMachine?.invalidateCommittedScope();
-      return;
+      return false;
     }
 
     _viewState.openConversationOnFocusedAccount(peer);
@@ -107,6 +103,7 @@ class AccountNavigationEffects implements NavigationEffects {
       'open_peer',
       data: {'accountUserId': focus, 'peerProfileId': peer.profileId},
     );
+    return true;
   }
 
   @override
@@ -221,10 +218,10 @@ class AccountNavigationEffects implements NavigationEffects {
   void _commitScope(ConversationScope scope) {
     final session = _manager.focusedSession;
     if (session == null || !scope.matchesSession(session)) {
-      navigationMachine?.invalidateCommittedScope();
+      _invalidateCommittedScope();
       return;
     }
-    navigationMachine?.commitScope(scope);
+    _commitScopeCallback(scope);
   }
 
   Future<bool> _ensureAccountSessionReady(String accountUserId) async {

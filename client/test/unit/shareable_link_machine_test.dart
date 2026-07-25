@@ -27,7 +27,7 @@ class _RecordingShareableLinkEffects implements ShareableLinkEffects {
   }
 
   @override
-  Future<bool> openChatFromLink({
+  Future<bool> openSharedChat({
     required String accountUserId,
     required String peerProfileId,
   }) async {
@@ -49,14 +49,14 @@ ProfileSummary _profile(String id, String username) => ProfileSummary(
 
 void main() {
   group('ShareableLinkMachine', () {
-    test('ParseFragment valido → targetQueued', () {
+    test('ParseFragment valido → pending', () {
       final effects = _RecordingShareableLinkEffects();
       final machine = ShareableLinkMachine(effects);
       final adapters = ShareableLinkAdapters(machine);
 
       adapters.onFragmentChanged('mario');
 
-      expect(machine.state, ShareableLinkState.targetQueued);
+      expect(machine.state, ShareableLinkState.pending);
       expect(machine.target?.address, 'mario');
     });
 
@@ -68,7 +68,7 @@ void main() {
       adapters.onFragmentChanged('mario/chat');
       await adapters.onHandleRequested();
 
-      expect(machine.state, ShareableLinkState.targetQueued);
+      expect(machine.state, ShareableLinkState.pending);
       expect(effects.openChatCount, 0);
     });
 
@@ -81,7 +81,7 @@ void main() {
       adapters.onFragmentChanged('mario/chat');
       await adapters.onHandleRequested();
 
-      expect(machine.state, ShareableLinkState.targetQueued);
+      expect(machine.state, ShareableLinkState.pending);
       expect(effects.openChatCount, 0);
     });
 
@@ -112,7 +112,7 @@ void main() {
       expect(effects.openChatCount, 0);
     });
 
-    test('profilo assente → notFound', () async {
+    test('profilo assente → invalid', () async {
       final effects = _RecordingShareableLinkEffects();
       final machine = ShareableLinkMachine(effects);
       final adapters = ShareableLinkAdapters(machine);
@@ -120,7 +120,7 @@ void main() {
       adapters.onFragmentChanged('unknown');
       await adapters.onHandleRequested();
 
-      expect(machine.state, ShareableLinkState.notFound);
+      expect(machine.state, ShareableLinkState.invalid);
     });
 
     test('self peer → ignorato', () async {

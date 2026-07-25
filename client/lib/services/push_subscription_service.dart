@@ -54,13 +54,6 @@ class PushSubscriptionService {
 
     PushPlatform.ensureMessageHook();
 
-    if (!shouldAttemptPushSubscription(
-      isPushSupported: PushPlatform.isPushSupported,
-      notificationPermission: PushPlatform.notificationPermission,
-    )) {
-      return;
-    }
-
     final keys = await PushPlatform.ensureSubscription(
       vapidPublicKey: AppConfig.vapidPublicKey,
     );

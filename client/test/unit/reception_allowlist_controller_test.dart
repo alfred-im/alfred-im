@@ -67,6 +67,26 @@ void main() {
     expect(controller.allowedPeople.single.profile.id, bob.id);
   });
 
+  test('load sorts allowed people by display name', () async {
+    service.people = [
+      AllowedPerson(
+        entryId: 'e1',
+        profile: ProfileSummary(id: 'z-id', displayName: 'Zara'),
+      ),
+      AllowedPerson(
+        entryId: 'e2',
+        profile: ProfileSummary(id: 'a-id', displayName: 'Anna'),
+      ),
+    ];
+
+    await controller.load();
+
+    expect(
+      controller.allowedPeople.map((p) => p.displayName).toList(),
+      ['Anna', 'Zara'],
+    );
+  });
+
   test('filteredAllowedPeople respects search query', () async {
     service.people = [
       AllowedPerson(entryId: 'e1', profile: alice),

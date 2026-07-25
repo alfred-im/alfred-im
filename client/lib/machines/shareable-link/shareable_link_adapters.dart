@@ -16,15 +16,11 @@ class ShareableLinkAdapters {
     _machine.send(ParseFragment(fragment));
   }
 
-  void onSessionBecameReady() {
-    _machine.send(const SessionBecameReady());
-  }
-
   Future<void> onHandleRequested() {
     return _machine.handleTargetIfReady();
   }
 
-  void onDismissNotFound() {
-    _machine.send(const DismissNotFound());
+  void onDismissInvalid() {
+    _machine.send(const DismissInvalid());
   }
 }

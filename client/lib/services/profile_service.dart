@@ -15,6 +15,12 @@ class ProfileService {
   static const _publicProfileColumns =
       'id, username, display_name, avatar_url, pronouns, profile_kind';
 
+  static String? normalizeOptional(String? value) {
+    if (value == null) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
   Future<UserProfile> updateProfile({
     required String userId,
     required String displayName,
@@ -25,9 +31,9 @@ class ProfileService {
     final row = await _client
         .from('profiles')
         .update({
-          'display_name': displayName,
-          'bio': bio,
-          'pronouns': pronouns,
+          'display_name': displayName.trim(),
+          'bio': normalizeOptional(bio),
+          'pronouns': normalizeOptional(pronouns),
           'avatar_url': ?avatarUrl,
           'updated_at': DateTime.now().toUtc().toIso8601String(),
         })

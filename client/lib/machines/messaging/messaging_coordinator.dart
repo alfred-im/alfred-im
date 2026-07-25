@@ -153,20 +153,17 @@ class MessagingCoordinator {
   }
 
   Future<void> sendText(String body) async {
-    if (body.trim().isEmpty || isSending) return;
-    if (loadMachine.state == ConversationLoadState.sessionBlocked) return;
+    if (body.trim().isEmpty || _guardSend()) return;
     await effects.sendText(body);
   }
 
   Future<void> sendGif(Uint8List bytes) async {
-    if (bytes.isEmpty || isSending) return;
-    if (loadMachine.state == ConversationLoadState.sessionBlocked) return;
+    if (bytes.isEmpty || _guardSend()) return;
     await effects.sendGif(bytes);
   }
 
   Future<void> sendImage({required Uint8List bytes, String? caption}) async {
-    if (bytes.isEmpty || isSending) return;
-    if (loadMachine.state == ConversationLoadState.sessionBlocked) return;
+    if (bytes.isEmpty || _guardSend()) return;
     await effects.sendImage(bytes: bytes, caption: caption);
   }
 
@@ -174,12 +171,7 @@ class MessagingCoordinator {
     required PlatformFile file,
     String? caption,
   }) async {
-    if (isSending) {
-      state.error = 'Invio già in corso, attendi il completamento.';
-      _notify();
-      return;
-    }
-    if (loadMachine.state == ConversationLoadState.sessionBlocked) return;
+    if (_guardSend(notifyOnBusy: true)) return;
     await effects.sendVideoFromPicker(file: file, caption: caption);
   }
 
@@ -190,12 +182,7 @@ class MessagingCoordinator {
     required int durationSeconds,
     String? caption,
   }) async {
-    if (isSending) {
-      state.error = 'Invio già in corso, attendi il completamento.';
-      _notify();
-      return;
-    }
-    if (loadMachine.state == ConversationLoadState.sessionBlocked) return;
+    if (_guardSend(notifyOnBusy: true)) return;
     await effects.sendVideo(
       bytes: bytes,
       extension: extension,
@@ -209,8 +196,7 @@ class MessagingCoordinator {
     required Uint8List bytes,
     required int durationMs,
   }) async {
-    if (bytes.isEmpty || isSending) return;
-    if (loadMachine.state == ConversationLoadState.sessionBlocked) return;
+    if (bytes.isEmpty || _guardSend()) return;
     await effects.sendVoice(bytes: bytes, durationMs: durationMs);
   }
 
@@ -218,14 +204,12 @@ class MessagingCoordinator {
     required double latitude,
     required double longitude,
   }) async {
-    if (isSending) return;
-    if (loadMachine.state == ConversationLoadState.sessionBlocked) return;
+    if (_guardSend()) return;
     await effects.sendLocation(latitude: latitude, longitude: longitude);
   }
 
   Future<void> retryMessage(String clientId) async {
-    if (isSending) return;
-    if (loadMachine.state == ConversationLoadState.sessionBlocked) return;
+    if (_guardSend()) return;
     await effects.retryMessage(clientId);
   }
 
@@ -247,6 +231,21 @@ class MessagingCoordinator {
   void dispose() {
     detachRealtime();
     effects.disposeQueue();
+  }
+
+  /// `true` when send must be blocked (busy or session expired).
+  bool _guardSend({bool notifyOnBusy = false}) {
+    if (isSending) {
+      if (notifyOnBusy) {
+        state.error = 'Invio già in corso, attendi il completamento.';
+        _notify();
+      }
+      return true;
+    }
+    if (loadMachine.state == ConversationLoadState.sessionBlocked) {
+      return true;
+    }
+    return false;
   }
 
   void _notify() {

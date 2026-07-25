@@ -33,7 +33,7 @@ class AuthShareableLinkEffects implements ShareableLinkEffects {
   }
 
   @override
-  Future<bool> openChatFromLink({
+  Future<bool> openSharedChat({
     required String accountUserId,
     required String peerProfileId,
   }) {
