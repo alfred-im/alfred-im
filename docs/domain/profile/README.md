@@ -2,15 +2,12 @@
 
 **Stato modellazione:** `verified`
 
+Identità **propria** dell'account autenticato (`SaveProfile`, `UploadAvatar`). Per la scheda peer (overlay su altri utenti) vedi [peer-profile](../peer-profile/) — surfaccia delegata, non parte di questo contesto.
+
 ## Mapping dominio → implementazione
 
 | Dominio | Statechart | Codice |
 |---------|------------|--------|
 | `UpdateOwnProfile` | `SaveProfile`, `UploadAvatar` | `ProfileService`, `ProfileAvatarService` |
-| `ViewPeerProfile` | `OpenPeerProfile` | overlay peer |
-| `TogglePeerConsent` | `ToggleAllowMessages` | → `ReceptionMachine` |
-| `TogglePeerInContacts` | `ToggleRubrica` | → `ContactsMachine` |
-| `StartChatFromPeerProfile` | `StartChatFromProfile` | → navigation |
-| `SharePeerProfile` | `ShareProfileLink` | share sheet |
 
 Statechart: `client/lib/machines/profile/` · `ProfileCoordinator`

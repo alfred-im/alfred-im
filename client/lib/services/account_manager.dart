@@ -391,7 +391,6 @@ class AccountManager {
     }
 
     if (_testOnlyAccountIds.contains(userId)) {
-      await _loadFocusedInboxIfNeeded();
       return;
     }
 
@@ -401,8 +400,6 @@ class AccountManager {
       disposeOtherSessions: true,
       persistFocus: true,
     );
-
-    await _loadFocusedInboxIfNeeded();
   }
 
   Future<void> _executeFocusImpl(
@@ -421,7 +418,6 @@ class AccountManager {
           deferProfileSync: deferProfileSync,
         );
       }
-      await _loadFocusedInboxIfNeeded();
       return;
     }
 
@@ -457,7 +453,6 @@ class AccountManager {
           deferProfileSync: deferProfileSync,
         );
       }
-      await _loadFocusedInboxIfNeeded();
     } catch (e) {
       _focusUserId = previousFocus;
       if (previousFocus != null) {
@@ -481,7 +476,8 @@ class AccountManager {
     }
   }
 
-  Future<void> _loadFocusedInboxIfNeeded() async {
+  /// Carica inbox dell'account in focus (non gruppi). Chiamato dal layer navigation.
+  Future<void> refreshFocusedInbox() async {
     final session = _sessions[_focusUserId];
     if (session == null || session.profile.isGroup) return;
     await session.inboxController.load();

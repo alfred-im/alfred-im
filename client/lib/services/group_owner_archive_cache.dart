@@ -3,13 +3,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import '../models/message.dart';
+import 'group_archive_service.dart';
 import 'message_service.dart';
 
 /// Cache sessione per `list_owner_messages` — condivisa tra home e conversazione
 /// gruppo per evitare fetch duplicati sullo stesso owner.
 class GroupOwnerArchiveCache {
   GroupOwnerArchiveCache({
-    required this.messageService,
+    required this.groupArchiveService,
     required this.userId,
   });
 
@@ -18,22 +19,32 @@ class GroupOwnerArchiveCache {
   /// Istanza condivisa per [userId] nella sessione corrente.
   static GroupOwnerArchiveCache forUserId({
     required String userId,
-    required MessageService messageService,
+    required GroupArchiveService groupArchiveService,
   }) {
     final existing = _byUserId[userId];
     if (existing != null) return existing;
     final cache = GroupOwnerArchiveCache(
-      messageService: messageService,
+      groupArchiveService: groupArchiveService,
       userId: userId,
     );
     _byUserId[userId] = cache;
     return cache;
   }
 
+  /// Retrocompat: estrae [GroupArchiveService] dalla facade [MessageService].
+  static GroupOwnerArchiveCache forMessageService({
+    required String userId,
+    required MessageService messageService,
+  }) =>
+      forUserId(
+        userId: userId,
+        groupArchiveService: messageService.groupArchive,
+      );
+
   /// Rimuove la cache quando la sessione account viene smontata.
   static void evict(String userId) => _byUserId.remove(userId);
 
-  final MessageService messageService;
+  final GroupArchiveService groupArchiveService;
   final String userId;
 
   List<ChatMessage>? _cached;
@@ -49,7 +60,7 @@ class GroupOwnerArchiveCache {
       _cached = null;
     }
 
-    final future = messageService
+    final future = groupArchiveService
         .fetchOwnerMessages(currentUserId: userId)
         .then((messages) {
       _cached = List<ChatMessage>.from(messages);

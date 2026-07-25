@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 
 import '../adapters/external_intent_adapter.dart';
 import '../coordinators/auth_session_coordinator.dart';
+import '../coordinators/navigation_session_access.dart';
 import '../coordinators/push_coordinator.dart';
 import '../machines/auth/auth_adapters.dart';
 import '../machines/auth/auth_machine.dart';
@@ -46,6 +47,7 @@ class AuthController extends ChangeNotifier {
           _manager,
           focusCommand: multiAccountAdapters,
         );
+    _navigationAccess = NavigationSessionAccess(_navigation);
     multiAccountEffects.onFocusIdentityChanged = notifyListeners;
     _navigation.onStateChanged = notifyListeners;
     _manager.onFocusedProfileSynced = notifyListeners;
@@ -75,6 +77,7 @@ class AuthController extends ChangeNotifier {
 
   final AccountManager _manager;
   late final NavigationCoordinator _navigation;
+  late final NavigationSessionAccess _navigationAccess;
   late final AuthSessionState _sessionState;
   late final PushCoordinator _pushCoordinator;
   late final AuthSessionCoordinator _sessionCoordinator;
@@ -85,8 +88,10 @@ class AuthController extends ChangeNotifier {
   late final AuthMachine authMachine;
   late final AuthAdapters authAdapters;
 
+  NavigationSessionAccess get navigation => _navigationAccess;
+
   @visibleForTesting
-  NavigationCoordinator get navigation => _navigation;
+  NavigationCoordinator get navigationCoordinator => _navigation;
 
   ExternalIntentAdapter get externalIntents => _navigation.externalIntents;
 
@@ -105,17 +110,17 @@ class AuthController extends ChangeNotifier {
 
   AccountManager get accountManager => _manager;
 
-  ConversationScope? get committedScope => _navigation.committedScope;
+  ConversationScope? get committedScope => _navigationAccess.committedScope;
 
-  ConversationMessageStore get messageStore => _navigation.messageStore;
+  ConversationMessageStore get messageStore => _navigationAccess.messageStore;
 
-  bool get isChatShellOpen => _navigation.isChatShellOpen;
+  bool get isChatShellOpen => _navigationAccess.isChatShellOpen;
 
   bool isConversationReady({
     required AccountSession session,
     required ChatPeer peer,
   }) {
-    return _navigation.isConversationReady(session: session, peer: peer);
+    return _navigationAccess.isConversationReady(session: session, peer: peer);
   }
 
   List<OpenAccount> get openAccounts => _manager.openAccounts;
@@ -170,7 +175,7 @@ class AuthController extends ChangeNotifier {
     if (!hasOpenAccounts || focusedSession != null) return;
     try {
       await multiAccountAdapters.reconnectFocusedSession();
-      _navigation.syncShellAfterFocusSettled();
+      await _navigation.syncShellAfterFocusSettled();
       error = null;
     } catch (e) {
       error = friendlyAuthError(e);
@@ -238,23 +243,23 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> openConversation(ChatPeer peer) async {
-    await _navigation.openPeerOnFocusedAccount(peer);
+    await _navigationAccess.openConversation(peer);
   }
 
   Future<void> backToInboxOnMobile() async {
-    await _navigation.closeConversation();
+    await _navigationAccess.backToInboxOnMobile();
   }
 
   Future<void> openGroupChat() async {
-    await _navigation.openGroupChat();
+    await _navigationAccess.openGroupChat();
   }
 
   Future<void> backToGroupHome() async {
-    await _navigation.backToGroupHome();
+    await _navigationAccess.backToGroupHome();
   }
 
   void mergeActivePeerFromInbox(ChatPeer inboxRow) {
-    _navigation.adapters.mergeActivePeerFromInbox(inboxRow);
+    _navigationAccess.mergeActivePeerFromInbox(inboxRow);
     notifyListeners();
   }
 

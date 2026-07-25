@@ -86,15 +86,17 @@ class NavigationCoordinator {
   }
 
   /// Bootstrap / reconnect / focus macchina: allinea shell (inbox); nessun restore chat implicito.
-  void syncShellAfterFocusSettled() {
+  Future<void> syncShellAfterFocusSettled() async {
     _machine.invalidateCommittedScope();
     _machine.resetShellToAccountHome();
     _machine.syncShellFromCommittedScope();
+    await _manager.refreshFocusedInbox();
     _notifyStateChanged();
   }
 
   Future<void> switchToAccount(String accountUserId) async {
     await adapters.switchToAccount(accountUserId);
+    await _manager.refreshFocusedInbox();
     _notifyStateChanged();
   }
 
@@ -112,7 +114,10 @@ class NavigationCoordinator {
     final ok = _manager.focusUserId == accountUserId &&
         session != null &&
         session.userId == accountUserId;
-    if (ok) _notifyStateChanged();
+    if (ok) {
+      await _manager.refreshFocusedInbox();
+      _notifyStateChanged();
+    }
     return ok;
   }
 

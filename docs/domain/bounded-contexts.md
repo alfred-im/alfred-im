@@ -22,6 +22,12 @@ Ogni riga è un **contesto delimitato** (DDD): propri glossario, comandi/eventi 
 
 Mappa relazioni: [context-map.puml](../model/context-map.puml).
 
+### Surficie non-BC
+
+| Surfaccia | Documentazione | Note |
+|-----------|----------------|------|
+| **peer-profile** | [peer-profile/](./peer-profile/) | Overlay modale su altri utenti; comandi delegati a reception, contacts, navigation — non riga BC separata |
+
 ## Dipendenze principali (solo riferimento)
 
 ```text

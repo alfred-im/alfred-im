@@ -109,12 +109,12 @@ void main() {
       );
     });
 
-    test('syncShellAfterFocusSettled non committa scope da view-state', () {
+    test('syncShellAfterFocusSettled non committa scope da view-state', () async {
       manager.applyAccountViewState(
         'user-a',
         (view) => view.openChat(ChatPeer(profile: peer)),
       );
-      navigation.syncShellAfterFocusSettled();
+      await navigation.syncShellAfterFocusSettled();
 
       expect(navigation.committedScope, isNull);
       expect(navigation.machine.shellState, NavigationShellState.inboxVisible);

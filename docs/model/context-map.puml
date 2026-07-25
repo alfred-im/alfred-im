@@ -20,12 +20,12 @@ package "Client (statechart)" #E8F4FD {
   component [contacts\nverified] as contacts
   component [profile\nverified] as profile
   component [reception\nverified] as reception
+  component [groups\nverified] as groups
   component [media\ndocumented] as media
 }
 
 package "Server / infrastruttura" #F5F5F5 {
   component [delivery\ndocumented] as delivery
-  component [groups\nverified] as groups
   component [federation\ndocumented] as federation
 }
 
@@ -67,6 +67,12 @@ end note
 note bottom of delivery
   DeliveryWorker (platform)
   — nessuno statechart client
+end note
+
+note bottom of groups
+  GroupHomeMachine /
+  GroupMessagesMachine
+  (client statechart)
 end note
 
 @enduml

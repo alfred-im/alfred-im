@@ -46,9 +46,9 @@ void main() {
       );
       await auth.initialize();
 
-      await auth.navigation.openPeerOnFocusedAccount(_peer('peer-b', 'bob'));
+      await auth.navigation.openConversation(_peer('peer-b', 'bob'));
 
-      expect(auth.navigation.machine.shellState, NavigationShellState.chatOpen);
+      expect(auth.navigationCoordinator.machine.shellState, NavigationShellState.chatOpen);
       expect(auth.viewState.activePeer?.profileId, 'peer-b');
     });
 
@@ -74,7 +74,7 @@ void main() {
       );
 
       expect(ok, isFalse);
-      expect(auth.navigation.machine.shellState,
+      expect(auth.navigationCoordinator.machine.shellState,
           NavigationShellState.inboxVisible);
     });
   });

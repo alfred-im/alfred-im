@@ -17,6 +17,7 @@ import '../services/inbox_service.dart';
 import '../services/message_media_service.dart';
 import '../services/message_service.dart';
 import '../services/outbound_message_queue.dart';
+import '../groups/group_peer_author_enrichment.dart';
 import '../services/profile_service.dart';
 
 class MessagesController extends ChangeNotifier {
@@ -29,7 +30,7 @@ class MessagesController extends ChangeNotifier {
     required this.messageMediaService,
     required this.inboxService,
     this.profileService,
-    this.peerIsGroup = false,
+    this.groupPeerAuthorEnrichment,
     this.onMessagesChanged,
     this.hasValidSession,
     this.isScopeCommitted,
@@ -46,7 +47,7 @@ class MessagesController extends ChangeNotifier {
       messageMediaService: messageMediaService,
       inboxService: inboxService,
       profileService: profileService,
-      peerIsGroup: peerIsGroup,
+      groupPeerAuthorEnrichment: groupPeerAuthorEnrichment,
       onMessagesChanged: onMessagesChanged,
       hasValidSession: hasValidSession,
       isScopeCommitted: isScopeCommitted,
@@ -57,7 +58,6 @@ class MessagesController extends ChangeNotifier {
       state: _state,
       effects: _effects,
       onChanged: notifyListeners,
-      peerIsGroup: peerIsGroup,
     );
     _effects.onSendLifecycleStart = _coordinator.notifySendStarted;
     _effects.onSendLifecycleEnd = _coordinator.notifySendEnded;
@@ -81,7 +81,7 @@ class MessagesController extends ChangeNotifier {
   final MessageMediaService messageMediaService;
   final InboxService inboxService;
   final ProfileService? profileService;
-  final bool peerIsGroup;
+  final GroupPeerAuthorEnrichment? groupPeerAuthorEnrichment;
 
   late final MessagingConversationState _state;
   late final MessagesControllerEffects _effects;

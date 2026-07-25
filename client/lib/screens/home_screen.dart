@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(builder: (_) => const ContactsScreen()),
     );
     if (!mounted || peer == null) return;
-    auth.openConversation(peer);
+    auth.navigation.openConversation(peer);
   }
 
   Future<void> _startMessageFromAddress(String address) async {
@@ -66,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final peer = await session.composeService.resolveAddress(address);
       if (!mounted) return;
-      auth.openConversation(peer);
+      auth.navigation.openConversation(peer);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final updated = inbox.findByProfileId(activePeer.profileId);
     if (updated != null) {
-      auth.mergeActivePeerFromInbox(updated);
+      auth.navigation.mergeActivePeerFromInbox(updated);
     }
   }
 
@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading: inbox.isLoading,
       error: inbox.error,
       onRetry: inbox.load,
-      onSelected: auth.openConversation,
+      onSelected: auth.navigation.openConversation,
       onSearchChanged: inbox.setSearchQuery,
       onDrawerTap: showDrawerButton ? _openDrawer : null,
       onContactsTap: _openContacts,
@@ -181,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= SplitShellLayout.breakpoint;
     final showChatOnMobile =
-        auth.isChatShellOpen && auth.committedScope != null;
+        auth.navigation.isChatShellOpen && auth.navigation.committedScope != null;
 
     final inboxArea = !auth.hasOpenAccounts
         ? const NoAccountPlaceholder()
@@ -204,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
       auth: auth,
       session: session,
       showBackButton: !isWide,
-      onBack: isWide ? null : auth.backToInboxOnMobile,
+      onBack: isWide ? null : auth.navigation.backToInboxOnMobile,
       onMessagesChanged: _onMessagesChanged,
     );
 
@@ -239,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Stack(
       key: navigationShellKey(
         focusUserId: auth.userId,
-        committedScope: auth.committedScope,
+        committedScope: auth.navigation.committedScope,
       ),
       children: [
         _mainContent(context),

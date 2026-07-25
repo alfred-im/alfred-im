@@ -4,60 +4,53 @@
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../config/voice_config.dart';
 import '../models/message.dart';
-import '../utils/mailbox_message_filter.dart';
+import 'group_archive_service.dart';
+import 'peer_message_service.dart';
 
+/// Facade backward-compatible: compone [PeerMessageService] e [GroupArchiveService].
 class MessageService {
-  MessageService(this._client);
+  MessageService(SupabaseClient client)
+      : _peer = PeerMessageService(client),
+        _groupArchive = GroupArchiveService(client);
 
-  final SupabaseClient _client;
+  final PeerMessageService _peer;
+  final GroupArchiveService _groupArchive;
+
+  GroupArchiveService get groupArchive => _groupArchive;
+
+  PeerMessageService get peer => _peer;
 
   Future<List<ChatMessage>> fetchOwnerMessages({
     required String currentUserId,
     int limit = 200,
-  }) async {
-    final rows = await _client.rpc(
-      'list_owner_messages',
-      params: {'p_limit': limit},
-    );
-
-    return (rows as List<dynamic>)
-        .map(
-          (r) => ChatMessage.fromJson(
-            json: r as Map<String, dynamic>,
-            currentUserId: currentUserId,
-          ),
-        )
-        .where((m) => m.hasRenderableContent)
-        .toList();
-  }
+  }) =>
+      _groupArchive.fetchOwnerMessages(
+        currentUserId: currentUserId,
+        limit: limit,
+      );
 
   Future<ChatMessage> broadcastToAllowlist({
     required String body,
     required String currentUserId,
     required String clientMessageId,
-  }) {
-    return _broadcastToAllowlist(
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'text',
-      body: body,
-    );
-  }
+  }) =>
+      _groupArchive.broadcastToAllowlist(
+        body: body,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
 
   Future<ChatMessage> broadcastGifToAllowlist({
     required String mediaUrl,
     required String currentUserId,
     required String clientMessageId,
-  }) {
-    return _broadcastToAllowlist(
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'gif',
-      mediaUrl: mediaUrl,
-    );
-  }
+  }) =>
+      _groupArchive.broadcastGifToAllowlist(
+        mediaUrl: mediaUrl,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
 
   Future<ChatMessage> broadcastVoiceToAllowlist({
     required String mediaUrl,
@@ -65,32 +58,27 @@ class MessageService {
     required int mediaSizeBytes,
     required String currentUserId,
     required String clientMessageId,
-  }) {
-    return _broadcastToAllowlist(
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'voice',
-      mediaUrl: mediaUrl,
-      durationSeconds: durationSeconds,
-      mediaMime: VoiceConfig.canonicalMime,
-      mediaSizeBytes: mediaSizeBytes,
-    );
-  }
+  }) =>
+      _groupArchive.broadcastVoiceToAllowlist(
+        mediaUrl: mediaUrl,
+        durationSeconds: durationSeconds,
+        mediaSizeBytes: mediaSizeBytes,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
 
   Future<ChatMessage> broadcastLocationToAllowlist({
     required double latitude,
     required double longitude,
     required String currentUserId,
     required String clientMessageId,
-  }) {
-    return _broadcastToAllowlist(
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'location',
-      latitude: latitude,
-      longitude: longitude,
-    );
-  }
+  }) =>
+      _groupArchive.broadcastLocationToAllowlist(
+        latitude: latitude,
+        longitude: longitude,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
 
   Future<ChatMessage> broadcastImageToAllowlist({
     required String mediaUrl,
@@ -99,17 +87,15 @@ class MessageService {
     required String currentUserId,
     required String clientMessageId,
     String body = '',
-  }) {
-    return _broadcastToAllowlist(
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'image',
-      body: body,
-      mediaUrl: mediaUrl,
-      mediaMime: mediaMime,
-      mediaSizeBytes: mediaSizeBytes,
-    );
-  }
+  }) =>
+      _groupArchive.broadcastImageToAllowlist(
+        mediaUrl: mediaUrl,
+        mediaMime: mediaMime,
+        mediaSizeBytes: mediaSizeBytes,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+        body: body,
+      );
 
   Future<ChatMessage> broadcastVideoToAllowlist({
     required String mediaUrl,
@@ -119,110 +105,55 @@ class MessageService {
     required String currentUserId,
     required String clientMessageId,
     String body = '',
-  }) {
-    return _broadcastToAllowlist(
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'video',
-      body: body,
-      mediaUrl: mediaUrl,
-      durationSeconds: durationSeconds,
-      mediaMime: mediaMime,
-      mediaSizeBytes: mediaSizeBytes,
-    );
-  }
-
-  Future<ChatMessage> _broadcastToAllowlist({
-    required String currentUserId,
-    required String clientMessageId,
-    required String contentType,
-    String body = '',
-    String? mediaUrl,
-    int? durationSeconds,
-    String? mediaMime,
-    int? mediaSizeBytes,
-    double? latitude,
-    double? longitude,
-  }) async {
-    final params = <String, dynamic>{
-      'p_body': body,
-      'p_client_message_id': clientMessageId,
-      'p_content_type': contentType,
-      'p_media_url': ?mediaUrl,
-      'p_duration_seconds': ?durationSeconds,
-      'p_media_mime': ?mediaMime,
-      'p_media_size_bytes': ?mediaSizeBytes,
-      'p_latitude': ?latitude,
-      'p_longitude': ?longitude,
-    };
-
-    final row = await _client.rpc('broadcast_message_to_allowlist', params: params);
-    return ChatMessage.fromJson(
-      json: row as Map<String, dynamic>,
-      currentUserId: currentUserId,
-    );
-  }
+  }) =>
+      _groupArchive.broadcastVideoToAllowlist(
+        mediaUrl: mediaUrl,
+        mediaMime: mediaMime,
+        durationSeconds: durationSeconds,
+        mediaSizeBytes: mediaSizeBytes,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+        body: body,
+      );
 
   Future<List<ChatMessage>> fetchPeerMessages({
     required String peerProfileId,
     required String currentUserId,
     int limit = 100,
     DateTime? beforeCreatedAt,
-  }) async {
-    final params = <String, dynamic>{
-      'p_peer_profile_id': peerProfileId,
-      'p_limit': limit,
-    };
-    if (beforeCreatedAt != null) {
-      params['p_before_created_at'] = beforeCreatedAt.toUtc().toIso8601String();
-    }
-
-    final rows = await _client.rpc(
-      'list_peer_messages',
-      params: params,
-    );
-
-    return (rows as List<dynamic>)
-        .map(
-          (r) => ChatMessage.fromJson(
-            json: r as Map<String, dynamic>,
-            currentUserId: currentUserId,
-          ),
-        )
-        .where((m) => m.hasRenderableContent)
-        .toList();
-  }
+  }) =>
+      _peer.fetchPeerMessages(
+        peerProfileId: peerProfileId,
+        currentUserId: currentUserId,
+        limit: limit,
+        beforeCreatedAt: beforeCreatedAt,
+      );
 
   Future<ChatMessage> sendToProfile({
     required String recipientProfileId,
     required String body,
     required String currentUserId,
     required String clientMessageId,
-  }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'text',
-      body: body,
-    );
-  }
+  }) =>
+      _peer.sendToProfile(
+        recipientProfileId: recipientProfileId,
+        body: body,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
 
   Future<ChatMessage> sendGifToProfile({
     required String recipientProfileId,
     required String mediaUrl,
     required String currentUserId,
     required String clientMessageId,
-  }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'gif',
-      body: '',
-      mediaUrl: mediaUrl,
-    );
-  }
+  }) =>
+      _peer.sendGifToProfile(
+        recipientProfileId: recipientProfileId,
+        mediaUrl: mediaUrl,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
 
   Future<ChatMessage> sendVoiceToProfile({
     required String recipientProfileId,
@@ -231,19 +162,15 @@ class MessageService {
     required int mediaSizeBytes,
     required String currentUserId,
     required String clientMessageId,
-  }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'voice',
-      body: '',
-      mediaUrl: mediaUrl,
-      durationSeconds: durationSeconds,
-      mediaMime: VoiceConfig.canonicalMime,
-      mediaSizeBytes: mediaSizeBytes,
-    );
-  }
+  }) =>
+      _peer.sendVoiceToProfile(
+        recipientProfileId: recipientProfileId,
+        mediaUrl: mediaUrl,
+        durationSeconds: durationSeconds,
+        mediaSizeBytes: mediaSizeBytes,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
 
   Future<ChatMessage> sendLocationToProfile({
     required String recipientProfileId,
@@ -251,17 +178,14 @@ class MessageService {
     required double longitude,
     required String currentUserId,
     required String clientMessageId,
-  }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'location',
-      body: '',
-      latitude: latitude,
-      longitude: longitude,
-    );
-  }
+  }) =>
+      _peer.sendLocationToProfile(
+        recipientProfileId: recipientProfileId,
+        latitude: latitude,
+        longitude: longitude,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
 
   Future<ChatMessage> sendImageToProfile({
     required String recipientProfileId,
@@ -271,18 +195,16 @@ class MessageService {
     required String currentUserId,
     required String clientMessageId,
     String body = '',
-  }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'image',
-      body: body,
-      mediaUrl: mediaUrl,
-      mediaMime: mediaMime,
-      mediaSizeBytes: mediaSizeBytes,
-    );
-  }
+  }) =>
+      _peer.sendImageToProfile(
+        recipientProfileId: recipientProfileId,
+        mediaUrl: mediaUrl,
+        mediaMime: mediaMime,
+        mediaSizeBytes: mediaSizeBytes,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+        body: body,
+      );
 
   Future<ChatMessage> sendVideoToProfile({
     required String recipientProfileId,
@@ -293,168 +215,38 @@ class MessageService {
     required String currentUserId,
     required String clientMessageId,
     String body = '',
-  }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
-      currentUserId: currentUserId,
-      clientMessageId: clientMessageId,
-      contentType: 'video',
-      body: body,
-      mediaUrl: mediaUrl,
-      durationSeconds: durationSeconds,
-      mediaMime: mediaMime,
-      mediaSizeBytes: mediaSizeBytes,
-    );
-  }
-
-  Future<ChatMessage> _sendToProfile({
-    required String recipientProfileId,
-    required String currentUserId,
-    required String clientMessageId,
-    required String contentType,
-    required String body,
-    String? mediaUrl,
-    int? durationSeconds,
-    String? mediaMime,
-    int? mediaSizeBytes,
-    double? latitude,
-    double? longitude,
-  }) async {
-    if (contentType == 'text') {
-      final row = await _client.rpc(
-        'send_message_to_profile',
-        params: {
-          'p_recipient_profile_id': recipientProfileId,
-          'p_body': body,
-          'p_client_message_id': clientMessageId,
-          'p_content_type': contentType,
-        },
-      );
-      return ChatMessage.fromJson(
-        json: row as Map<String, dynamic>,
+  }) =>
+      _peer.sendVideoToProfile(
+        recipientProfileId: recipientProfileId,
+        mediaUrl: mediaUrl,
+        mediaMime: mediaMime,
+        durationSeconds: durationSeconds,
+        mediaSizeBytes: mediaSizeBytes,
         currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+        body: body,
       );
-    }
-
-    final params = {
-      'p_recipient_profile_id': recipientProfileId,
-      'p_body': body,
-      'p_client_message_id': clientMessageId,
-      'p_content_type': contentType,
-      'p_media_url': ?mediaUrl,
-      'p_duration_seconds': ?durationSeconds,
-      'p_media_mime': ?mediaMime,
-      'p_media_size_bytes': ?mediaSizeBytes,
-      'p_latitude': ?latitude,
-      'p_longitude': ?longitude,
-    };
-
-    final row = await _client.rpc('send_message_to_profile', params: params);
-
-    return ChatMessage.fromJson(
-      json: row as Map<String, dynamic>,
-      currentUserId: currentUserId,
-    );
-  }
 
   RealtimeChannel subscribeToOwnerMessages({
     required String currentUserId,
     required void Function(ChatMessage message) onMessage,
-  }) {
-    void handle(PostgresChangePayload payload) {
-      final record = payload.newRecord;
-      if (record.isEmpty) return;
-      if (record['owner_id'] != currentUserId) return;
-      final message = ChatMessage.fromJson(
-        json: record,
+  }) =>
+      _groupArchive.subscribeToOwnerMessages(
         currentUserId: currentUserId,
+        onMessage: onMessage,
       );
-      final isDeliveryTick = payload.eventType == PostgresChangeEvent.update;
-      if (!message.hasRenderableContent && !isDeliveryTick) return;
-      onMessage(message);
-    }
-
-    return _client
-        .channel('messages-owner-$currentUserId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'messages',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
-            value: currentUserId,
-          ),
-          callback: handle,
-        )
-        .onPostgresChanges(
-          event: PostgresChangeEvent.update,
-          schema: 'public',
-          table: 'messages',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
-            value: currentUserId,
-          ),
-          callback: handle,
-        )
-        .subscribe();
-  }
 
   RealtimeChannel subscribeToPeerMessages({
     required String currentUserId,
     required String peerProfileId,
     required void Function(ChatMessage message) onMessage,
-  }) {
-    bool isRelevant(Map<String, dynamic> record) =>
-        isMailboxPeerMessageRelevant(
-          record: record,
-          currentUserId: currentUserId,
-          peerProfileId: peerProfileId,
-        );
-
-    void handle(PostgresChangePayload payload) {
-      final record = payload.newRecord;
-      if (record.isEmpty || !isRelevant(record)) return;
-      final message = ChatMessage.fromJson(
-        json: record,
+  }) =>
+      _peer.subscribeToPeerMessages(
         currentUserId: currentUserId,
+        peerProfileId: peerProfileId,
+        onMessage: onMessage,
       );
-      final isDeliveryTick = payload.eventType == PostgresChangeEvent.update;
-      if (!message.hasRenderableContent && !isDeliveryTick) return;
-      onMessage(message);
-    }
 
-    return _client
-        .channel('messages-peer-$currentUserId-$peerProfileId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'messages',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
-            value: currentUserId,
-          ),
-          callback: handle,
-        )
-        .onPostgresChanges(
-          event: PostgresChangeEvent.update,
-          schema: 'public',
-          table: 'messages',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
-            value: currentUserId,
-          ),
-          callback: handle,
-        )
-        .subscribe();
-  }
-
-  void disposeChannel(RealtimeChannel? channel) {
-    if (channel != null) {
-      _client.removeChannel(channel);
-    }
-  }
+  void disposeChannel(RealtimeChannel? channel) =>
+      _peer.disposeChannel(channel);
 }

@@ -15,14 +15,13 @@ import '../../config/voice_config.dart';
 import '../../models/conversation_scope.dart';
 import '../../models/message.dart';
 import '../../models/outbound_queue_item.dart';
-import '../../models/profile_summary.dart';
+import '../../groups/group_peer_author_enrichment.dart';
 import '../../services/inbox_service.dart';
 import '../../services/message_media_service.dart';
 import '../../services/message_service.dart';
 import '../../services/outbound_media_cache.dart';
 import '../../services/outbound_message_queue.dart';
 import '../../services/profile_service.dart';
-import '../../utils/author_display.dart' show enrichMessageAuthor;
 import '../../utils/date_format.dart';
 import '../../utils/image_bytes.dart';
 import '../../utils/picked_file_bytes.dart';
@@ -44,6 +43,7 @@ abstract class MessagingEffects {
   /// Carica pagina più vecchia; `false` se scope non più attivo.
   Future<bool> fetchAndPrependOlderMessages();
   Future<void> enrichAuthorNamesIfNeeded();
+  bool get hasGroupPeerAuthorEnrichment;
   Future<void> markRead();
   RealtimeChannel? attachRealtime(void Function(ChatMessage message) onMessage);
   void disposeRealtime(RealtimeChannel? channel);
@@ -73,7 +73,7 @@ class MessagesControllerEffects implements MessagingEffects {
     required this.messageMediaService,
     required this.inboxService,
     this.profileService,
-    this.peerIsGroup = false,
+    this.groupPeerAuthorEnrichment,
     this.onMessagesChanged,
     this.hasValidSession,
     this.isScopeCommitted,
@@ -96,8 +96,11 @@ class MessagesControllerEffects implements MessagingEffects {
   final MessageMediaService messageMediaService;
   final InboxService inboxService;
   final ProfileService? profileService;
-  final bool peerIsGroup;
+  final GroupPeerAuthorEnrichment? groupPeerAuthorEnrichment;
   final OutboundMessageQueue _outboundQueue;
+
+  @override
+  bool get hasGroupPeerAuthorEnrichment => groupPeerAuthorEnrichment != null;
   final MessagingConversationState _state;
   final VoidCallback _onChanged;
   final _uuid = const Uuid();
@@ -341,30 +344,9 @@ class MessagesControllerEffects implements MessagingEffects {
   }
 
   Future<List<ChatMessage>> _enrichMessages(List<ChatMessage> source) async {
-    if (!peerIsGroup || profileService == null) return source;
-
-    final authorIds = source
-        .map((m) => m.contentAuthorId ?? m.authorId)
-        .whereType<String>()
-        .where((id) => id != userId)
-        .toSet()
-        .toList();
-
-    var profilesById = <String, ProfileSummary>{};
-    if (authorIds.isNotEmpty) {
-      final profiles = await profileService!.fetchSummariesByIds(authorIds);
-      profilesById = {for (final p in profiles) p.id: p};
-    }
-
-    return source
-        .map(
-          (m) => enrichMessageAuthor(
-            message: m,
-            profilesById: profilesById,
-            currentUserId: userId,
-          ),
-        )
-        .toList();
+    final enricher = groupPeerAuthorEnrichment;
+    if (enricher == null) return source;
+    return enricher.enrichMessages(source);
   }
 
   @override
