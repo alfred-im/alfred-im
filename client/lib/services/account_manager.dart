@@ -304,6 +304,33 @@ class AccountManager {
     return executeFocus(userId);
   }
 
+  /// Account UI in focus: ripristina GoTrue senza fidarsi della sessione in RAM.
+  ///
+  /// Usato all'ingresso in chat — JWT assente, auth disallineato o sessioni spurie.
+  Future<void> consolidateSessionForAccount(String userId) {
+    return _enqueueFocusOperation(
+      () => _consolidateSessionForAccountImpl(userId),
+    );
+  }
+
+  /// Sessione utilizzabile per RPC messaggistica sull'account [userId].
+  bool isSessionReadyForAccount(String userId) {
+    if (_testOnlyAccountIds.contains(userId)) {
+      final session = _sessions[userId];
+      return session != null && session.userId == userId;
+    }
+    final session = _sessions[userId];
+    if (session == null || session.userId != userId) return false;
+    final authUserId = session.client.auth.currentUser?.id;
+    if (authUserId != null && authUserId != userId) return false;
+    if (session.hasValidJwt()) {
+      return authUserId == userId;
+    }
+    // Hook test: sessioni iniettate senza JWT (restoreSessionForTest).
+    if (restoreSessionForTest != null) return true;
+    return false;
+  }
+
   /// Manifest con account ma sessione GoTrue assente in RAM — ripristina il focus.
   Future<void> reconnectFocusedSession(String focusUserId) {
     return _enqueueFocusOperation(
@@ -348,6 +375,43 @@ class AccountManager {
     }
   }
 
+  Future<void> _consolidateSessionForAccountImpl(String userId) async {
+    if (!_hasAccount(userId)) return;
+
+    if (_focusUserId != userId) {
+      await _executeFocusImpl(userId);
+      return;
+    }
+
+    if (_testOnlyAccountIds.contains(userId)) {
+      await _loadFocusedInboxIfNeeded();
+      return;
+    }
+
+    if (isSessionReadyForAccount(userId) && _sessions.length == 1) {
+      await _loadFocusedInboxIfNeeded();
+      return;
+    }
+
+    for (final entry in _sessions.entries.toList()) {
+      if (entry.key == userId) continue;
+      await entry.value.disposeResources(clearAuthStorage: false);
+      _sessions.remove(entry.key);
+    }
+
+    if (!isSessionReadyForAccount(userId)) {
+      final stale = _sessions.remove(userId);
+      if (stale != null) {
+        await stale.disposeResources(clearAuthStorage: false);
+      }
+      _focusUserId = userId;
+      await _storage.saveFocusUserId(userId);
+      await _activateSessionForFocus(userId, requireSession: true);
+    }
+
+    await _loadFocusedInboxIfNeeded();
+  }
+
   Future<void> _executeFocusImpl(
     String userId, {
     bool deferProfileSync = false,
@@ -356,8 +420,12 @@ class AccountManager {
     if (!_hasAccount(userId)) return;
 
     if (_focusUserId == userId) {
-      if (_sessions[userId] == null &&
+      if (!isSessionReadyForAccount(userId) &&
           !_testOnlyAccountIds.contains(userId)) {
+        final stale = _sessions.remove(userId);
+        if (stale != null) {
+          await stale.disposeResources(clearAuthStorage: false);
+        }
         await _activateSessionForFocus(
           userId,
           requireSession: true,

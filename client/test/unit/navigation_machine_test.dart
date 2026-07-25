@@ -55,7 +55,8 @@ class _RecordingNavigationEffects implements NavigationEffects {
   void resetShellToAccountHome() {}
 
   @override
-  void openPeerOnFocusedAccount(ChatPeer peer) {
+  @override
+  Future<void> openPeerOnFocusedAccount(ChatPeer peer) async {
     lastPeer = peer;
   }
 
@@ -247,7 +248,7 @@ void main() {
       final session = await _testSession('account-a');
       manager.focusTestSession(session);
 
-      nav.openPeerOnFocusedAccount(_peer('peer-b'));
+      await nav.openPeerOnFocusedAccount(_peer('peer-b'));
 
       expect(manager.viewState.activePeer?.profileId, 'peer-b');
       expect(manager.viewState.showInboxOnMobile, isFalse);
@@ -255,7 +256,7 @@ void main() {
 
     test('CloseConversation ripristina inbox mobile', () async {
       manager.focusTestSession(await _testSession('account-a'));
-      nav.openPeerOnFocusedAccount(_peer('peer-b'));
+      await nav.openPeerOnFocusedAccount(_peer('peer-b'));
 
       await nav.closeConversation();
 
@@ -319,7 +320,7 @@ void main() {
       manager.focusTestSession(await _testSession('account-a'));
 
       await manager.setFocus('account-b');
-      nav.openPeerOnFocusedAccount(_peer('peer-x'));
+      await nav.openPeerOnFocusedAccount(_peer('peer-x'));
 
       await manager.setFocus('account-a');
       expect(manager.viewState.activePeer, isNull);

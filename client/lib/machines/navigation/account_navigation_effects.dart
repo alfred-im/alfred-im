@@ -73,7 +73,7 @@ class AccountNavigationEffects implements NavigationEffects {
   }
 
   @override
-  void openPeerOnFocusedAccount(ChatPeer peer) {
+  Future<void> openPeerOnFocusedAccount(ChatPeer peer) async {
     final focus = _manager.focusUserId;
     if (focus == null || peer.profileId == focus) {
       diagLogFail(
@@ -85,6 +85,18 @@ class AccountNavigationEffects implements NavigationEffects {
       navigationMachine?.invalidateCommittedScope();
       return;
     }
+
+    if (!await _ensureAccountSessionReady(focus)) {
+      diagLogFail(
+        'nav',
+        'open_peer',
+        'session_not_ready',
+        data: {'accountUserId': focus, 'peerProfileId': peer.profileId},
+      );
+      navigationMachine?.invalidateCommittedScope();
+      return;
+    }
+
     _viewState.openConversationOnFocusedAccount(peer);
     final session = _manager.focusedSession;
     if (session != null) {
@@ -152,7 +164,7 @@ class AccountNavigationEffects implements NavigationEffects {
         break;
     }
 
-    if (!await _ensureAccountFocused(accountUserId)) {
+    if (!await _ensureAccountSessionReady(accountUserId)) {
       return false;
     }
 
@@ -215,7 +227,7 @@ class AccountNavigationEffects implements NavigationEffects {
     navigationMachine?.commitScope(scope);
   }
 
-  Future<bool> _ensureAccountFocused(String accountUserId) async {
+  Future<bool> _ensureAccountSessionReady(String accountUserId) async {
     diagLog(
       'nav',
       'focus.start',
@@ -235,10 +247,24 @@ class AccountNavigationEffects implements NavigationEffects {
       return false;
     }
 
-    await _focusCommand.focusAccount(accountUserId);
+    try {
+      if (_manager.focusUserId != accountUserId) {
+        await _focusCommand.focusAccount(accountUserId);
+      }
+      await _manager.consolidateSessionForAccount(accountUserId);
+    } catch (_) {
+      diagLogFail(
+        'nav',
+        'focus',
+        'consolidate_failed',
+        data: {'accountUserId': accountUserId},
+      );
+      return false;
+    }
 
     final session = _manager.focusedSession;
     final ok = _manager.focusUserId == accountUserId &&
+        _manager.isSessionReadyForAccount(accountUserId) &&
         session != null &&
         session.userId == accountUserId;
 

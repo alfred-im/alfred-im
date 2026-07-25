@@ -201,7 +201,7 @@ class NavigationMachine {
         _syncShellStateFromCommittedScope();
       case OpenPeerOnFocusedAccount(:final peer):
         invalidateCommittedScope();
-        _effects.openPeerOnFocusedAccount(peer);
+        await _effects.openPeerOnFocusedAccount(peer);
         shellState = NavigationShellState.chatOpen;
       case OpenConversationOnAccount(
         :final accountUserId,

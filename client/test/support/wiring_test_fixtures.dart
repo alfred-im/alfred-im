@@ -17,11 +17,14 @@ Future<AuthController> createWiredAuthController({
   AccountManager? manager,
 }) async {
   final accountManager = manager ?? AccountManager();
-  accountManager.restoreSessionForTest ??=
-      (account) => AccountSession.createForTest(
-            profile: account.profile,
-            client: createTestSupabaseClient(),
-          );
+  accountManager.restoreSessionForTest ??= (account) async {
+    final client = createTestSupabaseClient();
+    await installTestAuthSession(client, userId: account.userId);
+    return AccountSession.createForTest(
+      profile: account.profile,
+      client: client,
+    );
+  };
 
   final auth = AuthController(accountManager: accountManager);
   return auth;

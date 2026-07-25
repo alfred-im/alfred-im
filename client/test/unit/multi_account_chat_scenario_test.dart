@@ -119,7 +119,7 @@ void main() {
       final peer2 = _peer(_profile(_agent1, 'alfredagent1'));
 
       await auth.setFocus(_agent1);
-      nav.openPeerOnFocusedAccount(peer1);
+      await nav.openPeerOnFocusedAccount(peer1);
       expect(auth.viewState.activePeer?.profileId, _agent2);
 
       final scopeAgent1 = testConversationScope(
@@ -141,7 +141,7 @@ void main() {
       expect(chatAsAgent1.messages.length, 2);
 
       await auth.setFocus(_agent2);
-      nav.openPeerOnFocusedAccount(peer2);
+      await nav.openPeerOnFocusedAccount(peer2);
       expect(auth.viewState.activePeer?.profileId, _agent1);
 
       final scopeAgent2 = testConversationScope(

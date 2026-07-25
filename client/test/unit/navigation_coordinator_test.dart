@@ -56,6 +56,7 @@ void main() {
           ),
         }),
       );
+      await installTestAuthSession(sessionA.client, userId: 'account-a');
       sessionB = await AccountSession.createForTest(
         profile: const ProfileSummary(
           id: 'account-b',
@@ -82,6 +83,7 @@ void main() {
           ),
         }),
       );
+      await installTestAuthSession(sessionB.client, userId: 'account-b');
 
       sessionA.wireStorage(storage);
       sessionB.wireStorage(storage);
@@ -101,8 +103,8 @@ void main() {
       expect(manager.focusUserId, 'account-b');
     });
 
-    test('openPeerOnFocusedAccount rejects self peer', () {
-      nav.openPeerOnFocusedAccount(
+    test('openPeerOnFocusedAccount rejects self peer', () async {
+      await nav.openPeerOnFocusedAccount(
         ChatPeer(
           profile: const ProfileSummary(
             id: 'account-a',
