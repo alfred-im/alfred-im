@@ -9,6 +9,7 @@ import '../models/chat_peer.dart';
 import '../models/group_active_author.dart';
 import '../models/profile_summary.dart';
 import '../services/account_session.dart';
+import '../services/group_owner_archive_cache.dart';
 import '../services/message_service.dart';
 import '../services/profile_service.dart';
 
@@ -19,18 +20,24 @@ class GroupHomeController extends ChangeNotifier {
     required this.profile,
     required MessageService messageService,
     required ProfileService profileService,
-  }) {
+    GroupOwnerArchiveCache? ownerArchiveCache,
+  }) : ownerArchiveCache = ownerArchiveCache ??
+            GroupOwnerArchiveCache.forUserId(
+              userId: session.userId,
+              messageService: messageService,
+            ) {
     _coordinator = GroupHomeCoordinator(
       session: session,
       profile: profile,
-      messageService: messageService,
       profileService: profileService,
+      ownerArchiveCache: this.ownerArchiveCache,
       onStateChanged: notifyListeners,
     );
   }
 
   final AccountSession session;
   final ProfileSummary profile;
+  final GroupOwnerArchiveCache ownerArchiveCache;
   late final GroupHomeCoordinator _coordinator;
 
   DateTime? get createdAt => _coordinator.state.createdAt;
@@ -53,4 +60,10 @@ class GroupHomeController extends ChangeNotifier {
 
   static String formatBirthDate(DateTime dateTime) =>
       GroupHomeCoordinator.formatBirthDate(dateTime);
+
+  @override
+  void dispose() {
+    GroupOwnerArchiveCache.evict(session.userId);
+    super.dispose();
+  }
 }

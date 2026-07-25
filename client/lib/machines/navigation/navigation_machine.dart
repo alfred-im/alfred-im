@@ -44,41 +44,6 @@ final class OpenConversationOnAccount extends NavigationEvent {
   final bool allowProfileFallback;
 }
 
-/// Tap notifica push — delega a [OpenConversationOnAccount] con source push.
-final class OpenFromPushTap extends NavigationEvent {
-  const OpenFromPushTap({
-    required this.accountUserId,
-    required this.peerProfileId,
-  });
-
-  final String accountUserId;
-  final String peerProfileId;
-}
-
-/// Adapter shareable-link → OpenConversation source shareableLink.
-final class OpenFromShareableLink extends NavigationEvent {
-  const OpenFromShareableLink({
-    required this.accountUserId,
-    required this.peerProfileId,
-  });
-
-  final String accountUserId;
-  final String peerProfileId;
-}
-
-/// Nuovo messaggio da compose — source compose.
-final class OpenFromCompose extends NavigationEvent {
-  const OpenFromCompose({
-    required this.accountUserId,
-    required this.peerProfileId,
-    this.allowProfileFallback = true,
-  });
-
-  final String accountUserId;
-  final String peerProfileId;
-  final bool allowProfileFallback;
-}
-
 /// Back mobile / chiudi chat — inbox o group home.
 final class CloseConversation extends NavigationEvent {
   const CloseConversation();
@@ -201,8 +166,12 @@ class NavigationMachine {
         _syncShellStateFromCommittedScope();
       case OpenPeerOnFocusedAccount(:final peer):
         invalidateCommittedScope();
-        await _effects.openPeerOnFocusedAccount(peer);
-        shellState = NavigationShellState.chatOpen;
+        final peerOk = await _effects.openPeerOnFocusedAccount(peer);
+        shellState = peerOk
+            ? NavigationShellState.chatOpen
+            : _effects.focusedAccountIsGroup
+                ? NavigationShellState.groupShell
+                : NavigationShellState.inboxVisible;
       case OpenConversationOnAccount(
         :final accountUserId,
         :final peerProfileId,
@@ -213,29 +182,6 @@ class NavigationMachine {
           accountUserId: accountUserId,
           peerProfileId: peerProfileId,
           source: source,
-          allowProfileFallback: allowProfileFallback,
-        );
-      case OpenFromPushTap(:final accountUserId, :final peerProfileId):
-        await _openConversation(
-          accountUserId: accountUserId,
-          peerProfileId: peerProfileId,
-          source: OpenConversationSource.push,
-        );
-      case OpenFromShareableLink(:final accountUserId, :final peerProfileId):
-        await _openConversation(
-          accountUserId: accountUserId,
-          peerProfileId: peerProfileId,
-          source: OpenConversationSource.shareableLink,
-        );
-      case OpenFromCompose(
-        :final accountUserId,
-        :final peerProfileId,
-        :final allowProfileFallback,
-      ):
-        await _openConversation(
-          accountUserId: accountUserId,
-          peerProfileId: peerProfileId,
-          source: OpenConversationSource.compose,
           allowProfileFallback: allowProfileFallback,
         );
       case CloseConversation():

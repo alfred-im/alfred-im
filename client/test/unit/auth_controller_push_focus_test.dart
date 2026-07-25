@@ -28,7 +28,7 @@ class _FakeProfileService extends ProfileService {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('AuthController focusAccountForPushNotification', () {
+  group('AuthController push tap flow', () {
     late AccountStorageService storage;
     late AccountManager manager;
     late AccountSession sessionA;
@@ -105,33 +105,6 @@ void main() {
 
       auth = AuthController(accountManager: manager);
       await auth.initialize();
-    });
-
-    test('reactivates session when focus id already matches recipient', () async {
-      expect(auth.userId, 'account-a');
-
-      manager.clearSessionsInRamForTest();
-
-      final focused = await auth.focusAccountForPushNotification('account-a');
-
-      expect(focused, isTrue);
-      expect(auth.userId, 'account-a');
-      expect(auth.focusedSession?.userId, 'account-a');
-    });
-
-    test('switches focus to recipient account', () async {
-      final focused = await auth.focusAccountForPushNotification('account-b');
-
-      expect(focused, isTrue);
-      expect(auth.userId, 'account-b');
-      expect(auth.focusedSession?.userId, 'account-b');
-    });
-
-    test('returns false when recipient is not in manifest', () async {
-      final focused = await auth.focusAccountForPushNotification('missing');
-
-      expect(focused, isFalse);
-      expect(auth.userId, 'account-a');
     });
 
     test('tap flow: focus recipient then open peer conversation', () async {

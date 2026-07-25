@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../machines/multi-account/multi_account_effects.dart';
+import '../machines/navigation/account_view_state_store.dart';
 import '../models/account_view_state.dart';
 import '../models/open_account.dart';
 import '../models/profile_summary.dart';
@@ -23,7 +24,9 @@ import 'account_storage_service.dart';
 /// dispose/restore quando comandato via effetti.
 class AccountManager {
   AccountManager({AccountStorageService? storage})
-      : _storage = storage ?? AccountStorageService();
+      : _storage = storage ?? AccountStorageService() {
+    viewStateStore = AccountViewStateStore(this);
+  }
 
   /// Sostituisce [AccountSession.restore] nei test (percorso dispose + ripristino).
   @visibleForTesting
@@ -33,8 +36,8 @@ class AccountManager {
   VoidCallback? onFocusedProfileSynced;
 
   final AccountStorageService _storage;
+  late final AccountViewStateStore viewStateStore;
   final Map<String, AccountSession> _sessions = {};
-  final Map<String, AccountViewState> _viewsByAccount = {};
   final Set<String> _testOnlyAccountIds = {};
   List<OpenAccount> _manifestAccounts = [];
   String? _focusUserId;
@@ -59,10 +62,11 @@ class AccountManager {
 
   String? get focusUserId => _focusUserId;
 
-  AccountViewState get viewState => _viewFor(_focusUserId);
+  AccountViewState get viewState => viewStateStore.viewStateFor(_focusUserId);
 
   /// View state per account (sanitizzato); sola lettura.
-  AccountViewState viewStateFor(String accountUserId) => _viewFor(accountUserId);
+  AccountViewState viewStateFor(String accountUserId) =>
+      viewStateStore.viewStateFor(accountUserId);
 
   bool get hasOpenAccounts =>
       _manifestAccounts.isNotEmpty || _testOnlyAccountIds.isNotEmpty;
@@ -72,31 +76,15 @@ class AccountManager {
     String accountUserId,
     AccountViewState Function(AccountViewState current) transform,
   ) {
-    if (!_hasAccount(accountUserId)) return;
-    _setViewFor(accountUserId, transform(_storedViewFor(accountUserId)));
+    viewStateStore.apply(accountUserId, transform);
   }
 
-  AccountViewState _viewFor(String? userId) {
-    if (userId == null) return const AccountViewState();
-    return _sanitizeView(userId, _storedViewFor(userId));
-  }
-
-  AccountViewState _storedViewFor(String userId) =>
-      _viewsByAccount[userId] ?? const AccountViewState();
-
-  AccountViewState _sanitizeView(String userId, AccountViewState view) =>
-      view.sanitizedForAccount(userId);
-
-  void _setViewFor(String userId, AccountViewState view) {
-    _viewsByAccount[userId] = _sanitizeView(userId, view);
-  }
+  /// Account presente nel manifest o nel set di test.
+  bool hasOpenAccount(String userId) => _hasAccount(userId);
 
   bool _hasAccount(String userId) =>
       _manifestAccounts.any((a) => a.userId == userId) ||
       _testOnlyAccountIds.contains(userId);
-
-  /// Account presente nel manifest o nel set di test.
-  bool hasOpenAccount(String userId) => _hasAccount(userId);
 
   @visibleForTesting
   void seedTestAccount(String userId) {
@@ -206,11 +194,13 @@ class AccountManager {
         stored.where((account) => account.refreshToken.isNotEmpty).toList();
   }
 
-  /// Ripristina GoTrue solo per [userId]; su auth permanente rimuove account invalido.
-  Future<AccountSession?> _activateSessionForFocus(
+  /// Ripristina GoTrue per [userId] e opzionalmente persiste il focus.
+  Future<AccountSession?> _ensureSessionForAccount(
     String userId, {
     bool requireSession = false,
     bool deferProfileSync = false,
+    bool persistFocus = false,
+    bool disposeOtherSessions = false,
   }) async {
     if (!_hasAccount(userId)) {
       if (requireSession) {
@@ -221,6 +211,28 @@ class AccountManager {
 
     if (_testOnlyAccountIds.contains(userId)) {
       return _sessions[userId];
+    }
+
+    if (persistFocus) {
+      _focusUserId = userId;
+      await _storage.saveFocusUserId(userId);
+    }
+
+    if (disposeOtherSessions) {
+      for (final entry in _sessions.entries.toList()) {
+        if (entry.key == userId) continue;
+        await entry.value.disposeResources(clearAuthStorage: false);
+        _sessions.remove(entry.key);
+      }
+    }
+
+    if (isSessionReadyForAccount(userId) && _sessions.length == 1) {
+      return _sessions[userId];
+    }
+
+    final stale = _sessions.remove(userId);
+    if (stale != null) {
+      await stale.disposeResources(clearAuthStorage: false);
     }
 
     final accountIndex =
@@ -297,11 +309,6 @@ class AccountManager {
       }
     }
     throw lastError ?? const AuthException('Ripristino account non riuscito.');
-  }
-
-  /// Tap push / deep link: garantisce focus e sessione GoTrue in RAM.
-  Future<void> ensureRecipientAccountActive(String userId) {
-    return executeFocus(userId);
   }
 
   /// Account UI in focus: ripristina GoTrue senza fidarsi della sessione in RAM.
@@ -388,26 +395,12 @@ class AccountManager {
       return;
     }
 
-    if (isSessionReadyForAccount(userId) && _sessions.length == 1) {
-      await _loadFocusedInboxIfNeeded();
-      return;
-    }
-
-    for (final entry in _sessions.entries.toList()) {
-      if (entry.key == userId) continue;
-      await entry.value.disposeResources(clearAuthStorage: false);
-      _sessions.remove(entry.key);
-    }
-
-    if (!isSessionReadyForAccount(userId)) {
-      final stale = _sessions.remove(userId);
-      if (stale != null) {
-        await stale.disposeResources(clearAuthStorage: false);
-      }
-      _focusUserId = userId;
-      await _storage.saveFocusUserId(userId);
-      await _activateSessionForFocus(userId, requireSession: true);
-    }
+    await _ensureSessionForAccount(
+      userId,
+      requireSession: true,
+      disposeOtherSessions: true,
+      persistFocus: true,
+    );
 
     await _loadFocusedInboxIfNeeded();
   }
@@ -422,11 +415,7 @@ class AccountManager {
     if (_focusUserId == userId) {
       if (!isSessionReadyForAccount(userId) &&
           !_testOnlyAccountIds.contains(userId)) {
-        final stale = _sessions.remove(userId);
-        if (stale != null) {
-          await stale.disposeResources(clearAuthStorage: false);
-        }
-        await _activateSessionForFocus(
+        await _ensureSessionForAccount(
           userId,
           requireSession: true,
           deferProfileSync: deferProfileSync,
@@ -462,7 +451,7 @@ class AccountManager {
 
     try {
       if (!_testOnlyAccountIds.contains(userId)) {
-        await _activateSessionForFocus(
+        await _ensureSessionForAccount(
           userId,
           requireSession: true,
           deferProfileSync: deferProfileSync,
@@ -480,7 +469,10 @@ class AccountManager {
       if (previousFocus != null &&
           !_testOnlyAccountIds.contains(previousFocus)) {
         try {
-          await _activateSessionForFocus(previousFocus, requireSession: false);
+          await _ensureSessionForAccount(
+            previousFocus,
+            requireSession: false,
+          );
         } catch (_) {
           // Best-effort restore of the previous session.
         }
@@ -498,7 +490,7 @@ class AccountManager {
   /// Rimuove account dal manifest; non decide il prossimo focus (macchina).
   Future<CloseAccountResult> removeAccount(String userId) async {
     _testOnlyAccountIds.remove(userId);
-    _viewsByAccount.remove(userId);
+    viewStateStore.clearForAccount(userId);
 
     final wasFocused = _focusUserId == userId;
     final session = _sessions.remove(userId);
@@ -575,7 +567,7 @@ class AccountManager {
 
   Future<void> dispose() async {
     await _disposeSessionsInRam(clearAuthStorage: true);
-    _viewsByAccount.clear();
+    viewStateStore.clearAll();
     _testOnlyAccountIds.clear();
     _manifestAccounts = [];
     _focusUserId = null;

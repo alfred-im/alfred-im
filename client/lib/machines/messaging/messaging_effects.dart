@@ -128,6 +128,62 @@ class MessagesControllerEffects implements MessagingEffects {
   bool _mutateMessages(List<ChatMessage> Function(List<ChatMessage>) update) =>
       messageStore.mutateMessages(scope, update);
 
+  void _appendOptimistic(ChatMessage optimistic) {
+    _mutateMessages((messages) => [...messages, optimistic]);
+    _onChanged();
+  }
+
+  void _patchOutboundMessage(
+    String clientId,
+    ChatMessage Function(ChatMessage current) patch,
+  ) {
+    _mutateMessages(
+      (messages) => messages
+          .map((m) => m.id == clientId ? patch(m) : m)
+          .toList(),
+    );
+    _onChanged();
+  }
+
+  Future<void> _finalizeOutboundSuccess({
+    required String clientId,
+    required ChatMessage saved,
+    String? mediaPath,
+  }) async {
+    _mutateMessages(
+      (messages) => replaceOrInsertMessage(messages, withTimeLabel(saved)),
+    );
+    await _outboundQueue.remove(clientId);
+    await _outboundQueue.deleteMediaFile(mediaPath, clientId: clientId);
+    _state.error = null;
+    if (onMessagesChanged != null) {
+      await onMessagesChanged!();
+    }
+  }
+
+  Future<void> _finalizeOutboundFailed({
+    required String clientId,
+    required OutboundQueueItem failedItem,
+    String? mediaPath,
+    required String error,
+  }) async {
+    await _outboundQueue.enqueue(failedItem);
+    _patchOutboundMessage(
+      clientId,
+      (m) => m.copyWith(
+        status: MessageStatus.failed,
+        isMine: true,
+        retryPayloadPath: mediaPath,
+      ),
+    );
+    _state.error = error;
+  }
+
+  void _endOutboundLifecycle(bool sendFailed) {
+    onSendLifecycleEnd?.call(sendFailed);
+    _onChanged();
+  }
+
   @override
   Future<bool> fetchAndSetMessages() async {
     final gen = ++_fetchGeneration;
@@ -317,15 +373,11 @@ class MessagesControllerEffects implements MessagingEffects {
     if (!ensureValidSession()) return;
     final clientId = _uuid.v4();
     await _sendOptimistic(
-      optimistic: ChatMessage(
-        id: clientId,
-        body: body.trim(),
-        timeLabel: formatMessageTime(DateTime.now()),
-        isMine: true,
-        status: MessageStatus.pending,
-        createdAt: DateTime.now(),
-        clientMessageId: clientId,
+      optimistic: pendingOutboundMessage(
+        clientId: clientId,
         senderId: userId,
+        body: body.trim(),
+        contentType: MessageContentType.text,
       ),
       queueItem: OutboundQueueItem(
         clientId: clientId,
@@ -356,17 +408,10 @@ class MessagesControllerEffects implements MessagingEffects {
     );
 
     await _sendOptimistic(
-      optimistic: ChatMessage(
-        id: clientId,
-        body: '',
-        timeLabel: formatMessageTime(DateTime.now()),
-        isMine: true,
-        status: MessageStatus.pending,
-        createdAt: DateTime.now(),
-        clientMessageId: clientId,
+      optimistic: pendingOutboundMessage(
+        clientId: clientId,
         senderId: userId,
         contentType: MessageContentType.gif,
-        mediaUrl: 'pending://$clientId',
         retryPayloadPath: mediaPath,
       ),
       queueItem: OutboundQueueItem(
@@ -414,23 +459,16 @@ class MessagesControllerEffects implements MessagingEffects {
     // Preview in chat immediately — conversion and disk persist run after.
     OutboundMediaCache.instance.put(clientId, bytes);
 
-    final optimistic = ChatMessage(
-      id: clientId,
-      body: body,
-      timeLabel: formatMessageTime(DateTime.now()),
-      isMine: true,
-      status: MessageStatus.pending,
-      createdAt: DateTime.now(),
-      clientMessageId: clientId,
+    final optimistic = pendingOutboundMessage(
+      clientId: clientId,
       senderId: userId,
+      body: body,
       contentType: MessageContentType.image,
-      mediaUrl: 'pending://$clientId',
       mediaMime: ChatMediaConfig.imageMimeForExtension(rawExtension),
       mediaSizeBytes: bytes.length,
     );
 
-    _mutateMessages((messages) => [...messages, optimistic]);
-    _onChanged();
+    _appendOptimistic(optimistic);
     onSendLifecycleStart?.call();
     var sendFailed = false;
     String? mediaPath;
@@ -440,14 +478,10 @@ class MessagesControllerEffects implements MessagingEffects {
         bytes: bytes,
         extension: rawExtension,
       );
-      _mutateMessages((messages) => messages
-          .map(
-            (m) => m.id == clientId
-                ? m.copyWith(retryPayloadPath: mediaPath)
-                : m,
-          )
-          .toList());
-      _onChanged();
+      _patchOutboundMessage(
+        clientId,
+        (m) => m.copyWith(retryPayloadPath: mediaPath),
+      );
 
       final normalized = await prepareImageForUpload(bytes);
 
@@ -484,16 +518,11 @@ class MessagesControllerEffects implements MessagingEffects {
         mime: normalized.mime,
         body: body,
       );
-      _mutateMessages((messages) => replaceOrInsertMessage(messages, withTimeLabel(saved)));
-      await _outboundQueue.remove(clientId);
-      await _outboundQueue.deleteMediaFile(
-        uploadPath,
+      await _finalizeOutboundSuccess(
         clientId: clientId,
+        saved: saved,
+        mediaPath: uploadPath,
       );
-      _state.error = null;
-      if (onMessagesChanged != null) {
-        await onMessagesChanged!();
-      }
     } catch (e) {
       final failedItem = OutboundQueueItem(
         clientId: clientId,
@@ -505,23 +534,17 @@ class MessagesControllerEffects implements MessagingEffects {
         localMediaPath: mediaPath,
         lastError: e.toString(),
       );
-      await _outboundQueue.enqueue(failedItem);
-      _mutateMessages((messages) => messages
-          .map(
-            (m) => m.id == clientId
-                ? m.copyWith(
-                    status: MessageStatus.failed,
-                    isMine: true,
-                    retryPayloadPath: mediaPath,
-                  )
-                : m,
-          )
-          .toList());
-      _state.error = e is UnsupportedImageFormatException ? e.userMessage : e.toString();
+      await _finalizeOutboundFailed(
+        clientId: clientId,
+        failedItem: failedItem,
+        mediaPath: mediaPath,
+        error: e is UnsupportedImageFormatException
+            ? e.userMessage
+            : e.toString(),
+      );
       sendFailed = true;
     } finally {
-      onSendLifecycleEnd?.call(sendFailed);
-      _onChanged();
+      _endOutboundLifecycle(sendFailed);
     }
   }
 
@@ -599,23 +622,16 @@ class MessagesControllerEffects implements MessagingEffects {
       ChatMediaConfig.maxVideoDurationSeconds,
     );
 
-    final optimistic = ChatMessage(
-      id: clientId,
-      body: body,
-      timeLabel: formatMessageTime(DateTime.now()),
-      isMine: true,
-      status: MessageStatus.pending,
-      createdAt: DateTime.now(),
-      clientMessageId: clientId,
+    final optimistic = pendingOutboundMessage(
+      clientId: clientId,
       senderId: userId,
+      body: body,
       contentType: MessageContentType.video,
-      mediaUrl: 'pending://$clientId',
       durationSeconds: resolvedDuration,
       mediaMime: mime,
     );
 
-    _mutateMessages((messages) => [...messages, optimistic]);
-    _onChanged();
+    _appendOptimistic(optimistic);
     onSendLifecycleStart?.call();
     var sendFailed = false;
     String? mediaPath;
@@ -626,42 +642,30 @@ class MessagesControllerEffects implements MessagingEffects {
       }
 
       OutboundMediaCache.instance.put(clientId, bytes);
-      _mutateMessages((messages) => messages
-          .map(
-            (m) => m.id == clientId
-                ? m.copyWith(mediaSizeBytes: bytes.length)
-                : m,
-          )
-          .toList());
-      _onChanged();
+      _patchOutboundMessage(
+        clientId,
+        (m) => m.copyWith(mediaSizeBytes: bytes.length),
+      );
 
       final probed = await readVideoDurationSeconds(
         bytes: bytes,
         extension: extension,
       );
       resolvedDuration = probed.clamp(1, ChatMediaConfig.maxVideoDurationSeconds);
-      _mutateMessages((messages) => messages
-          .map(
-            (m) => m.id == clientId
-                ? m.copyWith(durationSeconds: resolvedDuration)
-                : m,
-          )
-          .toList());
-      _onChanged();
+      _patchOutboundMessage(
+        clientId,
+        (m) => m.copyWith(durationSeconds: resolvedDuration),
+      );
 
       mediaPath = await _outboundQueue.persistMediaBytes(
         clientId: clientId,
         bytes: bytes,
         extension: extension,
       );
-      _mutateMessages((messages) => messages
-          .map(
-            (m) => m.id == clientId
-                ? m.copyWith(retryPayloadPath: mediaPath)
-                : m,
-          )
-          .toList());
-      _onChanged();
+      _patchOutboundMessage(
+        clientId,
+        (m) => m.copyWith(retryPayloadPath: mediaPath),
+      );
 
       final queueItem = OutboundQueueItem(
         clientId: clientId,
@@ -694,16 +698,11 @@ class MessagesControllerEffects implements MessagingEffects {
         clientMessageId: clientId,
         body: body,
       );
-      _mutateMessages((messages) => replaceOrInsertMessage(messages, withTimeLabel(saved)));
-      await _outboundQueue.remove(clientId);
-      await _outboundQueue.deleteMediaFile(
-        mediaPath,
+      await _finalizeOutboundSuccess(
         clientId: clientId,
+        saved: saved,
+        mediaPath: mediaPath,
       );
-      _state.error = null;
-      if (onMessagesChanged != null) {
-        await onMessagesChanged!();
-      }
     } catch (e) {
       final failedItem = OutboundQueueItem(
         clientId: clientId,
@@ -718,23 +717,15 @@ class MessagesControllerEffects implements MessagingEffects {
         mediaExtension: extension,
         lastError: e.toString(),
       );
-      await _outboundQueue.enqueue(failedItem);
-      _mutateMessages((messages) => messages
-          .map(
-            (m) => m.id == clientId
-                ? m.copyWith(
-                    status: MessageStatus.failed,
-                    isMine: true,
-                    retryPayloadPath: mediaPath,
-                  )
-                : m,
-          )
-          .toList());
-      _state.error = e.toString();
+      await _finalizeOutboundFailed(
+        clientId: clientId,
+        failedItem: failedItem,
+        mediaPath: mediaPath,
+        error: e.toString(),
+      );
       sendFailed = true;
     } finally {
-      onSendLifecycleEnd?.call(sendFailed);
-      _onChanged();
+      _endOutboundLifecycle(sendFailed);
     }
   }
 
@@ -756,17 +747,10 @@ class MessagesControllerEffects implements MessagingEffects {
     );
 
     await _sendOptimistic(
-      optimistic: ChatMessage(
-        id: clientId,
-        body: '',
-        timeLabel: formatMessageTime(DateTime.now()),
-        isMine: true,
-        status: MessageStatus.pending,
-        createdAt: DateTime.now(),
-        clientMessageId: clientId,
+      optimistic: pendingOutboundMessage(
+        clientId: clientId,
         senderId: userId,
         contentType: MessageContentType.voice,
-        mediaUrl: 'pending://$clientId',
         durationSeconds: durationSeconds,
         mediaMime: VoiceConfig.canonicalMime,
         mediaSizeBytes: bytes.length,
@@ -811,14 +795,8 @@ class MessagesControllerEffects implements MessagingEffects {
     final clientId = _uuid.v4();
 
     await _sendOptimistic(
-      optimistic: ChatMessage(
-        id: clientId,
-        body: '',
-        timeLabel: formatMessageTime(DateTime.now()),
-        isMine: true,
-        status: MessageStatus.pending,
-        createdAt: DateTime.now(),
-        clientMessageId: clientId,
+      optimistic: pendingOutboundMessage(
+        clientId: clientId,
         senderId: userId,
         contentType: MessageContentType.location,
         latitude: lat,
@@ -871,23 +849,17 @@ class MessagesControllerEffects implements MessagingEffects {
     _onChanged();
 
     final clientId = optimistic.id;
-    _mutateMessages((messages) => [...messages, optimistic]);
-    _onChanged();
+    _appendOptimistic(optimistic);
 
     onSendLifecycleStart?.call();
     var sendFailed = false;
     try {
       final saved = await send(clientId);
-      _mutateMessages((messages) => replaceOrInsertMessage(messages, withTimeLabel(saved)));
-      await _outboundQueue.remove(clientId);
-      await _outboundQueue.deleteMediaFile(
-        queueItem.localMediaPath,
+      await _finalizeOutboundSuccess(
         clientId: clientId,
+        saved: saved,
+        mediaPath: queueItem.localMediaPath,
       );
-      _state.error = null;
-      if (onMessagesChanged != null) {
-        await onMessagesChanged!();
-      }
     } catch (e) {
       sendFailed = true;
       final failedItem = queueItem.copyWith(
@@ -895,21 +867,17 @@ class MessagesControllerEffects implements MessagingEffects {
         lastError: e.toString(),
       );
       await _outboundQueue.update(failedItem);
-      _mutateMessages((messages) => messages
-          .map(
-            (m) => m.id == clientId
-                ? m.copyWith(
-                    status: MessageStatus.failed,
-                    isMine: true,
-                    retryPayloadPath: queueItem.localMediaPath,
-                  )
-                : m,
-          )
-          .toList());
+      _patchOutboundMessage(
+        clientId,
+        (m) => m.copyWith(
+          status: MessageStatus.failed,
+          isMine: true,
+          retryPayloadPath: queueItem.localMediaPath,
+        ),
+      );
       _state.error = e.toString();
     } finally {
-      onSendLifecycleEnd?.call(sendFailed);
-      _onChanged();
+      _endOutboundLifecycle(sendFailed);
     }
   }
 

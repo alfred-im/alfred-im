@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import '../../models/chat_peer.dart';
+import '../../models/open_conversation_source.dart';
 import 'navigation_machine.dart';
 
 /// Adapter UI / contesti esterni → eventi [NavigationMachine].
@@ -39,38 +40,49 @@ class NavigationAdapters {
   Future<bool> openFromPushTap({
     required String accountUserId,
     required String peerProfileId,
-  }) async {
-    await _machine.send(
-      OpenFromPushTap(
-        accountUserId: accountUserId,
-        peerProfileId: peerProfileId,
-      ),
+  }) {
+    return _openConversationWithSource(
+      accountUserId: accountUserId,
+      peerProfileId: peerProfileId,
+      source: OpenConversationSource.push,
     );
-    return _machine.shellState == NavigationShellState.chatOpen;
   }
 
   Future<bool> openFromShareableLink({
     required String accountUserId,
     required String peerProfileId,
-  }) async {
-    await _machine.send(
-      OpenFromShareableLink(
-        accountUserId: accountUserId,
-        peerProfileId: peerProfileId,
-      ),
+  }) {
+    return _openConversationWithSource(
+      accountUserId: accountUserId,
+      peerProfileId: peerProfileId,
+      source: OpenConversationSource.shareableLink,
     );
-    return _machine.shellState == NavigationShellState.chatOpen;
   }
 
   Future<bool> openFromCompose({
     required String accountUserId,
     required String peerProfileId,
     bool allowProfileFallback = true,
+  }) {
+    return _openConversationWithSource(
+      accountUserId: accountUserId,
+      peerProfileId: peerProfileId,
+      source: OpenConversationSource.compose,
+      allowProfileFallback: allowProfileFallback,
+    );
+  }
+
+  Future<bool> _openConversationWithSource({
+    required String accountUserId,
+    required String peerProfileId,
+    required OpenConversationSource source,
+    bool allowProfileFallback = true,
   }) async {
     await _machine.send(
-      OpenFromCompose(
+      OpenConversationOnAccount(
         accountUserId: accountUserId,
         peerProfileId: peerProfileId,
+        source: source,
         allowProfileFallback: allowProfileFallback,
       ),
     );

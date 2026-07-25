@@ -17,7 +17,7 @@ abstract class NavigationEffects {
     bool allowProfileFallback = true,
   });
 
-  Future<void> openPeerOnFocusedAccount(ChatPeer peer);
+  Future<bool> openPeerOnFocusedAccount(ChatPeer peer);
 
   void closeConversation();
 

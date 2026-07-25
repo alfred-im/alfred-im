@@ -8,9 +8,9 @@ import 'shareable_link_effects.dart';
 /// Stato client — `docs/model/uml/shareable-link/seq-open-from-fragment.puml`.
 enum ShareableLinkState {
   idle,
-  targetQueued,
+  pending,
   resolving,
-  notFound,
+  invalid,
 }
 
 sealed class ShareableLinkEvent {
@@ -23,18 +23,8 @@ final class ParseFragment extends ShareableLinkEvent {
   final String? fragment;
 }
 
-/// Auth pronta con almeno un account aperto.
-final class SessionBecameReady extends ShareableLinkEvent {
-  const SessionBecameReady();
-}
-
-/// Tentativo di consumare il target in coda.
-final class HandleTargetRequested extends ShareableLinkEvent {
-  const HandleTargetRequested();
-}
-
-final class DismissNotFound extends ShareableLinkEvent {
-  const DismissNotFound();
+final class DismissInvalid extends ShareableLinkEvent {
+  const DismissInvalid();
 }
 
 /// Macchina shareable-link — parse fragment, risoluzione, delega navigation.
@@ -51,11 +41,7 @@ class ShareableLinkMachine {
     switch (event) {
       case ParseFragment(:final fragment):
         _applyFragment(fragment);
-      case SessionBecameReady():
-        break;
-      case HandleTargetRequested():
-        break;
-      case DismissNotFound():
+      case DismissInvalid():
         target = null;
         handling = false;
         state = ShareableLinkState.idle;
@@ -63,17 +49,17 @@ class ShareableLinkMachine {
   }
 
   Future<void> handleTargetIfReady() async {
-    if (target == null || handling || state == ShareableLinkState.notFound) {
+    if (target == null || handling || state == ShareableLinkState.invalid) {
       return;
     }
     if (!_effects.sessionReady || !_effects.hasOpenAccounts) {
-      state = ShareableLinkState.targetQueued;
+      state = ShareableLinkState.pending;
       return;
     }
 
     final focusedUserId = _effects.focusedUserId;
     if (focusedUserId == null) {
-      state = ShareableLinkState.targetQueued;
+      state = ShareableLinkState.pending;
       return;
     }
 
@@ -90,7 +76,7 @@ class ShareableLinkMachine {
   void _applyFragment(String? fragment) {
     final parsed = parseShareableFragment(fragment);
     if (parsed == null) {
-      if (target != null || state == ShareableLinkState.notFound) {
+      if (target != null || state == ShareableLinkState.invalid) {
         target = null;
         state = ShareableLinkState.idle;
       }
@@ -102,7 +88,7 @@ class ShareableLinkMachine {
     }
 
     target = parsed;
-    state = ShareableLinkState.targetQueued;
+    state = ShareableLinkState.pending;
   }
 
   Future<void> _resolveAndOpen(
@@ -111,14 +97,14 @@ class ShareableLinkMachine {
   ) async {
     final resolution = resolveShareableAddress(currentTarget.address);
     if (resolution == null) {
-      state = ShareableLinkState.notFound;
+      state = ShareableLinkState.invalid;
       return;
     }
 
     final profile =
         await _effects.findProfileByUsername(resolution.localUsername);
     if (profile == null) {
-      state = ShareableLinkState.notFound;
+      state = ShareableLinkState.invalid;
       return;
     }
 
@@ -129,7 +115,7 @@ class ShareableLinkMachine {
     }
 
     if (currentTarget.kind == ShareableLinkKind.chat) {
-      await _effects.openChatFromLink(
+      await _effects.openSharedChat(
         accountUserId: focusedUserId,
         peerProfileId: profile.id,
       );

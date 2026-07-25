@@ -78,6 +78,7 @@ void main() {
         messageService: messageService,
         profileService: profileService,
       );
+      addTearDown(controller.dispose);
 
       for (var i = 0; i < 200 && controller.isLoading; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 5));
@@ -85,6 +86,61 @@ void main() {
 
       expect(controller.totalMessageCount, 1);
       expect(controller.activeAuthors.single.profile.id, marioId);
+    });
+
+    test('home and messages coordinators share owner archive cache', () async {
+      SharedPreferences.setMockInitialValues({});
+      final client = createTestSupabaseClient();
+      final messageService = FakeMessageService(client);
+      messageService.ownerMessagesByUserId[groupId] = [
+        ChatMessage(
+          id: 'm1',
+          body: 'ciao',
+          timeLabel: '',
+          isMine: false,
+          createdAt: DateTime.utc(2026, 7, 1),
+        ),
+      ];
+
+      final home = GroupHomeController(
+        session: await AccountSession.createForTest(
+          profile: const ProfileSummary(
+            id: groupId,
+            displayName: 'Famiglia',
+            username: 'famiglia',
+            profileKind: ProfileKind.group,
+          ),
+          client: client,
+          messageService: messageService,
+          messageMediaService: MessageMediaService(client),
+        ),
+        profile: const ProfileSummary(
+          id: groupId,
+          displayName: 'Famiglia',
+          username: 'famiglia',
+          profileKind: ProfileKind.group,
+        ),
+        messageService: messageService,
+        profileService: FakeProfileService(client),
+      );
+      addTearDown(home.dispose);
+
+      for (var i = 0; i < 200 && home.isLoading; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+
+      final messages = GroupMessagesController(
+        userId: groupId,
+        messageService: messageService,
+        messageMediaService: MessageMediaService(client),
+        profileService: FakeProfileService(client),
+        ownerArchiveCache: home.ownerArchiveCache,
+      );
+      await _waitForGroupController(messages);
+      addTearDown(messages.dispose);
+
+      expect(identical(home.ownerArchiveCache, messages.ownerArchiveCache), isTrue);
+      expect(messages.messages, hasLength(1));
     });
 
     test('GroupMessagesController send attraversa coordinator live', () async {

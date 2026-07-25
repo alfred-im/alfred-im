@@ -38,9 +38,15 @@ class NavigationCoordinator {
   }) {
     final command = focusCommand ?? _ManagerFocusCommand(_manager);
     _messageStore = messageStore ?? ConversationMessageStore();
-    _effects = AccountNavigationEffects(_manager, focusCommand: command);
-    _machine = NavigationMachine(_effects, messageStore: _messageStore);
-    _effects.navigationMachine = _machine;
+    late final NavigationMachine machine;
+    _effects = AccountNavigationEffects(
+      _manager,
+      focusCommand: command,
+      onInvalidateCommittedScope: () => machine.invalidateCommittedScope(),
+      onCommitScope: (scope) => machine.commitScope(scope),
+    );
+    machine = NavigationMachine(_effects, messageStore: _messageStore);
+    _machine = machine;
     adapters = NavigationAdapters(_machine);
     externalIntents = ExternalIntentAdapter(adapters);
   }
@@ -79,8 +85,9 @@ class NavigationCoordinator {
     _machine.invalidateCommittedScope();
   }
 
-  /// Bootstrap / reconnect: allinea shell (inbox); nessun restore chat implicito.
+  /// Bootstrap / reconnect / focus macchina: allinea shell (inbox); nessun restore chat implicito.
   void syncShellAfterFocusSettled() {
+    _machine.invalidateCommittedScope();
     _machine.resetShellToAccountHome();
     _machine.syncShellFromCommittedScope();
     _notifyStateChanged();

@@ -72,16 +72,6 @@ class ConversationMessageStore extends ChangeNotifier {
     return true;
   }
 
-  bool setFailed(ConversationScope scope, String error) {
-    if (!_matches(scope)) return false;
-    _snapshot = ConversationMessageSnapshot(
-      phase: ConversationLoadPhase.failed,
-      error: error,
-    );
-    notifyListeners();
-    return true;
-  }
-
   bool applyLoadedMessages(
     ConversationScope scope,
     List<ChatMessage> messages, {
@@ -105,22 +95,6 @@ class ConversationMessageStore extends ChangeNotifier {
       error: _snapshot.error,
       hasMoreOlder: _snapshot.hasMoreOlder,
       isLoadingOlder: value,
-    );
-    notifyListeners();
-    return true;
-  }
-
-  bool prependOlderMessages(
-    ConversationScope scope,
-    List<ChatMessage> messages, {
-    required bool hasMoreOlder,
-  }) {
-    if (!_matches(scope)) return false;
-    _snapshot = ConversationMessageSnapshot(
-      messages: List.unmodifiable([...messages, ..._snapshot.messages]),
-      phase: _snapshot.phase,
-      hasMoreOlder: hasMoreOlder,
-      isLoadingOlder: false,
     );
     notifyListeners();
     return true;

@@ -8,7 +8,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 
 import '../machines/messaging/conversation_message_store.dart';
-import '../machines/messaging/messaging_adapters.dart';
 import '../machines/messaging/messaging_conversation_state.dart';
 import '../machines/messaging/messaging_coordinator.dart';
 import '../machines/messaging/messaging_effects.dart';
@@ -62,9 +61,8 @@ class MessagesController extends ChangeNotifier {
     );
     _effects.onSendLifecycleStart = _coordinator.notifySendStarted;
     _effects.onSendLifecycleEnd = _coordinator.notifySendEnded;
-    _adapters = MessagingAdapters(_coordinator);
     messageStore.addListener(_onMessageStoreChanged);
-    unawaited(_adapters.init());
+    unawaited(_coordinator.init());
   }
 
   void _onMessageStoreChanged() => notifyListeners();
@@ -88,7 +86,6 @@ class MessagesController extends ChangeNotifier {
   late final MessagingConversationState _state;
   late final MessagesControllerEffects _effects;
   late final MessagingCoordinator _coordinator;
-  late final MessagingAdapters _adapters;
   bool _notifierDisposed = false;
 
   List<ChatMessage> get messages => _coordinator.messages;
@@ -120,27 +117,27 @@ class MessagesController extends ChangeNotifier {
   }) =>
       '$userId|$peerProfileId';
 
-  Future<void> reload() => _adapters.reload();
+  Future<void> reload() => _coordinator.reload();
 
-  Future<void> loadOlderMessages() => _adapters.loadOlderMessages();
+  Future<void> loadOlderMessages() => _coordinator.loadOlderMessages();
 
-  Future<void> load() => _adapters.load();
+  Future<void> load() => _coordinator.load();
 
-  Future<void> send(String body) => _adapters.sendText(body);
+  Future<void> send(String body) => _coordinator.sendText(body);
 
-  Future<void> sendGif(Uint8List bytes) => _adapters.sendGif(bytes);
+  Future<void> sendGif(Uint8List bytes) => _coordinator.sendGif(bytes);
 
   Future<void> sendImage({
     required Uint8List bytes,
     String? caption,
   }) =>
-      _adapters.sendImage(bytes: bytes, caption: caption);
+      _coordinator.sendImage(bytes: bytes, caption: caption);
 
   Future<void> sendVideoFromPicker({
     required PlatformFile file,
     String? caption,
   }) =>
-      _adapters.sendVideoFromPicker(file: file, caption: caption);
+      _coordinator.sendVideoFromPicker(file: file, caption: caption);
 
   Future<void> sendVideo({
     required Uint8List bytes,
@@ -149,7 +146,7 @@ class MessagesController extends ChangeNotifier {
     required int durationSeconds,
     String? caption,
   }) =>
-      _adapters.sendVideo(
+      _coordinator.sendVideo(
         bytes: bytes,
         extension: extension,
         mime: mime,
@@ -161,16 +158,16 @@ class MessagesController extends ChangeNotifier {
     required Uint8List bytes,
     required int durationMs,
   }) =>
-      _adapters.sendVoice(bytes: bytes, durationMs: durationMs);
+      _coordinator.sendVoice(bytes: bytes, durationMs: durationMs);
 
   Future<void> sendLocation({
     required double latitude,
     required double longitude,
   }) =>
-      _adapters.sendLocation(latitude: latitude, longitude: longitude);
+      _coordinator.sendLocation(latitude: latitude, longitude: longitude);
 
   Future<void> retryMessage(String clientId) =>
-      _adapters.retryMessage(clientId);
+      _coordinator.retryMessage(clientId);
 
   @override
   void notifyListeners() {
@@ -184,7 +181,7 @@ class MessagesController extends ChangeNotifier {
     _notifierDisposed = true;
     messageStore.removeListener(_onMessageStoreChanged);
     _effects.markDisposed();
-    _adapters.dispose();
+    _coordinator.dispose();
     super.dispose();
   }
 }

@@ -17,8 +17,6 @@ class PushPlatform {
   static Future<String> getOrCreateDeviceId() async =>
       '00000000-0000-4000-8000-000000000000';
 
-  static Future<String?> requestPermissionIfNeeded() async => null;
-
   static Future<PushSubscriptionKeys?> ensureSubscription({
     required String vapidPublicKey,
   }) async =>

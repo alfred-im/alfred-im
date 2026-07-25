@@ -35,18 +35,6 @@ final class OverlayCloseRequested extends AuthEvent {
   const OverlayCloseRequested();
 }
 
-final class SignInRequested extends AuthEvent {
-  const SignInRequested();
-}
-
-final class SignUpRequested extends AuthEvent {
-  const SignUpRequested();
-}
-
-final class ResetPasswordRequested extends AuthEvent {
-  const ResetPasswordRequested();
-}
-
 final class LastAccountRemoved extends AuthEvent {
   const LastAccountRemoved();
 }
@@ -99,8 +87,6 @@ class AuthMachine {
             : AuthUiState.noSession;
       case OverlayCloseRequested():
         _handleOverlayClose();
-      case SignInRequested() || SignUpRequested() || ResetPasswordRequested():
-        _beginAuthOperation();
       case ValidationRejected():
         if (uiState == AuthUiState.authOperationInProgress) {
           _restorePreOperationState();

@@ -53,3 +53,45 @@ ChatMessage withTimeLabel(ChatMessage message) {
   final at = message.createdAt ?? DateTime.now();
   return message.copyWith(timeLabel: formatMessageTime(at), createdAt: at);
 }
+
+/// Optimistic outbound bubble before server ack (text, media, location).
+ChatMessage pendingOutboundMessage({
+  required String clientId,
+  required String senderId,
+  String body = '',
+  required MessageContentType contentType,
+  String? mediaMime,
+  int? mediaSizeBytes,
+  int? durationSeconds,
+  double? latitude,
+  double? longitude,
+  String? retryPayloadPath,
+}) {
+  final now = DateTime.now();
+  final hasPendingMedia = switch (contentType) {
+    MessageContentType.gif ||
+    MessageContentType.image ||
+    MessageContentType.video ||
+    MessageContentType.voice =>
+      true,
+    _ => false,
+  };
+  return ChatMessage(
+    id: clientId,
+    body: body,
+    timeLabel: formatMessageTime(now),
+    isMine: true,
+    status: MessageStatus.pending,
+    createdAt: now,
+    clientMessageId: clientId,
+    senderId: senderId,
+    contentType: contentType,
+    mediaUrl: hasPendingMedia ? 'pending://$clientId' : null,
+    durationSeconds: durationSeconds,
+    mediaMime: mediaMime,
+    mediaSizeBytes: mediaSizeBytes,
+    latitude: latitude,
+    longitude: longitude,
+    retryPayloadPath: retryPayloadPath,
+  );
+}

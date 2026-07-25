@@ -142,6 +142,7 @@ void main() {
         messageService: messageService,
         profileService: profileService,
       );
+      addTearDown(controller.dispose);
 
       for (var i = 0; i < 200 && controller.isLoading; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 5));

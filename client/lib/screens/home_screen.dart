@@ -8,26 +8,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
-import '../models/conversation_scope.dart';
-import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
 import '../providers/inbox_controller.dart';
-import '../providers/messages_controller.dart';
-import '../services/account_session.dart';
+import '../providers/group_home_controller.dart';
 import '../theme/alfred_colors.dart';
-import '../utils/conversation_scope_guard.dart';
 import '../widgets/account_sidebar.dart';
 import '../widgets/auth_overlay.dart';
-import '../widgets/chat_panel.dart';
 import '../widgets/no_account_placeholder.dart';
 import '../widgets/inbox_panel.dart';
-import '../widgets/group_home_panel.dart';
-import '../providers/group_home_controller.dart';
+import '../widgets/conversation_scope_pane.dart';
+import '../widgets/split_shell_layout.dart';
+import '../utils/session_scope_keys.dart';
 import 'allowed_people_screen.dart';
 import 'contacts_screen.dart';
 import 'profile_screen.dart';
-import 'group_conversation_screen.dart';
-import '../utils/session_scope_keys.dart';
+import 'group_account_shell.dart';
 
 /// Layout principale stile WhatsApp Web: sidebar (profilo + inbox) + chat.
 class HomeScreen extends StatefulWidget {
@@ -39,8 +34,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  static const _breakpoint = 720.0;
 
   void _openDrawer() => _scaffoldKey.currentState?.openDrawer();
 
@@ -156,57 +149,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _chatArea({
-    required AuthController auth,
-    required AccountSession? session,
-    required bool showBackButton,
-    VoidCallback? onBack,
-  }) {
-    final peer = auth.activePeer;
-    if (peer == null || session == null) {
-      return const EmptyChatPlaceholder();
-    }
-
-    if (session.userId != auth.userId) {
-      return const ColoredBox(
-        color: AlfredColors.surface,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (!auth.isConversationReady(
-      session: session,
-      peer: peer,
-    )) {
-      if (auth.committedScope == null) {
-        return const EmptyChatPlaceholder();
-      }
-      return const ColoredBox(
-        color: AlfredColors.surface,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    final scope = auth.committedScope;
-    if (scope == null || !scope.matches(session, peer)) {
-      return const ColoredBox(
-        color: AlfredColors.surface,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return _ChatWithMessages(
-      key: conversationScopeKey(scope),
-      auth: auth,
-      session: session,
-      peer: peer,
-      scope: scope,
-      showBackButton: showBackButton,
-      onBack: onBack,
-      onMessagesChanged: _onMessagesChanged,
-    );
-  }
-
   Widget _mainContent(BuildContext context) {
     final auth = context.watch<AuthController>();
     final session = auth.focusedSession;
@@ -223,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
           messageService: session.messageService,
           profileService: session.profileService,
         ),
-        child: _GroupAccountLayout(
+        child: GroupAccountShell(
           session: session,
           auth: auth,
           scaffoldKey: _scaffoldKey,
@@ -237,67 +179,44 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final width = MediaQuery.sizeOf(context).width;
-    final isWide = width >= _breakpoint;
+    final isWide = width >= SplitShellLayout.breakpoint;
     final showChatOnMobile =
         auth.isChatShellOpen && auth.committedScope != null;
-    final sidebarWidth = width >= 1100 ? 380.0 : 320.0;
 
     final inboxArea = !auth.hasOpenAccounts
         ? const NoAccountPlaceholder()
         : session == null
             ? const _ReconnectingAccountPlaceholder()
             : ListenableBuilder(
-            key: ValueKey(accountUserId),
-            listenable: inbox!,
-            builder: (context, _) => _inboxPanel(
-              context: context,
-              auth: auth,
-              inbox: inbox,
-              accountUserId: accountUserId!,
-              showDrawerButton: !isWide,
-              showTopBar: !isWide,
-            ),
-          );
-
-    if (isWide) {
-      return Scaffold(
-        body: Row(
-          children: [
-            SizedBox(
-              width: sidebarWidth,
-              child: ColoredBox(
-                color: AlfredColors.panel,
-                child: Column(
-                  children: [
-                    _accountSidebar(context, compact: true),
-                    const Divider(height: 1),
-                    Expanded(child: inboxArea),
-                  ],
+                key: ValueKey(accountUserId),
+                listenable: inbox!,
+                builder: (context, _) => _inboxPanel(
+                  context: context,
+                  auth: auth,
+                  inbox: inbox,
+                  accountUserId: accountUserId!,
+                  showDrawerButton: !isWide,
+                  showTopBar: !isWide,
                 ),
-              ),
-            ),
-            const VerticalDivider(width: 1, color: AlfredColors.border),
-            Expanded(
-              child: _chatArea(
-                auth: auth,
-                session: session,
-                showBackButton: false,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+              );
 
-    final needsSessionRecovery =
-        auth.hasOpenAccounts && session == null;
+    final chatArea = ConversationScopePane(
+      auth: auth,
+      session: session,
+      showBackButton: !isWide,
+      onBack: isWide ? null : auth.backToInboxOnMobile,
+      onMessagesChanged: _onMessagesChanged,
+    );
 
-    return Scaffold(
-      key: _scaffoldKey,
-      drawer: Drawer(
-        child: _accountSidebar(context),
-      ),
-      appBar: needsSessionRecovery
+    final needsSessionRecovery = auth.hasOpenAccounts && session == null;
+
+    return SplitShellLayout(
+      scaffoldKey: _scaffoldKey,
+      accountSidebar: _accountSidebar,
+      primaryPane: inboxArea,
+      detailPane: chatArea,
+      showDetailOnMobile: !auth.showInboxOnMobile && showChatOnMobile,
+      mobileAppBar: needsSessionRecovery
           ? AppBar(
               backgroundColor: AlfredColors.panel,
               foregroundColor: AlfredColors.textPrimary,
@@ -310,14 +229,6 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('Riconnessione…'),
             )
           : null,
-      body: !showChatOnMobile || auth.showInboxOnMobile
-          ? inboxArea
-          : _chatArea(
-              auth: auth,
-              session: session,
-              showBackButton: true,
-              onBack: auth.backToInboxOnMobile,
-            ),
     );
   }
 
@@ -363,218 +274,6 @@ class _ReconnectingAccountPlaceholderState
     return const ColoredBox(
       color: AlfredColors.surface,
       child: Center(child: CircularProgressIndicator()),
-    );
-  }
-}
-
-class _GroupAccountLayout extends StatelessWidget {
-  const _GroupAccountLayout({
-    required this.session,
-    required this.auth,
-    required this.scaffoldKey,
-    required this.accountSidebar,
-    required this.onOpenProfile,
-    required this.onOpenAllowedPeople,
-    required this.onOpenDrawer,
-    required this.onGroupMessagesChanged,
-  });
-
-  static const _breakpoint = 720.0;
-
-  final AccountSession session;
-  final AuthController auth;
-  final GlobalKey<ScaffoldState> scaffoldKey;
-  final Widget Function(BuildContext context, {bool compact}) accountSidebar;
-  final Future<void> Function() onOpenProfile;
-  final Future<void> Function() onOpenAllowedPeople;
-  final VoidCallback onOpenDrawer;
-  final Future<void> Function(BuildContext providerContext) onGroupMessagesChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final isWide = width >= _breakpoint;
-    final sidebarWidth = width >= 1100 ? 380.0 : 320.0;
-
-    final groupHomeArea = GroupHomePanel(
-      profile: session.profile,
-      conversationSelected: auth.groupChatOpen,
-      onConversationTap: auth.openGroupChat,
-      onProfileTap: () => unawaited(onOpenProfile()),
-      onAllowedPeopleTap: () => unawaited(onOpenAllowedPeople()),
-      onDrawerTap: isWide ? null : onOpenDrawer,
-    );
-
-    final groupChatArea = auth.groupChatOpen
-        ? _GroupChatWithMessages(
-            key: groupSessionKey(session, 'group-chat-wide'),
-            session: session,
-            profile: session.profile,
-            showBackButton: !isWide,
-            onBack: auth.backToGroupHome,
-            onMessagesChanged: onGroupMessagesChanged,
-          )
-        : const EmptyChatPlaceholder();
-
-    if (isWide) {
-      return Scaffold(
-        body: Row(
-          children: [
-            SizedBox(
-              width: sidebarWidth,
-              child: ColoredBox(
-                color: AlfredColors.panel,
-                child: Column(
-                  children: [
-                    accountSidebar(context, compact: true),
-                    const Divider(height: 1),
-                    Expanded(child: groupHomeArea),
-                  ],
-                ),
-              ),
-            ),
-            const VerticalDivider(width: 1, color: AlfredColors.border),
-            Expanded(child: groupChatArea),
-          ],
-        ),
-      );
-    }
-
-    return Scaffold(
-      key: scaffoldKey,
-      drawer: Drawer(
-        child: accountSidebar(context),
-      ),
-      body: auth.groupChatOpen
-          ? _GroupChatWithMessages(
-              key: groupSessionKey(session, 'group-chat-mobile'),
-              session: session,
-              profile: session.profile,
-              showBackButton: true,
-              onBack: auth.backToGroupHome,
-              onMessagesChanged: onGroupMessagesChanged,
-            )
-          : groupHomeArea,
-    );
-  }
-}
-
-class _GroupChatWithMessages extends StatelessWidget {
-  const _GroupChatWithMessages({
-    super.key,
-    required this.session,
-    required this.profile,
-    this.showBackButton = false,
-    this.onBack,
-    required this.onMessagesChanged,
-  });
-
-  final AccountSession session;
-  final ProfileSummary profile;
-  final bool showBackButton;
-  final VoidCallback? onBack;
-  final Future<void> Function(BuildContext providerContext) onMessagesChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return GroupConversationScreen(
-      session: session,
-      profile: profile,
-      showBackButton: showBackButton,
-      onBack: onBack,
-      onMessagesChanged: () => onMessagesChanged(context),
-    );
-  }
-}
-
-class _ChatWithMessages extends StatelessWidget {
-  const _ChatWithMessages({
-    super.key,
-    required this.auth,
-    required this.session,
-    required this.peer,
-    required this.scope,
-    this.showBackButton = false,
-    this.onBack,
-    required this.onMessagesChanged,
-  });
-
-  final AuthController auth;
-  final AccountSession session;
-  final ChatPeer peer;
-  final ConversationScope scope;
-  final bool showBackButton;
-  final VoidCallback? onBack;
-  final Future<void> Function() onMessagesChanged;
-
-  bool _focusedSessionValid() {
-    final live = auth.focusedSession;
-    return live != null && live.userId == session.userId && live.hasValidJwt();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final liveSession = auth.focusedSession;
-    if (liveSession == null ||
-        liveSession.userId != session.userId ||
-        !scope.matches(liveSession, peer) ||
-        !auth.isConversationReady(
-          session: liveSession,
-          peer: peer,
-        )) {
-      return const ColoredBox(
-        color: AlfredColors.surface,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return ChangeNotifierProvider(
-      create: (_) => MessagesController(
-        scope: scope,
-        userId: liveSession.userId,
-        peerProfileId: peer.profileId,
-        messageService: liveSession.messageService,
-        messageMediaService: liveSession.messageMediaService,
-        inboxService: liveSession.inboxService,
-        profileService: liveSession.profileService,
-        peerIsGroup: peer.isGroup,
-        onMessagesChanged: onMessagesChanged,
-        hasValidSession: _focusedSessionValid,
-        isScopeCommitted: () => isMessagesScopeActive(
-          scope: scope,
-          committedScope: auth.committedScope,
-          peer: peer,
-          liveSession: auth.focusedSession,
-          isConversationReady: (session, activePeer) =>
-              auth.isConversationReady(session: session, peer: activePeer),
-        ),
-        messageStore: auth.messageStore,
-      ),
-      child: ChatPanel(
-        peer: peer,
-        showBackButton: showBackButton,
-        onBack: onBack,
-        showAuthorLabels: peer.isGroup,
-      ),
-    );
-  }
-}
-
-class EmptyChatPlaceholder extends StatelessWidget {
-  const EmptyChatPlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AlfredColors.surface,
-      child: Center(
-        child: Text(
-          'Seleziona una chat o scrivi a un indirizzo',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AlfredColors.textSecondary,
-              ),
-        ),
-      ),
     );
   }
 }
