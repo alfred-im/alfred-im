@@ -23,9 +23,18 @@ Tutto il resto (UI, realtime, spunte, tipi messaggio, rubrica) si deduce dall’
 
 ---
 
-## Media (GIF, voice) — file condiviso
+## Media (GIF, voice, image, video) — file condiviso
 
-Il flusso client resta quello attuale: **un upload** nel bucket `chat-media` → **un** `media_url` → metadati sul messaggio.
+Il flusso client resta quello attuale: **un upload** nel bucket `chat-media` → **un** `media_url` → metadati sul messaggio (`media_mime`, `media_size_bytes`; per voice e video anche `duration_seconds`).
+
+| Tipo | MIME ammessi (`chat-media`) | Note RPC |
+|------|----------------------------|----------|
+| GIF | `image/gif` | `media_url` obbligatorio |
+| voice | `audio/webm` | `duration_seconds` > 0 |
+| image | `image/jpeg`, `image/png`, `image/webp` | `media_mime` obbligatorio |
+| video | `video/mp4`, `video/webm` | `duration_seconds` > 0; limite bucket 50 MB |
+
+Anteprima inbox: `📷 Foto` / `🎬 Video` (o caption con emoji) — vedi `list_inbox` e [contracts/rpc.md](../specs/contracts/rpc.md).
 
 Con il modello caselle le **copie d’archivio** (mittente e destinatario) puntano allo **stesso blob** — il file **non** si duplica in storage. È una scelta deliberata (come un allegato referenziato in due caselle), non un dettaglio trascurabile.
 

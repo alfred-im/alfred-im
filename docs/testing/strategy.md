@@ -20,7 +20,7 @@ Piano a livelli allineato a **dominio → UML → statechart → composition roo
 
 Gate: `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutter analyze` + `flutter test` (esclusi tag `live`, `diagnostic`).
 
-**Nota:** `flutter test` senza `--exclude-tags` include i test `diagnostic` (4 test che falliscono by design senza define). Il gate usa `verify.sh` — **377** test al 2026-07-19.
+**Nota:** `flutter test` senza `--exclude-tags` include i test `diagnostic` (4 test che falliscono by design senza define). Il gate usa `verify.sh` — **403** test al 2026-07-25.
 
 ---
 

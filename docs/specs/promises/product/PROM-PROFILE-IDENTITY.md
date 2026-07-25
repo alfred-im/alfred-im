@@ -55,8 +55,8 @@ Schema backend (`profiles`, bucket `avatars`): [SYS-PROFILE](../system/SYS-PROFI
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/profile/](../../../domain/profile/) |
-| UML | [docs/model/uml/profile/](../../model/uml/profile/) |
-| Statechart client | [client/lib/machines/profile/](../../../client/lib/machines/profile/) |
+| UML | [docs/model/uml/profile/](../../../model/uml/profile/) |
+| Statechart client | [client/lib/machines/profile/](../../../../client/lib/machines/profile/) |
 
 **Implementazione (non vincolante):** [docs/domain/profile/README.md](../../../domain/profile/README.md) · schema: [SYS-PROFILE](../system/SYS-PROFILE.md)
 

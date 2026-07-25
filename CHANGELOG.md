@@ -200,7 +200,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **Inbox**: preview `📍 Posizione` (`format_location_preview`)
 - **Coda**: `OutboundContentKind.location` con coordinate in retry
 - **CI**: retry deploy GitHub Pages (fino a 3 tentativi su errori transitori)
-- **Doc**: `docs/implementation/location-sharing.md`; `full-stack.md` §2.13
+- **Doc**: [docs/guides/media.md](docs/guides/media.md); `full-stack.md` §2.13
 - **Migrazioni**: `20260702120000`, `20260702120100`
 
 ### Flutter — PR #152 (multi-account: una GoTrue attiva)
@@ -216,7 +216,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **`AccountSession.persistOpenAccount`**: token dalla risposta HTTP / evento auth, non da `currentSession` globale
 - **`AccountManager`**: niente `_persistAllOpenAccounts`; `upsertAccount` / `removeAccount` per entry
 - **F5**: manifest = unica verità; restore solo account in focus (completato con #152 per runtime)
-- **Doc**: `docs/implementation/multi-account-persistence-redesign.md` — implementato
+- **Doc**: [docs/guides/multi-account.md](docs/guides/multi-account.md) — implementato
 
 ### Flutter — PR #143 (multi-account: logout locale, chat, persistenza)
 
@@ -251,8 +251,8 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **Focus**: `setFocus` — switch istantaneo, nessuna ri-autenticazione
 - **Rimossi**: `AuthService`, gate `AppShell` auth vs home, `switchAccount` con `setSession`
 - **ADR**: `docs/decisions/multi-account-parallel-sessions.md`
-- **Design**: `docs/design/auth-overlay-shell.md`
-- **Implementazione**: `docs/implementation/multi-account-client.md`
+- **Design**: [docs/guides/multi-account.md](docs/guides/multi-account.md)
+- **Implementazione**: [docs/guides/multi-account.md](docs/guides/multi-account.md)
 
 ### Documentazione (2026-06-28 — sync post-merge #126–#132)
 
@@ -263,7 +263,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **`InboxPanel`**: barra «Cerca messaggi» nascosta di default; icona lente apre con focus; chiusura via `dismissSearch()` (toggle lente + `TapRegion.onTapOutside`); filtro azzerato alla chiusura
 - **Layout**: mobile = lente in header accanto a Contatti; desktop = riga «Conversazioni» + lente
 - **`HomeScreen`**: `ValueKey(userId)` su `InboxPanel` — reset stato ricerca al cambio account
-- **Design**: `docs/design/inbox-search-toggle.md`
+- **Design**: [docs/guides/inbox.md](docs/guides/inbox.md) · [PROM-LIST-FILTER](docs/specs/promises/product/PROM-LIST-FILTER.md)
 
 ### Flutter — PR #131 (sidebar logout)
 
@@ -303,7 +303,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Documentazione (2026-06-27)
 - **ADR** [no-internal-external-chat-distinction.md](docs/decisions/no-internal-external-chat-distinction.md) — vietata distinzione chat interna/esterna a tutti i livelli (PR #124)
-- **Design** [conversation-bottom-anchor.md](docs/design/conversation-bottom-anchor.md) — specifica aggancio al fondo conversazione
+- **Design** [docs/guides/chat-scroll.md](docs/guides/chat-scroll.md) — specifica aggancio al fondo conversazione
 
 ### Flutter — PR #125 (aggancio al fondo)
 - **`AnchoredMessageList`**: `ListView` `reverse: true`, soglia aggancio 48 px, pulsante riaggancio + badge

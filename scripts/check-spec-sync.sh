@@ -21,7 +21,7 @@ if [[ ! -f "$REGISTRY" ]]; then
   echo "ERROR: manca $REGISTRY" >&2
   ERR=1
 fi
-for contract in docs/specs/contracts/rpc.md docs/specs/contracts/schema.md; do
+for contract in docs/specs/contracts/rpc.md docs/specs/contracts/schema.md docs/specs/contracts/push-payload.md; do
   if [[ ! -f "$contract" ]]; then
     echo "ERROR: manca $contract" >&2
     ERR=1
@@ -94,12 +94,53 @@ fi
 
 echo "==> SDD: contratti mailbox (no target stale)"
 for contract in docs/specs/contracts/rpc.md docs/specs/contracts/schema.md; do
-  if grep -q 'non su `main`' "$contract" 2>/dev/null; then
+  if grep -q "non su \`main\`" "$contract" 2>/dev/null; then
     echo "ERROR: $contract contiene ancora 'non su main' per mailbox" >&2
     ERR=1
   fi
   if grep -q '20260702120100' "$contract" 2>/dev/null && ! grep -q '20260704120000' "$contract" 2>/dev/null; then
     echo "ERROR: $contract milestone migrazioni obsoleto (manca 20260704120000)" >&2
+    ERR=1
+  fi
+done
+
+echo "==> SDD: conteggio migrazioni in header contratti"
+MIGRATION_COUNT=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l | tr -d ' ')
+LATEST_MIGRATION="$(basename "$(ls -1 supabase/migrations/*.sql | sort | tail -1)" .sql)"
+LATEST_MIGRATION_TS="${LATEST_MIGRATION%%_*}"
+for contract in docs/specs/contracts/rpc.md docs/specs/contracts/schema.md; do
+  header_count="$(grep -oE '[0-9]+ totali in `supabase/migrations/`' "$contract" | head -1 | grep -oE '^[0-9]+' || true)"
+  if [[ -z "$header_count" ]]; then
+    echo "ERROR: $contract — header senza conteggio migrazioni atteso" >&2
+    ERR=1
+  elif [[ "$header_count" != "$MIGRATION_COUNT" ]]; then
+    echo "ERROR: $contract header dice $header_count migrazioni, trovate $MIGRATION_COUNT in supabase/migrations/" >&2
+    ERR=1
+  fi
+  if ! grep -q "$LATEST_MIGRATION_TS" "$contract" 2>/dev/null; then
+    echo "ERROR: $contract header non referenzia ultima migrazione $LATEST_MIGRATION_TS ($LATEST_MIGRATION)" >&2
+    ERR=1
+  fi
+done
+
+echo "==> SDD: allineamento stato registry ↔ file promessa"
+for prom_file in "$PRODUCT_DIR"/PROM-*.md "$SYSTEM_DIR"/SYS-*.md; do
+  [[ -f "$prom_file" ]] || continue
+  base="$(basename "$prom_file" .md)"
+  file_status="$(grep -E '^\| \*\*Status\*\*' "$prom_file" | sed -n 's/.*| `\([^`]*\)`.*/\1/p' | head -1 || true)"
+  registry_status="$(grep -F "**$base**" "$REGISTRY" | head -1 | sed -n 's/.*| `\([^`]*\)` |.*/\1/p' | head -1 || true)"
+  if [[ -n "$file_status" && -n "$registry_status" && "$file_status" != "$registry_status" ]]; then
+    echo "ERROR: $base — registry '$registry_status' vs file '$file_status'" >&2
+    ERR=1
+  fi
+done
+for surf_file in "$SURFACES_DIR"/SURF-*.md; do
+  [[ -f "$surf_file" ]] || continue
+  base="$(basename "$surf_file" .md)"
+  file_status="$(grep -E '^\| \*\*Status\*\*' "$surf_file" | sed -n 's/.*| `\([^`]*\)`.*/\1/p' | head -1 || true)"
+  registry_status="$(grep -F "**$base**" "$REGISTRY" | head -1 | sed -n 's/.*| `\([^`]*\)` |.*/\1/p' | head -1 || true)"
+  if [[ -n "$file_status" && -n "$registry_status" && "$file_status" != "$registry_status" ]]; then
+    echo "ERROR: $base — registry '$registry_status' vs file '$file_status'" >&2
     ERR=1
   fi
 done

@@ -4,10 +4,10 @@
 |-------|--------|
 | **Promessa ID** | `PROM-CONVERSATION-SCOPE` |
 | **Classe** | PRODUCT |
-| **Status** | `approved` |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-25 |
 
-[NavigationMachine](../../client/lib/machines/navigation/navigation_machine.dart) possiede l'unico `ConversationScope` commesso. `activePeer` in view-state è proiezione UI. Messaging legge solo scope commesso.
+[NavigationMachine](../../../../client/lib/machines/navigation/navigation_machine.dart) possiede l'unico `ConversationScope` commesso. `activePeer` in view-state è proiezione UI. Messaging legge solo scope commesso.
 
 **UML:** `docs/model/uml/navigation/navigation-shell-state.puml`, `seq-open-conversation-unified.puml`
 

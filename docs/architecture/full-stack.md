@@ -95,7 +95,7 @@ Dettaglio: [guides/shareable-link.md](../guides/shareable-link.md).
 
 Schema, enum, RLS, storage: **[contracts/schema.md](../specs/contracts/schema.md)**  
 RPC business logic: **[contracts/rpc.md](../specs/contracts/rpc.md)**  
-Migrazioni: [`supabase/migrations/`](../../../supabase/migrations/)
+Migrazioni: [`supabase/migrations/`](../../supabase/migrations/)
 
 ### Integrazione bridge (non implementata)
 
@@ -127,9 +127,11 @@ Vedi [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md), [
 
 | Livello | Path |
 |---------|------|
-| Gate CI | `client/scripts/verify.sh` |
-| SDD sync | `scripts/check-spec-sync.sh` |
-| Integrazione | `client/scripts/integration-multi-account.sh` · `bash scripts/test.sh integration-ticks` |
+| Gate CI | `client/scripts/verify.sh` — `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutter pub get` → `flutter analyze` → `flutter test` (esclusi tag `live`, `diagnostic`; **403** test al 2026-07-25) |
+| SDD sync | `scripts/check-spec-sync.sh` (invocato da `verify.sh`) |
+| Model sync | `scripts/check-model-sync.sh` (invocato da `verify.sh`) |
+| Composition sync | `scripts/check-composition-sync.sh` (invocato da `verify.sh`) |
+| Integrazione | `client/scripts/integration-multi-account.sh` · `cd client && bash scripts/test.sh integration-ticks` |
 | E2E | `client/e2e/` |
 | SQL smoke | `supabase/tests/` |
 

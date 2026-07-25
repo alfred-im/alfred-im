@@ -1,0 +1,53 @@
+@startuml shareable-link-state
+' Context: shareable-link
+' Profile: client
+' SDD: PROM-SHAREABLE-LINK
+' Revision: 2026-07-25
+' Sequence: seq-open-from-fragment.puml
+' Statechart: ShareableLinkMachine (client/lib/machines/shareable-link/)
+
+title Shareable-link — parse fragment, coda e risoluzione
+
+state Idle : nessun target in coda
+state TargetQueued : SharedLinkPending\n(targetDeferred)
+state Resolving : ResolveSharedLink in corso
+state NotFound : SharedLinkInvalid\n(profileNotFound)
+
+[*] --> Idle
+
+Idle --> TargetQueued : ParseFragment\n[fragment valido]
+TargetQueued --> TargetQueued : ParseFragment\n[stesso target]
+TargetQueued --> TargetQueued : ParseFragment\n[nuovo target]
+TargetQueued --> Idle : ParseFragment\n[fragment assente o riservato]
+
+Idle --> Idle : ParseFragment\n[fragment assente]
+NotFound --> Idle : ParseFragment\n[fragment assente]
+NotFound --> Idle : DismissNotFound
+
+TargetQueued --> TargetQueued : HandleTargetRequested\n/ SessionBecameReady\n[!sessionReady || !hasOpenAccounts]
+TargetQueued --> TargetQueued : HandleTargetRequested\n/ SessionBecameReady\n[focusedUserId null]
+TargetQueued --> Resolving : HandleTargetRequested\n/ SessionBecameReady\n[sessione pronta]
+
+Resolving --> NotFound : ResolveSharedLink\n[indirizzo non risolvibile]
+Resolving --> NotFound : ResolveSharedLink\n[profilo assente]
+Resolving --> Idle : ResolveSharedLink\n[self peer — ignorato]
+Resolving --> Idle : OpenSharedChat\n→ navigation
+Resolving --> Idle : OpenSharedProfile\n→ overlay profilo
+
+note right of TargetQueued
+  Domain: SharedLinkPending
+  Eventi: ParseFragment, SessionBecameReady
+end note
+
+note right of Resolving
+  Effetti: findProfileByUsername,
+  openChatFromLink, showProfileOverlay
+  Vedi seq-open-from-fragment.puml
+end note
+
+note right of NotFound
+  Domain: SharedLinkInvalid
+  UI dismiss → DismissNotFound → Idle
+end note
+
+@enduml

@@ -80,9 +80,16 @@ Navigazione per AI. **Modello**: [domain/README.md](./domain/README.md) · **Pro
 
 ---
 
+## Testing
+
+- [testing/strategy.md](./testing/strategy.md) — piramide test, catalogo COMP, regole gate
+- [../client/scripts/test/README.md](../client/scripts/test/README.md) — hub comandi `test.sh`, suite CI e manuali
+
+---
+
 ## Altro
 
 - [WISHLIST.md](./WISHLIST.md) — backlog futuro
-- [specs/contracts/schema.md](./specs/contracts/schema.md) · [rpc.md](./specs/contracts/rpc.md)
+- [specs/contracts/schema.md](./specs/contracts/schema.md) · [rpc.md](./specs/contracts/rpc.md) · [push-payload.md](./specs/contracts/push-payload.md)
 
-**Ultimo aggiornamento**: 2026-07-19
+**Ultimo aggiornamento**: 2026-07-25

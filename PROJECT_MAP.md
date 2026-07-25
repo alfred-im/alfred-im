@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-19  
+**Ultimo aggiornamento**: 2026-07-25  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 ---
@@ -112,6 +112,7 @@
 │   └── model/uml/          # UML 2.5 PlantUML (forma)
 ├── fly.toml, Dockerfile    # Deploy bridge Fly.io
 ├── PROJECT_MAP.md          # Questo file
+├── AGENTS.md               # Istruzioni agenti Cloud / toolchain VM
 └── .cursor-rules.md        # Regole sviluppo AI
 ```
 
@@ -123,10 +124,10 @@
 | **State** | **Macchine** (`client/lib/machines/<context>/`) + **coordinatori** (`client/lib/coordinators/`) + controller UI sottili; composition root: `AuthController` |
 | **Backend** | `SupabaseClient` della sessione in **focus** (una GoTrue attiva) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
-| **Gate** | `scripts/verify.sh` — `check-spec-sync` + `check-model-sync` + pub get + analyze (zero issue) + test |
+| **Gate** | `scripts/verify.sh` — `check-spec-sync` + `check-model-sync` + `check-composition-sync` + pub get + analyze (zero issue) + test |
 | **Build web** | `flutter build web --base-href "/alfred-im/"` |
 
-**Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `group_home`, `group_messages` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — ingresso unificato push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `machines/messaging/` (facade: `MessagesController`).
+**Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `group_home`, `group_messages` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — ingresso unificato push tap / link `#` / compose → `NavigationMachine`. **Conversation scope** (`ConversationScope`, promessa `PROM-CONVERSATION-SCOPE`): solo `NavigationMachine.commitScope` registra l'ambito attivo; messaging legge scope commesso, non `activePeer` come autorità. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `machines/messaging/` (facade: `MessagesController`).
 
 **Non deducibile — multi-account client**: `MultiAccountMachine` **possiede** `focusUserId` (intent focus); `AccountManager` esegue dispose/restore GoTrue via effetti. Manifest `alfred_saved_accounts` elenca **tutti** gli account aperti; in RAM **al massimo una** `AccountSession` GoTrue (quella in focus). Storage auth per account: `SharedPreferencesLocalStorage` → `alfred_auth_{userId}`. Persistenza **dichiarativa** per entry (`persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). **Vista UI** (`AccountViewState` per `userId`): mutazione **solo** via `AccountViewStateStore` (`machines/navigation/`) — chat aperta + inbox/chat su mobile **indipendenti per account**. Inbox UI: `HomeScreen` + `ListenableBuilder` su `focusedSession?.inboxController`. Coda invio: `userId|peerProfileId`. Overlay credenziali su `HomeScreen`. Doc: `docs/guides/multi-account.md`, `docs/decisions/multi-account-parallel-sessions.md`.
 
@@ -180,7 +181,7 @@ Avvio container: `scripts/start-bridges.sh` (`CMD ["/bin/sh", "/start.sh"]`). De
 
 RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_profile`, `list_peer_messages`, `list_owner_messages`, `broadcast_message_to_allowlist`, `mark_peer_read`.
 
-Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §3.
+Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §4.
 
 ---
 
@@ -188,7 +189,7 @@ Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §3.
 
 ```bash
 cd client
-bash scripts/verify.sh           # check-spec-sync + check-model-sync + gate Dart
+bash scripts/verify.sh           # check-spec-sync + check-model-sync + check-composition-sync + gate Dart
 bash scripts/verify.sh --build   # + build web
 ```
 
@@ -245,7 +246,7 @@ Test: `bash scripts/test.sh integration-ticks`
 
 ### Gate test
 
-`verify.sh` — `check-spec-sync.sh` + `check-model-sync.sh` (stati contesto `documented`|`wired`|`verified`, no `implemented`) + **377** test Dart. Smoke SQL: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `group_*.sql`, `reception_allowlist_*.sql`.
+`verify.sh` — `check-spec-sync.sh` + `check-model-sync.sh` + `check-composition-sync.sh` (stati contesto `documented`|`wired`|`verified`, no `implemented`; hygiene JWT wiring) + **403** test Dart. Smoke SQL: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `group_*.sql`, `reception_allowlist_*.sql`.
 
 ### File chiave client
 

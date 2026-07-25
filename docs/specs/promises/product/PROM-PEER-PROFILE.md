@@ -69,8 +69,8 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/profile/](../../../domain/profile/), [docs/domain/reception/](../../../domain/reception/), [docs/domain/contacts/](../../../domain/contacts/) |
-| UML | [docs/model/uml/profile/seq-peer-profile-overlay.puml](../../model/uml/profile/seq-peer-profile-overlay.puml) |
-| Statechart client | [client/lib/machines/profile/](../../../client/lib/machines/profile/), [client/lib/machines/reception/](../../../client/lib/machines/reception/) |
+| UML | [docs/model/uml/profile/seq-peer-profile-overlay.puml](../../../model/uml/profile/seq-peer-profile-overlay.puml) |
+| Statechart client | [client/lib/machines/profile/](../../../../client/lib/machines/profile/), [client/lib/machines/reception/](../../../../client/lib/machines/reception/) |
 | Overlay dismiss | [PROM-OVERLAY-DISMISS](./PROM-OVERLAY-DISMISS.md) |
 
 **Implementazione (non vincolante):** [docs/guides/peer-profile.md](../../../guides/peer-profile.md) · binding: [SURF-PEER-PROFILE](../../surfaces/SURF-PEER-PROFILE.md)

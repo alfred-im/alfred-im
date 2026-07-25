@@ -1,7 +1,7 @@
 # Contratto RPC — messaggistica
 
-**Ultima revisione**: 2026-07-19  
-**Status**: `implemented` su `main` (migrazioni fino a `20260715230000`, 38 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-07-25  
+**Status**: `implemented` su `main` (migrazioni fino a `20260719220000`, 39 totali in `supabase/migrations/`)  
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) (`implemented`)
 
 Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
@@ -37,6 +37,8 @@ send_message_to_profile(
 |----------------|-------------|
 | `text` | `body` trim non vuoto |
 | `gif` | `media_url` obbligatorio |
+| `image` | `media_url`, `media_mime` obbligatori; MIME ammessi: `image/jpeg`, `image/png`, `image/webp`; `media_size_bytes` opzionale ma se presente > 0 |
+| `video` | `media_url`, `media_mime`, `duration_seconds` > 0 obbligatori; MIME ammessi: `video/mp4`, `video/webm`; `media_size_bytes` opzionale ma se presente > 0 |
 | `voice` | `media_url`, `duration_seconds` > 0, `media_mime` obbligatori |
 | `location` | `latitude` ∈ [-90,90], `longitude` ∈ [-180,180] |
 
@@ -60,7 +62,7 @@ Idempotenza: stesso `p_client_message_id` → stessa riga mittente (no duplicati
 
 **Helper**: `is_sender_allowed_for_reception(owner_id, sender_profile_id) → boolean` — migrazione `20260704130000`; **helper interno** (non chiamabile da client).
 
-**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate), `20260711190000` (delivery plane).
+**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate), `20260711190000` (delivery plane), `20260713100000` (enum image/video), `20260713100001` (validazione image/video).
 
 ### Destinatario gruppo (SYS-GROUP)
 
@@ -95,6 +97,8 @@ broadcast_message_to_allowlist(
 |----------------|-------------|
 | `text` | `body` trim non vuoto |
 | `gif` | `media_url` obbligatorio |
+| `image` | Come `send_message_to_profile` (MIME `image/jpeg`, `image/png`, `image/webp`) |
+| `video` | Come `send_message_to_profile` (MIME `video/mp4`, `video/webm`; `duration_seconds` > 0) |
 | `voice` | `media_url`, `duration_seconds` > 0, `media_mime` obbligatori |
 | `location` | `latitude` / `longitude` obbligatori (senza range [-90,90]/[-180,180] come `send_message_to_profile`) |
 
@@ -102,7 +106,7 @@ Errori: `not authenticated`, `only group accounts can broadcast`, `no allow list
 
 Idempotenza: stesso `p_client_message_id` → stessa riga archivio gruppo.
 
-**Migrazioni**: `20260706120000`, `20260706140000`, `20260711190000`.
+**Migrazioni**: `20260706120000`, `20260706140000`, `20260711190000`, `20260713100001`.
 
 ---
 
@@ -149,9 +153,9 @@ Aggregazione su `messages` WHERE `owner_id = auth.uid()`:
 - `unread_count` = righe **in entrata** (`author_id <> owner_id`) con `read_at IS NULL`
 - Ordine: `last_message_at` DESC
 
-Preview per tipo: testo troncato, `[GIF]`, `format_voice_preview`, `format_location_preview`.
+Preview per tipo: testo troncato (120 char), `[GIF]`, `📷 Foto` / `📷 {caption}` (image), `🎬 Video` / `🎬 {caption}` (video), `format_voice_preview`, `format_location_preview`.
 
-**Migrazioni**: `20260627230000`, `20260628100000`, aggiornamenti voice/location, `20260704120000`, `20260706130000`.
+**Migrazioni**: `20260627230000`, `20260628100000`, aggiornamenti voice/location, `20260704120000`, `20260706130000`, `20260713110000`.
 
 ---
 
@@ -242,7 +246,7 @@ Funzioni `SECURITY DEFINER` invocate **solo** da worker `alfred_delivery` o altr
 
 | Funzione | Uso interno | Migrazione |
 |----------|-------------|------------|
-| `mailbox_has_renderable_content(text, message_content_type)` | Filtro contenuto renderizzabile in inbox/liste | `20260704120000` |
+| `mailbox_has_renderable_content(text, message_content_type)` | Filtro contenuto renderizzabile in inbox/liste | `20260704120000`, `20260713100001` |
 | `format_voice_preview(integer)` | Preview inbox voice | `20260627120100` |
 | `format_location_preview()` | Preview inbox location | `20260702120100` |
 | `is_sender_allowed_for_reception(uuid, uuid)` | Gate allow list nel worker delivery | `20260704130000` |
@@ -254,6 +258,10 @@ Funzioni `SECURITY DEFINER` invocate **solo** da worker `alfred_delivery` o altr
 | `alfred_delivery.propagate_read_receipt(uuid, uuid)` | UPDATE `read_at` copia mittente per λ | `20260711190000` |
 | `alfred_delivery.group_erogate(uuid)` | Broadcast gruppo → allow list | `20260711190000` |
 | `alfred_delivery.erogate_group_message(...)` | Fan-out proxy gruppo | `20260711190000` |
+| `alfred_delivery.queue_push_after_delivery(...)` | Accoda `push_notify` post-recapito | `20260714100000` |
+| `alfred_delivery.process_push_notify(uuid)` | HTTP POST Edge Function `send-push` | `20260714100000` |
+| `public.message_preview_text(message_content_type, text)` | Preview push/inbox allineata al client | `20260714100000` |
+| `public.internal_push_dispatch_config()` | Config VAPID + dispatch secret (solo `service_role`) | `20260714223000` |
 
 Revoca `authenticated`: migrazione `20260707190000`. Smoke: `supabase/tests/rpc_helper_security_smoke.sql`.
 
@@ -287,6 +295,12 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 | `supabase/tests/reception_allowlist_gate_smoke.sql` | Rifiuto silenzioso vs recapito allowed |
 | `supabase/tests/rpc_helper_security_smoke.sql` | Helper interni non eseguibili da `authenticated` |
 | `supabase/tests/group_schema_smoke.sql` | `list_owner_messages`, `profile_kind`, `broadcast_message_to_allowlist` |
+| `supabase/tests/push_subscriptions_schema_smoke.sql` | DDL `push_subscriptions`, `push_settings`, `message_preview_text`, `queue_push_after_delivery` |
+| `supabase/tests/push_subscriptions_rls_smoke.sql` | RLS subscription proprie |
+| `supabase/tests/push_multi_account_endpoint_smoke.sql` | UNIQUE `(user_id, endpoint)` multi-account stesso browser |
+| `supabase/tests/push_multi_device_smoke.sql` | Invio a tutte le subscription del destinatario |
+| `supabase/tests/push_delivery_trigger_smoke.sql` | `push_notify` accodato solo dopo recapito |
+| `supabase/tests/push_deliver_idempotent_smoke.sql` | Idempotenza push su retry delivery |
 
 Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/test.sh e2e-multi`
 
@@ -329,7 +343,9 @@ Client autenticato: UPSERT via PostgREST su `push_subscriptions` (RLS `user_id =
 
 Invocata solo da infrastruttura server (hook delivery / `push_notify` outbox). Non esposta al client.
 
-Input (JSON): `recipient_user_id`, `peer_profile_id`, `peer_display_name`, `preview_text`, `logical_message_id`, `content_type`.
+Input (JSON): `recipient_user_id`, `recipient_display_name`, `recipient_username`, `peer_profile_id`, `peer_display_name`, `preview_text`, `logical_message_id`, `content_type`.
+
+Payload costruito da `alfred_delivery.queue_push_after_delivery` (migrazioni `20260714100000`, `20260715210000`).
 
 ---
 

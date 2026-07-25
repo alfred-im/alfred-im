@@ -1,7 +1,7 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-07-19  
-**Status**: `implemented` su `main` (migrazioni fino a `20260715230000`, 38 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-07-25  
+**Status**: `implemented` su `main` (migrazioni fino a `20260719220000`, 39 totali in `supabase/migrations/`)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
@@ -19,6 +19,7 @@ messages *── peer profiles (peer_profile_id denormalizzato)
 messages 1──* outbox (ogni invio/lettura può accodare eventi)
 profiles 1──* sync_cursors (profile_id, peer_profile_id, protocol, cursor_key)
 profiles 1──* push_subscriptions (user_id, device_id)
+alfred_delivery.push_settings (singleton — dispatch VAPID)
 bridge_jobs (coda bridge)
 storage: chat-media, avatars
 ```
@@ -113,7 +114,7 @@ storage: chat-media, avatars
 | `body` | text | |
 | `content_type` | message_content_type | |
 | `media_url` | text nullable | Condiviso tra copie |
-| `duration_seconds`, `media_mime`, `media_size_bytes` | | voice |
+| `duration_seconds`, `media_mime`, `media_size_bytes` | | voice, video |
 | `latitude`, `longitude` | double nullable | location |
 | `delivered_at` | timestamptz nullable | Solo righe uscita (author = owner) |
 | `read_at` | timestamptz nullable | Uscita: spunta lettura; entrata: lettura locale |
@@ -140,14 +141,28 @@ Nessuna tabella aggiuntiva. Partecipazione = allow list bidirezionale:
 
 ## `outbox`
 
-Coda eventi — popolata per **ogni** invio (internal + federato) e per ogni `read_receipt`. Colonna `message_id`:
+Coda eventi — popolata per **ogni** invio (internal + federato), per ogni `read_receipt` e per `push_notify` post-recapito.
 
-| `event_kind` | `message_id` punta a |
-|--------------|----------------------|
+| Colonna | Tipo | Note |
+|---------|------|------|
+| `id` | uuid PK | default `gen_random_uuid()` |
+| `message_id` | uuid FK → messages | Riga archivio correlata (vedi tabella sotto per `event_kind`) |
+| `protocol` | contact_protocol | Routing consumer (`internal`, …) |
+| `payload` | jsonb | default `{}`; include `event_kind` e dati evento |
+| `status` | queue_status | default `queued` |
+| `locked_by` | text nullable | Worker lock (federato / retry) |
+| `locked_at` | timestamptz nullable | |
+| `attempts` | integer | default `0` |
+| `last_error` | text nullable | |
+| `created_at`, `updated_at` | timestamptz | |
+
+| `event_kind` (in `payload`) | `message_id` punta a |
+|------------------------------|----------------------|
 | `deliver`, `group_erogate` | Copia **mittente** (o archivio gruppo per broadcast) |
 | `read_receipt` | Copia **lettore** (riga in entrata con `read_at` aggiornato) |
+| `push_notify` | Copia **destinatario** (riga appena materializzata) |
 
-Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`. Stato colonna `status`: tipo `queue_status`.
+Valori `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`.
 
 Consumer internal: worker `alfred_delivery.process_outbox` (sincrono in transazione RPC account); federato: fase B bridge (stub).
 
@@ -169,8 +184,26 @@ Worker infrastruttura **non-account** — unico attore autorizzato a attraversar
 | `propagate_read_receipt(uuid, uuid)` | UPDATE `read_at` su copia mittente per `logical_message_id` |
 | `group_erogate(uuid)` | Broadcast gruppo → allow list |
 | `erogate_group_message(...)` | Fan-out proxy partecipanti |
+| `queue_push_after_delivery(...)` | Accoda `outbox` `push_notify` dopo INSERT copia destinatario |
+| `process_push_notify(uuid)` | Invoca Edge Function `send-push` via `pg_net` |
 
-**GRANT**: nessuno su `authenticated`. Migrazione `20260711190000`.
+### `alfred_delivery.push_settings` (singleton)
+
+| Colonna | Tipo | Note |
+|---------|------|------|
+| `singleton` | boolean PK | default `true`, CHECK `singleton` |
+| `functions_base_url` | text NOT NULL | Base URL Edge Functions (default progetto Supabase) |
+| `dispatch_secret` | text nullable | Header `X-Push-Dispatch-Secret` verso `send-push` |
+| `enabled` | boolean NOT NULL | default `true` — disabilita invio se `false` |
+| `vapid_public_key` | text nullable | Coppia VAPID (hosted deploy) |
+| `vapid_private_key` | text nullable | Solo infrastruttura |
+| `vapid_subject` | text NOT NULL | default `mailto:push@alfred.app` |
+
+**GRANT**: nessuno su `authenticated` / `anon` / `public`. Lettura config VAPID: RPC `public.internal_push_dispatch_config()` — solo `service_role`.
+
+**Migrazioni**: `20260714100000`, `20260714223000`.
+
+**GRANT** funzioni worker: nessuno su `authenticated`. Migrazione `20260711190000`; push `20260714100000`.
 
 ---
 

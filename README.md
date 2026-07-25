@@ -127,15 +127,11 @@ See [`client/README.md`](client/README.md) for client-specific setup, including 
 
 ```bash
 cd client
-bash scripts/verify.sh          # required before push
+bash scripts/verify.sh          # required before push (includes check-spec-sync, check-model-sync, check-composition-sync)
 bash scripts/verify.sh --build  # optional web build
 ```
 
-When changing specs or database migrations:
-
-```bash
-bash scripts/check-spec-sync.sh
-```
+When changing specs or database migrations, `verify.sh` already runs `check-spec-sync` — no separate invocation needed unless debugging that script alone (`bash ../scripts/check-spec-sync.sh` from `client/`).
 
 ---
 
@@ -158,8 +154,9 @@ Before opening a PR, run:
 
 ```bash
 cd client && bash scripts/verify.sh
-bash scripts/check-spec-sync.sh   # when specs or migrations change
 ```
+
+(`verify.sh` includes `check-spec-sync`, `check-model-sync`, and `check-composition-sync`.)
 
 This project is actively developed with AI assistance; there is no separate `CONTRIBUTING.md` yet. For agent-oriented workflow notes, see [`AGENTS.md`](AGENTS.md).
 

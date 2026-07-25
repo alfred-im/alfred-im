@@ -48,7 +48,7 @@ L'utente può condividere foto e video nelle conversazioni 1:1 e nei broadcast d
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/media/](../../../domain/media/), [docs/domain/messaging/](../../../domain/messaging/) |
-| UML | [docs/model/uml/media/media-state.puml](../../model/uml/media/media-state.puml) |
+| UML | [docs/model/uml/media/media-state.puml](../../../model/uml/media/media-state.puml) |
 | Invio media | `PrepareImage` / `PrepareVideo` → `SendContent` (messaging) |
 
 **Implementazione (non vincolante):** [docs/domain/media/README.md](../../../domain/media/README.md) · [docs/guides/media.md](../../../guides/media.md)
@@ -75,7 +75,7 @@ L'utente può condividere foto e video nelle conversazioni 1:1 e nei broadcast d
 | PROM-CHAT-MEDIA-005–006 | `picked_file_bytes_test.dart`; flussi controller in `messages_controller_media_test.dart` |
 | PROM-CHAT-MEDIA-007 | `chat_media_support_test.dart` (coda + `OutboundMediaCache`); `messages_controller_media_test.dart` (optimistic + retry path) |
 | PROM-CHAT-MEDIA-008 | `group_messages_controller_media_test.dart`; `group_broadcast_smoke.sql` |
-| PROM-CHAT-MEDIA (gate) | `bash scripts/test.sh gate` (**377** test Dart) |
+| PROM-CHAT-MEDIA (gate) | `bash scripts/test.sh gate` (**403** test Dart) |
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 

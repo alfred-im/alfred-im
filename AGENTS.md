@@ -38,7 +38,7 @@ Per **ogni promessa** nuova o modificata (SYSTEM, PRODUCT, SURFACE):
 1. Domanda obbligatoria: **quale promessa creo, estendo o rompo?** — se l'utente osserva comportamento diverso, è una promessa (non «solo UX»).
 2. File promessa in `docs/specs/promises/product/`, `docs/specs/surfaces/` o `docs/specs/contracts/` — template: `_template-promise-product.md`, `_template-surface.md`.
 3. Stato **`approved`** **prima** di qualsiasi implementazione; **`implemented`** dopo merge. Aggiornare [registry.md](docs/specs/registry.md).
-4. Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`.
+4. Gate: `cd client && bash scripts/verify.sh` (include `check-spec-sync`, `check-model-sync`, `check-composition-sync`, analyze, test).
 5. PR template: `.github/PULL_REQUEST_TEMPLATE.md`.
 
 **Distinzione regole:**
@@ -93,9 +93,7 @@ backend out of the box.
 - **`supabase start` works on a fresh apply** (all 39 migrations + `seed.sql`). It needs the Docker daemon
   running (see below). Local users can be created confirmed via the GoTrue admin API with the `service_role`
   key (`POST /auth/v1/admin/users`, `email_confirm:true`, `user_metadata.username`); the `handle_new_user`
-  trigger then creates the `profiles` row. Note: the async delivery worker (`alfred_delivery.process_outbox`)
-  is not scheduled locally, so a sent message's `delivered_at`/recipient copy stay null until processed — the
-  sender's copy is still written, which is enough to exercise the send path.
+  trigger then creates the `profiles` row. Since migration `20260711190000`, `alfred_delivery.process_outbox` runs **synchronously in-transaction** inside `send_message_to_profile` and `mark_peer_read` — local `supabase start` delivers internal messages without a separate scheduler (`delivered_at`/recipient copy materialize on send).
 - **Docker daemon is not managed by systemd here.** Start it manually if needed:
   `sudo dockerd > /tmp/dockerd.log 2>&1 &` then `sudo chmod 666 /var/run/docker.sock` so non-root can use it.
 - **Python bridges (`bridge-xmpp`, `bridge-matrix`) are stubs** exposing only `GET /health`. Run locally:
@@ -108,11 +106,12 @@ backend out of the box.
 
 ### Lint / test / build
 - **Hub test:** `cd client && bash scripts/test.sh list` — catalogo gate + suite manuali (`scripts/test/README.md`).
-- Standard gate CI: `bash scripts/test.sh gate` (= `verify.sh`: `flutter pub get` → `flutter analyze` → `flutter test`). `flutter analyze` must be zero-issue (even `info`), matching CI.
-- Web build: `bash scripts/verify.sh --build` (or `flutter build web --release --base-href "/alfred-im/"`).
-- **Prima di qualsiasi test GUI**: `bash scripts/test.sh diagnose` — se fallisce su CDP: `bash scripts/reset-chrome-cdp.sh` (kill Chrome + profilo pulito `/tmp/chrome-cdp-profile`).
-- **Integrazione multi-account senza browser** (affidabile per agenti): `bash scripts/test.sh integration` — login agent1/agent2 + RPC inbox/messaggi su Supabase live.
-- **E2E multi-account** (browser): `bash scripts/test.sh e2e-multi`
+- Standard gate CI: `cd client && bash scripts/test.sh gate` (= `verify.sh`: `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutter pub get` → `flutter analyze` → `flutter test`, esclusi tag `live`/`diagnostic`). `flutter analyze` must be zero-issue (even `info`), matching CI.
+- Web build: `cd client && bash scripts/verify.sh --build` (or `flutter build web --release --base-href "/alfred-im/"`).
+- **Prima di qualsiasi test GUI**: `cd client && bash scripts/test.sh diagnose` — se fallisce su CDP: `cd client && bash scripts/reset-chrome-cdp.sh` (kill Chrome + profilo pulito `/tmp/chrome-cdp-profile`).
+- **Integrazione multi-account senza browser** (affidabile per agenti): `cd client && bash scripts/test.sh integration` — login agent1/agent2 + RPC inbox/messaggi su Supabase live.
+- **E2E multi-account** (browser): `cd client && bash scripts/test.sh e2e-multi`
+- **Attenzione `test.sh unit`**: esclude solo tag `live`, **non** `diagnostic` — include 4 test che falliscono by design senza `ALFRED_DIAGNOSTIC_LOG=true`. Per il gate usare `test.sh gate` o `verify.sh`.
 
 ### Log diagnostici (`ALFRED_DIAGNOSTIC_LOG`)
 
@@ -132,12 +131,12 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 ### Running the app (dev)
 - `cd client && flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0`, then open `http://localhost:8080/`.
 - Use the `web-server` device (above): `-d chrome` requires `CHROME_EXECUTABLE` + a display and is less reliable here.
-- **Non riavviare `flutter run` se la porta 8080 è già in uso** — crea istanze orfane e tmux in errore. Verificare con `diagnose-test-env.sh`; kill mirato del PID su 8080 solo se necessario.
+- **Non riavviare `flutter run` se la porta 8080 è già in uso** — crea istanze orfane e tmux in errore. Verificare con `cd client && bash scripts/diagnose-test-env.sh`; kill mirato del PID su 8080 solo se necessario.
 
 ### Hosted web client (GitHub Pages)
 
 - **Try it:** https://alfred-im.github.io/alfred-im/ — vedi [README.md](README.md) per la panoramica pubblica.
-- Build web: `bash scripts/verify.sh --build` (base-href `/alfred-im/`).
+- Build web: `cd client && bash scripts/verify.sh --build` (base-href `/alfred-im/`).
 - **Verifica PWA prima del merge**: non serve aspettare il merge su `main`. Ogni **PR su `main`** che tocca `client/**` esegue `deploy-pages` e pubblica sulla **stessa** URL Pages. Dopo push sul branch della PR, attendi il workflow verde, poi prova dal telefono (PWA). Il merge non è prerequisito per la review utente.
 - **Non** assumere che l'URL rifletta il branch `main`: `deploy-pages` pubblica da **PR su `main`** e da **push su `main`** (ultimo deploy riuscito vince). Vedi `docs/architecture/full-stack.md` §7.
 
@@ -156,13 +155,13 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 - **Account debug agente:** usare **solo** `alfredagent1` / `alfredagent2` (credenziali in `docs/AGENT_DEBUG_ACCOUNTS.md`). **Non modificare mai** password o dati di `test1`/`test2`/`test3`/`test4` — vedi incidente documentato in quel file (2026-06-29).
 
 ### Browser (computerUse) testing of Flutter web
-- **Eseguire sempre `bash scripts/diagnose-test-env.sh` prima.** Se Chrome CDP `:9222` non risponde: `bash scripts/reset-chrome-cdp.sh` poi ritestare. Non usare computerUse con CDP morto.
-- **Preferire** `bash scripts/test.sh integration` per auth + messaggistica multi-account; `bash scripts/test.sh gate` per il client Dart.
+- **Eseguire sempre `cd client && bash scripts/diagnose-test-env.sh` prima** (o `cd client && bash scripts/test.sh diagnose`). Se Chrome CDP `:9222` non risponde: `cd client && bash scripts/reset-chrome-cdp.sh` poi ritestare. Non usare computerUse con CDP morto.
+- **Preferire** `cd client && bash scripts/test.sh integration` per auth + messaggistica multi-account; `cd client && bash scripts/test.sh gate` per il client Dart.
 - **Non** riavviare flutter in loop per "sbloccare" i test GUI — peggiora lo stato (port conflict, CDP morto).
 - Inputs are typeable: **click directly into a field to focus it, then type** (don't assume canvas blocks input).
 - A brief (~1s) white flash can appear during navigation transitions in the debug web build; it self-resolves and is not a crash.
 
 ### Optional e2e (Playwright, in `client/`)
-- Hub: `bash scripts/test.sh e2e` o `bash scripts/test.sh e2e-multi`
+- Hub: `cd client && bash scripts/test.sh e2e` o `cd client && bash scripts/test.sh e2e-multi`
 - `npm install` then `npx playwright install chromium`. Tests default to the deployed GitHub Pages URL; override with `ALFRED_BASE_URL` (e.g. `http://localhost:8080/`).
 - `e2e/pages-smoke.spec.ts` uses DOM text matching and is unreliable against Flutter's canvas (it does not enable the accessibility tree); `e2e/inbox-load.spec.ts` enables accessibility first. Treat this suite as a best-effort smoke harness.

@@ -1,6 +1,6 @@
 # Archivio messaggi conversazione — design
 
-**Stato:** `implemented`  
+**Stato modellazione:** ereditato dal contesto [messaging](./README.md) (`verified`)  
 **Ultima revisione:** 2026-07-25  
 **Promessa:** [PROM-CONVERSATION-SCOPE](../../specs/promises/product/PROM-CONVERSATION-SCOPE.md)
 

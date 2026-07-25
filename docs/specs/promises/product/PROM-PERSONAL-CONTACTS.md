@@ -63,8 +63,8 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/contacts/](../../../domain/contacts/) |
-| UML | [docs/model/uml/contacts/](../../model/uml/contacts/) — [seq-compose-from-contact.puml](../../model/uml/contacts/seq-compose-from-contact.puml) |
-| Statechart client | [client/lib/machines/contacts/](../../../client/lib/machines/contacts/) |
+| UML | [docs/model/uml/contacts/](../../../model/uml/contacts/) — [seq-compose-from-contact.puml](../../../model/uml/contacts/seq-compose-from-contact.puml) |
+| Statechart client | [client/lib/machines/contacts/](../../../../client/lib/machines/contacts/) |
 | Compose da rubrica | `StartChatFromContact` → `OpenFromCompose` (navigation) |
 
 **Implementazione (non vincolante):** [docs/domain/contacts/README.md](../../../domain/contacts/README.md) · schema: [SYS-CONTACTS](../system/SYS-CONTACTS.md)

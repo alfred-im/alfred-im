@@ -1,6 +1,6 @@
 # Registro promesse — Alfred
 
-**Ultima revisione**: 2026-07-21  
+**Ultima revisione**: 2026-07-25  
 **Metodo**: [README.md](./README.md) (SDD)
 
 **Catalogo unico** di promesse SYSTEM, PRODUCT e SURFACE. Per navigazione generale: [INDICE.md](../INDICE.md). Per cronologia merge: [CHANGELOG.md](../../CHANGELOG.md).
@@ -11,7 +11,7 @@ Legenda stato: `draft` | `approved` | `implemented` | `deprecated` | `superseded
 
 ## SYSTEM — piattaforma
 
-Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contracts/schema.md)** · **[contracts/rpc.md](./contracts/rpc.md)**
+Dettaglio implementativo (DDL, firme RPC, RLS, push wire): **[contracts/schema.md](./contracts/schema.md)** · **[contracts/rpc.md](./contracts/rpc.md)** · **[contracts/push-payload.md](./contracts/push-payload.md)**
 
 | Promessa ID | Titolo | Stato | File |
 |-------------|--------|-------|------|
@@ -46,7 +46,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **PROM-SHAREABLE-LINK** | Link condivisibili stabili (`#indirizzo`, `#indirizzo/chat`) | `implemented` | [PROM-SHAREABLE-LINK.md](./promises/product/PROM-SHAREABLE-LINK.md) |
 | **PROM-CHAT-MEDIA** | Foto e video in chat (picker, fotocamera, didascalia) | `implemented` | [PROM-CHAT-MEDIA.md](./promises/product/PROM-CHAT-MEDIA.md) |
 | **PROM-PUSH-NOTIFY** | Push multi-device / multi-account, anteprima, soppressione | `implemented` | [PROM-PUSH-NOTIFY.md](./promises/product/PROM-PUSH-NOTIFY.md) |
-| **PROM-CONVERSATION-SCOPE** | Ambito unico conversazione attiva (account + peer + sessione) | `approved` | [PROM-CONVERSATION-SCOPE.md](./promises/product/PROM-CONVERSATION-SCOPE.md) |
+| **PROM-CONVERSATION-SCOPE** | Ambito unico conversazione attiva (account + peer + sessione) | `implemented` | [PROM-CONVERSATION-SCOPE.md](./promises/product/PROM-CONVERSATION-SCOPE.md) |
 
 ---
 
@@ -55,7 +55,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | Superficie ID | Titolo | Stato | Promesse principali | File |
 |---------------|--------|-------|---------------------|------|
 | **SURF-AUTH** | Overlay login/registrazione | `implemented` | PROM-MULTI-ACCOUNT, PROM-SHAREABLE-LINK | [SURF-AUTH.md](./surfaces/SURF-AUTH.md) |
-| **SURF-APP-SHELL** | `HomeScreen` sempre visibile | `implemented` | PROM-MULTI-ACCOUNT | (in SURF-AUTH) |
+| **SURF-APP-SHELL** | `HomeScreen` sempre visibile | `implemented` | PROM-MULTI-ACCOUNT | [SURF-AUTH.md](./surfaces/SURF-AUTH.md) — ID `SURF-AUTH-001` (nessun file dedicato) |
 | **SURF-ACCOUNT-SIDEBAR** | Manifest account in sidebar | `implemented` | PROM-MULTI-ACCOUNT, PROM-PROFILE-IDENTITY, PROM-SHAREABLE-LINK | [SURF-ACCOUNT-SIDEBAR.md](./surfaces/SURF-ACCOUNT-SIDEBAR.md) |
 | **SURF-INBOX** | Lista conversazioni | `implemented` | PROM-LIST-FILTER, PROM-REALTIME-OWNER | [SURF-INBOX.md](./surfaces/SURF-INBOX.md) |
 | **SURF-CHAT** | Conversazione 1:1 | `implemented` | PROM-CHAT-PEER-KEY, PROM-MESSAGE-STATUS, PROM-OUTBOUND-SEND, PROM-CHAT-MEDIA, PROM-SHAREABLE-LINK | [SURF-CHAT.md](./surfaces/SURF-CHAT.md) |

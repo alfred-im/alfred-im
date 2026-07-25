@@ -81,7 +81,7 @@ Ogni `docs/domain/<context>/README.md` dichiara **un solo** stato tra:
 |-------|-------------|------------------|
 | `documented` | Significato e forma UML allineati; nessuno statechart in produzione (o solo mirror documentativo) | `glossary.md`, `commands-and-events.md`, almeno un `.puml` |
 | `wired` | Statechart client in `client/lib/machines/<context>/` cablato al runtime | come `documented` + directory macchina |
-| `verified` | Transizioni statechart coperte da test unitari | come `wired` + `client/test/unit/<context>_machine_test.dart` |
+| `verified` | Transizioni statechart coperte da test unitari e cablaggio | come `wired` + `client/test/unit/<context>_machine_test.dart` + `client/test/wiring/<context>_wiring_test.dart` |
 
 Mappa contesti e relazioni: [bounded-contexts.md](./bounded-contexts.md) · [context-map.puml](../model/context-map.puml).
 

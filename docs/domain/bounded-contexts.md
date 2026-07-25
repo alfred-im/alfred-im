@@ -42,7 +42,7 @@ Tre livelli di maturità per contesto (governance — vedi [README.md](./README.
 |-------|-------------|----------------------------|
 | `documented` | Glossario, comandi/eventi e almeno un diagramma UML; statechart assente o solo mirror non cablato in produzione | nessun vincolo su macchina/test |
 | `wired` | Statechart in `client/lib/machines/<context>/` usato dal runtime client | richiede dominio + UML + directory macchina |
-| `verified` | `wired` + test unitari transizioni in `client/test/unit/<context>_machine_test.dart` | come `wired` + file test |
+| `verified` | `wired` + test unitari transizioni e cablaggio runtime | come `wired` + `client/test/unit/<context>_machine_test.dart` + `client/test/wiring/<context>_wiring_test.dart` |
 
 Contesti **`verified`** (produzione): auth, multi-account, navigation, notifications, shareable-link, messaging, contacts, profile, reception, groups.
 

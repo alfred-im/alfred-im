@@ -2,6 +2,14 @@
 
 **Stato modellazione:** `verified`
 
+## Artefatti
+
+| Livello | File |
+|---------|------|
+| Dominio | [glossary.md](./glossary.md), [commands-and-events.md](./commands-and-events.md) |
+| UML | [shareable-link-state.puml](../../model/uml/shareable-link/shareable-link-state.puml), [seq-open-from-fragment.puml](../../model/uml/shareable-link/seq-open-from-fragment.puml) |
+| Statechart | [client/lib/machines/shareable-link/](../../../client/lib/machines/shareable-link/) |
+
 ## Mapping dominio → implementazione
 
 | Dominio | Statechart | Codice |

@@ -82,9 +82,9 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/multi-account/](../../../domain/multi-account/), [docs/domain/auth/](../../../domain/auth/) |
-| UML | [docs/model/uml/multi-account/](../../model/uml/multi-account/), [docs/model/uml/auth/](../../model/uml/auth/) |
-| Statechart client | [client/lib/machines/multi-account/](../../../client/lib/machines/multi-account/), [client/lib/machines/auth/](../../../client/lib/machines/auth/) |
-| Focus account | `FocusAccount` · [seq-focus-switch.puml](../../model/uml/multi-account/seq-focus-switch.puml) |
+| UML | [docs/model/uml/multi-account/](../../../model/uml/multi-account/), [docs/model/uml/auth/](../../../model/uml/auth/) |
+| Statechart client | [client/lib/machines/multi-account/](../../../../client/lib/machines/multi-account/), [client/lib/machines/auth/](../../../../client/lib/machines/auth/) |
+| Focus account | `FocusAccount` · [seq-focus-switch.puml](../../../model/uml/multi-account/seq-focus-switch.puml) |
 
 **Implementazione (non vincolante):** [docs/domain/multi-account/README.md](../../../domain/multi-account/README.md) · [docs/guides/multi-account.md](../../../guides/multi-account.md)
 
@@ -106,7 +106,7 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 | PROM-MULTI-ACCOUNT-002–004 | `account_storage_test.dart` |
 | PROM-MULTI-ACCOUNT-005–006 | `account_manager_persistence_test.dart` |
 | PROM-MULTI-ACCOUNT-010 | `account_manager_view_state_test.dart` |
-| PROM-MULTI-ACCOUNT-012–015, 033 | `auth_controller_test.dart`; `auth_overlay_shell.md` |
+| PROM-MULTI-ACCOUNT-012–015, 033 | `auth_controller_test.dart`; [docs/guides/multi-account.md](../../../guides/multi-account.md) |
 | PROM-MULTI-ACCOUNT-009 | `inbox_provider_lifecycle_test.dart` |
 | PROM-MULTI-ACCOUNT-010, 020 | `multi_account_chat_scenario_test.dart` |
 | PROM-MULTI-ACCOUNT-022 | `composition/messaging_session_scope_test.dart` (COMP-001, COMP-002) |

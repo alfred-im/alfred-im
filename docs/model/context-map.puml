@@ -42,7 +42,7 @@ messaging --> reception : gate allow list
 messaging --> delivery : outbox recapito
 media ..> messaging : Prepare* → SendContent
 
-' Gruppi
+' Gruppi (statechart client in client/lib/machines/groups/ — package Server solo per RPC/gate)
 groups --> delivery : broadcast / erogazione
 groups --> reception : allow list bidirezionale
 groups ..> navigation : OpenGroupConversation\n/ LeaveGroupConversation
@@ -67,6 +67,13 @@ end note
 note bottom of delivery
   DeliveryWorker (platform)
   — nessuno statechart client
+end note
+
+note right of groups
+  groups-state.puml + GroupsMachine
+  sono client-side (Flutter);
+  il package Server qui indica
+  solo gate RPC / delivery
 end note
 
 @enduml

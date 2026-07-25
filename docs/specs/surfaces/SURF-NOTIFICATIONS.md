@@ -34,7 +34,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | **SURF-NOTIFICATIONS-004** | «Chiudi account»: DELETE subscription server + `unsubscribe` locale se ultimo account sul device |
 | **SURF-NOTIFICATIONS-005** | Handler SW `push`: mostra `Notification` con titolo e anteprima ([PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) PROM-PUSH-NOTIFY-010) |
 | **SURF-NOTIFICATIONS-006** | Handler SW `notificationclick`: focus finestra app + messaggio client `{ type: 'open_chat', recipientUserId, peerProfileId }` — **entrambi** obbligatori |
-| **SURF-NOTIFICATIONS-007** | Client riceve `open_chat` → parse [`PushConversationKey`](../../client/lib/models/push_conversation_key.dart) → focus `recipientUserId` + apre chat `peerProfileId`; azzera chat stale sull'account destinatario; retry inbox + fallback profilo se il peer non è ancora in lista |
+| **SURF-NOTIFICATIONS-007** | Client riceve `open_chat` → parse [`PushConversationKey`](../../../client/lib/models/push_conversation_key.dart) → focus `recipientUserId` + apre chat `peerProfileId`; azzera chat stale sull'account destinatario; retry inbox + fallback profilo se il peer non è ancora in lista |
 | **SURF-NOTIFICATIONS-008** | Soppressione: SW consulta stato client (focus + peer attivo) e confronta la **coppia** account+peer del payload prima di `showNotification` |
 | **SURF-NOTIFICATIONS-009** | Icona notifica: `icons/Icon-192.png`; `badge` coerente brand `#2D2926` |
 | **SURF-NOTIFICATIONS-010** | Payload push incompleto (manca `recipientUserId` o `peerProfileId`) → nessuna notifica visibile e nessun `open_chat` |
@@ -85,7 +85,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 |----------|-----------|
 | Dominio | [docs/domain/notifications/](../../domain/notifications/) |
 | UML | [docs/model/uml/notifications/](../../model/uml/notifications/) |
-| Statechart | [client/lib/machines/notifications/](../../client/lib/machines/notifications/) |
+| Statechart | [client/lib/machines/notifications/](../../../client/lib/machines/notifications/) |
 
 ---
 
