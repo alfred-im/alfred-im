@@ -20,11 +20,11 @@ void main() {
       final client = createTestSupabaseClient();
       final messageService = FakeMessageService(client);
 
-      final cache = GroupOwnerArchiveCache.forUserId(
+      final cache = GroupOwnerArchiveCache.forMessageService(
         userId: userId,
         messageService: messageService,
       );
-      final other = GroupOwnerArchiveCache.forUserId(
+      final other = GroupOwnerArchiveCache.forMessageService(
         userId: userId,
         messageService: messageService,
       );
@@ -45,7 +45,7 @@ void main() {
         ),
       ];
 
-      final cache = GroupOwnerArchiveCache.forUserId(
+      final cache = GroupOwnerArchiveCache.forMessageService(
         userId: userId,
         messageService: messageService,
       );

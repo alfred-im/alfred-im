@@ -249,6 +249,7 @@ class AccountNavigationEffects implements NavigationEffects {
         await _focusCommand.focusAccount(accountUserId);
       }
       await _manager.consolidateSessionForAccount(accountUserId);
+      await _manager.refreshFocusedInbox();
     } catch (_) {
       diagLogFail(
         'nav',

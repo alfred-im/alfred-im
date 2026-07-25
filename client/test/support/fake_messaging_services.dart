@@ -12,6 +12,7 @@ import 'package:alfred_client/models/conversation_scope.dart';
 import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
+import 'package:alfred_client/services/group_archive_service.dart';
 import 'package:alfred_client/services/inbox_service.dart';
 import 'package:alfred_client/services/message_service.dart';
 import 'package:alfred_client/services/profile_service.dart';
@@ -58,9 +59,15 @@ String conversationKey({
     '$userId|$peerProfileId';
 
 class FakeMessageService extends MessageService {
-  FakeMessageService(this._clientForTest) : super(_clientForTest);
+  FakeMessageService(this._clientForTest) : super(_clientForTest) {
+    _groupArchiveOverride = _FakeGroupArchiveService(this, _clientForTest);
+  }
 
   final SupabaseClient _clientForTest;
+  late final _FakeGroupArchiveService _groupArchiveOverride;
+
+  @override
+  GroupArchiveService get groupArchive => _groupArchiveOverride;
 
   final Map<String, List<ChatMessage>> messagesByConversation = {};
   final Map<String, List<ChatMessage>> ownerMessagesByUserId = {};
@@ -345,6 +352,126 @@ class FakeMessageService extends MessageService {
     _ownerRealtimeHandlers[currentUserId] = onMessage;
     return _clientForTest.channel('test-owner-$currentUserId').subscribe();
   }
+}
+
+/// Delega al [FakeMessageService] così [GroupOwnerArchiveCache] usa i dati fake.
+class _FakeGroupArchiveService extends GroupArchiveService {
+  _FakeGroupArchiveService(this._messageService, SupabaseClient client)
+      : super(client);
+
+  final FakeMessageService _messageService;
+
+  @override
+  Future<List<ChatMessage>> fetchOwnerMessages({
+    required String currentUserId,
+    int limit = 200,
+  }) =>
+      _messageService.fetchOwnerMessages(
+        currentUserId: currentUserId,
+        limit: limit,
+      );
+
+  @override
+  Future<ChatMessage> broadcastToAllowlist({
+    required String body,
+    required String currentUserId,
+    required String clientMessageId,
+  }) =>
+      _messageService.broadcastToAllowlist(
+        body: body,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
+
+  @override
+  Future<ChatMessage> broadcastGifToAllowlist({
+    required String mediaUrl,
+    required String currentUserId,
+    required String clientMessageId,
+  }) =>
+      _messageService.broadcastGifToAllowlist(
+        mediaUrl: mediaUrl,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
+
+  @override
+  Future<ChatMessage> broadcastVoiceToAllowlist({
+    required String mediaUrl,
+    required int durationSeconds,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+  }) =>
+      _messageService.broadcastVoiceToAllowlist(
+        mediaUrl: mediaUrl,
+        durationSeconds: durationSeconds,
+        mediaSizeBytes: mediaSizeBytes,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
+
+  @override
+  Future<ChatMessage> broadcastLocationToAllowlist({
+    required double latitude,
+    required double longitude,
+    required String currentUserId,
+    required String clientMessageId,
+  }) =>
+      _messageService.broadcastLocationToAllowlist(
+        latitude: latitude,
+        longitude: longitude,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+      );
+
+  @override
+  Future<ChatMessage> broadcastImageToAllowlist({
+    required String mediaUrl,
+    required String mediaMime,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+    String body = '',
+  }) =>
+      _messageService.broadcastImageToAllowlist(
+        mediaUrl: mediaUrl,
+        mediaMime: mediaMime,
+        mediaSizeBytes: mediaSizeBytes,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+        body: body,
+      );
+
+  @override
+  Future<ChatMessage> broadcastVideoToAllowlist({
+    required String mediaUrl,
+    required String mediaMime,
+    required int durationSeconds,
+    required int mediaSizeBytes,
+    required String currentUserId,
+    required String clientMessageId,
+    String body = '',
+  }) =>
+      _messageService.broadcastVideoToAllowlist(
+        mediaUrl: mediaUrl,
+        mediaMime: mediaMime,
+        durationSeconds: durationSeconds,
+        mediaSizeBytes: mediaSizeBytes,
+        currentUserId: currentUserId,
+        clientMessageId: clientMessageId,
+        body: body,
+      );
+
+  @override
+  RealtimeChannel subscribeToOwnerMessages({
+    required String currentUserId,
+    required void Function(ChatMessage message) onMessage,
+  }) =>
+      _messageService.subscribeToOwnerMessages(
+        currentUserId: currentUserId,
+        onMessage: onMessage,
+      );
 }
 
 /// [FakeMessageService] con ritardo artificiale sul fetch (race scope in test).

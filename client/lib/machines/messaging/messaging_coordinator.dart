@@ -22,13 +22,11 @@ class MessagingCoordinator {
     required this.state,
     required this.effects,
     required this.onChanged,
-    this.peerIsGroup = false,
   });
 
   final MessagingConversationState state;
   final MessagingEffects effects;
   final VoidCallback onChanged;
-  final bool peerIsGroup;
 
   final ConversationLoadMachine loadMachine = ConversationLoadMachine();
   final OutboundSendMachine sendMachine = OutboundSendMachine();
@@ -145,7 +143,7 @@ class MessagingCoordinator {
         withTimeLabel(message),
       ),
     );
-    if (peerIsGroup) {
+    if (effects.hasGroupPeerAuthorEnrichment) {
       unawaited(effects.enrichAuthorNamesIfNeeded());
     } else {
       _notify();

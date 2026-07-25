@@ -22,7 +22,7 @@ class GroupMessagesController extends ChangeNotifier {
     GroupOwnerArchiveCache? ownerArchiveCache,
     this.onMessagesChanged,
   }) : ownerArchiveCache = ownerArchiveCache ??
-            GroupOwnerArchiveCache.forUserId(
+            GroupOwnerArchiveCache.forMessageService(
               userId: userId,
               messageService: messageService,
             ) {

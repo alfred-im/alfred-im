@@ -95,7 +95,7 @@ class AuthSessionCoordinator {
         password: password,
       );
       _authAdapters.onAuthOperationCompleted(success: true);
-      _navigation.syncShellAfterFocusSettled();
+      await _navigation.syncShellAfterFocusSettled();
       await _pushCoordinator.syncPushSubscriptions();
     });
   }
@@ -139,7 +139,7 @@ class AuthSessionCoordinator {
         profileKind: profileKind,
       );
       _authAdapters.onAuthOperationCompleted(success: true);
-      _navigation.syncShellAfterFocusSettled();
+      await _navigation.syncShellAfterFocusSettled();
       await _pushCoordinator.syncPushSubscriptions();
     });
   }
@@ -186,7 +186,7 @@ class AuthSessionCoordinator {
     if (!_manager.hasOpenAccounts) {
       _authAdapters.onLastAccountRemoved();
     } else {
-      _navigation.syncShellAfterFocusSettled();
+      await _navigation.syncShellAfterFocusSettled();
     }
     _notify();
   }

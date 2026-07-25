@@ -1,6 +1,8 @@
-# Contesto: media
+# Modulo: media (sotto messaging)
 
 **Stato modellazione:** `documented`
+
+**Non è un bounded context runtime separato** — la preparazione allegati (voice, image, video, gif, location) è un **sottosistema del contesto messaging**. La cartella `docs/domain/media/` documenta glossario e comandi per chiarezza modellistica; l'esecuzione client passa da `MessagesControllerEffects` / `MessageMediaService`, non da una macchina `media` dedicata.
 
 Sotto-contesto di **messaging** — vedi [mapping messaging](../messaging/README.md).
 

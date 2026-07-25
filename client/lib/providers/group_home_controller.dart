@@ -22,7 +22,7 @@ class GroupHomeController extends ChangeNotifier {
     required ProfileService profileService,
     GroupOwnerArchiveCache? ownerArchiveCache,
   }) : ownerArchiveCache = ownerArchiveCache ??
-            GroupOwnerArchiveCache.forUserId(
+            GroupOwnerArchiveCache.forMessageService(
               userId: session.userId,
               messageService: messageService,
             ) {

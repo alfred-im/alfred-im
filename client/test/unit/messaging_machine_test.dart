@@ -58,6 +58,9 @@ class _RecordingEffects implements MessagingEffects {
   Future<void> enrichAuthorNamesIfNeeded() async {}
 
   @override
+  bool get hasGroupPeerAuthorEnrichment => false;
+
+  @override
   Future<void> markRead() async => markReadCount++;
 
   @override

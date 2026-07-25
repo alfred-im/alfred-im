@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
 import '../models/conversation_scope.dart';
+import '../groups/group_peer_author_enrichment.dart';
 import '../providers/auth_controller.dart';
 import '../providers/messages_controller.dart';
 import '../services/account_session.dart';
@@ -47,11 +48,11 @@ class ConversationScopePane extends StatelessWidget {
       );
     }
 
-    if (!auth.isConversationReady(
+    if (!auth.navigation.isConversationReady(
       session: activeSession,
       peer: peer,
     )) {
-      if (auth.committedScope == null) {
+      if (auth.navigation.committedScope == null) {
         return const EmptyChatPlaceholder();
       }
       return const ColoredBox(
@@ -60,7 +61,7 @@ class ConversationScopePane extends StatelessWidget {
       );
     }
 
-    final scope = auth.committedScope;
+    final scope = auth.navigation.committedScope;
     if (scope == null || !scope.matches(activeSession, peer)) {
       return const ColoredBox(
         color: AlfredColors.surface,
@@ -112,7 +113,7 @@ class _ChatWithMessages extends StatelessWidget {
     if (liveSession == null ||
         liveSession.userId != session.userId ||
         !scope.matches(liveSession, peer) ||
-        !auth.isConversationReady(
+        !auth.navigation.isConversationReady(
           session: liveSession,
           peer: peer,
         )) {
@@ -131,18 +132,23 @@ class _ChatWithMessages extends StatelessWidget {
         messageMediaService: liveSession.messageMediaService,
         inboxService: liveSession.inboxService,
         profileService: liveSession.profileService,
-        peerIsGroup: peer.isGroup,
+        groupPeerAuthorEnrichment: peer.isGroup
+            ? GroupPeerAuthorEnrichment(
+                profileService: liveSession.profileService,
+                userId: liveSession.userId,
+              )
+            : null,
         onMessagesChanged: onMessagesChanged,
         hasValidSession: _focusedSessionValid,
         isScopeCommitted: () => isMessagesScopeActive(
           scope: scope,
-          committedScope: auth.committedScope,
+          committedScope: auth.navigation.committedScope,
           peer: peer,
           liveSession: auth.focusedSession,
           isConversationReady: (session, activePeer) =>
-              auth.isConversationReady(session: session, peer: activePeer),
+              auth.navigation.isConversationReady(session: session, peer: activePeer),
         ),
-        messageStore: auth.messageStore,
+        messageStore: auth.navigation.messageStore,
       ),
       child: ChatPanel(
         peer: peer,
