@@ -32,10 +32,9 @@ MANUALE (rete / browser, non in CI):
   integration-ticks Solo contratto spunte (✓ / ✓✓ grigie / ✓✓ blu + allow list)
   integration-push  Delivery plane; smoke SQL push su DB di test (no account utente)
   e2e               tutti i Playwright (client/e2e/)
-  e2e-multi         Playwright multi-account (persist + messages + DB)
+  e2e-multi         Playwright multi-account (persist + golden path locale / live)
   e2e-push-local    Playwright push locale — ricezione + tap multi-account (stack locale)
   e2e-nav-local     Playwright navigation locale — inbox tap + push poison (stack locale)
-  e2e-golden-path   Playwright golden path — login, testo, switch, foto, spunte backend
   live              flutter test --tags live
   manual            integration + e2e-multi + live (in sequenza)
 
@@ -121,9 +120,6 @@ case "$CMD" in
     ;;
   e2e-nav-local|nav-local)
     bash scripts/run-e2e-nav-local.sh "$@"
-    ;;
-  e2e-golden-path|golden-path)
-    bash scripts/run-e2e-golden-path.sh "$@"
     ;;
   e2e|playwright)
     run_e2e "$@"

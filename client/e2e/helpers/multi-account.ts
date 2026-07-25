@@ -102,10 +102,17 @@ export async function clearAppData(page: Page) {
 }
 
 export async function openAccountDrawer(page: Page) {
-  await page
-    .locator('flt-semantics[role="button"]')
-    .first()
-    .click({ timeout: E2E_TIMEOUT.ui });
+  const drawerButton = page.locator('flt-semantics[role="button"]').first();
+  await expect
+    .poll(
+      async () => {
+        await enableFlutterAccessibility(page);
+        return drawerButton.isVisible().catch(() => false);
+      },
+      { timeout: E2E_TIMEOUT.ui * 2, intervals: [...E2E_POLL] },
+    )
+    .toBe(true);
+  await drawerButton.click({ timeout: E2E_TIMEOUT.ui });
   await expect(page.getByText('Aggiungi account')).toBeVisible({
     timeout: E2E_TIMEOUT.ui,
   });

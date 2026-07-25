@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 #!/usr/bin/env bash
-# E2E multi-account — default demo live (flusso utente mobile).
+# E2E multi-account — stack locale (default) o Pages live (override esplicito).
 # Hub: bash scripts/test.sh e2e-multi
-# Locale: ALFRED_BASE_URL=http://localhost:8080/ bash scripts/test.sh e2e-multi
-# test1/test2: ALFRED_ACCOUNT1_EMAIL=... ALFRED_ACCOUNT1_PASSWORD=... ALFRED_ACCOUNT1_LABEL=test1 ...
+# Locale (default): bash scripts/test.sh e2e-multi
+# Live: ALFRED_BASE_URL=https://alfred-im.github.io/alfred-im/ bash scripts/test.sh e2e-multi
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,26 +14,48 @@ cd "$ROOT"
 
 # shellcheck source=lib/e2e-flutter-port.sh
 source "$ROOT/scripts/lib/e2e-flutter-port.sh"
+# shellcheck source=lib/e2e-local-stack.sh
+source "$ROOT/scripts/lib/e2e-local-stack.sh"
 
-BASE="${ALFRED_BASE_URL:-https://alfred-im.github.io/alfred-im/}"
-
+BASE="${ALFRED_BASE_URL:-http://localhost:8080/}"
+USE_LOCAL_STACK=0
 if [[ "$BASE" == http://localhost:* ]] || [[ "$BASE" == http://127.0.0.1:* ]]; then
-  export ALFRED_BASE_URL="$BASE"
-  if ! e2e_resolve_flutter_port; then
-    SESSION_NAME="flutter-dev-server"
-    if [[ -n "$(_e2e_flutter_port_pids)" ]]; then
-      echo "e2e-multi: :${E2E_FLUTTER_PORT} occupata — libera la porta prima di avviare Flutter" >&2
-      exit 1
-    fi
-    echo "==> Avvio flutter web-server su :${E2E_FLUTTER_PORT}"
-    tmux -f /exec-daemon/tmux.portal.conf has-session -t "=$SESSION_NAME" 2>/dev/null || \
-      tmux -f /exec-daemon/tmux.portal.conf new-session -d -s "$SESSION_NAME" -c "$ROOT" -- "${SHELL:-bash}" -l
-    tmux -f /exec-daemon/tmux.portal.conf send-keys -t "$SESSION_NAME:0.0" \
-      "cd $ROOT && /opt/flutter/bin/flutter run -d web-server --web-port=${E2E_FLUTTER_PORT} --web-hostname=0.0.0.0" C-m
-    e2e_wait_flutter_ready
-  fi
+  USE_LOCAL_STACK=1
 fi
 
-export ALFRED_BASE_URL="$BASE"
+if [[ "$USE_LOCAL_STACK" == 1 ]]; then
+  e2e_ensure_supabase
+  e2e_ensure_local_schema
+  e2e_load_supabase_env
+  export ALFRED_BASE_URL="${ALFRED_BASE_URL:-http://localhost:8080/}"
+
+  SESSION_NAME="flutter-e2e-multi"
+  tmux -f /exec-daemon/tmux.portal.conf kill-session -t "=$SESSION_NAME" 2>/dev/null || true
+
+  if ! e2e_resolve_flutter_port; then
+    echo "==> Avvio flutter web-server su :${E2E_FLUTTER_PORT} (stack locale, release)"
+    tmux -f /exec-daemon/tmux.portal.conf new-session -d -s "$SESSION_NAME" -c "$ROOT" -- "${SHELL:-bash}" -l
+    tmux -f /exec-daemon/tmux.portal.conf send-keys -t "$SESSION_NAME:0.0" \
+      "cd $ROOT && /opt/flutter/bin/flutter run -d web-server --release --web-port=${E2E_FLUTTER_PORT} --web-hostname=0.0.0.0 \
+      --dart-define=SUPABASE_URL=${SUPABASE_URL} \
+      --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" C-m
+    e2e_wait_flutter_ready
+    e2e_warm_flutter_compile
+  fi
+else
+  export ALFRED_BASE_URL="$BASE"
+fi
+
+if [[ ! -x node_modules/.bin/playwright ]]; then
+  echo "==> npm install (Playwright)"
+  npm install
+  npx playwright install chromium
+fi
+
+export ALFRED_BASE_URL="${ALFRED_BASE_URL:-$BASE}"
 echo "==> Playwright multi-account (${ALFRED_BASE_URL})"
-npx playwright test e2e/multi-account-persist.spec.ts e2e/multi-account-messages.spec.ts "$@"
+npx playwright test \
+  e2e/multi-account-persist.spec.ts \
+  e2e/multi-account-messages.spec.ts \
+  --workers=1 \
+  "$@"
