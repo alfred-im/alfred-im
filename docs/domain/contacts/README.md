@@ -9,7 +9,7 @@
 | `AddContact` | `AddInternalContact` / `AddExternalContact` | `ContactService` |
 | `RemoveContact` | `RemoveInternalContact` | `ContactService` |
 | `SearchPeople` | `SearchProfiles` | RPC `search_profiles` |
-| `StartChatFromContact` | `ComposeFromContact` | → `NavigationMachine.OpenFromCompose` |
+| `StartChatFromContact` | `ComposeFromContact` | `ComposeService.peerFromContact` → `NavigationMachine.OpenFromCompose` |
 | `ContactListReady` | `ContactsLoaded` | `ContactsMachine` |
 
 Statechart: `client/lib/machines/contacts/` · `ContactsCoordinator`

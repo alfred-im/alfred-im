@@ -72,7 +72,6 @@ class ReceptionMachine {
         loadState = ReceptionLoadState.ready;
       case SetAllowlistSearchQuery(:final query):
         searchQuery = query;
-        _effects.onSearchQueryChanged(query);
       case AddAllowedProfile(:final profile):
         if (profile.id == ownerId) return;
         if (_effects.isProfileAllowed(profile.id)) return;

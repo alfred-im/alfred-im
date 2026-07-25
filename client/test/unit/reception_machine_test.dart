@@ -13,7 +13,6 @@ class _RecordingReceptionEffects implements ReceptionEffects {
   int addCount = 0;
   int removePersonCount = 0;
   int removeByProfileIdCount = 0;
-  String? lastSearchQuery;
   ProfileSummary? lastAddedProfile;
   AllowedPerson? lastRemovedPerson;
   String? lastRemovedProfileId;
@@ -22,11 +21,6 @@ class _RecordingReceptionEffects implements ReceptionEffects {
   @override
   Future<void> loadAllowlist() async {
     loadCount++;
-  }
-
-  @override
-  void onSearchQueryChanged(String query) {
-    lastSearchQuery = query;
   }
 
   @override
@@ -117,14 +111,15 @@ void main() {
   });
 
   group('ReceptionMachine search', () {
-    test('SetAllowlistSearchQuery updates query and notifies effect', () async {
-      final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, ownerId: ownerId);
+    test('SetAllowlistSearchQuery updates query', () async {
+      final machine = ReceptionMachine(
+        _RecordingReceptionEffects(),
+        ownerId: ownerId,
+      );
 
       await machine.send(const SetAllowlistSearchQuery('bob'));
 
       expect(machine.searchQuery, 'bob');
-      expect(effects.lastSearchQuery, 'bob');
     });
   });
 

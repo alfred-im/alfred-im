@@ -13,7 +13,6 @@ class _RecordingContactsEffects implements ContactsEffects {
   int addInternalCount = 0;
   int addExternalCount = 0;
   int removeInternalCount = 0;
-  String? lastSearchQuery;
   ProfileSummary? lastInternalProfile;
   ContactProtocol? lastExternalProtocol;
   String? lastExternalAddress;
@@ -23,11 +22,6 @@ class _RecordingContactsEffects implements ContactsEffects {
   @override
   Future<void> loadContacts() async {
     loadCount++;
-  }
-
-  @override
-  void onSearchQueryChanged(String query) {
-    lastSearchQuery = query;
   }
 
   @override
@@ -99,14 +93,12 @@ void main() {
   });
 
   group('ContactsMachine search', () {
-    test('SetSearchQuery updates query and notifies effect', () async {
-      final effects = _RecordingContactsEffects();
-      final machine = ContactsMachine(effects);
+    test('SetSearchQuery updates query', () async {
+      final machine = ContactsMachine(_RecordingContactsEffects());
 
       await machine.send(const SetSearchQuery('alice'));
 
       expect(machine.searchQuery, 'alice');
-      expect(effects.lastSearchQuery, 'alice');
     });
   });
 

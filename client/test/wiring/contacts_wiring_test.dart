@@ -10,7 +10,7 @@ import 'package:alfred_client/providers/contacts_controller.dart';
 
 import '../support/fake_contact_service.dart';
 
-/// Wiring: ContactsController → ContactsCoordinator → _LiveContactsEffects.
+/// Wiring: ContactsController → ContactsCoordinator → LiveContactsEffects.
 void main() {
   group('contacts wiring', () {
     const ownerId = 'owner-1';

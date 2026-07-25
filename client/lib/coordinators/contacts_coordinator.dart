@@ -25,7 +25,7 @@ class ContactsCoordinator {
     required this._contactService,
     required this._onStateChanged,
   }) {
-    _machine = ContactsMachine(_LiveContactsEffects._(this));
+    _machine = ContactsMachine(LiveContactsEffects(this));
     unawaited(load());
   }
 
@@ -36,6 +36,12 @@ class ContactsCoordinator {
   final ContactsState state = ContactsState();
 
   ContactsMachine get machine => _machine;
+
+  ContactService get contactService => _contactService;
+
+  void syncLoadingFromMachine() => _syncLoadingFromMachine();
+
+  void notifyStateChanged() => _notify();
 
   List<Contact> get filteredContacts => filterByQuery(
         state.contacts,
@@ -65,12 +71,9 @@ class ContactsCoordinator {
     return _contactService.searchProfiles(query);
   }
 
-  Contact? _lastAddedContact;
-
   Future<Contact> addInternal(ProfileSummary profile) async {
     await _machine.send(AddInternalContact(profile));
-    return _lastAddedContact ??
-        contactForProfileId(profile.id) ??
+    return contactForProfileId(profile.id) ??
         Contact(
           id: '',
           ownerId: ownerId,
@@ -97,7 +100,14 @@ class ContactsCoordinator {
         displayName: displayName,
       ),
     );
-    return _lastAddedContact ?? state.contacts.last;
+    final trimmedAddress = address.trim();
+    for (final contact in state.contacts) {
+      if (contact.protocol == protocol &&
+          contact.externalAddress == trimmedAddress) {
+        return contact;
+      }
+    }
+    return state.contacts.last;
   }
 
   void _syncLoadingFromMachine() {
@@ -105,61 +115,4 @@ class ContactsCoordinator {
   }
 
   void _notify() => _onStateChanged();
-}
-
-class _LiveContactsEffects implements ContactsEffects {
-  _LiveContactsEffects._(this._coordinator);
-
-  final ContactsCoordinator _coordinator;
-
-  ContactsCoordinator get _c => _coordinator;
-
-  @override
-  Future<void> loadContacts() async {
-    try {
-      _c.state.contacts = await _c._contactService.fetchContacts(_c.ownerId);
-      _c.state.error = null;
-      await _c._machine.send(const ContactsLoaded());
-    } catch (e) {
-      _c.state.error = e.toString();
-      await _c._machine.send(const ContactsLoadFailed());
-    } finally {
-      _c._syncLoadingFromMachine();
-      _c._notify();
-    }
-  }
-
-  @override
-  void onSearchQueryChanged(String query) {
-    // Query vive sulla macchina; la UI legge filteredContacts.
-  }
-
-  @override
-  Future<void> addInternal(ProfileSummary profile) async {
-    _c._lastAddedContact = await _c._contactService.addInternalContact(
-      ownerId: _c.ownerId,
-      profile: profile,
-    );
-  }
-
-  @override
-  Future<void> addExternal({
-    required ContactProtocol protocol,
-    required String address,
-    required String displayName,
-  }) async {
-    _c._lastAddedContact = await _c._contactService.addExternalContact(
-      ownerId: _c.ownerId,
-      protocol: protocol,
-      externalAddress: address,
-      displayName: displayName,
-    );
-  }
-
-  @override
-  Future<void> removeInternalByProfileId(String profileId) async {
-    final contact = _c.contactForProfileId(profileId);
-    if (contact == null) return;
-    await _c._contactService.deleteContact(contact.id);
-  }
 }

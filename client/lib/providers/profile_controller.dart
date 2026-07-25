@@ -15,12 +15,14 @@ class ProfileController extends ChangeNotifier {
     required this.userId,
     required ProfileService profileService,
     required ProfileAvatarService avatarService,
+    Future<void> Function()? onRefreshAuthProfile,
   }) {
     _coordinator = ProfileCoordinator(
       userId: userId,
       profileService: profileService,
       avatarService: avatarService,
       onStateChanged: notifyListeners,
+      onRefreshAuthProfile: onRefreshAuthProfile,
     );
   }
 
@@ -44,6 +46,23 @@ class ProfileController extends ChangeNotifier {
         bio: bio,
         pronouns: pronouns,
         avatarUrl: avatarUrl,
+      );
+
+  Future<UserProfile> uploadAndSaveAvatar({
+    required Uint8List bytes,
+    required String extension,
+    required String contentType,
+    required String displayName,
+    String? bio,
+    String? pronouns,
+  }) =>
+      _coordinator.uploadAndSaveAvatar(
+        bytes: bytes,
+        extension: extension,
+        contentType: contentType,
+        displayName: displayName,
+        bio: bio,
+        pronouns: pronouns,
       );
 
   Future<String> uploadAvatar({

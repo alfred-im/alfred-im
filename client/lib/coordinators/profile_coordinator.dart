@@ -24,14 +24,16 @@ class ProfileCoordinator {
     required this._profileService,
     required this._avatarService,
     required this._onStateChanged,
+    this._onRefreshAuthProfile,
   }) {
-    _machine = ProfileMachine(_LiveProfileEffects._(this));
+    _machine = ProfileMachine(_LiveProfileEffects(this));
   }
 
   final String _userId;
   final ProfileService _profileService;
   final ProfileAvatarService _avatarService;
   final void Function() _onStateChanged;
+  final Future<void> Function()? _onRefreshAuthProfile;
   late final ProfileMachine _machine;
   final ProfileEditUiState state = ProfileEditUiState();
 
@@ -65,6 +67,32 @@ class ProfileCoordinator {
 
   UserProfile? _lastSavedProfile;
 
+  Future<UserProfile> uploadAndSaveAvatar({
+    required Uint8List bytes,
+    required String extension,
+    required String contentType,
+    required String displayName,
+    String? bio,
+    String? pronouns,
+  }) async {
+    state.error = null;
+    _notify();
+    await _machine.send(
+      UploadAvatar(
+        bytes: bytes,
+        extension: extension,
+        contentType: contentType,
+        displayName: displayName,
+        bio: bio,
+        pronouns: pronouns,
+      ),
+    );
+    if (state.error != null) {
+      throw StateError(state.error!);
+    }
+    return _lastSavedProfile!;
+  }
+
   Future<String> uploadAvatar({
     required Uint8List bytes,
     required String extension,
@@ -89,6 +117,10 @@ class ProfileCoordinator {
     }
   }
 
+  Future<void> refreshAuthProfile() async {
+    await _onRefreshAuthProfile?.call();
+  }
+
   void _syncSavingFromMachine() {
     state.isSaving = _machine.editState == ProfileEditState.saving ||
         _machine.editState == ProfileEditState.uploadingAvatar;
@@ -98,7 +130,7 @@ class ProfileCoordinator {
 }
 
 class _LiveProfileEffects implements ProfileEffects {
-  _LiveProfileEffects._(this._coordinator);
+  _LiveProfileEffects(this._coordinator);
 
   final ProfileCoordinator _coordinator;
 
@@ -121,6 +153,7 @@ class _LiveProfileEffects implements ProfileEffects {
       );
       _c.state.error = null;
       await _c._machine.send(const ProfileSaved());
+      await _c.refreshAuthProfile();
     } catch (e) {
       _c.state.error = e.toString();
       await _c._machine.send(const ProfileSaveFailed());
@@ -144,5 +177,5 @@ class _LiveProfileEffects implements ProfileEffects {
   }
 
   @override
-  Future<void> refreshAuthProfile() async {}
+  Future<void> refreshAuthProfile() => _c.refreshAuthProfile();
 }

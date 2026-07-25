@@ -8,10 +8,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/profile.dart';
+import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
 import '../providers/profile_controller.dart';
 import '../theme/alfred_colors.dart';
-import '../utils/avatar_color.dart';
+import '../widgets/profile_identity.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -45,11 +47,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  String? _normalizeOptional(String value) {
-    final trimmed = value.trim();
-    return trimmed.isEmpty ? null : trimmed;
-  }
-
   Future<void> _pickAvatar() async {
     final auth = context.read<AuthController>();
     final profileController = context.read<ProfileController>();
@@ -71,20 +68,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final contentType = _avatarContentType(extension);
 
     try {
-      final avatarUrl = await profileController.uploadAvatar(
+      final saved = await profileController.uploadAndSaveAvatar(
         bytes: Uint8List.fromList(bytes),
         extension: extension,
         contentType: contentType,
+        displayName: _displayNameController.text,
+        bio: _bioController.text,
+        pronouns: _pronounsController.text,
       );
-      await profileController.save(
-        displayName: _displayNameController.text.trim(),
-        bio: _normalizeOptional(_bioController.text),
-        pronouns: _normalizeOptional(_pronounsController.text),
-        avatarUrl: avatarUrl,
-      );
-      await auth.refreshProfile();
       if (mounted) {
-        setState(() => _pendingAvatarUrl = avatarUrl);
+        setState(() => _pendingAvatarUrl = saved.avatarUrl);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Foto profilo aggiornata')),
         );
@@ -126,18 +119,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final profileController = context.read<ProfileController>();
     await profileController.save(
-      displayName: _displayNameController.text.trim(),
-      bio: _normalizeOptional(_bioController.text),
-      pronouns: _normalizeOptional(_pronounsController.text),
+      displayName: _displayNameController.text,
+      bio: _bioController.text,
+      pronouns: _pronounsController.text,
       avatarUrl: _pendingAvatarUrl,
     );
-    await auth.refreshProfile();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profilo aggiornato')),
       );
       Navigator.pop(context);
     }
+  }
+
+  ProfileSummary _displaySummary({
+    required String userId,
+    required UserProfile? profile,
+    required String? avatarUrl,
+  }) {
+    return ProfileSummary(
+      id: userId,
+      username: profile?.username,
+      displayName: _displayNameController.text.trim().isNotEmpty
+          ? _displayNameController.text.trim()
+          : profile?.displayName ?? '',
+      avatarUrl: avatarUrl,
+      pronouns: profile?.pronouns,
+    );
   }
 
   @override
@@ -147,6 +155,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profile = auth.profile;
     final userId = auth.userId;
     final avatarUrl = _pendingAvatarUrl ?? profile?.avatarUrl;
+    final displaySummary = userId != null
+        ? _displaySummary(
+            userId: userId,
+            profile: profile,
+            avatarUrl: avatarUrl,
+          )
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -167,24 +182,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Stack(
               alignment: Alignment.bottomRight,
               children: [
-                CircleAvatar(
-                  radius: 48,
-                  backgroundColor: userId != null
-                      ? avatarColorForId(userId)
-                      : AlfredColors.charcoal,
-                  backgroundImage:
-                      avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                  child: avatarUrl == null
-                      ? Text(
-                          avatarInitial(profile?.displayName ?? ''),
-                          style: const TextStyle(
-                            fontSize: 32,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        )
-                      : null,
-                ),
+                if (displaySummary != null)
+                  ProfileAvatar(
+                    profile: displaySummary,
+                    radius: 48,
+                    fontSize: 32,
+                  )
+                else
+                  const CircleAvatar(radius: 48),
                 Material(
                   color: AlfredColors.charcoal,
                   shape: const CircleBorder(),
@@ -210,12 +215,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Center(
-            child: Text(
-              '@${profile?.username ?? ''}',
-              style: const TextStyle(color: AlfredColors.textSecondary),
+          if (displaySummary != null)
+            Center(
+              child: ProfileIdentityLines(
+                profile: displaySummary,
+                showPronouns: false,
+                nameStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AlfredColors.textSecondary,
+                ),
+                usernameStyle: const TextStyle(
+                  color: AlfredColors.textSecondary,
+                ),
+              ),
             ),
-          ),
           const SizedBox(height: 24),
           TextFormField(
             initialValue: auth.email ?? '',

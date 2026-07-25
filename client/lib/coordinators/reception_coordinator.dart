@@ -104,9 +104,6 @@ class _LiveReceptionEffects implements ReceptionEffects {
   }
 
   @override
-  void onSearchQueryChanged(String query) {}
-
-  @override
   bool isProfileAllowed(String profileId) {
     return _c.allowedProfileIds.contains(profileId);
   }

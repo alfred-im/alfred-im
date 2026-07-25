@@ -6,11 +6,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/contact.dart';
 import '../models/profile_summary.dart';
+import 'profile_search_service.dart';
 
 class ContactService {
-  ContactService(this._client);
+  ContactService(this._client) : _profileSearch = ProfileSearchService(_client);
 
   final SupabaseClient _client;
+  final ProfileSearchService _profileSearch;
 
   Future<List<Contact>> fetchContacts(String ownerId) async {
     final rows = await _client
@@ -22,17 +24,8 @@ class ContactService {
     return rows.map((r) => Contact.fromJson(r)).toList();
   }
 
-  Future<List<ProfileSummary>> searchProfiles(String query) async {
-    if (query.trim().length < 2) return [];
-
-    final rows = await _client.rpc(
-      'search_profiles',
-      params: {'p_query': query.trim(), 'p_limit': 20},
-    );
-
-    return (rows as List<dynamic>)
-        .map((r) => ProfileSummary.fromProfilesRow(r as Map<String, dynamic>))
-        .toList();
+  Future<List<ProfileSummary>> searchProfiles(String query) {
+    return _profileSearch.searchProfiles(query);
   }
 
   Future<Contact> addInternalContact({

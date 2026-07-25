@@ -69,6 +69,7 @@ class AlfredApp extends StatelessWidget {
               userId: session.userId,
               profileService: session.profileService,
               avatarService: session.profileAvatarService,
+              onRefreshAuthProfile: auth.refreshProfile,
             );
           },
         ),
