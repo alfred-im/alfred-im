@@ -50,10 +50,10 @@ void main() {
       manager.injectTestSession(await _session('account-b'));
 
       await manager.setFocus('account-a');
-      nav.openPeerOnFocusedAccount(_peer('account-b'));
+      await nav.openPeerOnFocusedAccount(_peer('account-b'));
 
       await manager.setFocus('account-b');
-      nav.openPeerOnFocusedAccount(_peer('account-a'));
+      await nav.openPeerOnFocusedAccount(_peer('account-a'));
 
       await manager.setFocus('account-a');
       expect(manager.viewState.activePeer?.profileId, 'account-b');
@@ -69,7 +69,7 @@ void main() {
       manager.injectTestSession(await _session('account-b'));
 
       await manager.setFocus('account-a');
-      nav.openPeerOnFocusedAccount(_peer('account-b'));
+      await nav.openPeerOnFocusedAccount(_peer('account-b'));
 
       await manager.setFocus('account-b');
       expect(manager.viewState.activePeer, isNull);
@@ -85,7 +85,7 @@ void main() {
       manager.injectTestSession(await _session('account-b'));
 
       await manager.setFocus('account-a');
-      nav.openPeerOnFocusedAccount(_peer('account-b'));
+      await nav.openPeerOnFocusedAccount(_peer('account-b'));
 
       await manager.removeAccount('account-a');
       await manager.setFocus('account-b');

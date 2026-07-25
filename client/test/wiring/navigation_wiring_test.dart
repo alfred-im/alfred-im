@@ -46,7 +46,7 @@ void main() {
       );
       await auth.initialize();
 
-      auth.navigation.openPeerOnFocusedAccount(_peer('peer-b', 'bob'));
+      await auth.navigation.openPeerOnFocusedAccount(_peer('peer-b', 'bob'));
 
       expect(auth.navigation.machine.shellState, NavigationShellState.chatOpen);
       expect(auth.viewState.activePeer?.profileId, 'peer-b');

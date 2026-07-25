@@ -292,6 +292,7 @@ void main() {
         profileService: _FakeProfileService({'account-b': accountB}),
         messageService: messageServiceA,
       );
+      await installTestAuthSession(clientA, userId: 'account-a');
       final sessionB = await AccountSession.createForTest(
         profile: accountB,
         client: clientB,
@@ -301,6 +302,7 @@ void main() {
         profileService: _FakeProfileService({'account-a': accountA}),
         messageService: messageServiceB,
       );
+      await installTestAuthSession(clientB, userId: 'account-b');
 
       sessionA.wireStorage(storage);
       sessionB.wireStorage(storage);
@@ -316,7 +318,7 @@ void main() {
       final auth = AuthController(accountManager: manager);
       await auth.initialize();
 
-      auth.openConversation(ChatPeer(profile: accountB));
+      await auth.openConversation(ChatPeer(profile: accountB));
       expect(auth.userId, 'account-a');
       expect(auth.activePeer?.profile.id, 'account-b');
 
