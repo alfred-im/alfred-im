@@ -153,8 +153,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final auth = context.watch<AuthController>();
     final session = auth.focusedSession;
     final inbox = session?.inboxController;
-    final accountUserId = session?.userId;
-    final isGroupAccount = session?.profile.isGroup ?? false;
+    final accountUserId = session?.userId ?? auth.userId;
+    final isGroupAccount =
+        session?.profile.isGroup ?? auth.focusedProfileSummary?.isGroup ?? false;
 
     if (isGroupAccount && session != null) {
       return ChangeNotifierProvider(
@@ -186,7 +187,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final inboxArea = !auth.hasOpenAccounts
         ? const NoAccountPlaceholder()
         : session == null
-            ? const _ReconnectingAccountPlaceholder()
+            ? auth.isFocusedAccountDisconnected
+                ? _DisconnectedAccountPlaceholder(
+                    onReconnect: () => auth.promptReconnectFocusedAccount(),
+                  )
+                : const _ReconnectingAccountPlaceholder()
             : ListenableBuilder(
                 key: ValueKey(accountUserId),
                 listenable: inbox!,
@@ -226,7 +231,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 tooltip: 'Account',
                 onPressed: _openDrawer,
               ),
-              title: const Text('Riconnessione…'),
+              title: Text(
+                auth.isFocusedAccountDisconnected
+                    ? 'Disconnesso'
+                    : 'Riconnessione…',
+              ),
             )
           : null,
     );
@@ -245,6 +254,58 @@ class _HomeScreenState extends State<HomeScreen> {
         _mainContent(context),
         if (auth.showAuthOverlay) const AuthOverlay(),
       ],
+    );
+  }
+}
+
+/// Errore sessione: account resta nel manifest ma non è utilizzabile finché non si riaccede.
+class _DisconnectedAccountPlaceholder extends StatelessWidget {
+  const _DisconnectedAccountPlaceholder({required this.onReconnect});
+
+  final VoidCallback onReconnect;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AlfredColors.surface,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.link_off_outlined,
+                size: 48,
+                color: AlfredColors.textSecondary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Account disconnesso',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AlfredColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'La sessione non è più valida su questo dispositivo. '
+                'L\'account resta nell\'elenco: accedi di nuovo per continuare.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AlfredColors.textSecondary,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: onReconnect,
+                child: const Text('Accedi di nuovo'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -126,6 +126,16 @@ class AuthController extends ChangeNotifier {
   List<OpenAccount> get openAccounts => _manager.openAccounts;
   AccountSession? get focusedSession => _manager.focusedSession;
   String? get userId => _manager.focusUserId;
+
+  OpenAccount? get focusedOpenAccount {
+    final id = userId;
+    if (id == null) return null;
+    return _manager.openAccountFor(id);
+  }
+
+  bool get isFocusedAccountDisconnected =>
+      focusedOpenAccount?.isDisconnected ?? false;
+
   AccountViewState get viewState => _manager.viewState;
   ChatPeer? get activePeer => _manager.viewState.activePeer;
   bool get showInboxOnMobile => _manager.viewState.showInboxOnMobile;
@@ -133,6 +143,9 @@ class AuthController extends ChangeNotifier {
   bool get hasOpenAccounts => _manager.hasOpenAccounts;
 
   UserProfile? get profile => focusedSession?.fullProfile;
+
+  ProfileSummary? get focusedProfileSummary =>
+      focusedSession?.profile ?? focusedOpenAccount?.profile;
 
   String? get email => focusedSession?.client.auth.currentUser?.email;
   String? get username => focusedSession?.profile.username;
@@ -156,6 +169,11 @@ class AuthController extends ChangeNotifier {
 
   void openAuthOverlay({required bool dismissible}) =>
       _sessionCoordinator.openAuthOverlay(dismissible: dismissible);
+
+  /// Account in focus disconnesso per errore sessione — riapre overlay credenziali.
+  void promptReconnectFocusedAccount() {
+    openAuthOverlay(dismissible: hasOpenAccounts);
+  }
 
   void closeAuthOverlay() => _sessionCoordinator.closeAuthOverlay(
         hasOpenAccounts: _manager.hasOpenAccounts,

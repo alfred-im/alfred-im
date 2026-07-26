@@ -30,8 +30,9 @@ class AccountSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
-    final profile = auth.profile?.summary;
+    final profile = auth.focusedProfileSummary;
     final activeUserId = auth.userId;
+    final activeDisconnected = auth.isFocusedAccountDisconnected;
     final otherAccounts = auth.openAccounts
         .where((a) => a.userId != activeUserId)
         .toList();
@@ -48,6 +49,7 @@ class AccountSidebar extends StatelessWidget {
               _ActiveProfileCard(
                 profile: profile,
                 userId: activeUserId,
+                isDisconnected: activeDisconnected,
                 manifestUsername: auth.openAccounts
                     .where((a) => a.userId == activeUserId)
                     .map((a) => a.username)
@@ -87,6 +89,11 @@ class AccountSidebar extends StatelessWidget {
                 (account) => _AccountTile(
                   account: account,
                   onTap: () => _switchFocus(context, account),
+                  onReconnect: account.isDisconnected
+                      ? () => context
+                          .read<AuthController>()
+                          .promptReconnectFocusedAccount()
+                      : null,
                 ),
               ),
             ],
@@ -105,6 +112,10 @@ class AccountSidebar extends StatelessWidget {
 
   Future<void> _switchFocus(BuildContext context, OpenAccount account) async {
     await context.read<AuthController>().setFocus(account.userId);
+    if (!context.mounted) return;
+    if (account.isDisconnected) {
+      context.read<AuthController>().promptReconnectFocusedAccount();
+    }
     onAccountSwitched?.call();
   }
 }
@@ -114,11 +125,13 @@ class _ActiveProfileCard extends StatelessWidget {
     required this.profile,
     required this.userId,
     required this.manifestUsername,
+    this.isDisconnected = false,
   });
 
   final ProfileSummary profile;
   final String userId;
   final String manifestUsername;
+  final bool isDisconnected;
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +151,18 @@ class _ActiveProfileCard extends StatelessWidget {
                   color: AlfredColors.textPrimary,
                 ),
               ),
+              if (isDisconnected)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Text(
+                    'Disconnesso',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AlfredColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               if (profile.isGroup)
                 const Padding(
                   padding: EdgeInsets.only(top: 2),
@@ -190,10 +215,12 @@ class _AccountTile extends StatelessWidget {
   const _AccountTile({
     required this.account,
     required this.onTap,
+    this.onReconnect,
   });
 
   final OpenAccount account;
   final VoidCallback onTap;
+  final VoidCallback? onReconnect;
 
   @override
   Widget build(BuildContext context) {
@@ -207,6 +234,15 @@ class _AccountTile extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (account.isDisconnected)
+            const Text(
+              'Disconnesso',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AlfredColors.textSecondary,
+              ),
+            ),
           if (account.profile.isGroup)
             const Text(
               'Gruppo',
@@ -224,9 +260,11 @@ class _AccountTile extends StatelessWidget {
             ),
         ],
       ),
-      isThreeLine: account.profile.hasPronouns,
+      isThreeLine: account.isDisconnected ||
+          account.profile.isGroup ||
+          account.profile.hasPronouns,
       contentPadding: EdgeInsets.zero,
-      onTap: onTap,
+      onTap: account.isDisconnected ? onReconnect ?? onTap : onTap,
     );
   }
 }
