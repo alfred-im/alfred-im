@@ -12,7 +12,6 @@ enum ConversationLoadPhase {
   empty,
   loading,
   ready,
-  failed,
 }
 
 /// Snapshot immutabile per la UI.

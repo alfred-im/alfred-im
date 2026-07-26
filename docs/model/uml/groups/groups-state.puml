@@ -1,52 +1,64 @@
 @startuml groups-state
 ' Context: groups
+' Profile: client
 ' SDD: SYS-GROUP, SYS-DELIVERY (erogazione)
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Groups — GroupHomeMachine + GroupMessagesMachine
 
-state "GroupHomeMachine" as GH {
+state GroupHomeLoad {
   state GH_Loading
   state GH_Ready
-  state GH_Error
 
   [*] --> GH_Loading : LoadGroupHome
   GH_Loading --> GH_Ready : GroupHomeLoaded
-  GH_Loading --> GH_Error : GroupHomeLoadFailed
-  GH_Error --> GH_Loading : LoadGroupHome
+  GH_Loading --> GH_Ready : GroupHomeLoadFailed
   GH_Ready --> GH_Loading : LoadGroupHome
 }
 
-state "GroupMessagesMachine" as GM {
+state GroupMessagesLoad {
   state GM_Loading
   state GM_Ready
-  state GM_Sending
-  state GM_Error
 
   [*] --> GM_Loading : InitGroupMessages\nLoadGroupMessages
-
   GM_Loading --> GM_Ready : GroupMessagesLoaded
-  GM_Loading --> GM_Error : GroupMessagesLoadFailed
-  GM_Error --> GM_Loading : LoadGroupMessages
-
-  GM_Ready --> GM_Sending : BroadcastRequested
-  GM_Sending --> GM_Ready : BroadcastAcknowledged
-  GM_Sending --> GM_Error : BroadcastFailed
-
-  GM_Ready --> GM_Ready : OwnerRealtimeReceived
+  GM_Loading --> GM_Ready : GroupMessagesLoadFailed
+  GM_Ready --> GM_Loading : LoadGroupMessages
 }
 
-state c_nav {
-  GroupHomeVisible
-  GroupChatOpen
-  [*] --> GroupHomeVisible
-  GroupHomeVisible --> GroupChatOpen : OpenGroupChat
-  GroupChatOpen --> GroupHomeVisible : BackToGroupHome
+state GroupBroadcast {
+  state GB_Idle
+  state GB_Sending
+
+  [*] --> GB_Idle
+  GB_Idle --> GB_Sending : BroadcastRequested
+  GB_Sending --> GB_Idle : BroadcastAcknowledged
+  GB_Sending --> GB_Idle : BroadcastFailed
 }
 
-note right of GM_Sending
+state GroupRealtime {
+  state GR_Detached
+  state GR_Attached
+
+  [*] --> GR_Detached
+  GR_Detached --> GR_Attached : InitGroupMessages
+  GR_Attached --> GR_Detached : DisposeGroupMessages
+}
+
+note right of GB_Sending
   No optimistic bubble —
-  serializes broadcast
+  serializes broadcast.
+  LoadFailed / BroadcastFailed
+  keep Ready / Idle; error
+  string lives in coordinator UI state.
+end note
+
+note bottom of GroupRealtime
+  OwnerRealtimeReceived is handled
+  while Attached (no load-state change).
+  Shell navigation (OpenGroupConversation /
+  LeaveGroupConversation) is owned by
+  navigation context — see navigation-shell-state.puml.
 end note
 
 @enduml

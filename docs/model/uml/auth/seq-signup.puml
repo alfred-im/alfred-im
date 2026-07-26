@@ -2,7 +2,7 @@
 ' Context: auth
 ' Profile: client
 ' SDD: SURF-AUTH-004, SURF-AUTH-006, SURF-AUTH-008
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Auth — registrazione
 
@@ -13,29 +13,33 @@ participant "MultiAccountMachine" as MAM
 participant "AccountManager" as Mgr
 participant "Supabase GoTrue" as GT
 
-Utente -> UI : Registrati
-UI -> AM : SignUpRequested
-AM --> UI : AuthOperationStarted
-
-AM -> AM : validate email, username, displayName
+Utente -> UI : SignUp
+note over UI : validate email, username, displayName
 alt validazione fallita
-  AM --> UI : ValidationRejected
+  UI -> AM : ValidationRejected
 else validazione ok
-  AM -> GT : check username availability
+  UI -> AM : AuthOperationStarted
+  UI -> MAM : OpenAccountWithSignUp
+  MAM -> Mgr : sign up + open account
+  Mgr -> GT : is_username_available
   alt username occupato
-    AM --> UI : AuthOperationFailed
+    Mgr --> MAM : error
+    MAM --> UI : error
+    UI -> AM : AuthOperationFailed
   else username libero
-    UI -> MAM : OpenAccountWithSignUp
-    MAM -> Mgr : sign up + open account
     Mgr -> GT : authenticate (sign up)
     alt email non confermata
       GT --> Mgr : no session
-      AM --> UI : AuthOperationFailed\n(conferma email)
+      Mgr --> MAM : error
+      MAM --> UI : error
+      UI -> AM : AuthOperationFailed\n(conferma email)
     else session ok
       Mgr -> Mgr : adopt session per account
       Mgr --> MAM : AccountOpened
       MAM --> MAM : AccountFocused
-      AM --> UI : SessionEstablished
+      MAM --> UI : account aperto
+      UI -> AM : AuthOperationCompleted\n[success]
+      AM --> UI : SessionActive
     end
   end
 end

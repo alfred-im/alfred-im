@@ -1,7 +1,7 @@
 @startuml reception-allowlist-state
 ' Context: reception
 ' SDD: PROM-RECEPTION-FILTER, SYS-RECEPTION
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Reception — ReceptionMachine
 
@@ -17,11 +17,17 @@ Ready --> Loading : LoadAllowlist\n[after CRUD]
 Ready --> Ready : SetSearchQuery
 Ready --> Ready : AddAllowedProfile
 Ready --> Ready : RemoveAllowedPerson
+Ready --> Ready : RemoveAllowedByProfileId
 
 note right of Ready
   Empty list is still Ready —
   UI shows informational copy.
   allowedProfileIds is a derived view.
+  SearchCandidateSenders is a command
+  handled in UI sheet; results are
+  local until AddAllowedProfile.
+  List filter (SetSearchQuery) does
+  not change machine state.
 end note
 
 @enduml

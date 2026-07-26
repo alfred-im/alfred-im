@@ -127,6 +127,56 @@ void main() {
       expect(machine.realtimeState, GroupRealtimeState.attached);
     });
 
+    test('LoadGroupMessages reloads without attaching realtime', () async {
+      final effects = _RecordingGroupMessagesEffects();
+      final machine = GroupMessagesMachine(effects)
+        ..realtimeState = GroupRealtimeState.detached
+        ..loadState = GroupMessagesLoadState.ready;
+
+      await machine.send(const LoadGroupMessages());
+
+      expect(effects.loadCount, 1);
+      expect(effects.attachCount, 0);
+      expect(machine.realtimeState, GroupRealtimeState.detached);
+      expect(machine.loadState, GroupMessagesLoadState.loading);
+    });
+
+    test('GroupMessagesLoaded → ready', () async {
+      final machine = GroupMessagesMachine(_RecordingGroupMessagesEffects());
+
+      await machine.send(const GroupMessagesLoaded());
+
+      expect(machine.loadState, GroupMessagesLoadState.ready);
+    });
+
+    test('GroupMessagesLoadFailed → ready', () async {
+      final machine = GroupMessagesMachine(_RecordingGroupMessagesEffects());
+
+      await machine.send(const GroupMessagesLoadFailed());
+
+      expect(machine.loadState, GroupMessagesLoadState.ready);
+    });
+
+    test('BroadcastRequested ignored while sending', () async {
+      final effects = _RecordingGroupMessagesEffects();
+      final machine = GroupMessagesMachine(effects)
+        ..broadcastState = GroupBroadcastState.sending;
+
+      await machine.send(const BroadcastRequested());
+
+      expect(effects.broadcastCount, 0);
+      expect(machine.broadcastState, GroupBroadcastState.sending);
+    });
+
+    test('BroadcastFailed returns to idle', () async {
+      final machine = GroupMessagesMachine(_RecordingGroupMessagesEffects())
+        ..broadcastState = GroupBroadcastState.sending;
+
+      await machine.send(const BroadcastFailed());
+
+      expect(machine.broadcastState, GroupBroadcastState.idle);
+    });
+
     test('BroadcastRequested runs broadcast effect', () async {
       final effects = _RecordingGroupMessagesEffects();
       final machine = GroupMessagesMachine(effects);

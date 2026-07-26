@@ -1,7 +1,7 @@
 @startuml auth-state
 ' Context: auth
 ' Profile: client
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 ' Statechart: AuthUiState (bootstrapping, noSession, sessionActive, overlayVisible, authOperationInProgress)
 
 title Auth — overlay credenziali
@@ -14,18 +14,28 @@ state AuthOperationInProgress
 
 [*] --> Bootstrapping
 
-Bootstrapping --> NoSession : CredentialOverlayRequired
-Bootstrapping --> SessionActive : SessionEstablished
+Bootstrapping --> Bootstrapping : BootstrapStarted
+Bootstrapping --> NoSession : BootstrapCompleted\n[!hasOpenAccounts]
+Bootstrapping --> SessionActive : BootstrapCompleted\n[hasOpenAccounts]
 
-NoSession --> AuthOperationInProgress : SignIn / SignUp / RequestPasswordReset
-OverlayVisible --> SessionActive : DismissCredentialOverlay
-OverlayVisible --> AuthOperationInProgress : SignIn / SignUp
+NoSession --> AuthOperationInProgress : AuthOperationStarted\n[SignIn / SignUp]
+OverlayVisible --> AuthOperationInProgress : AuthOperationStarted\n[SignIn / SignUp]
 
-SessionActive --> OverlayVisible : ShowCredentialOverlay
-SessionActive --> NoSession : NoOpenAccounts
+SessionActive --> OverlayVisible : OverlayOpenRequested\n[dismissible]
+SessionActive --> NoSession : OverlayOpenRequested\n[!dismissible]
+SessionActive --> NoSession : LastAccountRemoved
 
-AuthOperationInProgress --> SessionActive : SessionEstablished
-AuthOperationInProgress --> NoSession : AuthenticationFailed
-AuthOperationInProgress --> OverlayVisible : AuthenticationFailed
+OverlayVisible --> SessionActive : OverlayCloseRequested
+
+AuthOperationInProgress --> SessionActive : AuthOperationCompleted\n[success]
+AuthOperationInProgress --> NoSession : AuthOperationFailed\n[pre: NoSession]
+AuthOperationInProgress --> OverlayVisible : AuthOperationFailed\n[pre: OverlayVisible]
+AuthOperationInProgress --> SessionActive : AuthOperationFailed\n[pre: SessionActive]
+
+note right of AuthOperationInProgress
+  ValidationRejected prima di AuthOperationStarted
+  non entra in AuthOperationInProgress.
+  RequestPasswordReset non cambia AuthUiState.
+end note
 
 @enduml

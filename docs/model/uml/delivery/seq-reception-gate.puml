@@ -2,7 +2,7 @@
 ' Context: delivery + reception
 ' Profile: platform
 ' SDD: SYS-RECEPTION-005–010
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Reception gate — deliver internal con allow list
 
@@ -14,14 +14,14 @@ database "MailboxArchive" as DM
 
 DW -> OB : claim outbox deliver
 DW -> SM : read sender copy
-DW -> GATE : CheckSenderAllowed\n(owner=dest, sender=mittente)
+DW -> GATE : EvaluateInboundDelivery\n(owner=dest, sender=mittente)
 
-alt allowed
-  GATE --> DW : DeliveryGatePassed
-  DW -> DM : RecipientCopyMaterialized
+alt DeliveryPermitted
+  GATE --> DW : DeliveryPermitted
+  DW -> DM : RecipientNotified
   DW -> SM : SenderDeliveredAtSet
-else rejected
-  GATE --> DW : DeliveryGateRejected
+else DeliverySilentlyBlocked
+  GATE --> DW : DeliverySilentlyBlocked
   note right of DW
     Nessuna copia destinatario.
     Spunta doppia mittente non valorizzata.

@@ -21,7 +21,7 @@ enum NotificationsOpenChatState {
   processing,
 }
 
-/// Eventi — stessi nomi di `docs/domain/notifications/commands-and-events.md`.
+/// Eventi — allineati a `docs/domain/notifications/commands-and-events.md`.
 sealed class NotificationsEvent {
   const NotificationsEvent();
 }
@@ -42,12 +42,12 @@ final class SyncSubscriptionsRequested extends NotificationsEvent {
   const SyncSubscriptionsRequested();
 }
 
-final class SubscriptionRegistered extends NotificationsEvent {
-  const SubscriptionRegistered();
+final class PushRegistrationSucceeded extends NotificationsEvent {
+  const PushRegistrationSucceeded();
 }
 
-final class SubscriptionSyncFailed extends NotificationsEvent {
-  const SubscriptionSyncFailed();
+final class PushRegistrationFailed extends NotificationsEvent {
+  const PushRegistrationFailed();
 }
 
 final class UnregisterSubscriptionRequested extends NotificationsEvent {
@@ -107,9 +107,9 @@ class NotificationsMachine {
           return;
         }
         subscriptionState = NotificationsSubscriptionState.syncing;
-      case SubscriptionRegistered():
+      case PushRegistrationSucceeded():
         subscriptionState = NotificationsSubscriptionState.active;
-      case SubscriptionSyncFailed():
+      case PushRegistrationFailed():
         if (subscriptionState == NotificationsSubscriptionState.syncing) {
           subscriptionState = NotificationsSubscriptionState.idle;
         }

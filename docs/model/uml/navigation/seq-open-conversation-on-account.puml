@@ -1,7 +1,7 @@
 @startuml seq-open-conversation-on-account
 ' Context: navigation
 ' Profile: client
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title OpenConversation — ingressi multipli
 

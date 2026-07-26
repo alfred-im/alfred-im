@@ -6,16 +6,23 @@
 
 ## Mapping dominio → implementazione
 
-### Comandi ed eventi
+### Comandi utente
 
-| Dominio | Statechart | Codice |
-|---------|------------|--------|
-| `SignIn` | `SignInRequested` | `AuthMachine` + `OpenAccountWithPassword` |
-| `SignUp` | `SignUpRequested` | `AuthMachine` + `OpenAccountWithSignUp` |
-| `RequestPasswordReset` | `ResetPasswordRequested` | GoTrue reset |
-| `ShowCredentialOverlay` | `OverlayOpenRequested` | overlay auth |
-| `DismissCredentialOverlay` | `OverlayCloseRequested` | chiusura se ≥1 account |
-| `SessionEstablished` | `AuthOperationCompleted(success)` | focus + overlay chiuso |
+| Comando dominio | Eventi `AuthMachine` | Codice |
+|-----------------|----------------------|--------|
+| `SignIn` | `ValidationRejected` o `AuthOperationStarted` → `AuthOperationCompleted` / `AuthOperationFailed` | `AuthSessionCoordinator.signIn` → `MultiAccountMachine.OpenAccountWithPassword` |
+| `SignUp` | come `SignIn` | `AuthSessionCoordinator.signUp` → `OpenAccountWithSignUp` |
+| `RequestPasswordReset` | — (nessun evento macchina) | `AuthSessionCoordinator.resetPassword` → `AccountManager.resetPassword` |
+| `ShowCredentialOverlay` | `OverlayOpenRequested` | `AuthSessionCoordinator.openAuthOverlay` |
+| `DismissCredentialOverlay` | `OverlayCloseRequested` | `AuthSessionCoordinator.closeAuthOverlay` |
+
+### Bootstrap e cross-contesto
+
+| Evento | `AuthMachine` | Codice |
+|--------|---------------|--------|
+| `BootstrapStarted` | `BootstrapStarted` | `AuthSessionCoordinator.initialize` |
+| `BootstrapCompleted` | `BootstrapCompleted` | dopo `MultiAccountAdapters.bootstrapManifest` |
+| `NoOpenAccounts` (multi-account) | `LastAccountRemoved` | `AuthSessionCoordinator.removeAccount` se manifest vuoto |
 
 ### Stati UI (UML ↔ `AuthUiState`)
 
@@ -27,4 +34,4 @@
 | `OverlayVisible` | `overlayVisible` |
 | `AuthOperationInProgress` | `authOperationInProgress` |
 
-Statechart: `client/lib/machines/auth/` · Facade: `AuthController`
+Statechart: `client/lib/machines/auth/` · Facade: `AuthController` + `AuthSessionCoordinator`

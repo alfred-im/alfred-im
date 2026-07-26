@@ -6,7 +6,7 @@ enum OutboundSendState { idle, sending, failedQueue }
 
 sealed class OutboundSendEvent { const OutboundSendEvent(); }
 
-/// Adapter interno — inizio invio (`SendContent`).
+/// Adapter interno — inizio invio (dominio: `SendContent`).
 final class SendStarted extends OutboundSendEvent { const SendStarted(); }
 
 /// Dominio: evento `ContentSent`.

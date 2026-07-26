@@ -83,7 +83,7 @@ class MessagingCoordinator {
 
   Future<void> load() async {
     if (!effects.ensureValidSession()) {
-      loadMachine.send(const SessionExpired());
+      loadMachine.send(const ConversationUnavailable());
       _notify();
       return;
     }
@@ -98,7 +98,7 @@ class MessagingCoordinator {
         if (attempt < _fetchScopeRetryAttempts - 1) {
           await Future<void>.delayed(_fetchScopeRetryDelay);
           if (!effects.ensureValidSession()) {
-            loadMachine.send(const SessionExpired());
+            loadMachine.send(const ConversationUnavailable());
             _notify();
             return;
           }
@@ -106,7 +106,7 @@ class MessagingCoordinator {
       }
       if (!applied && !effects.isDisposed) {
         state.error = MessagesControllerEffects.sessionExpiredMessage;
-        loadMachine.send(const SessionExpired());
+        loadMachine.send(const ConversationUnavailable());
         _notify();
         return;
       }
@@ -209,7 +209,16 @@ class MessagingCoordinator {
 
   Future<void> retryMessage(String clientId) async {
     if (_guardSend()) return;
-    await effects.retryMessage(clientId);
+    sendMachine.send(const RetryFailedSend());
+    _notify();
+    var failed = false;
+    try {
+      await effects.retryMessage(clientId);
+    } catch (_) {
+      failed = true;
+    } finally {
+      notifySendEnded(failed);
+    }
   }
 
   Future<void> _processRetries() async {

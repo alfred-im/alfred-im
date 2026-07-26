@@ -8,8 +8,8 @@
 |---------|------------|--------|
 | `AddContact` | `AddInternalContact` / `AddExternalContact` | `ContactService` |
 | `RemoveContact` | `RemoveInternalContact` | `ContactService` |
-| `SearchPeople` | `SearchProfiles` | RPC `search_profiles` |
-| `StartChatFromContact` | `ComposeFromContact` | `ComposeService.peerFromContact` → `NavigationMachine.OpenFromCompose` |
+| `SearchPeople` | — (sheet UI, non [ContactsMachine]) | `ContactsCoordinator.searchProfiles` → RPC `search_profiles` |
+| `StartChatFromContact` | — (non [ContactsMachine]) | `ComposeService.peerFromContact` → `NavigationMachine.OpenPeerOnFocusedAccount` |
 | `ContactListReady` | `ContactsLoaded` | `ContactsMachine` |
 
 Statechart: `client/lib/machines/contacts/` · `ContactsCoordinator`

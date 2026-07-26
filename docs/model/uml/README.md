@@ -53,7 +53,7 @@ Contesti: delivery, federation, gate recapito in reception (sequence cross-bound
 |------------|---------|
 | Attori dominio platform: `AccountBoundary`, `DeliveryWorker`, `ReceptionGate`, `Outbox`, `MailboxArchive` | Nomi funzione SQL grezzi come unico partecipante (`alfred_delivery.process_outbox`) |
 | `BridgeWorker`, `FederatedServer` | Dettaglio schema (`ON CONFLICT DO NOTHING`) sulle frecce |
-| Comandi worker da dominio: `ProcessOutbox`, `DeliverInternal` | |
+| Comandi worker da dominio: `ProcessDeliveryQueue`, `DeliverInternal` | |
 
 **Esempio target:** partecipante `DeliveryWorker`, freccia `DeliverInternal` — non `DI -> MSG : INSERT …`.
 

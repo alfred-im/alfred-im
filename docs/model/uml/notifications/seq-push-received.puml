@@ -1,31 +1,31 @@
 @startuml seq-push-received
 ' Context: notifications
-' Profile: client
-' Command: HandlePushPayload
+' Profile: client + SW
+' Command: PresentPushNotification
 ' SDD: PROM-PUSH-NOTIFY-022, SURF-NOTIFICATIONS-005–008
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title seq-push-received — delivery server → notifica visibile o soppressa
 
 participant "DeliveryWorker" as Del
 participant "PushPlatform" as PP
 participant "ServiceWorker" as SW
-participant "NotificationsMachine" as NM
+participant "PushSuppressionBinder" as Binder
 participant "UI" as UI
 
 Del -> PP : PushNotifyEnqueued
 PP -> SW : push event
 
-UI -> NM : UpdateSuppressionState
-NM -> SW : SuppressionStateApplied
+Binder -> PP : updateSuppression(snapshot)
+PP -> SW : alfred_push_suppression
 
-SW -> SW : HandlePushPayload
-SW -> SW : shouldSuppress?
+SW -> SW : PresentPushNotification\n(shouldSuppress?)
 
 alt soppresso (chat attiva stessa coppia)
-  SW -> SW : PushNotificationSuppressed\n(nessuna UI)
+  SW -> SW : NotificationSuppressed\n(nessuna UI)
 else mostra
   SW -> SW : NotificationShown
+  SW -> UI : postMessage alfred_push_received
 end
 
 @enduml

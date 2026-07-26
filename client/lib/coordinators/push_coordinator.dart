@@ -49,9 +49,9 @@ class PushCoordinator {
         _manager.openAccounts,
         focusedSession: _manager.focusedSession,
       );
-      _notificationsAdapters.onSubscriptionRegistered();
+      _notificationsAdapters.onPushRegistrationSucceeded();
     } catch (_) {
-      _notificationsAdapters.onSubscriptionSyncFailed();
+      _notificationsAdapters.onPushRegistrationFailed();
     }
   }
 

@@ -29,8 +29,8 @@ final class AllowlistLoadFailed extends ReceptionEvent {
   const AllowlistLoadFailed();
 }
 
-final class SetAllowlistSearchQuery extends ReceptionEvent {
-  const SetAllowlistSearchQuery(this.query);
+final class SetSearchQuery extends ReceptionEvent {
+  const SetSearchQuery(this.query);
   final String query;
 }
 
@@ -70,7 +70,7 @@ class ReceptionMachine {
         loadState = ReceptionLoadState.ready;
       case AllowlistLoadFailed():
         loadState = ReceptionLoadState.ready;
-      case SetAllowlistSearchQuery(:final query):
+      case SetSearchQuery(:final query):
         searchQuery = query;
       case AddAllowedProfile(:final profile):
         if (profile.id == ownerId) return;

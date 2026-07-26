@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto federation
 
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **UML:** [docs/model/uml/federation/](../../model/uml/federation/)
 
 Target — bridge attualmente stub.
@@ -15,6 +15,10 @@ Target — bridge attualmente stub.
 | `DeliverToFederatedPeer` | Bridge | Invia verso server esterno del peer. |
 | `ReceiveFromFederatedPeer` | Bridge | Riceve messaggio da server esterno. |
 | `ApplyFederatedAck` | Bridge | Propaga conferme recapito/lettura esterne. |
+
+UML platform outbound (target): [seq-federation-stub.puml](../../model/uml/federation/seq-federation-stub.puml) — `AccountBoundary` → `Outbox` : `QueueFederatedSend`; `BridgeWorker` → `FederatedServer` : `DeliverToFederatedPeer`.
+
+Inbound federato: `BridgeWorker` → `ReceptionGate` : `EvaluateInboundDelivery` (contesto **reception**) — vedi [seq-reception-delivery-gate.puml](../../model/uml/reception/seq-reception-delivery-gate.puml).
 
 ---
 

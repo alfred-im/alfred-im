@@ -1,7 +1,8 @@
 @startuml seq-open-from-fragment
-' Context: shareable-link → navigation
+' Context: shareable-link → navigation | profile overlay
 ' Profile: client
-' Revision: 2026-07-19
+' SDD: PROM-SHAREABLE-LINK
+' Revision: 2026-07-27
 
 title Link condiviso → profilo o chat
 
@@ -12,16 +13,21 @@ participant "ProfileMachine" as PM
 
 Br -> SL : ResolveSharedLink
 
-alt link non valido
-  SL --> Br : SharedLinkInvalid
-else sessione non pronta
+alt fragment non valido o riservato
+  SL --> Br : (resta Idle, nessun errore)
+else sessione non pronta o 0 account
   SL --> Br : SharedLinkPending
 else target chat
+  Br -> SL : HandleSharedLinkTarget
   SL -> Nav : OpenSharedChat
-  Nav --> Br : SharedChatOpened
+  Nav --> SL : SharedChatOpened
 else target profilo
+  Br -> SL : HandleSharedLinkTarget
   SL -> PM : OpenSharedProfile
-  PM --> Br : SharedProfileShown
+  PM --> SL : SharedProfileShown
+else profilo assente
+  Br -> SL : HandleSharedLinkTarget
+  SL --> Br : SharedLinkInvalid
 end
 
 @enduml

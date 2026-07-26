@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto messaging
 
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **UML:** [docs/model/uml/messaging/](../../model/uml/messaging/)
 
 ---
@@ -22,10 +22,10 @@
 | Evento | Descrizione |
 |--------|-------------|
 | `ConversationReady` | Storico disponibile; conversazione utilizzabile. |
-| `ConversationUnavailable` | Sessione non valida o caricamento fallito. |
+| `ConversationUnavailable` | Sessione non valida o scope non commesso; conversazione bloccata fino a refresh. |
 | `ContentSent` | Invio accettato dal server. |
 | `ContentSendFailed` | Invio non riuscito; resta in coda retry. |
-| `ConversationUpdated` | Nuovi messaggi, pagina storico precedente caricata, o aggiornamento spunte in conversazione. |
+| `ConversationUpdated` | Nuovi messaggi, pagina storico precedente caricata, o aggiornamento spunte (INSERT/UPDATE realtime) in conversazione. |
 
 ---
 

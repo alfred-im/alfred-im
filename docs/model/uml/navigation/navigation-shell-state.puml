@@ -1,30 +1,42 @@
 @startuml navigation-shell-state
 ' Context: navigation
 ' Profile: client
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 ' Statechart: NavigationShellState + ConversationScope
 
 title Navigation — shell e ambito conversazione
 
 state InboxVisible : committedScope = null
 state ChatOpen : committedScope = (owner, peer, epoch)
-state GroupShell : committedScope = null
+state GroupShell : committedScope = null\ngroupChatOpen in view-state
 
 [*] --> InboxVisible
 
-InboxVisible --> ChatOpen : OpenConversation\nCommitConversationScope
-InboxVisible --> GroupShell : EnterGroupShell\nInvalidateConversationScope
+InboxVisible --> ChatOpen : OpenConversation\n(OpenPeerOnFocusedAccount |\nOpenConversationOnAccount)\nCommitConversationScope
+InboxVisible --> GroupShell : EnterGroupShell\n(SwitchToAccount gruppo)\nInvalidateConversationScope
+InboxVisible --> InboxVisible : ShowInbox\n(SwitchToAccount utente)\nInvalidateConversationScope
 
 ChatOpen --> InboxVisible : CloseConversation\nInvalidateConversationScope
-ChatOpen --> ChatOpen : OpenConversation (altro account/peer)\nInvalidate → Commit
+ChatOpen --> ChatOpen : OpenConversation (altro peer)\nInvalidate → Commit
+ChatOpen --> InboxVisible : ShowInbox\n(SwitchToAccount utente)\nInvalidateConversationScope
+ChatOpen --> GroupShell : EnterGroupShell\n(SwitchToAccount gruppo)\nInvalidateConversationScope
 
-GroupShell --> GroupShell : OpenGroupConversation
-GroupShell --> GroupShell : LeaveGroupConversation
+GroupShell --> GroupShell : OpenGroupConversation\n(OpenGroupChat)
+GroupShell --> GroupShell : LeaveGroupConversation\n(BackToGroupHome)
+GroupShell --> GroupShell : EnterGroupShell\n(SwitchToAccount gruppo)\nInvalidateConversationScope
+GroupShell --> InboxVisible : ShowInbox\n(SwitchToAccount utente)\nInvalidateConversationScope
+GroupShell --> InboxVisible : CloseConversation\n(utente in focus)\nInvalidateConversationScope
 
 note right of ChatOpen
   Un solo [ConversationScope] commesso.
   Messaging legge solo da qui.
   activePeer in view-state è proiezione UI.
+end note
+
+note right of GroupShell
+  Chat gruppo: evento GroupConversationVisible
+  (view-state groupChatOpen), non ChatOpen.
+  Scope 1:1 sempre null.
 end note
 
 @enduml

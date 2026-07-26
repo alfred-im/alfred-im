@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto auth
 
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **UML:** [docs/model/uml/auth/](../../model/uml/auth/)
 
 ---
@@ -17,15 +17,23 @@
 
 ---
 
-## Eventi
+## Eventi (`AuthMachine`)
+
+Nomi allineati a `client/lib/machines/auth/auth_machine.dart` e ai diagrammi UML.
 
 | Evento | Descrizione |
 |--------|-------------|
-| `SessionEstablished` | Account autenticato e utilizzabile. |
-| `AuthenticationFailed` | Credenziali o rete non valide. |
-| `ValidationFailed` | Dati inseriti non validi. |
-| `CredentialOverlayRequired` | Nessun account aperto — overlay obbligatorio. |
-| `CredentialOverlayDismissed` | Overlay chiuso; shell invariata. |
+| `BootstrapStarted` | Avvio bootstrap overlay auth. |
+| `BootstrapCompleted` | Manifest caricato; `hasOpenAccounts` → `SessionActive`, altrimenti `NoSession`. |
+| `OverlayOpenRequested` | Mostra overlay (`dismissible` → `OverlayVisible`, altrimenti `NoSession`). |
+| `OverlayCloseRequested` | Chiude overlay dismissibile → `SessionActive`. |
+| `LastAccountRemoved` | Ultimo account chiuso → `NoSession` obbligatorio. |
+| `ValidationRejected` | Validazione locale fallita; resta nello stato precedente (non entra in `AuthOperationInProgress`). |
+| `AuthOperationStarted` | Login o sign-up avviato → `AuthOperationInProgress`. |
+| `AuthOperationCompleted` | Success → `SessionActive`; `success: false` ripristina stato pre-operazione. |
+| `AuthOperationFailed` | Errore credenziali, rete o server; ripristina stato pre-operazione. |
+
+`RequestPasswordReset` non emette eventi `AuthMachine` (solo loading ed errore UI).
 
 ---
 

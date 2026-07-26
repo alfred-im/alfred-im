@@ -50,7 +50,7 @@ class ReceptionCoordinator {
       state.allowedPeople.map((p) => p.profile.id).toSet();
 
   void setSearchQuery(String value) {
-    unawaited(_machine.send(SetAllowlistSearchQuery(value)));
+    unawaited(_machine.send(SetSearchQuery(value)));
     _syncLoadingFromMachine();
     _notify();
   }

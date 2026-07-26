@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto reception
 
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **UML:** [docs/model/uml/reception/](../../model/uml/reception/)
 
 ---
@@ -21,6 +21,10 @@
 |---------|-----------|-------------|
 | `EvaluateInboundDelivery` | Policy (worker recapito) | Decide se materializzare messaggio per il destinatario. |
 
+UML platform: [seq-reception-delivery-gate.puml](../../model/uml/reception/seq-reception-delivery-gate.puml) — `DeliveryWorker` → `ReceptionGate` : `EvaluateInboundDelivery`.
+
+Implementazione (non vincolante): helper SQL `is_sender_allowed_for_reception(owner, sender)` invocato da `deliver_internal`.
+
 ---
 
 ## Eventi
@@ -32,6 +36,8 @@
 | `SenderDisallowed` | Profilo rimosso dalla allow list. |
 | `DeliveryPermitted` | Mittente autorizzato — destinatario riceve. |
 | `DeliverySilentlyBlocked` | Mittente non autorizzato — nessun errore al mittente. |
+
+Statechart client: `AllowListReady` → evento macchina `AllowlistLoaded`; `DisallowSender` → `RemoveAllowedPerson` o `RemoveAllowedByProfileId` (toggle overlay peer).
 
 ---
 

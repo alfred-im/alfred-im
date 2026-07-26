@@ -1,26 +1,24 @@
 @startuml seq-compose-from-contact
-' Context: contacts
+' Context: contacts → navigation
 ' Profile: client
 ' SDD: PROM-PERSONAL-CONTACTS-006
-' Revision: 2026-07-25
+' Revision: 2026-07-27
 
 title Contacts — scorciatoia «Scrivi» da rubrica
 
 actor Utente
 participant "UI" as UI
-participant "ComposeService" as Compose
 participant "NavigationMachine" as Nav
 
-Utente -> UI : tap scrivi su contatto
+Utente -> UI : StartChatFromContact
 
 alt contatto internal
-  UI -> Compose : peerFromContact(contact)
-  Compose --> UI : ChatPeer
-  UI -> Nav : OpenFromCompose(peer)
+  UI -> UI : risolvi ChatPeer da contatto
+  UI -> Nav : OpenPeerOnFocusedAccount(peer)
+  Nav --> UI : ConversationVisible
+  UI --> Utente : ChatFromContactStarted
 else contatto esterno
-  UI -> Compose : peerFromContact(contact)
-  Compose --> UI : errore (esterno non supportato)
-  UI -> Utente : messaggio errore
+  UI --> Utente : ChatFromContactRejected\n(esterno non supportato)
 end
 
 @enduml
