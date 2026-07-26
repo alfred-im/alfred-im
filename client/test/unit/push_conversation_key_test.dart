@@ -101,6 +101,16 @@ void main() {
       );
     });
 
+    test('outboundQueueKey matches canonicalKey', () {
+      expect(
+        PushConversationKey.outboundQueueKey(
+          ownerUserId: 'account-a',
+          peerProfileId: 'peer-b',
+        ),
+        'account-a|peer-b',
+      );
+    });
+
     test('shouldSuppressInForeground matches account+peer only', () {
       const key = PushConversationKey(
         ownerUserId: 'account-b',

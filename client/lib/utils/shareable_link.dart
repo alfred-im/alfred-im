@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../config/app_config.dart';
 import '../models/profile_summary.dart';
+import '../utils/auth_identity.dart';
 import 'compose_address.dart';
 
 /// Destinazione di un link condivisibile (`#indirizzo` o `#indirizzo/chat`).
@@ -79,7 +80,7 @@ ShareableAddressResolution? resolveShareableAddress(String raw) {
       if (server != AppConfig.imServerId.toLowerCase()) {
         return null;
       }
-      if (!RegExp(r'^[a-z0-9_]{3,32}$').hasMatch(username)) {
+      if (!AuthIdentity.isValidUsername(username)) {
         return null;
       }
       return ShareableAddressResolution(

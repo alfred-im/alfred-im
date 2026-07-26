@@ -12,7 +12,9 @@ import '../machines/navigation/account_view_state_store.dart';
 import '../models/account_view_state.dart';
 import '../models/open_account.dart';
 import '../models/profile_summary.dart';
+import '../utils/conversation_session_access.dart';
 import '../utils/auth_redirect_url.dart';
+import '../utils/friendly_auth_error.dart';
 import 'account_session.dart';
 import 'account_storage_service.dart';
 
@@ -179,19 +181,32 @@ class AccountManager {
   }
 
   Future<void> _refreshManifestCache() async {
-    var stored = await _storage.loadAccounts();
-    final staleUserIds = stored
-        .where((account) => account.refreshToken.isEmpty)
-        .map((account) => account.userId)
-        .toList();
-    for (final userId in staleUserIds) {
-      await _storage.removeAccount(userId);
+    _manifestAccounts = await _storage.loadAccounts();
+  }
+
+  OpenAccount? openAccountFor(String userId) {
+    for (final account in _manifestAccounts) {
+      if (account.userId == userId) return account;
     }
-    if (staleUserIds.isNotEmpty) {
-      stored = await _storage.loadAccounts();
+    return null;
+  }
+
+  bool isAccountDisconnected(String userId) =>
+      openAccountFor(userId)?.isDisconnected ?? false;
+
+  /// Errore sessione: mantiene profilo nel manifest, marca disconnesso.
+  Future<void> _markAccountSessionDisconnected(String userId) async {
+    final account = openAccountFor(userId);
+    if (account == null || account.isDisconnected) return;
+
+    await _storage.upsertAccount(account.copyWith(refreshToken: ''));
+    await AccountSession.clearLocalAuthStorage(userId);
+
+    final stale = _sessions.remove(userId);
+    if (stale != null) {
+      await stale.disposeResources(clearAuthStorage: false);
     }
-    _manifestAccounts =
-        stored.where((account) => account.refreshToken.isNotEmpty).toList();
+    await _refreshManifestCache();
   }
 
   /// Ripristina GoTrue per [userId] e opzionalmente persiste il focus.
@@ -245,6 +260,10 @@ class AccountManager {
     }
     final account = _manifestAccounts[accountIndex];
 
+    if (account.isDisconnected) {
+      return null;
+    }
+
     try {
       final session = await _restoreWithRetry(account);
       _sessions.clear();
@@ -257,13 +276,8 @@ class AccountManager {
       }
       return session;
     } catch (e) {
-      if (_isPermanentAuthFailure(e)) {
-        await _storage.removeAccount(userId);
-        await AccountSession.clearLocalAuthStorage(userId);
-        await _refreshManifestCache();
-        if (requireSession) {
-          throw const AuthException('Sessione account non disponibile.');
-        }
+      if (isPermanentAuthFailure(e)) {
+        await _markAccountSessionDisconnected(userId);
         return null;
       }
       if (requireSession) rethrow;
@@ -302,7 +316,7 @@ class AccountManager {
         return await AccountSession.restore(account);
       } catch (e) {
         lastError = e;
-        if (_isPermanentAuthFailure(e)) rethrow;
+        if (isPermanentAuthFailure(e)) rethrow;
         if (attempt < 2) {
           await Future<void>.delayed(Duration(milliseconds: 300 * (attempt + 1)));
         }
@@ -328,12 +342,12 @@ class AccountManager {
     }
     final session = _sessions[userId];
     if (session == null || session.userId != userId) return false;
-    final authUserId = session.client.auth.currentUser?.id;
-    if (authUserId != null && authUserId != userId) return false;
-    if (session.hasValidJwt()) {
-      return authUserId == userId;
+    if (clientHasGoTrueSession(session.client)) {
+      return isAccountSessionReady(
+        client: session.client,
+        ownerUserId: userId,
+      );
     }
-    // Hook test: sessioni iniettate senza JWT (restoreSessionForTest).
     if (restoreSessionForTest != null) return true;
     return false;
   }
@@ -511,17 +525,6 @@ class AccountManager {
       wasFocused: wasFocused,
       remainingUserIds: remaining,
     );
-  }
-
-  bool _isPermanentAuthFailure(Object e) {
-    if (e is AuthException) {
-      final msg = e.message.toLowerCase();
-      return msg.contains('invalid refresh') ||
-          msg.contains('refresh token not found') ||
-          msg.contains('session expired') ||
-          msg.contains('token has expired');
-    }
-    return false;
   }
 
   Future<void> _syncFocusedProfile(AccountSession session) async {

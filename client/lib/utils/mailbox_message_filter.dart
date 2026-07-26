@@ -8,7 +8,15 @@ bool isMailboxPeerMessageRelevant({
   required String currentUserId,
   required String peerProfileId,
 }) {
-  final owner = record['owner_id'] as String?;
-  final peer = record['peer_profile_id'] as String?;
-  return owner == currentUserId && peer == peerProfileId;
+  if (!isOwnerArchiveRow(record: record, currentUserId: currentUserId)) {
+    return false;
+  }
+  return record['peer_profile_id'] == peerProfileId;
+}
+
+bool isOwnerArchiveRow({
+  required Map<String, dynamic> record,
+  required String currentUserId,
+}) {
+  return record['owner_id'] == currentUserId;
 }

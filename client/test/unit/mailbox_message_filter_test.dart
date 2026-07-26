@@ -44,4 +44,23 @@ void main() {
       );
     });
   });
+
+  group('isOwnerArchiveRow', () {
+    test('matches owner_id only', () {
+      expect(
+        isOwnerArchiveRow(
+          record: {'owner_id': 'user-a', 'peer_profile_id': 'peer-b'},
+          currentUserId: 'user-a',
+        ),
+        isTrue,
+      );
+      expect(
+        isOwnerArchiveRow(
+          record: {'owner_id': 'other'},
+          currentUserId: 'user-a',
+        ),
+        isFalse,
+      );
+    });
+  });
 }

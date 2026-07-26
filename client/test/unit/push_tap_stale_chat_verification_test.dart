@@ -6,135 +6,81 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:alfred_client/machines/navigation/navigation_machine.dart';
-import 'package:alfred_client/models/chat_peer.dart';
-import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_manager.dart';
-import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/navigation_coordinator.dart';
-import 'package:alfred_client/services/profile_service.dart';
 
-import '../support/fake_messaging_services.dart';
+import '../support/open_conversation_stale_harness.dart';
 
-class _FakeProfileService extends ProfileService {
-  _FakeProfileService(this._peers) : super(createTestSupabaseClient());
-
-  final Map<String, ProfileSummary> _peers;
-
-  @override
-  Future<ProfileSummary?> findById(String id) async => _peers[id];
-}
-
-ProfileSummary _profile(String id, String username) => ProfileSummary(
-      id: id,
-      username: username,
-      displayName: username,
-    );
-
-ChatPeer _peer(ProfileSummary profile) => ChatPeer.fromProfile(profile: profile);
-
-/// Regressione PROM-PUSH-NOTIFY-030/036 — tap push 1:1 multi-account.
+/// Tap push — dominio navigation/invariants.md § No stale chat
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const accountA = 'account-a';
-  const accountB = 'account-b';
-  const stalePeerId = 'stale-peer-y';
-  const pushSenderId = 'push-sender-z';
+  group('push tap open conversation stale', () {
+    const accountA = 'account-a';
+    const accountB = 'account-b';
+    const stalePeerId = 'stale-peer-y';
+    const pushSenderId = 'push-sender-z';
 
-  late AccountManager manager;
-  late NavigationCoordinator nav;
-  late AccountSession sessionA;
-  late AccountSession sessionB;
+    late AccountManager manager;
+    late NavigationCoordinator nav;
 
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    manager = AccountManager();
-    nav = NavigationCoordinator(manager);
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      manager = AccountManager();
+      nav = NavigationCoordinator(manager);
 
-    sessionA = await AccountSession.createForTest(
-      profile: _profile(accountA, 'agent_a'),
-      client: createTestSupabaseClient(),
-      inboxService: FakeInboxService(),
-      profileService: _FakeProfileService({}),
-    );
-    sessionB = await AccountSession.createForTest(
-      profile: _profile(accountB, 'agent_b'),
-      client: createTestSupabaseClient(),
-      inboxService: FakeInboxService(
-        peers: [_peer(_profile(pushSenderId, 'sender_z'))],
-      ),
-      profileService: _FakeProfileService({
-        pushSenderId: _profile(pushSenderId, 'sender_z'),
-      }),
-    );
+      final sessionA = await OpenConversationStaleHarness.session(
+        accountId: accountA,
+        username: 'agent_a',
+      );
+      final sessionB = await OpenConversationStaleHarness.session(
+        accountId: accountB,
+        username: 'agent_b',
+        inboxPeers: [
+          OpenConversationStaleHarness.peer(
+            OpenConversationStaleHarness.profile(pushSenderId, 'sender_z'),
+          ),
+        ],
+        peersById: {
+          pushSenderId: OpenConversationStaleHarness.profile(pushSenderId, 'sender_z'),
+        },
+      );
 
-    manager.seedTestAccount(accountA);
-    manager.seedTestAccount(accountB);
-    manager.injectTestSession(sessionA);
-    manager.injectTestSession(sessionB);
-    manager.focusTestSession(sessionA);
+      manager.seedTestAccount(accountA);
+      manager.seedTestAccount(accountB);
+      manager.injectTestSession(sessionA);
+      manager.injectTestSession(sessionB);
+      manager.focusTestSession(sessionA);
 
-    await manager.setFocus(accountB);
-    manager.applyAccountViewState(
-      accountB,
-      (view) => view.openChat(_peer(_profile(stalePeerId, 'stale_y'))),
-    );
-    expect(manager.viewState.activePeer?.profileId, stalePeerId);
+      await manager.setFocus(accountB);
+      OpenConversationStaleHarness.seedStaleChat(
+        manager: manager,
+        accountId: accountB,
+        stalePeerId: stalePeerId,
+        staleUsername: 'stale_y',
+      );
 
-    await manager.setFocus(accountA);
-    expect(manager.focusUserId, accountA);
-  });
+      await manager.setFocus(accountA);
+    });
 
-  test('tap push 1:1: focus B + peer in inbox → apre mittente corretto', () async {
-    final ok = await nav.adapters.openFromPushTap(
-      accountUserId: accountB,
-      peerProfileId: pushSenderId,
-    );
+    test('openFromPushTap apre mittente su account destinatario', () async {
+      final ok = await nav.adapters.openFromPushTap(
+        accountUserId: accountB,
+        peerProfileId: pushSenderId,
+      );
 
-    expect(ok, isTrue);
-    expect(manager.focusUserId, accountB);
-    expect(manager.viewState.activePeer?.profileId, pushSenderId);
-  });
+      expect(ok, isTrue);
+      expect(manager.focusUserId, accountB);
+      expect(manager.viewState.activePeer?.profileId, pushSenderId);
+    });
 
-  test('tap push 1:1: peer assente da inbox → fallback profilo, non chat stale', () async {
-    final sessionBFallback = await AccountSession.createForTest(
-      profile: _profile(accountB, 'agent_b'),
-      client: createTestSupabaseClient(),
-      inboxService: FakeInboxService(),
-      profileService: _FakeProfileService({
-        pushSenderId: _profile(pushSenderId, 'sender_z'),
-      }),
-    );
-    manager.injectTestSession(sessionBFallback);
+    test('switch focus senza tap non commette scope', () async {
+      await nav.switchToAccount(accountB);
 
-    final ok = await nav.adapters.openFromPushTap(
-      accountUserId: accountB,
-      peerProfileId: pushSenderId,
-    );
-
-    expect(ok, isTrue);
-    expect(manager.focusUserId, accountB);
-    expect(manager.viewState.activePeer?.profileId, pushSenderId);
-    expect(manager.viewState.activePeer?.profileId, isNot(stalePeerId));
-  });
-
-  test('tap push 1:1: peer irrisolvibile → inbox senza chat stale', () async {
-    final ok = await nav.adapters.openFromPushTap(
-      accountUserId: accountB,
-      peerProfileId: 'unknown-not-in-inbox',
-    );
-
-    expect(ok, isFalse);
-    expect(manager.focusUserId, accountB);
-    expect(manager.viewState.activePeer, isNull);
-  });
-
-  test('switch focus a B senza tap non apre chat commessa', () async {
-    await nav.switchToAccount(accountB);
-
-    expect(manager.focusUserId, accountB);
-    expect(manager.viewState.activePeer?.profileId, stalePeerId);
-    expect(nav.committedScope, isNull);
-    expect(nav.machine.shellState, NavigationShellState.inboxVisible);
+      expect(manager.focusUserId, accountB);
+      expect(manager.viewState.activePeer?.profileId, stalePeerId);
+      expect(nav.committedScope, isNull);
+      expect(nav.machine.shellState, NavigationShellState.inboxVisible);
+    });
   });
 }

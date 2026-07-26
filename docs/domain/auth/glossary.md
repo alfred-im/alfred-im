@@ -37,8 +37,4 @@
 
 ## Invarianti
 
-1. La shell resta sempre montata — overlay è uno strato, non una route ([SURF-AUTH-001]).
-2. Con 0 account l'overlay **non** è dismissibile ([SURF-AUTH-002], [SURF-AUTH-011]).
-3. Dopo session adoption **non** revocare il refresh token appena adottato.
-4. Ogni account persistito usa storage auth dedicato per account.
-5. Validazione client-side (email, username, display name) prima di chiamate rete.
+Vedi [invariants.md](invariants.md). Overlay e shell: [SURF-AUTH-001], [SURF-AUTH-002].

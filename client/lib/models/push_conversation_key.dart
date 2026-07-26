@@ -2,10 +2,10 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-/// Chiave univoca push: account destinatario + peer controparte.
+/// Chiave univoca conversazione 1:1: account owner + peer.
 ///
-/// Allineata a [MessagesController.outboundQueueKey] — mai interpretare
-/// una notifica o un intent come «solo conversazione» senza account.
+/// Regole: [docs/domain/notifications/invariants.md](../../docs/domain/notifications/invariants.md)
+/// Formato canonico condiviso con outbound queue e scope messaggistica.
 class PushConversationKey {
   const PushConversationKey({
     required this.ownerUserId,
@@ -21,6 +21,17 @@ class PushConversationKey {
   static const separator = '|';
 
   String get canonicalKey => '$ownerUserId$separator$peerProfileId';
+
+  /// Chiave outbound queue / realtime — stesso formato del push.
+  static String outboundQueueKey({
+    required String ownerUserId,
+    required String peerProfileId,
+  }) {
+    return PushConversationKey(
+      ownerUserId: ownerUserId,
+      peerProfileId: peerProfileId,
+    ).canonicalKey;
+  }
 
   /// Tag notifica browser: conversazione + messaggio logico (dedup per device).
   String notificationTag(String logicalMessageId) {

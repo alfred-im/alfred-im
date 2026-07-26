@@ -84,6 +84,15 @@ for readme in "$DOMAIN_DIR"/*/README.md; do
   fi
 done
 
+echo "==> Model: invarianti canoniche (contesti verified con client)"
+for ctx in navigation multi-account auth notifications; do
+  inv="$DOMAIN_DIR/$ctx/invariants.md"
+  if [[ ! -f "$inv" ]]; then
+    echo "ERROR: contesto $ctx manca $inv" >&2
+    ERR=1
+  fi
+done
+
 echo "==> Model: bounded-contexts.md non deve usare stato implemented"
 BC="docs/domain/bounded-contexts.md"
 if [[ -f "$BC" ]]; then

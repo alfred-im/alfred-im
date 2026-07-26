@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-MULTI-ACCOUNT` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
+| **Ultima revisione** | 2026-07-26 |
 | **PR origine** | #140 (UX/shell), #147 (persistenza), #152 (single-active GoTrue) |
 
 Promessa di prodotto: una o più identità messaggistica sulla stessa shell, focus istantaneo, una sessione GoTrue attiva in RAM, overlay auth non invasivo.
@@ -49,6 +49,8 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 | **PROM-MULTI-ACCOUNT-013** | ≥1 account → overlay solo da «Aggiungi account», dismissibile |
 | **PROM-MULTI-ACCOUNT-014** | Login e registrazione sulla stessa card (`AuthScreen`); toggle Accedi/Registrati |
 | **PROM-MULTI-ACCOUNT-015** | «Chiudi account» (`removeAccount`): rimuove manifest + `alfred_auth_{userId}`; se ultimo account → overlay obbligatorio |
+| **PROM-MULTI-ACCOUNT-016** | Errore ripristino sessione (token assente/invalido): account **resta** nel manifest, etichetta UI **Disconnesso**, azione **Accedi di nuovo** — non scompare dalla sidebar |
+| **PROM-MULTI-ACCOUNT-017** | Solo `removeAccount` esplicito rimuove un account dal manifest |
 
 ### SHOULD
 
@@ -67,6 +69,7 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 | **PROM-MULTI-ACCOUNT-032** | `switchAccount` legacy con `setSession` tra account già in RAM |
 | **PROM-MULTI-ACCOUNT-033** | Overlay dismissibile con 0 account |
 | **PROM-MULTI-ACCOUNT-034** | Rotella globale che nasconde shell durante switch |
+| **PROM-MULTI-ACCOUNT-035** | Rimuovere automaticamente un account dal manifest per errore auth o `refreshToken` vuoto nel manifest |
 
 ### Fuori scope
 

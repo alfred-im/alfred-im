@@ -10,6 +10,8 @@ import 'package:alfred_client/services/message_media_service.dart';
 import 'package:alfred_client/utils/session_scope_keys.dart';
 
 import '../support/composition_harness.dart';
+import 'package:alfred_client/utils/conversation_session_access.dart';
+
 import '../support/fake_messaging_services.dart';
 
 const _userA = 'account-a';
@@ -19,11 +21,15 @@ const _peerId = 'peer-b';
 bool _focusedSessionValid(
   AuthController auth,
   String expectedUserId,
+  String peerProfileId,
 ) {
   final live = auth.focusedSession;
-  return live != null &&
-      live.userId == expectedUserId &&
-      live.hasValidJwt();
+  if (live == null || live.userId != expectedUserId) return false;
+  return isMessagingSessionReady(
+    client: live.client,
+    ownerUserId: expectedUserId,
+    peerProfileId: peerProfileId,
+  );
 }
 
 /// COMP-001, COMP-002 — PROM-MULTI-ACCOUNT-022
@@ -115,7 +121,7 @@ void main() {
         messageService: staleService,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: FakeInboxService(),
-        hasValidSession: () => _focusedSessionValid(setup.auth, _userA),
+        hasValidSession: () => _focusedSessionValid(setup.auth, _userA, _peerId),
         isScopeCommitted: () => true,
       );
       await waitForMessagesController(controller);
@@ -171,7 +177,7 @@ void main() {
         messageService: liveSession.messageService,
         messageMediaService: liveSession.messageMediaService,
         inboxService: liveSession.inboxService,
-        hasValidSession: () => _focusedSessionValid(setup.auth, _userA),
+        hasValidSession: () => _focusedSessionValid(setup.auth, _userA, _peerId),
         isScopeCommitted: () => true,
       );
       await waitForMessagesController(controller);

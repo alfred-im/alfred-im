@@ -4,15 +4,25 @@
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-String friendlyAuthError(Object e) {
-  if (e is AuthException) {
-    final msg = e.message.toLowerCase();
-    if (msg.contains('invalid refresh') ||
+import 'conversation_session_access.dart';
+
+bool isPermanentAuthFailure(Object error) {
+  if (error is AuthException) {
+    final msg = error.message.toLowerCase();
+    return msg.contains('invalid refresh') ||
         msg.contains('refresh token not found') ||
         msg.contains('session expired') ||
-        msg.contains('token has expired')) {
-      return 'Sessione scaduta per questo account. Accedi di nuovo.';
+        msg.contains('token has expired');
+  }
+  return false;
+}
+
+String friendlyAuthError(Object e) {
+  if (e is AuthException) {
+    if (isPermanentAuthFailure(e)) {
+      return conversationSessionExpiredMessage;
     }
+    final msg = e.message.toLowerCase();
     if (msg.contains('invalid login credentials')) {
       return 'Email o password non corretti.';
     }

@@ -17,10 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fake_messaging_services.dart';
 
-/// PROM-CONVERSATION-SCOPE-008 — consolidamento sessione GoTrue all'ingresso chat.
-///
-/// Hub test: AccountManager + navigation effects/coordinator.
-/// Archivio messaggi / INV-R4: `multi_account_message_store_test.dart`.
+/// Consolidamento sessione GoTrue all'ingresso chat — vedi dominio navigation/invariants.md
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

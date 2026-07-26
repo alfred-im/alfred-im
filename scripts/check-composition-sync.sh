@@ -32,6 +32,12 @@ for ctx in "${!REQUIRED[@]}"; do
   fi
 done
 
+echo "==> Composition: harness usa ConversationSessionAccess"
+if ! grep -q 'conversation_session_access' "$HARNESS"; then
+  echo "ERROR: $HARNESS deve usare conversation_session_access per session check" >&2
+  ERR=1
+fi
+
 echo "==> Composition: wiring hygiene (hasValidSession bypass)"
 while IFS= read -r -d '' f; do
   if grep -q 'hasValidSession: () => true' "$f" \

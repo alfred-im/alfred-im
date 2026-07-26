@@ -14,6 +14,7 @@ import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
 import 'package:alfred_client/services/message_media_service.dart';
+import 'package:alfred_client/utils/conversation_session_access.dart';
 import 'package:alfred_client/utils/session_scope_keys.dart';
 
 import 'fake_messaging_services.dart';
@@ -150,9 +151,12 @@ class _SessionScopedMessagesBody extends StatelessWidget {
 
   bool _focusedSessionValid() {
     final live = auth.focusedSession;
-    return live != null &&
-        live.userId == session.userId &&
-        live.hasValidJwt();
+    if (live == null || live.userId != session.userId) return false;
+    return isMessagingSessionReady(
+      client: live.client,
+      ownerUserId: live.userId,
+      peerProfileId: peer.profileId,
+    );
   }
 
   @override

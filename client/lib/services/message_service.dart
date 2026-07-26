@@ -21,6 +21,8 @@ class MessageService {
 
   PeerMessageService get peer => _peer;
 
+  SupabaseClient get client => _peer.client;
+
   Future<List<ChatMessage>> fetchOwnerMessages({
     required String currentUserId,
     int limit = 200,

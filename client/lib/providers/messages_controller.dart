@@ -13,6 +13,7 @@ import '../machines/messaging/messaging_coordinator.dart';
 import '../machines/messaging/messaging_effects.dart';
 import '../models/conversation_scope.dart';
 import '../models/message.dart';
+import '../models/push_conversation_key.dart';
 import '../services/inbox_service.dart';
 import '../services/message_media_service.dart';
 import '../services/message_service.dart';
@@ -115,7 +116,10 @@ class MessagesController extends ChangeNotifier {
     required String userId,
     required String peerProfileId,
   }) =>
-      '$userId|$peerProfileId';
+      PushConversationKey.outboundQueueKey(
+        ownerUserId: userId,
+        peerProfileId: peerProfileId,
+      );
 
   Future<void> reload() => _coordinator.reload();
 

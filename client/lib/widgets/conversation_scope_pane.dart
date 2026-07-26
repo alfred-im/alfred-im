@@ -13,6 +13,7 @@ import '../providers/messages_controller.dart';
 import '../services/account_session.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/conversation_scope_guard.dart';
+import '../utils/conversation_session_access.dart';
 import '../utils/session_scope_keys.dart';
 import '../widgets/chat_panel.dart';
 
@@ -102,9 +103,12 @@ class _ChatWithMessages extends StatelessWidget {
   final VoidCallback? onBack;
   final Future<void> Function() onMessagesChanged;
 
-  bool _focusedSessionValid() {
-    final live = auth.focusedSession;
-    return live != null && live.userId == session.userId && live.hasValidJwt();
+  bool _messagingSessionReady(AccountSession liveSession) {
+    return isMessagingSessionReady(
+      client: liveSession.client,
+      ownerUserId: liveSession.userId,
+      peerProfileId: peer.profileId,
+    );
   }
 
   @override
@@ -113,6 +117,7 @@ class _ChatWithMessages extends StatelessWidget {
     if (liveSession == null ||
         liveSession.userId != session.userId ||
         !scope.matches(liveSession, peer) ||
+        !_messagingSessionReady(liveSession) ||
         !auth.navigation.isConversationReady(
           session: liveSession,
           peer: peer,
@@ -139,7 +144,7 @@ class _ChatWithMessages extends StatelessWidget {
               )
             : null,
         onMessagesChanged: onMessagesChanged,
-        hasValidSession: _focusedSessionValid,
+        hasValidSession: () => _messagingSessionReady(liveSession),
         isScopeCommitted: () => isMessagesScopeActive(
           scope: scope,
           committedScope: auth.navigation.committedScope,

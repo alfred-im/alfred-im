@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/voice_config.dart';
 import '../models/message.dart';
+import '../utils/mailbox_message_filter.dart';
 
 /// RPC e realtime archivio owner (broadcast gruppo / list_owner_messages).
 class GroupArchiveService {
@@ -170,7 +171,9 @@ class GroupArchiveService {
     void handle(PostgresChangePayload payload) {
       final record = payload.newRecord;
       if (record.isEmpty) return;
-      if (record['owner_id'] != currentUserId) return;
+      if (!isOwnerArchiveRow(record: record, currentUserId: currentUserId)) {
+        return;
+      }
       final message = ChatMessage.fromJson(
         json: record,
         currentUserId: currentUserId,

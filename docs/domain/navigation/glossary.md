@@ -17,7 +17,7 @@
 | **CommitConversationScope** | Registra scope dopo apertura validata (account + peer + sessione viva). |
 | **InvalidateConversationScope** | Azzera scope (chiusura chat, switch account, apertura verso altro peer). |
 | **OpenConversation** | Transazione unica: invalida → focus (se serve) → **consolida sessione** → risolvi peer → commit scope. Sorgenti: inbox, push, link, compose. |
-| **ConsolidateSession** | All'ingresso chat: account UI ripristina/verifica GoTrue (JWT + `auth.uid`) — non fidarsi della sola presenza in RAM. |
+| **ConsolidateSession** | All'ingresso chat: vedi [invariants.md](invariants.md) § Session identity |
 | **Profile fallback** | Se peer non in inbox, lookup profilo — link/compose sempre; push dopo retry inbox esteso. |
 | **CloseConversation** | Chiude chat; invalida scope; torna a inbox o home gruppo. |
 | **GroupShell** | Account gruppo in focus — home gruppo al posto dell'inbox classica. |
@@ -36,6 +36,8 @@
 ---
 
 ## Invarianti
+
+Vedi [invariants.md](invariants.md) — implementazione in `client/lib/utils/conversation_session_access.dart`.
 
 1. Un solo ingresso navigazione: `NavigationMachine`.
 2. Push e link **non** bypassano multi-account.
