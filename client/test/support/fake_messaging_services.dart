@@ -66,6 +66,7 @@ class FakeMessageService extends MessageService {
   final SupabaseClient _clientForTest;
   late final _FakeGroupArchiveService _groupArchiveOverride;
 
+  @override
   SupabaseClient get client => _clientForTest;
 
   @override

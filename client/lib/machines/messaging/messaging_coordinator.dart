@@ -13,6 +13,7 @@ import 'conversation_load_machine.dart';
 import 'messaging_conversation_state.dart';
 import 'messaging_effects.dart';
 import 'messaging_message_list.dart';
+import '../../utils/messaging_session_identity.dart';
 import 'outbound_send_machine.dart';
 import 'realtime_attachment_machine.dart';
 
@@ -112,7 +113,7 @@ class MessagingCoordinator {
       state.error = null;
       loadMachine.send(const ConversationReady());
     } catch (e) {
-      state.error = e.toString();
+      state.error = friendlyMessagingError(e);
       loadMachine.send(const LoadFailed());
     }
     _notify();

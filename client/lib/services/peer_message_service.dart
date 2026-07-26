@@ -14,6 +14,8 @@ class PeerMessageService {
 
   final SupabaseClient _client;
 
+  SupabaseClient get client => _client;
+
   Future<List<ChatMessage>> fetchPeerMessages({
     required String peerProfileId,
     required String currentUserId,

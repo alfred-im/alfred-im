@@ -50,9 +50,10 @@ void main() {
     });
 
     /// Simula il check debole attuale: JWT presente, identità non verificata.
-    bool weakJwtOnlySessionCheck() =>
-        messageService.client.auth.currentSession?.accessToken?.isNotEmpty ==
-        true;
+    bool weakJwtOnlySessionCheck() {
+      final token = messageService.client.auth.currentSession?.accessToken;
+      return token != null && token.isNotEmpty;
+    }
 
     MessagesController createMisalignedController() {
       final scope = testConversationScope(

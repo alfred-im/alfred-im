@@ -13,7 +13,7 @@
 | **Shell** | Layout principale: sidebar + inbox + chat (sempre visibile). |
 | **InboxVisible** | Area inbox mostrata (mobile o desktop). |
 | **ChatOpen** | Conversazione 1:1 o gruppo aperta per account in focus. |
-| **ConversationScope** | Ambito atomico commesso `(owner_user_id, peer_profile_id, session_epoch)` — unica autorità per messaging. |
+| **ConversationScope** | Ambito atomico commesso `(owner_user_id, peer_profile_id, session_epoch)` — unica autorità per messaging. Invariante runtime: `auth.uid == owner_user_id` per fetch/invio. |
 | **CommitConversationScope** | Registra scope dopo apertura validata (account + peer + sessione viva). |
 | **InvalidateConversationScope** | Azzera scope (chiusura chat, switch account, apertura verso altro peer). |
 | **OpenConversation** | Transazione unica: invalida → focus (se serve) → **consolida sessione** → risolvi peer → commit scope. Sorgenti: inbox, push, link, compose. |

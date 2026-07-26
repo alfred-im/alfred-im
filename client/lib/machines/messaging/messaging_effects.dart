@@ -26,6 +26,7 @@ import '../../utils/date_format.dart';
 import '../../utils/image_bytes.dart';
 import '../../utils/picked_file_bytes.dart';
 import '../../utils/prepare_image_for_upload.dart';
+import '../../utils/messaging_session_identity.dart';
 import '../../utils/diagnostic_log.dart';
 import '../../utils/video_duration.dart';
 import '../../utils/video_file_extension.dart';
@@ -80,7 +81,7 @@ class MessagesControllerEffects implements MessagingEffects {
     OutboundMessageQueue? outboundQueue,
     required this._onChanged,
   }) : _outboundQueue = outboundQueue ?? OutboundMessageQueue();
-  static const sessionExpiredMessage = 'Sessione scaduta — accedi di nuovo';
+  static const sessionExpiredMessage = messagingSessionExpiredMessage;
   static const _peerMessagesPageSize = 100;
 
   @override
@@ -317,14 +318,19 @@ class MessagesControllerEffects implements MessagingEffects {
       _onChanged();
       return false;
     }
-    if (hasValidSession != null && !hasValidSession!()) {
+    if (!_sessionIdentityReady()) {
+      final client = messageService.client;
+      final reason = clientHasGoTrueSession(client)
+          ? 'identity_mismatch'
+          : 'jwt_missing';
       diagLogFail(
         'messaging',
         'session.check',
-        'jwt_missing',
+        reason,
         data: {
           'userId': userId,
           'peerProfileId': peerProfileId,
+          'authUserId': client.auth.currentUser?.id,
         },
       );
       _state.error = sessionExpiredMessage;
@@ -340,6 +346,21 @@ class MessagesControllerEffects implements MessagingEffects {
         'ok': true,
       },
     );
+    return true;
+  }
+
+  bool _sessionIdentityReady() {
+    final client = messageService.client;
+    if (clientHasGoTrueSession(client)) {
+      return isMessagingIdentityAligned(
+        client: client,
+        ownerUserId: userId,
+        peerProfileId: peerProfileId,
+      );
+    }
+    if (hasValidSession != null) {
+      return hasValidSession!();
+    }
     return true;
   }
 
@@ -857,7 +878,7 @@ class MessagesControllerEffects implements MessagingEffects {
           retryPayloadPath: queueItem.localMediaPath,
         ),
       );
-      _state.error = e.toString();
+      _state.error = friendlyMessagingError(e);
     } finally {
       _endOutboundLifecycle(sendFailed);
     }
@@ -1084,7 +1105,7 @@ class MessagesControllerEffects implements MessagingEffects {
                 : message,
           )
           .toList());
-      _state.error = e.toString();
+      _state.error = friendlyMessagingError(e);
     } finally {
       _onChanged();
     }

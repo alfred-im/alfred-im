@@ -13,6 +13,7 @@ import '../providers/messages_controller.dart';
 import '../services/account_session.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/conversation_scope_guard.dart';
+import '../utils/messaging_session_identity.dart';
 import '../utils/session_scope_keys.dart';
 import '../widgets/chat_panel.dart';
 
@@ -104,7 +105,29 @@ class _ChatWithMessages extends StatelessWidget {
 
   bool _focusedSessionValid() {
     final live = auth.focusedSession;
-    return live != null && live.userId == session.userId && live.hasValidJwt();
+    if (live == null || live.userId != session.userId) return false;
+    if (clientHasGoTrueSession(live.client)) {
+      return isMessagingIdentityAligned(
+        client: live.client,
+        ownerUserId: live.userId,
+        peerProfileId: peer.profileId,
+      );
+    }
+    return live.hasValidJwt();
+  }
+
+  bool _chatSessionIdentityReady(AccountSession liveSession) {
+    if (!auth.accountManager.isSessionReadyForAccount(liveSession.userId)) {
+      return false;
+    }
+    if (clientHasGoTrueSession(liveSession.client)) {
+      return isMessagingIdentityAligned(
+        client: liveSession.client,
+        ownerUserId: liveSession.userId,
+        peerProfileId: peer.profileId,
+      );
+    }
+    return liveSession.hasValidJwt();
   }
 
   @override
@@ -113,6 +136,7 @@ class _ChatWithMessages extends StatelessWidget {
     if (liveSession == null ||
         liveSession.userId != session.userId ||
         !scope.matches(liveSession, peer) ||
+        !_chatSessionIdentityReady(liveSession) ||
         !auth.navigation.isConversationReady(
           session: liveSession,
           peer: peer,
