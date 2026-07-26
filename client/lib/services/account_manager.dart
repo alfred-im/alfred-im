@@ -11,6 +11,7 @@ import '../machines/multi-account/multi_account_effects.dart';
 import '../machines/navigation/account_view_state_store.dart';
 import '../models/account_view_state.dart';
 import '../models/open_account.dart';
+import '../utils/conversation_session_access.dart';
 import '../models/profile_summary.dart';
 import '../utils/auth_redirect_url.dart';
 import 'account_session.dart';
@@ -328,12 +329,12 @@ class AccountManager {
     }
     final session = _sessions[userId];
     if (session == null || session.userId != userId) return false;
-    final authUserId = session.client.auth.currentUser?.id;
-    if (authUserId != null && authUserId != userId) return false;
-    if (session.hasValidJwt()) {
-      return authUserId == userId;
+    if (clientHasGoTrueSession(session.client)) {
+      return isAccountSessionReady(
+        client: session.client,
+        ownerUserId: userId,
+      );
     }
-    // Hook test: sessioni iniettate senza JWT (restoreSessionForTest).
     if (restoreSessionForTest != null) return true;
     return false;
   }
