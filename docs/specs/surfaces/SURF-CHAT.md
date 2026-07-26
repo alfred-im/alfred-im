@@ -67,7 +67,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | SURF-CHAT-003 | `message_bubble_test.dart`, `models_and_utils_test.dart` |
 | SURF-CHAT-004 | `mailbox_read_smoke.sql`; `messages_controller` `_init` |
 | SURF-CHAT-005 | `message_bubble_test.dart` |
-| SURF-CHAT-006 | `messages_controller_multi_account_test.dart`, `multi_account_scope_test.dart` |
+| SURF-CHAT-006 | `messages_controller_multi_account_test.dart`, `push_conversation_key_test.dart` |
 | SURF-CHAT-008 | `inbox_controller.dart` preview helpers |
 | SURF-CHAT-012 | `shareable_link_controller.dart`; `shareable_link_stale_chat_verification_test.dart` |
 | SURF-CHAT-011 | `client/test/unit/models_and_utils_test.dart` |

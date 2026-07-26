@@ -241,7 +241,7 @@ Dettaglio: [contracts/rpc.md](../../contracts/rpc.md) § `list_peer_messages`.
 | SYS-MAILBOX-047–049 | `supabase/tests/mailbox_read_smoke.sql` |
 | SYS-MAILBOX-054 | `client/test/unit/models_and_utils_test.dart` |
 | SYS-MAILBOX-017–025 | `bash scripts/test.sh integration` |
-| PROM-OUTBOUND-SEND | `messages_controller_multi_account_test.dart`, `multi_account_scope_test.dart` |
+| PROM-OUTBOUND-SEND | `messages_controller_multi_account_test.dart`, `push_conversation_key_test.dart` |
 | PROM-REALTIME-OWNER-001 | `inbox_provider_listen_test.dart`, `inbox_realtime_owner_filter_test.dart` |
 | PROM-REALTIME-OWNER-007 | `multi_account_chat_scenario_test.dart` |
 | PROM-LIST-FILTER, SURF-INBOX | `inbox_controller.dart` `filteredPeers` |
