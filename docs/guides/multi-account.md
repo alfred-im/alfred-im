@@ -43,7 +43,7 @@ Il focus determina quale `AccountSession` è in RAM. Gli altri account compaiono
 ### Avvio
 
 1. `AuthController.initialize()` → `AccountManager.initialize()` → `_rebuildFromManifest()`
-2. Carica `OpenAccount[]`; rimuove entry con `refreshToken` vuoto
+2. Carica `OpenAccount[]`; entry con `refreshToken` vuoto restano nel manifest come **disconnesso** (errore sessione)
 3. Focus da `alfred_focus_user_id` o primo account
 4. `_activateFocusedSession()` — `AccountSession.restore()` solo per il focus
 5. Zero account → overlay obbligatorio

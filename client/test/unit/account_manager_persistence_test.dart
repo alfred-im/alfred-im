@@ -4,8 +4,10 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:alfred_client/models/profile_summary.dart';
+import 'package:alfred_client/models/open_account.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
@@ -148,7 +150,7 @@ void main() {
       expect(stored.single.refreshToken, 'refresh-agent-a-v2');
     });
 
-    test('initialize removes entries with empty refresh token', () async {
+    test('initialize keeps disconnected entries with empty refresh token', () async {
       await storage.upsertAccount(
         (await sessionFor(
           id: 'agent-broken',
@@ -163,7 +165,37 @@ void main() {
       await manager.initialize(focusUserId: null);
 
       final stored = await storage.loadAccounts();
-      expect(stored, isEmpty);
+      expect(stored.length, 1);
+      expect(stored.single.userId, 'agent-broken');
+      expect(stored.single.isDisconnected, isTrue);
+    });
+
+    test('permanent auth failure marks disconnected instead of removing', () async {
+      await storage.upsertAccount(
+        OpenAccount(
+          profile: const ProfileSummary(
+            id: 'agent-a',
+            username: 'alfredagent1',
+            displayName: 'Agent A',
+          ),
+          refreshToken: 'stale-refresh',
+        ),
+      );
+
+      final manager = AccountManager(storage: storage);
+      manager.restoreSessionForTest = (_) async {
+        throw const AuthException('Invalid Refresh Token: Already Used');
+      };
+      await manager.syncManifestFromStorageForTest();
+
+      await manager.executeFocus('agent-a');
+
+      final stored = await storage.loadAccounts();
+      expect(stored.length, 1);
+      expect(stored.single.userId, 'agent-a');
+      expect(stored.single.isDisconnected, isTrue);
+      expect(manager.focusUserId, 'agent-a');
+      expect(manager.focusedSession, isNull);
     });
   });
 }

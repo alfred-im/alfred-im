@@ -12,7 +12,13 @@ class OpenAccount {
   });
 
   final ProfileSummary profile;
+
+  /// Refresh token nel manifest. Vuoto solo in errore (sessione non ripristinabile):
+  /// l'account resta in lista come [isDisconnected].
   final String refreshToken;
+
+  /// Sessione non ripristinabile (errore storage/auth) — non è uno stato normale.
+  bool get isDisconnected => refreshToken.isEmpty;
 
   String get userId => profile.id;
   String get username => profile.username ?? '';

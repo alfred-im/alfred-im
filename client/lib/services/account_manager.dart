@@ -179,19 +179,32 @@ class AccountManager {
   }
 
   Future<void> _refreshManifestCache() async {
-    var stored = await _storage.loadAccounts();
-    final staleUserIds = stored
-        .where((account) => account.refreshToken.isEmpty)
-        .map((account) => account.userId)
-        .toList();
-    for (final userId in staleUserIds) {
-      await _storage.removeAccount(userId);
+    _manifestAccounts = await _storage.loadAccounts();
+  }
+
+  OpenAccount? openAccountFor(String userId) {
+    for (final account in _manifestAccounts) {
+      if (account.userId == userId) return account;
     }
-    if (staleUserIds.isNotEmpty) {
-      stored = await _storage.loadAccounts();
+    return null;
+  }
+
+  bool isAccountDisconnected(String userId) =>
+      openAccountFor(userId)?.isDisconnected ?? false;
+
+  /// Errore sessione: mantiene profilo nel manifest, marca disconnesso.
+  Future<void> _markAccountSessionDisconnected(String userId) async {
+    final account = openAccountFor(userId);
+    if (account == null || account.isDisconnected) return;
+
+    await _storage.upsertAccount(account.copyWith(refreshToken: ''));
+    await AccountSession.clearLocalAuthStorage(userId);
+
+    final stale = _sessions.remove(userId);
+    if (stale != null) {
+      await stale.disposeResources(clearAuthStorage: false);
     }
-    _manifestAccounts =
-        stored.where((account) => account.refreshToken.isNotEmpty).toList();
+    await _refreshManifestCache();
   }
 
   /// Ripristina GoTrue per [userId] e opzionalmente persiste il focus.
@@ -245,6 +258,10 @@ class AccountManager {
     }
     final account = _manifestAccounts[accountIndex];
 
+    if (account.isDisconnected) {
+      return null;
+    }
+
     try {
       final session = await _restoreWithRetry(account);
       _sessions.clear();
@@ -258,12 +275,7 @@ class AccountManager {
       return session;
     } catch (e) {
       if (_isPermanentAuthFailure(e)) {
-        await _storage.removeAccount(userId);
-        await AccountSession.clearLocalAuthStorage(userId);
-        await _refreshManifestCache();
-        if (requireSession) {
-          throw const AuthException('Sessione account non disponibile.');
-        }
+        await _markAccountSessionDisconnected(userId);
         return null;
       }
       if (requireSession) rethrow;
