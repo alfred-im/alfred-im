@@ -28,3 +28,13 @@ Per operazioni sull'account `O` senza peer (inbox, focus, consolidate):
 2. `auth.uid() == O`
 
 Sottoinsieme di session identity — senza il vincolo su `P`.
+
+---
+
+## No stale chat
+
+`OpenConversation` (inbox, push, link, compose) **sostituisce** la chat precedente:
+
+1. Se il peer richiesto ≠ peer in view-state, la chat stale non resta commessa.
+2. Peer irrisolvibile → inbox/home, scope non commesso.
+3. Switch account senza `OpenConversation` → view-state può conservare `activePeer` ma **scope non commesso** (nessun fetch/send).

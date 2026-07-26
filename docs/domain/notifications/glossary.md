@@ -38,8 +38,4 @@
 
 ## Invarianti
 
-1. **Mai solo peer:** target, soppressione, tap e tag usano sempre `PushConversationKey` (account + peer).
-2. **Payload incompleto:** senza account destinatario e peer → nessuna UI, nessun open chat.
-3. **Permesso negato:** app funziona senza push; nessun retry invasivo.
-4. **Subscription per account:** registrazione solo per account del manifest; rimozione alla chiusura account sul device.
-5. **Soppressione client→SW:** stato sincronizzato via messaggio al service worker.
+Vedi [invariants.md](invariants.md).

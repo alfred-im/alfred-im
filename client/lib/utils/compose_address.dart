@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'auth_identity.dart';
+
 enum ComposeAddressKind { internalUsername, externalServer, invalid }
 
 class ParsedComposeAddress {
@@ -41,7 +43,7 @@ ParsedComposeAddress parseComposeAddress(String raw) {
     );
   }
 
-  if (RegExp(r'^[a-z0-9_]{3,32}$').hasMatch(normalized)) {
+  if (AuthIdentity.isValidUsername(normalized)) {
     return ParsedComposeAddress(
       kind: ComposeAddressKind.internalUsername,
       normalized: normalized,

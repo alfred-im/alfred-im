@@ -11,9 +11,10 @@ import '../machines/multi-account/multi_account_effects.dart';
 import '../machines/navigation/account_view_state_store.dart';
 import '../models/account_view_state.dart';
 import '../models/open_account.dart';
-import '../utils/conversation_session_access.dart';
 import '../models/profile_summary.dart';
+import '../utils/conversation_session_access.dart';
 import '../utils/auth_redirect_url.dart';
+import '../utils/friendly_auth_error.dart';
 import 'account_session.dart';
 import 'account_storage_service.dart';
 
@@ -258,7 +259,7 @@ class AccountManager {
       }
       return session;
     } catch (e) {
-      if (_isPermanentAuthFailure(e)) {
+      if (isPermanentAuthFailure(e)) {
         await _storage.removeAccount(userId);
         await AccountSession.clearLocalAuthStorage(userId);
         await _refreshManifestCache();
@@ -303,7 +304,7 @@ class AccountManager {
         return await AccountSession.restore(account);
       } catch (e) {
         lastError = e;
-        if (_isPermanentAuthFailure(e)) rethrow;
+        if (isPermanentAuthFailure(e)) rethrow;
         if (attempt < 2) {
           await Future<void>.delayed(Duration(milliseconds: 300 * (attempt + 1)));
         }
@@ -512,17 +513,6 @@ class AccountManager {
       wasFocused: wasFocused,
       remainingUserIds: remaining,
     );
-  }
-
-  bool _isPermanentAuthFailure(Object e) {
-    if (e is AuthException) {
-      final msg = e.message.toLowerCase();
-      return msg.contains('invalid refresh') ||
-          msg.contains('refresh token not found') ||
-          msg.contains('session expired') ||
-          msg.contains('token has expired');
-    }
-    return false;
   }
 
   Future<void> _syncFocusedProfile(AccountSession session) async {

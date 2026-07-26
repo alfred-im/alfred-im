@@ -37,7 +37,9 @@
 
 ## Invarianti
 
+Vedi [invariants.md](invariants.md).
+
 1. Una sola sessione auth attiva in RAM.
 2. Account in sidebar = account nel manifest.
-3. Cambio focus: dispose + restore — non scambio sessione in RAM tra account già aperti.
+3. Cambio focus: dispose + restore.
 4. Storage auth dedicato per ogni account.

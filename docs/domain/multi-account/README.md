@@ -2,6 +2,8 @@
 
 **Stato modellazione:** `verified`
 
+**Invarianti:** [invariants.md](invariants.md)
+
 ## Mapping dominio → implementazione
 
 | Dominio | Statechart | Codice |
