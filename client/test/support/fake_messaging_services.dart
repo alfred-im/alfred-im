@@ -66,6 +66,8 @@ class FakeMessageService extends MessageService {
   final SupabaseClient _clientForTest;
   late final _FakeGroupArchiveService _groupArchiveOverride;
 
+  SupabaseClient get client => _clientForTest;
+
   @override
   GroupArchiveService get groupArchive => _groupArchiveOverride;
 
@@ -76,7 +78,19 @@ class FakeMessageService extends MessageService {
 
   final List<String> sentBodies = [];
   final List<String> broadcastBodies = [];
+  final List<Map<String, Object?>> gifProfileSends = [];
   bool sendShouldFail = false;
+
+  /// Come `send_message_to_profile` su Postgres (`P0001`).
+  void enforceSendToProfileBoundary(String recipientProfileId) {
+    final me = _clientForTest.auth.currentUser?.id;
+    if (me != null && recipientProfileId == me) {
+      throw const PostgrestException(
+        message: 'cannot message yourself',
+        code: 'P0001',
+      );
+    }
+  }
 
   @override
   Future<ChatMessage> broadcastToAllowlist({
@@ -111,6 +125,7 @@ class FakeMessageService extends MessageService {
     if (sendShouldFail) {
       throw StateError('fake send failed');
     }
+    enforceSendToProfileBoundary(recipientProfileId);
     sentBodies.add(body);
     final message = ChatMessage(
       id: 'server-$clientMessageId',
@@ -128,6 +143,27 @@ class FakeMessageService extends MessageService {
     );
     messagesByConversation.putIfAbsent(key, () => []).add(message);
     return message;
+  }
+
+  @override
+  Future<ChatMessage> sendGifToProfile({
+    required String recipientProfileId,
+    required String mediaUrl,
+    required String currentUserId,
+    required String clientMessageId,
+  }) async {
+    enforceSendToProfileBoundary(recipientProfileId);
+    gifProfileSends.add({
+      'recipientProfileId': recipientProfileId,
+      'mediaUrl': mediaUrl,
+      'clientMessageId': clientMessageId,
+    });
+    return _mediaMessage(
+      clientMessageId: clientMessageId,
+      currentUserId: currentUserId,
+      contentType: MessageContentType.gif,
+      mediaUrl: mediaUrl,
+    );
   }
 
   @override
@@ -205,6 +241,7 @@ class FakeMessageService extends MessageService {
     required String clientMessageId,
     String body = '',
   }) async {
+    enforceSendToProfileBoundary(recipientProfileId);
     imageProfileSends.add({
       'recipientProfileId': recipientProfileId,
       'mediaUrl': mediaUrl,
@@ -234,6 +271,7 @@ class FakeMessageService extends MessageService {
     required String clientMessageId,
     String body = '',
   }) async {
+    enforceSendToProfileBoundary(recipientProfileId);
     videoProfileSends.add({
       'recipientProfileId': recipientProfileId,
       'mediaUrl': mediaUrl,
