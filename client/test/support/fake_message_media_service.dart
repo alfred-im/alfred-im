@@ -17,6 +17,16 @@ class FakeMessageMediaService extends MessageMediaService {
 
   final imageUploads = <_ImageUploadCall>[];
   final videoUploads = <_VideoUploadCall>[];
+  final gifUploads = <_GifUploadCall>[];
+
+  @override
+  Future<String> uploadGif({
+    required Uint8List bytes,
+    required String userId,
+  }) async {
+    gifUploads.add(_GifUploadCall(bytes: bytes, userId: userId));
+    return 'https://storage.example/$userId/upload.gif';
+  }
 
   @override
   Future<String> uploadImage({
@@ -61,6 +71,13 @@ class FakeMessageMediaService extends MessageMediaService {
     );
     return 'https://storage.example/$userId/upload.$extension';
   }
+}
+
+class _GifUploadCall {
+  const _GifUploadCall({required this.bytes, required this.userId});
+
+  final Uint8List bytes;
+  final String userId;
 }
 
 class _ImageUploadCall {
