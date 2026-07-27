@@ -110,9 +110,14 @@ Nessun provider inbox globale — `ChangeNotifierProxyProvider` per contatti/pro
 
 ## Test
 
-`account_storage_test`, `account_manager_view_state_test`, `multi_account_chat_scenario_test`, `inbox_realtime_owner_filter_test`, `e2e/multi-account-messages.spec.ts`
+**Igiene CI:** `account_storage_test`, `account_manager_view_state_test`, `multi_account_chat_scenario_test`, `inbox_realtime_owner_filter_test`
+
+**Prodotto (pre-release):**
 
 ```bash
+bash scripts/test.sh flusso-reale   # riferimento — percorso telefono completo
 bash scripts/test.sh integration
 bash scripts/test.sh e2e-multi
 ```
+
+`e2e/multi-account-messages.spec.ts` copre scenari parziali; non sostituisce `flusso-reale`.

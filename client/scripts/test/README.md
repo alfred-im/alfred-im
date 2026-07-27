@@ -39,7 +39,7 @@ Opzione build web: `bash scripts/verify.sh --build`
 | **SCOPE-008** | `unit/conversation_open_session_test.dart` | Consolidamento GoTrue all'ingresso chat |
 | SCOPE-008 wiring | `wiring/navigation_wiring_test.dart` | Stack produzione: open peer + sessione |
 
-**Strategia completa:** [docs/testing/strategy.md](../../docs/testing/strategy.md) — piramide machine → wiring → composition → E2E, catalogo COMP, regole `hasValidSession`.
+**Strategia completa:** [docs/testing/strategy.md](../../docs/testing/strategy.md) — gate = igiene; `flusso-reale` = riferimento prodotto.
 
 ### Tier 1c — Composition (gate)
 
@@ -62,7 +62,7 @@ Gate script: `scripts/check-composition-sync.sh`
 
 | Cosa | Dettaglio |
 |------|-----------|
-| **Perché esiste** | È l’unico tier che ripete **cosa fa l’utente**: browser, tap, drawer, galleria, resume, Supabase vero, verifica su Postgres. Il gate non tocca nessuno di questi strati. |
+| **Perché esiste** | Percorso **telefono** end-to-end: browser, tap, drawer, galleria, resume, Supabase e Postgres veri. I test Dart del gate non eseguono nessuno di questi passi. |
 | **File** | `e2e/photo-resume-session-repro.spec.ts` (tag `@real-flow`) |
 | **Stack** | `supabase start` + Flutter release `:8080` + Playwright |
 | **Verifica** | UI + messaggio `image` con `media_url` in archivio mittente **e** destinatario |
@@ -90,7 +90,7 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 
 | File | Suite | Note |
 |------|-------|------|
-| **`photo-resume-session-repro.spec.ts`** | **`flusso-reale`** ★ | Unico tier che valida il prodotto su questo scenario |
+| **`photo-resume-session-repro.spec.ts`** | **`flusso-reale`** ★ | Riferimento pre-release: multi-account + galleria + resume + foto in DB |
 | `multi-account-persist.spec.ts` | `e2e-multi` | 2 account, F5, manifest |
 | `multi-account-messages.spec.ts` | `e2e-multi` | Testo, foto, switch e spunte (locale) o scambio testo bidirezionale (live) |
 | `inbox-load.spec.ts` | `e2e` | Inbox senza digitare in ricerca |

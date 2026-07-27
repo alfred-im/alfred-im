@@ -123,7 +123,7 @@
 | **State** | **Macchine** (`client/lib/machines/<context>/`) + **coordinatori** (`client/lib/coordinators/`) + controller UI sottili; composition root: `AuthController` |
 | **Backend** | `SupabaseClient` della sessione in **focus** (una GoTrue attiva) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
-| **Gate** | `scripts/verify.sh` — `check-spec-sync` + `check-model-sync` + pub get + analyze (zero issue) + test |
+| **Gate CI** | `scripts/verify.sh` — igiene: sync spec/modello + analyze + test Dart isolati (**non** valida il prodotto) |
 | **Build web** | `flutter build web --base-href "/alfred-im/"` |
 
 **Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `group_home`, `group_messages` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — ingresso unificato push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `machines/messaging/` (facade: `MessagesController`).
@@ -188,10 +188,14 @@ Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §3.
 
 ```bash
 cd client
-bash scripts/verify.sh           # check-spec-sync + check-model-sync + gate Dart
+bash scripts/verify.sh           # gate CI — igiene codice (obbligatorio prima del push)
 bash scripts/verify.sh --build   # + build web
+bash scripts/test.sh flusso-reale  # pre-release — valida il prodotto (browser + DB)
+bash scripts/test.sh manual      # flusso-reale + integration + e2e-multi + live
 ```
 
+- **Gate CI** (`verify.sh`): lint, compile, ~400 test Dart con mock — non sostituisce test sul telefono. Vedi [docs/testing/strategy.md](docs/testing/strategy.md).
+- **Validazione prodotto:** `flusso-reale` (riferimento), poi `integration`, `e2e-multi`, ecc. — [client/scripts/test/README.md](client/scripts/test/README.md)
 - CI: `.github/workflows/deploy-pages.yml` → `deploy-pages` → GitHub Pages
 - **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (deploy da PR)
 - E2E: `client/e2e/` (Playwright)
@@ -212,7 +216,7 @@ bash scripts/verify.sh --build   # + build web
 | Account gruppo (shell, erogazione, UI autore) | ✅ |
 | Ricerca inbox on-demand, aggancio al fondo | ✅ |
 | Schema Supabase + RLS + RPC | ✅ |
-| Deploy Pages + gate `verify.sh` | ✅ |
+| Deploy Pages + gate CI `verify.sh` (igiene) | ✅ |
 | Bridge federazione | 🟡 Stub health only |
 
 ### Prossimi passi
@@ -243,9 +247,11 @@ Ogni account parte con **`reception_allowlist` vuota** → nessun recapito finch
 
 Test: `bash scripts/test.sh integration-ticks`
 
-### Gate test
+### Gate CI (igiene)
 
-`verify.sh` — `check-spec-sync.sh` + `check-model-sync.sh` (stati contesto `documented`|`wired`|`verified`, no `implemented`) + **377** test Dart. Smoke SQL: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `group_*.sql`, `reception_allowlist_*.sql`.
+`verify.sh` — sync spec/modello + analyze + test Dart isolati (~400). **Non** valida il prodotto. Smoke SQL server: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, …
+
+Validazione prodotto: `bash scripts/test.sh flusso-reale` (riferimento) · catalogo in [client/scripts/test/README.md](client/scripts/test/README.md)
 
 ### File chiave client
 

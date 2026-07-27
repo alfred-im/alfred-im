@@ -117,7 +117,8 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 | PROM-MULTI-ACCOUNT-030, 034 | `guides/multi-account.md` |
 
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` (include `check-composition-sync`) · Integrazione: `bash scripts/test.sh integration` · E2E: `bash scripts/test.sh e2e-multi` · Strategia: [docs/testing/strategy.md](../../../testing/strategy.md)
+Igiene (CI): `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` (include `check-composition-sync`)  
+Prodotto (pre-release): `bash scripts/test.sh flusso-reale` · `integration` · `e2e-multi` · [docs/testing/strategy.md](../../../testing/strategy.md)
 
 ---
 

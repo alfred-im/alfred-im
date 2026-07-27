@@ -141,10 +141,13 @@ bash scripts/check-spec-sync.sh
 
 ## Testing
 
-| Suite | Command |
-|-------|---------|
-| CI gate | `cd client && bash scripts/test.sh gate` |
-| Full catalog | [`client/scripts/test/README.md`](client/scripts/test/README.md) |
+| Suite | Command | Ruolo |
+|-------|---------|--------|
+| CI gate (igiene) | `cd client && bash scripts/test.sh gate` | Lint + compile + test isolati — **non** valida il prodotto |
+| **Flusso reale** | `cd client && bash scripts/test.sh flusso-reale` | **Pre-release:** stesso percorso del telefono (browser + DB) |
+| Catalogo completo | [`client/scripts/test/README.md`](client/scripts/test/README.md) | Tutte le suite manuali |
+
+**Verde al gate ≠ Alfred funziona.** Vedi [docs/testing/strategy.md](docs/testing/strategy.md).
 
 ---
 

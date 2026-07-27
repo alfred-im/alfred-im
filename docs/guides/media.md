@@ -102,11 +102,12 @@ File: `location_service.dart`, `LocationMessageContent`, `ChatInputBar._beginLoc
 
 ---
 
-## Verifica (gate)
+## Verifica
 
-| Livello | Artefatti |
-|---------|-----------|
-| SQL | `supabase/tests/mailbox_send_media_smoke.sql` |
-| Dart unit | `messages_controller_media_test.dart`, `group_messages_controller_media_test.dart`, `chat_media_support_test.dart`, `image_bytes_test.dart`, `merge_chat_message_test.dart` |
-| Dart widget | `message_bubble_test.dart` |
-| Gate | `cd client && bash scripts/verify.sh` |
+| Livello | Artefatti | Ruolo |
+|---------|-----------|--------|
+| SQL | `supabase/tests/mailbox_send_media_smoke.sql` | Contratto RPC server |
+| Dart unit/widget | `messages_controller_media_test.dart`, `chat_media_support_test.dart`, … | **Igiene CI** — non valida invio reale da galleria |
+| **Prodotto** | `bash scripts/test.sh flusso-reale` | Browser + DB — percorso telefono (4 account + gruppo, galleria, resume) |
+
+Vedi [docs/testing/strategy.md](../testing/strategy.md).

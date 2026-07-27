@@ -107,13 +107,14 @@ backend out of the box.
   live Supabase from this dev VM without explicit user confirmation — that is their review surface, not a dev target.
 
 ### Lint / test / build
-- **Hub test:** `cd client && bash scripts/test.sh list` — catalogo gate + suite manuali (`scripts/test/README.md`).
-- Standard gate CI: `bash scripts/test.sh gate` (= `verify.sh`: `flutter pub get` → `flutter analyze` → `flutter test`). `flutter analyze` must be zero-issue (even `info`), matching CI.
+- **Hub test:** `cd client && bash scripts/test.sh list` — catalogo completo ([`scripts/test/README.md`](client/scripts/test/README.md)).
+- **Gate CI (igiene):** `bash scripts/test.sh gate` (= `verify.sh`: analyze + test Dart isolati). Obbligatorio su PR; **non** valida che l’app funzioni sul telefono.
+- **Validazione prodotto (pre-release):** `bash scripts/test.sh flusso-reale` — browser + DB, stesso percorso utente. Obbligatorio prima di considerare Alfred testato su media / multi-account / auth / push.
+- **Suite manuali complete:** `bash scripts/test.sh manual` (= flusso-reale → integration → e2e-multi → live).
 - Web build: `bash scripts/verify.sh --build` (or `flutter build web --release --base-href "/alfred-im/"`).
 - **Prima di qualsiasi test GUI**: `bash scripts/test.sh diagnose` — se fallisce su CDP: `bash scripts/reset-chrome-cdp.sh` (kill Chrome + profilo pulito `/tmp/chrome-cdp-profile`).
-- **Integrazione multi-account senza browser** (affidabile per agenti): `bash scripts/test.sh integration` — login agent1/agent2 + RPC inbox/messaggi su Supabase live.
-- **Flusso utente reale** (obbligatorio pre-release): `bash scripts/test.sh flusso-reale` — browser + DB + stesso percorso del telefono. Il gate (`verify.sh`) è solo igiene codice.
-- **E2E multi-account** (browser): `bash scripts/test.sh e2e-multi`
+- **Integrazione API** (no browser): `bash scripts/test.sh integration` — agent1/agent2 + RPC.
+- **E2E multi-account** (browser parziale): `bash scripts/test.sh e2e-multi`
 
 ### Log diagnostici (`ALFRED_DIAGNOSTIC_LOG`)
 
@@ -158,7 +159,8 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 
 ### Browser (computerUse) testing of Flutter web
 - **Eseguire sempre `bash scripts/diagnose-test-env.sh` prima.** Se Chrome CDP `:9222` non risponde: `bash scripts/reset-chrome-cdp.sh` poi ritestare. Non usare computerUse con CDP morto.
-- **Preferire** `bash scripts/test.sh integration` per auth + messaggistica multi-account; `bash scripts/test.sh gate` per il client Dart.
+- **Per validare il prodotto** usare `bash scripts/test.sh flusso-reale` (o `manual`), non il gate da solo.
+- **Gate CI** (`bash scripts/test.sh gate`) solo per igiene Dart dopo modifiche al client.
 - **Non** riavviare flutter in loop per "sbloccare" i test GUI — peggiora lo stato (port conflict, CDP morto).
 - Inputs are typeable: **click directly into a field to focus it, then type** (don't assume canvas blocks input).
 - A brief (~1s) white flash can appear during navigation transitions in the debug web build; it self-resolves and is not a crash.

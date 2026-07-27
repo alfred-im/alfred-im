@@ -6,16 +6,36 @@ Piano a livelli allineato a **dominio → UML → statechart → composition roo
 
 ---
 
-## Piramide
+## Convenzione documentazione (gate vs prodotto)
 
-**Regola:** il gate (tier 1) è **igiene del codice**. Non sostituisce — e non può sostituire — test con browser, DB e percorso utente. Verde al gate non significa che Alfred funziona.
+Usare **sempre** questa distinzione in README, promesse, guide e `AGENTS.md`:
+
+| Termine | Significato | Comando tipico |
+|---------|-------------|----------------|
+| **Gate CI / igiene** | Lint, compile, test Dart isolati (mock/fake). **Non** dimostra che l’app funziona per l’utente. | `cd client && bash scripts/verify.sh` |
+| **Validazione prodotto** | Browser e/o DB reali, percorso utente o contratto end-to-end. Obbligatoria **pre-release**. | `bash scripts/test.sh manual` o suite singole sotto |
+
+**Tier di riferimento** per «funziona sul telefono»: `bash scripts/test.sh flusso-reale` (`@real-flow`). Altre suite manuali (`integration`, `e2e-multi`, `e2e-push-local`, …) coprono **parti** del prodotto; non sostituiscono il gate né lo contraddicono.
+
+**Frase vietata nelle spec:** implicare che `verify.sh` o «377 test» validino il comportamento utente.
+
+**Frase corretta in fondo alle promesse SURFACE/PRODUCT:**
+
+```
+Igiene (CI): check-spec-sync + verify.sh
+Prodotto (pre-release): vedi docs/testing/strategy.md — almeno flusso-reale se multi-account / media / auth / push
+```
+
+---
+
+## Piramide
 
 | Tier | Dove | Quando gira | Cosa dimostra |
 |------|------|-------------|---------------|
 | **1a–1d Gate** | `client/test/unit/`, `wiring/`, `composition/`, `widget/` | Ogni PR (CI) | Lint, compile, pezzi isolati con mock/fake — **non** il prodotto |
-| **★ Flusso reale** | `scripts/test.sh flusso-reale` | **Pre-release obbligatorio** | Browser + DB + tap — **valida che l’app funzioni** |
-| **2 Integration** | `scripts/integration-multi-account.sh` | Manuale / pre-release | RPC Supabase multi-account (no UI completa) |
-| **3 E2E** | `client/e2e/` | Manuale / nightly | Browser, DB, scenari compose |
+| **★ Flusso reale** | `scripts/test.sh flusso-reale` | **Pre-release obbligatorio** (media, multi-account, auth, push-on-resume) | Percorso telefono completo + verifica Postgres — **riferimento** per «l’app funziona» |
+| **2 Integration** | `scripts/integration-multi-account.sh` | Manuale / pre-release | RPC Supabase multi-account — **senza** UI completa |
+| **3 E2E** | `client/e2e/` | Manuale / nightly | Browser + DB — scenari parziali (`e2e-multi`, `e2e-push-local`, …) |
 | **Diagnostic** | `client/test/diagnostic/` (tag `diagnostic`) | Su richiesta agente | Log `[alfred]` con `ALFRED_DIAGNOSTIC_LOG=true` |
 
 Gate: `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutter analyze` + `flutter test` (esclusi tag `live`, `diagnostic`).
@@ -62,14 +82,15 @@ Il bug foto PWA (2026-07) era in produzione con il gate tutto verde: nessun tier
 
 ---
 
-## Tracciabilità promessa → test minimo
+## Tracciabilità promessa → verifica
 
-| Promessa | Test gate minimo |
-|----------|------------------|
-| PROM-MULTI-ACCOUNT-006 | `account_manager_persistence_test.dart` |
-| PROM-MULTI-ACCOUNT-009 | `inbox_provider_lifecycle_test.dart` (COMP-003) |
-| PROM-MULTI-ACCOUNT-010, 020 | `multi_account_chat_scenario_test.dart` |
-| **PROM-MULTI-ACCOUNT-022** | `composition/messaging_session_scope_test.dart` (COMP-001, COMP-002) |
+| Promessa | Igiene CI (mock) | Prodotto (pre-release) |
+|----------|------------------|-------------------------|
+| PROM-MULTI-ACCOUNT-006 | `account_manager_persistence_test.dart` | `flusso-reale`, `e2e-multi`, `integration` |
+| PROM-MULTI-ACCOUNT-009 | `inbox_provider_lifecycle_test.dart` (COMP-003) | `e2e-multi` |
+| PROM-MULTI-ACCOUNT-010, 020 | `multi_account_chat_scenario_test.dart` | `integration`, `e2e-multi` |
+| **PROM-MULTI-ACCOUNT-022** | `composition/messaging_session_scope_test.dart` (COMP-001, COMP-002) | **`flusso-reale`** |
+| PROM-CHAT-MEDIA | `messages_controller_media_test.dart`, smoke SQL | **`flusso-reale`** |
 
 ---
 
