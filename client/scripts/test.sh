@@ -7,7 +7,7 @@
 #
 #   bash scripts/test.sh list          # elenco suite
 #   bash scripts/test.sh gate          # gate CI (default)
-#   bash scripts/test.sh manual        # integration + e2e-multi + live
+#   bash scripts/test.sh manual        # flusso-reale + integration + e2e-multi + live
 #
 # Dettaglio: scripts/test/README.md
 set -euo pipefail
@@ -26,18 +26,23 @@ Alfred client — suite test
 GATE (CI, sempre):
   gate              flutter analyze + flutter test (esclusi live)
                     → bash scripts/verify.sh [--build]
+                    (centinaia di unit/wiring — non bastano da soli; vedi flusso-reale)
+
+★ FLUSSO UTENTE REALE (pre-release / dopo bug multi-account o media):
+  flusso-reale      TELEFONO IN VM: 4 user + gruppo → galleria → resume → foto → DB
+                    alias: integration-photo-repro, photo-repro, real-flow
+                    file: e2e/photo-resume-session-repro.spec.ts (@real-flow)
 
 MANUALE (rete / browser, non in CI):
   integration       API Supabase live — agent1↔agent2 + contratto spunte
   integration-ticks Solo contratto spunte (✓ / ✓✓ grigie / ✓✓ blu + allow list)
   integration-push  Delivery plane; smoke SQL push su DB di test (no account utente)
-  integration-photo-repro  Riproduzione bug foto/sessione — auth+storage+RPC live
   e2e               tutti i Playwright (client/e2e/)
   e2e-multi         Playwright multi-account (persist + messaggi locale / live)
   e2e-push-local    Playwright push locale — ricezione + tap multi-account (stack locale)
   e2e-nav-local     Playwright navigation locale — inbox tap + push poison (stack locale)
   live              flutter test --tags live
-  manual            integration + e2e-multi + live (in sequenza)
+  manual            flusso-reale + integration + e2e-multi + live (in sequenza)
 
 UTILITÀ:
   diagnose          ambiente flutter web / Chrome CDP / Playwright
@@ -89,8 +94,14 @@ run_diagnose() {
   bash scripts/diagnose-test-env.sh "$@"
 }
 
+run_real_flow() {
+  echo "==> ★ Flusso utente reale (multi-account + galleria + resume + DB) — non sostituibile da unit test"
+  bash scripts/integration-photo-session-repro.sh "$@"
+}
+
 run_manual() {
-  echo "==> Suite manuali (integration → e2e-multi → live)"
+  echo "==> Suite manuali (flusso-reale → integration → e2e-multi → live)"
+  run_real_flow
   run_integration
   run_e2e_multi
   run_live
@@ -116,8 +127,8 @@ case "$CMD" in
   integration-push|push)
     bash scripts/integration-push.sh "$@"
     ;;
-  integration-photo-repro|photo-repro)
-    bash scripts/integration-photo-session-repro.sh "$@"
+  flusso-reale|real-flow|integration-photo-repro|photo-repro)
+    run_real_flow "$@"
     ;;
   e2e-push-local|push-local)
     bash scripts/run-push-e2e-local.sh "$@"

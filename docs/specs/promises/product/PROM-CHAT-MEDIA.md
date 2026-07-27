@@ -77,7 +77,7 @@ L'utente può condividere foto e video nelle conversazioni 1:1 e nei broadcast d
 | PROM-CHAT-MEDIA-008 | `group_messages_controller_media_test.dart`; `group_broadcast_smoke.sql` |
 | PROM-CHAT-MEDIA (gate) | `bash scripts/test.sh gate` (**377** test Dart) |
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` + **`bash scripts/test.sh flusso-reale`** (pre-release / media + multi-account)
 
 ---
 

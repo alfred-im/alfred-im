@@ -15,6 +15,7 @@ Piano a livelli allineato a **dominio → UML → statechart → composition roo
 | **1c Composition** | `client/test/composition/` | Ogni PR (gate) | `setFocus` round-trip + chiavi scope + binding servizi sessione |
 | **1d Unit / widget** | `client/test/unit/`, `widget/` | Ogni PR (gate) | Logica pura, widget isolati, promesse UI puntuali |
 | **2 Integration** | `scripts/integration-multi-account.sh` | Manuale / pre-release | RPC Supabase multi-account (no Provider) |
+| **★ Flusso reale** | `scripts/test.sh flusso-reale` | **Pre-release obbligatorio** (media/multi-account) | Browser + DB + lifecycle picker — **non** sostituibile da unit |
 | **3 E2E** | `client/e2e/` | Manuale / nightly | Browser, DB, tap compose |
 | **Diagnostic** | `client/test/diagnostic/` (tag `diagnostic`) | Su richiesta agente | Log `[alfred]` con `ALFRED_DIAGNOSTIC_LOG=true` |
 
@@ -51,13 +52,14 @@ Estensioni future: **COMP-005** groups (`groupSessionKey` + `GroupMessagesContro
 
 | Scenario | File | Stato |
 |----------|------|-------|
+| **★ Foto dopo galleria + resume (4 user + gruppo)** | `e2e/photo-resume-session-repro.spec.ts` | **`flusso-reale`** — implementato |
 | Persistenza manifest + F5 | `e2e/multi-account-persist.spec.ts` | Implementato |
 | Invio + DB + ricezione UI (live) | `e2e/multi-account-messages.spec.ts` | Implementato (override Pages) |
 | Testo, foto, switch e spunte (locale) | `e2e/multi-account-messages.spec.ts` | Implementato (`e2e-multi` default) |
 | **Invio dopo round-trip focus con chat aperta** | `e2e/multi-account-send-after-focus-roundtrip.spec.ts` | Da implementare (tier 2) |
 | Tap push multi-account | `e2e/push-tap-multi-account.spec.ts` | Locale (`e2e-push-local`) |
 
-Lo scenario «Sessione scaduta» PWA (2026-07) non era coperto perché `e2e-multi-messages` invia da A **prima** dello switch e al ritorno su A verifica solo la ricezione, non un nuovo invio.
+Lo scenario «Sessione scaduta» / `StorageException` foto PWA (2026-07) non era coperto perché `e2e-multi-messages` invia da A **prima** dello switch, non simula resume dal picker, e i ~400 test gate non esercitano JWT+RLS+`syncPushSubscriptions` al resume. **`bash scripts/test.sh flusso-reale`** copre quel percorso.
 
 ---
 

@@ -5,9 +5,10 @@ Punto unico per **scoprire** e **lanciare** tutti i test del client.
 **Entry point:** dalla cartella `client/`:
 
 ```bash
-bash scripts/test.sh list      # catalogo completo
-bash scripts/test.sh gate        # gate CI (default)
-bash scripts/test.sh manual      # tutte le suite manuali
+bash scripts/test.sh list          # catalogo completo
+bash scripts/test.sh gate          # gate CI (default)
+bash scripts/test.sh flusso-reale  # ★ stesso percorso del telefono (pre-release)
+bash scripts/test.sh manual        # flusso-reale + integration + e2e-multi + live
 ```
 
 ---
@@ -47,7 +48,25 @@ Provider + `AccountSession` dopo `setFocus`. Harness: `client/test/support/compo
 
 Gate script: `scripts/check-composition-sync.sh`
 
+> Il gate (~400 test) è necessario ma **non sufficiente** per bug come «foto dopo galleria + resume multi-account» (2026-07): JWT, RLS, lifecycle PWA e picker OS non compaiono nei unit test. Per quello esiste il tier **flusso-reale** sotto.
+
 ---
+
+## Tier ★ — Flusso utente reale (la differenza vera)
+
+**Comando:** `bash scripts/test.sh flusso-reale`  
+**Alias:** `real-flow`, `integration-photo-repro`, `photo-repro`  
+**Incluso in:** `bash scripts/test.sh manual` (primo step)
+
+| Cosa | Dettaglio |
+|------|-----------|
+| **Perché esiste** | Ripete il telefono: tap, drawer, galleria, background/resume, upload verso Supabase. I unit/wiring mockano JWT e non aprono il picker. |
+| **File** | `e2e/photo-resume-session-repro.spec.ts` (tag Playwright `@real-flow`) |
+| **Stack** | `supabase start` + Flutter release `:8080` + Playwright |
+| **Verifica** | Nessun `StorageException` / «Sessione scaduta» in UI; messaggio `image` con `media_url` in archivio mittente **e** destinatario (query DB) |
+| **Scenario** | 4 user + 1 gruppo → focus account 2 → nuova chat → Allega → Galleria → resume → invio foto |
+
+Incidente 2026-07: il gate non diagnosticava il bug; questo test sì. **Pre-release obbligatorio** dopo cambi multi-account, media, push-on-resume o auth.
 
 ## Tier 2 — Manuale / pre-release (non in CI)
 
@@ -63,12 +82,13 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 | **e2e** | `bash scripts/test.sh e2e` | Tutti i Playwright in `client/e2e/` |
 | **e2e-multi** | `bash scripts/test.sh e2e-multi` | Multi-account: persistenza F5 + messaggi (testo/foto locale, testo live) |
 | **live** | `bash scripts/test.sh live` | Dart con tag `@Tags(['live'])` (es. password reset PKCE) |
-| **manual** | `bash scripts/test.sh manual` | integration → e2e-multi → live (in sequenza) |
+| **manual** | `bash scripts/test.sh manual` | **flusso-reale** → integration → e2e-multi → live |
 
 ### Playwright (`client/e2e/`)
 
 | File | Suite | Note |
 |------|-------|------|
+| **`photo-resume-session-repro.spec.ts`** | **`flusso-reale`** ★ | **4 user + gruppo → galleria → resume → foto → DB** — tier che conta |
 | `multi-account-persist.spec.ts` | `e2e-multi` | 2 account, F5, manifest |
 | `multi-account-messages.spec.ts` | `e2e-multi` | Testo, foto, switch e spunte (locale) o scambio testo bidirezionale (live) |
 | `inbox-load.spec.ts` | `e2e` | Inbox senza digitare in ricerca |
@@ -141,5 +161,7 @@ Prima di test browser: `bash scripts/diagnose-test-env.sh` (o `test.sh diagnose`
 | `scripts/verify.sh` | Implementazione gate (usata da CI) |
 | `scripts/check-composition-sync.sh` | Catalogo COMP + hygiene wiring JWT |
 | `scripts/integration-multi-account.sh` | Integrazione API |
+| `scripts/integration-photo-session-repro.sh` | ★ Flusso utente reale (foto + resume) |
+| `scripts/run-photo-repro-e2e-local.sh` | Runner Playwright `flusso-reale` |
 | `scripts/run-e2e-multi-account.sh` | Playwright multi-account |
 | `docs/AGENT_DEBUG_ACCOUNTS.md` | Credenziali account agente |

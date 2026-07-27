@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# E2E riproduzione bug foto — 4 user + gruppo, galleria, resume.
-# Hub: bash scripts/test.sh integration-photo-repro
+# ★ Tier «flusso utente reale» — stesso percorso del telefono (non unit test).
+# Hub: bash scripts/test.sh flusso-reale
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -45,5 +45,5 @@ if [[ ! -x node_modules/.bin/playwright ]]; then
 fi
 
 export SUPABASE_URL SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY ALFRED_BASE_URL
-echo "==> photo-resume e2e (${ALFRED_BASE_URL})"
+echo "==> ★ flusso-reale: photo-resume e2e (${ALFRED_BASE_URL})"
 npx playwright test e2e/photo-resume-session-repro.spec.ts --workers=1 "$@"

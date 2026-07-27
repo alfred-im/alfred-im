@@ -3,9 +3,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /**
- * Stesso flusso utente in produzione:
+ * @real-flow — Tier «flusso utente reale» (scripts/test.sh flusso-reale).
+ *
+ * Stesso percorso del telefono in produzione — non sostituibile da unit/wiring:
  * 4 user + 1 gruppo → focus account → chat → Allega → Galleria → resume → invio foto.
- * Verifica backend reale (messaggi + storage), nessun mock auth.
+ * Verifica UI + archivio Postgres + path storage (auth/RLS/JWT reali).
+ *
+ * Incidente 2026-07: ~400 test gate non lo coprivano; questo sì.
  */
 import { test, expect } from '@playwright/test';
 
@@ -40,7 +44,8 @@ test.beforeAll(() => {
   configureLocalPushSettings();
 });
 
-test('4 user + gruppo: galleria dopo resume → foto inviata senza errore sessione', async ({
+test.describe('@real-flow foto multi-account dopo galleria', () => {
+test('4 user + gruppo: galleria dopo resume → foto in archivio (flusso telefono)', async ({
   page,
   context,
 }) => {
@@ -93,5 +98,6 @@ test('4 user + gruppo: galleria dopo resume → foto inviata senza errore sessio
     },
   });
 
-  console.log('photo_session_repro_OK — flusso utente completato, foto in archivio');
+  console.log('real_flow_OK — flusso utente completato, foto in archivio');
+});
 });
