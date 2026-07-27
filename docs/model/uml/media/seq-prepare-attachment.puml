@@ -1,0 +1,31 @@
+@startuml seq-prepare-attachment
+' Context: media (sotto messaging)
+' Profile: client
+' Revision: 2026-07-27
+
+title Media — preparazione allegato → invio messaging
+
+participant "UI" as UI
+participant "ChatInputBar" as BAR
+participant "VoiceRecordingService" as VOICE
+participant "MessageMediaService" as MEDIA
+participant "MessagingCoordinator" as MSG
+
+UI -> BAR : PrepareImage
+BAR -> BAR : Preparing
+alt formato / dimensione ok
+  BAR -> MEDIA : uploadImage
+  MEDIA --> BAR : AttachmentReady
+  UI -> MSG : SendContent
+  MSG --> UI : ContentSent
+else rifiuto
+  BAR --> UI : AttachmentRejected
+end
+
+note over BAR, MSG
+  Voice / video / gif / location: stesso schema
+  Prepare* → Preparing → AttachmentReady → SendContent (messaging).
+  Contesto documented — nessuno statechart media dedicato.
+end note
+
+@enduml

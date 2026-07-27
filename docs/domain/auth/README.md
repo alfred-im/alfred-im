@@ -22,7 +22,7 @@
 |--------|---------------|--------|
 | `BootstrapStarted` | `BootstrapStarted` | `AuthSessionCoordinator.initialize` |
 | `BootstrapCompleted` | `BootstrapCompleted` | dopo `MultiAccountAdapters.bootstrapManifest` |
-| `NoOpenAccounts` (multi-account) | `LastAccountRemoved` | `AuthSessionCoordinator.removeAccount` se manifest vuoto |
+| `NoOpenAccounts` (stato multi-account) | `LastAccountRemoved` | `AuthSessionCoordinator.removeAccount` se manifest vuoto — **non** è evento auth |
 
 ### Stati UI (UML ↔ `AuthUiState`)
 

@@ -1,7 +1,7 @@
 # Modello di dominio — Alfred
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-19
+**Ultima revisione**: 2026-07-27
 
 Questo documento definisce il **metodo di rappresentazione** dell'applicazione Alfred a strati di astrazione crescente. È la fonte di verità **ingegneristica**; non duplica le promesse SDD.
 
@@ -30,9 +30,26 @@ Più astratto ──────────────────────
 
 **Regola madre:** il modello guida il codice. Il modello **non** si adatta al codice sporco.
 
-**Regola nomi:** un comando o evento ha **un solo nome** dal post-it Event Storming al PlantUML allo statechart al Dart (`FocusAccount`, non sinonimi sparsi).
+**Regola nomi:** un comando o evento ha **un solo nome canonico per livello**. Tra livelli diversi il nome può differire **solo** se documentato nel `README.md` del contesto (tabella mapping dominio ↔ statechart ↔ codice).
 
 **Vietato:** linguaggi di design inventati in markdown (DSL custom, «contratti NAV» ad hoc, descrizioni di flusso duplicate in guide al posto di UML).
+
+### Nomenclatura dominio ↔ statechart (pattern intenzionale)
+
+| Livello | Ruolo | Esempio |
+|---------|-------|---------|
+| **Dominio** (`commands-and-events.md`) | Intento utente / policy Event Storming | `AllowSender`, `OpenConversation`, `RegisterDeviceForPush` |
+| **Statechart** (`*_machine.dart`) | Eventi meccanici della macchina | `AddAllowedProfile`, `OpenConversationOnAccount`, `SyncSubscriptionsRequested` |
+| **Adapter / coordinator** | Ponte tra contesti o I/O | `openFromPushTap`, `SearchProfiles` (coordinator) |
+| **Platform UML** | Worker / SQL (termini rinominati in dominio dove possibile) | `EvaluateInboundDelivery` — helper SQL citati solo in README come implementazione |
+
+Regole:
+
+1. **UML state machine (client):** preferire nomi **dominio** sulle transizioni; note se lo statechart usa alias meccanico.
+2. **README contesto:** tabella mapping obbligatoria per ogni alias noto — è la fonte di verità del disallineamento intenzionale.
+3. **Eventi semantici workshop:** ammessi solo in dominio se mappati esplicitamente (es. `ContactListReady` → `ContactsLoaded`). Vietati in UML/statechart se non esistono nel codice.
+4. **Surfici delegate** (peer-profile, adapter navigation): nessuno statechart dedicato salvo decisione esplicita nel README surfaccia.
+5. **Coordinator composition root** (`*SessionCoordinator`, `*Coordinator`): non compaiono nei diagrammi profilo Client UML; le sequence usano `UI` o il contesto delegato.
 
 ---
 

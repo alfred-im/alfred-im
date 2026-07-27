@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-PEER-PROFILE` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
+| **Ultima revisione** | 2026-07-27 |
 | **PR origine** | #163, #176 |
 
 Promessa di prodotto: tap avatar peer Alfred → overlay fullscreen con identità pubblica, toggle allow list, azione rubrica e CTA «Inizia a chattare» — **indipendenti** e **immediati**.
@@ -68,9 +68,10 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 
 | Elemento | Artefatto |
 |----------|-----------|
-| Glossario / comandi | [docs/domain/profile/](../../../domain/profile/), [docs/domain/reception/](../../../domain/reception/), [docs/domain/contacts/](../../../domain/contacts/) |
+| Glossario / comandi surfaccia | [docs/domain/peer-profile/](../../../domain/peer-profile/) |
+| Contesti delegati | [reception](../../../domain/reception/), [contacts](../../../domain/contacts/), [navigation](../../../domain/navigation/) |
 | UML | [docs/model/uml/profile/seq-peer-profile-overlay.puml](../../model/uml/profile/seq-peer-profile-overlay.puml) |
-| Statechart client | [client/lib/machines/profile/](../../../client/lib/machines/profile/), [client/lib/machines/reception/](../../../client/lib/machines/reception/) |
+| Statechart client | **Nessuno** per overlay peer — delega a `ReceptionMachine`, `ContactsMachine`, `NavigationMachine` (vedi peer-profile README) |
 | Overlay dismiss | [PROM-OVERLAY-DISMISS](./PROM-OVERLAY-DISMISS.md) |
 
 **Implementazione (non vincolante):** [docs/guides/peer-profile.md](../../../guides/peer-profile.md) · binding: [SURF-PEER-PROFILE](../../surfaces/SURF-PEER-PROFILE.md)

@@ -11,7 +11,7 @@ Sotto-contesto di **messaging** — vedi [mapping messaging](../messaging/README
 | Livello | File |
 |---------|------|
 | Dominio | [glossary.md](./glossary.md), [commands-and-events.md](./commands-and-events.md) |
-| UML | [media-state.puml](../../model/uml/media/media-state.puml) |
+| UML | [media-state.puml](../../model/uml/media/media-state.puml), [seq-prepare-attachment.puml](../../model/uml/media/seq-prepare-attachment.puml) |
 | Statechart | — (contesto `documented`; preparazione in `ChatInputBar`, invio in messaging) |
 
 ## Mapping dominio → implementazione

@@ -25,4 +25,10 @@
 
 Statechart: `client/lib/machines/groups/` · `GroupHomeCoordinator`, `GroupMessagesCoordinator`
 
+### Pattern coordinator (come contacts)
+
+`GroupHomeCoordinator` / `GroupMessagesCoordinator` espongono `error` UI e orchestrano load/realtime **fuori** dalle regioni statechart. La macchina modella solo `loadState` / `broadcastState` / `realtimeState`; errori fetch e messaggi utente restano nel coordinator — **intenzionale**, non debito da unificare senza motivo.
+
+`GroupMessagesCoordinator.loadMessages({forceRefresh})` è dettaglio implementativo del refresh post-broadcast; il modello espone solo `LoadGroupMessages` sulla macchina.
+
 Shell navigazione gruppo (`OpenGroupConversation` / `LeaveGroupConversation`): contesto **navigation** — `navigation-shell-state.puml`.

@@ -8,7 +8,7 @@
 |---------|---------------------|--------|
 | `AllowSender` | `AddAllowedProfile` | `ReceptionAllowlistService` |
 | `DisallowSender` | `RemoveAllowedPerson` / `RemoveAllowedByProfileId` | `ReceptionAllowlistService` |
-| `SearchCandidateSenders` | `SearchProfiles` (coordinator, non macchina) | allow list UI |
+| `SearchCandidateSenders` | ricerca coordinator (`searchProfiles`, non evento macchina) | allow list UI |
 | `AllowListReady` | `AllowlistLoaded` | `ReceptionMachine` |
 | `EvaluateInboundDelivery` | `DeliverInternal` → gate | `is_sender_allowed_for_reception` in worker |
 | `DeliveryPermitted` | `DeliveryPermitted` | INSERT copia destinatario |

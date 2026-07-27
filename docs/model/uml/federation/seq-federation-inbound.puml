@@ -1,0 +1,27 @@
+@startuml seq-federation-inbound
+' Context: federation
+' Profile: platform
+' Revision: 2026-07-27
+
+title Federation — inbound federato (target)
+
+participant "FederatedServer" as EXT
+participant "BridgeWorker" as B
+participant "ReceptionGate" as GATE
+participant "AccountBoundary" as AB
+
+EXT -> B : ReceiveFromFederatedPeer <<future>>
+B -> GATE : EvaluateInboundDelivery
+alt allow list
+  GATE --> B : DeliveryPermitted
+  B -> AB : materialize inbound copy
+  AB --> AB : InboundFederatedMessageReceived
+else bloccato
+  GATE --> B : DeliverySilentlyBlocked
+  note right of B
+    Nessuna copia destinatario;
+    ack esterno opzionale.
+  end note
+end
+
+@enduml

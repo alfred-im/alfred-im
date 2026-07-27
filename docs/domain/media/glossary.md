@@ -15,7 +15,7 @@
 | **Outbound media cache** | Cache RAM per anteprima media pending prima dell'upload. |
 | **Image normalization** | Conversione formati (es. HEIC → JPEG); verifica magic bytes. |
 | **Voice limits** | Durata massima, dimensione massima, formato audio canonico. |
-| **Media limits** | Soglie image/video; persistenza locale web sotto soglia byte. |
+| **Media limits** | Soglie image/gif/video (`ChatMediaConfig`); voice (`VoiceConfig`); persistenza locale web sotto soglia byte. |
 | **Location precision** | Coordinate arrotondate; tile mappa; nessun bucket. |
 | **Voice capture phase** | idle → recording → locked → preview. |
 | **Location capture phase** | `idle` → `sharing` (overlay: affinamento GPS + conferma invio). |

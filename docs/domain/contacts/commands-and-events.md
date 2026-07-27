@@ -37,3 +37,4 @@
 | **Scope per account** | Rubrica dell'account in focus. |
 | **Reload dopo CRUD** | `ContactAdded` / `ContactRemoved` non sono eventi espliciti dello statechart — `Add*` / `Remove*` innescano `LoadContacts` → `ContactsLoaded`. |
 | **Compose fuori ContactsMachine** | `StartChatFromContact` e gli esiti `ChatFromContactStarted` / `ChatFromContactRejected` sono gestiti in UI + navigation, non in [ContactsMachine]. |
+| **Vincoli CRUD a valle** | `ContactsMachine` non replica guardie reception (self-add, duplicati): vincoli su DB (`contacts` unique) e UI. Pattern allineato a reception solo dove il rischio è simmetrico. |

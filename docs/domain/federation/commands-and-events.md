@@ -18,7 +18,7 @@ Target — bridge attualmente stub.
 
 UML platform outbound (target): [seq-federation-stub.puml](../../model/uml/federation/seq-federation-stub.puml) — `AccountBoundary` → `Outbox` : `QueueFederatedSend`; `BridgeWorker` → `FederatedServer` : `DeliverToFederatedPeer`.
 
-Inbound federato: `BridgeWorker` → `ReceptionGate` : `EvaluateInboundDelivery` (contesto **reception**) — vedi [seq-reception-delivery-gate.puml](../../model/uml/reception/seq-reception-delivery-gate.puml).
+Inbound federato: `BridgeWorker` → `ReceptionGate` : `EvaluateInboundDelivery` — vedi [seq-federation-inbound.puml](../../model/uml/federation/seq-federation-inbound.puml) e [seq-reception-delivery-gate.puml](../../model/uml/reception/seq-reception-delivery-gate.puml).
 
 ---
 

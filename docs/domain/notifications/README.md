@@ -72,4 +72,13 @@ Tap notifica: SW `postMessage(open_chat)` → `PushPlatform` → `PushNotificati
 
 **Pending persistito:** `PushPlatform.tryDrainPendingOpenChat` (da `PushNotificationListener` quando `sessionReady`) ri-emette `OpenChatFromNotification`; non passa da `SessionBecameReady` sulla macchina.
 
+## Decisioni architetturali (non debito)
+
+| Scelta | Motivazione |
+|--------|-------------|
+| **Due percorsi pending** | Coda in-memory (`SessionBecameReady` su macchina) per tap durante `OpenChatProcessing`; `localStorage` per tap a app chiusa — unificare richiederebbe effetti macchina su storage |
+| **Soppressione fuori macchina** | `UpdateInChatSuppression` via `PushSuppressionBinder` → SW; la macchina gestisce solo subscription e open-chat |
+| **UML SW descrittivo** | `push_sw.js` è imperativo; diagramma SW documenta policy, non genera codice |
+| **`RegisterDeviceForPush` vs `SyncSubscriptionsRequested`** | Comando dominio (policy) vs evento statechart (operazione tecnica) — mapping in tabella sopra |
+
 Statechart: `client/lib/machines/notifications/` · SW: `client/web/push_sw.js`

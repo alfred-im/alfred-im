@@ -44,3 +44,13 @@ La **scheda profilo peer** è una surfaccia modale (`showPeerProfileOverlay`) ch
 | `SharePeerProfile` | — | shareable-link utility | `shareShareableProfileLink` |
 
 Overlay: `client/lib/widgets/peer_profile_overlay.dart`
+
+## Decisione architetturale — nessuno statechart
+
+La surfaccia peer-profile **non** ha macchina dedicata in `client/lib/machines/`. Motivazione:
+
+- Ogni azione delega a un contesto già modellato (`reception`, `contacts`, `navigation`, utility shareable-link).
+- Duplicare stati (loading toggle, errori) nello overlay replicherebbe logica già in `ReceptionMachine` / `ContactsMachine`.
+- I comandi surfaccia (`ViewPeerProfile`, `TogglePeerConsent`, …) sono **intent UI** documentati qui; gli eventi statechart sono quelli del contesto delegato.
+
+`ProfileMachine` / `ProfileCoordinator` restano **solo** per edit profilo proprio ([profile](../profile/)).
