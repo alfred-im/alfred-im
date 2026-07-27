@@ -43,6 +43,9 @@ class _RecordingEffects implements MessagingEffects {
   bool ensureValidSession() => true;
 
   @override
+  bool get isScopeActive => true;
+
+  @override
   Future<bool> fetchAndSetMessages() async {
     fetchCount++;
     return true;

@@ -144,7 +144,11 @@ class _ChatWithMessages extends StatelessWidget {
               )
             : null,
         onMessagesChanged: onMessagesChanged,
-        hasValidSession: () => _messagingSessionReady(liveSession),
+        hasValidSession: () {
+          final current = auth.focusedSession;
+          if (current == null || !scope.matches(current, peer)) return false;
+          return _messagingSessionReady(current);
+        },
         isScopeCommitted: () => isMessagesScopeActive(
           scope: scope,
           committedScope: auth.navigation.committedScope,

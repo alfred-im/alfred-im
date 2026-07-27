@@ -105,6 +105,9 @@ class MessagingCoordinator {
         }
       }
       if (!applied && !effects.isDisposed) {
+        if (!effects.isScopeActive) {
+          return;
+        }
         state.error = MessagesControllerEffects.sessionExpiredMessage;
         loadMachine.send(const ConversationUnavailable());
         _notify();
