@@ -114,9 +114,11 @@ class _ChatWithMessages extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final liveSession = auth.focusedSession;
+    final committed = auth.navigation.committedScope;
     if (liveSession == null ||
-        liveSession.userId != session.userId ||
-        !scope.matches(liveSession, peer) ||
+        committed == null ||
+        !committed.isSameConversationAs(scope) ||
+        liveSession.userId != scope.ownerUserId ||
         !_messagingSessionReady(liveSession) ||
         !auth.navigation.isConversationReady(
           session: liveSession,
@@ -129,8 +131,9 @@ class _ChatWithMessages extends StatelessWidget {
     }
 
     return ChangeNotifierProvider(
+      key: conversationScopeKey(committed),
       create: (_) => MessagesController(
-        scope: scope,
+        scope: committed,
         userId: liveSession.userId,
         peerProfileId: peer.profileId,
         messageService: liveSession.messageService,
@@ -146,17 +149,33 @@ class _ChatWithMessages extends StatelessWidget {
         onMessagesChanged: onMessagesChanged,
         hasValidSession: () {
           final current = auth.focusedSession;
-          if (current == null || !scope.matches(current, peer)) return false;
+          final committedNow = auth.navigation.committedScope;
+          if (current == null || committedNow == null) return false;
+          if (!committedNow.isSameConversationAs(scope)) return false;
+          auth.navigation.isConversationReady(session: current, peer: peer);
           return _messagingSessionReady(current);
         },
-        isScopeCommitted: () => isMessagesScopeActive(
-          scope: scope,
-          committedScope: auth.navigation.committedScope,
-          peer: peer,
-          liveSession: auth.focusedSession,
-          isConversationReady: (session, activePeer) =>
-              auth.navigation.isConversationReady(session: session, peer: activePeer),
-        ),
+        resolveMessageMediaService: () {
+          final current = auth.focusedSession;
+          if (current == null) return liveSession.messageMediaService;
+          return current.messageMediaService;
+        },
+        isScopeCommitted: () {
+          final committedNow = auth.navigation.committedScope;
+          final current = auth.focusedSession;
+          if (committedNow == null || current == null) return false;
+          return isMessagesScopeActive(
+            scope: committedNow,
+            committedScope: committedNow,
+            peer: peer,
+            liveSession: current,
+            isConversationReady: (session, activePeer) =>
+                auth.navigation.isConversationReady(
+                  session: session,
+                  peer: activePeer,
+                ),
+          );
+        },
         messageStore: auth.navigation.messageStore,
       ),
       child: ChatPanel(

@@ -127,6 +127,46 @@ void main() {
       controller.dispose();
     });
 
+    test('epoch reconciled su scope congelato resta attivo se conversation ready', () async {
+      final client = createTestSupabaseClient();
+      final service = DelayedFakeMessageService(
+        client,
+        fetchDelay: const Duration(milliseconds: 80),
+      );
+      final sessionV1 = await AccountSession.createForTest(
+        profile: _profile(_accountA),
+        client: client,
+        messageService: service,
+      );
+      final sessionV2 = await AccountSession.createForTest(
+        profile: _profile(_accountA),
+        client: client,
+        messageService: service,
+      );
+      final peerB = ChatPeer(profile: _profile(_accountB));
+      final frozenScope = testConversationScope(
+        userId: _accountA,
+        peerProfileId: _accountB,
+        sessionEpoch: sessionV1.epoch,
+      );
+      final reconciledScope = frozenScope.copyWith(
+        sessionEpoch: sessionV2.epoch,
+        loadSeq: 1,
+      );
+
+      expect(
+        isMessagesScopeActive(
+          scope: frozenScope,
+          committedScope: reconciledScope,
+          peer: peerB,
+          liveSession: sessionV2,
+          isConversationReady: (_, _) => true,
+          logOnInactive: false,
+        ),
+        isTrue,
+      );
+    });
+
     test('epoch stale su scope congelato non blocca se conversation ready', () async {
       final client = createTestSupabaseClient();
       final service = DelayedFakeMessageService(

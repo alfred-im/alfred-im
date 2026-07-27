@@ -150,8 +150,8 @@ class AuthController extends ChangeNotifier {
   String? get email => focusedSession?.client.auth.currentUser?.email;
   String? get username => focusedSession?.profile.username;
 
-  Future<void> syncPushSubscriptions() =>
-      _pushCoordinator.syncPushSubscriptions();
+  Future<void> syncPushSubscriptions({bool onlyFocused = false}) =>
+      _pushCoordinator.syncPushSubscriptions(onlyFocused: onlyFocused);
 
   Future<void> initialize() async {
     await _sessionCoordinator.initialize();

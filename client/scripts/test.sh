@@ -31,6 +31,7 @@ MANUALE (rete / browser, non in CI):
   integration       API Supabase live — agent1↔agent2 + contratto spunte
   integration-ticks Solo contratto spunte (✓ / ✓✓ grigie / ✓✓ blu + allow list)
   integration-push  Delivery plane; smoke SQL push su DB di test (no account utente)
+  integration-photo-repro  Riproduzione bug foto/sessione — auth+storage+RPC live
   e2e               tutti i Playwright (client/e2e/)
   e2e-multi         Playwright multi-account (persist + messaggi locale / live)
   e2e-push-local    Playwright push locale — ricezione + tap multi-account (stack locale)
@@ -114,6 +115,9 @@ case "$CMD" in
     ;;
   integration-push|push)
     bash scripts/integration-push.sh "$@"
+    ;;
+  integration-photo-repro|photo-repro)
+    bash scripts/integration-photo-session-repro.sh "$@"
     ;;
   e2e-push-local|push-local)
     bash scripts/run-push-e2e-local.sh "$@"

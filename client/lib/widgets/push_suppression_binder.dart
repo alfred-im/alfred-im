@@ -44,7 +44,9 @@ class _PushSuppressionBinderState extends State<PushSuppressionBinder>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _sync();
     if (state == AppLifecycleState.resumed) {
-      unawaited(context.read<AuthController>().syncPushSubscriptions());
+      unawaited(
+        context.read<AuthController>().syncPushSubscriptions(onlyFocused: true),
+      );
     }
   }
 

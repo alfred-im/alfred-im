@@ -4,7 +4,7 @@
 
 import { type Page } from '@playwright/test';
 
-import { readSavedAccountsManifest } from './flutter-a11y';
+import { readSavedAccountsManifest, type ManifestEntry } from './flutter-a11y';
 import {
   createLocalConfirmedUser,
   type LocalE2eUser,
@@ -55,6 +55,74 @@ export async function prepareLocalMessagingPair(
   });
 
   return { acct1, acct2, session1, session2 };
+}
+
+export type LocalFiveAccountManifest = {
+  users: [LocalE2eUser, LocalE2eUser, LocalE2eUser, LocalE2eUser];
+  group: LocalE2eUser;
+};
+
+/** 4 user + 1 gruppo — stesso setup dell'utente in produzione. */
+export async function prepareLocalFiveAccountManifest(
+  stamp: string,
+): Promise<LocalFiveAccountManifest> {
+  configureLocalChatMediaBucket();
+  const users = await Promise.all([
+    createLocalConfirmedUser(`u1${stamp}`),
+    createLocalConfirmedUser(`u2${stamp}`),
+    createLocalConfirmedUser(`u3${stamp}`),
+    createLocalConfirmedUser(`u4${stamp}`),
+  ]);
+  const group = await createLocalConfirmedUser(`grp${stamp}`, {
+    profileKind: 'group',
+  });
+
+  const session1 = await loginSupabase(users[0].email, users[0].password);
+  for (const other of [users[1], users[2], users[3], group]) {
+    await addReceptionAllowlist({
+      ownerUserId: users[0].userId,
+      allowedProfileId: other.userId,
+      ownerAccessToken: session1.accessToken,
+    });
+    const sessionOther = await loginSupabase(other.email, other.password);
+    await addReceptionAllowlist({
+      ownerUserId: other.userId,
+      allowedProfileId: users[0].userId,
+      ownerAccessToken: sessionOther.accessToken,
+    });
+  }
+  const session2 = await loginSupabase(users[1].email, users[1].password);
+  await addReceptionAllowlist({
+    ownerUserId: users[1].userId,
+    allowedProfileId: users[0].userId,
+    ownerAccessToken: session2.accessToken,
+  });
+  await addReceptionAllowlist({
+    ownerUserId: users[0].userId,
+    allowedProfileId: users[1].userId,
+    ownerAccessToken: session1.accessToken,
+  });
+
+  return { users: users as LocalFiveAccountManifest['users'], group };
+}
+
+/** Login 4 user + gruppo; focus finale sul gruppo (come ultimo aggiunto). */
+export async function setupFiveLocalAccounts(
+  page: Page,
+  manifest: LocalFiveAccountManifest,
+): Promise<ManifestEntry[]> {
+  const all = [...manifest.users, manifest.group];
+  await clearAppData(page);
+  await loginInAuthForm(page, all[0].email, all[0].password);
+  for (let i = 1; i < all.length; i++) {
+    await clickAggiungiAccount(page);
+    await waitForAuthForm(page);
+    await loginInAuthForm(page, all[i].email, all[i].password, {
+      minAccounts: i + 1,
+    });
+  }
+  expectManifestCount(await readSavedAccountsManifest(page), 5);
+  return (await readSavedAccountsManifest(page))!;
 }
 
 /** Login account 1, aggiunge account 2; al termine il focus è su account 2. */

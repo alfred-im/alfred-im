@@ -79,6 +79,7 @@ class MessagesControllerEffects implements MessagingEffects {
     this.groupPeerAuthorEnrichment,
     this.onMessagesChanged,
     this.hasValidSession,
+    this.resolveMessageMediaService,
     this.isScopeCommitted,
     OutboundMessageQueue? outboundQueue,
     required this._onChanged,
@@ -94,6 +95,7 @@ class MessagesControllerEffects implements MessagingEffects {
   final String peerProfileId;
   final Future<void> Function()? onMessagesChanged;
   final bool Function()? hasValidSession;
+  final MessageMediaService Function()? resolveMessageMediaService;
   final bool Function()? isScopeCommitted;
   final MessageService messageService;
   final MessageMediaService messageMediaService;
@@ -307,6 +309,15 @@ class MessagesControllerEffects implements MessagingEffects {
 
   String get _queueKey => '$userId|$peerProfileId';
 
+  MessageMediaService _mediaServiceForUpload() =>
+      resolveMessageMediaService?.call() ?? messageMediaService;
+
+  void _requireValidSessionForUpload() {
+    if (!ensureValidSession()) {
+      throw StateError(sessionExpiredMessage);
+    }
+  }
+
   @override
   bool ensureValidSession() {
     if (!_scopeIsActive()) {
@@ -429,7 +440,8 @@ class MessagesControllerEffects implements MessagingEffects {
         localMediaPath: mediaPath,
       ),
       send: (id) async {
-        final mediaUrl = await messageMediaService.uploadGif(
+        _requireValidSessionForUpload();
+        final mediaUrl = await _mediaServiceForUpload().uploadGif(
           bytes: bytes,
           userId: userId,
         );
@@ -561,7 +573,8 @@ class MessagesControllerEffects implements MessagingEffects {
     required String mime,
     required String body,
   }) async {
-    final mediaUrl = await messageMediaService.uploadImage(
+    _requireValidSessionForUpload();
+    final mediaUrl = await _mediaServiceForUpload().uploadImage(
       bytes: bytes,
       userId: userId,
       extension: extension,
@@ -688,7 +701,8 @@ class MessagesControllerEffects implements MessagingEffects {
       await _outboundQueue.enqueue(queueItem);
       _onChanged();
 
-      final mediaUrl = await messageMediaService.uploadVideo(
+      _requireValidSessionForUpload();
+      final mediaUrl = await _mediaServiceForUpload().uploadVideo(
         bytes: bytes,
         userId: userId,
         extension: extension,
@@ -773,7 +787,7 @@ class MessagesControllerEffects implements MessagingEffects {
         mediaMime: VoiceConfig.canonicalMime,
       ),
       send: (id) async {
-        final mediaUrl = await messageMediaService.uploadVoice(
+        final mediaUrl = await _mediaServiceForUpload().uploadVoice(
           bytes: bytes,
           userId: userId,
         );
@@ -969,6 +983,10 @@ class MessagesControllerEffects implements MessagingEffects {
     _onChanged();
 
     try {
+      if (item.kind != OutboundContentKind.text &&
+          item.kind != OutboundContentKind.location) {
+        _requireValidSessionForUpload();
+      }
       final ChatMessage saved;
       switch (item.kind) {
         case OutboundContentKind.text:
@@ -986,7 +1004,7 @@ class MessagesControllerEffects implements MessagingEffects {
           if (bytes == null || bytes.isEmpty) {
             throw StateError('GIF retry payload missing');
           }
-          final mediaUrl = await messageMediaService.uploadGif(
+          final mediaUrl = await _mediaServiceForUpload().uploadGif(
             bytes: bytes,
             userId: userId,
           );
@@ -1006,7 +1024,7 @@ class MessagesControllerEffects implements MessagingEffects {
           }
           final durationSeconds = item.durationSeconds ??
               (bytes.length / 16000).ceil().clamp(1, VoiceConfig.maxDurationSeconds);
-          final mediaUrl = await messageMediaService.uploadVoice(
+          final mediaUrl = await _mediaServiceForUpload().uploadVoice(
             bytes: bytes,
             userId: userId,
           );
@@ -1040,7 +1058,7 @@ class MessagesControllerEffects implements MessagingEffects {
             throw StateError('Image retry payload missing');
           }
           final normalized = await prepareImageForUpload(rawBytes);
-          final mediaUrl = await messageMediaService.uploadImage(
+          final mediaUrl = await _mediaServiceForUpload().uploadImage(
             bytes: normalized.bytes,
             userId: userId,
             extension: normalized.extension,
@@ -1069,7 +1087,7 @@ class MessagesControllerEffects implements MessagingEffects {
               'video/mp4';
           final durationSeconds = item.durationSeconds ??
               await readVideoDurationSeconds(bytes: bytes, extension: extension);
-          final mediaUrl = await messageMediaService.uploadVideo(
+          final mediaUrl = await _mediaServiceForUpload().uploadVideo(
             bytes: bytes,
             userId: userId,
             extension: extension,
