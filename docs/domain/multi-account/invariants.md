@@ -8,7 +8,7 @@
 
 ## Sessione attiva
 
-1. **Al massimo una** [AccountSession] GoTrue in RAM.
+1. **Al massimo una** **Account session** GoTrue in RAM (vedi [glossary.md](glossary.md)).
 2. Cambio focus: **dispose** sessione corrente + **restore** da manifest — mai due JWT attivi in parallelo.
 3. Storage GoTrue dedicato per account (`alfred_auth_{userId}`).
 

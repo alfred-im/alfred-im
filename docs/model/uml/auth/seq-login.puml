@@ -2,7 +2,7 @@
 ' Context: auth
 ' Profile: client
 ' SDD: SURF-AUTH-004, SURF-AUTH-007
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Auth — login (password)
 
@@ -13,14 +13,12 @@ participant "MultiAccountMachine" as MAM
 participant "AccountManager" as Mgr
 participant "Supabase GoTrue" as GT
 
-Utente -> UI : Accedi (email, password)
-UI -> AM : SignInRequested
-AM --> UI : AuthOperationStarted
-
-AM -> AM : validate email
+Utente -> UI : SignIn (email, password)
+note over UI : validate email (AuthIdentity)
 alt email non valida
-  AM --> UI : ValidationRejected
+  UI -> AM : ValidationRejected
 else email ok
+  UI -> AM : AuthOperationStarted
   UI -> MAM : OpenAccountWithPassword
   MAM -> Mgr : sign in + open account
   Mgr -> GT : authenticate
@@ -28,8 +26,9 @@ else email ok
   Mgr -> Mgr : adopt session per account
   Mgr --> MAM : AccountOpened
   MAM --> MAM : AccountFocused
-  MAM --> AM : AuthOperationCompleted
-  AM --> UI : SessionEstablished\noverlay chiuso
+  MAM --> UI : account aperto
+  UI -> AM : AuthOperationCompleted\n[success]
+  AM --> UI : SessionActive\noverlay chiuso
 end
 
 @enduml

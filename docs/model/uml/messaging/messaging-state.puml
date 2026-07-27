@@ -1,7 +1,7 @@
 @startuml messaging-state
 ' Context: messaging
 ' Profile: client
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 ' Statechart: ConversationLoadMachine, OutboundSendMachine, RealtimeAttachmentMachine
 
 title Messaging — stato conversazione (composite)
@@ -14,6 +14,7 @@ state ConversationLoad {
   [*] --> Loading
   Loading --> Ready : ConversationReady
   Loading --> SessionBlocked : ConversationUnavailable
+  Loading --> Ready : LoadFailed
   Ready --> Loading : RefreshConversation
   SessionBlocked --> Loading : RefreshConversation
 }
@@ -41,8 +42,10 @@ state RealtimeAttachment {
 
 note right of Ready
   ConversationUpdated mentre Attached
+  (RealtimeReceived: INSERT + UPDATE spunte)
   LoadOlderMessages: side-effect in Ready
   (hasMoreOlder / isLoadingOlder)
+  markRead: side-effect all'apertura
 end note
 
 @enduml

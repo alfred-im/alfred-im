@@ -49,7 +49,7 @@ ProfileSummary _profile(String id, String username) => ProfileSummary(
 
 void main() {
   group('ShareableLinkMachine', () {
-    test('ParseFragment valido → pending', () {
+    test('ResolveSharedLink valido → pending', () {
       final effects = _RecordingShareableLinkEffects();
       final machine = ShareableLinkMachine(effects);
       final adapters = ShareableLinkAdapters(machine);
@@ -85,7 +85,7 @@ void main() {
       expect(effects.openChatCount, 0);
     });
 
-    test('chat link → OpenFromShareableLink via effetti', () async {
+    test('chat link → OpenSharedChat via effetti', () async {
       final effects = _RecordingShareableLinkEffects()
         ..profileToReturn = _profile('peer-b', 'mario');
       final machine = ShareableLinkMachine(effects);
@@ -134,6 +134,20 @@ void main() {
 
       expect(effects.openChatCount, 0);
       expect(machine.state, ShareableLinkState.idle);
+    });
+
+    test('DismissSharedLinkNotFound → idle', () async {
+      final effects = _RecordingShareableLinkEffects();
+      final machine = ShareableLinkMachine(effects);
+      final adapters = ShareableLinkAdapters(machine);
+
+      adapters.onFragmentChanged('unknown');
+      await adapters.onHandleRequested();
+      expect(machine.state, ShareableLinkState.invalid);
+
+      adapters.onDismissNotFound();
+      expect(machine.state, ShareableLinkState.idle);
+      expect(machine.target, isNull);
     });
   });
 }

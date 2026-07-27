@@ -1,7 +1,7 @@
 # Glossario — contesto auth
 
 **Bounded context:** `auth`  
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **Promesse SDD:** [SURF-AUTH](../../specs/surfaces/SURF-AUTH.md), [PROM-MULTI-ACCOUNT](../../specs/promises/product/PROM-MULTI-ACCOUNT.md)
 
 ---
@@ -18,6 +18,7 @@
 | **NoSession** | Zero account nel manifest: overlay obbligatorio e non dismissibile ([SURF-AUTH-002]). |
 | **SessionActive** | Almeno un account aperto e overlay nascosto — shell utilizzabile. |
 | **OverlayVisible** | Overlay mostrato con account già aperti (es. aggiungi account), dismissibile ([SURF-AUTH-003]). |
+| **AuthOperationInProgress** | Login o sign-up in corso verso il server — overlay in loading. |
 | **Auth operation** | Login, registrazione o reset password in corso. |
 | **Auth redirect URL** | URL redirect per conferma email e reset password. |
 | **Friendly auth error** | Messaggio utente derivato da errore auth (credenziali, sessione scaduta, username occupato, …). |

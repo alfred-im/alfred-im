@@ -1,7 +1,7 @@
 # Glossario — contesto groups
 
 **Bounded context:** `groups`  
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **Promesse SDD:** [SYS-GROUP](../../specs/promises/system/SYS-GROUP.md), [SYS-DELIVERY](../../specs/promises/system/SYS-DELIVERY.md)
 
 ---
@@ -33,7 +33,7 @@
 | **messaging** | Chat umano→gruppo usa stessa pipeline invio; UI autore in bolla. |
 | **delivery** | Recapito archivio gruppo, spunte mittente umano, erogazione fan-out. |
 | **reception** | Gate bidirezionale allow list prima di materializzare storico o copia erogata. |
-| **navigation** | `OpenGroupChat` / `BackToGroupHome` in shell gruppo. |
+| **navigation** | `OpenGroupConversation` / `LeaveGroupConversation` in shell gruppo (`OpenGroupChat` / `BackToGroupHome` in statechart navigation). |
 | **multi-account** | Account gruppo nel manifest; focus come qualsiasi sessione. |
 | **media** | Broadcast media: upload prima di broadcast con content type e URL. |
 

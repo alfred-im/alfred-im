@@ -1,7 +1,7 @@
 # Glossario — contesto messaging
 
 **Bounded context:** `messaging`  
-**Ultima revisione:** 2026-07-19
+**Ultima revisione:** 2026-07-27
 
 ---
 

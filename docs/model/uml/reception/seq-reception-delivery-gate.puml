@@ -2,7 +2,7 @@
 ' Context: reception
 ' Profile: platform
 ' SDD: SYS-RECEPTION-005–010, PROM-RECEPTION-FILTER-005
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Reception — gate recapito nel worker delivery
 
@@ -13,16 +13,16 @@ participant "ReceptionGate" as Gate
 database "MailboxArchive\n(recipient copy)" as Recv
 
 AB -> Msg : sender copy accepted (✓)
-AB -> Worker : EnqueueDeliver
+AB -> Worker : QueueDelivery
 
-Worker -> Gate : CheckSenderAllowed
+Worker -> Gate : EvaluateInboundDelivery
 
 alt sender allowed
-  Gate --> Worker : DeliveryGatePassed
-  Worker -> Recv : RecipientCopyMaterialized
+  Gate --> Worker : DeliveryPermitted
+  Worker -> Recv : RecipientNotified
   Worker -> Msg : SenderDeliveredAtSet\n(✓✓ mittente)
 else sender not allowed
-  Gate --> Worker : DeliveryGateRejected
+  Gate --> Worker : DeliverySilentlyBlocked
   note right of Worker
     Nessuna copia destinatario.
     Spunta doppia non valorizzata.

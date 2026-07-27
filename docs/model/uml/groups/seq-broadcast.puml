@@ -1,17 +1,26 @@
 @startuml seq-broadcast
 ' Context: groups
 ' Profile: client
-' Revision: 2026-07-19
+' SDD: SYS-GROUP, SYS-DELIVERY (erogazione asincrona)
+' Revision: 2026-07-27
 
-title Broadcast gruppo → partecipanti
+title Broadcast gruppo → archivio owner (client)
 
 actor Utente
 participant "GroupMessagesMachine" as GMM
-participant "DeliveryWorker" as W
+participant "Supabase" as SB
 
 Utente -> GMM : BroadcastToGroup
-GMM -> W : QueueGroupFanOut
-W --> GMM : GroupBroadcastSent
+GMM -> SB : BroadcastToGroup
+SB --> GMM : GroupBroadcastSent
+GMM -> GMM : LoadGroupMessages
 GMM --> Utente : GroupConversationUpdated
+
+note right of SB
+  Fan-out verso partecipanti allow list
+  è asincrono nel contesto delivery
+  (QueueGroupFanOut / GroupErogate) —
+  non blocca il ritorno al client.
+end note
 
 @enduml

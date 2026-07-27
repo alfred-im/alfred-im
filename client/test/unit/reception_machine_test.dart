@@ -111,13 +111,13 @@ void main() {
   });
 
   group('ReceptionMachine search', () {
-    test('SetAllowlistSearchQuery updates query', () async {
+    test('SetSearchQuery updates query', () async {
       final machine = ReceptionMachine(
         _RecordingReceptionEffects(),
         ownerId: ownerId,
       );
 
-      await machine.send(const SetAllowlistSearchQuery('bob'));
+      await machine.send(const SetSearchQuery('bob'));
 
       expect(machine.searchQuery, 'bob');
     });

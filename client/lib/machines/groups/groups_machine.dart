@@ -10,25 +10,26 @@ import '../../services/profile_service.dart';
 import '../../utils/date_format.dart';
 import '../../utils/message_preview.dart';
 
-/// Stato caricamento home gruppo — `docs/model/uml/groups/groups-state.puml`.
+/// Stato caricamento home gruppo — regione `GroupHomeLoad` in
+/// `docs/model/uml/groups/groups-state.puml`.
 enum GroupHomeLoadState {
   loading,
   ready,
 }
 
-/// Stato caricamento conversazione gruppo.
+/// Stato caricamento conversazione gruppo — regione `GroupMessagesLoad`.
 enum GroupMessagesLoadState {
   loading,
   ready,
 }
 
-/// Stato invio broadcast serializzato.
+/// Stato invio broadcast serializzato — regione `GroupBroadcast`.
 enum GroupBroadcastState {
   idle,
   sending,
 }
 
-/// Regione parallela subscription Realtime owner.
+/// Subscription Realtime owner — regione `GroupRealtime`.
 enum GroupRealtimeState {
   detached,
   attached,
@@ -192,7 +193,7 @@ ChatPeer buildGroupConversationTile({
   );
 }
 
-/// Interprete statechart home gruppo.
+/// Interprete statechart home gruppo (`GroupHomeLoad`).
 class GroupHomeMachine {
   GroupHomeMachine(this._effects);
 
@@ -215,7 +216,8 @@ class GroupHomeMachine {
   }
 }
 
-/// Interprete statechart messaggi gruppo.
+/// Interprete statechart messaggi gruppo (`GroupMessagesLoad` +
+/// `GroupBroadcast` + `GroupRealtime`).
 class GroupMessagesMachine {
   GroupMessagesMachine(this._effects);
 

@@ -43,6 +43,9 @@ class _RecordingEffects implements MessagingEffects {
   bool ensureValidSession() => true;
 
   @override
+  bool get isScopeActive => true;
+
+  @override
   Future<bool> fetchAndSetMessages() async {
     fetchCount++;
     return true;
@@ -143,10 +146,24 @@ void main() {
       expect(machine.state, ConversationLoadState.loading);
     });
 
-    test('SessionExpired → sessionBlocked', () {
+    test('ConversationUnavailable → sessionBlocked', () {
       final machine = ConversationLoadMachine();
-      machine.send(const SessionExpired());
+      machine.send(const ConversationUnavailable());
       expect(machine.state, ConversationLoadState.sessionBlocked);
+    });
+
+    test('LoadFailed → ready', () {
+      final machine = ConversationLoadMachine()
+        ..state = ConversationLoadState.loading;
+      machine.send(const LoadFailed());
+      expect(machine.state, ConversationLoadState.ready);
+    });
+
+    test('ConversationReady → ready', () {
+      final machine = ConversationLoadMachine()
+        ..state = ConversationLoadState.loading;
+      machine.send(const ConversationReady());
+      expect(machine.state, ConversationLoadState.ready);
     });
   });
 
@@ -163,6 +180,12 @@ void main() {
       final machine = OutboundSendMachine()..state = OutboundSendState.sending;
       machine.send(const ContentSendFailed());
       expect(machine.state, OutboundSendState.failedQueue);
+    });
+
+    test('RetryFailedSend → sending', () {
+      final machine = OutboundSendMachine()..state = OutboundSendState.failedQueue;
+      machine.send(const RetryFailedSend());
+      expect(machine.state, OutboundSendState.sending);
     });
   });
 

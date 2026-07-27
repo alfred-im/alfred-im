@@ -7,8 +7,8 @@ import 'notifications_machine.dart';
 
 /// Mappa ingressi attuali → eventi macchina notifications.
 ///
-/// Adapter verso navigation: [NotificationsMachine] emette [OpenChatForwarded]
-/// e l'effetto chiama `AuthController.openConversationAfterPushTap`.
+/// Adapter verso navigation: l'effetto [NotificationsEffects.forwardOpenFromPushTap]
+/// chiama `AuthController.openConversationAfterPushTap` → `openFromPushTap`.
 ///
 /// UML: `docs/model/uml/notifications/seq-notification-click.puml`
 class NotificationsAdapters {
@@ -35,12 +35,12 @@ class NotificationsAdapters {
     _machine.send(const SyncSubscriptionsRequested());
   }
 
-  void onSubscriptionRegistered() {
-    _machine.send(const SubscriptionRegistered());
+  void onPushRegistrationSucceeded() {
+    _machine.send(const PushRegistrationSucceeded());
   }
 
-  void onSubscriptionSyncFailed() {
-    _machine.send(const SubscriptionSyncFailed());
+  void onPushRegistrationFailed() {
+    _machine.send(const PushRegistrationFailed());
   }
 
   void onUnregisterSubscription() {

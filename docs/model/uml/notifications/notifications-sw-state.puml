@@ -2,7 +2,7 @@
 ' Context: notifications (service worker)
 ' Contract: docs/specs/contracts/push-payload.md
 ' SDD: SURF-NOTIFICATIONS-005–008
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Notifications — service worker state machine
 
@@ -16,15 +16,22 @@ Waiting --> SuppressionReady : alfred_push_suppression\n/ applySuppressionState
 
 SuppressionReady --> SuppressionReady : alfred_push_suppression\n/ applySuppressionState
 
-SuppressionReady --> Waiting : push event\n[shouldSuppress]\n/ PushNotificationSuppressed
-SuppressionReady --> NotificationShown : push event\n[!shouldSuppress, payload valido]\n/ showNotification
+SuppressionReady --> Waiting : push event\n[shouldSuppress]\n/ NotificationSuppressed
 
-NotificationShown --> SuppressionReady : notificationclick\n/ OpenFromPushTap
+SuppressionReady --> NotificationShown : push event\n[!shouldSuppress, payload valido]\n/ PresentPushNotification
+
+NotificationShown --> SuppressionReady : notificationclick\n/ postMessage open_chat
 
 note right of SuppressionReady
   shouldSuppress quando:
   appVisible && focusUserId == owner
   && activePeerProfileId == peer
+end note
+
+note right of NotificationShown
+  Tap → client Flutter
+  (OpenChatFromNotification)
+  via PushPlatform stream
 end note
 
 @enduml

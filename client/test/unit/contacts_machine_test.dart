@@ -100,6 +100,15 @@ void main() {
 
       expect(machine.searchQuery, 'alice');
     });
+
+    test('SetSearchQuery does not change load state', () async {
+      final machine = ContactsMachine(_RecordingContactsEffects())
+        ..loadState = ContactsLoadState.ready;
+
+      await machine.send(const SetSearchQuery('alice'));
+
+      expect(machine.loadState, ContactsLoadState.ready);
+    });
   });
 
   group('ContactsMachine CRUD', () {

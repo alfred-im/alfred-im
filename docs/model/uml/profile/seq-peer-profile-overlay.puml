@@ -1,32 +1,49 @@
 @startuml seq-peer-profile-overlay
-' Context: profile
+' Context: profile (surfaccia peer-profile)
 ' Profile: client
-' Revision: 2026-07-19
+' SDD: PROM-PEER-PROFILE
+' Revision: 2026-07-27
 
-title Scheda peer — azioni
+title Scheda peer — azioni delegate
 
 actor Utente
-participant "ProfileMachine" as PM
+participant "UI" as UI
 participant "ReceptionMachine" as RM
 participant "ContactsMachine" as CM
 participant "NavigationMachine" as Nav
 
-Utente -> PM : ViewPeerProfile
-PM --> Utente : PeerProfileDisplayed
+Utente -> UI : ViewPeerProfile
+UI --> Utente : PeerProfileDisplayed
 
 opt consenso recapito
-  Utente -> PM : TogglePeerConsent
-  PM -> RM : AllowSender / DisallowSender
+  Utente -> UI : TogglePeerConsent
+  alt consente
+    UI -> RM : AllowSender
+  else revoca
+    UI -> RM : DisallowSender
+  end
 end
 
 opt rubrica
-  Utente -> PM : TogglePeerInContacts
-  PM -> CM : AddContact / RemoveContact
+  Utente -> UI : TogglePeerInContacts
+  alt aggiungi
+    UI -> CM : AddContact
+  else rimuovi
+    UI -> CM : RemoveContact
+  end
 end
 
 opt chat
-  Utente -> PM : StartChatFromPeerProfile
-  PM -> Nav : OpenConversation
+  Utente -> UI : StartChatFromPeerProfile
+  UI -> Nav : OpenConversation
+end
+
+opt condividi
+  Utente -> UI : SharePeerProfile
+  note right of UI
+    Utility shareable-link
+    (nessun evento statechart)
+  end note
 end
 
 @enduml

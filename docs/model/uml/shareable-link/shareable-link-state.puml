@@ -1,0 +1,32 @@
+@startuml shareable-link-state
+' Context: shareable-link
+' Profile: client
+' SDD: PROM-SHAREABLE-LINK
+' Revision: 2026-07-27
+
+title Shareable-link — ShareableLinkMachine
+
+state Idle
+state Pending : SharedLinkPending
+state Resolving
+state Invalid : SharedLinkInvalid
+
+[*] --> Idle
+
+Idle --> Pending : ResolveSharedLink\n[fragment valido]
+Pending --> Idle : ResolveSharedLink\n[fragment vuoto o riservato]
+Pending --> Pending : ResolveSharedLink\n[stesso target]
+Pending --> Pending : HandleSharedLinkTarget\n[!sessionReady || !account]
+Pending --> Resolving : HandleSharedLinkTarget\n[sessione pronta]
+Resolving --> Idle : SharedChatOpened\n[target chat]
+Resolving --> Idle : SharedProfileShown\n[target profilo]
+Resolving --> Idle : Self ignorato\n[peer = account in focus]
+Resolving --> Invalid : SharedLinkInvalid\n[profilo assente o indirizzo non risolvibile]
+Invalid --> Idle : DismissSharedLinkNotFound
+
+note right of Resolving
+  OpenSharedChat → NavigationMachine.OpenFromShareableLink
+  OpenSharedProfile → overlay scheda peer (ViewPeerProfile)
+end note
+
+@enduml

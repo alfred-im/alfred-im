@@ -1,7 +1,7 @@
 # Glossario — contesto federation
 
 **Bounded context:** `federation`  
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **Stato runtime:** bridge stub (health only); modello documentato per implementazione futura.
 
 ---

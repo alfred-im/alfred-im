@@ -1,7 +1,7 @@
 # Glossario — contesto notifications
 
 **Bounded context:** `notifications`  
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **Promesse SDD:** [PROM-PUSH-NOTIFY](../../specs/promises/product/PROM-PUSH-NOTIFY.md), [SURF-NOTIFICATIONS](../../specs/surfaces/SURF-NOTIFICATIONS.md), [SYS-PUSH](../../specs/promises/system/SYS-PUSH.md)
 
 ---

@@ -1,25 +1,30 @@
 @startuml seq-notification-click
 ' Context: notifications → navigation
 ' Profile: client
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Tap notifica → apertura chat
 
 actor Utente
 participant "ServiceWorker" as SW
+participant "PushPlatform" as PP
+participant "PushNotificationListener" as Listener
 participant "NotificationsMachine" as NM
 participant "NavigationMachine" as Nav
 participant "MultiAccountMachine" as MAM
 
 Utente -> SW : tap notifica
-SW -> NM : OpenChatFromNotification
+SW -> PP : postMessage open_chat
+PP -> Listener : openChatIntents stream
+Listener -> NM : OpenChatFromNotification
 
 alt sessione non pronta
-  NM --> NM : ChatOpenFromNotificationDeferred
+  NM --> NM : ChatOpenFromNotificationDeferred\n(persist pending)
+  Note over PP,Listener : sessionReady → tryDrainPendingOpenChat\nri-emette OpenChatFromNotification
 else account non disponibile
   NM --> NM : ChatOpenFromNotificationFailed
 else ok
-  NM -> Nav : OpenConversation(source=push)
+  NM -> Nav : openFromPushTap\n(OpenConversation source=push)
   Nav -> Nav : InvalidateConversationScope
   Nav -> MAM : FocusAccount (se necessario)
   Nav -> Nav : CommitConversationScope

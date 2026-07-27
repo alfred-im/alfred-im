@@ -1,7 +1,7 @@
 # Glossario — contesto contacts
 
 **Bounded context:** `contacts`  
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **Promesse SDD:** [PROM-PERSONAL-CONTACTS](../../specs/promises/product/PROM-PERSONAL-CONTACTS.md), [SYS-CONTACTS](../../specs/promises/system/SYS-CONTACTS.md)
 
 ---

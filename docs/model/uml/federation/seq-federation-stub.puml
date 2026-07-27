@@ -2,7 +2,7 @@
 ' Context: federation
 ' Profile: platform
 ' SDD: SYS-DELIVERY (outbox federato)
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Federation — stub outbound (target)
 
@@ -12,16 +12,25 @@ database "Outbox" as OB
 participant "BridgeWorker" as B
 participant "FederatedServer" as EXT
 
-C -> AB : SendMessage (futuro branch federato)
-AB -> OB : EnqueueFederatedDeliver
-AB --> C : sender copy ✓
+C -> AB : SendContent (futuro branch federato)
+AB -> OB : QueueFederatedSend
+AB --> C : ContentSent (sender copy ✓)
 
 note over OB, B
   Stato attuale: outbox queued,
   nessun consumer bridge in produzione.
 end note
 
-B ..> AB : IngestExternalMessage\n+ ApplyReceptionGate\n<<future>>
-B ..> EXT : TranslateToExternal\n<<future>>
+OB --> B : FederatedSendQueued <<future>>
+
+B -> EXT : DeliverToFederatedPeer <<future>>
+EXT --> B : FederatedMessageDelivered <<future>>
+
+B ..> AB : ApplyFederatedAck <<future>>
+AB ..> AB : FederatedAckApplied <<future>>
+
+note over OB, B
+  Inbound federato: seq-federation-inbound.puml
+end note
 
 @enduml

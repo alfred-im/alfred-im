@@ -1,25 +1,25 @@
 @startuml seq-close-conversation
 ' Context: navigation
 ' Profile: client
-' Command: CloseConversation
-' Revision: 2026-07-19
+' Command: CloseConversation / LeaveGroupConversation
+' Revision: 2026-07-27
 
 title seq-close-conversation — back mobile / chiudi chat
 
 actor Utente
 participant "UI" as UI
 participant "NavigationMachine" as Nav
-participant "MultiAccountMachine" as MAM
+participant "AccountViewState" as VS
 
 Utente -> UI : back / chiudi chat
 UI -> Nav : CloseConversation\n(o BackToGroupHome)
-
+Nav -> Nav : InvalidateConversationScope
 alt account utente
-  Nav -> MAM : update view state (inbox visible)
-  Nav --> UI : NavigationIdle
+  Nav -> VS : showInboxOnMobile
+  Nav --> UI : InboxVisible
 else account gruppo
-  Nav -> MAM : update view state (group home)
-  Nav --> UI : GroupShellEntered
+  Nav -> VS : backToGroupHome
+  Nav --> UI : GroupHomeVisible
 end
 
 @enduml

@@ -1,8 +1,8 @@
 @startuml seq-focus-account
 ' Context: navigation
 ' Profile: client
-' Command: FocusAccount / SwitchToAccount
-' Revision: 2026-07-19
+' Command: ShowInbox / EnterGroupShell → SwitchToAccount
+' Revision: 2026-07-27
 
 title seq-focus-account — sidebar switch
 
@@ -13,8 +13,13 @@ participant "MultiAccountMachine" as MAM
 
 Utente -> UI : tap account
 UI -> Nav : SwitchToAccount(userId)
+Nav -> Nav : InvalidateConversationScope
 Nav -> MAM : FocusAccount(userId)
 MAM --> Nav : AccountFocused
-Nav --> UI : InboxVisible
+alt account utente
+  Nav --> UI : InboxVisible
+else account gruppo
+  Nav --> UI : GroupHomeVisible
+end
 
 @enduml

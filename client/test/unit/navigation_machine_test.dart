@@ -6,6 +6,7 @@ import 'package:alfred_client/machines/navigation/navigation_adapters.dart';
 import 'package:alfred_client/machines/navigation/navigation_effects.dart';
 import 'package:alfred_client/machines/navigation/navigation_machine.dart';
 import 'package:alfred_client/models/chat_peer.dart';
+import 'package:alfred_client/models/conversation_scope.dart';
 import 'package:alfred_client/models/open_conversation_source.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_manager.dart';
@@ -29,6 +30,7 @@ class _RecordingNavigationEffects implements NavigationEffects {
   int closeCount = 0;
   int openGroupChatCount = 0;
   int backToGroupHomeCount = 0;
+  int mergeActivePeerCount = 0;
 
   @override
   bool get focusedAccountIsGroup => focusedIsGroup;
@@ -77,7 +79,9 @@ class _RecordingNavigationEffects implements NavigationEffects {
   }
 
   @override
-  void mergeActivePeerFromInbox(ChatPeer inboxRow) {}
+  void mergeActivePeerFromInbox(ChatPeer inboxRow) {
+    mergeActivePeerCount++;
+  }
 }
 
 ChatPeer _peer(String id) => ChatPeer(
@@ -92,6 +96,25 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('NavigationMachine shell state', () {
+    test('SwitchToAccount invalida committedScope', () async {
+      final effects = _RecordingNavigationEffects();
+      final machine = NavigationMachine(effects)
+        ..commitScope(
+          const ConversationScope(
+            ownerUserId: 'user-a',
+            peerProfileId: 'peer-b',
+            sessionEpoch: 1,
+          ),
+        )
+        ..shellState = NavigationShellState.chatOpen;
+
+      await machine.send(const SwitchToAccount('user-a'));
+
+      expect(machine.committedScope, isNull);
+      expect(machine.shellState, NavigationShellState.inboxVisible);
+      expect(effects.lastFocusAccountId, 'user-a');
+    });
+
     test('SwitchToAccount su utente → inboxVisible', () async {
       final effects = _RecordingNavigationEffects();
       final machine = NavigationMachine(effects);
@@ -128,6 +151,22 @@ void main() {
       await machine.send(OpenPeerOnFocusedAccount(_peer('peer-b')));
 
       expect(machine.shellState, NavigationShellState.inboxVisible);
+    });
+
+    test('OpenConversationOnAccount source inbox → chatOpen', () async {
+      final effects = _RecordingNavigationEffects();
+      final machine = NavigationMachine(effects);
+
+      await machine.send(
+        const OpenConversationOnAccount(
+          accountUserId: 'user-a',
+          peerProfileId: 'peer-b',
+          source: OpenConversationSource.inbox,
+        ),
+      );
+
+      expect(machine.shellState, NavigationShellState.chatOpen);
+      expect(effects.lastSource, OpenConversationSource.inbox);
     });
 
     test('OpenConversationOnAccount ok → chatOpen', () async {
@@ -222,12 +261,42 @@ void main() {
     test('CloseConversation su gruppo → groupShell', () async {
       final effects = _RecordingNavigationEffects()..focusedIsGroup = true;
       final machine = NavigationMachine(effects)
-        ..shellState = NavigationShellState.groupShell;
+        ..shellState = NavigationShellState.chatOpen;
 
       await machine.send(const CloseConversation());
 
       expect(machine.shellState, NavigationShellState.groupShell);
       expect(effects.closeCount, 1);
+    });
+
+    test('MergeActivePeerFromInbox non cambia shell state', () async {
+      final effects = _RecordingNavigationEffects();
+      final machine = NavigationMachine(effects)
+        ..shellState = NavigationShellState.chatOpen;
+
+      await machine.send(MergeActivePeerFromInbox(_peer('peer-b')));
+
+      expect(machine.shellState, NavigationShellState.chatOpen);
+      expect(effects.mergeActivePeerCount, 1);
+    });
+
+    test('OpenGroupChat invalida committedScope', () async {
+      final effects = _RecordingNavigationEffects()..focusedIsGroup = true;
+      final machine = NavigationMachine(effects)
+        ..commitScope(
+          const ConversationScope(
+            ownerUserId: 'group-a',
+            peerProfileId: 'peer-b',
+            sessionEpoch: 1,
+          ),
+        )
+        ..shellState = NavigationShellState.chatOpen;
+
+      await machine.send(const OpenGroupChat());
+
+      expect(machine.committedScope, isNull);
+      expect(machine.shellState, NavigationShellState.groupShell);
+      expect(effects.openGroupChatCount, 1);
     });
 
     test('OpenGroupChat e BackToGroupHome restano in groupShell', () async {

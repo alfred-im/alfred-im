@@ -1,7 +1,7 @@
 # Glossario — contesto reception
 
 **Bounded context:** `reception`  
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **Promesse SDD:** [SYS-RECEPTION](../../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER](../../specs/promises/product/PROM-RECEPTION-FILTER.md)
 
 ---
@@ -14,6 +14,9 @@
 | **Allowed person** | Voce allow list: identificativo entry + identità profilo consentito. |
 | **Owner (destinatario)** | Utente che filtra la ricezione. |
 | **Sender gate** | Condizione recapito: mittente ∈ allow list del destinatario. |
+| **EvaluateInboundDelivery** | Comando worker che valuta il gate prima della materializzazione copia destinatario. |
+| **DeliveryPermitted** | Esito gate positivo — copia destinatario materializzata, spunta doppia mittente. |
+| **DeliverySilentlyBlocked** | Esito gate negativo — nessuna copia destinatario; mittente resta a ✓ singola. |
 | **Silent rejection** | Messaggio accettato lato mittente (✓) ma senza copia destinatario né ✓✓ — nessun errore al mittente. |
 | **Empty allowlist** | Lista vuota → nessun mittente passa il gate ([PROM-RECEPTION-FILTER-002](../../specs/promises/product/PROM-RECEPTION-FILTER.md)). |
 | **Always-on filter** | Nessun toggle globale on/off — filtro sempre attivo ([SYS-RECEPTION-014](../../specs/promises/system/SYS-RECEPTION.md)). |

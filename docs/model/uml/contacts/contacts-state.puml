@@ -1,7 +1,7 @@
 @startuml contacts-state
 ' Context: contacts
 ' SDD: PROM-PERSONAL-CONTACTS, SYS-CONTACTS
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Contacts — ContactsMachine
 
@@ -20,11 +20,10 @@ Ready --> Ready : AddExternalContact
 Ready --> Ready : RemoveInternalContact
 
 note right of Ready
-  SearchProfiles is a command
-  handled in UI sheet; results are
-  local until AddInternalContact.
-  List filter (SetSearchQuery) does
-  not change machine state.
+  SearchPeople (add-contact sheet) is handled
+  in UI via coordinator — not a ContactsMachine
+  event. List filter (SetSearchQuery) does not
+  change load state. Empty list is still Ready.
 end note
 
 @enduml

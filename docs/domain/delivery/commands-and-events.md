@@ -1,20 +1,33 @@
 # Comandi ed eventi — contesto delivery
 
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **UML:** [docs/model/uml/delivery/](../../model/uml/delivery/)
 
 Worker server — nessuno statechart client.
 
 ---
 
-## Comandi
+## Comandi — accodamento (confine account)
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
 | `QueueDelivery` | Policy (invio account) | Accoda recapito messaggio al destinatario. |
 | `QueueReadReceipt` | Policy (lettura) | Accoda propagazione spunta lettura al mittente. |
 | `QueueGroupFanOut` | Policy (broadcast gruppo) | Accoda erogazione verso partecipanti. |
-| `ProcessDeliveryQueue` | Policy (worker) | Elabora prossimo evento in coda. |
+
+---
+
+## Comandi — worker (platform)
+
+| Comando | Emesso da | Descrizione |
+|---------|-----------|-------------|
+| `ProcessDeliveryQueue` | Policy (worker) | Elabora prossimo evento in coda (dispatcher per `event_kind`). |
+| `DeliverInternal` | `ProcessDeliveryQueue` | Recapito 1:1 o verso archivio gruppo; gate reception prima della materializzazione. |
+| `PropagateReadReceipt` | `ProcessDeliveryQueue` | Propaga spunta lettura sulla copia mittente (λ). |
+| `GroupErogate` | `ProcessDeliveryQueue` | Legge archivio gruppo e avvia fan-out. |
+| `ErogateGroupMessage` | `DeliverInternal` / `GroupErogate` | Erogazione verso partecipanti allow list con gate per-partecipante. |
+| `QueuePushNotification` | Policy post-recapito | Accoda notifica Web Push post-recapito riuscito (SYS-PUSH). |
+| `ProcessPushNotification` | `ProcessDeliveryQueue` | Invoca pipeline Web Push per evento `push_notify`. |
 
 ---
 
@@ -22,10 +35,11 @@ Worker server — nessuno statechart client.
 
 | Evento | Descrizione |
 |--------|-------------|
-| `RecipientNotified` | Copia destinatario materializzata. |
-| `DeliveryCompleted` | Evento in coda elaborato. |
+| `RecipientNotified` | Copia destinatario materializzata; spunta doppia mittente valorizzata se consentito. |
+| `DeliveryCompleted` | Evento in coda elaborato (`completed`). |
 | `ReadReceiptPropagated` | Spunta lettura visibile al mittente. |
 | `GroupFanOutCompleted` | Erogazione gruppo terminata. |
+| `DeliverySilentlyBlocked` | Gate reception negato — nessuna copia destinatario; nessun errore verso mittente (evento reception, osservato nel worker). |
 
 ---
 
@@ -33,6 +47,7 @@ Worker server — nessuno statechart client.
 
 | Policy | Descrizione |
 |--------|-------------|
-| **Gate reception prima del recapito** | Allow list valutata sul destinatario. |
+| **Gate reception prima del recapito** | Allow list valutata sul destinatario (`EvaluateInboundDelivery`). |
 | **Nessuna scrittura cross-archivio** | Solo il worker attraversa il confine tra archivi. |
-| **Rifiuto silenzioso** | Gate fallito non genera errore verso il mittente. |
+| **Rifiuto silenzioso** | Gate fallito → `DeliverySilentlyBlocked`; nessun errore verso il mittente. |
+| **Push solo dopo materializzazione** | `QueuePushNotification` solo se copia destinatario creata (SYS-DELIVERY-022). |

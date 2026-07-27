@@ -23,7 +23,7 @@ class MessageMediaService {
       userId: userId,
       extension: 'gif',
       contentType: 'image/gif',
-      maxBytes: VoiceConfig.maxBytes,
+      maxBytes: ChatMediaConfig.gifMaxBytes,
     );
   }
 

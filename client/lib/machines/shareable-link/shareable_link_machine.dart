@@ -5,7 +5,7 @@
 import '../../utils/shareable_link.dart';
 import 'shareable_link_effects.dart';
 
-/// Stato client — `docs/model/uml/shareable-link/seq-open-from-fragment.puml`.
+/// Stato client — `docs/model/uml/shareable-link/shareable-link-state.puml`.
 enum ShareableLinkState {
   idle,
   pending,
@@ -13,18 +13,25 @@ enum ShareableLinkState {
   invalid,
 }
 
+/// Eventi — `docs/domain/shareable-link/commands-and-events.md`.
 sealed class ShareableLinkEvent {
   const ShareableLinkEvent();
 }
 
 /// Fragment `#` ricevuto o aggiornato.
-final class ParseFragment extends ShareableLinkEvent {
-  const ParseFragment(this.fragment);
+final class ResolveSharedLink extends ShareableLinkEvent {
+  const ResolveSharedLink(this.fragment);
   final String? fragment;
 }
 
-final class DismissInvalid extends ShareableLinkEvent {
-  const DismissInvalid();
+/// Sessione pronta: risolve target in coda.
+final class HandleSharedLinkTarget extends ShareableLinkEvent {
+  const HandleSharedLinkTarget();
+}
+
+/// Utente chiude schermata risorsa non trovata.
+final class DismissSharedLinkNotFound extends ShareableLinkEvent {
+  const DismissSharedLinkNotFound();
 }
 
 /// Macchina shareable-link — parse fragment, risoluzione, delega navigation.
@@ -37,18 +44,20 @@ class ShareableLinkMachine {
   ShareableLinkTarget? target;
   bool handling = false;
 
-  void send(ShareableLinkEvent event) {
+  Future<void> send(ShareableLinkEvent event) async {
     switch (event) {
-      case ParseFragment(:final fragment):
+      case ResolveSharedLink(:final fragment):
         _applyFragment(fragment);
-      case DismissInvalid():
+      case HandleSharedLinkTarget():
+        await _handleTargetIfReady();
+      case DismissSharedLinkNotFound():
         target = null;
         handling = false;
         state = ShareableLinkState.idle;
     }
   }
 
-  Future<void> handleTargetIfReady() async {
+  Future<void> _handleTargetIfReady() async {
     if (target == null || handling || state == ShareableLinkState.invalid) {
       return;
     }

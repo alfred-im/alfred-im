@@ -1,43 +1,53 @@
 @startuml seq-process-outbox
 ' Context: delivery
 ' Profile: platform
-' Command: ProcessOutbox
+' Command: ProcessDeliveryQueue
 ' SDD: SYS-DELIVERY-011
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title seq-process-outbox — dispatcher worker
 
 participant "AccountBoundary" as AB
 database "Outbox" as OB
 participant "DeliveryWorker" as DW
+participant "ReceptionGate" as GATE
 participant "MailboxArchive" as MSG
 
-AB -> OB : EnqueueDeliver / EnqueueReadReceipt / EnqueueGroupErogate
-AB -> DW : ProcessOutbox
+AB -> OB : QueueDelivery / QueueReadReceipt / QueueGroupFanOut
+AB -> DW : ProcessDeliveryQueue
 
 DW -> OB : read event_kind
 
 alt event_kind = read_receipt
-  DW -> DW : ProcessReadReceipt
-  DW -> MSG : PropagateReadReceipt
-  DW -> OB : OutboxCompleted
+  DW -> DW : PropagateReadReceipt
+  DW -> MSG : ReadReceiptPropagated
+  DW -> OB : DeliveryCompleted
 else event_kind = group_erogate
   DW -> DW : GroupErogate
   DW -> MSG : read group archive row
   DW -> DW : ErogateGroupMessage
-  DW -> OB : OutboxCompleted
+  DW -> OB : GroupFanOutCompleted
+else event_kind = push_notify
+  DW -> DW : ProcessPushNotification
+  DW -> OB : DeliveryCompleted
 else event_kind = deliver (default)
   DW -> DW : DeliverInternal
-  DW -> DW : CheckSenderAllowed (reception gate)
-  alt allowed
-    DW -> MSG : RecipientCopyMaterialized
+  DW -> GATE : EvaluateInboundDelivery
+  alt DeliveryPermitted
+    GATE --> DW : DeliveryPermitted
+    DW -> MSG : RecipientNotified
     DW -> MSG : SenderDeliveredAtSet
     opt destinatario è gruppo
       DW -> DW : ErogateGroupMessage
     end
-    DW -> OB : OutboxCompleted
-  else rejected
-    DW -> OB : OutboxCompleted\n(DeliveryGateRejected)
+    opt recapito materializzato (SYS-PUSH)
+      DW -> OB : QueuePushNotification
+      DW -> DW : ProcessPushNotification
+    end
+    DW -> OB : DeliveryCompleted
+  else DeliverySilentlyBlocked
+    GATE --> DW : DeliverySilentlyBlocked
+    DW -> OB : DeliveryCompleted
   end
 end
 

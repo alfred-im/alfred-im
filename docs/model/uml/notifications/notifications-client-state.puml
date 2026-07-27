@@ -1,7 +1,7 @@
 @startuml notifications-client-state
 ' Context: notifications (client Flutter)
 ' SDD: PROM-PUSH-NOTIFY, SURF-NOTIFICATIONS
-' Revision: 2026-07-19
+' Revision: 2026-07-27
 
 title Notifications — client state machine (subscription + open chat)
 
@@ -15,15 +15,15 @@ state OpenChatIdle
 state OpenChatQueued : intent in coda / pending
 state OpenChatProcessing : handler serializzato
 
-[*] --> PushUnsupported : CheckPushSupport\n[!supported]
-[*] --> PermissionDenied : CheckPushSupport\n[permission denied]
-[*] --> Idle : CheckPushSupport\n[supported, not denied]
+[*] --> PushUnsupported : CheckPushSupport\nPushUnsupportedDetected
+[*] --> PermissionDenied : CheckPushSupport\nPermissionDeniedDetected
+[*] --> Idle : CheckPushSupport\nSubscriptionIdleReached
 
-Idle --> Syncing : SyncSubscriptions
+Idle --> Syncing : SyncSubscriptionsRequested
 Syncing --> Active : PushRegistrationSucceeded
-Syncing --> Idle : PushRegistrationSkipped
-Active --> Syncing : SyncSubscriptions\n(login, resume, add account)
-Active --> Idle : UnregisterDeviceFromPush\n(ultimo account)
+Syncing --> Idle : PushRegistrationFailed
+Active --> Syncing : SyncSubscriptionsRequested\n(login, resume, add account)
+Active --> Idle : UnregisterSubscriptionRequested\n(ultimo account)
 
 state c_subscription {
   PushUnsupported
@@ -34,17 +34,26 @@ state c_subscription {
 }
 
 state c_openchat {
-  OpenChatIdle --> OpenChatQueued : OpenChatFromNotification\n[!sessionReady]
-  OpenChatIdle --> OpenChatProcessing : OpenChatFromNotification\n[sessionReady]
-  OpenChatQueued --> OpenChatProcessing : SessionBecameReady\n/ DrainPendingOpenChat
-  OpenChatProcessing --> OpenChatIdle : ChatOpenFromNotificationSucceeded
-  OpenChatProcessing --> OpenChatIdle : ChatOpenFromNotificationFailed
-  OpenChatProcessing --> OpenChatQueued : ChatOpenFromNotificationDeferred
+  OpenChatIdle --> OpenChatQueued : OpenChatFromNotification\n[!sessionReady]\n/ ChatOpenFromNotificationDeferred
+  OpenChatIdle --> OpenChatProcessing : OpenChatFromNotification\n[sessionReady && hasOpenAccount]
+  OpenChatIdle --> OpenChatIdle : OpenChatFromNotification\n[!hasOpenAccount]\n/ ChatOpenFromNotificationFailed
+  OpenChatQueued --> OpenChatProcessing : OpenChatFromNotification\n[sessionReady]\n/ da PushPlatform drain
+  OpenChatProcessing --> OpenChatQueued : OpenChatFromNotification\n[chain busy]\n/ coda in-memory
+  OpenChatProcessing --> OpenChatIdle : forwardOpenFromPushTap ok\n/ ChatOpenFromNotificationSucceeded
+  OpenChatProcessing --> OpenChatIdle : forwardOpenFromPushTap fail\n/ ChatOpenFromNotificationFailed
+  OpenChatQueued --> OpenChatProcessing : SessionBecameReady\n/ DrainPendingOpenChat\n(solo coda in-memory)
 }
 
 note right of OpenChatProcessing
-  Effetto: delega OpenFromPushTap
-  al contesto navigation
+  Effetto: forwardOpenFromPushTap
+  → openFromPushTap → OpenConversation(source=push)
+end note
+
+note bottom of OpenChatQueued
+  Pending persistito (localStorage):
+  PushPlatform.tryDrainPendingOpenChat
+  ri-emette OpenChatFromNotification
+  (PushNotificationListener, non SessionBecameReady)
 end note
 
 @enduml

@@ -1,7 +1,7 @@
 # Glossario — contesto media
 
 **Bounded context:** `media` (sotto-contesto di messaging per allegati chat)  
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **Promesse SDD:** [PROM-CHAT-MEDIA](../../specs/promises/product/PROM-CHAT-MEDIA.md), [PROM-OUTBOUND-SEND](../../specs/promises/product/PROM-OUTBOUND-SEND.md)
 
 ---
@@ -15,10 +15,10 @@
 | **Outbound media cache** | Cache RAM per anteprima media pending prima dell'upload. |
 | **Image normalization** | Conversione formati (es. HEIC → JPEG); verifica magic bytes. |
 | **Voice limits** | Durata massima, dimensione massima, formato audio canonico. |
-| **Media limits** | Soglie image/video; persistenza locale web sotto soglia byte. |
+| **Media limits** | Soglie image/gif/video (`ChatMediaConfig`); voice (`VoiceConfig`); persistenza locale web sotto soglia byte. |
 | **Location precision** | Coordinate arrotondate; tile mappa; nessun bucket. |
 | **Voice capture phase** | idle → recording → locked → preview. |
-| **Location capture phase** | idle → refining → preview conferma. |
+| **Location capture phase** | `idle` → `sharing` (overlay: affinamento GPS + conferma invio). |
 | **Local media reference** | Riferimento locale per retry coda (disco o memoria). |
 | **Pending media URL** | Placeholder fino a URL pubblico server disponibile. |
 

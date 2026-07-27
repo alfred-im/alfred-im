@@ -12,15 +12,15 @@ class ShareableLinkAdapters {
 
   final ShareableLinkMachine _machine;
 
-  void onFragmentChanged(String? fragment) {
-    _machine.send(ParseFragment(fragment));
+  Future<void> onFragmentChanged(String? fragment) {
+    return _machine.send(ResolveSharedLink(fragment));
   }
 
   Future<void> onHandleRequested() {
-    return _machine.handleTargetIfReady();
+    return _machine.send(const HandleSharedLinkTarget());
   }
 
-  void onDismissInvalid() {
-    _machine.send(const DismissInvalid());
+  Future<void> onDismissNotFound() {
+    return _machine.send(const DismissSharedLinkNotFound());
   }
 }

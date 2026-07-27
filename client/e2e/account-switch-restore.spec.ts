@@ -4,7 +4,8 @@
 
 /**
  * Gate browser — switch account dalla sidebar deve ripristinare scope/chat
- * (SwitchToAccount + restoreCommittedScopeFromViewState), non spinner né inbox vuota.
+ * (SwitchToAccount + committedScope da view-state, PROM-CONVERSATION-SCOPE),
+ * non spinner né inbox vuota.
  */
 import { test, expect } from '@playwright/test';
 

@@ -1,7 +1,8 @@
 @startuml media-state
 ' Context: media
 ' Profile: client
-' Revision: 2026-07-19
+' Revision: 2026-07-27
+' Note: contesto documented — nessuno statechart client dedicato; diagramma astratto
 
 title Media — preparazione allegato
 
@@ -15,6 +16,12 @@ Idle --> Preparing : PrepareVoiceMessage\nPrepareImage\nPrepareVideo\nPrepareGif
 Preparing --> Ready : AttachmentReady
 Preparing --> Rejected : AttachmentRejected
 Preparing --> Idle : AttachmentCancelled
+Rejected --> Idle
 Ready --> Idle : SendContent\n(messaging)
+
+note right of Rejected
+  Transitorio: feedback UI
+  (policy Rejected transitorio)
+end note
 
 @enduml

@@ -16,7 +16,8 @@ Saving --> Idle : ProfileSaved
 Saving --> Idle : ProfileSaveFailed
 
 Idle --> UploadingAvatar : UploadAvatar
-UploadingAvatar --> Saving : AvatarUploaded\n+ SaveProfile
+UploadingAvatar --> Saving : SaveProfile
+UploadingAvatar --> Idle : AvatarUploadFailed
 UploadingAvatar --> Idle : AvatarUploadFailed
 
 note right of Saving

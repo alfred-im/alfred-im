@@ -5,6 +5,7 @@
 /// Canonical chat photo/video limits — contract for client, storage, RPC.
 abstract final class ChatMediaConfig {
   static const imageMaxBytes = 10 * 1024 * 1024;
+  static const gifMaxBytes = 10 * 1024 * 1024;
   static const videoMaxBytes = 50 * 1024 * 1024;
   static const maxVideoDurationSeconds = 3600;
 

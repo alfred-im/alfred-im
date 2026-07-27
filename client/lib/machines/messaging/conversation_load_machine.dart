@@ -20,11 +20,13 @@ final class ConversationReady extends ConversationLoadEvent {
   const ConversationReady();
 }
 
-/// Caricamento fallito — resta in `ready` con errore in coordinator (effetto).
+/// Caricamento fallito (errore recuperabile) — resta in `ready` con errore in coordinator.
 final class LoadFailed extends ConversationLoadEvent { const LoadFailed(); }
 
-/// Sessione non valida — regione `SessionBlocked`.
-final class SessionExpired extends ConversationLoadEvent { const SessionExpired(); }
+/// Dominio: evento `ConversationUnavailable` — regione `SessionBlocked`.
+final class ConversationUnavailable extends ConversationLoadEvent {
+  const ConversationUnavailable();
+}
 
 class ConversationLoadMachine {
   ConversationLoadState state = ConversationLoadState.loading;
@@ -36,7 +38,7 @@ class ConversationLoadMachine {
       case ConversationReady():
       case LoadFailed():
         state = ConversationLoadState.ready;
-      case SessionExpired():
+      case ConversationUnavailable():
         state = ConversationLoadState.sessionBlocked;
     }
   }

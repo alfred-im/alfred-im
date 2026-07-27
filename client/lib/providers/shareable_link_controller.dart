@@ -64,7 +64,7 @@ class ShareableLinkController extends ChangeNotifier {
 
   void clearInvalid() {
     if (!invalid) return;
-    _adapters?.onDismissInvalid();
+    _adapters?.onDismissNotFound();
     notifyListeners();
   }
 

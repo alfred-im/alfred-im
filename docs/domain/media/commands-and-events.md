@@ -1,9 +1,9 @@
 # Comandi ed eventi — contesto media
 
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **UML:** [docs/model/uml/media/](../../model/uml/media/)
 
-Sotto-contesto di **messaging**: prepara allegati prima di `SendContent`.
+Sotto-contesto di **messaging**: prepara allegati prima di `SendContent`. Nessuno statechart `media` in produzione — fasi UI in `ChatInputBar`, invio in `MessagesControllerEffects` / `GroupMessagesCoordinator`.
 
 ---
 
@@ -35,3 +35,5 @@ Sotto-contesto di **messaging**: prepara allegati prima di `SendContent`.
 |--------|-------------|
 | **Upload prima dell'invio** | Blob caricati prima che il messaggio parta (tranne posizione). |
 | **Durata minima vocale** | Registrazioni troppo brevi vengono scartate. |
+| **Rejected transitorio** | Dopo `AttachmentRejected`, feedback UI e ritorno a `Idle` senza stato persistente. |
+| **Handoff a messaging** | Su `AttachmentReady`, il contesto messaging esegue `SendContent` (upload già completato o in corso con bolla ottimistica). |

@@ -1,8 +1,8 @@
 # Glossario — contesto navigation
 
 **Bounded context:** `navigation`  
-**Ultima revisione:** 2026-07-25  
-**Promesse SDD:** [PROM-SHAREABLE-LINK](../../specs/promises/product/PROM-SHAREABLE-LINK.md), [PROM-MULTI-ACCOUNT](../../specs/promises/product/PROM-MULTI-ACCOUNT.md)
+**Ultima revisione:** 2026-07-27  
+**Promesse SDD:** [PROM-SHAREABLE-LINK](../../specs/promises/product/PROM-SHAREABLE-LINK.md), [PROM-MULTI-ACCOUNT](../../specs/promises/product/PROM-MULTI-ACCOUNT.md), [PROM-CONVERSATION-SCOPE](../../specs/promises/product/PROM-CONVERSATION-SCOPE.md)
 
 ---
 
@@ -11,17 +11,19 @@
 | Termine | Definizione |
 |---------|-------------|
 | **Shell** | Layout principale: sidebar + inbox + chat (sempre visibile). |
-| **InboxVisible** | Area inbox mostrata (mobile o desktop). |
-| **ChatOpen** | Conversazione 1:1 o gruppo aperta per account in focus. |
+| **InboxVisible** | Area inbox mostrata (mobile o desktop) per account utente. |
+| **ChatOpen** | Conversazione 1:1 aperta per account utente in focus (`NavigationShellState.chatOpen`). |
+| **GroupShell** | Account gruppo in focus — home gruppo al posto dell'inbox classica. |
+| **GroupHomeVisible** | Home gruppo (`GroupShell`, `groupChatOpen = false`). |
+| **GroupConversationVisible** | Chat gruppo aperta (`GroupShell`, `groupChatOpen = true`). |
 | **ConversationScope** | Ambito atomico commesso `(owner_user_id, peer_profile_id, session_epoch)` — unica autorità per messaging. |
 | **CommitConversationScope** | Registra scope dopo apertura validata (account + peer + sessione viva). |
 | **InvalidateConversationScope** | Azzera scope (chiusura chat, switch account, apertura verso altro peer). |
 | **OpenConversation** | Transazione unica: invalida → focus (se serve) → **consolida sessione** → risolvi peer → commit scope. Sorgenti: inbox, push, link, compose. |
 | **ConsolidateSession** | All'ingresso chat: vedi [invariants.md](invariants.md) § Session identity |
 | **Profile fallback** | Se peer non in inbox, lookup profilo — link/compose sempre; push dopo retry inbox esteso. |
-| **CloseConversation** | Chiude chat; invalida scope; torna a inbox o home gruppo. |
-| **GroupShell** | Account gruppo in focus — home gruppo al posto dell'inbox classica. |
-| **Account view state** | Stato UI per account (chat aperta, inbox mobile) — `activePeer` è proiezione, non autorità messaging. |
+| **CloseConversation** | Chiude chat; invalida scope; torna a inbox (utente) o home gruppo (gruppo). |
+| **Account view state** | Stato UI per account (`activePeer`, `showInboxOnMobile`, `groupChatOpen`) — proiezione, non autorità messaging. |
 
 ---
 
@@ -30,8 +32,9 @@
 | Contesto | Relazione |
 |----------|-----------|
 | **multi-account** | `FocusAccount` = solo I/O sessione. `SwitchToAccount` (navigation) invalida scope e mostra inbox/home gruppo — **non** ripristina chat da view-state. |
-| **notifications** | `OpenConversation(source=push)` — stessa transazione, policy push. |
-| **shareable-link** | `OpenConversation(source=shareableLink)` — clear stale se peer diverso. |
+| **notifications** | Tap notifica → adapter `openFromPushTap` → `OpenConversation(source=push)`. |
+| **shareable-link** | Fragment `#…/chat` → adapter `openFromShareableLink` → `OpenConversation(source=shareableLink)`. |
+| **contacts** | Compose da rubrica → adapter `openFromCompose` → `OpenConversation(source=compose)`. |
 
 ---
 

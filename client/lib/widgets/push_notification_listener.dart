@@ -13,7 +13,7 @@ import '../providers/auth_controller.dart';
 import '../utils/diagnostic_log.dart';
 import '../utils/push_platform.dart';
 
-/// Gestisce tap notifica push → [NotificationsMachine] → [ExternalIntentAdapter].
+/// Gestisce tap notifica push → [NotificationsMachine] → `openFromPushTap`.
 class PushNotificationListener extends StatefulWidget {
   const PushNotificationListener({
     super.key,

@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-REALTIME-OWNER` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
+| **Ultima revisione** | 2026-07-27 |
 | **PR origine** | #159, #179 |
 
 Promessa di prodotto: subscribe Realtime Postgres su `messages` filtrato per `owner_id = io` — inbox, chat per peer e aggiornamento spunte mittente.
@@ -66,7 +66,7 @@ Multi-account: realtime solo sull'account in focus — [PROM-MULTI-ACCOUNT](./PR
 | Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/), [docs/domain/multi-account/](../../../domain/multi-account/) |
 | UML | [docs/model/uml/messaging/](../../model/uml/messaging/) |
 | Statechart client | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/) |
-| Eventi realtime | `ConversationUpdated`, `DeliveryTickReceived` |
+| Eventi realtime | `RealtimeReceived` → `ConversationUpdated` (statechart messaging); spunte mittente via UPDATE `read_at` |
 
 **Implementazione (non vincolante):** [docs/domain/messaging/README.md](../../../domain/messaging/README.md)
 

@@ -12,21 +12,50 @@
 
 ## Mapping dominio → implementazione
 
-| Dominio (DDD) | Statechart | Codice |
-|---------------|------------|--------|
-| `OpenConversation` | `LoadMessages`, `AttachRealtime`, `MarkRead` | `MessagingCoordinator` init ciclo |
-| `SendContent` | `SendStarted` → `ContentSent` / `ContentSendFailed` | `SendMessage`, `SendGif`, `SendVoice`, … |
-| `RetryFailedSend` | `RetryFailedSend` | `RetryMessage` |
-| `RefreshConversation` | `RefreshConversation` | reload su `ConversationLoadMachine` |
-| `LoadOlderMessages` | side-effect in `Ready` (no transizione macchina) | `MessagingCoordinator.loadOlderMessages` / `MessageService.fetchPeerMessages(beforeCreatedAt: …)` |
-| `ConversationReady` | `ConversationReady` / stato `ready` | lista messaggi in UI |
-| `ContentSent` | `ContentSent` | merge riga server |
-| `ContentSendFailed` | `ContentSendFailed` | coda `OutboundMessageQueue` |
-| `ConversationUpdated` | `RealtimeReceived`, `DeliveryTickReceived` | merge realtime |
+### Comandi
+
+| Dominio | Statechart (adapter) | Codice |
+|---------|----------------------|--------|
+| `OpenConversation` | `LoadMessages` | `MessagingCoordinator.init` → `load()` |
+| `OpenConversation` | `AttachRealtime` | `MessagingCoordinator.init` → `attachRealtime()` |
+| `OpenConversation` | — (side-effect) | `MessagingCoordinator.init` → `effects.markRead()` |
+| `SendContent` | `SendStarted` | `MessagesController.send*` → `notifySendStarted()` |
+| `RetryFailedSend` | `RetryFailedSend` | `MessagesController.retryMessage` |
+| `RefreshConversation` | `RefreshConversation` | `MessagingCoordinator.reload()` |
+| `LoadOlderMessages` | — (side-effect in `Ready`) | `MessagingCoordinator.loadOlderMessages()` |
+| `CloseConversation` | `DetachRealtime` | `MessagingCoordinator.dispose()` |
+
+### Eventi
+
+| Dominio | Statechart (adapter) | Codice |
+|---------|----------------------|--------|
+| `ConversationReady` | `ConversationReady` | `ConversationLoadMachine` → `ready` |
+| `ConversationUnavailable` | `ConversationUnavailable` | `ConversationLoadMachine` → `sessionBlocked` |
+| `ContentSent` | `ContentSent` | `notifySendEnded(false)` |
+| `ContentSendFailed` | `ContentSendFailed` | `notifySendEnded(true)` |
+| `ConversationUpdated` | `RealtimeReceived` | merge in `ConversationMessageStore` (INSERT messaggi + UPDATE spunte) |
+
+Eventi statechart **solo interni** (non in dominio): `LoadFailed` (errore fetch recuperabile → `ready` con banner), `QueueEmptied`, `FailedQueueRestored`.
+
+### Stati (UML ↔ statechart)
+
+| UML | `ConversationLoadState` / `OutboundSendState` / `RealtimeAttachmentState` |
+|-----|---------------------------------------------------------------------------|
+| `Loading` | `loading` |
+| `Ready` | `ready` |
+| `SessionBlocked` | `sessionBlocked` |
+| `Idle` | `idle` |
+| `Sending` | `sending` |
+| `FailedQueue` | `failedQueue` |
+| `Detached` | `detached` |
+| `Attached` | `attached` |
+
+### Componenti
 
 | Componente | Ruolo |
 |------------|-------|
 | `MessagingCoordinator` | Compone le tre macchine |
 | `MessagesController` | Facade UI |
 | `MessagesControllerEffects` | RPC, coda, media, realtime |
+| `ConversationMessageStore` | Unica mutazione lista DM |
 | `MessageService` | Piattaforma mailbox + realtime |

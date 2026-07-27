@@ -2,7 +2,7 @@
 
 **Bounded context:** `navigation`  
 **Implementazione:** `client/lib/utils/conversation_session_access.dart`  
-**Confine prodotto:** [PROM-CONVERSATION-SCOPE-008](../../specs/promises/product/PROM-CONVERSATION-SCOPE.md)
+**Confine prodotto:** [PROM-CONVERSATION-SCOPE](../../specs/promises/product/PROM-CONVERSATION-SCOPE.md) (promessa **PROM-CONVERSATION-SCOPE-008**)
 
 ---
 
@@ -14,7 +14,7 @@ Per una conversazione commessa con owner `O` e peer `P`:
 2. `auth.uid() == O`
 3. `P != auth.uid()`
 
-Vale **all'ingresso** (`OpenConversation` / consolidate) e **per tutta la durata** dello scope commesso (UI chat, fetch, invio, upload).
+Vale **all'ingresso** (`OpenConversation` / `OpenPeerOnFocusedAccount` / `OpenConversationOnAccount` dopo consolidate) e **per tutta la durata** dello scope commesso (UI chat, fetch, invio, upload).
 
 Se l'invariante fallisce: nessuna RPC/upload; l'utente vede «Sessione scaduta — accedi di nuovo» (mai errore RPC grezzo).
 
@@ -33,8 +33,16 @@ Sottoinsieme di session identity — senza il vincolo su `P`.
 
 ## No stale chat
 
-`OpenConversation` (inbox, push, link, compose) **sostituisce** la chat precedente:
+`OpenConversation` (inbox via `OpenPeerOnFocusedAccount`, push, link, compose via `OpenConversationOnAccount`) **sostituisce** la chat precedente:
 
-1. Se il peer richiesto ≠ peer in view-state, la chat stale non resta commessa.
-2. Peer irrisolvibile → inbox/home, scope non commesso.
-3. Switch account senza `OpenConversation` → view-state può conservare `activePeer` ma **scope non commesso** (nessun fetch/send).
+1. Se il peer richiesto ≠ peer in view-state, la chat stale non resta commessa (`ConversationScopeInvalidated`).
+2. Peer irrisolvibile → inbox/home (`NavigationFailed`), scope non commesso.
+3. `SwitchToAccount` (`ShowInbox` / `EnterGroupShell`) senza `OpenConversation` → view-state può conservare `activePeer` ma **scope non commesso** (nessun fetch/send).
+
+---
+
+## Scope e shell
+
+1. Solo `NavigationMachine.commitScope` registra `ConversationScope`; `invalidateCommittedScope` lo azzera.
+2. `ChatOpen` implica scope commesso; `InboxVisible` e `GroupShell` implicano scope `null`.
+3. Chat gruppo: shell `GroupShell` con `groupChatOpen` in view-state — nessun `ConversationScope` 1:1.

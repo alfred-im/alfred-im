@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto groups
 
-**Ultima revisione:** 2026-07-19  
+**Ultima revisione:** 2026-07-27  
 **UML:** [docs/model/uml/groups/](../../model/uml/groups/)
 
 ---
@@ -25,6 +25,8 @@
 | `GroupBroadcastFailed` | Broadcast non riuscito. |
 | `GroupConversationUpdated` | Nuovi messaggi o aggiornamenti nello storico gruppo. |
 
+Mapping verso eventi statechart: [README.md](./README.md).
+
 ---
 
 ## Policy
@@ -41,6 +43,6 @@
 
 | Contesto | Relazione |
 |----------|-----------|
-| **navigation** | Shell gruppo e apertura chat. |
-| **delivery** | Fan-out verso partecipanti allow list. |
+| **navigation** | Shell gruppo (`OpenGroupConversation` / `LeaveGroupConversation`). |
+| **delivery** | Fan-out verso partecipanti allow list (`QueueGroupFanOut`). |
 | **reception** | Gate su ogni erogazione. |

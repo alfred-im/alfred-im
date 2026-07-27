@@ -45,7 +45,7 @@ void main() {
       machine.send(const SyncSubscriptionsRequested());
       expect(machine.subscriptionState, NotificationsSubscriptionState.syncing);
 
-      machine.send(const SubscriptionRegistered());
+      machine.send(const PushRegistrationSucceeded());
       expect(machine.subscriptionState, NotificationsSubscriptionState.active);
     });
 
@@ -58,6 +58,34 @@ void main() {
         machine.subscriptionState,
         NotificationsSubscriptionState.permissionDenied,
       );
+    });
+
+    test('push unsupported blocca sync', () {
+      final machine = NotificationsMachine()
+        ..send(const PushUnsupportedDetected());
+
+      machine.send(const SyncSubscriptionsRequested());
+      expect(
+        machine.subscriptionState,
+        NotificationsSubscriptionState.pushUnsupported,
+      );
+    });
+
+    test('sync fallita torna idle', () {
+      final machine = NotificationsMachine()
+        ..send(const SyncSubscriptionsRequested());
+
+      machine.send(const PushRegistrationFailed());
+      expect(machine.subscriptionState, NotificationsSubscriptionState.idle);
+    });
+
+    test('unregister da active torna idle', () {
+      final machine = NotificationsMachine()
+        ..send(const SyncSubscriptionsRequested())
+        ..send(const PushRegistrationSucceeded());
+
+      machine.send(const UnregisterSubscriptionRequested());
+      expect(machine.subscriptionState, NotificationsSubscriptionState.idle);
     });
   });
 
@@ -118,6 +146,35 @@ void main() {
       expect(machine.openChatState, NotificationsOpenChatState.idle);
       expect(effects.forwardCount, 0);
       expect(effects.clearCount, 1);
+    });
+
+    test('SessionBecameReady drena coda in-memory durante processing', () async {
+      final effects = _RecordingEffects();
+      final machine = NotificationsMachine(effects: effects);
+      final adapters = NotificationsAdapters(machine);
+
+      adapters.onOpenChatFromNotification(
+        conversation: const PushConversationKey(
+          ownerUserId: 'user-a',
+          peerProfileId: 'peer-b',
+        ),
+        sessionReady: true,
+        hasOpenAccount: true,
+      );
+      adapters.onOpenChatFromNotification(
+        conversation: const PushConversationKey(
+          ownerUserId: 'user-c',
+          peerProfileId: 'peer-d',
+        ),
+        sessionReady: true,
+        hasOpenAccount: true,
+      );
+
+      expect(machine.openChatState, NotificationsOpenChatState.queued);
+
+      await Future<void>.delayed(Duration.zero);
+      expect(effects.forwardCount, 2);
+      expect(machine.openChatState, NotificationsOpenChatState.idle);
     });
   });
 }

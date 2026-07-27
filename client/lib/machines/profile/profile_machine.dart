@@ -99,7 +99,7 @@ class ProfileMachine {
             avatarUrl: avatarUrl,
           ));
         } catch (_) {
-          editState = ProfileEditState.idle;
+          await send(const AvatarUploadFailed());
         }
       case AvatarUploadFailed():
         editState = ProfileEditState.idle;

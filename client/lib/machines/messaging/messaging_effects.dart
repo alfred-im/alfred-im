@@ -39,6 +39,8 @@ abstract class MessagingEffects {
   ConversationMessageStore get messageStore;
   bool get isDisposed;
   bool ensureValidSession();
+  /// Scope commesso ancora attivo (navigation + sessione live).
+  bool get isScopeActive;
   /// Carica messaggi; `false` se scope non più attivo (il coordinator può ritentare).
   Future<bool> fetchAndSetMessages();
   /// Carica pagina più vecchia; `false` se scope non più attivo.
@@ -125,6 +127,9 @@ class MessagesControllerEffects implements MessagingEffects {
     if (isScopeCommitted == null) return false;
     return isScopeCommitted!();
   }
+
+  @override
+  bool get isScopeActive => _scopeIsActive();
 
   List<ChatMessage> get _activeMessages =>
       messageStore.messagesIfActive(scope);
@@ -350,11 +355,15 @@ class MessagesControllerEffects implements MessagingEffects {
   }
 
   bool _messagingSessionReady() {
+    // Produzione: callback legge auth.focusedSession a ogni invio (non il client
+    // congelato nel controller — critico dopo picker media / refresh token).
+    if (hasValidSession != null) {
+      return hasValidSession!();
+    }
     return isMessagingSessionReady(
       client: messageService.client,
       ownerUserId: userId,
       peerProfileId: peerProfileId,
-      whenNoGoTrueSession: hasValidSession,
     );
   }
 
