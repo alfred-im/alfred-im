@@ -45,7 +45,7 @@ MessagesScopeInactiveReason? diagnoseMessagesScopeInactive({
   if (committedScope == null) {
     return MessagesScopeInactiveReason.noCommittedScope;
   }
-  if (committedScope != scope) {
+  if (!committedScope.isSameConversationAs(scope)) {
     return MessagesScopeInactiveReason.scopeMismatch;
   }
   if (liveSession == null) return MessagesScopeInactiveReason.noLiveSession;

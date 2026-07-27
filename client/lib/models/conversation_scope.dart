@@ -61,6 +61,18 @@ class ConversationScope {
   bool matches(AccountSession session, ChatPeer peer) =>
       matchesSession(session) && matchesPeer(peer);
 
+  /// Stessa conversazione (account + peer), indipendentemente da epoch/loadSeq.
+  bool isSameConversationAs(ConversationScope other) =>
+      ownerUserId == other.ownerUserId &&
+      peerProfileId == other.peerProfileId;
+
+  /// Identità conversazione senza generazione sessione/caricamento.
+  bool isSameConversation({
+    required String ownerUserId,
+    required String peerProfileId,
+  }) =>
+      this.ownerUserId == ownerUserId && this.peerProfileId == peerProfileId;
+
   Key get providerKey => ValueKey(
         Object.hash(
           'conversation-scope',
