@@ -29,7 +29,10 @@ class PushCoordinator {
   NotificationsMachine? get notificationsMachine => _notificationsMachine;
 
   /// Re-registra subscription push (es. dopo resume PWA, permesso concesso o auth).
-  Future<void> syncPushSubscriptions() async {
+  ///
+  /// Su [onlyFocused] true (resume da picker/galleria) sincronizza solo l'account
+  /// in focus — evita restore paralleli degli altri account che invalidano JWT.
+  Future<void> syncPushSubscriptions({bool onlyFocused = false}) async {
     if (kIsWeb) {
       _notificationsAdapters.onPushSupportChecked(
         supported: PushPlatform.isPushSupported,
@@ -48,6 +51,7 @@ class PushCoordinator {
       await _pushService.syncOpenAccounts(
         _manager.openAccounts,
         focusedSession: _manager.focusedSession,
+        onlyFocused: onlyFocused,
       );
       _notificationsAdapters.onPushRegistrationSucceeded();
     } catch (_) {

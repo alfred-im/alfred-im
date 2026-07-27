@@ -34,6 +34,7 @@ class MessagesController extends ChangeNotifier {
     this.groupPeerAuthorEnrichment,
     this.onMessagesChanged,
     this.hasValidSession,
+    this.resolveMessageMediaService,
     this.isScopeCommitted,
     OutboundMessageQueue? outboundQueue,
   }) {
@@ -51,6 +52,7 @@ class MessagesController extends ChangeNotifier {
       groupPeerAuthorEnrichment: groupPeerAuthorEnrichment,
       onMessagesChanged: onMessagesChanged,
       hasValidSession: hasValidSession,
+      resolveMessageMediaService: resolveMessageMediaService,
       isScopeCommitted: isScopeCommitted,
       outboundQueue: outboundQueue,
       onChanged: notifyListeners,
@@ -77,6 +79,7 @@ class MessagesController extends ChangeNotifier {
   final String peerProfileId;
   final Future<void> Function()? onMessagesChanged;
   final bool Function()? hasValidSession;
+  final MessageMediaService Function()? resolveMessageMediaService;
   final bool Function()? isScopeCommitted;
   final MessageService messageService;
   final MessageMediaService messageMediaService;

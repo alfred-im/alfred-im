@@ -155,6 +155,11 @@ class _ChatWithMessages extends StatelessWidget {
           auth.navigation.isConversationReady(session: current, peer: peer);
           return _messagingSessionReady(current);
         },
+        resolveMessageMediaService: () {
+          final current = auth.focusedSession;
+          if (current == null) return liveSession.messageMediaService;
+          return current.messageMediaService;
+        },
         isScopeCommitted: () {
           final committedNow = auth.navigation.committedScope;
           final current = auth.focusedSession;

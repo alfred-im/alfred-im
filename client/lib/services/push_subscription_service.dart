@@ -22,6 +22,7 @@ class PushSubscriptionService {
   Future<void> syncOpenAccounts(
     List<OpenAccount> accounts, {
     AccountSession? focusedSession,
+    bool onlyFocused = false,
   }) async {
     if (!kIsWeb) return;
     if (accounts.isEmpty) return;
@@ -36,6 +37,7 @@ class PushSubscriptionService {
       await _syncOpenAccountsImpl(
         accounts,
         focusedSession: focusedSession,
+        onlyFocused: onlyFocused,
       );
     } finally {
       gate.complete();
@@ -48,6 +50,7 @@ class PushSubscriptionService {
   Future<void> _syncOpenAccountsImpl(
     List<OpenAccount> accounts, {
     AccountSession? focusedSession,
+    bool onlyFocused = false,
   }) async {
     if (!kIsWeb) return;
     if (accounts.isEmpty) return;
@@ -66,6 +69,35 @@ class PushSubscriptionService {
 
     final deviceId = await PushPlatform.getOrCreateDeviceId();
     final userAgent = defaultTargetPlatform.name;
+
+    if (onlyFocused) {
+      final session = focusedSession;
+      if (session == null) return;
+      OpenAccount? account;
+      for (final candidate in accounts) {
+        if (candidate.userId == session.userId) {
+          account = candidate;
+          break;
+        }
+      }
+      if (account == null || account.refreshToken.isEmpty) return;
+      final ok = await _upsertWithClient(
+        client: session.client,
+        account: account,
+        deviceId: deviceId,
+        keys: keys,
+        userAgent: userAgent,
+      );
+      if (!ok) {
+        await _upsertForAccount(
+          account: account,
+          deviceId: deviceId,
+          keys: keys,
+          userAgent: userAgent,
+        );
+      }
+      return;
+    }
 
     for (final account in accounts) {
       if (account.refreshToken.isEmpty) continue;

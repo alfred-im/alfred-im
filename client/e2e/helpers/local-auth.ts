@@ -20,6 +20,7 @@ export type LocalE2eUser = {
 
 export async function createLocalConfirmedUser(
   label: string,
+  options?: { profileKind?: 'user' | 'group' },
 ): Promise<LocalE2eUser> {
   const supabaseUrl =
     process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321';
@@ -49,6 +50,9 @@ export async function createLocalConfirmedUser(
       user_metadata: {
         username,
         display_name: `E2E ${label}`,
+        ...(options?.profileKind === 'group'
+          ? { profile_kind: 'group' }
+          : {}),
       },
     }),
   });
