@@ -5,11 +5,63 @@
 import '../models/chat_peer.dart';
 import '../models/conversation_scope.dart';
 import '../services/account_session.dart';
+import '../utils/diagnostic_log.dart';
 
-/// True se [scope] (congelato nel [MessagesController]) è ancora l'ambito attivo.
-///
-/// INV-MSG-1: owner+peer+loadSeq del controller devono coincidere con scope commesso
-/// e sessione live. Non usare solo [ConversationScope.matches] sullo scope congelato.
+/// Motivo per cui lo scope messaggi non è attivo — per diagnostica e test.
+enum MessagesScopeInactiveReason {
+  disposed,
+  noCommittedScope,
+  scopeMismatch,
+  noLiveSession,
+  ownerMismatch,
+  peerMismatch,
+  conversationNotReady,
+}
+
+extension MessagesScopeInactiveReasonDiag on MessagesScopeInactiveReason {
+  String get diagnosticCode => switch (this) {
+        MessagesScopeInactiveReason.disposed => 'disposed',
+        MessagesScopeInactiveReason.noCommittedScope => 'no_committed_scope',
+        MessagesScopeInactiveReason.scopeMismatch => 'scope_mismatch',
+        MessagesScopeInactiveReason.noLiveSession => 'no_live_session',
+        MessagesScopeInactiveReason.ownerMismatch => 'owner_mismatch',
+        MessagesScopeInactiveReason.peerMismatch => 'peer_mismatch',
+        MessagesScopeInactiveReason.conversationNotReady =>
+          'conversation_not_ready',
+      };
+}
+
+/// Valuta scope messaggi e restituisce il motivo di inattività (null = attivo).
+MessagesScopeInactiveReason? diagnoseMessagesScopeInactive({
+  required ConversationScope scope,
+  required ConversationScope? committedScope,
+  required ChatPeer peer,
+  required AccountSession? liveSession,
+  required bool Function(AccountSession session, ChatPeer peer)
+      isConversationReady,
+  bool disposed = false,
+}) {
+  if (disposed) return MessagesScopeInactiveReason.disposed;
+  if (committedScope == null) {
+    return MessagesScopeInactiveReason.noCommittedScope;
+  }
+  if (committedScope != scope) {
+    return MessagesScopeInactiveReason.scopeMismatch;
+  }
+  if (liveSession == null) return MessagesScopeInactiveReason.noLiveSession;
+  if (liveSession.userId != scope.ownerUserId) {
+    return MessagesScopeInactiveReason.ownerMismatch;
+  }
+  if (peer.profileId != scope.peerProfileId) {
+    return MessagesScopeInactiveReason.peerMismatch;
+  }
+  if (!isConversationReady(liveSession, peer)) {
+    return MessagesScopeInactiveReason.conversationNotReady;
+  }
+  return null;
+}
+
+/// Come [isMessagesScopeActive] ma con log strutturato su fallimento.
 bool isMessagesScopeActive({
   required ConversationScope scope,
   required ConversationScope? committedScope,
@@ -17,11 +69,36 @@ bool isMessagesScopeActive({
   required AccountSession? liveSession,
   required bool Function(AccountSession session, ChatPeer peer)
       isConversationReady,
+  bool disposed = false,
+  bool logOnInactive = true,
 }) {
-  if (committedScope == null) return false;
-  if (committedScope != scope) return false;
-  if (liveSession == null) return false;
-  if (liveSession.userId != scope.ownerUserId) return false;
-  if (peer.profileId != scope.peerProfileId) return false;
-  return isConversationReady(liveSession, peer);
+  final reason = diagnoseMessagesScopeInactive(
+    scope: scope,
+    committedScope: committedScope,
+    peer: peer,
+    liveSession: liveSession,
+    isConversationReady: isConversationReady,
+    disposed: disposed,
+  );
+  if (reason == null) {
+    return true;
+  }
+  if (logOnInactive) {
+    DiagnosticHub.instance.emitFail(
+      DiagnosticFlows.scope,
+      'inactive',
+      reason.diagnosticCode,
+      data: {
+        'ownerUserId': scope.ownerUserId,
+        'peerProfileId': scope.peerProfileId,
+        'scopeEpoch': scope.sessionEpoch,
+        'scopeLoadSeq': scope.loadSeq,
+        'committedEpoch': committedScope?.sessionEpoch,
+        'committedLoadSeq': committedScope?.loadSeq,
+        'liveUserId': liveSession?.userId,
+        'liveEpoch': liveSession?.epoch,
+      },
+    );
+  }
+  return false;
 }

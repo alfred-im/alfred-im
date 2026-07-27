@@ -5,7 +5,6 @@
 @Tags(['diagnostic'])
 library;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,46 +13,38 @@ import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
 import 'package:alfred_client/services/message_media_service.dart';
+import 'package:alfred_client/utils/diagnostic_log.dart';
 import 'package:alfred_client/utils/session_scope_keys.dart';
 
+import '../support/diagnostic_harness.dart';
 import '../support/fake_messaging_services.dart';
 import '../support/wiring_test_fixtures.dart';
 
-/// Diagnosi «Sessione scaduta» all'invio — raccolta log `[alfred]` come
-/// `e2e/helpers/diagnostic-logs.ts` (`dumpDiagnosticLogsOnFailure` su fail).
+/// Diagnosi flussi messaging/session — usa [DiagnosticHarness] (hub strutturato).
 ///
 /// Lancio:
 /// ```bash
-/// cd client && flutter test --dart-define=ALFRED_DIAGNOSTIC_LOG=true \
-///   --tags diagnostic \
-///   test/diagnostic/session_send_diagnostic_test.dart
+/// cd client && flutter test --tags diagnostic test/diagnostic/
 /// ```
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  final diagnosticLogs = <String>[];
-  late DebugPrintCallback originalDebugPrint;
+  late DiagnosticHarness harness;
 
   setUp(() {
-    diagnosticLogs.clear();
-    originalDebugPrint = debugPrint;
-    debugPrint = (String? message, {int? wrapWidth}) {
-      if (message != null && message.contains('[alfred]')) {
-        diagnosticLogs.add(message);
-      }
-      originalDebugPrint(message, wrapWidth: wrapWidth);
-    };
+    harness = DiagnosticHarness();
     SharedPreferences.setMockInitialValues({});
   });
 
   tearDown(() {
-    debugPrint = originalDebugPrint;
-    if (diagnosticLogs.isNotEmpty) {
-      originalDebugPrint(
-        '=== ALFRED DIAGNOSTIC LOGS (tearDown) ===\n'
-        '${diagnosticLogs.join('\n')}',
+    if (harness.lines.isNotEmpty) {
+      // ignore: avoid_print
+      print(
+        '=== ALFRED DIAGNOSTIC EVENTS (tearDown) ===\n'
+        '${harness.lines.join('\n')}',
       );
     }
+    harness.dispose();
   });
 
   group('session send diagnostic', () {
@@ -80,29 +71,28 @@ void main() {
       );
       await waitForMessagesController(controller);
 
+      expect(controller.error, MessagesController.sessionExpiredMessage);
       expect(
-        controller.error,
-        MessagesController.sessionExpiredMessage,
-        reason: 'load deve bloccare senza JWT',
-      );
-      expect(
-        diagnosticLogs.any(
-          (line) =>
-              line.contains('[messaging] session.check') &&
-              line.contains('FAIL jwt_missing'),
+        harness.any(
+          flow: DiagnosticFlows.messaging,
+          phaseContains: 'session.check',
+          failureOnly: true,
         ),
         isTrue,
       );
 
-      diagnosticLogs.clear();
+      harness.clear();
       await controller.send('ciao diagnosi');
 
       expect(controller.error, MessagesController.sessionExpiredMessage);
       expect(
-        diagnosticLogs,
-        isEmpty,
-        reason:
-            'send con sessionBlocked esce in silenzio (coordinator) — nessun secondo log',
+        harness.any(
+          flow: DiagnosticFlows.messaging,
+          phaseContains: 'send.guard',
+          failureOnly: true,
+        ),
+        isTrue,
+        reason: 'send con sessionBlocked deve loggare send.guard session_blocked',
       );
 
       controller.dispose();
@@ -134,15 +124,15 @@ void main() {
       expect(controller.error, isNull);
 
       sessionValid = false;
-      diagnosticLogs.clear();
+      harness.clear();
       await controller.send('dopo load ok');
 
       expect(controller.error, MessagesController.sessionExpiredMessage);
       expect(
-        diagnosticLogs.any(
-          (line) =>
-              line.contains('[messaging] session.check') &&
-              line.contains('FAIL jwt_missing'),
+        harness.any(
+          flow: DiagnosticFlows.messaging,
+          phaseContains: 'session.check',
+          failureOnly: true,
         ),
         isTrue,
       );
@@ -223,14 +213,17 @@ void main() {
       await waitForMessagesController(reboundController);
       expect(messagesSessionKey(liveSession, peerId), isNotNull);
 
-      diagnosticLogs.clear();
+      harness.clear();
       await reboundController.send('dopo rebind sessione');
 
       expect(reboundController.error, isNull);
       expect(
-        diagnosticLogs.any((line) => line.contains('FAIL jwt_missing')),
+        harness.any(
+          flow: DiagnosticFlows.messaging,
+          phaseContains: 'session.check',
+          failureOnly: true,
+        ),
         isFalse,
-        reason: 'con key+sessione viva il send non deve fallire su JWT',
       );
 
       controller.dispose();
@@ -288,12 +281,16 @@ void main() {
 
       sessionValid = false;
 
-      diagnosticLogs.clear();
+      harness.clear();
       await controller.send('senza rebind');
 
       expect(controller.error, MessagesController.sessionExpiredMessage);
       expect(
-        diagnosticLogs.any((line) => line.contains('FAIL jwt_missing')),
+        harness.any(
+          flow: DiagnosticFlows.messaging,
+          phaseContains: 'session.check',
+          failureOnly: true,
+        ),
         isTrue,
       );
 
@@ -323,14 +320,14 @@ void main() {
       );
       await waitForMessagesController(controller);
 
+      harness.clear();
       await controller.send('wiring ignora JWT');
 
       expect(controller.error, isNull);
       expect(
-        diagnosticLogs.any(
-          (line) =>
-              line.contains('[messaging] session.check') &&
-              line.contains('ok=true'),
+        harness.any(
+          flow: DiagnosticFlows.messaging,
+          phaseContains: 'send.done',
         ),
         isTrue,
       );
