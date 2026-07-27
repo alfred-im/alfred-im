@@ -3,10 +3,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /**
- * @real-flow — Tier «flusso utente reale» (scripts/test.sh flusso-reale).
+ * RIFERIMENTO — come si scrivono i test di release in Alfred.
  *
- * Valida il prodotto: stesso percorso del telefono, Supabase e Postgres veri.
- * Il gate CI (flutter test) non esegue nessuno di questi passi.
+ * Copiare questo file per ogni nuovo scenario che l'utente fa sul telefono.
+ * Documentazione: docs/testing/strategy.md § «Come si scrivono i test di release»
+ * Hub: bash scripts/test.sh flusso-reale · tag @real-flow
+ *
+ * - Percorso utente completo (tap, drawer, chat, allegati, resume)
+ * - Stack locale reale (supabase + Flutter release + Playwright)
+ * - Login da UI, assert su Postgres (non solo canvas)
+ * - Vietato: curl/JWT forzato, unit test Dart al posto di questo
  */
 import { test, expect } from '@playwright/test';
 

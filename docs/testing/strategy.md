@@ -15,7 +15,10 @@ Usare **sempre** questa distinzione in README, promesse, guide e `AGENTS.md`:
 | **Gate CI / igiene** | Lint, compile, test Dart isolati (mock/fake). **Non** dimostra che l’app funziona per l’utente. | `cd client && bash scripts/verify.sh` |
 | **Validazione release** | Browser e/o DB reali, percorso utente o contratto end-to-end. **È** il criterio di release. | `bash scripts/test.sh manual` o suite singole sotto |
 
-**Tier di riferimento** per «funziona sul telefono»: `bash scripts/test.sh flusso-reale` (`@real-flow`). Altre suite manuali (`integration`, `e2e-multi`, `e2e-push-local`, …) coprono **parti** del prodotto; non sostituiscono il gate né lo contraddicono.
+**Tier di riferimento** per «funziona sul telefono»: `bash scripts/test.sh flusso-reale` (`@real-flow`).  
+**Riferimento per scrivere nuovi test:** [`client/e2e/photo-resume-session-repro.spec.ts`](../../client/e2e/photo-resume-session-repro.spec.ts) — vedi sezione [Come si scrivono i test di release](#come-si-scrivono-i-test-di-release) sotto.
+
+Altre suite manuali (`integration`, `e2e-multi`, …) coprono **parti** del prodotto; i test legacy vanno riallineati a questo modello quando si toccano.
 
 **Frase vietata nelle spec:** implicare che `verify.sh` o «377 test» validino il comportamento utente.
 
@@ -28,7 +31,44 @@ Release: vedi docs/testing/strategy.md — almeno flusso-reale se multi-account 
 
 ---
 
-## Piramide
+## Come si scrivono i test di release
+
+**Modello obbligatorio** (da copiare, non reinventare):  
+[`client/e2e/photo-resume-session-repro.spec.ts`](../../client/e2e/photo-resume-session-repro.spec.ts) · comando `bash scripts/test.sh flusso-reale` · tag Playwright `@real-flow`.
+
+Ogni nuovo comportamento che l’utente vede sul telefono si valida **così** — non con altri unit test Dart nel gate.
+
+### Cosa fa il modello (checklist)
+
+| # | Regola | Esempio nel file modello |
+|---|--------|---------------------------|
+| 1 | **Stesso percorso utente** — tap, drawer, chat, allegati, lifecycle PWA | `setupFiveLocalAccounts` → switch account → `composeNewMessage` → `sendPhotoFromGalleryAfterPickerResume` |
+| 2 | **Stack reale** — `supabase start`, Flutter web release su `:8080`, Playwright | runner `scripts/run-photo-repro-e2e-local.sh` |
+| 3 | **Auth reale** — utenti creati su stack locale (admin API), login **dal form** nell’app | `prepareLocalFiveAccountManifest`, `loginInAuthForm` |
+| 4 | **Niente scorciatoie** — no curl con JWT forzato, no `setSession` nel test, no “simula mismatch” | tutto via UI + storage GoTrue dell’app |
+| 5 | **Assert su effetti** — non solo “il bottone c’è”: errore assente in UI **e** stato in Postgres | `expectImagePersistedBothSides` (mittente + destinatario) |
+| 6 | **Viewport telefono** + permessi PWA se servono (notifiche, push al resume) | `390×844`, `installPushTestEnvironment` |
+| 7 | **Lifecycle OS** quando il bug dipende da background/resume (picker galleria, ecc.) | `simulateAppBackground` / `simulateAppResume` in `helpers/chat-media.ts` |
+| 8 | **Un file, un viaggio** — uno spec = un flusso completo, non frammenti sparsi | un `test.describe('@real-flow …')` |
+| 9 | **Helper condivisi** — `e2e/helpers/local-multi-account.ts`, `backend-assertions.ts`, `multi-account.ts` | non duplicare login/setup |
+| 10 | **Registrato in hub** — `scripts/test.sh` + riga in `scripts/test/README.md` | comando `flusso-reale` |
+
+### Cosa non è il modello
+
+- Aggiungere test in `client/test/unit/` o `wiring/` e chiamarli “release”.
+- Playwright che invia RPC/fetch al posto dei tap utente.
+- Assert solo su `img` in canvas Flutter senza verifica DB.
+- Più PR con “un pezzetto” di test senza flusso end-to-end.
+
+### Aggiungere un nuovo scenario
+
+1. Copiare la struttura di `photo-resume-session-repro.spec.ts`.
+2. Tag `@real-flow` nel `test.describe`.
+3. Runner dedicato `scripts/run-*-e2e-local.sh` (pattern `run-photo-repro-e2e-local.sh`) o estendere quello esistente se stesso stack.
+4. Voce in `scripts/test.sh` (alias sotto `flusso-reale` o nuovo comando documentato in README).
+5. Riga in tabella tracciabilità promessa → colonna **Release**.
+
+---
 
 | Tier | Dove | Quando gira | Cosa dimostra |
 |------|------|-------------|---------------|

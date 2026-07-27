@@ -30,8 +30,9 @@ GATE (CI, sempre) — solo igiene codice, NON valida il prodotto:
 
 ★ FLUSSO UTENTE REALE — quello che conta per il rilascio:
   flusso-reale      TELEFONO IN VM: 4 user + gruppo → galleria → resume → foto → DB
+                    MODELLO per nuovi test: e2e/photo-resume-session-repro.spec.ts
+                    docs/testing/strategy.md § Come si scrivono i test di release
                     alias: integration-photo-repro, photo-repro, real-flow
-                    file: e2e/photo-resume-session-repro.spec.ts (@real-flow)
 
 MANUALE (rete / browser, non in CI):
   integration       API Supabase live — agent1↔agent2 + contratto spunte

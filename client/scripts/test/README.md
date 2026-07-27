@@ -60,6 +60,16 @@ Gate script: `scripts/check-composition-sync.sh`
 **Alias:** `real-flow`, `integration-photo-repro`, `photo-repro`  
 **Incluso in:** `bash scripts/test.sh manual` (primo step)
 
+### Riferimento per scrivere test
+
+**Da oggi, ogni test nuovo che conta per la release segue questo file:**
+
+[`client/e2e/photo-resume-session-repro.spec.ts`](../../e2e/photo-resume-session-repro.spec.ts)
+
+Checklist completa: [docs/testing/strategy.md § Come si scrivono i test di release](../../docs/testing/strategy.md#come-si-scrivono-i-test-di-release).
+
+In sintesi: percorso telefono intero, stack locale reale, login da UI, assert su Postgres — **non** altri unit test al posto di questo.
+
 | Cosa | Dettaglio |
 |------|-----------|
 | **Perché esiste** | Percorso **telefono** end-to-end: browser, tap, drawer, galleria, resume, Supabase e Postgres veri. I test Dart del gate non eseguono nessuno di questi passi. |
