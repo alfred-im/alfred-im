@@ -7,7 +7,7 @@ Punto unico per **scoprire** e **lanciare** tutti i test del client.
 ```bash
 bash scripts/test.sh list          # catalogo completo
 bash scripts/test.sh gate          # gate CI (default)
-bash scripts/test.sh flusso-reale  # ★ stesso percorso del telefono (pre-release)
+bash scripts/test.sh flusso-reale  # ★ release — stesso percorso del telefono
 bash scripts/test.sh manual        # flusso-reale + integration + e2e-multi + live
 ```
 
@@ -68,9 +68,9 @@ Gate script: `scripts/check-composition-sync.sh`
 | **Verifica** | UI + messaggio `image` con `media_url` in archivio mittente **e** destinatario |
 | **Scenario** | 4 user + 1 gruppo → focus account 2 → nuova chat → Allega → Galleria → resume → invio foto |
 
-Incidente 2026-07: il gate era tutto verde e il bug era in produzione. **Pre-release obbligatorio** prima di considerare Alfred testato.
+Incidente 2026-07: il gate era tutto verde e il bug era in produzione. **`flusso-reale` è il test di release** — senza quello non c’è release valida.
 
-## Tier 2 — Manuale / pre-release (non in CI)
+## Tier 2 — Release (non in CI)
 
 Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 
@@ -90,7 +90,7 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 
 | File | Suite | Note |
 |------|-------|------|
-| **`photo-resume-session-repro.spec.ts`** | **`flusso-reale`** ★ | Riferimento pre-release: multi-account + galleria + resume + foto in DB |
+| **`photo-resume-session-repro.spec.ts`** | **`flusso-reale`** ★ | Test di release: multi-account + galleria + resume + foto in DB |
 | `multi-account-persist.spec.ts` | `e2e-multi` | 2 account, F5, manifest |
 | `multi-account-messages.spec.ts` | `e2e-multi` | Testo, foto, switch e spunte (locale) o scambio testo bidirezionale (live) |
 | `inbox-load.spec.ts` | `e2e` | Inbox senza digitare in ricerca |

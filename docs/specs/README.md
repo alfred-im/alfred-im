@@ -217,12 +217,12 @@ bash scripts/check-spec-sync.sh
 
 Verifica: registry, promesse PRODUCT/SURFACE/SYSTEM, contratti `contracts/`, coerenza migrazioni.
 
-### Gate CI vs validazione prodotto
+### Gate CI vs validazione release
 
-| | Gate CI | Validazione prodotto |
+| | Gate CI | Validazione release |
 |---|---------|----------------------|
 | **Cosa** | `verify.sh` — lint + test Dart isolati | `flusso-reale`, `integration`, `e2e-*`, … |
-| **Quando** | Ogni PR (`client/**`) | Pre-release / dopo cambi che l’utente vede |
+| **Quando** | Ogni PR (`client/**`) | Ogni release / dopo cambi che l’utente vede |
 | **Cosa dimostra** | Il codice compila e i pezzi isolati non regrediscono | L’app funziona sul percorso reale |
 
 Documentazione canonica: [docs/testing/strategy.md](../testing/strategy.md) · catalogo: [client/scripts/test/README.md](../../client/scripts/test/README.md)

@@ -31,7 +31,7 @@ Comandi / stati / transizioni toccati: <!-- es. FocusAccount, InboxVisible; oppu
 
 - [ ] `cd client && bash scripts/verify.sh` (gate CI — igiene codice)
 - [ ] `bash scripts/check-spec-sync.sh` (se toccate `docs/specs/` o `supabase/migrations/`)
-- [ ] `cd client && bash scripts/test.sh flusso-reale` (se toccati **media**, **multi-account**, **auth**, **push-on-resume** — validazione prodotto)
+- [ ] `cd client && bash scripts/test.sh flusso-reale` (se toccati **media**, **multi-account**, **auth**, **push-on-resume** — validazione release)
 
 ## Registro
 

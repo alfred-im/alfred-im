@@ -76,7 +76,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | SURF-CHAT-015 | `mailbox_peer_messages_window_smoke.sql`; `messaging_message_list_test.dart`; `messaging_machine_test.dart` |
 
 Igiene (CI): `verify.sh` + smoke SQL dove indicato in tabella  
-Prodotto (pre-release): `integration` + `e2e-multi` + **`flusso-reale`** (media / galleria / multi-account)
+Release: `integration` + `e2e-multi` + **`flusso-reale`** (media / galleria / multi-account)
 
 ---
 

@@ -78,7 +78,7 @@ L'utente può condividere foto e video nelle conversazioni 1:1 e nei broadcast d
 | PROM-CHAT-MEDIA (prodotto) | `bash scripts/test.sh flusso-reale` |
 
 Igiene (CI): `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`  
-Validazione prodotto (pre-release): **`bash scripts/test.sh flusso-reale`**
+Validazione release: **`bash scripts/test.sh flusso-reale`**
 
 ---
 

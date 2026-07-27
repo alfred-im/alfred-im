@@ -108,6 +108,6 @@ File: `location_service.dart`, `LocationMessageContent`, `ChatInputBar._beginLoc
 |---------|-----------|--------|
 | SQL | `supabase/tests/mailbox_send_media_smoke.sql` | Contratto RPC server |
 | Dart unit/widget | `messages_controller_media_test.dart`, `chat_media_support_test.dart`, … | **Igiene CI** — non valida invio reale da galleria |
-| **Prodotto** | `bash scripts/test.sh flusso-reale` | Browser + DB — percorso telefono (4 account + gruppo, galleria, resume) |
+| **Release** | `bash scripts/test.sh flusso-reale` | Browser + DB — percorso telefono (4 account + gruppo, galleria, resume) |
 
 Vedi [docs/testing/strategy.md](../testing/strategy.md).

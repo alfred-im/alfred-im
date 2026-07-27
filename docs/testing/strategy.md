@@ -13,7 +13,7 @@ Usare **sempre** questa distinzione in README, promesse, guide e `AGENTS.md`:
 | Termine | Significato | Comando tipico |
 |---------|-------------|----------------|
 | **Gate CI / igiene** | Lint, compile, test Dart isolati (mock/fake). **Non** dimostra che l’app funziona per l’utente. | `cd client && bash scripts/verify.sh` |
-| **Validazione prodotto** | Browser e/o DB reali, percorso utente o contratto end-to-end. Obbligatoria **pre-release**. | `bash scripts/test.sh manual` o suite singole sotto |
+| **Validazione release** | Browser e/o DB reali, percorso utente o contratto end-to-end. **È** il criterio di release. | `bash scripts/test.sh manual` o suite singole sotto |
 
 **Tier di riferimento** per «funziona sul telefono»: `bash scripts/test.sh flusso-reale` (`@real-flow`). Altre suite manuali (`integration`, `e2e-multi`, `e2e-push-local`, …) coprono **parti** del prodotto; non sostituiscono il gate né lo contraddicono.
 
@@ -23,7 +23,7 @@ Usare **sempre** questa distinzione in README, promesse, guide e `AGENTS.md`:
 
 ```
 Igiene (CI): check-spec-sync + verify.sh
-Prodotto (pre-release): vedi docs/testing/strategy.md — almeno flusso-reale se multi-account / media / auth / push
+Release: vedi docs/testing/strategy.md — almeno flusso-reale se multi-account / media / auth / push
 ```
 
 ---
@@ -33,8 +33,8 @@ Prodotto (pre-release): vedi docs/testing/strategy.md — almeno flusso-reale se
 | Tier | Dove | Quando gira | Cosa dimostra |
 |------|------|-------------|---------------|
 | **1a–1d Gate** | `client/test/unit/`, `wiring/`, `composition/`, `widget/` | Ogni PR (CI) | Lint, compile, pezzi isolati con mock/fake — **non** il prodotto |
-| **★ Flusso reale** | `scripts/test.sh flusso-reale` | **Pre-release obbligatorio** (media, multi-account, auth, push-on-resume) | Percorso telefono completo + verifica Postgres — **riferimento** per «l’app funziona» |
-| **2 Integration** | `scripts/integration-multi-account.sh` | Manuale / pre-release | RPC Supabase multi-account — **senza** UI completa |
+| **★ Flusso reale** | `scripts/test.sh flusso-reale` | **Ogni release** (media, multi-account, auth, push-on-resume) | Percorso telefono completo + verifica Postgres — **riferimento** per «l’app funziona» |
+| **2 Integration** | `scripts/integration-multi-account.sh` | Release (non in CI) | RPC Supabase multi-account — **senza** UI completa |
 | **3 E2E** | `client/e2e/` | Manuale / nightly | Browser + DB — scenari parziali (`e2e-multi`, `e2e-push-local`, …) |
 | **Diagnostic** | `client/test/diagnostic/` (tag `diagnostic`) | Su richiesta agente | Log `[alfred]` con `ALFRED_DIAGNOSTIC_LOG=true` |
 
@@ -84,7 +84,7 @@ Il bug foto PWA (2026-07) era in produzione con il gate tutto verde: nessun tier
 
 ## Tracciabilità promessa → verifica
 
-| Promessa | Igiene CI (mock) | Prodotto (pre-release) |
+| Promessa | Igiene CI (mock) | Release (prodotto) |
 |----------|------------------|-------------------------|
 | PROM-MULTI-ACCOUNT-006 | `account_manager_persistence_test.dart` | `flusso-reale`, `e2e-multi`, `integration` |
 | PROM-MULTI-ACCOUNT-009 | `inbox_provider_lifecycle_test.dart` (COMP-003) | `e2e-multi` |
@@ -98,7 +98,7 @@ Il bug foto PWA (2026-07) era in produzione con il gate tutto verde: nessun tier
 
 Il gate non testa il prodotto: non c’è browser, non c’è PWA, non c’è multi-account reale, non c’è upload verso storage con auth vera. Machine, wiring e composition girano in harness sintetici con mock e bypass documentati. **Possono essere tutti verdi mentre l’app è rotta sul telefono.**
 
-L’unica lezione: prima del rilascio serve **`flusso-reale`** (e, dove applicabile, le altre suite manuali con DB/browser).
+Ogni release richiede **`flusso-reale`** (e, dove applicabile, le altre suite manuali con DB/browser).
 
 ---
 

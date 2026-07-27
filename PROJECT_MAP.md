@@ -190,12 +190,12 @@ Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §3.
 cd client
 bash scripts/verify.sh           # gate CI — igiene codice (obbligatorio prima del push)
 bash scripts/verify.sh --build   # + build web
-bash scripts/test.sh flusso-reale  # pre-release — valida il prodotto (browser + DB)
+bash scripts/test.sh flusso-reale  # release — valida il prodotto (browser + DB)
 bash scripts/test.sh manual      # flusso-reale + integration + e2e-multi + live
 ```
 
 - **Gate CI** (`verify.sh`): lint, compile, ~400 test Dart con mock — non sostituisce test sul telefono. Vedi [docs/testing/strategy.md](docs/testing/strategy.md).
-- **Validazione prodotto:** `flusso-reale` (riferimento), poi `integration`, `e2e-multi`, ecc. — [client/scripts/test/README.md](client/scripts/test/README.md)
+- **Validazione release:** `flusso-reale` (test di release), poi `integration`, `e2e-multi`, ecc. — [client/scripts/test/README.md](client/scripts/test/README.md)
 - CI: `.github/workflows/deploy-pages.yml` → `deploy-pages` → GitHub Pages
 - **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (deploy da PR)
 - E2E: `client/e2e/` (Playwright)
@@ -251,7 +251,7 @@ Test: `bash scripts/test.sh integration-ticks`
 
 `verify.sh` — sync spec/modello + analyze + test Dart isolati (~400). **Non** valida il prodotto. Smoke SQL server: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, …
 
-Validazione prodotto: `bash scripts/test.sh flusso-reale` (riferimento) · catalogo in [client/scripts/test/README.md](client/scripts/test/README.md)
+Validazione release: `bash scripts/test.sh flusso-reale` · catalogo in [client/scripts/test/README.md](client/scripts/test/README.md)
 
 ### File chiave client
 

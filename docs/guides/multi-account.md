@@ -112,7 +112,7 @@ Nessun provider inbox globale — `ChangeNotifierProxyProvider` per contatti/pro
 
 **Igiene CI:** `account_storage_test`, `account_manager_view_state_test`, `multi_account_chat_scenario_test`, `inbox_realtime_owner_filter_test`
 
-**Prodotto (pre-release):**
+**Release:**
 
 ```bash
 bash scripts/test.sh flusso-reale   # riferimento — percorso telefono completo
