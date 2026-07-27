@@ -13,13 +13,17 @@ bash scripts/test.sh manual        # flusso-reale + integration + e2e-multi + li
 
 ---
 
-## Tier 1 — Gate CI (sempre)
+## Tier 1 — Gate CI (igiene codice, non prodotto)
 
 Eseguito da `verify.sh` e da GitHub Actions (`deploy-pages.yml`) su ogni PR/push `client/**`.
 
+**Cosa fa davvero:** `flutter analyze`, sync spec/modello, `flutter test` su pezzi isolati (mock, fake, harness sintetici). **Non** apre l’app, **non** usa il telefono, **non** dimostra che messaggi, media, multi-account o auth funzionano per l’utente.
+
+**Verde al gate ≠ Alfred funziona.** Per quello esiste il tier **flusso-reale** (e le altre suite manuali con browser/DB).
+
 | Suite | Comando | Cosa verifica |
 |-------|---------|---------------|
-| **gate** | `bash scripts/test.sh gate` | `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutter pub get` → `flutter analyze` (zero issue) → `flutter test` (esclusi tag `live`, `diagnostic`) |
+| **gate** | `bash scripts/test.sh gate` | Lint + compile + test isolati (esclusi tag `live`, `diagnostic`) |
 
 Equivalente diretto: `bash scripts/verify.sh`  
 Opzione build web: `bash scripts/verify.sh --build`
@@ -48,11 +52,9 @@ Provider + `AccountSession` dopo `setFocus`. Harness: `client/test/support/compo
 
 Gate script: `scripts/check-composition-sync.sh`
 
-> Il gate (~400 test) è necessario ma **non sufficiente** per bug come «foto dopo galleria + resume multi-account» (2026-07): JWT, RLS, lifecycle PWA e picker OS non compaiono nei unit test. Per quello esiste il tier **flusso-reale** sotto.
-
 ---
 
-## Tier ★ — Flusso utente reale (la differenza vera)
+## Tier ★ — Flusso utente reale (quello che conta)
 
 **Comando:** `bash scripts/test.sh flusso-reale`  
 **Alias:** `real-flow`, `integration-photo-repro`, `photo-repro`  
@@ -60,13 +62,13 @@ Gate script: `scripts/check-composition-sync.sh`
 
 | Cosa | Dettaglio |
 |------|-----------|
-| **Perché esiste** | Ripete il telefono: tap, drawer, galleria, background/resume, upload verso Supabase. I unit/wiring mockano JWT e non aprono il picker. |
-| **File** | `e2e/photo-resume-session-repro.spec.ts` (tag Playwright `@real-flow`) |
+| **Perché esiste** | È l’unico tier che ripete **cosa fa l’utente**: browser, tap, drawer, galleria, resume, Supabase vero, verifica su Postgres. Il gate non tocca nessuno di questi strati. |
+| **File** | `e2e/photo-resume-session-repro.spec.ts` (tag `@real-flow`) |
 | **Stack** | `supabase start` + Flutter release `:8080` + Playwright |
-| **Verifica** | Nessun `StorageException` / «Sessione scaduta» in UI; messaggio `image` con `media_url` in archivio mittente **e** destinatario (query DB) |
+| **Verifica** | UI + messaggio `image` con `media_url` in archivio mittente **e** destinatario |
 | **Scenario** | 4 user + 1 gruppo → focus account 2 → nuova chat → Allega → Galleria → resume → invio foto |
 
-Incidente 2026-07: il gate non diagnosticava il bug; questo test sì. **Pre-release obbligatorio** dopo cambi multi-account, media, push-on-resume o auth.
+Incidente 2026-07: il gate era tutto verde e il bug era in produzione. **Pre-release obbligatorio** prima di considerare Alfred testato.
 
 ## Tier 2 — Manuale / pre-release (non in CI)
 
@@ -88,7 +90,7 @@ Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
 
 | File | Suite | Note |
 |------|-------|------|
-| **`photo-resume-session-repro.spec.ts`** | **`flusso-reale`** ★ | **4 user + gruppo → galleria → resume → foto → DB** — tier che conta |
+| **`photo-resume-session-repro.spec.ts`** | **`flusso-reale`** ★ | Unico tier che valida il prodotto su questo scenario |
 | `multi-account-persist.spec.ts` | `e2e-multi` | 2 account, F5, manifest |
 | `multi-account-messages.spec.ts` | `e2e-multi` | Testo, foto, switch e spunte (locale) o scambio testo bidirezionale (live) |
 | `inbox-load.spec.ts` | `e2e` | Inbox senza digitare in ricerca |

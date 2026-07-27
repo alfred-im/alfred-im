@@ -8,15 +8,14 @@ Piano a livelli allineato a **dominio → UML → statechart → composition roo
 
 ## Piramide
 
+**Regola:** il gate (tier 1) è **igiene del codice**. Non sostituisce — e non può sostituire — test con browser, DB e percorso utente. Verde al gate non significa che Alfred funziona.
+
 | Tier | Dove | Quando gira | Cosa dimostra |
 |------|------|-------------|---------------|
-| **1a Machine** | `client/test/unit/*_machine_test.dart` | Ogni PR (gate) | Transizioni stato, coordinator senza I/O |
-| **1b Wiring** | `client/test/wiring/*_wiring_test.dart` | Ogni PR (gate) | Controller → effects **live**; mock solo al confine RPC |
-| **1c Composition** | `client/test/composition/` | Ogni PR (gate) | `setFocus` round-trip + chiavi scope + binding servizi sessione |
-| **1d Unit / widget** | `client/test/unit/`, `widget/` | Ogni PR (gate) | Logica pura, widget isolati, promesse UI puntuali |
-| **2 Integration** | `scripts/integration-multi-account.sh` | Manuale / pre-release | RPC Supabase multi-account (no Provider) |
-| **★ Flusso reale** | `scripts/test.sh flusso-reale` | **Pre-release obbligatorio** (media/multi-account) | Browser + DB + lifecycle picker — **non** sostituibile da unit |
-| **3 E2E** | `client/e2e/` | Manuale / nightly | Browser, DB, tap compose |
+| **1a–1d Gate** | `client/test/unit/`, `wiring/`, `composition/`, `widget/` | Ogni PR (CI) | Lint, compile, pezzi isolati con mock/fake — **non** il prodotto |
+| **★ Flusso reale** | `scripts/test.sh flusso-reale` | **Pre-release obbligatorio** | Browser + DB + tap — **valida che l’app funzioni** |
+| **2 Integration** | `scripts/integration-multi-account.sh` | Manuale / pre-release | RPC Supabase multi-account (no UI completa) |
+| **3 E2E** | `client/e2e/` | Manuale / nightly | Browser, DB, scenari compose |
 | **Diagnostic** | `client/test/diagnostic/` (tag `diagnostic`) | Su richiesta agente | Log `[alfred]` con `ALFRED_DIAGNOSTIC_LOG=true` |
 
 Gate: `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutter analyze` + `flutter test` (esclusi tag `live`, `diagnostic`).
@@ -59,7 +58,7 @@ Estensioni future: **COMP-005** groups (`groupSessionKey` + `GroupMessagesContro
 | **Invio dopo round-trip focus con chat aperta** | `e2e/multi-account-send-after-focus-roundtrip.spec.ts` | Da implementare (tier 2) |
 | Tap push multi-account | `e2e/push-tap-multi-account.spec.ts` | Locale (`e2e-push-local`) |
 
-Lo scenario «Sessione scaduta» / `StorageException` foto PWA (2026-07) non era coperto perché `e2e-multi-messages` invia da A **prima** dello switch, non simula resume dal picker, e i ~400 test gate non esercitano JWT+RLS+`syncPushSubscriptions` al resume. **`bash scripts/test.sh flusso-reale`** copre quel percorso.
+Il bug foto PWA (2026-07) era in produzione con il gate tutto verde: nessun tier 1 esegue l’app come l’utente. **`bash scripts/test.sh flusso-reale`** è il test che avrebbe dovuto bloccare il rilascio.
 
 ---
 
@@ -74,12 +73,11 @@ Lo scenario «Sessione scaduta» / `StorageException` foto PWA (2026-07) non era
 
 ---
 
-## Perché il bug «Sessione scaduta» (2026-07) è sfuggito
+## Perché il gate non ha fermato nulla (2026-07)
 
-- **Wiring** dimostrava il percorso coordinator, ma bypassava JWT e condivideva un solo service.
-- **Scenario unit** costruiva `MessagesController` a mano ad ogni focus (pattern corretto, diverso da `HomeScreen`).
-- **Composition** non esisteva come tier obbligatorio.
-- **E2E** non eseguiva invio dopo A→B→A con chat già aperta; inoltre non è in gate PR.
+Il gate non testa il prodotto: non c’è browser, non c’è PWA, non c’è multi-account reale, non c’è upload verso storage con auth vera. Machine, wiring e composition girano in harness sintetici con mock e bypass documentati. **Possono essere tutti verdi mentre l’app è rotta sul telefono.**
+
+L’unica lezione: prima del rilascio serve **`flusso-reale`** (e, dove applicabile, le altre suite manuali con DB/browser).
 
 ---
 

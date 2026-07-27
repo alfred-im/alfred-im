@@ -23,12 +23,12 @@ print_catalog() {
 Alfred client — suite test
 ==========================
 
-GATE (CI, sempre):
-  gate              flutter analyze + flutter test (esclusi live)
+GATE (CI, sempre) — solo igiene codice, NON valida il prodotto:
+  gate              flutter analyze + flutter test (mock/fake, niente browser)
                     → bash scripts/verify.sh [--build]
-                    (centinaia di unit/wiring — non bastano da soli; vedi flusso-reale)
+                    Verde qui ≠ Alfred funziona. Vedi flusso-reale.
 
-★ FLUSSO UTENTE REALE (pre-release / dopo bug multi-account o media):
+★ FLUSSO UTENTE REALE — quello che conta per il rilascio:
   flusso-reale      TELEFONO IN VM: 4 user + gruppo → galleria → resume → foto → DB
                     alias: integration-photo-repro, photo-repro, real-flow
                     file: e2e/photo-resume-session-repro.spec.ts (@real-flow)
@@ -95,7 +95,7 @@ run_diagnose() {
 }
 
 run_real_flow() {
-  echo "==> ★ Flusso utente reale (multi-account + galleria + resume + DB) — non sostituibile da unit test"
+  echo "==> ★ Flusso utente reale — valida il prodotto (browser + DB + tap veri)"
   bash scripts/integration-photo-session-repro.sh "$@"
 }
 

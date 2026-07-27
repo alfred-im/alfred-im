@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# ★ Tier «flusso utente reale» — stesso percorso del telefono (non unit test).
+# ★ Tier «flusso utente reale» — valida il prodotto (il gate no).
 # Hub: bash scripts/test.sh flusso-reale
 set -euo pipefail
 

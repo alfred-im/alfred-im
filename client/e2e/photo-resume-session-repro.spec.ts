@@ -5,11 +5,8 @@
 /**
  * @real-flow — Tier «flusso utente reale» (scripts/test.sh flusso-reale).
  *
- * Stesso percorso del telefono in produzione — non sostituibile da unit/wiring:
- * 4 user + 1 gruppo → focus account → chat → Allega → Galleria → resume → invio foto.
- * Verifica UI + archivio Postgres + path storage (auth/RLS/JWT reali).
- *
- * Incidente 2026-07: ~400 test gate non lo coprivano; questo sì.
+ * Valida il prodotto: stesso percorso del telefono, Supabase e Postgres veri.
+ * Il gate CI (flutter test) non esegue nessuno di questi passi.
  */
 import { test, expect } from '@playwright/test';
 

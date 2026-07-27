@@ -112,7 +112,7 @@ backend out of the box.
 - Web build: `bash scripts/verify.sh --build` (or `flutter build web --release --base-href "/alfred-im/"`).
 - **Prima di qualsiasi test GUI**: `bash scripts/test.sh diagnose` — se fallisce su CDP: `bash scripts/reset-chrome-cdp.sh` (kill Chrome + profilo pulito `/tmp/chrome-cdp-profile`).
 - **Integrazione multi-account senza browser** (affidabile per agenti): `bash scripts/test.sh integration` — login agent1/agent2 + RPC inbox/messaggi su Supabase live.
-- **Flusso utente reale** (pre-release media/multi-account): `bash scripts/test.sh flusso-reale` — stesso percorso del telefono (4 account + gruppo, galleria, resume, foto, DB). Non sostituibile dal gate (~400 unit test).
+- **Flusso utente reale** (obbligatorio pre-release): `bash scripts/test.sh flusso-reale` — browser + DB + stesso percorso del telefono. Il gate (`verify.sh`) è solo igiene codice.
 - **E2E multi-account** (browser): `bash scripts/test.sh e2e-multi`
 
 ### Log diagnostici (`ALFRED_DIAGNOSTIC_LOG`)
