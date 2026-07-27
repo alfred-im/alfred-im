@@ -6,6 +6,7 @@ import '../../models/chat_peer.dart';
 import '../../models/conversation_scope.dart';
 import '../../models/open_conversation_source.dart';
 import '../../services/account_session.dart';
+import '../../utils/diagnostic_log.dart';
 import '../messaging/conversation_message_store.dart';
 import 'navigation_effects.dart';
 
@@ -81,13 +82,33 @@ class NavigationMachine {
 
   void invalidateCommittedScope() {
     _loadSeq++;
+    final previous = committedScope;
     committedScope = null;
     _messageStore.bindCommittedScope(null);
+    DiagnosticHub.instance.emit(
+      DiagnosticFlows.nav,
+      'scope.invalidate',
+      data: {
+        'loadSeq': _loadSeq,
+        'previousOwner': previous?.ownerUserId,
+        'previousPeer': previous?.peerProfileId,
+      },
+    );
   }
 
   void commitScope(ConversationScope scope) {
     committedScope = scope.copyWith(loadSeq: _loadSeq);
     _messageStore.bindCommittedScope(committedScope);
+    DiagnosticHub.instance.emit(
+      DiagnosticFlows.nav,
+      'scope.commit',
+      data: {
+        'ownerUserId': scope.ownerUserId,
+        'peerProfileId': scope.peerProfileId,
+        'sessionEpoch': scope.sessionEpoch,
+        'loadSeq': _loadSeq,
+      },
+    );
   }
 
   /// Sessione ricreata (stesso account + peer): aggiorna epoch e invalida lista.
@@ -102,6 +123,16 @@ class NavigationMachine {
       loadSeq: _loadSeq,
     );
     _messageStore.bindCommittedScope(committedScope);
+    DiagnosticHub.instance.emit(
+      DiagnosticFlows.nav,
+      'scope.epoch_reconcile',
+      data: {
+        'ownerUserId': session.userId,
+        'previousEpoch': committed.sessionEpoch,
+        'newEpoch': session.epoch,
+        'loadSeq': _loadSeq,
+      },
+    );
     return true;
   }
 

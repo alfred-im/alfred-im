@@ -14,6 +14,7 @@ import 'messaging_conversation_state.dart';
 import 'messaging_effects.dart';
 import 'messaging_message_list.dart';
 import '../../utils/conversation_session_access.dart';
+import '../../utils/diagnostic_log.dart';
 import 'outbound_send_machine.dart';
 import 'realtime_attachment_machine.dart';
 
@@ -82,7 +83,16 @@ class MessagingCoordinator {
   static const _fetchScopeRetryDelay = Duration(milliseconds: 50);
 
   Future<void> load() async {
+    final trace = DiagnosticHub.instance.beginTrace(
+      DiagnosticFlows.messaging,
+      op: DiagnosticOps.loadConversation,
+      data: {
+        'ownerUserId': effects.scope.ownerUserId,
+        'peerProfileId': effects.scope.peerProfileId,
+      },
+    );
     if (!effects.ensureValidSession()) {
+      trace.fail('load.blocked', 'session_invalid');
       loadMachine.send(const ConversationUnavailable());
       _notify();
       return;
@@ -92,12 +102,14 @@ class MessagingCoordinator {
     try {
       var applied = false;
       for (var attempt = 0; attempt < _fetchScopeRetryAttempts; attempt++) {
+        trace.step('fetch.attempt', data: {'attempt': attempt});
         applied = await effects.fetchAndSetMessages();
         if (effects.isDisposed) return;
         if (applied) break;
         if (attempt < _fetchScopeRetryAttempts - 1) {
           await Future<void>.delayed(_fetchScopeRetryDelay);
           if (!effects.ensureValidSession()) {
+            trace.fail('load.blocked', 'session_invalid_retry');
             loadMachine.send(const ConversationUnavailable());
             _notify();
             return;
@@ -106,18 +118,22 @@ class MessagingCoordinator {
       }
       if (!applied && !effects.isDisposed) {
         if (!effects.isScopeActive) {
+          trace.fail('load.blocked', 'scope_inactive');
           return;
         }
         state.error = MessagesControllerEffects.sessionExpiredMessage;
         loadMachine.send(const ConversationUnavailable());
+        trace.fail('load.blocked', 'fetch_exhausted');
         _notify();
         return;
       }
       state.error = null;
       loadMachine.send(const ConversationReady());
+      trace.end(data: {'messageCount': messages.length});
     } catch (e) {
       state.error = friendlyMessagingError(e);
       loadMachine.send(const LoadFailed());
+      trace.fail('load.fail', e.runtimeType.toString());
     }
     _notify();
   }
@@ -155,17 +171,17 @@ class MessagingCoordinator {
   }
 
   Future<void> sendText(String body) async {
-    if (body.trim().isEmpty || _guardSend()) return;
+    if (body.trim().isEmpty || _guardSend(op: DiagnosticOps.sendText)) return;
     await effects.sendText(body);
   }
 
   Future<void> sendGif(Uint8List bytes) async {
-    if (bytes.isEmpty || _guardSend()) return;
+    if (bytes.isEmpty || _guardSend(op: DiagnosticOps.sendGif)) return;
     await effects.sendGif(bytes);
   }
 
   Future<void> sendImage({required Uint8List bytes, String? caption}) async {
-    if (bytes.isEmpty || _guardSend()) return;
+    if (bytes.isEmpty || _guardSend(op: DiagnosticOps.sendImage)) return;
     await effects.sendImage(bytes: bytes, caption: caption);
   }
 
@@ -173,7 +189,7 @@ class MessagingCoordinator {
     required PlatformFile file,
     String? caption,
   }) async {
-    if (_guardSend(notifyOnBusy: true)) return;
+    if (_guardSend(notifyOnBusy: true, op: DiagnosticOps.sendVideo)) return;
     await effects.sendVideoFromPicker(file: file, caption: caption);
   }
 
@@ -184,7 +200,7 @@ class MessagingCoordinator {
     required int durationSeconds,
     String? caption,
   }) async {
-    if (_guardSend(notifyOnBusy: true)) return;
+    if (_guardSend(notifyOnBusy: true, op: DiagnosticOps.sendVideo)) return;
     await effects.sendVideo(
       bytes: bytes,
       extension: extension,
@@ -198,7 +214,7 @@ class MessagingCoordinator {
     required Uint8List bytes,
     required int durationMs,
   }) async {
-    if (bytes.isEmpty || _guardSend()) return;
+    if (bytes.isEmpty || _guardSend(op: DiagnosticOps.sendVoice)) return;
     await effects.sendVoice(bytes: bytes, durationMs: durationMs);
   }
 
@@ -206,7 +222,7 @@ class MessagingCoordinator {
     required double latitude,
     required double longitude,
   }) async {
-    if (_guardSend()) return;
+    if (_guardSend(op: DiagnosticOps.sendLocation)) return;
     await effects.sendLocation(latitude: latitude, longitude: longitude);
   }
 
@@ -235,6 +251,10 @@ class MessagingCoordinator {
   }
 
   void notifySendEnded(bool failed) {
+    DiagnosticHub.instance.emit(
+      DiagnosticFlows.messaging,
+      failed ? 'send.fail' : 'send.done',
+    );
     sendMachine.send(failed ? const ContentSendFailed() : const ContentSent());
     _notify();
   }
@@ -245,8 +265,14 @@ class MessagingCoordinator {
   }
 
   /// `true` when send must be blocked (busy or session expired).
-  bool _guardSend({bool notifyOnBusy = false}) {
+  bool _guardSend({bool notifyOnBusy = false, String? op}) {
     if (isSending) {
+      DiagnosticHub.instance.emitFail(
+        DiagnosticFlows.messaging,
+        'send.guard',
+        'send_busy',
+        data: {'op': op},
+      );
       if (notifyOnBusy) {
         state.error = 'Invio già in corso, attendi il completamento.';
         _notify();
@@ -254,8 +280,22 @@ class MessagingCoordinator {
       return true;
     }
     if (loadMachine.state == ConversationLoadState.sessionBlocked) {
+      DiagnosticHub.instance.emitFail(
+        DiagnosticFlows.messaging,
+        'send.guard',
+        'session_blocked',
+        data: {
+          'op': op,
+          'loadState': loadMachine.state.name,
+        },
+      );
       return true;
     }
+    DiagnosticHub.instance.emit(
+      DiagnosticFlows.messaging,
+      'send.start',
+      data: {'op': op},
+    );
     return false;
   }
 

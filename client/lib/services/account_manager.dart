@@ -14,6 +14,7 @@ import '../models/open_account.dart';
 import '../models/profile_summary.dart';
 import '../utils/conversation_session_access.dart';
 import '../utils/auth_redirect_url.dart';
+import '../utils/diagnostic_log.dart';
 import '../utils/friendly_auth_error.dart';
 import 'account_session.dart';
 import 'account_storage_service.dart';
@@ -426,6 +427,11 @@ class AccountManager {
     if (_focusUserId == userId) {
       if (!isSessionReadyForAccount(userId) &&
           !_testOnlyAccountIds.contains(userId)) {
+        DiagnosticHub.instance.emit(
+          DiagnosticFlows.auth,
+          'focus.restore',
+          data: {'accountUserId': userId},
+        );
         await _ensureSessionForAccount(
           userId,
           requireSession: true,
@@ -436,6 +442,14 @@ class AccountManager {
     }
 
     final previousFocus = _focusUserId;
+    DiagnosticHub.instance.emit(
+      DiagnosticFlows.auth,
+      'focus.start',
+      data: {
+        'accountUserId': userId,
+        'previousFocus': previousFocus,
+      },
+    );
 
     final keepTestSessions = _testOnlyAccountIds.isEmpty
         ? <String, AccountSession>{}
@@ -467,7 +481,21 @@ class AccountManager {
           deferProfileSync: deferProfileSync,
         );
       }
+      DiagnosticHub.instance.emit(
+        DiagnosticFlows.auth,
+        'focus.ok',
+        data: {
+          'accountUserId': userId,
+          'sessionEpoch': _sessions[userId]?.epoch,
+        },
+      );
     } catch (e) {
+      DiagnosticHub.instance.emitFail(
+        DiagnosticFlows.auth,
+        'focus.fail',
+        e.runtimeType.toString(),
+        data: {'accountUserId': userId, 'previousFocus': previousFocus},
+      );
       _focusUserId = previousFocus;
       if (previousFocus != null) {
         await _storage.saveFocusUserId(previousFocus);

@@ -2,60 +2,41 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:flutter/foundation.dart';
+import 'diagnostic/diagnostic_hub.dart';
+
+export 'diagnostic/diagnostic_event.dart';
+export 'diagnostic/diagnostic_flows.dart';
+export 'diagnostic/diagnostic_hub.dart';
+export 'diagnostic/diagnostic_sink.dart';
 
 /// Log diagnostici client (solo sviluppo / agenti).
 ///
 /// **Attivazione:** `--dart-define=ALFRED_DIAGNOSTIC_LOG=true` su `flutter run` o build
 /// locale. GitHub Pages / `verify.sh --build` **non** passano il define → nessun output
-/// (ramo eliminato a compile-time).
+/// (ramo eliminato a compile-time per la console; test usano [DiagnosticHub.installMemoryCapture]).
 ///
-/// **API:** [diagLog] fase informativa; [diagLogFail] uscita anticipata (`FAIL motivo`).
+/// **API legacy:** [diagLog] / [diagLogFail] — preferire [DiagnosticHub.emit] e
+/// [DiagnosticHub.beginTrace] sui confini macchina.
 ///
-/// **Formato console:** `[alfred][categoria] fase …` oppure `… FAIL motivo key=value`
+/// **Formato console:** `[alfred][flow] phase …` oppure `… FAIL motivo key=value`
 ///
-/// **Categorie attuali:** `push` (tap notifica: ingresso SW→pagina, focus, peer, chat).
-/// Altre categorie usano lo stesso modulo quando servono.
-///
-/// **Lettura:** DevTools pagina (non service worker). Filtrare per `[alfred]`.
+/// **Flussi:** vedi [DiagnosticFlows]. **Lettura:** DevTools pagina, filtro `[alfred]`.
 /// Vedi `AGENTS.md` § Log diagnostici e `client/scripts/test/README.md`.
 const bool kDiagnosticLogEnabled = bool.fromEnvironment('ALFRED_DIAGNOSTIC_LOG');
 
-const _prefix = '[alfred]';
-
 void diagLog(
-  String category,
+  String flow,
   String phase, {
   Map<String, Object?>? data,
 }) {
-  if (!kDiagnosticLogEnabled) return;
-  debugPrint(_formatLine(category, phase, data: data));
+  DiagnosticHub.instance.emit(flow, phase, data: data);
 }
 
 void diagLogFail(
-  String category,
+  String flow,
   String phase,
   String reason, {
   Map<String, Object?>? data,
 }) {
-  if (!kDiagnosticLogEnabled) return;
-  debugPrint(_formatLine(category, phase, fail: reason, data: data));
-}
-
-String _formatLine(
-  String category,
-  String phase, {
-  String? fail,
-  Map<String, Object?>? data,
-}) {
-  final buffer = StringBuffer('$_prefix[$category] $phase');
-  if (fail != null && fail.isNotEmpty) {
-    buffer.write(' FAIL $fail');
-  }
-  if (data != null) {
-    for (final entry in data.entries) {
-      buffer.write(' ${entry.key}=${entry.value}');
-    }
-  }
-  return buffer.toString();
+  DiagnosticHub.instance.emitFail(flow, phase, reason, data: data);
 }

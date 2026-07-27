@@ -9,6 +9,8 @@ import '../config/voice_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../utils/diagnostic_log.dart';
+
 class MessageMediaService {
   MessageMediaService(this._client);
 
@@ -82,14 +84,39 @@ class MessageMediaService {
     }
 
     final path = '$userId/${const Uuid().v4()}.$extension';
-    await _client.storage.from('chat-media').uploadBinary(
-          path,
-          bytes,
-          fileOptions: FileOptions(
-            contentType: contentType,
-            upsert: false,
-          ),
-        );
-    return _client.storage.from('chat-media').getPublicUrl(path);
+    DiagnosticHub.instance.emit(
+      DiagnosticFlows.media,
+      'upload.start',
+      data: {
+        'extension': extension,
+        'bytes': bytes.length,
+        'contentType': contentType,
+      },
+    );
+    try {
+      await _client.storage.from('chat-media').uploadBinary(
+            path,
+            bytes,
+            fileOptions: FileOptions(
+              contentType: contentType,
+              upsert: false,
+            ),
+          );
+      final url = _client.storage.from('chat-media').getPublicUrl(path);
+      DiagnosticHub.instance.emit(
+        DiagnosticFlows.media,
+        'upload.done',
+        data: {'path': path, 'bytes': bytes.length},
+      );
+      return url;
+    } catch (e) {
+      DiagnosticHub.instance.emitFail(
+        DiagnosticFlows.media,
+        'upload.fail',
+        e.runtimeType.toString(),
+        data: {'extension': extension, 'bytes': bytes.length},
+      );
+      rethrow;
+    }
   }
 }
