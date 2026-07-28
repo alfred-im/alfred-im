@@ -24,6 +24,7 @@ e2e_load_supabase_env
 export SUPABASE_URL="${SUPABASE_URL:-http://127.0.0.1:54321}"
 export SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:-${ANON_KEY:-}}"
 export SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-${SERVICE_ROLE_KEY:-}}"
+export DATABASE_URL="${DATABASE_URL:-${DB_URL:-}}"
 export ALFRED_BASE_URL="${ALFRED_BASE_URL:-$CI_LOCAL_BASE_URL}"
 
 bash "$REPO_ROOT/scripts/ci-bootstrap-agents.sh"
