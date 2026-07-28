@@ -11,11 +11,11 @@ DECLARE
   v_device uuid := 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
   v_endpoint text := 'https://push.test/shared-browser-endpoint';
 BEGIN
-  SELECT id INTO v_test1 FROM public.profiles WHERE username = 'test1' LIMIT 1;
-  SELECT id INTO v_test2 FROM public.profiles WHERE username = 'test2' LIMIT 1;
+  SELECT id INTO v_test1 FROM public.profiles WHERE username = 'ciagent1' LIMIT 1;
+  SELECT id INTO v_test2 FROM public.profiles WHERE username = 'ciagent2' LIMIT 1;
 
   IF v_test1 IS NULL OR v_test2 IS NULL THEN
-    RAISE NOTICE 'push_multi_account_endpoint_smoke_skip missing test1/test2';
+    RAISE NOTICE 'push_multi_account_endpoint_smoke_skip missing ciagent1/ciagent2';
     RETURN;
   END IF;
 

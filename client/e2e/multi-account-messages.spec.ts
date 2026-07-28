@@ -3,12 +3,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /**
- * Multi-account mobile — messaggistica (stack locale o live).
+ * Multi-account mobile — messaggistica su stack locale.
  *
- * Stack locale (default `bash scripts/test.sh e2e-multi`):
- * login UI → testo → switch → foto → read_at backend.
- *
- * Live (override esplicito ALFRED_BASE_URL=Pages): scambio testo bidirezionale + DB.
+ * `bash scripts/test.sh e2e-multi`: login UI → testo → switch → foto → read_at backend.
  */
 import { test, expect } from '@playwright/test';
 
@@ -29,24 +26,14 @@ import {
   setupTwoLocalAccounts,
 } from './helpers/local-multi-account';
 import {
-  ACCOUNT1,
-  ACCOUNT2,
   backToInboxFromChat,
   composeNewMessage,
   expectChatContains,
-  expectReceivedMessageOnAccount,
   openPeerInInbox,
   sendChatMessage,
-  setupTwoAccounts,
   switchToAccountByDisplayName,
 } from './helpers/multi-account';
 import { attachPageErrorCollector } from './helpers/page-errors';
-import {
-  expectMessagePersistedBothSides,
-  listPeerMessages,
-  loginSupabase,
-  waitForMessageInDb,
-} from './helpers/supabase-api';
 
 test.use({ viewport: { width: 390, height: 844 } });
 test.setTimeout(180_000);
@@ -127,97 +114,6 @@ test('multi-account mobile: testo, foto, switch account e spunte in DB (stack lo
     peerUserId: cred1.userId,
     contentType: 'image',
   });
-
-  expect(errors, `errori JS: ${errors.join('; ')}`).toEqual([]);
-});
-
-test('multi-account mobile: scambio testo bidirezionale in DB e UI (live)', async ({
-  page,
-}) => {
-  test.skip(
-    isLocalSupabaseStack(),
-    'su stack locale usa il test testo+foto',
-  );
-
-  const errors: string[] = [];
-  page.on('pageerror', (err) => errors.push(err.message));
-
-  const stamp = Date.now();
-  const msgFrom1 = `e2e-a1-${stamp}`;
-  const msgFrom2 = `e2e-a2-${stamp}`;
-
-  const { account1, account2 } = await setupTwoAccounts(page);
-  const agent1Id = account1.userId;
-  const agent2Id = account2.userId;
-
-  await switchToAccountByDisplayName(
-    page,
-    account1.displayName!,
-    agent1Id,
-  );
-  await openPeerInInbox(page, account2.displayName!);
-  await sendChatMessage(page, msgFrom1);
-  await backToInboxFromChat(page);
-
-  await expectMessagePersistedBothSides({
-    body: msgFrom1,
-    senderUserId: agent1Id,
-    recipientUserId: agent2Id,
-    senderEmail: ACCOUNT1.email,
-    senderPassword: ACCOUNT1.password,
-    recipientEmail: ACCOUNT2.email,
-    recipientPassword: ACCOUNT2.password,
-  });
-
-  await waitForMessageInDb({
-    viewerEmail: ACCOUNT2.email,
-    viewerPassword: ACCOUNT2.password,
-    peerProfileId: agent1Id,
-    body: msgFrom1,
-    expectedSenderId: agent1Id,
-  });
-
-  await expectReceivedMessageOnAccount(
-    page,
-    { displayName: account2.displayName!, userId: agent2Id },
-    { displayName: account1.displayName! },
-    msgFrom1,
-  );
-
-  await sendChatMessage(page, msgFrom2);
-  await backToInboxFromChat(page);
-
-  await expectMessagePersistedBothSides({
-    body: msgFrom2,
-    senderUserId: agent2Id,
-    recipientUserId: agent1Id,
-    senderEmail: ACCOUNT2.email,
-    senderPassword: ACCOUNT2.password,
-    recipientEmail: ACCOUNT1.email,
-    recipientPassword: ACCOUNT1.password,
-  });
-
-  await waitForMessageInDb({
-    viewerEmail: ACCOUNT1.email,
-    viewerPassword: ACCOUNT1.password,
-    peerProfileId: agent2Id,
-    body: msgFrom2,
-    expectedSenderId: agent2Id,
-  });
-
-  await expectReceivedMessageOnAccount(
-    page,
-    { displayName: account1.displayName!, userId: agent1Id },
-    { displayName: account2.displayName! },
-    msgFrom2,
-  );
-  await expectChatContains(page, [msgFrom1, msgFrom2]);
-
-  const asAgent1 = await loginSupabase(ACCOUNT1.email, ACCOUNT1.password);
-  const dbAsAgent1 = await listPeerMessages(asAgent1.accessToken, agent2Id);
-  expect(dbAsAgent1.map((m) => m.body)).toEqual(
-    expect.arrayContaining([msgFrom1, msgFrom2]),
-  );
 
   expect(errors, `errori JS: ${errors.join('; ')}`).toEqual([]);
 });

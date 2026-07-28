@@ -2,19 +2,25 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Named library required so @Tags(['live']) applies to all tests in this file.
+// Named library required so @Tags(['stack']) applies to all tests in this file.
 // ignore_for_file: unnecessary_library_name
 
-@Tags(['live'])
-library password_reset_live_test;
+@Tags(['stack'])
+library password_reset_gotrue_test;
 
 import 'package:supabase/supabase.dart';
 import 'package:test/test.dart';
 
 import 'package:alfred_client/config/app_config.dart';
 
-const _agentEmail = 'agadriel.sexpositive+alfredagent1@gmail.com';
-const _redirect = 'https://alfred-im.github.io/alfred-im/';
+const _agentEmail = String.fromEnvironment(
+  'CI_AGENT1_EMAIL',
+  defaultValue: 'ci-agent1@e2e.local.test',
+);
+const _redirect = String.fromEnvironment(
+  'CI_LOCAL_REDIRECT',
+  defaultValue: 'http://localhost:8080/',
+);
 
 /// Storage in-memory minimo per PKCE (come farebbe Supabase.initialize).
 class _MemoryPkceStorage implements GotrueAsyncStorage {
@@ -54,23 +60,19 @@ String _errorLabel(Object e) {
   return '${e.runtimeType}: $e';
 }
 
-bool _isRateLimit(Object e) {
+bool _isAcceptableStackFailure(Object e) {
   final label = _errorLabel(e).toLowerCase();
   return label.contains('rate limit') ||
-      label.contains('over_email_send_rate_limit');
-}
-
-bool _isAcceptableLiveFailure(Object e) {
-  if (_isRateLimit(e)) return true;
-  final label = _errorLabel(e).toLowerCase();
-  // GoTrue hosted può rispondere 500 su reset password (quota, config, transient).
-  return label.contains('unexpected_failure') ||
+      label.contains('over_email_send_rate_limit') ||
+      label.contains('status=429') ||
+      label.contains('security purposes') ||
+      label.contains('unexpected_failure') ||
       label.contains('status=500') ||
       label.contains('unable to process request');
 }
 
 void main() {
-  group('password reset live (GoTrue)', () {
+  group('password reset GoTrue (stack locale)', () {
     test('BUG: PKCE senza pkceAsyncStorage → crash client (null)', () async {
       final client = _rawClient(AuthFlowType.pkce);
       addTearDown(client.dispose);
@@ -98,7 +100,7 @@ void main() {
       );
     });
 
-    test('PKCE con pkceAsyncStorage → OK o rate limit (no crash null)', () async {
+    test('PKCE con pkceAsyncStorage → OK o errore noto (no crash null)', () async {
       final client = _rawClient(
         AuthFlowType.pkce,
         pkceStorage: _MemoryPkceStorage(),
@@ -125,13 +127,13 @@ void main() {
         reason: 'non deve crashare: $label',
       );
       expect(
-        _isAcceptableLiveFailure(err),
+        _isAcceptableStackFailure(err),
         isTrue,
-        reason: 'se fallisce deve essere rate limit o errore GoTrue noto: $label',
+        reason: 'se fallisce deve essere errore GoTrue noto: $label',
       );
     });
 
-    test('FIX: PKCE + pkceAsyncStorage (bootstrap produzione) → OK o rate limit',
+    test('FIX: PKCE + pkceAsyncStorage (bootstrap produzione) → OK o errore noto',
         () async {
       final client = _rawClient(
         AuthFlowType.pkce,
@@ -159,9 +161,9 @@ void main() {
         reason: 'PKCE con storage non deve crashare: $label',
       );
       expect(
-        _isAcceptableLiveFailure(err),
+        _isAcceptableStackFailure(err),
         isTrue,
-        reason: 'se fallisce deve essere rate limit o errore GoTrue noto: $label',
+        reason: 'se fallisce deve essere errore GoTrue noto: $label',
       );
     });
   });

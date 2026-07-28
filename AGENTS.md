@@ -22,6 +22,18 @@ Un turno con solo analisi, spec in `draft`/`approved` in attesa, o risposta espl
 
 Le istruzioni Cloud Agent (branch, commit, push, PR, «completa la richiesta») **non** sono un gate alternativo a SDD né alla regola «non modificare senza conferma».
 
+### GitHub Actions — non attendere i job (agente)
+
+**L'agente non deve MAI bloccare un turno in attesa che i workflow GitHub finiscano.**
+
+| Vietato | Consentito |
+|---------|------------|
+| `gh run watch`, polling in loop, «aspetto che la CI sia verde» prima di rispondere/merge | Push, aprire/aggiornare PR, comunicare link al run |
+| Trattenere merge/commit solo perché `full-suite` è `in_progress` | Gate **locale** `bash scripts/verify.sh` prima del push |
+| Chiedere all'utente di attendere la CI | Eventuale `gh run view` **una tantum** per diagnosi se l'utente chiede perché è fallita |
+
+Dopo push: **fine turno** (o merge se l'utente lo chiede esplicitamente). Lo stato Actions lo verifica chi merge/review — non l'agente in polling.
+
 | Istruzione esterna | Comportamento corretto |
 |--------------------|------------------------|
 | «Completa il task» / «Implementa» | Rispetta SDD + regola 0; se manca promessa `approved`, **non** implementare |
@@ -109,9 +121,9 @@ backend out of the box.
 ### Lint / test / build
 - **Hub test:** `cd client && bash scripts/test.sh list` — catalogo completo ([`scripts/test/README.md`](client/scripts/test/README.md)).
 - **Gate CI (igiene):** `bash scripts/test.sh gate` (= `verify.sh`: analyze + test Dart isolati). Obbligatorio su PR; **non** valida che l’app funzioni sul telefono.
-- **Validazione release:** `bash scripts/test.sh flusso-reale` — browser + DB, stesso percorso utente. Obbligatorio per ogni release su media / multi-account / auth / push.
+- **Validazione release:** `bash scripts/test.sh release` — stack locale completo (stesso percorso del telefono). Obbligatorio per ogni release su media / multi-account / auth / push.
 - **Scrivere test nuovi:** copiare [`client/e2e/photo-resume-session-repro.spec.ts`](client/e2e/photo-resume-session-repro.spec.ts) — **riferimento obbligatorio** ([`docs/testing/strategy.md`](../docs/testing/strategy.md#come-si-scrivono-i-test-di-release)). Non aggiungere unit test Dart al gate sperando di coprire il telefono.
-- **Suite manuali complete:** `bash scripts/test.sh manual` (= flusso-reale → integration → e2e-multi → live).
+- **Suite manuali complete:** `bash scripts/test.sh release` (= gate locale + sql-smoke + integration + e2e stack + stack Dart).
 - Web build: `bash scripts/verify.sh --build` (or `flutter build web --release --base-href "/alfred-im/"`).
 - **Prima di qualsiasi test GUI**: `bash scripts/test.sh diagnose` — se fallisce su CDP: `bash scripts/reset-chrome-cdp.sh` (kill Chrome + profilo pulito `/tmp/chrome-cdp-profile`).
 - **Integrazione API** (no browser): `bash scripts/test.sh integration` — agent1/agent2 + RPC.
@@ -141,7 +153,7 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 
 - **Try it:** https://alfred-im.github.io/alfred-im/ — vedi [README.md](README.md) per la panoramica pubblica.
 - Build web: `bash scripts/verify.sh --build` (base-href `/alfred-im/`).
-- **Verifica PWA prima del merge**: non serve aspettare il merge su `main`. Ogni **PR su `main`** che tocca `client/**` esegue `deploy-pages` e pubblica sulla **stessa** URL Pages. Dopo push sul branch della PR, attendi il workflow verde, poi prova dal telefono (PWA). Il merge non è prerequisito per la review utente.
+- **Verifica PWA prima del merge**: non serve il merge su `main`. Ogni **PR su `main`** che tocca `client/**` esegue `deploy-pages` sulla stessa URL Pages. L'utente prova dal telefono quando il deploy è pronto (badge Actions / URL Pages) — **l'agente non attende** il workflow (vedi § GitHub Actions sopra). Il merge non è prerequisito per la review utente.
 - **Non** assumere che l'URL rifletta il branch `main`: `deploy-pages` pubblica da **PR su `main`** e da **push su `main`** (ultimo deploy riuscito vince). Vedi `docs/architecture/full-stack.md` §7.
 
 ### Fly.io bridges

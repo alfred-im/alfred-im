@@ -9,22 +9,36 @@ import { expectFocusedUserId } from './focus';
 import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
 
 export const BASE_URL =
-  process.env.ALFRED_BASE_URL ?? 'https://alfred-im.github.io/alfred-im/';
+  process.env.ALFRED_BASE_URL ?? 'http://localhost:8080/';
 
 export const ACCOUNT1 = {
   email:
     process.env.ALFRED_ACCOUNT1_EMAIL ??
-    'agadriel.sexpositive+alfredagent1@gmail.com',
-  password: process.env.ALFRED_ACCOUNT1_PASSWORD ?? 'AlfredAgentDbg1!',
-  username: process.env.ALFRED_ACCOUNT1_USERNAME ?? 'alfredagent1',
+    process.env.CI_AGENT1_EMAIL ??
+    'ci-agent1@e2e.local.test',
+  password:
+    process.env.ALFRED_ACCOUNT1_PASSWORD ??
+    process.env.CI_AGENT1_PASS ??
+    'CiAgentPass1!',
+  username:
+    process.env.ALFRED_ACCOUNT1_USERNAME ??
+    process.env.CI_AGENT1_USERNAME ??
+    'ciagent1',
 };
 
 export const ACCOUNT2 = {
   email:
     process.env.ALFRED_ACCOUNT2_EMAIL ??
-    'agadriel.sexpositive+alfredagent2@gmail.com',
-  password: process.env.ALFRED_ACCOUNT2_PASSWORD ?? 'AlfredAgentDbg2!',
-  username: process.env.ALFRED_ACCOUNT2_USERNAME ?? 'alfredagent2',
+    process.env.CI_AGENT2_EMAIL ??
+    'ci-agent2@e2e.local.test',
+  password:
+    process.env.ALFRED_ACCOUNT2_PASSWORD ??
+    process.env.CI_AGENT2_PASS ??
+    'CiAgentPass2!',
+  username:
+    process.env.ALFRED_ACCOUNT2_USERNAME ??
+    process.env.CI_AGENT2_USERNAME ??
+    'ciagent2',
 };
 
 /** Attende fine splash «Caricamento Alfred» prima di cercare UI. */

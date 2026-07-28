@@ -7,12 +7,13 @@
 #
 #   bash scripts/test.sh list          # elenco suite
 #   bash scripts/test.sh gate          # gate CI (default)
-#   bash scripts/test.sh manual        # flusso-reale + integration + e2e-multi + live
+#   bash scripts/test.sh manual        # suite release completa (stack locale)
 #
 # Dettaglio: scripts/test/README.md
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 cd "$ROOT"
 
 CMD="${1:-gate}"
@@ -23,37 +24,32 @@ print_catalog() {
 Alfred client — suite test
 ==========================
 
-GATE (CI, sempre) — solo igiene codice, NON valida il prodotto:
-  gate              flutter analyze + flutter test (mock/fake, niente browser)
+GATE (CI) — igiene codice (mock/fake, niente browser):
+  gate              flutter analyze + flutter test (esclusi tag stack, diagnostic)
                     → bash scripts/verify.sh [--build]
-                    Verde qui ≠ Alfred funziona. Vedi flusso-reale.
 
-★ FLUSSO UTENTE REALE — quello che conta per il rilascio:
-  flusso-reale      TELEFONO IN VM: 4 user + gruppo → galleria → resume → foto → DB
-                    MODELLO per nuovi test: e2e/photo-resume-session-repro.spec.ts
-                    docs/testing/strategy.md § Come si scrivono i test di release
-                    alias: integration-photo-repro, photo-repro, real-flow
-
-MANUALE (rete / browser, non in CI):
-  integration       API Supabase live — agent1↔agent2 + contratto spunte
-  integration-ticks Solo contratto spunte (✓ / ✓✓ grigie / ✓✓ blu + allow list)
-  integration-push  Delivery plane; smoke SQL push su DB di test (no account utente)
-  e2e               tutti i Playwright (client/e2e/)
-  e2e-multi         Playwright multi-account (persist + messaggi locale / live)
-  e2e-push-local    Playwright push locale — ricezione + tap multi-account (stack locale)
-  e2e-nav-local     Playwright navigation locale — inbox tap + push poison (stack locale)
-  live              flutter test --tags live
-  manual            flusso-reale + integration + e2e-multi + live (in sequenza)
+STACK LOCALE (CI + release) — supabase start + Flutter :8080:
+  sql-smoke         tutti gli smoke SQL (supabase/tests/*.sql)
+  flusso-reale      ★ TELEFONO: 4 user + gruppo → galleria → resume → foto → DB
+  integration       API multi-account + contratto spunte (stack locale)
+  integration-ticks Solo contratto spunte (✓ / ✓✓ grigie / ✓✓ blu)
+  integration-push  Smoke SQL push (stack locale)
+  e2e               tutti i Playwright su localhost:8080
+  e2e-multi         Playwright multi-account (persist + messaggi)
+  e2e-push-local    Playwright push — ricezione + tap multi-account
+  e2e-nav-local     Playwright navigation — inbox tap + push poison
+  stack             flutter test --tags stack (GoTrue locale)
+  release           suite completa stack (alias: manual, ci)
+  manual            alias di release
 
 UTILITÀ:
   diagnose          ambiente flutter web / Chrome CDP / Playwright
-  spec-sync         bash ../scripts/check-spec-sync.sh (SDD catalogo/contratti)
+  spec-sync         bash ../scripts/check-spec-sync.sh (SDD)
 
 Esempi:
   bash scripts/test.sh gate
-  bash scripts/test.sh e2e-multi
-  ALFRED_BASE_URL=http://localhost:8080/ bash scripts/test.sh e2e-multi
-  bash scripts/test.sh manual
+  bash scripts/test.sh release
+  bash scripts/test.sh sql-smoke
 
 Documentazione: scripts/test/README.md
 EOF
@@ -61,6 +57,10 @@ EOF
 
 run_gate() {
   bash scripts/verify.sh "$@"
+}
+
+run_sql_smoke() {
+  bash "$REPO_ROOT/scripts/run-sql-smoke.sh" "$@"
 }
 
 run_integration() {
@@ -71,24 +71,52 @@ run_integration_ticks() {
   INTEGRATION_MODE=ticks bash scripts/integration-multi-account.sh "$@"
 }
 
+ensure_local_stack_env() {
+  # shellcheck source=../../scripts/ci-ensure-local-stack.sh
+  source "$REPO_ROOT/scripts/ci-ensure-local-stack.sh"
+}
+
 run_e2e() {
+  ensure_local_stack_env
+  # shellcheck source=lib/e2e-flutter-port.sh
+  source "$ROOT/scripts/lib/e2e-flutter-port.sh"
+  # shellcheck source=lib/e2e-local-stack.sh
+  source "$ROOT/scripts/lib/e2e-local-stack.sh"
+
+  if ! e2e_resolve_flutter_port; then
+    SESSION_NAME="flutter-e2e-all"
+    tmux -f /exec-daemon/tmux.portal.conf kill-session -t "=$SESSION_NAME" 2>/dev/null || true
+    tmux -f /exec-daemon/tmux.portal.conf new-session -d -s "$SESSION_NAME" -c "$ROOT" -- "${SHELL:-bash}" -l
+    tmux -f /exec-daemon/tmux.portal.conf send-keys -t "$SESSION_NAME:0.0" \
+      "cd $ROOT && /opt/flutter/bin/flutter run -d web-server --release --web-port=${E2E_FLUTTER_PORT:-8080} --web-hostname=0.0.0.0 \
+      --dart-define=SUPABASE_URL=${SUPABASE_URL} \
+      --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" C-m
+    e2e_wait_flutter_ready
+    e2e_warm_flutter_compile
+  fi
+
   if [[ ! -x node_modules/.bin/playwright ]]; then
     echo "==> npm install (Playwright)"
     npm install
     npx playwright install chromium
   fi
-  echo "==> Playwright e2e/ (ALFRED_BASE_URL=${ALFRED_BASE_URL:-https://alfred-im.github.io/alfred-im/})"
-  npx playwright test e2e/ "$@"
+  echo "==> Playwright e2e/ (ALFRED_BASE_URL=${ALFRED_BASE_URL})"
+  npx playwright test e2e/ --workers=1 "$@"
 }
 
 run_e2e_multi() {
   bash scripts/run-e2e-multi-account.sh "$@"
 }
 
-run_live() {
-  echo "==> flutter test --tags live"
+run_stack() {
+  ensure_local_stack_env
+  echo "==> flutter test --tags stack"
   flutter pub get
-  flutter test --tags live "$@"
+  flutter test test/integration/ \
+    --tags stack \
+    --dart-define=SUPABASE_URL="${SUPABASE_URL}" \
+    --dart-define=SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY}" \
+    "$@"
 }
 
 run_diagnose() {
@@ -100,12 +128,8 @@ run_real_flow() {
   bash scripts/integration-photo-session-repro.sh "$@"
 }
 
-run_manual() {
-  echo "==> Suite manuali (flusso-reale → integration → e2e-multi → live)"
-  run_real_flow
-  run_integration
-  run_e2e_multi
-  run_live
+run_release() {
+  bash "$REPO_ROOT/scripts/ci-release-tests.sh" "$@"
 }
 
 case "$CMD" in
@@ -115,9 +139,12 @@ case "$CMD" in
   gate|ci|verify)
     run_gate "$@"
     ;;
+  sql-smoke|sql)
+    run_sql_smoke "$@"
+    ;;
   unit)
     flutter pub get
-    flutter test --exclude-tags live "$@"
+    flutter test --exclude-tags stack "$@"
     ;;
   integration|integration-multi)
     run_integration "$@"
@@ -143,8 +170,8 @@ case "$CMD" in
   e2e-multi|multi-account|multi)
     run_e2e_multi "$@"
     ;;
-  live)
-    run_live "$@"
+  stack|live)
+    run_stack "$@"
     ;;
   diagnose|diag)
     run_diagnose "$@"
@@ -152,8 +179,8 @@ case "$CMD" in
   spec-sync|sdd)
     bash ../scripts/check-spec-sync.sh "$@"
     ;;
-  manual|all-manual)
-    run_manual
+  release|manual|all-manual|ci)
+    run_release "$@"
     ;;
   *)
     echo "Comando sconosciuto: $CMD" >&2

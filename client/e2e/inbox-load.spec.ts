@@ -4,21 +4,16 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE_URL =
-  process.env.ALFRED_BASE_URL ?? 'https://alfred-im.github.io/alfred-im/';
+import {
+  BASE_URL,
+  loginInAuthForm,
+  waitForLoggedInShell,
+} from './helpers/multi-account';
+import { createLocalConfirmedUser, isLocalSupabaseStack } from './helpers/local-auth';
+import { enableFlutterAccessibility } from './helpers/flutter-a11y';
 
-async function enableFlutterAccessibility(page: import('@playwright/test').Page) {
-  const enabled = await page.evaluate(() => {
-    const btn = document.querySelector(
-      '[aria-label="Enable accessibility"]',
-    ) as HTMLElement | null;
-    if (!btn) return false;
-    btn.click();
-    return true;
-  });
-  if (enabled) {
-    await page.waitForTimeout(500);
-  }
+async function enableA11y(page: import('@playwright/test').Page) {
+  await enableFlutterAccessibility(page);
 }
 
 /**
@@ -28,38 +23,25 @@ async function enableFlutterAccessibility(page: import('@playwright/test').Page)
 test('lista conversazioni si carica senza digitare nella ricerca', async ({
   page,
 }) => {
+  test.skip(!isLocalSupabaseStack(), 'richiede stack Supabase locale');
+  test.skip(
+    !(process.env.ALFRED_BASE_URL ?? BASE_URL).match(/localhost|127\.0\.0\.1/),
+    'richiede ALFRED_BASE_URL locale',
+  );
+
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
 
-  const username =
-    process.env.ALFRED_TEST_USERNAME ??
-    `e2e${Date.now().toString().slice(-8)}`;
-  const email =
-    process.env.ALFRED_TEST_EMAIL ??
-    `${username}@example.com`;
-  const password = process.env.ALFRED_TEST_PASSWORD ?? 'E2eTestPass123!';
+  const user = await createLocalConfirmedUser('inbox');
 
   await page.goto(BASE_URL, {
     waitUntil: 'networkidle',
     timeout: 90_000,
   });
-  await enableFlutterAccessibility(page);
+  await enableA11y(page);
 
-  const registerLink = page.getByText('Non hai un account? Registrati');
-  const loginHeading = page.getByText('Accedi ad Alfred');
-
-  if (await registerLink.isVisible().catch(() => false)) {
-    await registerLink.click();
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Username').fill(username);
-    await page.getByLabel('Nome visualizzato').fill('E2E User');
-    await page.getByLabel('Password').fill(password);
-    await page.getByRole('button', { name: 'Registrati' }).click();
-  } else if (await loginHeading.isVisible().catch(() => false)) {
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Password').fill(password);
-    await page.getByRole('button', { name: 'Accedi' }).click();
-  }
+  await loginInAuthForm(page, user.email, user.password);
+  await waitForLoggedInShell(page);
 
   await expect(page.getByText('Alfred', { exact: true })).toBeVisible({
     timeout: 45_000,

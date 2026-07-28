@@ -34,7 +34,7 @@
 
 **Non deducibile — URL live ≠ branch `main`**: https://alfred-im.github.io/alfred-im/ pubblica l’**ultimo** `deploy-pages` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-dev-demo` → ultimo vince). Panoramica pubblica: `README.md`.
 
-**Verifica PWA prima del merge**: l’utente può provare le modifiche client sulla PWA **subito dopo** il deploy della PR — **non** serve il merge su `main`. Push sul branch PR → workflow `deploy-pages` verde → stessa URL https://alfred-im.github.io/alfred-im/ dal telefono.
+**Verifica PWA prima del merge**: l’utente può provare le modifiche client sulla PWA **subito dopo** il deploy della PR — **non** serve il merge su `main`. Push sul branch PR → stessa URL https://alfred-im.github.io/alfred-im/ dal telefono. L'agente **non** attende il workflow GitHub (vedi `AGENTS.md` § GitHub Actions).
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
