@@ -80,21 +80,22 @@ In sintesi: percorso telefono intero, stack locale reale, login da UI, assert su
 
 Incidente 2026-07: il gate era tutto verde e il bug era in produzione. **`flusso-reale` è il test di release** — senza quello non c’è release valida.
 
-## Tier 2 — Release (non in CI)
+## Tier 2 — Release (stack locale, in CI)
 
-Richiedono rete (Supabase live) e/o browser. Non bloccano merge.
+Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/client-full-tests.yml`.
 
 | Suite | Comando | Cosa verifica |
 |-------|---------|---------------|
-| **integration** | `bash scripts/test.sh integration` | Login agent1/agent2 + RPC inbox/peer + **contratto spunte** (✓/✓✓/allow list) |
+| **sql-smoke** | `bash scripts/test.sh sql-smoke` | Tutti gli smoke SQL (`supabase/tests/*.sql`) |
+| **integration** | `bash scripts/test.sh integration` | Login agenti CI + RPC inbox/peer + **contratto spunte** |
 | **integration-ticks** | `bash scripts/test.sh integration-ticks` | Solo contratto spunte delivery plane (3 fasi) |
-| **integration-push** | `bash scripts/test.sh integration-push` | Smoke SQL `push_*` su stack locale; oppure delivery plane live con agent1/2 |
-| **e2e-push-local** | `bash scripts/test.sh e2e-push-local` | Playwright push locale: ricezione SW + **tap multi-account** (stack locale) |
-| **e2e-nav-local** | `bash scripts/test.sh e2e-nav-local` | Playwright navigation locale: inbox tap, switch account restore, push tap/poison (`--workers=1`) |
-| **e2e** | `bash scripts/test.sh e2e` | Tutti i Playwright in `client/e2e/` |
-| **e2e-multi** | `bash scripts/test.sh e2e-multi` | Multi-account: persistenza F5 + messaggi (testo/foto locale, testo live) |
-| **live** | `bash scripts/test.sh live` | Dart con tag `@Tags(['live'])` (es. password reset PKCE) |
-| **manual** | `bash scripts/test.sh manual` | **flusso-reale** → integration → e2e-multi → live |
+| **integration-push** | `bash scripts/test.sh integration-push` | Smoke SQL `push_*` su stack locale |
+| **e2e-push-local** | `bash scripts/test.sh e2e-push-local` | Playwright push locale: ricezione SW + **tap multi-account** |
+| **e2e-nav-local** | `bash scripts/test.sh e2e-nav-local` | Playwright navigation locale: inbox tap, switch account restore, push tap/poison |
+| **e2e** | `bash scripts/test.sh e2e` | Tutti i Playwright in `client/e2e/` (stack locale) |
+| **e2e-multi** | `bash scripts/test.sh e2e-multi` | Multi-account: persistenza F5 + messaggi (testo/foto) |
+| **stack** | `bash scripts/test.sh stack` | Dart con tag `@Tags(['stack'])` (password reset PKCE su GoTrue locale) |
+| **release** | `bash scripts/test.sh release` | Suite completa stack (alias: `manual`, `ci`) |
 
 ### Playwright (`client/e2e/`)
 
@@ -151,8 +152,9 @@ In DevTools (console pagina), filtrare `[alfred][push]`. Fasi attese su tap rius
 | `push_notification_listener_test.dart` | Tap notifica / open_chat → chat peer (mock, gate CI) |
 | `notification_permission_test.dart` | Matrice permesso push + subscribe-first |
 
-Default `e2e-multi`: stack locale (`supabase start` + Flutter release su `:8080`).  
-Live (override): `ALFRED_BASE_URL=https://alfred-im.github.io/alfred-im/ bash scripts/test.sh e2e-multi` — env `ALFRED_ACCOUNT{1,2}_{EMAIL,PASSWORD}`; **non** usare `test1`–`test4`.
+Default `e2e-multi`: stack locale (`supabase start` + Flutter release su `:8080`).
+
+Account CI (solo stack locale): `scripts/ci-agents.env.sh` — `ci-agent1@e2e.local.test` / `ci-agent2@e2e.local.test`.
 
 ### Utilità ambiente GUI
 

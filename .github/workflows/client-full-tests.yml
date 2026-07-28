@@ -1,0 +1,88 @@
+name: Client full test suite
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/client-full-tests.yml'
+      - 'client/**'
+      - 'supabase/**'
+      - 'scripts/ci-*.sh'
+      - 'scripts/ci-*.sql'
+      - 'scripts/run-sql-smoke.sh'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/client-full-tests.yml'
+      - 'client/**'
+      - 'supabase/**'
+      - 'scripts/ci-*.sh'
+      - 'scripts/ci-*.sql'
+      - 'scripts/run-sql-smoke.sh'
+  workflow_dispatch:
+
+concurrency:
+  group: client-full-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Gate (analyze + unit/widget/wiring)
+        run: bash scripts/verify.sh
+        working-directory: client
+
+  release-stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install Playwright browsers
+        run: |
+          cd client
+          npm ci
+          npx playwright install chromium --with-deps
+
+      - name: Release suite (stack locale completo)
+        run: bash scripts/ci-release-tests.sh
+
+  docker-bridges:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build image and verify bridge health endpoints
+        run: bash scripts/docker-smoke.sh

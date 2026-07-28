@@ -20,10 +20,13 @@ BEGIN
     json_build_object('sub', v_agent2::text, 'role', 'authenticated')::text,
     true
   );
+  SET LOCAL ROLE authenticated;
 
   SELECT count(*) INTO v_rows
   FROM public.push_subscriptions
   WHERE user_id = v_agent1;
+
+  RESET ROLE;
 
   IF v_rows <> 0 THEN
     RAISE EXCEPTION 'agent2 must not read agent1 push subscriptions';

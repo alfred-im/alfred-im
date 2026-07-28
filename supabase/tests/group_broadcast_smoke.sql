@@ -7,7 +7,7 @@
 DO $$
 DECLARE
   v_group uuid := '0a81f785-173c-4f1c-b5df-3937086a2482';
-  v_observer uuid := '5b9fadb5-884a-41f2-89c9-4ced56be07a2'; -- test1
+  v_observer uuid := '5b9fadb5-884a-41f2-89c9-4ced56be07a2'; -- ci-observer (stack locale)
   v_client text := 'smoke-broadcast-' || floor(random() * 1000000)::text;
   v_broadcast public.messages;
   v_group_rows integer;

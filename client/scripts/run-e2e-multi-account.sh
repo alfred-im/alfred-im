@@ -3,10 +3,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 #!/usr/bin/env bash
-# E2E multi-account — stack locale (default) o Pages live (override esplicito).
+# E2E multi-account — stack locale (default).
 # Hub: bash scripts/test.sh e2e-multi
-# Locale (default): bash scripts/test.sh e2e-multi
-# Live: ALFRED_BASE_URL=https://alfred-im.github.io/alfred-im/ bash scripts/test.sh e2e-multi
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

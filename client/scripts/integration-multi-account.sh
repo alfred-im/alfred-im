@@ -3,24 +3,39 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 #!/usr/bin/env bash
-# Integrazione live Supabase — multi-account senza browser.
+# Integrazione API multi-account su stack Supabase locale (nessun backend live).
 # Hub: bash scripts/test.sh integration | integration-ticks
 # Garantisce: ✓ singola (rifiuto allow list), ✓✓ grigie (deliver worker), ✓✓ blu (read_receipt worker).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 cd "$ROOT"
 
-SUPABASE_URL="${SUPABASE_URL:-https://tvwpoxxcqwphryvuyqzu.supabase.co}"
-ANON_KEY="${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2d3BveHhjcXdwaHJ5dnV5cXp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTkzODAsImV4cCI6MjA5NzczNTM4MH0.u85Ze5hAtZp6P-3-LSrb0QM2nSG1cfM1I6hddCov0_M}"
+# shellcheck source=../../scripts/ci-agents.env.sh
+source "$REPO_ROOT/scripts/ci-agents.env.sh"
+# shellcheck source=lib/e2e-local-stack.sh
+source "$ROOT/scripts/lib/e2e-local-stack.sh"
 
-AGENT1_EMAIL="${AGENT1_EMAIL:-agadriel.sexpositive+alfredagent1@gmail.com}"
-AGENT1_PASS="${AGENT1_PASS:-AlfredAgentDbg1!}"
-AGENT1_ID="${AGENT1_ID:-efd885fe-b36e-48fc-a796-0e3f153e40d6}"
+e2e_ensure_supabase
+e2e_load_supabase_env
+bash "$REPO_ROOT/scripts/ci-bootstrap-agents.sh"
 
-AGENT2_EMAIL="${AGENT2_EMAIL:-agadriel.sexpositive+alfredagent2@gmail.com}"
-AGENT2_PASS="${AGENT2_PASS:-AlfredAgentDbg2!}"
-AGENT2_ID="${AGENT2_ID:-0a81f785-173c-4f1c-b5df-3937086a2482}"
+SUPABASE_URL="${SUPABASE_URL:-http://127.0.0.1:54321}"
+ANON_KEY="${SUPABASE_ANON_KEY:-${ANON_KEY:-}}"
+
+AGENT1_EMAIL="${AGENT1_EMAIL:-$CI_AGENT1_EMAIL}"
+AGENT1_PASS="${AGENT1_PASS:-$CI_AGENT1_PASS}"
+AGENT1_ID="${AGENT1_ID:-$CI_AGENT1_ID}"
+
+AGENT2_EMAIL="${AGENT2_EMAIL:-$CI_AGENT2_EMAIL}"
+AGENT2_PASS="${AGENT2_PASS:-$CI_AGENT2_PASS}"
+AGENT2_ID="${AGENT2_ID:-$CI_AGENT2_ID}"
+
+if [[ ! "$SUPABASE_URL" =~ localhost|127\.0\.0\.1 ]]; then
+  echo "integration richiede stack Supabase locale (SUPABASE_URL=${SUPABASE_URL})" >&2
+  exit 1
+fi
 
 MODE="${INTEGRATION_MODE:-full}"
 

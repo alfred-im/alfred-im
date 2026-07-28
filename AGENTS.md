@@ -109,9 +109,9 @@ backend out of the box.
 ### Lint / test / build
 - **Hub test:** `cd client && bash scripts/test.sh list` — catalogo completo ([`scripts/test/README.md`](client/scripts/test/README.md)).
 - **Gate CI (igiene):** `bash scripts/test.sh gate` (= `verify.sh`: analyze + test Dart isolati). Obbligatorio su PR; **non** valida che l’app funzioni sul telefono.
-- **Validazione release:** `bash scripts/test.sh flusso-reale` — browser + DB, stesso percorso utente. Obbligatorio per ogni release su media / multi-account / auth / push.
+- **Validazione release:** `bash scripts/test.sh release` — stack locale completo (stesso percorso del telefono). Obbligatorio per ogni release su media / multi-account / auth / push.
 - **Scrivere test nuovi:** copiare [`client/e2e/photo-resume-session-repro.spec.ts`](client/e2e/photo-resume-session-repro.spec.ts) — **riferimento obbligatorio** ([`docs/testing/strategy.md`](../docs/testing/strategy.md#come-si-scrivono-i-test-di-release)). Non aggiungere unit test Dart al gate sperando di coprire il telefono.
-- **Suite manuali complete:** `bash scripts/test.sh manual` (= flusso-reale → integration → e2e-multi → live).
+- **Suite manuali complete:** `bash scripts/test.sh release` (= gate locale + sql-smoke + integration + e2e stack + stack Dart).
 - Web build: `bash scripts/verify.sh --build` (or `flutter build web --release --base-href "/alfred-im/"`).
 - **Prima di qualsiasi test GUI**: `bash scripts/test.sh diagnose` — se fallisce su CDP: `bash scripts/reset-chrome-cdp.sh` (kill Chrome + profilo pulito `/tmp/chrome-cdp-profile`).
 - **Integrazione API** (no browser): `bash scripts/test.sh integration` — agent1/agent2 + RPC.
