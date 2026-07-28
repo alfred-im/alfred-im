@@ -28,25 +28,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  gate:
+  full-suite:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Gate (analyze + unit/widget/wiring)
-        run: bash scripts/verify.sh
-        working-directory: client
-
-  release-stack:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -69,20 +53,18 @@ jobs:
           cache: npm
           cache-dependency-path: client/package-lock.json
 
+      - name: Gate (analyze + unit/widget/wiring)
+        run: bash scripts/verify.sh
+        working-directory: client
+
       - name: Install Playwright browsers
         run: |
           cd client
           npm ci
           npx playwright install chromium --with-deps
 
-      - name: Release suite (stack locale completo)
-        run: bash scripts/ci-release-tests.sh
-
-  docker-bridges:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build image and verify bridge health endpoints
+      - name: Docker bridges smoke
         run: bash scripts/docker-smoke.sh
+
+      - name: Release suite (stack locale, sequenziale)
+        run: bash scripts/ci-release-tests.sh

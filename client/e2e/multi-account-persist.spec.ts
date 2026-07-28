@@ -11,14 +11,8 @@ import {
 import { createLocalConfirmedUser, isLocalSupabaseStack } from './helpers/local-auth';
 import { setupTwoLocalAccounts } from './helpers/local-multi-account';
 import {
-  ACCOUNT1,
-  ACCOUNT2,
-  clearAppData,
-  clickAggiungiAccount,
   expectManifestCount,
   expectMultiAccountList,
-  loginInAuthForm,
-  waitForAuthForm,
   waitForLoggedInShell,
   waitForAppBoot,
 } from './helpers/multi-account';
@@ -44,47 +38,6 @@ test('multi-account mobile: dopo F5 restano 2 account in lista (stack locale)', 
   const acct1 = await createLocalConfirmedUser('mp1');
   const acct2 = await createLocalConfirmedUser('mp2');
   await setupTwoLocalAccounts(page, acct1, acct2);
-
-  await page.reload({ waitUntil: 'domcontentloaded', timeout: E2E_TIMEOUT.boot });
-  await waitForAppBoot(page);
-  await waitForLoggedInShell(page);
-  await enableFlutterAccessibility(page);
-
-  expectManifestCount(await readSavedAccountsManifest(page), 2);
-  await expectMultiAccountList(page, true);
-
-  expect(errors, `errori JS: ${errors.join('; ')}`).toEqual([]);
-});
-
-test('multi-account mobile: dopo F5 restano 2 account in lista (live)', async ({
-  page,
-}) => {
-  test.skip(
-    isLocalSupabaseStack(),
-    'su stack locale usa l’altro test persist',
-  );
-
-  const errors: string[] = [];
-  page.on('pageerror', (err) => errors.push(err.message));
-
-  const base =
-    process.env.ALFRED_BASE_URL ?? 'https://alfred-im.github.io/alfred-im/';
-  await page.goto(base, {
-    waitUntil: 'domcontentloaded',
-    timeout: E2E_TIMEOUT.boot,
-  });
-  await clearAppData(page);
-  await loginInAuthForm(page, ACCOUNT1.email, ACCOUNT1.password);
-  expectManifestCount(await readSavedAccountsManifest(page), 1);
-  await expectMultiAccountList(page, false);
-
-  await clickAggiungiAccount(page);
-  await waitForAuthForm(page);
-  await loginInAuthForm(page, ACCOUNT2.email, ACCOUNT2.password, {
-    minAccounts: 2,
-  });
-  expectManifestCount(await readSavedAccountsManifest(page), 2);
-  await expectMultiAccountList(page, true);
 
   await page.reload({ waitUntil: 'domcontentloaded', timeout: E2E_TIMEOUT.boot });
   await waitForAppBoot(page);

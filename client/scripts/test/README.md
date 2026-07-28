@@ -95,7 +95,7 @@ Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/c
 | **e2e** | `bash scripts/test.sh e2e` | Tutti i Playwright in `client/e2e/` (stack locale) |
 | **e2e-multi** | `bash scripts/test.sh e2e-multi` | Multi-account: persistenza F5 + messaggi (testo/foto) |
 | **stack** | `bash scripts/test.sh stack` | Dart con tag `@Tags(['stack'])` (password reset PKCE su GoTrue locale) |
-| **release** | `bash scripts/test.sh release` | Suite completa stack (alias: `manual`, `ci`) |
+| **release** | `bash scripts/test.sh release` | Suite sequenziale stack (alias: `manual`, `ci`) |
 
 ### Playwright (`client/e2e/`)
 

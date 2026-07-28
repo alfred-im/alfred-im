@@ -80,7 +80,7 @@ Ogni nuovo comportamento che l’utente vede sul telefono si valida **così** �
 
 Gate: `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutter analyze` + `flutter test` (esclusi tag `stack`, `diagnostic`).
 
-**CI completa:** `.github/workflows/client-full-tests.yml` — gate + `bash scripts/ci-release-tests.sh` (stack locale).
+**CI completa:** `.github/workflows/client-full-tests.yml` — un job sequenziale: gate → docker-smoke → `ci-release-tests.sh` (target wall clock ~10 min, timeout 15).
 
 **Nota:** `flutter test` senza `--exclude-tags` include i test `diagnostic` (falliscono by design senza define). Il gate usa `verify.sh` — **441** test al 2026-07-27.
 

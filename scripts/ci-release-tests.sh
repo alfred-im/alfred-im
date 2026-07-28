@@ -3,57 +3,53 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 #!/usr/bin/env bash
-# Suite release completa su stack locale — usata da CI e `bash scripts/test.sh manual`.
+# Suite release sequenziale — un solo stack, un solo build web, un solo Playwright.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CLIENT_ROOT="$REPO_ROOT/client"
 cd "$CLIENT_ROOT"
 
+cleanup() {
+  if [[ -n "${CI_FLUTTER_SERVE_PID:-}" ]]; then
+    kill "$CI_FLUTTER_SERVE_PID" 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT
+
 # shellcheck source=ci-agents.env.sh
 source "$REPO_ROOT/scripts/ci-agents.env.sh"
 
-echo "==> [1/9] Stack locale (Docker + Supabase + agenti CI)"
+echo "==> [1/6] Stack locale"
 # shellcheck source=ci-ensure-local-stack.sh
 source "$REPO_ROOT/scripts/ci-ensure-local-stack.sh"
-
 export ALFRED_BASE_URL="${ALFRED_BASE_URL:-$CI_LOCAL_BASE_URL}"
 
-echo "==> [2/9] SQL smoke"
+echo "==> [2/6] SQL smoke"
 bash "$REPO_ROOT/scripts/run-sql-smoke.sh"
 
-echo "==> [3/9] integration (API)"
+echo "==> [3/6] integration API"
 bash scripts/integration-multi-account.sh
-
-echo "==> [4/9] integration-ticks"
 INTEGRATION_MODE=ticks bash scripts/integration-multi-account.sh
-
-echo "==> [5/9] integration-push"
 bash scripts/integration-push.sh
 
-echo "==> [6/9] flusso-reale"
-bash scripts/run-photo-repro-e2e-local.sh
-
-echo "==> [7/9] e2e-multi"
-bash scripts/run-e2e-multi-account.sh
-
-echo "==> [8/9] e2e-push-local + e2e-nav-local"
-E2E_PUSH_REUSE_FLUTTER=1 bash scripts/run-push-e2e-local.sh
-E2E_PUSH_REUSE_FLUTTER=1 bash scripts/run-e2e-nav-local.sh
-
-echo "==> [9/9] e2e (tutti gli spec Playwright)"
-export ALFRED_BASE_URL="${ALFRED_BASE_URL:-$CI_LOCAL_BASE_URL}"
-if [[ ! -x node_modules/.bin/playwright ]]; then
-  npm install
-  npx playwright install chromium
-fi
-npx playwright test e2e/ --workers=1
-
-echo "==> stack Dart (password reset GoTrue locale)"
+echo "==> [4/6] stack Dart (GoTrue locale)"
 flutter pub get
 flutter test test/integration/ \
   --tags stack \
   --dart-define=SUPABASE_URL="${SUPABASE_URL}" \
   --dart-define=SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY}"
+
+echo "==> [5/6] build web + serve"
+bash "$REPO_ROOT/scripts/ci-configure-push-local.sh"
+bash "$REPO_ROOT/scripts/ci-serve-flutter-web.sh" "$CLIENT_ROOT"
+
+echo "==> [6/6] Playwright (tutti gli e2e, una sola passata)"
+if [[ ! -x node_modules/.bin/playwright ]]; then
+  npm ci
+  npx playwright install chromium
+fi
+export ALFRED_BASE_URL="${ALFRED_BASE_URL:-$CI_LOCAL_BASE_URL}"
+npx playwright test e2e/ --workers=1
 
 echo "ci_release_tests_ok"
