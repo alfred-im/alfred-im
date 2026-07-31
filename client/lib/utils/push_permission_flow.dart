@@ -26,3 +26,11 @@ bool shouldPersistPushSubscription({
 }) {
   return notificationPermission == 'granted';
 }
+
+/// Rileva transizione verso permesso concesso (es. ritorno da impostazioni OS).
+bool notificationPermissionJustGranted({
+  required String? previous,
+  required String? current,
+}) {
+  return previous != 'granted' && current == 'granted';
+}

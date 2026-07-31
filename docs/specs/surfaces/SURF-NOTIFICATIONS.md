@@ -3,7 +3,7 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-NOTIFICATIONS` |
-| **Status** | `draft` |
+| **Status** | `approved` |
 | **Ultima revisione** | 2026-07-28 |
 | **Promesse** | [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) |
 
