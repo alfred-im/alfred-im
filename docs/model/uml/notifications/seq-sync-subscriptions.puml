@@ -1,36 +1,49 @@
 @startuml seq-sync-subscriptions
 ' Context: notifications
 ' Profile: client
-' Command: RegisterDeviceForPush
-' SDD: SURF-NOTIFICATIONS-001–004
-' Revision: 2026-07-27
+' Command: RegisterDeviceForPush { scope, reason }
+' SDD: PROM-PUSH-NOTIFY-048–049, 053; SURF-NOTIFICATIONS-011–013
+' Revision: 2026-07-28
 
-title seq-sync-subscriptions — registrazione manifest multi-account
+title seq-sync-subscriptions — registrazione con scope esplicito
 
 actor Utente
-participant "UI" as UI
+participant "Policy" as Pol
 participant "NotificationsMachine" as NM
 participant "PushPlatform" as Plat
 participant "ServiceWorker" as SW
 participant "Supabase" as DB
 
-Utente -> UI : login / sessionReady / resume
-UI -> NM : CheckPushSupport
+== Bootstrap / permesso granted ==
+Utente -> Pol : sessionReady / PermissionGranted
+Pol -> NM : SyncSubscriptionsRequested\nscope=AllOpenAccounts
 activate NM
-
-alt unsupported o permission denied
-  NM --> UI : PushRegistrationSkipped
-else ok
-  UI -> NM : SyncSubscriptionsRequested
-  NM -> Plat : ensureSubscription(VAPID)
-  Plat -> SW : register push worker
-  Plat -> SW : pushManager.subscribe
-  SW --> Plat : PushSubscriptionKeys
-  loop ogni account nel manifest
-    NM -> DB : upsert subscription
-  end
-  NM --> UI : PushRegistrationSucceeded
+NM -> Plat : ensureSubscription(VAPID)
+Plat -> SW : register + subscribe
+SW --> Plat : PushSubscriptionKeys
+loop ogni account nel manifest
+  NM -> DB : upsert push_subscriptions\n(client effimero, no focus change)
 end
+NM --> Pol : PushRegistrationSucceeded
 deactivate NM
+
+== Resume PWA (non upload attivo) ==
+Utente -> Pol : AppResumed
+alt picker/upload media attivo
+  Pol -> NM : PushSyncDeferred
+else ok
+  Pol -> NM : SyncSubscriptionsRequested\nscope=FocusedAccount
+  NM -> DB : upsert solo account in focus
+end
+
+== Cambio focus ==
+Utente -> Pol : FocusChanged
+Pol -> NM : SyncSubscriptionsRequested\nscope=FocusedAccount
+NM -> DB : upsert account destinazione
+
+note over Pol, DB
+  MUST NOT: scope=AllOpenAccounts su resume generico
+  MUST NOT: AccountSession.restore parallelo nel percorso caldo
+end note
 
 @enduml

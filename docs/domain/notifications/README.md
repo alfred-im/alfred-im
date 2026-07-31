@@ -10,7 +10,7 @@
 
 | Comando dominio | Evento `NotificationsMachine` | Codice |
 |-----------------|-------------------------------|--------|
-| `RegisterDeviceForPush` | `SyncSubscriptionsRequested` | `PushCoordinator.syncPushSubscriptions` |
+| `RegisterDeviceForPush { scope, reason }` | `SyncSubscriptionsRequested` | `PushCoordinator.syncPushSubscriptions` — scope esplicito; vedi [commands-and-events.md](commands-and-events.md) § Policy sync |
 | `UnregisterDeviceFromPush` | `UnregisterSubscriptionRequested` | `PushCoordinator.unregisterAccount` |
 | `OpenChatFromNotification` | `OpenChatFromNotification` | `NotificationsAdapters.onOpenChatFromNotification` ← SW / `PushPlatform` |
 
@@ -39,7 +39,10 @@
 | `PushUnsupportedDetected` | `CheckPushSupport` → stato `PushUnsupported` |
 | `PermissionDeniedDetected` | `CheckPushSupport` → stato `PermissionDenied` |
 | `SubscriptionIdleReached` | `CheckPushSupport` ok → stato `Idle` |
-| `SessionBecameReady` | Bootstrap sessione; drena coda in-memory (`_pendingWhileBusy`) |
+| `SessionBecameReady` | Bootstrap sessione → `RegisterDeviceForPush(AllOpenAccounts)`; drena coda in-memory (`_pendingWhileBusy`) |
+| `PermissionGrantedDetected` | Permesso → `granted` → `RegisterDeviceForPush(AllOpenAccounts)` |
+| `FocusChangedDetected` | Dopo `setFocus` → `RegisterDeviceForPush(FocusedAccount)` |
+| `PushSyncDeferred` | Upload/picker attivo — sync rimandato |
 
 ### Eventi service worker (non passano dalla macchina client)
 
@@ -78,6 +81,7 @@ Tap notifica: SW `postMessage(open_chat)` → `PushPlatform` → `PushNotificati
 |--------|-------------|
 | **Due percorsi pending** | Coda in-memory (`SessionBecameReady` su macchina) per tap durante `OpenChatProcessing`; `localStorage` per tap a app chiusa — unificare richiederebbe effetti macchina su storage |
 | **Soppressione fuori macchina** | `UpdateInChatSuppression` via `PushSuppressionBinder` → SW; la macchina gestisce solo subscription e open-chat |
+| **Sync scope esplicito** | Resume PWA = `FocusedAccount` only; grant permesso = `AllOpenAccounts`; push non fa restore sessione focus ([invariants.md](invariants.md) § Sync push) |
 | **UML SW descrittivo** | `push_sw.js` è imperativo; diagramma SW documenta policy, non genera codice |
 | **`RegisterDeviceForPush` vs `SyncSubscriptionsRequested`** | Comando dominio (policy) vs evento statechart (operazione tecnica) — mapping in tabella sopra |
 

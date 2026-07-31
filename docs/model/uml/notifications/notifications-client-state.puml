@@ -1,7 +1,7 @@
 @startuml notifications-client-state
 ' Context: notifications (client Flutter)
 ' SDD: PROM-PUSH-NOTIFY, SURF-NOTIFICATIONS
-' Revision: 2026-07-27
+' Revision: 2026-07-28
 
 title Notifications — client state machine (subscription + open chat)
 
@@ -19,10 +19,11 @@ state OpenChatProcessing : handler serializzato
 [*] --> PermissionDenied : CheckPushSupport\nPermissionDeniedDetected
 [*] --> Idle : CheckPushSupport\nSubscriptionIdleReached
 
-Idle --> Syncing : SyncSubscriptionsRequested
+Idle --> Syncing : SyncSubscriptionsRequested\n[scope explicito]
+Idle --> Idle : PushSyncDeferred\n[upload/picker attivo]
 Syncing --> Active : PushRegistrationSucceeded
 Syncing --> Idle : PushRegistrationFailed
-Active --> Syncing : SyncSubscriptionsRequested\n(login, resume, add account)
+Active --> Syncing : SyncSubscriptionsRequested\n(scope explicito:\nSessionReady/PermissionGranted → AllOpenAccounts;\nAppResumed/FocusChanged → FocusedAccount)
 Active --> Idle : UnregisterSubscriptionRequested\n(ultimo account)
 
 state c_subscription {

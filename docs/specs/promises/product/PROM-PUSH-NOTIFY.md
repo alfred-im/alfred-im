@@ -4,8 +4,9 @@
 |-------|--------|
 | **Promessa ID** | `PROM-PUSH-NOTIFY` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
+| **Status** | `draft` |
+| **Ultima revisione** | 2026-07-28 |
+| **Amend** | Politica sync multi-account (post-incidente foto PWA #229) |
 
 Promessa di prodotto: notifiche Web Push su tutti i dispositivi attivi per account e per tutti gli account aperti sullo stesso dispositivo; anteprima testo; soppressione in chat attiva.
 
@@ -16,6 +17,8 @@ Infrastruttura server: [SYS-PUSH](../system/SYS-PUSH.md). Superficie client/SW: 
 ## 1. Problema / obiettivo
 
 Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM-REALTIME-OWNER.md), solo l'account in focus riceve aggiornamenti live. Le push colmano il gap: l'utente viene avvisato di messaggi su account in background e su altri browser/dispositivi.
+
+**Amend 2026-07-28:** la registrazione push non deve violare l'invariante «una GoTrue attiva in RAM» ([PROM-MULTI-ACCOUNT-006](./PROM-MULTI-ACCOUNT.md)). Sync al resume PWA con restore di tutti gli account (pre-#229) invalidava il JWT in focus durante upload media. Questo amend definisce **trigger, scope e confini** di `RegisterDeviceForPush` senza rifare l'infrastruttura VAPID/SW.
 
 ---
 
@@ -31,6 +34,28 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 | **PROM-PUSH-NOTIFY-004** | «Chiudi account» → DELETE `push_subscriptions` WHERE `user_id` AND `device_id` corrente |
 | **PROM-PUSH-NOTIFY-005** | Messaggio recapitato a account **non in focus** → push su quel device (se subscription attiva) |
 | **PROM-PUSH-NOTIFY-006** | Messaggio recapitato a account su **altro device** → push su tutti i device con subscription per quel `user_id` |
+
+### MUST — politica sync (amend 2026-07-28)
+
+Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espliciti — vedi [docs/domain/notifications/commands-and-events.md](../../../domain/notifications/commands-and-events.md) § Policy sync.
+
+| ID | Promessa |
+|----|----------|
+| **PROM-PUSH-NOTIFY-048** | Al cambio focus completato (`FocusChanged`): registrazione push per l'account **destinazione** se permesso `granted` e riga assente o chiavi device ruotate |
+| **PROM-PUSH-NOTIFY-049** | Quando il permesso notifiche passa a `granted` (`NotificationPermissionGranted`): registrazione push per **tutti** gli account aperti nel manifest nella stessa sessione app — senza richiedere riavvio |
+| **PROM-PUSH-NOTIFY-053** | Ogni sync dichiara scope esplicito: `AllOpenAccounts` \| `FocusedAccount` \| `NewAccount` \| `Unregister` — nessun default implicito «tutti» su lifecycle generico |
+
+#### Tabella trigger → scope (vincolante)
+
+| Trigger | Scope | PROM-ID |
+|---------|-------|---------|
+| Bootstrap (`SessionBecameReady`) | `AllOpenAccounts` | 002, 053 |
+| Login / «Aggiungi account» | `NewAccount` (minimo); SHOULD anche `AllOpenAccounts` | 003, 053 |
+| `removeAccount` | `Unregister` | 004 |
+| Cambio focus (`FocusChanged`) | `FocusedAccount` | 048, 053 |
+| Permesso `default`/`denied` → `granted` | `AllOpenAccounts` | 049, 053 |
+| Resume PWA (`AppResumed`) | `FocusedAccount` | 053 |
+| Resume con upload media / picker attivo | **nessun sync** | 047 |
 
 ### MUST — contenuto notifica
 
@@ -68,6 +93,13 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 | **PROM-PUSH-NOTIFY-031** | Deep link coerente con [PROM-SHAREABLE-LINK](./PROM-SHAREABLE-LINK.md) dove applicabile |
 | **PROM-PUSH-NOTIFY-036** | Tap notifica: prima di aprire, azzera `activePeer` stale sull'account destinatario; se il peer non è ancora in inbox → retry caricamento + `profile_fallback` sul `peer_profile_id` del payload (messaggio già recapitato) |
 
+### SHOULD
+
+| ID | Promessa |
+|----|----------|
+| **PROM-PUSH-NOTIFY-054** | `last_seen_at` aggiornato su sync `FocusedAccount` (focus change, resume) |
+| **PROM-PUSH-NOTIFY-055** | Sync `AllOpenAccounts` concorrenti debounced (max uno in volo per sessione app) |
+
 ### MUST NOT
 
 | ID | Promessa |
@@ -77,6 +109,9 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 | **PROM-PUSH-NOTIFY-042** | Subscription di un account associata al `user_id` di un altro |
 | **PROM-PUSH-NOTIFY-043** | Handler push che apre chat o sopprime notifica usando solo `peer_profile_id` senza `recipient_user_id` |
 | **PROM-PUSH-NOTIFY-044** | Tap notifica che lascia visibile chat con peer diverso da `peer_profile_id` del payload (stale UI) |
+| **PROM-PUSH-NOTIFY-045** | Resume PWA generico che innesca `RegisterDeviceForPush` con scope `AllOpenAccounts` |
+| **PROM-PUSH-NOTIFY-046** | `RegisterDeviceForPush` che invoca `AccountManager.setFocus`, dispose della sessione in focus o restore parallelo di account non in focus tramite `AccountSession.restore` nel percorso caldo |
+| **PROM-PUSH-NOTIFY-047** | Sync push durante upload media attivo (picker galleria/fotocamera aperto o coda outbound con allegato in invio) |
 
 ### Fuori scope (v1)
 
@@ -105,7 +140,7 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 
 | Superficie | Stato | File |
 |------------|-------|------|
-| SURF-NOTIFICATIONS | `implemented` | [SURF-NOTIFICATIONS.md](../../surfaces/SURF-NOTIFICATIONS.md) |
+| SURF-NOTIFICATIONS | `draft` | [SURF-NOTIFICATIONS.md](../../surfaces/SURF-NOTIFICATIONS.md) |
 | SURF-APP-SHELL | `implemented` | Bootstrap permesso + registrazione |
 | SURF-AUTH | `implemented` | Registrazione post-login |
 
@@ -124,6 +159,9 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 | PROM-PUSH-NOTIFY-002–003 | `client/e2e/push-registration.spec.ts`; `client/e2e/push-full.spec.ts` |
 | PROM-PUSH-NOTIFY-030 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/push-full.spec.ts` |
 | PROM-PUSH-NOTIFY-022 | Scenario manuale §6 |
+| **PROM-PUSH-NOTIFY-045–047** | `client/e2e/photo-resume-session-repro.spec.ts` (`flusso-reale`); test unit sync scope (da implementare) |
+| **PROM-PUSH-NOTIFY-048–049, 053** | `e2e-push-local` multi-account esteso; `push-permission-grant-multi-account` (da implementare) |
+| **PROM-PUSH-NOTIFY-047** | `flusso-reale`; gate upload+picker (da implementare) |
 
 **Gate**: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` + smoke SQL + `bash scripts/test.sh e2e-push-local`
 
@@ -138,13 +176,20 @@ Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM
 5. Su A: focus agent1, torna inbox (chat chiusa) → invio da B → push visibile con anteprima testo.
 6. Messaggio a gruppo in allow list → push con titolo gruppo e anteprima come 1:1.
 
+**Amend — scenari aggiuntivi (da automatizzare):**
+
+7. Tre account aperti, permesso concesso da impostazioni OS → tutti e tre hanno riga `push_subscriptions` senza riavvio app.
+8. Switch A→B → riga B aggiornata (`last_seen_at` o chiavi se ruotate).
+9. Galleria → resume → foto inviata: nessun errore sessione/RLS; push su account non in focus ancora funzionante (riga da bootstrap).
+
 ---
 
 ## 7. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|
-| [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) | Manifest, focus |
+| [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) | Manifest, focus, una GoTrue in RAM |
+| [PROM-CHAT-MEDIA](./PROM-CHAT-MEDIA.md) | Upload media — percorso caldo protetto da sync push |
 | [PROM-REALTIME-OWNER](./PROM-REALTIME-OWNER.md) | Realtime solo focus |
 | [SYS-PUSH](../system/SYS-PUSH.md) | Infrastruttura server |
 | [registry.md](../../registry.md) | Indice promesse |
