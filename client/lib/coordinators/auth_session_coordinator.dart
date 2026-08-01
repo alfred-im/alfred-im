@@ -9,6 +9,7 @@ import '../machines/auth/auth_adapters.dart';
 import '../machines/auth/auth_machine.dart';
 import '../machines/multi-account/multi_account_adapters.dart';
 import '../models/open_account.dart';
+import '../models/push_sync_scope.dart';
 import '../models/profile_summary.dart';
 import '../services/account_manager.dart';
 import '../services/navigation_coordinator.dart';
@@ -64,7 +65,12 @@ class AuthSessionCoordinator {
       _notificationsAdapters.onSessionBecameReady();
       _notify();
     }
-    unawaited(_pushCoordinator.syncPushSubscriptions());
+    unawaited(
+      _pushCoordinator.syncPushSubscriptions(
+        scope: PushSyncScope.allOpenAccounts,
+        reason: PushSyncReason.sessionReady,
+      ),
+    );
   }
 
   void openAuthOverlay({required bool dismissible}) {
@@ -96,7 +102,10 @@ class AuthSessionCoordinator {
       );
       _authAdapters.onAuthOperationCompleted(success: true);
       await _navigation.syncShellAfterFocusSettled();
-      await _pushCoordinator.syncPushSubscriptions();
+      await _pushCoordinator.syncPushSubscriptions(
+        scope: PushSyncScope.allOpenAccounts,
+        reason: PushSyncReason.accountOpened,
+      );
     });
   }
 
@@ -140,7 +149,10 @@ class AuthSessionCoordinator {
       );
       _authAdapters.onAuthOperationCompleted(success: true);
       await _navigation.syncShellAfterFocusSettled();
-      await _pushCoordinator.syncPushSubscriptions();
+      await _pushCoordinator.syncPushSubscriptions(
+        scope: PushSyncScope.allOpenAccounts,
+        reason: PushSyncReason.accountOpened,
+      );
     });
   }
 

@@ -4,10 +4,12 @@
 |-------|--------|
 | **Superficie ID** | `SURF-NOTIFICATIONS` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-18 |
+| **Ultima revisione** | 2026-07-28 |
 | **Promesse** | [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) |
 
 Binding UX e service worker per notifiche Web Push VAPID: permesso browser, registrazione subscription, visualizzazione notifica, tap → chat.
+
+**Amend 2026-07-28:** allineamento alla politica sync in [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) § politica sync — scope espliciti, resume solo focus, sync al cambio focus e al grant permesso.
 
 ---
 
@@ -16,8 +18,10 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | Elemento | Valore |
 |----------|--------|
 | Service worker | `client/web/push_sw.js` (o modulo registrato da `flutter_bootstrap.js`) |
-| Client Dart | `PushSubscriptionService`, `PushSuppressionBinder` |
-| Bootstrap | `AppShell` / `AccountManager` — permesso e sync post-login |
+| Client Dart | `PushSubscriptionService`, `PushCoordinator`, `PushSuppressionBinder` |
+| Bootstrap | `AuthSessionCoordinator` — sync `AllOpenAccounts` post-`sessionReady` |
+| Lifecycle | `PushSuppressionBinder` — soppressione + resume (`FocusedAccount` only) |
+| Focus | `AuthController.setFocus` — sync `FocusedAccount` (da implementare) |
 | Storage locale | `alfred_device_id` (localStorage), subscription keys via SW |
 
 ---
@@ -29,8 +33,8 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | ID | Promessa |
 |----|----------|
 | **SURF-NOTIFICATIONS-001** | Dopo `sessionReady`: se push supportata e permesso ≠ `denied`, registra service worker e `pushManager.subscribe` (VAPID, `userVisibleOnly: true`); con permesso `default` il dialog di sistema compare durante subscribe — **nessuna** `Notification.requestPermission()` separata prima di subscribe |
-| **SURF-NOTIFICATIONS-002** | Se `granted`: registra service worker push, `pushManager.subscribe` con VAPID public key, UPSERT `push_subscriptions` per ogni account nel manifest |
-| **SURF-NOTIFICATIONS-003** | Post-login / «Aggiungi account»: re-registrazione subscription per il nuovo `user_id` |
+| **SURF-NOTIFICATIONS-002** | Se `granted`: registra service worker push, `pushManager.subscribe` con VAPID public key, UPSERT `push_subscriptions` per ogni account nel manifest (scope `AllOpenAccounts` al bootstrap) |
+| **SURF-NOTIFICATIONS-003** | Post-login / «Aggiungi account»: re-registrazione subscription per il nuovo `user_id` (scope `NewAccount` minimo) |
 | **SURF-NOTIFICATIONS-004** | «Chiudi account»: DELETE subscription server + `unsubscribe` locale se ultimo account sul device |
 | **SURF-NOTIFICATIONS-005** | Handler SW `push`: mostra `Notification` con titolo e anteprima ([PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) PROM-PUSH-NOTIFY-010) |
 | **SURF-NOTIFICATIONS-006** | Handler SW `notificationclick`: focus finestra app + messaggio client `{ type: 'open_chat', recipientUserId, peerProfileId }` — **entrambi** obbligatori |
@@ -38,6 +42,9 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | **SURF-NOTIFICATIONS-008** | Soppressione: SW consulta stato client (focus + peer attivo) e confronta la **coppia** account+peer del payload prima di `showNotification` |
 | **SURF-NOTIFICATIONS-009** | Icona notifica: `icons/Icon-192.png`; `badge` coerente brand `#2D2926` |
 | **SURF-NOTIFICATIONS-010** | Payload push incompleto (manca `recipientUserId` o `peerProfileId`) → nessuna notifica visibile e nessun `open_chat` |
+| **SURF-NOTIFICATIONS-011** | Resume PWA (`AppResumed`): sync subscription scope `FocusedAccount` — **non** `AllOpenAccounts` ([PROM-PUSH-NOTIFY-045](../promises/product/PROM-PUSH-NOTIFY.md)) |
+| **SURF-NOTIFICATIONS-012** | Cambio focus sidebar: sync subscription scope `FocusedAccount` per l'account destinazione ([PROM-PUSH-NOTIFY-048](../promises/product/PROM-PUSH-NOTIFY.md)) |
+| **SURF-NOTIFICATIONS-013** | Permesso notifiche `default`/`denied` → `granted`: sync scope `AllOpenAccounts` nella stessa sessione ([PROM-PUSH-NOTIFY-049](../promises/product/PROM-PUSH-NOTIFY.md)) |
 
 ### SHOULD
 
@@ -54,6 +61,8 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | **SURF-NOTIFICATIONS-031** | Mostrare notifica senza controllare soppressione |
 | **SURF-NOTIFICATIONS-032** | Service worker che bypassa RLS o invia push autonomamente |
 | **SURF-NOTIFICATIONS-033** | Tap `open_chat` che lascia visibile chat con peer diverso da `peerProfileId` del payload |
+| **SURF-NOTIFICATIONS-034** | Sync push al resume che esegue `AccountSession.restore` su account non in focus ([PROM-PUSH-NOTIFY-046](../promises/product/PROM-PUSH-NOTIFY.md)) |
+| **SURF-NOTIFICATIONS-035** | Sync push mentre picker media o upload allegato è in corso ([PROM-PUSH-NOTIFY-047](../promises/product/PROM-PUSH-NOTIFY.md)) |
 
 ### Note piattaforma
 
@@ -73,6 +82,8 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | SURF-NOTIFICATIONS-005–008 | `client/test/unit/push_suppression_test.dart`; `client/test/unit/push_conversation_key_test.dart`; `client/e2e/push-full.spec.ts` |
 | SURF-NOTIFICATIONS-006–007 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/push-full.spec.ts` |
 | SURF-NOTIFICATIONS-008 | `client/test/unit/push_suppression_test.dart` |
+| SURF-NOTIFICATIONS-011 | `client/e2e/photo-resume-session-repro.spec.ts` (`flusso-reale`) |
+| SURF-NOTIFICATIONS-012–013 | da implementare (`e2e-push-local` multi-account; grant permesso OS) |
 | PROM-PUSH-NOTIFY-022 | Scenario manuale in [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) §6 |
 
 **Gate**: `bash scripts/check-spec-sync.sh` + `verify.sh` + `bash scripts/test.sh e2e-push-local` (stack locale)

@@ -25,6 +25,7 @@ import '../models/account_view_state.dart';
 import '../models/chat_peer.dart';
 import '../models/conversation_scope.dart';
 import '../models/profile.dart';
+import '../models/push_sync_scope.dart';
 import '../services/account_manager.dart';
 import '../services/account_session.dart';
 import '../services/navigation_coordinator.dart';
@@ -150,8 +151,16 @@ class AuthController extends ChangeNotifier {
   String? get email => focusedSession?.client.auth.currentUser?.email;
   String? get username => focusedSession?.profile.username;
 
-  Future<void> syncPushSubscriptions({bool onlyFocused = false}) =>
-      _pushCoordinator.syncPushSubscriptions(onlyFocused: onlyFocused);
+  Future<void> syncPushSubscriptions({
+    required PushSyncScope scope,
+    required PushSyncReason reason,
+    String? newAccountUserId,
+  }) =>
+      _pushCoordinator.syncPushSubscriptions(
+        scope: scope,
+        reason: reason,
+        newAccountUserId: newAccountUserId,
+      );
 
   Future<void> initialize() async {
     await _sessionCoordinator.initialize();
@@ -183,6 +192,10 @@ class AuthController extends ChangeNotifier {
     try {
       await _navigation.switchToAccount(userId);
       error = null;
+      await _pushCoordinator.syncPushSubscriptions(
+        scope: PushSyncScope.focusedAccount,
+        reason: PushSyncReason.focusChanged,
+      );
     } catch (e) {
       error = friendlyAuthError(e);
     }

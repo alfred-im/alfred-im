@@ -10,9 +10,12 @@ CLIENT_ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../client" && pwd)}"
 PORT="${E2E_FLUTTER_PORT:-8080}"
 cd "$CLIENT_ROOT"
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=ci-vapid-local.env.sh
+source "$REPO_ROOT/scripts/ci-vapid-local.env.sh"
+
 : "${SUPABASE_URL:?SUPABASE_URL richiesto}"
 : "${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY richiesto}"
-: "${CI_VAPID_PUBLIC_KEY:?CI_VAPID_PUBLIC_KEY richiesto}"
 
 echo "==> flutter build web (release, stack locale)"
 flutter pub get

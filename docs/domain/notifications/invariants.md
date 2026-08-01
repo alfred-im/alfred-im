@@ -18,3 +18,12 @@
 ## Preview
 
 4. Testo anteprima push = stessa logica inbox (`message_preview.dart`).
+
+## Sync push multi-account (amend 2026-07-28)
+
+5. `RegisterDeviceForPush` dichiara **scope** esplicito — nessun default «tutti gli account» su lifecycle generico.
+6. Resume PWA (`AppResumed`) → scope `FocusedAccount` al massimo — **mai** `AllOpenAccounts`.
+7. Registrazione push **non** invoca `setFocus`, dispose sessione in focus, né `AccountSession.restore` parallelo su account non in focus nel percorso caldo.
+8. Durante upload media o picker OS attivo → sync push **deferred** (`PushSyncDeferred`).
+9. Cambio focus completato → scope `FocusedAccount` per l'account destinazione.
+10. Permesso notifiche appena `granted` → scope `AllOpenAccounts` nella stessa sessione app.

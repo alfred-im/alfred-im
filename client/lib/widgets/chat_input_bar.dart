@@ -15,6 +15,7 @@ import '../services/location_service.dart';
 import '../services/voice_recording_service.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/duration_format.dart';
+import '../utils/push_media_sync_guard.dart';
 import '../utils/video_file_extension.dart';
 import 'location_map_preview.dart';
 import 'voice_message_content.dart';
@@ -180,56 +181,60 @@ class _ChatInputBarState extends State<ChatInputBar> {
   Future<void> _pickImage(ImageSource source) async {
     if (!widget.enabled || widget.onSendImage == null) return;
 
-    final picker = ImagePicker();
-    final file = await picker.pickImage(
-      source: source,
-      imageQuality: 90,
-      maxWidth: 4096,
-      maxHeight: 4096,
-    );
-    if (file == null) return;
+    await PushMediaSyncGuard.run(() async {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(
+        source: source,
+        imageQuality: 90,
+        maxWidth: 4096,
+        maxHeight: 4096,
+      );
+      if (file == null) return;
 
-    final bytes = await file.readAsBytes();
-    if (bytes.isEmpty) return;
+      final bytes = await file.readAsBytes();
+      if (bytes.isEmpty) return;
 
-    final caption = _takeCaption();
+      final caption = _takeCaption();
 
-    await widget.onSendImage!(
-      bytes,
-      caption: caption,
-    );
+      await widget.onSendImage!(
+        bytes,
+        caption: caption,
+      );
+    });
   }
 
   Future<void> _pickVideo() async {
     if (!widget.enabled || widget.onSendVideo == null) return;
 
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.video,
-      withData: false,
-      withReadStream: true,
-      allowMultiple: false,
-    );
-
-    final file = result?.files.single;
-    if (file == null) return;
-
-    final extension = videoExtensionFromPickedFile(file);
-    if (!isSupportedVideoExtension(extension)) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Formato video non supportato. Usa MP4 o WebM.'),
-        ),
+    await PushMediaSyncGuard.run(() async {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.video,
+        withData: false,
+        withReadStream: true,
+        allowMultiple: false,
       );
-      return;
-    }
 
-    final caption = _takeCaption();
+      final file = result?.files.single;
+      if (file == null) return;
 
-    await widget.onSendVideo!(
-      file,
-      caption: caption,
-    );
+      final extension = videoExtensionFromPickedFile(file);
+      if (!isSupportedVideoExtension(extension)) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Formato video non supportato. Usa MP4 o WebM.'),
+          ),
+        );
+        return;
+      }
+
+      final caption = _takeCaption();
+
+      await widget.onSendVideo!(
+        file,
+        caption: caption,
+      );
+    });
   }
 
   Future<void> _submit() async {
@@ -242,16 +247,18 @@ class _ChatInputBarState extends State<ChatInputBar> {
   Future<void> _pickGif() async {
     if (!widget.enabled || widget.onSendGif == null) return;
 
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: const ['gif'],
-      withData: true,
-      allowMultiple: false,
-    );
+    await PushMediaSyncGuard.run(() async {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['gif'],
+        withData: true,
+        allowMultiple: false,
+      );
 
-    final bytes = result?.files.single.bytes;
-    if (bytes == null || bytes.isEmpty) return;
-    await widget.onSendGif!(Uint8List.fromList(bytes));
+      final bytes = result?.files.single.bytes;
+      if (bytes == null || bytes.isEmpty) return;
+      await widget.onSendGif!(Uint8List.fromList(bytes));
+    });
   }
 
   bool get _isComposerLocked =>
