@@ -20,6 +20,7 @@
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
 | `EvaluateInboundDelivery` | Policy (worker recapito) | Decide se materializzare messaggio per il destinatario. |
+| `EvaluateOutboundSend` | Policy (RPC invio) | Decide se il mittente può inviare al destinatario (propria allow list). |
 
 UML platform: [seq-reception-delivery-gate.puml](../../model/uml/reception/seq-reception-delivery-gate.puml) — `DeliveryWorker` → `ReceptionGate` : `EvaluateInboundDelivery`.
 
@@ -35,7 +36,8 @@ Implementazione (non vincolante): helper SQL `is_sender_allowed_for_reception(ow
 | `SenderAllowed` | Profilo aggiunto alla allow list. |
 | `SenderDisallowed` | Profilo rimosso dalla allow list. |
 | `DeliveryPermitted` | Mittente autorizzato — destinatario riceve. |
-| `DeliverySilentlyBlocked` | Mittente non autorizzato — nessun errore al mittente. |
+| `DeliverySilentlyBlocked` | Mittente non autorizzato dal destinatario — nessun errore al mittente. |
+| `OutboundSendDenied` | Destinatario non in allow list del mittente — errore RPC, nessuna copia mittente. |
 
 Statechart client: `AllowListReady` → evento macchina `AllowlistLoaded`; `DisallowSender` → `RemoveAllowedPerson` o `RemoveAllowedByProfileId` (toggle overlay peer).
 

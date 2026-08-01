@@ -36,6 +36,9 @@ class ReceptionAllowlistController extends ChangeNotifier {
 
   Set<String> get allowedProfileIds => _coordinator.allowedProfileIds;
 
+  bool isProfileAllowed(String profileId) =>
+      allowedProfileIds.contains(profileId);
+
   void setSearchQuery(String value) => _coordinator.setSearchQuery(value);
 
   Future<void> load() => _coordinator.load();

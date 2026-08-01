@@ -29,6 +29,10 @@ BEGIN
   DELETE FROM public.reception_allowlist
   WHERE owner_id = v_agent2 AND allowed_profile_id = v_agent1;
 
+  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  VALUES (v_agent1, v_agent2)
+  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
+
   PERFORM set_config(
     'request.jwt.claims',
     json_build_object('sub', v_agent1::text, 'role', 'authenticated')::text,

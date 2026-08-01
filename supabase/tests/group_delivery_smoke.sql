@@ -104,5 +104,9 @@ BEGIN
     (v_observer, v_group)
   );
 
+  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  VALUES (v_agent1, v_group), (v_group, v_agent1)
+  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
+
   RAISE NOTICE 'group_delivery_smoke_ok';
 END $$;

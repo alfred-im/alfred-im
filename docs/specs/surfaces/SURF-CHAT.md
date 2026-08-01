@@ -43,6 +43,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | **SURF-CHAT-012** | Apertura conversazione da fragment `#indirizzo/chat` — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) via `ShareableLinkController`; azzera chat stale se peer diverso; fallback profilo consentito |
 | **SURF-CHAT-015** | Storico iniziale = ultimi messaggi (allineato a anteprima inbox); scroll verso messaggi più vecchi carica pagine precedenti senza saltare la posizione visibile |
 | **SURF-CHAT-016** | Ingresso da inbox (mobile): stesso frame di transizione shell → header chat del peer (nome noto dal tap) + back + spinner nel corpo; nessuna fase con header inbox ancora visibile e corpo lista in loading per effetto di `OpenConversation`; **vietata** AppBar globale recovery («Riconnessione…» / hamburger) mentre la shell chat è aperta — header solo da `ChatIngressPanel` |
+| **SURF-CHAT-017** | `ChatInputBar` disabilitato se peer ∉ `reception_allowlist` dell'account in focus o allow list in caricamento — [PROM-RECEPTION-FILTER](../promises/product/PROM-RECEPTION-FILTER.md) gate outbound |
 
 ### SHOULD
 

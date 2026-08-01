@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
 import '../providers/messages_controller.dart';
+import '../providers/reception_allowlist_controller.dart';
 import '../theme/alfred_colors.dart';
 import 'peer_profile_overlay.dart';
 import 'profile_identity.dart';
@@ -63,7 +64,11 @@ class ChatPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final messagesController = context.watch<MessagesController>();
+    final allowlist = context.watch<ReceptionAllowlistController?>();
     final messages = messagesController.messages;
+    final canCompose = allowlist != null &&
+        !allowlist.isLoading &&
+        allowlist.isProfileAllowed(peer.profileId);
 
     return ColoredBox(
       color: AlfredColors.surface,
@@ -98,7 +103,7 @@ class ChatPanel extends StatelessWidget {
               ),
             ),
           ChatInputBar(
-            enabled: !messagesController.isSending,
+            enabled: !messagesController.isSending && canCompose,
             onSend: messagesController.send,
             onSendGif: messagesController.sendGif,
             onSendImage: (bytes, {caption}) => messagesController.sendImage(

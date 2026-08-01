@@ -13,7 +13,8 @@
 | **Reception allowlist** | Elenco profili autorizzati a **consegnare** messaggi al destinatario. |
 | **Allowed person** | Voce allow list: identificativo entry + identità profilo consentito. |
 | **Owner (destinatario)** | Utente che filtra la ricezione. |
-| **Sender gate** | Condizione recapito: mittente ∈ allow list del destinatario. |
+| **Sender gate (inbound)** | Condizione recapito: mittente ∈ allow list del destinatario. |
+| **Outbound send gate** | Condizione invio: destinatario ∈ allow list del mittente. |
 | **EvaluateInboundDelivery** | Comando worker che valuta il gate prima della materializzazione copia destinatario. |
 | **DeliveryPermitted** | Esito gate positivo — copia destinatario materializzata, spunta doppia mittente. |
 | **DeliverySilentlyBlocked** | Esito gate negativo — nessuna copia destinatario; mittente resta a ✓ singola. |
@@ -40,8 +41,10 @@
 
 ## Invarianti
 
-1. Gate server **prima** della materializzazione copia destinatario.
-2. Rifiuto: nessun errore verso mittente, nessun messaggio «bloccato» al mittente.
-3. Non consentire profilo proprio nell'allow list.
-4. Unicità coppia (owner, profilo consentito).
+1. Gate server **inbound** prima della materializzazione copia destinatario.
+2. Gate server **outbound** prima della materializzazione copia mittente.
+3. Rifiuto inbound: nessun errore verso mittente, nessun messaggio «bloccato» al mittente.
+4. Rifiuto outbound: errore RPC strutturale; nessuna copia mittente.
+5. Non consentire profilo proprio nell'allow list.
+6. Unicità coppia (owner, profilo consentito).
 5. Toggle allow in overlay: immediato, senza dialog ([PROM-PEER-PROFILE-008](../../specs/promises/product/PROM-PEER-PROFILE.md)); rimozione da screen lista richiede conferma.
