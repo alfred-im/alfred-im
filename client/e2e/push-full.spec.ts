@@ -111,6 +111,7 @@ test('push locale: permesso, messaggio e notifica ricevuta nel service worker', 
     userId: recipient.userId,
   });
   expect(subscription.endpoint.length).toBeGreaterThan(10);
+  expect(subscription.device_id).toBeTruthy();
 
   const messageBody = `e2e push full ${Date.now()}`;
   const clientId = `e2e-push-full-${Date.now()}`;

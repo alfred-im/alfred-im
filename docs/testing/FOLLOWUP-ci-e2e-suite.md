@@ -11,10 +11,9 @@
 |-------|--------|
 | Gate Dart (`verify.sh`) | ✅ ~446 test |
 | CI full-suite step 1–5 | ✅ stack, SQL smoke, integration, Dart `@stack`, build web |
-| CI Playwright step 6 | ✅ **9 spec** (~2.2 min headless) |
-| `e2e/` intero | ❌ non usare — `push-bug-repro` (headed), `push-registration` (debug) esclusi |
+| CI Playwright step 6 | ✅ **9 spec** (`e2e/` intero, ~2.6 min headless) |
 
-### Step 6 CI — spec inclusi
+### Spec in `client/e2e/` (9)
 
 | Spec | Tier |
 |------|------|
@@ -28,29 +27,14 @@
 | `push-full` | e2e-push-local |
 | `push-tap-multi-account` | e2e-push-local |
 
-### Fuori CI (tenere nel repo)
+### Rimossi
 
 | Spec | Motivo |
 |------|--------|
-| `push-bug-repro` | Agente locale headed; `test.skip(CI)` |
-| `push-registration` | Subset debug di `push-full` |
-
-### Rimossi
-
-- `pages-smoke.spec.ts`, `inbox-load.spec.ts` — fragili/duplicati
-
----
-
-## Fix harness applicati
-
-| Fix | File |
-|-----|------|
-| `fillFlutterTextField` (login password 2° account) | `e2e/helpers/multi-account.ts` |
-| `closeDrawerIfOpen` multi-strategy (toggle, scrim, Escape) | idem |
-| `ensureInboxReady` prima di compose | idem |
-| `assertImageInUi: false` + assert DB per foto headless | `chat-media.ts`, `multi-account-messages` |
-| `ALFRED_DIAGNOSTIC_LOG=true` in build CI | `ci-serve-flutter-web.sh` |
-| `account-switch-restore`: tap inbox dopo switch (no auto-restore chat) | spec allineato al prodotto |
+| `pages-smoke.spec.ts` | Fragile su canvas Flutter |
+| `inbox-load.spec.ts` | Duplicato/fragile |
+| `push-registration.spec.ts` | Subset di `push-full` (registrazione + assert `device_id`) |
+| `push-bug-repro.spec.ts` | Headed/debug; coperto da `push-tap-multi-account` in CI |
 
 ---
 
@@ -59,5 +43,5 @@
 ```bash
 cd client && bash scripts/verify.sh
 bash scripts/test.sh flusso-reale
-cd client && npx playwright test e2e/photo-resume-session-repro.spec.ts e2e/inbox-open-chat.spec.ts ... --workers=1
+cd client && npx playwright test e2e/ --workers=1
 ```
