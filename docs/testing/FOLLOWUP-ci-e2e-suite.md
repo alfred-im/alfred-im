@@ -11,7 +11,7 @@
 |-------|--------|
 | Gate Dart (`verify.sh`) | ✅ ~446 test |
 | CI full-suite step 1–5 | ✅ stack, SQL smoke, integration, Dart `@stack`, build web |
-| CI Playwright step 6 | ✅ **`photo-resume-session-repro`** (tier `flusso-reale`); resto `e2e/` ancora skip |
+| CI Playwright step 6 | ✅ **4 spec** — `photo-resume` + `inbox-open-chat` + `chat-inbox-parity` + `manual-push-poison-repro`; resto `e2e/` skip |
 | `npx playwright test e2e/` in VM (2026-08-01) | ❌ **5 pass / 8 fail** (~4 min) |
 
 La full suite CI (`client-full-tests.yml`) **non ha mai avuto una run verde** con `e2e/` intero (introdotto PR #230, 2026-07-28).
@@ -58,6 +58,7 @@ Sostituire lo skip con una selezione esplicita, es.:
 npx playwright test e2e/photo-resume-session-repro.spec.ts --workers=1
 # Poi, quando verdi in headless:
 # npx playwright test e2e/multi-account-persist.spec.ts e2e/multi-account-messages.spec.ts --workers=1
+# (fase 2 nav: inbox-open-chat, chat-inbox-parity, manual-push-poison-repro — in CI da PR #232+)
 ```
 
 **Non** rimettere `npx playwright test e2e/` finché i singoli tier non sono verdi in GitHub Actions headless.

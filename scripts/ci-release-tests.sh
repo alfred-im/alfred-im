@@ -45,13 +45,18 @@ echo "==> [5/6] build web + serve"
 source "$REPO_ROOT/scripts/ci-configure-push-local.sh"
 bash "$REPO_ROOT/scripts/ci-serve-flutter-web.sh" "$CLIENT_ROOT"
 
-echo "==> [6/6] Playwright — tier flusso-reale (photo-resume)"
-# Solo il test di release @real-flow — non `e2e/` intero (debito PR #230).
+echo "==> [6/6] Playwright — tier release + nav (headless)"
+# Tier documentati — non `e2e/` intero (debito PR #230).
 if [[ ! -x node_modules/.bin/playwright ]]; then
   npm install
   npx playwright install chromium
 fi
 export SUPABASE_URL SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY ALFRED_BASE_URL
-npx playwright test e2e/photo-resume-session-repro.spec.ts --workers=1
+npx playwright test \
+  e2e/photo-resume-session-repro.spec.ts \
+  e2e/inbox-open-chat.spec.ts \
+  e2e/chat-inbox-parity.spec.ts \
+  e2e/manual-push-poison-repro.spec.ts \
+  --workers=1
 
 echo "ci_release_tests_ok"
