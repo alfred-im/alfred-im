@@ -134,10 +134,55 @@ export async function openAccountDrawer(page: Page) {
 
 export async function closeDrawerIfOpen(page: Page) {
   const drawerMarker = page.getByText('Aggiungi account');
-  if (await drawerMarker.isVisible().catch(() => false)) {
-    await page.keyboard.press('Escape');
-    await expect(drawerMarker).not.toBeVisible({ timeout: 2_000 });
+  if (!(await drawerMarker.isVisible().catch(() => false))) {
+    return;
   }
+
+  await enableFlutterAccessibility(page);
+
+  // 1) Toggle hamburger (stesso controllo di openAccountDrawer).
+  const drawerButton = page.locator('flt-semantics[role="button"]').first();
+  if (await drawerButton.isVisible().catch(() => false)) {
+    await drawerButton.click({ timeout: E2E_TIMEOUT.ui }).catch(() => {});
+    if (!(await drawerMarker.isVisible().catch(() => false))) {
+      return;
+    }
+  }
+
+  // 2) Tap scrim — area destra fuori dal drawer Material (~304px su mobile).
+  const viewport = page.viewportSize() ?? { width: 390, height: 844 };
+  await page.mouse.click(viewport.width - 20, viewport.height / 2);
+  if (!(await drawerMarker.isVisible().catch(() => false))) {
+    return;
+  }
+
+  // 3) Escape (funziona in locale, spesso no in Actions headless).
+  await page.keyboard.press('Escape');
+  if (!(await drawerMarker.isVisible().catch(() => false))) {
+    return;
+  }
+
+  // 4) Backdrop Flutter web (se esposto nel DOM).
+  const scrim = page.locator(
+    'flt-glass-pane, [aria-modal="true"], .drawer-backdrop',
+  );
+  if ((await scrim.count()) > 0) {
+    await scrim
+      .first()
+      .click({ position: { x: 10, y: 10 }, timeout: 2_000 })
+      .catch(() => {});
+  }
+
+  await expect(drawerMarker).not.toBeVisible({ timeout: E2E_TIMEOUT.ui });
+}
+
+/** Inbox mobile pronta: drawer chiuso + FAB nuovo messaggio. */
+export async function ensureInboxReady(page: Page) {
+  await closeDrawerIfOpen(page);
+  await enableFlutterAccessibility(page);
+  await expect(
+    page.getByRole('button', { name: 'Nuovo messaggio' }),
+  ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
 }
 
 export async function clickAggiungiAccount(page: Page) {
@@ -357,6 +402,7 @@ export async function waitForChatInput(page: Page) {
 }
 
 export async function composeNewMessage(page: Page, peerUsername: string) {
+  await ensureInboxReady(page);
   await page.getByRole('button', { name: 'Nuovo messaggio' }).click({
     timeout: E2E_TIMEOUT.ui,
   });

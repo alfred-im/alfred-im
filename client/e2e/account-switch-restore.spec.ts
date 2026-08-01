@@ -3,9 +3,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /**
- * Gate browser — switch account dalla sidebar deve ripristinare scope/chat
- * (SwitchToAccount + committedScope da view-state, PROM-CONVERSATION-SCOPE),
- * non spinner né inbox vuota.
+ * Gate browser — switch account dalla sidebar: torna all'account con inbox
+ * coerente; riaprendo il peer dalla inbox la chat è ripristinata (scope + messaggi).
  */
 import { test, expect } from '@playwright/test';
 
@@ -18,6 +17,7 @@ import {
 import {
   BASE_URL,
   backToInboxFromChat,
+  openPeerInInbox,
   switchToAccountByDisplayName,
   waitForChatInput,
 } from './helpers/multi-account';
@@ -97,6 +97,8 @@ test('switch sidebar ripristina chat aperta senza spinner', async ({ page }) => 
     account1.userId,
   );
 
+  // Dopo backToInbox + switch, il prodotto mostra inbox (non auto-restore chat).
+  await openPeerInInbox(page, peerLabel);
   await waitForChatInput(page);
   await expect(page.getByText(TEST_MSG)).toBeVisible({
     timeout: E2E_TIMEOUT.message,

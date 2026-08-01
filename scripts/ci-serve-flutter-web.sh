@@ -22,7 +22,8 @@ flutter pub get
 flutter build web --release \
   --dart-define=SUPABASE_URL="${SUPABASE_URL}" \
   --dart-define=SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY}" \
-  --dart-define=VAPID_PUBLIC_KEY="${CI_VAPID_PUBLIC_KEY}"
+  --dart-define=VAPID_PUBLIC_KEY="${CI_VAPID_PUBLIC_KEY}" \
+  --dart-define=ALFRED_DIAGNOSTIC_LOG=true
 
 if lsof -ti :"${PORT}" >/dev/null 2>&1; then
   lsof -ti :"${PORT}" | xargs -r kill

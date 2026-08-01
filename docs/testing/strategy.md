@@ -75,7 +75,7 @@ Ogni nuovo comportamento che l’utente vede sul telefono si valida **così** �
 | **1a–1d Gate** | `client/test/unit/`, `wiring/`, `composition/`, `widget/` | Ogni PR (CI) | Lint, compile, pezzi isolati con mock/fake — **non** il prodotto |
 | **★ Flusso reale** | `scripts/test.sh flusso-reale` | **Ogni release** (media, multi-account, auth, push-on-resume) | Percorso telefono completo + verifica Postgres — **riferimento** per «l’app funziona» |
 | **2 Integration** | `scripts/integration-multi-account.sh` | Release (non in CI) | RPC Supabase multi-account — **senza** UI completa |
-| **3 E2E** | `client/e2e/` | CI (`client-full-tests.yml`) | Browser + DB locale — scenari parziali (`e2e-multi`, `e2e-push-local`, …) |
+| **3 E2E** | `client/e2e/` | CI step 6 (`ci-release-tests.sh`, 9 spec tier) | Browser + DB locale — non `e2e/` intero |
 | **Diagnostic** | `client/test/diagnostic/` (tag `diagnostic`) | Su richiesta agente | Log `[alfred]` con `ALFRED_DIAGNOSTIC_LOG=true` |
 
 Gate: `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutter analyze` + `flutter test` (esclusi tag `stack`, `diagnostic`).

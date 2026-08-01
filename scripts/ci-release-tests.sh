@@ -45,8 +45,8 @@ echo "==> [5/6] build web + serve"
 source "$REPO_ROOT/scripts/ci-configure-push-local.sh"
 bash "$REPO_ROOT/scripts/ci-serve-flutter-web.sh" "$CLIENT_ROOT"
 
-echo "==> [6/6] Playwright — tier release + nav (headless)"
-# Tier documentati — non `e2e/` intero (debito PR #230).
+echo "==> [6/6] Playwright — tier release completo (headless)"
+# Tier documentati — non `e2e/` intero. Esclusi: push-bug-repro (agente headed), push-registration (subset debug).
 if [[ ! -x node_modules/.bin/playwright ]]; then
   npm install
   npx playwright install chromium
@@ -57,6 +57,11 @@ npx playwright test \
   e2e/inbox-open-chat.spec.ts \
   e2e/chat-inbox-parity.spec.ts \
   e2e/manual-push-poison-repro.spec.ts \
+  e2e/multi-account-persist.spec.ts \
+  e2e/multi-account-messages.spec.ts \
+  e2e/account-switch-restore.spec.ts \
+  e2e/push-full.spec.ts \
+  e2e/push-tap-multi-account.spec.ts \
   --workers=1
 
 echo "ci_release_tests_ok"
