@@ -44,5 +44,5 @@ Sottoinsieme di session identity — senza il vincolo su `P`.
 ## Scope e shell
 
 1. Solo `NavigationMachine.commitScope` registra `ConversationScope`; `invalidateCommittedScope` lo azzera.
-2. `ChatOpen` implica scope commesso; `InboxVisible` e `GroupShell` implicano scope `null`.
+2. `ChatOpen` implica shell conversazione 1:1 visibile; `committedScope` può essere `null` durante ingresso (fase A) finché consolidate non commette scope. `InboxVisible` e `GroupShell` implicano scope `null`.
 3. Chat gruppo: shell `GroupShell` con `groupChatOpen` in view-state — nessun `ConversationScope` 1:1.

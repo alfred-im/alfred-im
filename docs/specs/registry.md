@@ -1,6 +1,6 @@
 # Registro promesse — Alfred
 
-**Ultima revisione**: 2026-08-01  
+**Ultima revisione**: 2026-08-01 (post-merge #234)  
 **Metodo**: [README.md](./README.md) (SDD)
 
 **Catalogo unico** di promesse SYSTEM, PRODUCT e SURFACE. Per navigazione generale: [INDICE.md](../INDICE.md). Per cronologia merge: [CHANGELOG.md](../../CHANGELOG.md).
@@ -46,7 +46,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **PROM-SHAREABLE-LINK** | Link condivisibili stabili (`#indirizzo`, `#indirizzo/chat`) | `implemented` | [PROM-SHAREABLE-LINK.md](./promises/product/PROM-SHAREABLE-LINK.md) |
 | **PROM-CHAT-MEDIA** | Foto e video in chat (picker, fotocamera, didascalia) | `implemented` | [PROM-CHAT-MEDIA.md](./promises/product/PROM-CHAT-MEDIA.md) |
 | **PROM-PUSH-NOTIFY** | Push multi-device / multi-account, anteprima, soppressione, **politica sync** (amend) | `implemented` | [PROM-PUSH-NOTIFY.md](./promises/product/PROM-PUSH-NOTIFY.md) |
-| **PROM-CONVERSATION-SCOPE** | Ambito unico conversazione attiva (account + peer + sessione) | `approved` | [PROM-CONVERSATION-SCOPE.md](./promises/product/PROM-CONVERSATION-SCOPE.md) |
+| **PROM-CONVERSATION-SCOPE** | Ambito unico conversazione attiva (account + peer + sessione) | `implemented` | [PROM-CONVERSATION-SCOPE.md](./promises/product/PROM-CONVERSATION-SCOPE.md) |
 
 ---
 
@@ -58,7 +58,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **SURF-APP-SHELL** | `HomeScreen` sempre visibile | `implemented` | PROM-MULTI-ACCOUNT | (in SURF-AUTH) |
 | **SURF-ACCOUNT-SIDEBAR** | Manifest account in sidebar | `implemented` | PROM-MULTI-ACCOUNT, PROM-PROFILE-IDENTITY, PROM-SHAREABLE-LINK | [SURF-ACCOUNT-SIDEBAR.md](./surfaces/SURF-ACCOUNT-SIDEBAR.md) |
 | **SURF-INBOX** | Lista conversazioni | `implemented` | PROM-LIST-FILTER, PROM-REALTIME-OWNER | [SURF-INBOX.md](./surfaces/SURF-INBOX.md) |
-| **SURF-CHAT** | Conversazione 1:1 | `implemented` | PROM-CHAT-PEER-KEY, PROM-MESSAGE-STATUS, PROM-OUTBOUND-SEND, PROM-CHAT-MEDIA, PROM-SHAREABLE-LINK | [SURF-CHAT.md](./surfaces/SURF-CHAT.md) |
+| **SURF-CHAT** | Conversazione 1:1 | `implemented` | PROM-CHAT-PEER-KEY, PROM-MESSAGE-STATUS, PROM-OUTBOUND-SEND, PROM-CHAT-MEDIA, PROM-SHAREABLE-LINK, PROM-CONVERSATION-SCOPE | [SURF-CHAT.md](./surfaces/SURF-CHAT.md) |
 | **SURF-CONTACTS** | Rubrica | `implemented` | PROM-LIST-FILTER, PROM-PERSONAL-CONTACTS | [SURF-CONTACTS.md](./surfaces/SURF-CONTACTS.md) |
 | **SURF-ALLOWLIST** | Persone consentite | `implemented` | PROM-LIST-FILTER, PROM-RECEPTION-FILTER | [SURF-ALLOWLIST.md](./surfaces/SURF-ALLOWLIST.md) |
 | **SURF-PROFILE** | Modifica profilo proprio | `implemented` | PROM-PROFILE-IDENTITY, SYS-PROFILE | [SURF-PROFILE.md](./surfaces/SURF-PROFILE.md) |

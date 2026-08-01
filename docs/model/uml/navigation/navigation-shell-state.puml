@@ -1,23 +1,24 @@
 @startuml navigation-shell-state
 ' Context: navigation
 ' Profile: client
-' Revision: 2026-07-27
+' Revision: 2026-08-01
 ' Statechart: NavigationShellState + ConversationScope
 
 title Navigation — shell e ambito conversazione
 
 state InboxVisible : committedScope = null
-state ChatOpen : committedScope = (owner, peer, epoch)
+state ChatOpen : shell chat 1:1\ncommittedScope opzionale\n(null in fase A ingresso)
 state GroupShell : committedScope = null\ngroupChatOpen in view-state
 
 [*] --> InboxVisible
 
-InboxVisible --> ChatOpen : OpenConversation\n(OpenPeerOnFocusedAccount |\nOpenConversationOnAccount)\nCommitConversationScope
+InboxVisible --> ChatOpen : OpenConversation\n(OpenPeerOnFocusedAccount |\nOpenConversationOnAccount)\nOpenChat + CommitScope?\n(se sessione in RAM)
 InboxVisible --> GroupShell : EnterGroupShell\n(SwitchToAccount gruppo)\nInvalidateConversationScope
 InboxVisible --> InboxVisible : ShowInbox\n(SwitchToAccount utente)\nInvalidateConversationScope
 
 ChatOpen --> InboxVisible : CloseConversation\nInvalidateConversationScope
-ChatOpen --> ChatOpen : OpenConversation (altro peer)\nInvalidate → Commit
+ChatOpen --> ChatOpen : OpenConversation (altro peer)\nInvalidate → OpenChat
+ChatOpen --> ChatOpen : ConsolidateSession +\nCommitConversationScope\n(fase B ingresso)
 ChatOpen --> InboxVisible : ShowInbox\n(SwitchToAccount utente)\nInvalidateConversationScope
 ChatOpen --> GroupShell : EnterGroupShell\n(SwitchToAccount gruppo)\nInvalidateConversationScope
 
@@ -28,8 +29,10 @@ GroupShell --> InboxVisible : ShowInbox\n(SwitchToAccount utente)\nInvalidateCon
 GroupShell --> InboxVisible : CloseConversation\n(utente in focus)\nInvalidateConversationScope
 
 note right of ChatOpen
-  Un solo [ConversationScope] commesso.
-  Messaging legge solo da qui.
+  Shell chatOpen ≠ scope sempre commesso.
+  Messaging legge solo scope commesso.
+  Ingresso: ChatIngressPanel (header peer + spinner)
+  prima di consolidate / LoadMessages.
   activePeer in view-state è proiezione UI.
 end note
 

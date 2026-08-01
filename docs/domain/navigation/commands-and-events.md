@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto navigation
 
-**Ultima revisione:** 2026-07-27  
+**Ultima revisione:** 2026-08-01  
 **UML:** [docs/model/uml/navigation/](../../model/uml/navigation/)
 
 ---
@@ -23,7 +23,7 @@
 | Evento | Descrizione |
 |--------|-------------|
 | `InboxVisible` | Inbox dell'account utente in focus visibile. |
-| `ConversationVisible` | Chat 1:1 aperta con peer risolto e [ConversationScope] commesso. |
+| `ConversationVisible` | Shell chat 1:1 visibile con peer noto (header + spinner in ingresso); **non** implica ancora `ConversationScope` commesso — vedi `ConversationScopeCommitted`. |
 | `ConversationScopeCommitted` | Ambito `(owner, peer, epoch)` registrato — messaging autorizzato. |
 | `ConversationScopeInvalidated` | Ambito azzerato — messaging non mostra dati fino a nuovo commit. |
 | `GroupHomeVisible` | Home gruppo visibile (`GroupShell`, `groupChatOpen = false`). |

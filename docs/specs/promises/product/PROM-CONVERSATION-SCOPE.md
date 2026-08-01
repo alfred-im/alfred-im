@@ -4,7 +4,7 @@
 |-------|--------|
 | **Promessa ID** | `PROM-CONVERSATION-SCOPE` |
 | **Classe** | PRODUCT |
-| **Status** | `approved` |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-01 |
 
 [NavigationMachine](../../client/lib/machines/navigation/navigation_machine.dart) possiede l'unico `ConversationScope` commesso. `activePeer` in view-state è proiezione UI. Messaging legge solo scope commesso.
@@ -42,6 +42,6 @@
 | PROM-CONVERSATION-SCOPE-005–006 | `client/test/widget/push_notification_listener_test.dart`; `client/test/composition/messaging_session_scope_test.dart`; `client/test/unit/messages_controller_scope_guard_test.dart`; `client/test/widget/push_tap_message_contract_test.dart`; `client/test/unit/multi_account_message_store_test.dart` (INV-R4); `client/e2e/inbox-open-chat.spec.ts`; `client/e2e/manual-push-poison-repro.spec.ts` |
 | PROM-CONVERSATION-SCOPE-007 | `client/test/unit/navigation_machine_test.dart` |
 | PROM-CONVERSATION-SCOPE-008 | `client/test/unit/conversation_session_access_test.dart`; `client/test/unit/conversation_open_session_test.dart`; `client/test/wiring/navigation_wiring_test.dart` |
-| PROM-CONVERSATION-SCOPE-009–012 | `client/test/wiring/navigation_open_ingress_test.dart`; `client/test/widget/inbox_panel_test.dart` |
+| PROM-CONVERSATION-SCOPE-009–012 | `client/test/wiring/navigation_open_ingress_test.dart`; `client/test/widget/conversation_scope_ingress_test.dart`; `client/test/unit/conversation_open_session_test.dart`; `client/test/widget/inbox_panel_test.dart` |
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`

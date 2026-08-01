@@ -4,6 +4,18 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
+## [Unreleased] - 2026-08-01
+
+### Aggiunto
+
+- **#234** — Ingresso chat navigation-first: shell chat + header peer + spinner **sincroni** al tap; consolidate/load messaggi e `refreshFocusedInbox(silent)` **async** dopo ingresso (PROM-CONVERSATION-SCOPE-009–012, SURF-CHAT-016, SURF-INBOX-011); `ChatIngressPanel`; nessuna AppBar globale «Riconnessione…» con shell chat aperta
+
+### Documentazione
+
+- Post-merge **#234**: `PROM-CONVERSATION-SCOPE` → `implemented`; allineamento dominio/UML (`ChatOpen` vs scope commesso), tracciabilità test, `PROJECT_MAP.md`, hub test SCOPE-009–012
+
+---
+
 ## [Unreleased] - 2026-07-19
 
 ### Documentazione

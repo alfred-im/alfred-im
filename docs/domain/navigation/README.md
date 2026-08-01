@@ -12,8 +12,8 @@
 |-----------------|------------------------------|------|
 | `ShowInbox` | `SwitchToAccount` | Account utente in focus; invalida scope; evento `InboxVisible`. |
 | `EnterGroupShell` | `SwitchToAccount` | Account gruppo in focus; invalida scope; evento `GroupHomeVisible`. |
-| `OpenConversation` | `OpenPeerOnFocusedAccount` | Inbox su account già in focus (`source=inbox`). |
-| `OpenConversation` | `OpenConversationOnAccount` | Transazione completa (focus + consolidate + resolve + commit). |
+| `OpenConversation` | `OpenPeerOnFocusedAccount` | Inbox su account già in focus; ingresso UI sync, piano dati async. |
+| `OpenConversation` | `OpenConversationOnAccount` | Focus (se serve) + resolve peer + ingresso UI; consolidate/load in fase B se sessione assente in RAM. |
 | `CloseConversation` | `CloseConversation` | Utente → inbox; gruppo → home gruppo (via effetti). |
 | `OpenGroupConversation` | `OpenGroupChat` | Shell resta `groupShell`; view-state `groupChatOpen`. |
 | `LeaveGroupConversation` | `BackToGroupHome` | Shell resta `groupShell`; view-state home gruppo. |

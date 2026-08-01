@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-07-19  
+**Ultimo aggiornamento**: 2026-08-01  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 ---
@@ -133,6 +133,8 @@
 **Non deducibile — auth bootstrap**: login/add-account usa client effimero; **non** chiamare `signOut` sul bootstrap dopo adozione sessione dedicata (revoca refresh GoTrue). PKCE: `EphemeralPkceStorage`. **Chiudi account** = logout **solo locale** (`close()` cancella storage, nessuna `POST /auth/v1/logout`). Doc: `docs/guides/multi-account.md`.
 
 **Non deducibile — layout inbox**: `HomeScreen` — mobile drawer `AccountSidebar`; desktop colonna sinistra account + inbox. `AccountSidebar`: chiusura account in card profilo. `InboxPanel`: ricerca on-demand ([PROM-LIST-FILTER](docs/specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](docs/specs/surfaces/SURF-INBOX.md)), `ValueKey(userId)` al cambio focus. Doc: `docs/guides/inbox.md`.
+
+**Non deducibile — ingresso chat 1:1**: `OpenConversation` in due fasi ([PROM-CONVERSATION-SCOPE-009–012](docs/specs/promises/product/PROM-CONVERSATION-SCOPE.md), [SURF-CHAT-016](docs/specs/surfaces/SURF-CHAT.md)): **fase A sync** — `AccountNavigationEffects._enterConversationUi` imposta view-state (`activePeer`, shell mobile chat) e committa scope solo se sessione già in RAM; UI `ChatIngressPanel` (header peer + back + spinner) via `ConversationScopePane`. **Fase B async** — `consolidateSessionForAccount`, re-commit scope, `LoadMessages`, `refreshFocusedInboxSilently` (`InboxController.load(showLoadingIndicator: false)`); abort se utente esce o cambia peer (`_ingressPrepGeneration`). Su mobile: AppBar recovery (`Riconnessione…`) solo se **non** in shell chat (`home_screen.dart`). UML: `docs/model/uml/navigation/seq-open-conversation-unified.puml`. Test: `conversation_scope_ingress_test.dart`, `navigation_open_ingress_test.dart`.
 
 **Non deducibile — chat**: `AnchoredMessageList` (`ListView` reverse, soglia 48 px). Storico iniziale = ultimi 100 messaggi (`list_peer_messages` senza cursore); scroll verso l'alto → `loadOlderMessages()` + `p_before_created_at`; anteprima inbox sempre nella prima finestra (SYS-MAILBOX-057 / SURF-CHAT-015). Doc: `docs/guides/chat-scroll.md`, `docs/specs/contracts/rpc.md`.
 

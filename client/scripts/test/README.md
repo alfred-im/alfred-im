@@ -36,8 +36,9 @@ Opzione build web: `bash scripts/verify.sh --build`
 |----|------|------------|
 | SCOPE-001–004 | `unit/conversation_scope_test.dart` | `ConversationScope`, commit/invalidate, epoch |
 | SCOPE-005–006 | `unit/messages_controller_scope_guard_test.dart`, `unit/multi_account_message_store_test.dart` (INV-R4) | Fetch/render solo con scope attivo |
-| **SCOPE-008** | `unit/conversation_open_session_test.dart` | Consolidamento GoTrue all'ingresso chat |
+| **SCOPE-008** | `unit/conversation_open_session_test.dart` | Consolidamento GoTrue all'ingresso chat (fase B) |
 | SCOPE-008 wiring | `wiring/navigation_wiring_test.dart` | Stack produzione: open peer + sessione |
+| **SCOPE-009–012** | `wiring/navigation_open_ingress_test.dart`; `widget/conversation_scope_ingress_test.dart` | Ingresso UI sync prima di refresh inbox; header peer senza sessione in RAM; inbox silent refresh |
 
 **Strategia completa:** [docs/testing/strategy.md](../../docs/testing/strategy.md) — gate = igiene; `flusso-reale` = riferimento prodotto.
 

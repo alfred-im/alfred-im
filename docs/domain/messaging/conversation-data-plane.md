@@ -1,7 +1,7 @@
 # Archivio messaggi conversazione — design
 
 **Stato:** `implemented`  
-**Ultima revisione:** 2026-07-27  
+**Ultima revisione:** 2026-08-01  
 **Promessa:** [PROM-CONVERSATION-SCOPE](../../specs/promises/product/PROM-CONVERSATION-SCOPE.md)
 
 ## Scopo
@@ -43,7 +43,7 @@ Consolidamento **obbligatorio prima di fetch/send**, non prima della shell chat.
 
 UML: `docs/model/uml/navigation/seq-open-conversation-unified.puml`
 
-Test hub: `client/test/unit/conversation_open_session_test.dart`
+Test hub: `client/test/unit/conversation_open_session_test.dart`; `client/test/wiring/navigation_open_ingress_test.dart`; `client/test/widget/conversation_scope_ingress_test.dart`
 
 ## Invalidazione forte (`loadSeq++`)
 
