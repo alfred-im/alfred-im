@@ -6,11 +6,11 @@
 # Build web release + serve statico su :8080 (più veloce di flutter run in CI).
 set -euo pipefail
 
-CLIENT_ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../client" && pwd)}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+CLIENT_ROOT="${1:-$REPO_ROOT/client}"
 PORT="${E2E_FLUTTER_PORT:-8080}"
 cd "$CLIENT_ROOT"
-
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=ci-vapid-local.env.sh
 source "$REPO_ROOT/scripts/ci-vapid-local.env.sh"
 
@@ -22,7 +22,8 @@ flutter pub get
 flutter build web --release \
   --dart-define=SUPABASE_URL="${SUPABASE_URL}" \
   --dart-define=SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY}" \
-  --dart-define=VAPID_PUBLIC_KEY="${CI_VAPID_PUBLIC_KEY}"
+  --dart-define=VAPID_PUBLIC_KEY="${CI_VAPID_PUBLIC_KEY}" \
+  --dart-define=ALFRED_DIAGNOSTIC_LOG=true
 
 if lsof -ti :"${PORT}" >/dev/null 2>&1; then
   lsof -ti :"${PORT}" | xargs -r kill

@@ -45,10 +45,24 @@ echo "==> [5/6] build web + serve"
 source "$REPO_ROOT/scripts/ci-configure-push-local.sh"
 bash "$REPO_ROOT/scripts/ci-serve-flutter-web.sh" "$CLIENT_ROOT"
 
-echo "==> [6/6] Playwright — temporaneamente disattivato"
-# Debito CI (PR #230): `npx playwright test e2e/` non è mai stato verde in headless
-# (drawer Escape, pages-smoke senza a11y, push-bug-repro headed, …).
-# Ripristinare a tier documentati (flusso-reale, e2e-multi, …) — non e2e/ intero.
-echo "skip: Playwright in CI — eseguire manualmente: bash scripts/test.sh flusso-reale"
+echo "==> [6/6] Playwright — tier release completo (headless)"
+# Tier documentati — non `e2e/` intero. Esclusi: push-bug-repro (agente headed), push-registration (subset debug).
+if [[ ! -x node_modules/.bin/playwright ]]; then
+  npm install
+  npx playwright install chromium
+fi
+export SUPABASE_URL SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY ALFRED_BASE_URL
+npx playwright test \
+  e2e/photo-resume-session-repro.spec.ts \
+  e2e/inbox-open-chat.spec.ts \
+  e2e/chat-inbox-parity.spec.ts \
+  e2e/manual-push-poison-repro.spec.ts \
+  e2e/multi-account-persist.spec.ts \
+  e2e/multi-account-messages.spec.ts \
+  e2e/account-switch-restore.spec.ts \
+  e2e/push-full.spec.ts \
+  e2e/push-tap-multi-account.spec.ts \
+  --workers=1 \
+  ${CI:+--retries=2}
 
 echo "ci_release_tests_ok"

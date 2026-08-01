@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 import { enableFlutterAccessibility, readSavedAccountsManifest, type ManifestEntry } from './flutter-a11y';
 import { expectFocusedUserId } from './focus';
@@ -132,17 +132,97 @@ export async function openAccountDrawer(page: Page) {
   });
 }
 
-export async function closeDrawerIfOpen(page: Page) {
-  const drawerMarker = page.getByText('Aggiungi account');
-  if (await drawerMarker.isVisible().catch(() => false)) {
-    await page.keyboard.press('Escape');
-    await expect(drawerMarker).not.toBeVisible({ timeout: 2_000 });
+async function isDrawerOpen(page: Page): Promise<boolean> {
+  return page.getByText('Aggiungi account').isVisible().catch(() => false);
+}
+
+/** Chiude il drawer senza throw — per poll e switch account in CI. */
+export async function tryCloseDrawerIfOpen(page: Page): Promise<boolean> {
+  if (!(await isDrawerOpen(page))) {
+    return true;
   }
+
+  await enableFlutterAccessibility(page);
+
+  const drawerButton = page.locator('flt-semantics[role="button"]').first();
+  if (await drawerButton.isVisible().catch(() => false)) {
+    await drawerButton.click({ timeout: E2E_TIMEOUT.ui }).catch(() => {});
+    if (!(await isDrawerOpen(page))) {
+      return true;
+    }
+  }
+
+  const viewport = page.viewportSize() ?? { width: 390, height: 844 };
+  await page.mouse.click(viewport.width - 20, viewport.height / 2);
+  if (!(await isDrawerOpen(page))) {
+    return true;
+  }
+
+  await page.keyboard.press('Escape');
+  if (!(await isDrawerOpen(page))) {
+    return true;
+  }
+
+  const scrim = page.locator(
+    'flt-glass-pane, [aria-modal="true"], .drawer-backdrop',
+  );
+  if ((await scrim.count()) > 0) {
+    await scrim
+      .first()
+      .click({ position: { x: 10, y: 10 }, timeout: 2_000 })
+      .catch(() => {});
+  }
+
+  return !(await isDrawerOpen(page));
+}
+
+export async function closeDrawerIfOpen(page: Page) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (await tryCloseDrawerIfOpen(page)) {
+      return;
+    }
+    await page.waitForTimeout(300);
+  }
+  await expect(page.getByText('Aggiungi account')).not.toBeVisible({
+    timeout: E2E_TIMEOUT.ui,
+  });
+}
+
+/** Inbox mobile pronta: drawer chiuso + FAB nuovo messaggio. */
+export async function ensureInboxReady(page: Page) {
+  await closeDrawerIfOpen(page);
+  await enableFlutterAccessibility(page);
+  await expect(
+    page.getByRole('button', { name: 'Nuovo messaggio' }),
+  ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
 }
 
 export async function clickAggiungiAccount(page: Page) {
   await openAccountDrawer(page);
   await page.getByText('Aggiungi account').click();
+}
+
+/**
+ * Flutter web release: `fill()` spesso non aggiorna il semantics layer (password
+ * soprattutto al 2° login «Aggiungi account»). Digitazione reale + poll inputValue.
+ */
+export async function fillFlutterTextField(
+  page: Page,
+  field: Locator,
+  value: string,
+) {
+  await enableFlutterAccessibility(page);
+  await field.click({ timeout: E2E_TIMEOUT.ui });
+  await page.waitForTimeout(100);
+  await page.keyboard.press('Control+A');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.type(value, { delay: 15 });
+  await expect
+    .poll(async () => field.inputValue(), {
+      timeout: E2E_TIMEOUT.ui,
+      intervals: [...E2E_POLL],
+    })
+    .toBe(value);
 }
 
 export async function loginInAuthForm(
@@ -151,13 +231,11 @@ export async function loginInAuthForm(
   password: string,
   options?: { minAccounts?: number },
 ) {
+  await enableFlutterAccessibility(page);
   const emailField = page.getByRole('textbox', { name: 'Email' });
   const passwordField = page.getByRole('textbox', { name: 'Password' });
-  await emailField.click();
-  await emailField.fill(email);
-  await passwordField.click();
-  await passwordField.fill(password);
-  await expect(passwordField).toHaveValue(password, { timeout: 3_000 });
+  await fillFlutterTextField(page, emailField, email);
+  await fillFlutterTextField(page, passwordField, password);
   await page.getByRole('button', { name: 'Accedi' }).click();
 
   await waitForLoggedInShell(page);
@@ -283,6 +361,16 @@ export async function waitForAccountShell(page: Page) {
     .poll(
       async () => {
         await enableFlutterAccessibility(page);
+        const loading = await page
+          .getByText('Caricamento Alfred')
+          .isVisible()
+          .catch(() => false);
+        if (loading) {
+          return false;
+        }
+        if (await isDrawerOpen(page)) {
+          await tryCloseDrawerIfOpen(page);
+        }
         const overlayClosed = !(await emailField.isVisible().catch(() => false));
         const noPlaceholder = !(await page
           .getByText('Nessun account aperto')
@@ -311,14 +399,15 @@ export async function switchToAccountByDisplayName(
   const otherAccount = drawerAccountButton(page, displayName);
   if ((await otherAccount.count()) > 0) {
     await otherAccount.first().click({ timeout: E2E_TIMEOUT.ui });
-    await closeDrawerIfOpen(page);
   } else {
     await expect(
       activeAccountGroup(page, displayName).first(),
       `account «${displayName}» non trovato nel drawer`,
     ).toBeVisible({ timeout: 3_000 });
-    await closeDrawerIfOpen(page);
   }
+
+  await page.waitForTimeout(400);
+  await tryCloseDrawerIfOpen(page);
 
   if (userId) {
     await expectFocusedUserId(page, userId);
@@ -336,6 +425,7 @@ export async function waitForChatInput(page: Page) {
 }
 
 export async function composeNewMessage(page: Page, peerUsername: string) {
+  await ensureInboxReady(page);
   await page.getByRole('button', { name: 'Nuovo messaggio' }).click({
     timeout: E2E_TIMEOUT.ui,
   });

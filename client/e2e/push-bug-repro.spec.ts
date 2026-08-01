@@ -53,6 +53,7 @@ test.afterEach(({}, testInfo) => {
 });
 
 test.beforeAll(() => {
+  test.skip(!!process.env.CI, 'push-bug-repro: solo agente locale (headed)');
   test.skip(!isLocalSupabaseStack(), 'stack locale richiesto');
   test.skip(
     !(process.env.ALFRED_BASE_URL ?? 'http://localhost:8080/').match(

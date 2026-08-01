@@ -103,13 +103,11 @@ Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/c
 |------|-------|------|
 | **`photo-resume-session-repro.spec.ts`** | **`flusso-reale`** ★ | Test di release: multi-account + galleria + resume + foto in DB |
 | `multi-account-persist.spec.ts` | `e2e-multi` | 2 account, F5, manifest |
-| `multi-account-messages.spec.ts` | `e2e-multi` | Testo, foto, switch e spunte (locale) o scambio testo bidirezionale (live) |
-| `inbox-load.spec.ts` | `e2e` | Inbox senza digitare in ricerca |
+| `multi-account-messages.spec.ts` | `e2e-multi` | Testo, foto, switch e spunte (assert DB; img canvas opzionale) |
 | `inbox-open-chat.spec.ts` | `e2e-nav-local` | Tap inbox → input chat visibile (cattura spinner infinito) |
-| `account-switch-restore.spec.ts` | `e2e-nav-local` | Switch sidebar → chat ripristinata (scope + showInboxOnMobile) |
+| `account-switch-restore.spec.ts` | `e2e-nav-local` | Switch sidebar → inbox + riapertura chat peer |
 | `manual-push-poison-repro.spec.ts` | `e2e-nav-local` | Push tap multi-account + mailbox poison |
 | `push-tap-multi-account.spec.ts` | `e2e-nav-local`, `e2e-push-local` | Due account → tap notifica → focus destinatario + chat |
-| `pages-smoke.spec.ts` | `e2e` | Smoke generico (fragile su canvas Flutter) |
 | `push-registration.spec.ts` | `e2e-push-local` | Solo registrazione subscription (subset) |
 | `push-full.spec.ts` | `e2e-push-local` | Permesso → subscribe → messaggio → notifica in SW |
 

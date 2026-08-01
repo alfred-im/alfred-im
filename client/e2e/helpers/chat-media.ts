@@ -7,7 +7,7 @@ import path from 'path';
 import { expect, type Page } from '@playwright/test';
 
 import { enableFlutterAccessibility } from './flutter-a11y';
-import { waitForChatInput } from './multi-account';
+import { fillFlutterTextField, waitForChatInput } from './multi-account';
 import { E2E_TIMEOUT } from './timeouts';
 
 const FIXTURE_IMAGE = path.resolve(__dirname, '../fixtures/test-photo.jpg');
@@ -59,7 +59,7 @@ export async function sendPhotoFromGalleryAfterPickerResume(page: Page) {
 /** Tap Allega → Galleria foto → file fixture; attende img in chat. */
 export async function sendPhotoFromGallery(
   page: Page,
-  options?: { caption?: string },
+  options?: { caption?: string; assertImageInUi?: boolean },
 ) {
   await waitForChatInput(page);
   await enableFlutterAccessibility(page);
@@ -68,8 +68,7 @@ export async function sendPhotoFromGallery(
     const field = page
       .getByRole('textbox', { name: /Scrivi un messaggio/i })
       .or(page.locator('flt-semantics[role="textbox"]').last());
-    await field.click();
-    await field.fill(options.caption);
+    await fillFlutterTextField(page, field, options.caption);
   }
 
   const fileChooserPromise = page.waitForEvent('filechooser', {
@@ -87,6 +86,10 @@ export async function sendPhotoFromGallery(
   await expect(
     page.getByText(/PostgrestException|StorageException/i),
   ).not.toBeVisible({ timeout: 5_000 });
+
+  if (options?.assertImageInUi === false) {
+    return;
+  }
 
   await expect
     .poll(

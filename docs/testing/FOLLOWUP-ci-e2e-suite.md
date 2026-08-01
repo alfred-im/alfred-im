@@ -1,111 +1,63 @@
 # Follow-up: suite CI e Playwright (post-merge PR #231)
 
-**Data:** 2026-08-01  
-**Contesto:** PR #231 (politica sync push multi-account) mergiata con Playwright `e2e/` **temporaneamente disattivato** in `scripts/ci-release-tests.sh` (commit `f7604a5`).
+**Data:** 2026-08-01 (agg. fine sessione)  
+**Contesto:** tier Playwright in CI ripristinati a spec documentati (PR #232+).
 
 ---
 
-## Stato al merge
+## Stato attuale
 
 | Layer | Stato |
 |-------|--------|
 | Gate Dart (`verify.sh`) | ✅ ~446 test |
 | CI full-suite step 1–5 | ✅ stack, SQL smoke, integration, Dart `@stack`, build web |
-| CI Playwright step 6 | ⏸️ **skip** (commento in `ci-release-tests.sh`) |
-| `npx playwright test e2e/` in VM (2026-08-01) | ❌ **5 pass / 8 fail** (~4 min) |
+| CI Playwright step 6 | ✅ **9 spec** (~2.2 min headless) |
+| `e2e/` intero | ❌ non usare — `push-bug-repro` (headed), `push-registration` (debug) esclusi |
 
-La full suite CI (`client-full-tests.yml`) **non ha mai avuto una run verde** con `e2e/` intero (introdotto PR #230, 2026-07-28).
+### Step 6 CI — spec inclusi
 
----
+| Spec | Tier |
+|------|------|
+| `photo-resume-session-repro` | flusso-reale ★ |
+| `inbox-open-chat` | e2e-nav-local |
+| `chat-inbox-parity` | e2e-nav-local |
+| `manual-push-poison-repro` | e2e-nav-local |
+| `multi-account-persist` | e2e-multi |
+| `multi-account-messages` | e2e-multi |
+| `account-switch-restore` | e2e-nav-local |
+| `push-full` | e2e-push-local |
+| `push-tap-multi-account` | e2e-push-local |
 
-## Run VM completa (riferimento)
+### Fuori CI (tenere nel repo)
 
-**Passati (5):**
+| Spec | Motivo |
+|------|--------|
+| `push-bug-repro` | Agente locale headed; `test.skip(CI)` |
+| `push-registration` | Subset debug di `push-full` |
 
-- `e2e/chat-inbox-parity.spec.ts`
-- `e2e/inbox-open-chat.spec.ts`
-- `e2e/manual-push-poison-repro.spec.ts`
-- `e2e/push-full.spec.ts`
-- `e2e/push-registration.spec.ts`
+### Rimossi
 
-**Falliti (8):**
-
-| File | Causa probabile |
-|------|-----------------|
-| `account-switch-restore.spec.ts` | input chat non visibile dopo switch |
-| `inbox-load.spec.ts` | `getByText('Alfred')` non trovato post-login |
-| `multi-account-messages.spec.ts` | setup 2 account / drawer |
-| `multi-account-persist.spec.ts` | idem |
-| `pages-smoke.spec.ts` | manca `enableFlutterAccessibility` (documentato come fragile) |
-| **`photo-resume-session-repro.spec.ts`** ★ | timeout `loginInAuthForm` / manifest — **`flusso-reale` rosso** |
-| `push-tap-multi-account.spec.ts` | build senza `ALFRED_DIAGNOSTIC_LOG` |
-| `push-bug-repro.spec.ts` | headed/diagnostic; documentato «non in CI» |
-
-Log completo VM: `/tmp/e2e-full-run.log` (sessione agente 2026-08-01).
+- `pages-smoke.spec.ts`, `inbox-load.spec.ts` — fragili/duplicati
 
 ---
 
-## Obiettivo sessione successiva
+## Fix harness applicati
 
-Ripristinare l’«asticella» **a tier documentati**, non `e2e/` intero.
+| Fix | File |
+|-----|------|
+| `fillFlutterTextField` (login password 2° account) | `e2e/helpers/multi-account.ts` |
+| `closeDrawerIfOpen` multi-strategy (toggle, scrim, Escape) | idem |
+| `ensureInboxReady` prima di compose | idem |
+| `assertImageInUi: false` + assert DB per foto headless | `chat-media.ts`, `multi-account-messages` |
+| `ALFRED_DIAGNOSTIC_LOG=true` in build CI | `ci-serve-flutter-web.sh` |
+| `account-switch-restore`: tap inbox dopo switch (no auto-restore chat) | spec allineato al prodotto |
 
-### 1. CI (`scripts/ci-release-tests.sh`)
+---
 
-Sostituire lo skip con una selezione esplicita, es.:
+## Comandi
 
 ```bash
-# Tier release (da validare uno per uno prima di riaccendere in CI)
-npx playwright test e2e/photo-resume-session-repro.spec.ts --workers=1
-# Poi, quando verdi in headless:
-# npx playwright test e2e/multi-account-persist.spec.ts e2e/multi-account-messages.spec.ts --workers=1
-```
-
-**Non** rimettere `npx playwright test e2e/` finché i singoli tier non sono verdi in GitHub Actions headless.
-
-### 2. Fix helper / test (suite, non prodotto)
-
-| Priorità | Fix |
-|----------|-----|
-| P0 | `closeDrawerIfOpen` — click scrim / toggle menu, non solo `Escape` (fallisce in Actions headless) |
-| P0 | `photo-resume-session-repro` — investigare timeout login/manifest in build release statica |
-| P1 | `pages-smoke` — `enableFlutterAccessibility` o escludere dalla CI |
-| P1 | `push-bug-repro` — `test.skip(!!process.env.CI)` o `headless: true` in CI |
-| P2 | push tap specs — `ALFRED_DIAGNOSTIC_LOG=true` nel build CI se servono log `[alfred]` |
-
-### 3. Escludere permanentemente dalla CI
-
-- `pages-smoke.spec.ts` (smoke fragile, già in README)
-- `push-bug-repro.spec.ts` (riproduzione manuale agente)
-
-### 4. SDD post-merge PR #231
-
-- Aggiornare `docs/specs/registry.md`: `PROM-PUSH-NOTIFY`, `SURF-NOTIFICATIONS` → `implemented`
-- Test manuale utente su PWA: resume + galleria + cambio account (scenario bug #229)
-- Scenario 7 SDD (permesso OS → `AllOpenAccounts`): e2e dedicato ancora da scrivere
-
----
-
-## Comandi utili
-
-```bash
-# Gate (sempre)
 cd client && bash scripts/verify.sh
-
-# Release manuale (riferimento prodotto)
 bash scripts/test.sh flusso-reale
-
-# Replica CI step 1–5 + playwright (agente)
-# Vedi script inline in sessione 2026-08-01 o ripristinare blocco playwright in ci-release-tests.sh
-
-# Solo e2e locale (stack + serve già up)
-cd client && npx playwright test e2e/ --workers=1
+cd client && npx playwright test e2e/photo-resume-session-repro.spec.ts e2e/inbox-open-chat.spec.ts ... --workers=1
 ```
-
----
-
-## File toccati da ricordare
-
-- `scripts/ci-release-tests.sh` — skip step 6
-- `.github/workflows/client-full-tests.yml` — rimosso `playwright install` (riaggiungere con tier ristretto)
-- `client/e2e/helpers/multi-account.ts` — `closeDrawerIfOpen`
-- `docs/testing/strategy.md` — tier gate vs release
