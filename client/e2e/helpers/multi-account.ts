@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 import { enableFlutterAccessibility, readSavedAccountsManifest, type ManifestEntry } from './flutter-a11y';
 import { expectFocusedUserId } from './focus';
@@ -145,19 +145,40 @@ export async function clickAggiungiAccount(page: Page) {
   await page.getByText('Aggiungi account').click();
 }
 
+/**
+ * Flutter web release: `fill()` spesso non aggiorna il semantics layer (password
+ * soprattutto al 2° login «Aggiungi account»). Digitazione reale + poll inputValue.
+ */
+export async function fillFlutterTextField(
+  page: Page,
+  field: Locator,
+  value: string,
+) {
+  await enableFlutterAccessibility(page);
+  await field.click({ timeout: E2E_TIMEOUT.ui });
+  await page.waitForTimeout(100);
+  await page.keyboard.press('Control+A');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.type(value, { delay: 15 });
+  await expect
+    .poll(async () => field.inputValue(), {
+      timeout: E2E_TIMEOUT.ui,
+      intervals: [...E2E_POLL],
+    })
+    .toBe(value);
+}
+
 export async function loginInAuthForm(
   page: Page,
   email: string,
   password: string,
   options?: { minAccounts?: number },
 ) {
+  await enableFlutterAccessibility(page);
   const emailField = page.getByRole('textbox', { name: 'Email' });
   const passwordField = page.getByRole('textbox', { name: 'Password' });
-  await emailField.click();
-  await emailField.fill(email);
-  await passwordField.click();
-  await passwordField.fill(password);
-  await expect(passwordField).toHaveValue(password, { timeout: 3_000 });
+  await fillFlutterTextField(page, emailField, email);
+  await fillFlutterTextField(page, passwordField, password);
   await page.getByRole('button', { name: 'Accedi' }).click();
 
   await waitForLoggedInShell(page);

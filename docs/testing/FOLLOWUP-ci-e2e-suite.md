@@ -11,7 +11,7 @@
 |-------|--------|
 | Gate Dart (`verify.sh`) | ✅ ~446 test |
 | CI full-suite step 1–5 | ✅ stack, SQL smoke, integration, Dart `@stack`, build web |
-| CI Playwright step 6 | ⏸️ **skip** (commento in `ci-release-tests.sh`) |
+| CI Playwright step 6 | ✅ **`photo-resume-session-repro`** (tier `flusso-reale`); resto `e2e/` ancora skip |
 | `npx playwright test e2e/` in VM (2026-08-01) | ❌ **5 pass / 8 fail** (~4 min) |
 
 La full suite CI (`client-full-tests.yml`) **non ha mai avuto una run verde** con `e2e/` intero (introdotto PR #230, 2026-07-28).

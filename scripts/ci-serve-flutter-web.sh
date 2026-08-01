@@ -6,11 +6,11 @@
 # Build web release + serve statico su :8080 (più veloce di flutter run in CI).
 set -euo pipefail
 
-CLIENT_ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../client" && pwd)}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+CLIENT_ROOT="${1:-$REPO_ROOT/client}"
 PORT="${E2E_FLUTTER_PORT:-8080}"
 cd "$CLIENT_ROOT"
-
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=ci-vapid-local.env.sh
 source "$REPO_ROOT/scripts/ci-vapid-local.env.sh"
 
