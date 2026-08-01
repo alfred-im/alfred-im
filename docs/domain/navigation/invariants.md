@@ -14,7 +14,7 @@ Per una conversazione commessa con owner `O` e peer `P`:
 2. `auth.uid() == O`
 3. `P != auth.uid()`
 
-Vale **all'ingresso** (`OpenConversation` / `OpenPeerOnFocusedAccount` / `OpenConversationOnAccount` dopo consolidate) e **per tutta la durata** dello scope commesso (UI chat, fetch, invio, upload).
+Vale **prima di fetch/send/upload** su conversazione commessa (non prima della transizione shell verso `ConversationVisible`). L'ingresso UI (header peer + spinner) può precedere consolidate; i messaggi compaiono solo dopo consolidate riuscita e `LoadMessages`.
 
 Se l'invariante fallisce: nessuna RPC/upload; l'utente vede «Sessione scaduta — accedi di nuovo» (mai errore RPC grezzo).
 

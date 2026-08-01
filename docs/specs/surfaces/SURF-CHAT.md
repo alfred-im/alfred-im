@@ -4,7 +4,7 @@
 |-------|--------|
 | **Superficie ID** | `SURF-CHAT` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
+| **Ultima revisione** | 2026-08-01 |
 | **Promesse** | [PROM-CHAT-PEER-KEY](../promises/product/PROM-CHAT-PEER-KEY.md), [PROM-MESSAGE-STATUS](../promises/product/PROM-MESSAGE-STATUS.md), [PROM-OUTBOUND-SEND](../promises/product/PROM-OUTBOUND-SEND.md), [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) (semantica spunte) |
 | **PR** | #159, #178, #210 |
 
@@ -42,6 +42,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | **SURF-CHAT-014** | Composer: un solo pulsante graffetta (`attach_file`) apre pannello contenuti ricchi; icone affiancate in riga orizzontale scrollabile (solo icone, tooltip per accessibilità); GIF e posizione nel pannello, non nella barra; microfono/invio restano a destra — `ChatInputBar` |
 | **SURF-CHAT-012** | Apertura conversazione da fragment `#indirizzo/chat` — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) via `ShareableLinkController`; azzera chat stale se peer diverso; fallback profilo consentito |
 | **SURF-CHAT-015** | Storico iniziale = ultimi messaggi (allineato a anteprima inbox); scroll verso messaggi più vecchi carica pagine precedenti senza saltare la posizione visibile |
+| **SURF-CHAT-016** | Ingresso da inbox (mobile): stesso frame di transizione shell → header chat del peer + spinner nel corpo; nessuna fase con header inbox ancora visibile e corpo lista in loading per effetto di `OpenConversation` |
 
 ### SHOULD
 
@@ -74,6 +75,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | SURF-CHAT-013 | `messages_controller_media_test.dart`, `message_bubble_test.dart`, `chat_media_support_test.dart` |
 | SURF-CHAT-014 | `chat_input_bar_test.dart`; `chat_input_bar.dart` |
 | SURF-CHAT-015 | `mailbox_peer_messages_window_smoke.sql`; `messaging_message_list_test.dart`; `messaging_machine_test.dart` |
+| SURF-CHAT-016 | `navigation_open_ingress_test.dart`; `chat_panel.dart` `ChatIngressPanel` |
 
 Igiene (CI): `verify.sh` + smoke SQL dove indicato in tabella  
 Release: `integration` + `e2e-multi` + **`flusso-reale`** (media / galleria / multi-account)

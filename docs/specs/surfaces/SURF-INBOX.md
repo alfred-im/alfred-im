@@ -4,7 +4,7 @@
 |-------|--------|
 | **Superficie ID** | `SURF-INBOX` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-08-01 |
 | **Promesse** | [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md) |
 | **PR** | #132, #161 |
 
@@ -41,6 +41,7 @@ Binding promessa PRODUCT filtro lista sulla inbox (`InboxPanel`) + entry «Perso
 | ID | Promessa |
 |----|----------|
 | **SURF-INBOX-010** | Ricerca nel contenuto messaggi chat (solo lista conversazioni) |
+| **SURF-INBOX-011** | Tap su riga conversazione **non** avvia un refresh inbox bloccante che mostra `CircularProgressIndicator` al posto della lista mentre l'utente è ancora in inbox |
 
 ---
 
@@ -54,6 +55,7 @@ Binding promessa PRODUCT filtro lista sulla inbox (`InboxPanel`) + entry «Perso
 | SURF-INBOX-004, SURF-INBOX-005 | `inbox_panel.dart` — `showTopBar` |
 | SURF-INBOX-006 | `home_screen.dart` |
 | SURF-INBOX-007 | `inbox_panel_test.dart`; `allowed_people_screen_test.dart` |
+| SURF-INBOX-011 | `navigation_open_ingress_test.dart`; `inbox_panel_test.dart` |
 
 ---
 

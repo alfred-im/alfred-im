@@ -181,8 +181,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= SplitShellLayout.breakpoint;
-    final showChatOnMobile =
-        auth.navigation.isChatShellOpen && auth.navigation.committedScope != null;
+    final showChatOnMobile = auth.navigation.isChatShellOpen &&
+        (auth.navigation.committedScope != null || auth.activePeer != null);
 
     final inboxArea = !auth.hasOpenAccounts
         ? const NoAccountPlaceholder()

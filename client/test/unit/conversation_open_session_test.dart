@@ -141,7 +141,7 @@ void main() {
         navigation = NavigationCoordinator(manager);
       });
 
-      test('openPeerOnFocusedAccount consolida prima di commitScope', () async {
+      test('openPeerOnFocusedAccount committa subito e consolida in async', () async {
         manager.injectTestSession(sessionB);
 
         await navigation.openPeerOnFocusedAccount(
@@ -154,9 +154,13 @@ void main() {
           ),
         );
 
-        expect(manager.sessions.map((s) => s.userId), ['account-a']);
         expect(navigation.committedScope?.ownerUserId, 'account-a');
         expect(navigation.committedScope?.peerProfileId, 'account-b');
+        expect(manager.viewState.activePeer?.profileId, 'account-b');
+
+        await pumpEventQueue(times: 20);
+
+        expect(manager.sessions.map((s) => s.userId), ['account-a']);
       });
 
       test('openConversationOnAccount consolida sessione assente in RAM', () async {
@@ -175,7 +179,7 @@ void main() {
     });
 
     group('AccountNavigationEffects', () {
-      test('openConversation via effects dopo consolidate', () async {
+      test('openConversation via effects con consolidate async', () async {
         late final NavigationMachine machine;
         final effects = AccountNavigationEffects(
           manager,
@@ -193,6 +197,8 @@ void main() {
         );
 
         expect(ok, isTrue);
+        await pumpEventQueue(times: 20);
+        expect(manager.isSessionReadyForAccount('account-a'), isTrue);
         expect(machine.committedScope?.ownerUserId, 'account-a');
         expect(machine.committedScope?.peerProfileId, 'account-b');
       });

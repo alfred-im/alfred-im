@@ -15,6 +15,37 @@ import 'profile_identity.dart';
 import 'anchored_message_list.dart';
 import 'chat_input_bar.dart';
 
+/// Ingresso chat: header peer + spinner, senza [MessagesController].
+class ChatIngressPanel extends StatelessWidget {
+  const ChatIngressPanel({
+    super.key,
+    required this.peer,
+    this.showBackButton = false,
+    this.onBack,
+  });
+
+  final ChatPeer peer;
+  final bool showBackButton;
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AlfredColors.surface,
+      child: Column(
+        children: [
+          _ChatHeader(
+            peer: peer,
+            showBackButton: showBackButton,
+            onBack: onBack,
+          ),
+          const Expanded(child: Center(child: CircularProgressIndicator())),
+        ],
+      ),
+    );
+  }
+}
+
 class ChatPanel extends StatelessWidget {
   const ChatPanel({
     super.key,

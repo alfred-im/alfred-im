@@ -54,7 +54,11 @@ class ConversationScopePane extends StatelessWidget {
       peer: peer,
     )) {
       if (auth.navigation.committedScope == null) {
-        return const EmptyChatPlaceholder();
+        return ChatIngressPanel(
+          peer: peer,
+          showBackButton: showBackButton,
+          onBack: onBack,
+        );
       }
       return const ColoredBox(
         color: AlfredColors.surface,
@@ -124,9 +128,10 @@ class _ChatWithMessages extends StatelessWidget {
           session: liveSession,
           peer: peer,
         )) {
-      return const ColoredBox(
-        color: AlfredColors.surface,
-        child: Center(child: CircularProgressIndicator()),
+      return ChatIngressPanel(
+        peer: peer,
+        showBackButton: showBackButton,
+        onBack: onBack,
       );
     }
 

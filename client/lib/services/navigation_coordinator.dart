@@ -44,6 +44,7 @@ class NavigationCoordinator {
       focusCommand: command,
       onInvalidateCommittedScope: () => machine.invalidateCommittedScope(),
       onCommitScope: (scope) => machine.commitScope(scope),
+      onIngressPrepComplete: _notifyStateChanged,
     );
     machine = NavigationMachine(_effects, messageStore: _messageStore);
     _machine = machine;

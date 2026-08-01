@@ -1,15 +1,16 @@
 @startuml seq-open-conversation-unified
 ' Context: navigation
 ' Profile: client
-' Revision: 2026-07-27
+' Revision: 2026-08-01
 
-title OpenConversation — transazione unica (inbox, push, link, compose)
+title OpenConversation — ingresso UI sincrono, piano dati async
 
 participant "Ingresso" as In
 participant "NavigationMachine" as Nav
 participant "MultiAccountMachine" as MAM
 participant "AccountViewState" as VS
 participant "AuthController" as Auth
+participant "MessagingCoordinator" as Msg
 
 In -> Nav : OpenConversation(account, peer, source)
 Nav -> Nav : InvalidateConversationScope
@@ -18,17 +19,33 @@ alt source == push
 else source == link | compose
   Nav -> VS : ClearStaleUnlessPeer(account, peer)
 end
-Nav -> MAM : FocusAccount (solo I/O, no scope)
-MAM --> Nav : sessione pronta
-Nav -> Nav : ConsolidateSession(account)\nJWT + auth.uid
-Nav -> Nav : ResolvePeer
-alt peer risolto
-  Nav -> VS : OpenChat(peer)
-  Nav -> Nav : CommitConversationScope
-  Nav -> Auth : onStateChanged
-  Nav --> In : ConversationVisible
-else fallito
-  Nav --> In : NavigationFailed
+
+note over Nav, VS
+  **Fase A — ingresso UI (sync)**
+  Shell chat + header peer + spinner
+  prima di I/O async non critico
+end note
+
+Nav -> VS : OpenChat(peer)
+Nav -> Nav : CommitConversationScope\n(se sessione in RAM)
+Nav -> Auth : onStateChanged
+Nav --> In : ConversationVisible
+
+par Fase B — piano dati (async, abortibile)
+  alt focus account diverso
+    Nav -> MAM : FocusAccount
+    MAM --> Nav : sessione
+  end
+  Nav -> Nav : ConsolidateSession(account)
+  alt peer ancora attivo (loadSeq invariato)
+    Nav -> Nav : CommitConversationScope (reconcile)
+    Nav -> Auth : onStateChanged (se scope aggiornato)
+    Nav -> Msg : LoadMessages
+    Msg --> Nav : ConversationReady | abort
+  else utente uscito / altro peer
+    Nav -> Nav : abort (ignora risultati)
+  end
+  Nav -> Nav : refreshFocusedInbox(silent)
 end
 
 @enduml
