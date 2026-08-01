@@ -132,37 +132,37 @@ export async function openAccountDrawer(page: Page) {
   });
 }
 
-export async function closeDrawerIfOpen(page: Page) {
-  const drawerMarker = page.getByText('Aggiungi account');
-  if (!(await drawerMarker.isVisible().catch(() => false))) {
-    return;
+async function isDrawerOpen(page: Page): Promise<boolean> {
+  return page.getByText('Aggiungi account').isVisible().catch(() => false);
+}
+
+/** Chiude il drawer senza throw — per poll e switch account in CI. */
+export async function tryCloseDrawerIfOpen(page: Page): Promise<boolean> {
+  if (!(await isDrawerOpen(page))) {
+    return true;
   }
 
   await enableFlutterAccessibility(page);
 
-  // 1) Toggle hamburger (stesso controllo di openAccountDrawer).
   const drawerButton = page.locator('flt-semantics[role="button"]').first();
   if (await drawerButton.isVisible().catch(() => false)) {
     await drawerButton.click({ timeout: E2E_TIMEOUT.ui }).catch(() => {});
-    if (!(await drawerMarker.isVisible().catch(() => false))) {
-      return;
+    if (!(await isDrawerOpen(page))) {
+      return true;
     }
   }
 
-  // 2) Tap scrim — area destra fuori dal drawer Material (~304px su mobile).
   const viewport = page.viewportSize() ?? { width: 390, height: 844 };
   await page.mouse.click(viewport.width - 20, viewport.height / 2);
-  if (!(await drawerMarker.isVisible().catch(() => false))) {
-    return;
+  if (!(await isDrawerOpen(page))) {
+    return true;
   }
 
-  // 3) Escape (funziona in locale, spesso no in Actions headless).
   await page.keyboard.press('Escape');
-  if (!(await drawerMarker.isVisible().catch(() => false))) {
-    return;
+  if (!(await isDrawerOpen(page))) {
+    return true;
   }
 
-  // 4) Backdrop Flutter web (se esposto nel DOM).
   const scrim = page.locator(
     'flt-glass-pane, [aria-modal="true"], .drawer-backdrop',
   );
@@ -173,7 +173,19 @@ export async function closeDrawerIfOpen(page: Page) {
       .catch(() => {});
   }
 
-  await expect(drawerMarker).not.toBeVisible({ timeout: E2E_TIMEOUT.ui });
+  return !(await isDrawerOpen(page));
+}
+
+export async function closeDrawerIfOpen(page: Page) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (await tryCloseDrawerIfOpen(page)) {
+      return;
+    }
+    await page.waitForTimeout(300);
+  }
+  await expect(page.getByText('Aggiungi account')).not.toBeVisible({
+    timeout: E2E_TIMEOUT.ui,
+  });
 }
 
 /** Inbox mobile pronta: drawer chiuso + FAB nuovo messaggio. */
@@ -349,6 +361,16 @@ export async function waitForAccountShell(page: Page) {
     .poll(
       async () => {
         await enableFlutterAccessibility(page);
+        const loading = await page
+          .getByText('Caricamento Alfred')
+          .isVisible()
+          .catch(() => false);
+        if (loading) {
+          return false;
+        }
+        if (await isDrawerOpen(page)) {
+          await tryCloseDrawerIfOpen(page);
+        }
         const overlayClosed = !(await emailField.isVisible().catch(() => false));
         const noPlaceholder = !(await page
           .getByText('Nessun account aperto')
@@ -377,14 +399,15 @@ export async function switchToAccountByDisplayName(
   const otherAccount = drawerAccountButton(page, displayName);
   if ((await otherAccount.count()) > 0) {
     await otherAccount.first().click({ timeout: E2E_TIMEOUT.ui });
-    await closeDrawerIfOpen(page);
   } else {
     await expect(
       activeAccountGroup(page, displayName).first(),
       `account «${displayName}» non trovato nel drawer`,
     ).toBeVisible({ timeout: 3_000 });
-    await closeDrawerIfOpen(page);
   }
+
+  await page.waitForTimeout(400);
+  await tryCloseDrawerIfOpen(page);
 
   if (userId) {
     await expectFocusedUserId(page, userId);
