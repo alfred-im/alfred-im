@@ -40,10 +40,11 @@ send_message_to_profile(
 | `voice` | `media_url`, `duration_seconds` > 0, `media_mime` obbligatori |
 | `location` | `latitude` ∈ [-90,90], `longitude` ∈ [-180,180] |
 
-Errori comuni: `not authenticated`, `cannot message yourself`, `recipient not found`, `empty message`, `unsupported content_type`.
+Errori comuni: `not authenticated`, `cannot message yourself`, `recipient not found`, `recipient not in reception allowlist`, `empty message`, `unsupported content_type`.
 
 Semantica mailbox ([SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md) — RPC account solo confine mittente):
 
+0. Gate **outbound** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): destinatario ∈ `reception_allowlist` del mittente? Se **no** → `raise exception 'recipient not in reception allowlist'` (nessuna copia mittente)
 1. INSERT copia mittente (`owner_id = author_id = auth.uid()`), λ nuovo, date null
 2. INSERT `outbox` (`protocol = internal`, `event_kind = deliver`, `status = queued`)
 3. `alfred_delivery.process_outbox` (worker, stessa transazione):
@@ -56,7 +57,7 @@ Lista allow vuota → passo 3 sempre **no** (nessuno consentito).
 
 Idempotenza: stesso `p_client_message_id` → stessa riga mittente (no duplicati).
 
-**MUST NOT**: promozione `delivered` senza copia destinatario materializzata; errore RPC verso mittente su rifiuto allow list; trigger `on_message_inserted` legacy.
+**MUST NOT**: promozione `delivered` senza copia destinatario materializzata; errore RPC verso mittente su rifiuto allow list **inbound**; INSERT copia mittente su violazione gate **outbound**; trigger `on_message_inserted` legacy.
 
 **Helper**: `is_sender_allowed_for_reception(owner_id, sender_profile_id) → boolean` — migrazione `20260704130000`; **helper interno** (non chiamabile da client).
 
@@ -284,7 +285,8 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 | `supabase/tests/mailbox_send_media_smoke.sql` | Validazione `gif` / `location` / `image` / `video` |
 | `supabase/tests/send_message_to_profile_smoke.sql` | Invio a profilo non in rubrica |
 | `supabase/tests/reception_allowlist_schema_smoke.sql` | Tabella + helper gate |
-| `supabase/tests/reception_allowlist_gate_smoke.sql` | Rifiuto silenzioso vs recapito allowed |
+| `supabase/tests/reception_allowlist_gate_smoke.sql` | Rifiuto silenzioso inbound vs recapito allowed |
+| `supabase/tests/reception_outbound_gate_smoke.sql` | Errore outbound se destinatario ∉ allow list mittente |
 | `supabase/tests/rpc_helper_security_smoke.sql` | Helper interni non eseguibili da `authenticated` |
 | `supabase/tests/group_schema_smoke.sql` | `list_owner_messages`, `profile_kind`, `broadcast_message_to_allowlist` |
 
