@@ -4,7 +4,7 @@
 |-------|--------|
 | **Promessa ID** | `PROM-PUSH-NOTIFY` |
 | **Classe** | PRODUCT |
-| **Status** | `approved` |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-28 |
 | **Amend** | Politica sync multi-account (post-incidente foto PWA #229) |
 
@@ -140,7 +140,7 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 
 | Superficie | Stato | File |
 |------------|-------|------|
-| SURF-NOTIFICATIONS | `approved` | [SURF-NOTIFICATIONS.md](../../surfaces/SURF-NOTIFICATIONS.md) |
+| SURF-NOTIFICATIONS | `implemented` | [SURF-NOTIFICATIONS.md](../../surfaces/SURF-NOTIFICATIONS.md) |
 | SURF-APP-SHELL | `implemented` | Bootstrap permesso + registrazione |
 | SURF-AUTH | `implemented` | Registrazione post-login |
 

@@ -45,7 +45,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **PROM-GROUP-TICKS** | Spunte limitate al rapporto con il gruppo | `implemented` | [PROM-GROUP-TICKS.md](./promises/product/PROM-GROUP-TICKS.md) |
 | **PROM-SHAREABLE-LINK** | Link condivisibili stabili (`#indirizzo`, `#indirizzo/chat`) | `implemented` | [PROM-SHAREABLE-LINK.md](./promises/product/PROM-SHAREABLE-LINK.md) |
 | **PROM-CHAT-MEDIA** | Foto e video in chat (picker, fotocamera, didascalia) | `implemented` | [PROM-CHAT-MEDIA.md](./promises/product/PROM-CHAT-MEDIA.md) |
-| **PROM-PUSH-NOTIFY** | Push multi-device / multi-account, anteprima, soppressione, **politica sync** (amend) | `approved` | [PROM-PUSH-NOTIFY.md](./promises/product/PROM-PUSH-NOTIFY.md) |
+| **PROM-PUSH-NOTIFY** | Push multi-device / multi-account, anteprima, soppressione, **politica sync** (amend) | `implemented` | [PROM-PUSH-NOTIFY.md](./promises/product/PROM-PUSH-NOTIFY.md) |
 | **PROM-CONVERSATION-SCOPE** | Ambito unico conversazione attiva (account + peer + sessione) | `approved` | [PROM-CONVERSATION-SCOPE.md](./promises/product/PROM-CONVERSATION-SCOPE.md) |
 
 ---
@@ -66,7 +66,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **SURF-GROUP-SHELL** | Shell account gruppo | `implemented` | PROM-MULTI-ACCOUNT, SYS-GROUP, SURF-GROUP-HOME | [SURF-GROUP-SHELL.md](./surfaces/SURF-GROUP-SHELL.md) |
 | **SURF-GROUP-HOME** | Home account gruppo | `implemented` | SYS-GROUP, SYS-PROFILE, PROM-PROFILE-IDENTITY, PROM-GROUP-AUTHOR-DISPLAY | [SURF-GROUP-HOME.md](./surfaces/SURF-GROUP-HOME.md) |
 | **SURF-GROUP-CONVERSATION** | Chat gruppo + erogazione UI | `implemented` | PROM-GROUP-AUTHOR-DISPLAY, PROM-GROUP-TICKS, PROM-CHAT-MEDIA, SURF-GROUP-HOME | [SURF-GROUP-CONVERSATION.md](./surfaces/SURF-GROUP-CONVERSATION.md) |
-| **SURF-NOTIFICATIONS** | Web Push, service worker, permesso browser, **sync scope** (amend) | `approved` | PROM-PUSH-NOTIFY, SYS-PUSH | [SURF-NOTIFICATIONS.md](./surfaces/SURF-NOTIFICATIONS.md) |
+| **SURF-NOTIFICATIONS** | Web Push, service worker, permesso browser, **sync scope** (amend) | `implemented` | PROM-PUSH-NOTIFY, SYS-PUSH | [SURF-NOTIFICATIONS.md](./surfaces/SURF-NOTIFICATIONS.md) |
 
 ---
 
