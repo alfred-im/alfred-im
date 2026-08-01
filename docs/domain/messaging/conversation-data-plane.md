@@ -24,14 +24,22 @@ Refactoring del layer lista messaggi chat 1:1: **un modulo**, **un'identità** (
 - `isConversationReady` senza side-effect; epoch via `reconcileSessionEpoch`.
 - Nessun `isScopeCommitted ?? true`.
 
-## Ingresso chat — consolidamento sessione (SCOPE-008)
+## Ingresso chat — due fasi (SCOPE-008 / PROM-CONVERSATION-SCOPE-009)
 
-All'ingresso (`OpenConversation` / `OpenPeerOnFocusedAccount`), **prima** di `commitScope` e fetch:
+### Fase A — ingresso UI (sincrona)
 
-1. Account UI = fonte di verità (non fidarsi di «sessione già in RAM»).
-2. Rimuovere sessioni spurie in RAM (altri account).
-3. Se JWT assente o `auth.uid` ≠ account UI → `restore` GoTrue da storage.
-4. Solo sessione pronta → `commitScope` → fetch `list_peer_messages`.
+1. `OpenChat` in view-state + shell `ChatOpen`.
+2. `CommitConversationScope` se sessione in RAM coerente.
+3. Notify UI → header peer + spinner nel pannello chat.
+
+### Fase B — piano dati (asincrona, abortibile)
+
+1. `ConsolidateSession` se necessario (JWT + `auth.uid`).
+2. Re-commit scope se epoch cambia; abort se `loadSeq` incrementato o peer diverso.
+3. `LoadMessages` (messaging) — già con generation guard.
+4. `refreshFocusedInbox(silent)` — **non** blocca navigazione, **non** `isLoading` inbox.
+
+Consolidamento **obbligatorio prima di fetch/send**, non prima della shell chat.
 
 UML: `docs/model/uml/navigation/seq-open-conversation-unified.puml`
 

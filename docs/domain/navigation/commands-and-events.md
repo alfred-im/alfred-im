@@ -61,7 +61,8 @@
 | Policy | Descrizione |
 |--------|-------------|
 | **Un solo orchestratore** | Ogni ingresso UI passa da [NavigationMachine]. |
-| **Una transazione OpenConversation** | Push, link, compose, inbox convergono sulla stessa transazione con policy per sorgente. |
+| **Una transazione OpenConversation** | Push, link, compose, inbox convergono sulla stessa transizione con policy per sorgente. |
+| **Ingresso UI prima del piano dati** | `OpenChat` + commit scope (se sessione in RAM) + notify **prima** di consolidate/refresh inbox/load messaggi; piano dati async abortibile su `InvalidateConversationScope`. |
 | **Scope in navigation** | Solo [NavigationMachine] commette/invalida [ConversationScope]; messaging non legge `activePeer` come autorità. |
 | **Focus prima della chat** | Push e link cambiano account se necessario. |
 | **Nessuna chat stale** | Aprendo un peer diverso, la chat precedente si chiude e lo scope si invalida. |

@@ -181,8 +181,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= SplitShellLayout.breakpoint;
-    final showChatOnMobile =
-        auth.navigation.isChatShellOpen && auth.navigation.committedScope != null;
+    final showChatOnMobile = auth.navigation.isChatShellOpen &&
+        (auth.navigation.committedScope != null || auth.activePeer != null);
 
     final inboxArea = !auth.hasOpenAccounts
         ? const NoAccountPlaceholder()
@@ -221,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
       primaryPane: inboxArea,
       detailPane: chatArea,
       showDetailOnMobile: !auth.showInboxOnMobile && showChatOnMobile,
-      mobileAppBar: needsSessionRecovery
+      mobileAppBar: needsSessionRecovery && !showChatOnMobile
           ? AppBar(
               backgroundColor: AlfredColors.panel,
               foregroundColor: AlfredColors.textPrimary,

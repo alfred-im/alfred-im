@@ -68,12 +68,14 @@ class InboxController extends ChangeNotifier {
     _channel = inboxService.subscribeToInbox(userId, load);
   }
 
-  Future<void> load() async {
+  Future<void> load({bool showLoadingIndicator = true}) async {
     if (!enableInboxLoads) return;
     final generation = ++_loadGeneration;
-    isLoading = true;
-    error = null;
-    notifyListeners();
+    if (showLoadingIndicator) {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+    }
 
     try {
       final loaded = await inboxService

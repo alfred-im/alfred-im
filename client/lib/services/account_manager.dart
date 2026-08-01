@@ -525,6 +525,13 @@ class AccountManager {
     await session.inboxController.load();
   }
 
+  /// Refresh inbox senza spinner lista — non blocca navigazione verso chat.
+  Future<void> refreshFocusedInboxSilently() async {
+    final session = _sessions[_focusUserId];
+    if (session == null || session.profile.isGroup) return;
+    await session.inboxController.load(showLoadingIndicator: false);
+  }
+
   /// Rimuove account dal manifest; non decide il prossimo focus (macchina).
   Future<CloseAccountResult> removeAccount(String userId) async {
     _testOnlyAccountIds.remove(userId);
