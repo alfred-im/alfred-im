@@ -34,44 +34,40 @@ class ConversationScopePane extends StatelessWidget {
   final VoidCallback? onBack;
   final Future<void> Function() onMessagesChanged;
 
+  Widget _ingressPanel(ChatPeer peer) {
+    return ChatIngressPanel(
+      peer: peer,
+      showBackButton: showBackButton,
+      onBack: onBack,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final peer = auth.activePeer;
-    final activeSession = session;
-    if (peer == null || activeSession == null) {
+    if (peer == null) {
       return const EmptyChatPlaceholder();
     }
 
+    final activeSession = session;
+    if (activeSession == null) {
+      return _ingressPanel(peer);
+    }
+
     if (activeSession.userId != auth.userId) {
-      return const ColoredBox(
-        color: AlfredColors.surface,
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return _ingressPanel(peer);
     }
 
     if (!auth.navigation.isConversationReady(
       session: activeSession,
       peer: peer,
     )) {
-      if (auth.navigation.committedScope == null) {
-        return ChatIngressPanel(
-          peer: peer,
-          showBackButton: showBackButton,
-          onBack: onBack,
-        );
-      }
-      return const ColoredBox(
-        color: AlfredColors.surface,
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return _ingressPanel(peer);
     }
 
     final scope = auth.navigation.committedScope;
     if (scope == null || !scope.matches(activeSession, peer)) {
-      return const ColoredBox(
-        color: AlfredColors.surface,
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return _ingressPanel(peer);
     }
 
     return _ChatWithMessages(

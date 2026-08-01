@@ -221,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
       primaryPane: inboxArea,
       detailPane: chatArea,
       showDetailOnMobile: !auth.showInboxOnMobile && showChatOnMobile,
-      mobileAppBar: needsSessionRecovery
+      mobileAppBar: needsSessionRecovery && !showChatOnMobile
           ? AppBar(
               backgroundColor: AlfredColors.panel,
               foregroundColor: AlfredColors.textPrimary,
