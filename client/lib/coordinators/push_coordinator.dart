@@ -17,14 +17,11 @@ import '../utils/push_platform.dart';
 /// Orchestrazione push: permessi, macchina notifications, sync subscription.
 class PushCoordinator {
   PushCoordinator({
-    required AccountManager manager,
-    required NotificationsAdapters notificationsAdapters,
-    NotificationsMachine? notificationsMachine,
+    required this._manager,
+    required this._notificationsAdapters,
+    this._notificationsMachine,
     PushSubscriptionService? pushService,
-  })  : _manager = manager,
-        _notificationsAdapters = notificationsAdapters,
-        _notificationsMachine = notificationsMachine,
-        _pushService = pushService ?? PushSubscriptionService();
+  }) : _pushService = pushService ?? PushSubscriptionService();
 
   final AccountManager _manager;
   final NotificationsAdapters _notificationsAdapters;
