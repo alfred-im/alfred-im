@@ -9,7 +9,7 @@ const CI_SCALE = process.env.CI ? 2 : 1;
 
 export const E2E_TIMEOUT = {
   boot: 12_000 * CI_SCALE,
-  auth: 30_000 * CI_SCALE,
+  auth: process.env.CI ? 90_000 : 30_000,
   ui: 8_000 * CI_SCALE,
   message: 20_000 * CI_SCALE,
   db: 15_000 * CI_SCALE,

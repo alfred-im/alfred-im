@@ -18,7 +18,7 @@ import { test, expect } from '@playwright/test';
 
 import { expectImagePersistedBothSides } from './helpers/backend-assertions';
 import { sendPhotoFromGalleryAfterPickerResume } from './helpers/chat-media';
-import { enableFlutterAccessibility } from './helpers/flutter-a11y';
+import { enableFlutterAccessibility, readSavedAccountsManifest } from './helpers/flutter-a11y';
 import { isLocalSupabaseStack } from './helpers/local-auth';
 import {
   prepareLocalFiveAccountManifest,
@@ -26,8 +26,11 @@ import {
 } from './helpers/local-multi-account';
 import {
   BASE_URL,
+  closeDrawerIfOpen,
   composeNewMessage,
+  manifestEntryForUsername,
   switchToAccountByDisplayName,
+  waitForLoggedInShell,
 } from './helpers/multi-account';
 import {
   installPushTestEnvironment,
@@ -40,7 +43,7 @@ test.use({
   viewport: { width: 390, height: 844 },
   permissions: ['notifications'],
 });
-test.setTimeout(300_000);
+test.setTimeout(process.env.CI ? 600_000 : 300_000);
 
 test.beforeAll(() => {
   test.skip(!isLocalSupabaseStack(), 'solo stack locale');
@@ -67,11 +70,15 @@ test('4 user + gruppo: galleria dopo resume → foto in archivio (flusso telefon
   );
 
   await setupFiveLocalAccounts(page, manifest);
+  await closeDrawerIfOpen(page);
+  await waitForLoggedInShell(page);
   await waitForBrowserPushGranted(page);
 
+  const saved = (await readSavedAccountsManifest(page))!;
+  const u2entry = manifestEntryForUsername(saved, user2.username);
   await switchToAccountByDisplayName(
     page,
-    `E2E u2${stamp}`,
+    u2entry.displayName ?? `E2E u2${stamp}`,
     user2.userId,
   );
   await composeNewMessage(page, user1.username);

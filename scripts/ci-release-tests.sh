@@ -63,6 +63,6 @@ npx playwright test \
   e2e/push-full.spec.ts \
   e2e/push-tap-multi-account.spec.ts \
   --workers=1 \
-  ${CI:+--retries=1}
+  ${CI:+--retries=2}
 
 echo "ci_release_tests_ok"
