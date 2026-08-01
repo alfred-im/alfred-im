@@ -33,13 +33,12 @@ La full suite CI (`client-full-tests.yml`) **non ha mai avuto una run verde** co
 | File | Causa probabile |
 |------|-----------------|
 | `account-switch-restore.spec.ts` | input chat non visibile dopo switch |
-| `inbox-load.spec.ts` | `getByText('Alfred')` non trovato post-login |
 | `multi-account-messages.spec.ts` | setup 2 account / drawer |
 | `multi-account-persist.spec.ts` | idem |
-| `pages-smoke.spec.ts` | manca `enableFlutterAccessibility` (documentato come fragile) |
-| **`photo-resume-session-repro.spec.ts`** ★ | timeout `loginInAuthForm` / manifest — **`flusso-reale` rosso** |
 | `push-tap-multi-account.spec.ts` | build senza `ALFRED_DIAGNOSTIC_LOG` |
 | `push-bug-repro.spec.ts` | headed/diagnostic; documentato «non in CI» |
+
+Rimossi (2026-08-01): `pages-smoke.spec.ts`, `inbox-load.spec.ts` — fragili/duplicati; copertura da `inbox-open-chat` e gate.
 
 Log completo VM: `/tmp/e2e-full-run.log` (sessione agente 2026-08-01).
 
@@ -68,15 +67,13 @@ npx playwright test e2e/photo-resume-session-repro.spec.ts --workers=1
 | Priorità | Fix |
 |----------|-----|
 | P0 | `closeDrawerIfOpen` — click scrim / toggle menu, non solo `Escape` (fallisce in Actions headless) |
-| P0 | `photo-resume-session-repro` — investigare timeout login/manifest in build release statica |
-| P1 | `pages-smoke` — `enableFlutterAccessibility` o escludere dalla CI |
+| ~~P0~~ | ~~`photo-resume-session-repro`~~ — risolto (`fillFlutterTextField`, PR #232) |
 | P1 | `push-bug-repro` — `test.skip(!!process.env.CI)` o `headless: true` in CI |
 | P2 | push tap specs — `ALFRED_DIAGNOSTIC_LOG=true` nel build CI se servono log `[alfred]` |
 
-### 3. Escludere permanentemente dalla CI
+### 3. Fuori CI (non rimuovere)
 
-- `pages-smoke.spec.ts` (smoke fragile, già in README)
-- `push-bug-repro.spec.ts` (riproduzione manuale agente)
+- `push-bug-repro.spec.ts` — riproduzione manuale agente (headed)
 
 ### 4. SDD post-merge PR #231
 
