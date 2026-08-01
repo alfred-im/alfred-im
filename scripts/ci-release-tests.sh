@@ -41,7 +41,8 @@ flutter test test/integration/ \
   --dart-define=SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY}"
 
 echo "==> [5/6] build web + serve"
-bash "$REPO_ROOT/scripts/ci-configure-push-local.sh"
+# shellcheck source=ci-configure-push-local.sh
+source "$REPO_ROOT/scripts/ci-configure-push-local.sh"
 bash "$REPO_ROOT/scripts/ci-serve-flutter-web.sh" "$CLIENT_ROOT"
 
 echo "==> [6/6] Playwright (tutti gli e2e, una sola passata)"
