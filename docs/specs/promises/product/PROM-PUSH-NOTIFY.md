@@ -156,7 +156,7 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 | PROM-PUSH-NOTIFY-020–021 | `client/test/unit/notification_permission_test.dart` |
 | PROM-PUSH-NOTIFY-022–024 | `client/test/unit/push_suppression_test.dart` |
 | PROM-PUSH-NOTIFY-005–006 | `client/e2e/push-full.spec.ts` (stack locale) |
-| PROM-PUSH-NOTIFY-002–003 | `client/e2e/push-registration.spec.ts`; `client/e2e/push-full.spec.ts` |
+| PROM-PUSH-NOTIFY-002–003 | `client/e2e/push-full.spec.ts` |
 | PROM-PUSH-NOTIFY-030 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/push-full.spec.ts` |
 | PROM-PUSH-NOTIFY-022 | Scenario manuale §6 |
 | **PROM-PUSH-NOTIFY-045–047** | `client/e2e/photo-resume-session-repro.spec.ts` (`flusso-reale`); test unit sync scope (da implementare) |

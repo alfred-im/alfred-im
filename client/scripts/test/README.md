@@ -108,8 +108,8 @@ Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/c
 | `account-switch-restore.spec.ts` | `e2e-nav-local` | Switch sidebar → inbox + riapertura chat peer |
 | `manual-push-poison-repro.spec.ts` | `e2e-nav-local` | Push tap multi-account + mailbox poison |
 | `push-tap-multi-account.spec.ts` | `e2e-nav-local`, `e2e-push-local` | Due account → tap notifica → focus destinatario + chat |
-| `push-registration.spec.ts` | `e2e-push-local` | Solo registrazione subscription (subset) |
-| `push-full.spec.ts` | `e2e-push-local` | Permesso → subscribe → messaggio → notifica in SW |
+| `push-full.spec.ts` | `e2e-push-local`, CI step 6 | Permesso → subscribe → messaggio → notifica in SW |
+| `chat-inbox-parity.spec.ts` | `e2e-nav-local`, CI step 6 | Parità inbox ↔ chat |
 
 Helper riusabili: `e2e/helpers/local-multi-account.ts`, `focus.ts`, `push.ts` (`simulateNotificationTap`, `installPushTestEnvironment`).
 
@@ -129,7 +129,7 @@ cd client && flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0 \
   --dart-define=ALFRED_DIAGNOSTIC_LOG=true
 ```
 
-In DevTools (console pagina), filtrare `[alfred][push]`. Fasi attese su tap riuscito: `sw.message` → `open_chat.emit` → `handler.enqueue` → `focus.ok` → `handler.chat_opened`. Uscite `FAIL …` indicano il punto esatto (es. `peer_timeout`, `focus_failed`). Script riproduzione locale: `client/e2e/push-bug-repro.spec.ts` (non in CI).
+In DevTools (console pagina), filtrare `[alfred][push]`. Fasi attese su tap riuscito: `sw.message` → `open_chat.emit` → `handler.enqueue` → `focus.ok` → `handler.chat_opened`. Copertura tap multi-account: `push-tap-multi-account.spec.ts`, `manual-push-poison-repro.spec.ts`.
 
 ### SQL smoke push (`supabase/tests/` — post SYS-PUSH)
 
