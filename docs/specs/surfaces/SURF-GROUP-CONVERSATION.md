@@ -39,6 +39,7 @@ Binding UX messaggistica gruppo: attribuzione autore contenuto, header avatar+no
 | **SURF-GROUP-CONVERSATION-009** | Apertura da [SURF-GROUP-HOME](./SURF-GROUP-HOME.md): non è schermata default al focus gruppo |
 | **SURF-GROUP-CONVERSATION-012** | Header chat allineato a [SURF-CHAT](./SURF-CHAT.md) `ChatPanel`: back su mobile, avatar + nome gruppo, bordo inferiore — **senza** entry allow list né sottotitolo «Account gruppo» |
 | **SURF-GROUP-CONVERSATION-013** | Composer gruppo: stesso `ChatInputBar` di [SURF-CHAT-014](./SURF-CHAT.md) (graffetta + pannello icone scrollabile; microfono a destra) |
+| **SURF-GROUP-CONVERSATION-014** | Body testo in bolla: `@username` validi come link → chat 1:1 — [PROM-MESSAGE-MENTION](../promises/product/PROM-MESSAGE-MENTION.md) (stesso `MessageBubble` di SURF-CHAT-018) |
 
 ### SHOULD
 

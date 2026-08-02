@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 
 import '../models/profile_summary.dart';
 import '../providers/group_messages_controller.dart';
+import '../utils/auth_controller_scope.dart';
+import '../utils/mention_navigation.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/session_scope_keys.dart';
 import '../widgets/anchored_message_list.dart';
@@ -36,6 +38,7 @@ class GroupConversationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = watchAuthControllerOrNull(context);
     return ChangeNotifierProvider(
       key: groupSessionKey(session, 'group-messages'),
       create: (_) => GroupMessagesController(
@@ -82,6 +85,11 @@ class GroupConversationScreen extends StatelessWidget {
                     messages: controller.messages,
                     isLoading: controller.isLoading,
                     showAuthorLabels: true,
+                    viewerUsername: auth?.username,
+                    onMentionTap: auth != null
+                        ? (username) =>
+                            openChatFromMentionUsername(context, username)
+                        : null,
                   );
                 },
               ),

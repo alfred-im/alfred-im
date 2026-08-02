@@ -5,7 +5,7 @@
 | **Superficie ID** | `SURF-CHAT` |
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-01 |
-| **Promesse** | [PROM-CHAT-PEER-KEY](../promises/product/PROM-CHAT-PEER-KEY.md), [PROM-MESSAGE-STATUS](../promises/product/PROM-MESSAGE-STATUS.md), [PROM-OUTBOUND-SEND](../promises/product/PROM-OUTBOUND-SEND.md), [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md), [PROM-CONVERSATION-SCOPE](../promises/product/PROM-CONVERSATION-SCOPE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) (semantica spunte) |
+| **Promesse** | [PROM-CHAT-PEER-KEY](../promises/product/PROM-CHAT-PEER-KEY.md), [PROM-MESSAGE-STATUS](../promises/product/PROM-MESSAGE-STATUS.md), [PROM-OUTBOUND-SEND](../promises/product/PROM-OUTBOUND-SEND.md), [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md), [PROM-CONVERSATION-SCOPE](../promises/product/PROM-CONVERSATION-SCOPE.md), [PROM-MESSAGE-MENTION](../promises/product/PROM-MESSAGE-MENTION.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) (semantica spunte) |
 | **PR** | #159, #178, #210, #234 |
 
 Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pieno, spunte, invio optimistic, preview inbox.
@@ -44,6 +44,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | **SURF-CHAT-015** | Storico iniziale = ultimi messaggi (allineato a anteprima inbox); scroll verso messaggi più vecchi carica pagine precedenti senza saltare la posizione visibile |
 | **SURF-CHAT-016** | Ingresso da inbox (mobile): stesso frame di transizione shell → header chat del peer (nome noto dal tap) + back + spinner nel corpo; nessuna fase con header inbox ancora visibile e corpo lista in loading per effetto di `OpenConversation`; **vietata** AppBar globale recovery («Riconnessione…» / hamburger) mentre la shell chat è aperta — header solo da `ChatIngressPanel` |
 | **SURF-CHAT-017** | `ChatInputBar` disabilitato se peer ∉ `reception_allowlist` dell'account in focus o allow list in caricamento — [PROM-RECEPTION-FILTER](../promises/product/PROM-RECEPTION-FILTER.md) gate outbound |
+| **SURF-CHAT-018** | Body testo in bolla: `@username` validi come link → chat 1:1 — [PROM-MESSAGE-MENTION](../promises/product/PROM-MESSAGE-MENTION.md) |
 
 ### SHOULD
 
@@ -77,6 +78,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | SURF-CHAT-014 | `chat_input_bar_test.dart`; `chat_input_bar.dart` |
 | SURF-CHAT-015 | `mailbox_peer_messages_window_smoke.sql`; `messaging_message_list_test.dart`; `messaging_machine_test.dart` |
 | SURF-CHAT-016 | `conversation_scope_ingress_test.dart`; `navigation_open_ingress_test.dart`; `chat_panel.dart` `ChatIngressPanel`; `home_screen.dart` (`mobileAppBar` solo se non in shell chat) |
+| SURF-CHAT-018 | `mention_text_test.dart`; `message_bubble_test.dart` |
 
 Igiene (CI): `verify.sh` + smoke SQL dove indicato in tabella  
 Release: `integration` + `e2e-multi` + **`flusso-reale`** (media / galleria / multi-account)
