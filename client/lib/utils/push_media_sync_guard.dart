@@ -2,18 +2,38 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-/// Blocca sync push durante picker media / upload (PROM-PUSH-NOTIFY-047).
+import '../services/account_manager.dart';
+
+/// Blocca sync push durante picker media / upload.
+///
+/// Delega a [SessionAuthority] quando collegato; fallback depth per test isolati.
 class PushMediaSyncGuard {
-  static int _depth = 0;
+  static SessionAuthority? _authority;
+  static int _fallbackDepth = 0;
 
-  static bool get isActive => _depth > 0;
+  static void bind(SessionAuthority authority) {
+    _authority = authority;
+  }
 
-  static Future<T> run<T>(Future<T> Function() action) async {
-    _depth++;
+  static bool get isActive =>
+      _authority?.hasActiveLease ?? _fallbackDepth > 0;
+
+  static Future<T> run<T>(
+    Future<T> Function() action, {
+    String? ownerUserId,
+    IdentityLeaseReason reason = IdentityLeaseReason.mediaPicker,
+  }) async {
+    final authority = _authority;
+    final owner = ownerUserId ?? authority?.activeOwnerId;
+    if (authority != null && owner != null) {
+      return authority.runWithLease(owner, reason, action);
+    }
+
+    _fallbackDepth++;
     try {
       return await action();
     } finally {
-      _depth--;
+      _fallbackDepth--;
     }
   }
 }

@@ -2,6 +2,7 @@
 
 **Bounded context:** `navigation`  
 **Implementazione:** `client/lib/utils/conversation_session_access.dart`  
+**Enforcement identità:** [multi-account/session-authority.md](../multi-account/session-authority.md) (`ensureOwnerReady` prima di fetch/send/upload)  
 **Confine prodotto:** [PROM-CONVERSATION-SCOPE](../../specs/promises/product/PROM-CONVERSATION-SCOPE.md) (promessa **PROM-CONVERSATION-SCOPE-008**)
 
 ---
@@ -14,7 +15,9 @@ Per una conversazione commessa con owner `O` e peer `P`:
 2. `auth.uid() == O`
 3. `P != auth.uid()`
 
-Vale **prima di fetch/send/upload** su conversazione commessa (non prima della transizione shell verso `ConversationVisible`). L'ingresso UI (header peer + spinner) può precedere consolidate; i messaggi compaiono solo dopo consolidate riuscita e `LoadMessages`.
+Vale **prima di fetch/send/upload** su conversazione commessa. L'ingresso UI può precedere consolidate; i messaggi compaiono solo dopo `SessionAuthority.ensureOwnerReady` riuscito e `LoadMessages`.
+
+UML: [seq-run-as-owner.puml](../../model/uml/multi-account/seq-run-as-owner.puml) (target `runAsOwner`; oggi `ensureOwnerReady`).
 
 Se l'invariante fallisce: nessuna RPC/upload; l'utente vede «Sessione scaduta — accedi di nuovo» (mai errore RPC grezzo).
 

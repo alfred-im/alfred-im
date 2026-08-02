@@ -22,8 +22,11 @@ class ConversationScope {
   final String ownerUserId;
   final String peerProfileId;
 
-  /// Incrementato a ogni restore/dispose sessione GoTrue per questo account.
+  /// Incrementato a ogni restore/dispose sessione GoTrue ([SessionAuthority.identityGeneration]).
   final int sessionEpoch;
+
+  /// Alias canonico dominio — stesso valore di [sessionEpoch].
+  int get identityGeneration => sessionEpoch;
 
   /// Incrementato su invalidazione forte (switch account, cambio peer, chiusura, epoch).
   final int loadSeq;

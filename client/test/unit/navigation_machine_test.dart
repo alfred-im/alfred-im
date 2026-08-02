@@ -401,13 +401,13 @@ void main() {
       manager.injectTestSession(await _testSession('account-b'));
       manager.focusTestSession(await _testSession('account-a'));
 
-      await manager.setFocus('account-b');
+      await manager.sessionAuthority.requestFocusSwitch('account-b');
       await nav.openPeerOnFocusedAccount(_peer('peer-x'));
 
-      await manager.setFocus('account-a');
+      await manager.sessionAuthority.requestFocusSwitch('account-a');
       expect(manager.viewState.activePeer, isNull);
 
-      await manager.setFocus('account-b');
+      await manager.sessionAuthority.requestFocusSwitch('account-b');
       expect(manager.viewState.activePeer?.profileId, 'peer-x');
     });
   });

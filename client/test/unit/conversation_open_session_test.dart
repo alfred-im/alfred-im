@@ -83,11 +83,11 @@ void main() {
       await manager.initialize(focusUserId: 'account-a');
     });
 
-    group('AccountManager.consolidateSessionForAccount', () {
+    group('SessionAuthority.ensureOwnerReady', () {
       test('ripristina sessione se JWT assente in RAM', () async {
         manager.clearSessionsInRamForTest();
 
-        await manager.consolidateSessionForAccount('account-a');
+        await manager.sessionAuthority.ensureOwnerReady('account-a');
 
         expect(restoreCallsForA, greaterThanOrEqualTo(1));
         expect(manager.isSessionReadyForAccount('account-a'), isTrue);
@@ -98,7 +98,7 @@ void main() {
         manager.injectTestSession(sessionB);
         expect(manager.sessions.length, 2);
 
-        await manager.consolidateSessionForAccount('account-a');
+        await manager.sessionAuthority.ensureOwnerReady('account-a');
 
         expect(manager.sessions.map((s) => s.userId), ['account-a']);
         expect(manager.isSessionReadyForAccount('account-a'), isTrue);
@@ -126,7 +126,7 @@ void main() {
           return sessionB;
         };
 
-        await manager.consolidateSessionForAccount('account-a');
+        await manager.sessionAuthority.ensureOwnerReady('account-a');
 
         expect(restoreCallsForA, greaterThanOrEqualTo(1));
         expect(manager.isSessionReadyForAccount('account-a'), isTrue);

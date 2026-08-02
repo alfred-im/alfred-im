@@ -15,7 +15,7 @@ Refactoring del layer lista messaggi chat 1:1: **un modulo**, **un'identità** (
 | **Archivio messaggi** | `client/lib/machines/messaging/conversation_message_store.dart` | Unica mutazione lista DM |
 | **Chiave conversazione** | `client/lib/models/conversation_scope.dart` | `ownerUserId`, `peerProfileId`, `sessionEpoch`, `loadSeq` |
 | **Navigazione** | `navigation_machine.dart` | `commitScope` / `invalidateCommittedScope` / `reconcileSessionEpoch` |
-| **Consolidamento sessione** | `account_manager.dart` | `consolidateSessionForAccount` — GoTrue allineato all'account UI |
+| **Consolidamento sessione** | `session_authority.dart` | `ensureOwnerReady` — GoTrue allineato all'account UI |
 
 ## Regole
 
@@ -34,7 +34,7 @@ Refactoring del layer lista messaggi chat 1:1: **un modulo**, **un'identità** (
 
 ### Fase B — piano dati (asincrona, abortibile)
 
-1. `ConsolidateSession` se necessario (JWT + `auth.uid`).
+1. `SessionAuthority.ensureOwnerReady` se necessario (JWT + `auth.uid`).
 2. Re-commit scope se epoch cambia; abort se `loadSeq` incrementato o peer diverso.
 3. `LoadMessages` (messaging) — già con generation guard.
 4. `refreshFocusedInbox(silent)` — **non** blocca navigazione, **non** `isLoading` inbox.

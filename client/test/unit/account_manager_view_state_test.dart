@@ -49,16 +49,16 @@ void main() {
       manager.injectTestSession(await _session('account-a'));
       manager.injectTestSession(await _session('account-b'));
 
-      await manager.setFocus('account-a');
+      await manager.sessionAuthority.requestFocusSwitch('account-a');
       await nav.openPeerOnFocusedAccount(_peer('account-b'));
 
-      await manager.setFocus('account-b');
+      await manager.sessionAuthority.requestFocusSwitch('account-b');
       await nav.openPeerOnFocusedAccount(_peer('account-a'));
 
-      await manager.setFocus('account-a');
+      await manager.sessionAuthority.requestFocusSwitch('account-a');
       expect(manager.viewState.activePeer?.profileId, 'account-b');
 
-      await manager.setFocus('account-b');
+      await manager.sessionAuthority.requestFocusSwitch('account-b');
       expect(manager.viewState.activePeer?.profileId, 'account-a');
     });
 
@@ -68,13 +68,13 @@ void main() {
       manager.injectTestSession(await _session('account-a'));
       manager.injectTestSession(await _session('account-b'));
 
-      await manager.setFocus('account-a');
+      await manager.sessionAuthority.requestFocusSwitch('account-a');
       await nav.openPeerOnFocusedAccount(_peer('account-b'));
 
-      await manager.setFocus('account-b');
+      await manager.sessionAuthority.requestFocusSwitch('account-b');
       expect(manager.viewState.activePeer, isNull);
 
-      await manager.setFocus('account-a');
+      await manager.sessionAuthority.requestFocusSwitch('account-a');
       expect(manager.viewState.activePeer?.profileId, 'account-b');
     });
 
@@ -84,11 +84,11 @@ void main() {
       manager.injectTestSession(await _session('account-a'));
       manager.injectTestSession(await _session('account-b'));
 
-      await manager.setFocus('account-a');
+      await manager.sessionAuthority.requestFocusSwitch('account-a');
       await nav.openPeerOnFocusedAccount(_peer('account-b'));
 
       await manager.removeAccount('account-a');
-      await manager.setFocus('account-b');
+      await manager.sessionAuthority.requestFocusSwitch('account-b');
 
       expect(manager.viewState.activePeer, isNull);
     });

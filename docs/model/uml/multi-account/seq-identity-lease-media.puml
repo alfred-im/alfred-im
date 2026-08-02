@@ -1,0 +1,57 @@
+@startuml seq-identity-lease-media
+' Context: multi-account + messaging + notifications
+' Profile: client
+' SDD: PROM-CHAT-MEDIA, PROM-PUSH-NOTIFY (incidente #229)
+' Revision: 2026-08-02
+
+title seq-identity-lease-media — lease durante upload;\nresume PWA non switcha identità
+
+actor Utente
+participant "UI" as UI
+participant "MessagingMachine" as Msg
+participant "SessionAuthority" as SA
+participant "NotificationsMachine" as Notif
+participant "Supabase" as SB
+
+== Upload foto (account A in focus) ==
+
+Utente -> UI : allega foto
+UI -> Msg : SendPhoto
+Msg -> SA : AcquireIdentityLease(A, MediaUpload)
+SA -> SA : OwnerActive → OwnerActiveLeased
+SA --> Msg : IdentityLeaseAcquired(leaseId)
+
+Msg -> SA : RunAsOwner(A, upload)
+SA -> SB : storage upload + send RPC
+note over SB : operazione lunga
+
+== Resume PWA durante upload ==
+
+Utente -> UI : torna da picker OS
+UI -> Notif : AppResumed
+Notif -> SA : AuthorizePushSync(FocusedAccount, AppResumed)
+
+alt leaseCount > 0 su A
+  SA --> Notif : PushSyncDeferred
+  note right of SA
+    Invariante notifications §8:
+    nessun restore/switch
+    durante upload/picker
+  end note
+else leaseCount == 0
+  SA --> Notif : PushSyncAuthorized
+  Notif -> SB : UPSERT push_subscriptions\n(solo A, sessione attiva)
+end
+
+== Fine upload ==
+
+SB --> Msg : ok
+Msg -> SA : ReleaseIdentityLease(leaseId)
+SA -> SA : OwnerActiveLeased → OwnerActive
+SA --> Msg : IdentityLeaseReleased
+
+Msg -> SA : RunAsOwner(A, reconcile UI)
+SA --> Msg : ok
+Msg -> UI : messaggio inviato
+
+@enduml

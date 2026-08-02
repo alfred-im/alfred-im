@@ -188,7 +188,7 @@ void main() {
       };
       await manager.syncManifestFromStorageForTest();
 
-      await manager.executeFocus('agent-a');
+      await manager.sessionAuthority.requestFocusSwitch('agent-a');
 
       final stored = await storage.loadAccounts();
       expect(stored.length, 1);

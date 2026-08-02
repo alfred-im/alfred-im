@@ -12,12 +12,15 @@ import '../machines/navigation/account_view_state_store.dart';
 import '../models/account_view_state.dart';
 import '../models/open_account.dart';
 import '../models/profile_summary.dart';
+import '../models/push_sync_scope.dart';
 import '../utils/conversation_session_access.dart';
 import '../utils/auth_redirect_url.dart';
 import '../utils/diagnostic_log.dart';
 import '../utils/friendly_auth_error.dart';
 import 'account_session.dart';
 import 'account_storage_service.dart';
+
+part 'session_authority.dart';
 
 /// Gestisce I/O account messaggistica: manifest, sessioni GoTrue, storage.
 ///
@@ -29,7 +32,11 @@ class AccountManager {
   AccountManager({AccountStorageService? storage})
       : _storage = storage ?? AccountStorageService() {
     viewStateStore = AccountViewStateStore(this);
+    sessionAuthority = SessionAuthority(this);
   }
+
+  /// Enforcement unico identità GoTrue — vedi docs/domain/multi-account/session-authority.md.
+  late final SessionAuthority sessionAuthority;
 
   /// Sostituisce [AccountSession.restore] nei test (percorso dispose + ripristino).
   @visibleForTesting
@@ -131,7 +138,10 @@ class AccountManager {
   Future<void> initialize({required String? focusUserId}) async {
     await _refreshManifestCache();
     if (focusUserId != null) {
-      await executeFocus(focusUserId, deferProfileSync: true);
+      await sessionAuthority.requestFocusSwitch(
+        focusUserId,
+        deferProfileSync: true,
+      );
     } else {
       _focusUserId = null;
       await _disposeSessionsInRam(clearAuthStorage: false);
@@ -329,7 +339,7 @@ class AccountManager {
   /// Account UI in focus: ripristina GoTrue senza fidarsi della sessione in RAM.
   ///
   /// Usato all'ingresso in chat — JWT assente, auth disallineato o sessioni spurie.
-  Future<void> consolidateSessionForAccount(String userId) {
+  Future<void> _consolidateSessionForAccount(String userId) {
     return _enqueueFocusOperation(
       () => _consolidateSessionForAccountImpl(userId),
     );
@@ -354,7 +364,7 @@ class AccountManager {
   }
 
   /// Manifest con account ma sessione GoTrue assente in RAM — ripristina il focus.
-  Future<void> reconnectFocusedSession(String focusUserId) {
+  Future<void> _reconnectFocusedSession(String focusUserId) {
     return _enqueueFocusOperation(
       () => _reconnectFocusedSessionImpl(focusUserId),
     );
@@ -368,7 +378,7 @@ class AccountManager {
   }
 
   /// Esegue focus comandato dalla macchina (persist + dispose + restore).
-  Future<void> executeFocus(
+  Future<void> _executeFocus(
     String userId, {
     bool deferProfileSync = false,
     VoidCallback? onFocusIdentityChanged,
@@ -381,9 +391,6 @@ class AccountManager {
       ),
     );
   }
-
-  /// Alias per test e retrocompatibilità interna navigation.
-  Future<void> setFocus(String userId) => executeFocus(userId);
 
   Future<void> _enqueueFocusOperation(Future<void> Function() operation) async {
     final previous = _focusOperationChain;

@@ -1,7 +1,8 @@
 # Invarianti — multi-account
 
 **Bounded context:** `multi-account`  
-**Implementazione:** `client/lib/services/account_manager.dart`, `client/lib/utils/conversation_session_access.dart`  
+**Implementazione:** [SessionAuthority](session-authority.md) (`client/lib/services/session_authority.dart`, `part of account_manager.dart`)  
+**Verifica sessione:** `AccountManager.isSessionReadyForAccount` + `SessionAuthority.ensureOwnerReady`  
 **Confine prodotto:** [PROM-MULTI-ACCOUNT](../../specs/promises/product/PROM-MULTI-ACCOUNT.md)
 
 ---
@@ -19,4 +20,8 @@
 
 ## Account session ready
 
-Regole in [navigation/invariants.md § Account session](../navigation/invariants.md#account-session-senza-peer) — `AccountManager.isSessionReadyForAccount`.
+Regole in [navigation/invariants.md § Account session](../navigation/invariants.md#account-session-senza-peer).
+
+## Enforcement
+
+Tutti gli invarianti di questa pagina passano da [SessionAuthority](session-authority.md). Vietato: switch identità, `restore`, `dispose` sessione o sync push auth **fuori** da SessionAuthority.

@@ -18,7 +18,7 @@ InboxVisible --> InboxVisible : ShowInbox\n(SwitchToAccount utente)\nInvalidateC
 
 ChatOpen --> InboxVisible : CloseConversation\nInvalidateConversationScope
 ChatOpen --> ChatOpen : OpenConversation (altro peer)\nInvalidate → OpenChat
-ChatOpen --> ChatOpen : ConsolidateSession +\nCommitConversationScope\n(fase B ingresso)
+ChatOpen --> ChatOpen : EnsureOwnerReady +\nCommitConversationScope\n(fase B ingresso)
 ChatOpen --> InboxVisible : ShowInbox\n(SwitchToAccount utente)\nInvalidateConversationScope
 ChatOpen --> GroupShell : EnterGroupShell\n(SwitchToAccount gruppo)\nInvalidateConversationScope
 

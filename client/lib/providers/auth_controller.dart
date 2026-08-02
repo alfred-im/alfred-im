@@ -30,6 +30,7 @@ import '../services/account_manager.dart';
 import '../services/account_session.dart';
 import '../services/navigation_coordinator.dart';
 import '../utils/friendly_auth_error.dart';
+import '../utils/push_media_sync_guard.dart';
 
 /// Composition root: macchine, coordinatori, stato UI read-only.
 class AuthController extends ChangeNotifier {
@@ -63,6 +64,7 @@ class AuthController extends ChangeNotifier {
       notificationsAdapters: notificationsAdapters,
       notificationsMachine: notificationsMachine,
     );
+    PushMediaSyncGuard.bind(_manager.sessionAuthority);
     _sessionCoordinator = AuthSessionCoordinator(
       manager: _manager,
       authMachine: authMachine,
@@ -110,6 +112,8 @@ class AuthController extends ChangeNotifier {
   bool get authOverlayDismissible => authMachine.overlayDismissible;
 
   AccountManager get accountManager => _manager;
+
+  SessionAuthority get sessionAuthority => _manager.sessionAuthority;
 
   ConversationScope? get committedScope => _navigationAccess.committedScope;
 
