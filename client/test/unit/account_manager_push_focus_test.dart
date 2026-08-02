@@ -12,11 +12,11 @@ import 'package:alfred_client/services/account_storage_service.dart';
 
 import '../support/fake_messaging_services.dart';
 
-// PROM-PUSH-NOTIFY-030, SURF-NOTIFICATIONS-007 — percorso reale setFocus (dispose + restore)
+// PROM-PUSH-NOTIFY-030, SURF-NOTIFICATIONS-007 — percorso SessionAuthority (dispose + restore)
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('AccountManager push focus (production setFocus path)', () {
+  group('SessionAuthority focus switch (production path)', () {
     late AccountStorageService storage;
     late AccountManager manager;
     late AccountSession sessionA;
@@ -70,14 +70,14 @@ void main() {
       };
     });
 
-    test('setFocus disposes previous session and keeps only focused session in RAM',
+    test('requestFocusSwitch disposes previous session and keeps only focused in RAM',
         () async {
       await manager.initialize(focusUserId: 'account-a');
 
       expect(manager.focusUserId, 'account-a');
       expect(manager.sessions.map((s) => s.userId), ['account-a']);
 
-      await manager.setFocus('account-b');
+      await manager.sessionAuthority.requestFocusSwitch('account-b');
 
       expect(manager.focusUserId, 'account-b');
       expect(manager.focusedSession?.userId, 'account-b');
@@ -85,7 +85,7 @@ void main() {
       expect(restoreCallsForB, 1);
     });
 
-    test('executeFocus reactivates session when focus id matches but RAM is empty',
+    test('requestFocusSwitch reactivates session when focus matches but RAM is empty',
         () async {
       await manager.initialize(focusUserId: 'account-a');
       expect(manager.focusUserId, 'account-a');
@@ -93,29 +93,29 @@ void main() {
 
       manager.clearSessionsInRamForTest();
 
-      await manager.executeFocus('account-a');
+      await manager.sessionAuthority.requestFocusSwitch('account-a');
 
       expect(manager.focusUserId, 'account-a');
       expect(manager.focusedSession?.userId, 'account-a');
       expect(restoreCallsForA, 2);
     });
 
-    test('executeFocus switches to recipient account', () async {
+    test('requestFocusSwitch switches to recipient account', () async {
       await manager.initialize(focusUserId: 'account-a');
 
-      await manager.executeFocus('account-b');
+      await manager.sessionAuthority.requestFocusSwitch('account-b');
 
       expect(manager.focusUserId, 'account-b');
       expect(manager.focusedSession?.userId, 'account-b');
       expect(restoreCallsForB, 1);
     });
 
-    test('reconnectFocusedSession restores session when manifest has focus but RAM is empty',
+    test('reconnectActiveOwner restores session when manifest has focus but RAM empty',
         () async {
       await manager.initialize(focusUserId: 'account-a');
       manager.clearSessionsInRamForTest();
 
-      await manager.reconnectFocusedSession('account-a');
+      await manager.sessionAuthority.reconnectActiveOwner('account-a');
 
       expect(manager.focusUserId, 'account-a');
       expect(manager.focusedSession?.userId, 'account-a');

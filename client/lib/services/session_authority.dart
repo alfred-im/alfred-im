@@ -2,13 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
-
-import '../models/push_sync_scope.dart';
-import 'account_manager.dart';
-import 'account_session.dart';
+part of 'account_manager.dart';
 
 /// Motivo di un lease identità — vedi docs/domain/multi-account/session-authority.md.
 enum IdentityLeaseReason {
@@ -73,7 +67,7 @@ class SessionAuthority {
         'Identity switch deferred: lease active for ${leaseOwnerUserId!}',
       );
     }
-    await _manager.executeFocus(
+    await _manager._executeFocus(
       userId,
       deferProfileSync: deferProfileSync,
       onFocusIdentityChanged: onFocusIdentityChanged,
@@ -95,7 +89,7 @@ class SessionAuthority {
           previous != null &&
           previous != ownerUserId &&
           !_blocksSwitchTo(previous)) {
-        await _manager.executeFocus(previous);
+        await _manager._executeFocus(previous);
       }
     }
   }
@@ -177,7 +171,7 @@ class SessionAuthority {
   }
 
   Future<void> reconnectActiveOwner(String focusUserId) {
-    return _manager.reconnectFocusedSession(focusUserId);
+    return _manager._reconnectFocusedSession(focusUserId);
   }
 
   bool _blocksSwitchTo(String userId) {
@@ -196,9 +190,9 @@ class SessionAuthority {
       );
     }
     if (_manager.focusUserId != ownerUserId) {
-      await _manager.executeFocus(ownerUserId);
+      await _manager._executeFocus(ownerUserId);
     } else {
-      await _manager.consolidateSessionForAccount(ownerUserId);
+      await _manager._consolidateSessionForAccount(ownerUserId);
     }
   }
 }

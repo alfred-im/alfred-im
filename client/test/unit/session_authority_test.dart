@@ -5,7 +5,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:alfred_client/services/account_manager.dart';
-import 'package:alfred_client/services/session_authority.dart';
 import 'package:alfred_client/models/push_sync_scope.dart';
 import 'package:alfred_client/utils/push_media_sync_guard.dart';
 

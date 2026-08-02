@@ -165,7 +165,7 @@ SessionAuthority **deve** garantire:
 
 1. Introdurre `SessionAuthority` come facade su `AccountManager` (stesso comportamento).
 2. Spostare consumer: notifications → navigation ingress → messaging send.
-3. Deprecare chiamate dirette a `executeFocus` / `consolidateSession` fuori da SessionAuthority.
+3. Deprecare chiamate dirette a `executeFocus` / `consolidateSession` fuori da SessionAuthority — **fatto**: metodi privati su `AccountManager`, `part session_authority.dart`.
 4. Alias `sessionEpoch` → `identityGeneration`; rimuovere guard duplicate.
 5. Test: unit su stati SessionAuthority + composition esistenti (COMP-*) contro authority.
 

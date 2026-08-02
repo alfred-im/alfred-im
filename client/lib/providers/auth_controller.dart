@@ -29,7 +29,6 @@ import '../models/push_sync_scope.dart';
 import '../services/account_manager.dart';
 import '../services/account_session.dart';
 import '../services/navigation_coordinator.dart';
-import '../services/session_authority.dart';
 import '../utils/friendly_auth_error.dart';
 import '../utils/push_media_sync_guard.dart';
 

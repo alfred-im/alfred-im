@@ -52,7 +52,7 @@ void main() {
       manager.injectTestSession(sessionB);
       manager.focusTestSession(sessionA);
 
-      await manager.setFocus(accountB);
+      await manager.sessionAuthority.requestFocusSwitch(accountB);
       OpenConversationStaleHarness.seedStaleChat(
         manager: manager,
         accountId: accountB,
@@ -60,7 +60,7 @@ void main() {
         staleUsername: 'stale_y',
       );
 
-      await manager.setFocus(accountA);
+      await manager.sessionAuthority.requestFocusSwitch(accountA);
     });
 
     test('openFromPushTap apre mittente su account destinatario', () async {

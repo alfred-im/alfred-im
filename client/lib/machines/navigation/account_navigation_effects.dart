@@ -11,7 +11,6 @@ import '../../models/conversation_scope.dart';
 import '../../models/open_conversation_source.dart';
 import '../../services/account_manager.dart';
 import '../../services/account_session.dart';
-import '../../services/session_authority.dart';
 import '../../utils/diagnostic_log.dart';
 import '../multi-account/multi_account_adapters.dart';
 import 'account_view_state_store.dart';

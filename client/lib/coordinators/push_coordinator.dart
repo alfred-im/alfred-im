@@ -10,7 +10,6 @@ import '../models/open_account.dart';
 import '../models/push_sync_scope.dart';
 import '../services/account_manager.dart';
 import '../services/push_subscription_service.dart';
-import '../services/session_authority.dart';
 import '../utils/push_permission_flow.dart';
 import '../utils/push_platform.dart';
 

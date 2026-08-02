@@ -14,7 +14,6 @@ import '../models/chat_peer.dart';
 import '../models/conversation_scope.dart';
 import '../services/account_manager.dart';
 import '../services/account_session.dart';
-import '../services/session_authority.dart';
 
 /// Fallback test: focus via SessionAuthority senza macchina.
 class _SessionAuthorityFocusCommand implements AccountFocusCommand {

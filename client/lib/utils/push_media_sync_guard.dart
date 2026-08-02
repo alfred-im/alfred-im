@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import '../services/session_authority.dart';
+import '../services/account_manager.dart';
 
 /// Blocca sync push durante picker media / upload.
 ///

@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 
 import '../../models/profile_summary.dart';
 import '../../services/account_manager.dart';
-import '../../services/session_authority.dart';
 import 'multi_account_effects.dart';
 
 /// Effetti multi-account → [AccountManager] + [SessionAuthority].
