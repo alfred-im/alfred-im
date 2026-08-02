@@ -18,6 +18,7 @@ import '../utils/diagnostic_log.dart';
 import '../utils/friendly_auth_error.dart';
 import 'account_session.dart';
 import 'account_storage_service.dart';
+import 'session_authority.dart';
 
 /// Gestisce I/O account messaggistica: manifest, sessioni GoTrue, storage.
 ///
@@ -29,7 +30,11 @@ class AccountManager {
   AccountManager({AccountStorageService? storage})
       : _storage = storage ?? AccountStorageService() {
     viewStateStore = AccountViewStateStore(this);
+    sessionAuthority = SessionAuthority(this);
   }
+
+  /// Enforcement unico identità GoTrue — vedi docs/domain/multi-account/session-authority.md.
+  late final SessionAuthority sessionAuthority;
 
   /// Sostituisce [AccountSession.restore] nei test (percorso dispose + ripristino).
   @visibleForTesting
@@ -131,7 +136,10 @@ class AccountManager {
   Future<void> initialize({required String? focusUserId}) async {
     await _refreshManifestCache();
     if (focusUserId != null) {
-      await executeFocus(focusUserId, deferProfileSync: true);
+      await sessionAuthority.requestFocusSwitch(
+        focusUserId,
+        deferProfileSync: true,
+      );
     } else {
       _focusUserId = null;
       await _disposeSessionsInRam(clearAuthStorage: false);

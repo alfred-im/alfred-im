@@ -1,23 +1,23 @@
 @startuml seq-focus-switch
 ' Context: multi-account + navigation
 ' Profile: client
-' Revision: 2026-07-19
+' Revision: 2026-08-02
 
-title seq-focus-switch — cambio account (sidebar)
+title seq-focus-switch — cambio account (sidebar)\nSessionAuthority enforcement
 
 actor Utente
 participant "UI" as UI
 participant "NavigationMachine" as Nav
 participant "MultiAccountMachine" as MA
-participant "AccountManager" as AM
+participant "SessionAuthority" as SA
 
 Utente -> UI : tap account sidebar
 UI -> Nav : SwitchToAccount(userId)
 Nav -> Nav : InvalidateConversationScope
 Nav -> MA : FocusAccount(userId)
-MA -> AM : executeFocus(userId)
-AM -> UI : onFocusIdentityChanged
-AM --> MA : sessione pronta
+MA -> SA : RequestFocusSwitch(userId)
+SA -> SA : dispose sessione precedente\n+ restore da manifest
+SA --> MA : IdentitySwitchCompleted\n(identityGeneration++)
 MA --> Nav : focus ok
 Nav -> Nav : resetShellToAccountHome\n(inbox / home gruppo, no scope)
 Nav -> Nav : syncShellFromCommittedScope

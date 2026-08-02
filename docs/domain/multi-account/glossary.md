@@ -1,7 +1,7 @@
 # Glossario — contesto multi-account
 
 **Bounded context:** `multi-account`  
-**Ultima revisione:** 2026-07-27  
+**Ultima revisione:** 2026-08-02  
 **Promesse SDD:** [PROM-MULTI-ACCOUNT](../../specs/promises/product/PROM-MULTI-ACCOUNT.md), [SURF-AUTH](../../specs/surfaces/SURF-AUTH.md)
 
 ---
@@ -23,6 +23,9 @@
 | **FocusedWithSession** | Focus persistito + sessione attiva in RAM. |
 | **FocusedAwaitingSession** | Focus persistito ma restore sessione non riuscito (ritentabile con reconnect). |
 | **SessionRestoreFailed** | Evento: restore sessione fallito dopo focus o switch. |
+| **SessionAuthority** | Servizio di dominio — unico owner di JWT attivo, generazione identità, lease e coda switch. Vedi [session-authority.md](session-authority.md). |
+| **Identity generation** | Contatore monotono emesso da SessionAuthority a ogni `IdentityActivated`; sostituisce concettualmente `sessionEpoch` su scope conversazione. |
+| **Identity lease** | Blocco temporaneo allo switch verso altro owner (upload media, picker OS). |
 
 ---
 

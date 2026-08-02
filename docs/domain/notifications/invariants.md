@@ -2,6 +2,7 @@
 
 **Bounded context:** `notifications`  
 **Implementazione:** `client/lib/models/push_conversation_key.dart`, `client/lib/utils/message_preview.dart`  
+**Enforcement sync auth:** [multi-account/session-authority.md](../multi-account/session-authority.md) (`AuthorizePushSync`)  
 **Confine prodotto:** [PROM-PUSH-NOTIFY](../../specs/promises/product/PROM-PUSH-NOTIFY.md)
 
 ---
@@ -23,7 +24,7 @@
 
 5. `RegisterDeviceForPush` dichiara **scope** esplicito — nessun default «tutti gli account» su lifecycle generico.
 6. Resume PWA (`AppResumed`) → scope `FocusedAccount` al massimo — **mai** `AllOpenAccounts`.
-7. Registrazione push **non** invoca `setFocus`, dispose sessione in focus, né `AccountSession.restore` parallelo su account non in focus nel percorso caldo.
-8. Durante upload media o picker OS attivo → sync push **deferred** (`PushSyncDeferred`).
+7. Registrazione push **non** invoca `RequestFocusSwitch`, dispose sessione in focus, né `AccountSession.restore` parallelo — gate: `SessionAuthority.AuthorizePushSync`.
+8. Durante upload media o picker OS attivo → `AcquireIdentityLease` attivo → sync push **deferred** (`PushSyncDeferred`).
 9. Cambio focus completato → scope `FocusedAccount` per l'account destinazione.
 10. Permesso notifiche appena `granted` → scope `AllOpenAccounts` nella stessa sessione app.

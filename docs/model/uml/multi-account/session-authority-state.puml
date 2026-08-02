@@ -1,0 +1,40 @@
+@startuml session-authority-state
+' Context: multi-account
+' Profile: client
+' SDD: PROM-MULTI-ACCOUNT (enforcement interno — nessun amend osservabile)
+' Revision: 2026-08-02
+
+title SessionAuthority — stati identità attiva\n(enforcement una GoTrue in RAM)
+
+state NoActiveIdentity
+state OwnerActive : activeOwnerId + JWT\nleaseCount = 0
+state OwnerActiveLeased : activeOwnerId + JWT\nleaseCount > 0
+state SwitchingOwner : dispose + restore\nserializzato
+
+[*] --> NoActiveIdentity : bootstrap\n[nessun restore ancora]
+
+NoActiveIdentity --> SwitchingOwner : RequestFocusSwitch\n/ RunAsOwner
+SwitchingOwner --> OwnerActive : IdentityActivated\n[restore ok]
+SwitchingOwner --> NoActiveIdentity : IdentitySwitchFailed
+
+OwnerActive --> SwitchingOwner : RequestFocusSwitch\n[altro owner,\nleaseCount = 0]
+OwnerActive --> OwnerActiveLeased : AcquireIdentityLease
+OwnerActiveLeased --> OwnerActive : ReleaseIdentityLease\n[leaseCount = 0]
+OwnerActiveLeased --> OwnerActiveLeased : AcquireIdentityLease\n[stesso owner]
+
+OwnerActiveLeased --> OwnerActiveLeased : RequestFocusSwitch\n[altro owner]\n/ IdentitySwitchDeferred
+OwnerActiveLeased --> SwitchingOwner : RequestFocusSwitch\n[stesso owner,\nreconnect]
+
+OwnerActive --> OwnerActive : RunAsOwner\n[stesso owner]
+OwnerActive --> SwitchingOwner : RunAsOwner\n[altro owner,\nleaseCount = 0]
+
+OwnerActive --> NoActiveIdentity : AccountClosed\n[ultimo account disposed]
+
+note right of OwnerActiveLeased
+  Durante lease:
+  - RunAsOwner verso altro owner → deferred
+  - AuthorizePushSync(AppResumed) → PushSyncDeferred
+  - messaging/upload continua su activeOwnerId
+end note
+
+@enduml

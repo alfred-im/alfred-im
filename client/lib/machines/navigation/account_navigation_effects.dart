@@ -11,6 +11,7 @@ import '../../models/conversation_scope.dart';
 import '../../models/open_conversation_source.dart';
 import '../../services/account_manager.dart';
 import '../../services/account_session.dart';
+import '../../services/session_authority.dart';
 import '../../utils/diagnostic_log.dart';
 import '../multi-account/multi_account_adapters.dart';
 import 'account_view_state_store.dart';
@@ -24,10 +25,13 @@ class AccountNavigationEffects implements NavigationEffects {
     required void Function() onInvalidateCommittedScope,
     required void Function(ConversationScope) onCommitScope,
     this._onIngressPrepComplete,
-  })  : _invalidateCommittedScope = onInvalidateCommittedScope,
+    SessionAuthority? sessionAuthority,
+  })  : _authority = sessionAuthority ?? _manager.sessionAuthority,
+        _invalidateCommittedScope = onInvalidateCommittedScope,
         _commitScopeCallback = onCommitScope;
 
   final AccountManager _manager;
+  final SessionAuthority _authority;
   final AccountFocusCommand _focusCommand;
   final void Function() _invalidateCommittedScope;
   final void Function(ConversationScope) _commitScopeCallback;
@@ -334,7 +338,20 @@ class AccountNavigationEffects implements NavigationEffects {
       if (_manager.focusUserId != accountUserId) {
         await _focusCommand.focusAccount(accountUserId);
       }
-      await _manager.consolidateSessionForAccount(accountUserId);
+      final ok = await _authority.ensureOwnerReady(accountUserId);
+      if (!ok) {
+        diagLogFail(
+          'nav',
+          'focus',
+          'session_mismatch',
+          data: {
+            'accountUserId': accountUserId,
+            'focusAfter': _manager.focusUserId,
+            'sessionUserId': _manager.focusedSession?.userId,
+          },
+        );
+      }
+      return ok;
     } catch (_) {
       diagLogFail(
         'nav',
@@ -344,26 +361,6 @@ class AccountNavigationEffects implements NavigationEffects {
       );
       return false;
     }
-
-    final session = _manager.focusedSession;
-    final ok = _manager.focusUserId == accountUserId &&
-        _manager.isSessionReadyForAccount(accountUserId) &&
-        session != null &&
-        session.userId == accountUserId;
-
-    if (!ok) {
-      diagLogFail(
-        'nav',
-        'focus',
-        'session_mismatch',
-        data: {
-          'accountUserId': accountUserId,
-          'focusAfter': _manager.focusUserId,
-          'sessionUserId': session?.userId,
-        },
-      );
-    }
-    return ok;
   }
 
   Future<ChatPeer?> resolvePeerInInboxForTest({

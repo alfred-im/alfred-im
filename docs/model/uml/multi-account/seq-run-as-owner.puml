@@ -1,0 +1,43 @@
+@startuml seq-run-as-owner
+' Context: multi-account + navigation
+' Profile: client
+' SDD: PROM-CONVERSATION-SCOPE, PROM-MULTI-ACCOUNT
+' Revision: 2026-08-02
+
+title seq-run-as-owner — OpenConversation con switch identità\n(sostituisce consolidateSession sparso)
+
+actor Utente
+participant "UI" as UI
+participant "NavigationMachine" as Nav
+participant "SessionAuthority" as SA
+participant "Supabase" as SB
+
+Utente -> UI : tap push / link\n(account B, peer P)
+UI -> Nav : OpenConversationOnAccount(B, P)
+Nav -> Nav : InvalidateConversationScope
+Nav -> SA : RunAsOwner(B, operation)
+activate SA
+
+alt activeOwnerId == B e JWT valido
+  SA -> SA : identityGeneration invariata
+else serve switch
+  SA -> SA : IdentityDeactivated(A)
+  SA -> SB : restore sessione B\n(alfred_auth_B)
+  SB --> SA : JWT B
+  SA -> SA : IdentityActivated(B)\nidentityGeneration++
+end
+
+SA -> Nav : operation: risolvi peer,\nprepara ingresso UI
+Nav -> Nav : ConversationVisible\n(fase A — spinner)
+SA -> Nav : operation: commitScope\n(owner B, peer P, generation)
+Nav -> Nav : ConversationScopeCommitted
+SA --> Nav : ok
+deactivate SA
+
+Nav -> SA : RunAsOwner(B, loadMessages)
+SA -> SB : list_peer_messages
+SB --> SA : messaggi
+SA --> Nav : ok
+Nav -> UI : onStateChanged
+
+@enduml

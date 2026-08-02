@@ -14,16 +14,17 @@ import '../models/chat_peer.dart';
 import '../models/conversation_scope.dart';
 import '../services/account_manager.dart';
 import '../services/account_session.dart';
+import '../services/session_authority.dart';
 
-/// Fallback test: focus diretto su manager senza macchina.
-class _ManagerFocusCommand implements AccountFocusCommand {
-  _ManagerFocusCommand(this._manager);
+/// Fallback test: focus via SessionAuthority senza macchina.
+class _SessionAuthorityFocusCommand implements AccountFocusCommand {
+  _SessionAuthorityFocusCommand(this._authority);
 
-  final AccountManager _manager;
+  final SessionAuthority _authority;
 
   @override
   Future<void> focusAccount(String accountUserId) {
-    return _manager.executeFocus(accountUserId);
+    return _authority.requestFocusSwitch(accountUserId);
   }
 }
 
@@ -36,7 +37,8 @@ class NavigationCoordinator {
     AccountFocusCommand? focusCommand,
     ConversationMessageStore? messageStore,
   }) {
-    final command = focusCommand ?? _ManagerFocusCommand(_manager);
+    final command = focusCommand ??
+        _SessionAuthorityFocusCommand(_manager.sessionAuthority);
     _messageStore = messageStore ?? ConversationMessageStore();
     late final NavigationMachine machine;
     _effects = AccountNavigationEffects(

@@ -6,13 +6,16 @@ import 'package:flutter/foundation.dart';
 
 import '../../models/profile_summary.dart';
 import '../../services/account_manager.dart';
+import '../../services/session_authority.dart';
 import 'multi_account_effects.dart';
 
-/// Effetti multi-account → [AccountManager] (solo I/O).
+/// Effetti multi-account → [AccountManager] + [SessionAuthority].
 class AccountMultiAccountEffects implements MultiAccountEffects {
-  AccountMultiAccountEffects(this._manager);
+  AccountMultiAccountEffects(this._manager)
+      : _authority = _manager.sessionAuthority;
 
   final AccountManager _manager;
+  final SessionAuthority _authority;
 
   /// Notifica UI quando l'identità focus cambia prima che la sessione GoTrue sia pronta.
   VoidCallback? onFocusIdentityChanged;
@@ -33,7 +36,7 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
 
   @override
   Future<void> executeFocus(String userId) async {
-    await _manager.executeFocus(
+    await _authority.requestFocusSwitch(
       userId,
       onFocusIdentityChanged: onFocusIdentityChanged,
     );
@@ -41,7 +44,7 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
 
   @override
   Future<void> reconnectFocusedSession(String focusUserId) {
-    return _manager.reconnectFocusedSession(focusUserId);
+    return _authority.reconnectActiveOwner(focusUserId);
   }
 
   @override

@@ -10,7 +10,7 @@ import '../models/open_account.dart';
 import '../models/push_sync_scope.dart';
 import '../services/account_manager.dart';
 import '../services/push_subscription_service.dart';
-import '../utils/push_media_sync_guard.dart';
+import '../services/session_authority.dart';
 import '../utils/push_permission_flow.dart';
 import '../utils/push_platform.dart';
 
@@ -21,9 +21,12 @@ class PushCoordinator {
     required this._notificationsAdapters,
     this._notificationsMachine,
     PushSubscriptionService? pushService,
-  }) : _pushService = pushService ?? PushSubscriptionService();
+    SessionAuthority? sessionAuthority,
+  })  : _authority = sessionAuthority ?? _manager.sessionAuthority,
+        _pushService = pushService ?? PushSubscriptionService();
 
   final AccountManager _manager;
+  final SessionAuthority _authority;
   final NotificationsAdapters _notificationsAdapters;
   final NotificationsMachine? _notificationsMachine;
   final PushSubscriptionService _pushService;
@@ -36,9 +39,14 @@ class PushCoordinator {
     required PushSyncReason reason,
     String? newAccountUserId,
   }) async {
-    if (PushMediaSyncGuard.isActive) {
+    final decision = _authority.authorizePushSync(
+      scope: scope,
+      reason: reason,
+    );
+    if (decision.deferred) {
       return;
     }
+    if (!decision.authorized) return;
 
     if (kIsWeb) {
       _notificationsAdapters.onPushSupportChecked(

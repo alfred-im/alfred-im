@@ -31,7 +31,7 @@ RegisterDeviceForPush {
 | `NewAccount(userId)` | UPSERT per l'account appena aperto |
 | `Unregister(userId)` | DELETE riga per `(user_id, device_id)` |
 
-**Vincolo:** la registrazione push **non** promuove un account a focus e **non** dispose della sessione GoTrue in RAM ([PROM-PUSH-NOTIFY-046](../../specs/promises/product/PROM-PUSH-NOTIFY.md)). Per account non in focus usare client auth effimero o equivalente — non `AccountSession.restore` nel percorso caldo.
+**Vincolo:** la registrazione push **non** promuove un account a focus e **non** dispose della sessione GoTrue in RAM ([PROM-PUSH-NOTIFY-046](../../specs/promises/product/PROM-PUSH-NOTIFY.md)). Gate: [SessionAuthority.AuthorizePushSync](../multi-account/session-authority.md) — per account non in focus usare client auth effimero, mai `restore` parallelo in RAM.
 
 ---
 
