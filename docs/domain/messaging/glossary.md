@@ -17,7 +17,7 @@
 | **Sincronizzazione** | Aggiornamenti in tempo reale mentre la conversazione è aperta. |
 | **Finestra recente** | Primi N messaggi restituiti da `list_peer_messages` senza cursore (= ultimi N cronologici nel mio archivio). |
 | **Cursore storico** | `created_at` del messaggio più vecchio già caricato; parametro `p_before_created_at` per la pagina precedente. |
-| **Allineamento inbox–chat** | L'anteprima `list_inbox` per un peer è sempre inclusa nella prima finestra di storico (SYS-MAILBOX-057). |
+| **Tag mention (`@username`)** | Convenzione testo nel body; rendering client aggiunge link alla chat 1:1 con quel peer. Non persistito come entità separata — vedi PROM-MESSAGE-MENTION. |
 
 ---
 

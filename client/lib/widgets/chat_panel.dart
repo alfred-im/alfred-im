@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 import '../models/chat_peer.dart';
 import '../providers/messages_controller.dart';
 import '../providers/reception_allowlist_controller.dart';
+import '../utils/auth_controller_scope.dart';
+import '../utils/mention_navigation.dart';
 import '../theme/alfred_colors.dart';
 import 'peer_profile_overlay.dart';
 import 'profile_identity.dart';
@@ -64,6 +66,7 @@ class ChatPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final messagesController = context.watch<MessagesController>();
+    final auth = watchAuthControllerOrNull(context);
     final allowlist = context.watch<ReceptionAllowlistController?>();
     final messages = messagesController.messages;
     final canCompose = allowlist != null &&
@@ -94,6 +97,11 @@ class ChatPanel extends StatelessWidget {
                 messages: messages,
                 isLoading: messagesController.isLoading,
                 showAuthorLabels: showAuthorLabels,
+                viewerUsername: auth?.username,
+                onMentionTap: auth != null
+                    ? (username) =>
+                        openChatFromMentionUsername(context, username)
+                    : null,
                 hasMoreOlder: messagesController.hasMoreOlder,
                 isLoadingOlder: messagesController.isLoadingOlder,
                 onLoadOlder: messagesController.hasMoreOlder

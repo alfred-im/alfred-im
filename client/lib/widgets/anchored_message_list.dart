@@ -17,6 +17,8 @@ class AnchoredMessageList extends StatefulWidget {
     required this.isLoading,
     this.onRetryMessage,
     this.showAuthorLabels = false,
+    this.viewerUsername,
+    this.onMentionTap,
     this.hasMoreOlder = false,
     this.isLoadingOlder = false,
     this.onLoadOlder,
@@ -26,6 +28,8 @@ class AnchoredMessageList extends StatefulWidget {
   final bool isLoading;
   final void Function(String messageId)? onRetryMessage;
   final bool showAuthorLabels;
+  final String? viewerUsername;
+  final void Function(String username)? onMentionTap;
   final bool hasMoreOlder;
   final bool isLoadingOlder;
   final VoidCallback? onLoadOlder;
@@ -218,6 +222,8 @@ class _AnchoredMessageListState extends State<AnchoredMessageList> {
             return MessageBubble(
               message: message,
               showAuthorLabel: widget.showAuthorLabels,
+              viewerUsername: widget.viewerUsername,
+              onMentionTap: widget.onMentionTap,
               onRetry: message.canRetry && widget.onRetryMessage != null
                   ? () => widget.onRetryMessage!(message.id)
                   : null,

@@ -12,6 +12,7 @@ import '../utils/image_bytes.dart';
 import 'location_message_content.dart';
 import 'message_author_header.dart';
 import 'video_message_content.dart';
+import 'mention_body_text.dart';
 import 'voice_message_content.dart';
 
 const double _mediaMaxWidth = 240;
@@ -69,11 +70,16 @@ class MessageBubble extends StatelessWidget {
     required this.message,
     this.showAuthorLabel = false,
     this.onRetry,
+    this.viewerUsername,
+    this.onMentionTap,
   });
 
   final ChatMessage message;
   final bool showAuthorLabel;
   final VoidCallback? onRetry;
+  /// Username account in focus — soppressione link `@self` su messaggi propri.
+  final String? viewerUsername;
+  final void Function(String username)? onMentionTap;
 
   @override
   Widget build(BuildContext context) {
@@ -128,14 +134,21 @@ class MessageBubble extends StatelessWidget {
                 longitude: message.longitude!,
               ),
             if (message.body.isNotEmpty)
-              Text(
-                message.body,
-                style: const TextStyle(
-                  color: AlfredColors.textPrimary,
-                  fontSize: 14.5,
-                  height: 1.35,
-                ),
-              ),
+              onMentionTap != null
+                  ? MentionBodyText(
+                      text: message.body,
+                      isMine: isMine,
+                      viewerUsername: viewerUsername,
+                      onMentionTap: onMentionTap!,
+                    )
+                  : Text(
+                      message.body,
+                      style: const TextStyle(
+                        color: AlfredColors.textPrimary,
+                        fontSize: 14.5,
+                        height: 1.35,
+                      ),
+                    ),
             const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,

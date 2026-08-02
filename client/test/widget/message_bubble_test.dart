@@ -354,4 +354,57 @@ void main() {
     expect(find.text('Tu'), findsNothing);
     expect(find.text('Mio messaggio'), findsOneWidget);
   });
+
+  testWidgets('MessageBubble invokes onMentionTap for @username', (tester) async {
+    String? tapped;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: Scaffold(
+          body: MessageBubble(
+            message: ChatMessage(
+              id: '10',
+              body: 'ciao @alice!',
+              timeLabel: '12:39',
+              isMine: false,
+            ),
+            viewerUsername: 'bob',
+            onMentionTap: (username) => tapped = username,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.textContaining('@alice'));
+    await tester.pump();
+    expect(tapped, 'alice');
+  });
+
+  testWidgets('MessageBubble does not link own @username on own message', (
+    tester,
+  ) async {
+    String? tapped;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: Scaffold(
+          body: MessageBubble(
+            message: ChatMessage(
+              id: '11',
+              body: 'ciao @bob!',
+              timeLabel: '12:40',
+              isMine: true,
+            ),
+            viewerUsername: 'bob',
+            onMentionTap: (username) => tapped = username,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.textContaining('@bob'), findsOneWidget);
+    await tester.tap(find.textContaining('@bob'));
+    await tester.pump();
+    expect(tapped, isNull);
+  });
 }
