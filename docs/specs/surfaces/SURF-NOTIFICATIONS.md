@@ -21,7 +21,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | Client Dart | `PushSubscriptionService`, `PushCoordinator`, `PushSuppressionBinder` |
 | Bootstrap | `AuthSessionCoordinator` — sync `AllOpenAccounts` post-`sessionReady` |
 | Lifecycle | `PushSuppressionBinder` — soppressione + resume (`FocusedAccount` only) |
-| Focus | `AuthController.setFocus` — sync `FocusedAccount` (da implementare) |
+| Focus | `AuthController.setFocus` — dopo switch account, `PushCoordinator.syncPushSubscriptions(FocusedAccount, focusChanged)` con gate `SessionAuthority.authorizePushSync` |
 | Storage locale | `alfred_device_id` (localStorage), subscription keys via SW |
 
 ---

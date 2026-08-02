@@ -110,7 +110,7 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 | **PROM-PUSH-NOTIFY-043** | Handler push che apre chat o sopprime notifica usando solo `peer_profile_id` senza `recipient_user_id` |
 | **PROM-PUSH-NOTIFY-044** | Tap notifica che lascia visibile chat con peer diverso da `peer_profile_id` del payload (stale UI) |
 | **PROM-PUSH-NOTIFY-045** | Resume PWA generico che innesca `RegisterDeviceForPush` con scope `AllOpenAccounts` |
-| **PROM-PUSH-NOTIFY-046** | `RegisterDeviceForPush` che invoca `AccountManager.setFocus`, dispose della sessione in focus o restore parallelo di account non in focus tramite `AccountSession.restore` nel percorso caldo |
+| **PROM-PUSH-NOTIFY-046** | `RegisterDeviceForPush` che invoca switch identità (`SessionAuthority.requestFocusSwitch` / dispose sessione in focus) o restore parallelo di account non in focus tramite `AccountSession.restore` nel percorso caldo |
 | **PROM-PUSH-NOTIFY-047** | Sync push durante upload media attivo (picker galleria/fotocamera aperto o coda outbound con allegato in invio) |
 
 ### Fuori scope (v1)

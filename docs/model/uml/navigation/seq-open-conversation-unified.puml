@@ -10,6 +10,7 @@ participant "NavigationMachine" as Nav
 participant "MultiAccountMachine" as MAM
 participant "AccountViewState" as VS
 participant "AuthController" as Auth
+participant "SessionAuthority" as SA
 participant "MessagingCoordinator" as Msg
 
 In -> Nav : OpenConversation(account, peer, source)
@@ -36,7 +37,8 @@ par Fase B — piano dati (async, abortibile)
     Nav -> MAM : FocusAccount
     MAM --> Nav : sessione
   end
-  Nav -> Nav : ConsolidateSession(account)
+  Nav -> SA : EnsureOwnerReady(account)
+  SA --> Nav : ok | session expired
   alt peer ancora attivo (loadSeq invariato)
     Nav -> Nav : CommitConversationScope (reconcile)
     Nav -> Auth : onStateChanged (se scope aggiornato)

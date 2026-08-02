@@ -10,12 +10,13 @@
 ```
 AuthController
     └── AccountManager
-            ├── _manifestAccounts[]     ← alfred_saved_accounts
-            ├── _sessions{}             ← al massimo 1 entry (account in focus)
+            ├── sessionAuthority          ← enforcement identità GoTrue (part)
+            ├── _manifestAccounts[]       ← alfred_saved_accounts
+            ├── _sessions{}               ← al massimo 1 entry (account in focus)
             │     └── AccountSession
             │           ├── SupabaseClient + alfred_auth_{userId}
             │           └── InboxController  ← realtime solo sul focus
-            ├── _viewsByAccount{}         ← AccountViewState per userId
+            ├── _viewsByAccount{}           ← AccountViewState per userId
             └── focusUserId
 ```
 
@@ -27,7 +28,8 @@ Il focus determina quale `AccountSession` è in RAM. Gli altri account compaiono
 
 | File | Responsabilità |
 |------|----------------|
-| `services/account_manager.dart` | Manifest, una sessione GoTrue attiva, focus, swap |
+| `services/session_authority.dart` | Enforcement identità: switch, lease, gate push (`part of account_manager.dart`) |
+| `services/account_manager.dart` | Manifest, view-state, sessione in RAM; switch GoTrue privato |
 | `services/account_session.dart` | Client Supabase, restore, persistenza dichiarativa |
 | `services/account_storage_service.dart` | `OpenAccount[]` + `focusUserId` |
 | `providers/auth_controller.dart` | Stato UI auth, overlay |
@@ -57,9 +59,9 @@ Il focus determina quale `AccountSession` è in RAM. Gli altri account compaiono
 
 ### Cambio focus
 
-1. `setFocus(userId)` — se già in focus: solo `inboxController.load()`
-2. Altrimenti: `disposeResources(clearAuthStorage: false)` sulla sessione corrente
-3. `_activateFocusedSession()` — restore da manifest
+1. UI: `AuthController.setFocus` → `NavigationCoordinator` → `MultiAccountMachine.FocusAccount`
+2. `SessionAuthority.requestFocusSwitch(userId)` — dispose + restore serializzato
+3. Se già in focus con sessione valida: solo refresh inbox se necessario
 4. `AccountViewState` per account **non** si azzera al switch
 
 ### Chiusura account
@@ -79,7 +81,7 @@ Su web, N client GoTrue paralleli condividono `BroadcastChannel` (`sb-{projectRe
 | Aspetto | Comportamento |
 |---------|---------------|
 | RAM | Una sessione GoTrue (account in focus) |
-| `setFocus` | Dispose (`clearAuthStorage: false`), restore nuovo account, `inbox.load()` |
+| Switch identità | `SessionAuthority.requestFocusSwitch` — dispose + restore |
 | Account non in focus | Solo manifest + `alfred_auth_{userId}` su disco |
 | Trade-off | Niente realtime in background per account non in focus |
 

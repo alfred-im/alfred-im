@@ -68,7 +68,7 @@ Mapping completo: [README.md](README.md).
 | `PushUnsupportedDetected` | *(ingresso)* | Esito `CheckPushSupport`. |
 | `PermissionDeniedDetected` | *(ingresso)* | Esito `CheckPushSupport`. |
 | `PermissionGrantedDetected` | `NotificationPermissionGranted` | → `RegisterDeviceForPush(AllOpenAccounts)` |
-| `FocusChangedDetected` | `FocusChanged` | → `RegisterDeviceForPush(FocusedAccount)` |
+| `FocusChangedDetected` | `FocusChanged` | *(mapping dominio)* — oggi `AuthController.setFocus` → `PushCoordinator` con `FocusedAccount` / `focusChanged` |
 | `SubscriptionIdleReached` | *(ingresso)* | Supporto ok, permesso non negato. |
 | `SessionBecameReady` | *(ingresso)* | → `RegisterDeviceForPush(AllOpenAccounts)`; drena coda open-chat in-memory |
 

@@ -13,7 +13,7 @@
 | `FocusAccount` | Utente / Policy | Intent focus UI → delega `RequestFocusSwitch` a [SessionAuthority](session-authority.md). Scope e shell: `NavigationMachine.SwitchToAccount`. |
 | `OpenAccount` | Utente | Aggiunge account al manifest (login o registrazione). |
 | `CloseAccount` | Utente | Rimuove account dal manifest. |
-| `ReconnectFocusedSession` | Utente / Policy | Ritenta restore sessione per l'account in focus (stato `FocusedAwaitingSession`) → `SessionAuthority.ReconnectActiveOwner`. |
+| `ReconnectFocusedSession` | Utente / Policy | Ritenta restore sessione per l'account in focus → `SessionAuthority.reconnectActiveOwner`. |
 
 Varianti statechart per `OpenAccount`: `OpenAccountWithPassword`, `OpenAccountWithSignUp`.
 
@@ -21,14 +21,14 @@ Varianti statechart per `OpenAccount`: `OpenAccountWithPassword`, `OpenAccountWi
 
 Servizio di dominio — vedi [session-authority.md](session-authority.md).
 
-| Comando | Emesso da | Descrizione |
+| Comando | Emesso da | Codice Dart |
 |---------|-----------|-------------|
-| `RequestFocusSwitch` | `FocusAccount` / navigation | Dispose + restore serializzato per `ownerUserId`. |
-| `RunAsOwner` | navigation, messaging, notifications, … | Garantisce JWT owner prima di RPC/upload. |
-| `AcquireIdentityLease` | messaging, media | Blocca switch verso altro owner durante operazione lunga. |
-| `ReleaseIdentityLease` | messaging, media | Fine lease; drain coda switch. |
-| `AuthorizePushSync` | notifications | Gate scope sync push senza violare una GoTrue in RAM. |
-| `ReconnectActiveOwner` | `ReconnectFocusedSession` | Retry restore owner già in focus. |
+| `RequestFocusSwitch` | `FocusAccount` / navigation | `requestFocusSwitch` |
+| `EnsureOwnerReady` | navigation (ingresso chat) | `ensureOwnerReady` |
+| `RunAsOwner` | *(previsto)* | `runAsOwner` |
+| `AcquireIdentityLease` / `ReleaseIdentityLease` | media | `runWithLease` / `acquireLease` |
+| `AuthorizePushSync` | notifications | `authorizePushSync` |
+| `ReconnectActiveOwner` | `ReconnectFocusedSession` | `reconnectActiveOwner` |
 
 ---
 

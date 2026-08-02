@@ -20,8 +20,8 @@
 | **ConversationScope** | Ambito atomico commesso `(owner_user_id, peer_profile_id, session_epoch)` — unica autorità per messaging. |
 | **CommitConversationScope** | Registra scope dopo apertura validata (account + peer + sessione viva). |
 | **InvalidateConversationScope** | Azzera scope (chiusura chat, switch account, apertura verso altro peer). |
-| **OpenConversation** | Transazione navigation: invalida scope stale → focus (se serve) → **fase A (sync)** `OpenChat` + commit scope se sessione in RAM → **fase B (async)** consolidate, re-commit, load messaggi, refresh inbox silent. Sorgenti: inbox, push, link, compose. |
-| **ConsolidateSession** | All'ingresso chat: vedi [invariants.md](invariants.md) § Session identity |
+| **OpenConversation** | Transazione navigation: invalida scope stale → focus (se serve) → **fase A (sync)** `OpenChat` + commit scope se sessione in RAM → **fase B (async)** `EnsureOwnerReady`, re-commit, load messaggi, refresh inbox silent. Sorgenti: inbox, push, link, compose. |
+| **EnsureOwnerReady** | All'ingresso chat (fase B): `SessionAuthority.ensureOwnerReady` — vedi [invariants.md](invariants.md) § Session identity |
 | **Profile fallback** | Se peer non in inbox, lookup profilo — link/compose sempre; push dopo retry inbox esteso. |
 | **CloseConversation** | Chiude chat; invalida scope; torna a inbox (utente) o home gruppo (gruppo). |
 | **Account view state** | Stato UI per account (`activePeer`, `showInboxOnMobile`, `groupChatOpen`) — proiezione, non autorità messaging. |

@@ -10,7 +10,7 @@
 
 | Comando dominio | Evento `NotificationsMachine` | Codice |
 |-----------------|-------------------------------|--------|
-| `RegisterDeviceForPush { scope, reason }` | `SyncSubscriptionsRequested` | `PushCoordinator.syncPushSubscriptions` — scope esplicito; vedi [commands-and-events.md](commands-and-events.md) § Policy sync |
+| `RegisterDeviceForPush { scope, reason }` | `SyncSubscriptionsRequested` | `PushCoordinator.syncPushSubscriptions` — gate `SessionAuthority.authorizePushSync`; scope esplicito; vedi [commands-and-events.md](commands-and-events.md) § Policy sync |
 | `UnregisterDeviceFromPush` | `UnregisterSubscriptionRequested` | `PushCoordinator.unregisterAccount` |
 | `OpenChatFromNotification` | `OpenChatFromNotification` | `NotificationsAdapters.onOpenChatFromNotification` ← SW / `PushPlatform` |
 
@@ -26,7 +26,7 @@
 | Evento dominio | Evento `NotificationsMachine` | Codice |
 |----------------|-------------------------------|--------|
 | `PushRegistrationSucceeded` | `PushRegistrationSucceeded` | `PushCoordinator` dopo `PushSubscriptionService.syncOpenAccounts` |
-| `PushRegistrationSkipped` | *(nessun sync)* | `PushCoordinator` esce prima di `SyncSubscriptionsRequested` se unsupported/denied |
+| `PushRegistrationSkipped` | *(nessun sync)* | `PushCoordinator` esce prima di `SyncSubscriptionsRequested` se unsupported/denied o `authorizePushSync` non autorizza / defer |
 | `PushRegistrationFailed` | `PushRegistrationFailed` | `PushCoordinator` catch su sync |
 | `ChatOpenFromNotificationDeferred` | stato `OpenChatQueued` + `persistPendingOpenChat` | `!sessionReady` |
 | `ChatOpenFromNotificationFailed` | ritorno `OpenChatIdle` + `clearPendingOpenChat` | `!hasOpenAccount` |
@@ -41,7 +41,7 @@
 | `SubscriptionIdleReached` | `CheckPushSupport` ok → stato `Idle` |
 | `SessionBecameReady` | Bootstrap sessione → `RegisterDeviceForPush(AllOpenAccounts)`; drena coda in-memory (`_pendingWhileBusy`) |
 | `PermissionGrantedDetected` | Permesso → `granted` → `RegisterDeviceForPush(AllOpenAccounts)` |
-| `FocusChangedDetected` | Dopo `setFocus` → `RegisterDeviceForPush(FocusedAccount)` |
+| `FocusChangedDetected` | *(mapping dominio)* | Percorso attuale: `AuthController.setFocus` → switch account → `PushCoordinator.syncPushSubscriptions(FocusedAccount, focusChanged)` — non ancora evento macchina |
 | `PushSyncDeferred` | Upload/picker attivo — sync rimandato |
 
 ### Eventi service worker (non passano dalla macchina client)
