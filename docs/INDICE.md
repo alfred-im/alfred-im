@@ -84,7 +84,9 @@ Navigazione per AI. **Modello**: [domain/README.md](./domain/README.md) · **Pro
 
 ## Altro
 
-- [WISHLIST.md](./WISHLIST.md) — backlog futuro
+- [wishes/README.md](./wishes/README.md) — esplorazioni e wish non vincolanti
+- [wishes/protected-evidence-vault.md](./wishes/protected-evidence-vault.md) — custodia asimmetrica / vault prove protette
+- [WISHLIST.md](./WISHLIST.md) — backlog funzionalità (XMPP, UI)
 - [specs/contracts/schema.md](./specs/contracts/schema.md) · [rpc.md](./specs/contracts/rpc.md)
 
-**Ultimo aggiornamento**: 2026-07-19
+**Ultimo aggiornamento**: 2026-08-03
