@@ -8,6 +8,35 @@ import '../models/profile_summary.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/avatar_color.dart';
 
+/// Avatar tondo che apre il drawer account su mobile (header inbox / home gruppo).
+class AccountDrawerTrigger extends StatelessWidget {
+  const AccountDrawerTrigger({
+    super.key,
+    required this.profile,
+    required this.onTap,
+    this.avatarRadius = 20,
+  });
+
+  final ProfileSummary profile;
+  final VoidCallback onTap;
+  final double avatarRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onTap,
+      tooltip: 'Account',
+      padding: const EdgeInsets.all(8),
+      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+      icon: ProfileAvatar(
+        profile: profile,
+        radius: avatarRadius,
+        fontSize: avatarRadius * 0.9,
+      ),
+    );
+  }
+}
+
 class ProfileAvatar extends StatelessWidget {
   const ProfileAvatar({
     super.key,

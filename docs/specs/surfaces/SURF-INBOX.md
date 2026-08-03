@@ -4,7 +4,7 @@
 |-------|--------|
 | **Superficie ID** | `SURF-INBOX` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-08-01 |
+| **Ultima revisione** | 2026-08-03 |
 | **Promesse** | [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md) |
 | **PR** | #132, #161 |
 
@@ -35,6 +35,7 @@ Binding promessa PRODUCT filtro lista sulla inbox (`InboxPanel`) + entry «Perso
 | **SURF-INBOX-005** | Layout **desktop** (`showTopBar: false`): lente nella riga «Conversazioni»; barra sotto titolo |
 | **SURF-INBOX-006** | Cambio account: `ValueKey(accountUserId)` su `InboxPanel` → stato ricerca reset |
 | **SURF-INBOX-007** | Icona «Persone consentite» in header inbox accanto a icona rubrica «Contatti» → naviga a `AllowedPeopleScreen` — [PROM-RECEPTION-FILTER](../promises/product/PROM-RECEPTION-FILTER.md) |
+| **SURF-INBOX-012** | Layout **mobile** (`showTopBar: true`): trigger drawer = `ProfileAvatar` tondo dell'account in focus (non icona hamburger); tooltip «Account»; tap apre drawer sidebar |
 
 ### MUST NOT
 
@@ -56,6 +57,7 @@ Binding promessa PRODUCT filtro lista sulla inbox (`InboxPanel`) + entry «Perso
 | SURF-INBOX-006 | `home_screen.dart` |
 | SURF-INBOX-007 | `inbox_panel_test.dart`; `allowed_people_screen_test.dart` |
 | SURF-INBOX-011 | `navigation_open_ingress_test.dart`; `conversation_scope_ingress_test.dart`; `inbox_panel_test.dart` |
+| SURF-INBOX-012 | `inbox_panel_test.dart`; `profile_identity.dart` `AccountDrawerTrigger` |
 
 ---
 

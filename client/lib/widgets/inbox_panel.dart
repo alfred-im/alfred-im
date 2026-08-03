@@ -5,10 +5,12 @@
 import 'package:flutter/material.dart';
 
 import '../models/chat_peer.dart';
+import '../models/profile_summary.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/compose_address.dart';
 import 'collapsible_list_search.dart';
 import 'inbox_peer_tile.dart';
+import 'profile_identity.dart';
 
 class InboxPanel extends StatefulWidget {
   const InboxPanel({
@@ -22,6 +24,7 @@ class InboxPanel extends StatefulWidget {
     this.onAllowedPeopleTap,
     this.onNewMessage,
     this.onDrawerTap,
+    this.drawerProfile,
     this.error,
     this.onRetry,
     this.showBackButton = false,
@@ -35,6 +38,7 @@ class InboxPanel extends StatefulWidget {
   final ValueChanged<ChatPeer> onSelected;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback? onDrawerTap;
+  final ProfileSummary? drawerProfile;
   final VoidCallback onContactsTap;
   final VoidCallback? onAllowedPeopleTap;
   final Future<void> Function(String address)? onNewMessage;
@@ -68,6 +72,7 @@ class _InboxPanelState extends State<InboxPanel> {
                       showBackButton: widget.showBackButton,
                       onBack: widget.onBack,
                       onDrawerTap: widget.onDrawerTap,
+                      drawerProfile: widget.drawerProfile,
                       onContactsTap: widget.onContactsTap,
                       onAllowedPeopleTap: widget.onAllowedPeopleTap,
                       searchLens: search.lensButton,
@@ -253,6 +258,7 @@ class _Header extends StatelessWidget {
     required this.showBackButton,
     this.onBack,
     this.onDrawerTap,
+    this.drawerProfile,
     required this.onContactsTap,
     this.onAllowedPeopleTap,
     required this.searchLens,
@@ -261,6 +267,7 @@ class _Header extends StatelessWidget {
   final bool showBackButton;
   final VoidCallback? onBack;
   final VoidCallback? onDrawerTap;
+  final ProfileSummary? drawerProfile;
   final VoidCallback onContactsTap;
   final VoidCallback? onAllowedPeopleTap;
   final Widget searchLens;
@@ -279,10 +286,10 @@ class _Header extends StatelessWidget {
                 onPressed: onBack,
                 icon: const Icon(Icons.arrow_back, color: AlfredColors.textOnDark),
               ),
-            if (onDrawerTap != null)
-              IconButton(
-                onPressed: onDrawerTap,
-                icon: const Icon(Icons.menu, color: AlfredColors.textOnDark),
+            if (onDrawerTap != null && drawerProfile != null)
+              AccountDrawerTrigger(
+                profile: drawerProfile!,
+                onTap: onDrawerTap!,
               ),
             const Expanded(
               child: Text(

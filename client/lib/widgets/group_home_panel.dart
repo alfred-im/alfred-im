@@ -41,6 +41,7 @@ class GroupHomePanel extends StatelessWidget {
         children: [
           _Header(
             title: profile.displayName,
+            profile: profile,
             onDrawerTap: onDrawerTap,
             onProfileTap: onProfileTap,
             onAllowedPeopleTap: onAllowedPeopleTap,
@@ -100,12 +101,14 @@ class GroupHomePanel extends StatelessWidget {
 class _Header extends StatelessWidget {
   const _Header({
     required this.title,
+    required this.profile,
     this.onDrawerTap,
     required this.onProfileTap,
     required this.onAllowedPeopleTap,
   });
 
   final String title;
+  final ProfileSummary profile;
   final VoidCallback? onDrawerTap;
   final VoidCallback onProfileTap;
   final VoidCallback onAllowedPeopleTap;
@@ -119,10 +122,9 @@ class _Header extends StatelessWidget {
         child: Row(
           children: [
             if (onDrawerTap != null)
-              IconButton(
-                onPressed: onDrawerTap,
-                icon: const Icon(Icons.menu),
-                tooltip: 'Account',
+              AccountDrawerTrigger(
+                profile: profile,
+                onTap: onDrawerTap!,
               ),
             Expanded(
               child: Text(

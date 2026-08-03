@@ -4,7 +4,7 @@
 |-------|--------|
 | **Superficie ID** | `SURF-GROUP-HOME` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-08-03 |
 | **Promesse** | [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [PROM-PROFILE-IDENTITY](../promises/product/PROM-PROFILE-IDENTITY.md), [PROM-GROUP-AUTHOR-DISPLAY](../promises/product/PROM-GROUP-AUTHOR-DISPLAY.md) |
 | **PR** | — |
 
@@ -31,7 +31,7 @@ Binding UX home account `profile_kind = group`: riepilogo, persone più attive, 
 | ID | Promessa |
 |----|----------|
 | **SURF-GROUP-HOME-001** | Account gruppo in focus: schermata **default** = home gruppo (non conversazione) — vedi [SURF-GROUP-SHELL](./SURF-GROUP-SHELL.md) |
-| **SURF-GROUP-HOME-002** | Guscio visivo **uniforme** a `InboxPanel`: stesso pannello (`AlfredColors.panel`), header con drawer su mobile, divider, tipografia e spaziatura lista |
+| **SURF-GROUP-HOME-002** | Guscio visivo **uniforme** a `InboxPanel`: stesso pannello (`AlfredColors.panel`), header con drawer su mobile (trigger = `ProfileAvatar` del gruppo, non hamburger — [SURF-INBOX](./SURF-INBOX.md) SURF-INBOX-012), divider, tipografia e spaziatura lista |
 | **SURF-GROUP-HOME-003** | Header home: titolo = **nome del gruppo** (`display_name`); entry profilo proprio e entry allow list **propria** (icone come inbox user per allow list) |
 | **SURF-GROUP-HOME-004** | Blocco riepilogo: data **nascita** gruppo da `profiles.created_at` (profilo completo account in focus); conteggio **totale messaggi** nello storico `owner_id = gruppo` |
 | **SURF-GROUP-HOME-005** | Sezione **«Persone più attive»**: elenco autori che hanno scritto almeno un messaggio nello storico del gruppo, ordinati per **conteggio messaggi decrescente**; ogni riga: avatar, nome leggibile, numero messaggi |
