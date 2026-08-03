@@ -140,6 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onSelected: auth.navigation.openConversation,
       onSearchChanged: inbox.setSearchQuery,
       onDrawerTap: showDrawerButton ? _openDrawer : null,
+      drawerProfile: auth.focusedProfileSummary,
       onContactsTap: _openContacts,
       onAllowedPeopleTap: _openAllowedPeople,
       onNewMessage: _startMessageFromAddress,

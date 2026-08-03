@@ -59,6 +59,12 @@ void main() {
       (tester) async {
     var allowedTapped = false;
     var contactsTapped = false;
+    var drawerTapped = false;
+    final profile = ProfileSummary(
+      id: 'user-1',
+      displayName: 'Mario',
+      username: 'mario',
+    );
 
     await tester.pumpWidget(
       _wrap(
@@ -70,12 +76,19 @@ void main() {
           onSearchChanged: (_) {},
           onContactsTap: () => contactsTapped = true,
           onAllowedPeopleTap: () => allowedTapped = true,
+          onDrawerTap: () => drawerTapped = true,
+          drawerProfile: profile,
           showTopBar: true,
         ),
       ),
     );
 
     expect(find.text('Alfred'), findsOneWidget);
+    expect(find.text('M'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Account'));
+    await tester.pump();
+    expect(drawerTapped, isTrue);
 
     await tester.tap(find.byTooltip('Persone consentite'));
     await tester.pump();
