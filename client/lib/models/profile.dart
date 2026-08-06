@@ -22,6 +22,7 @@ class UserProfile {
   String get displayName => summary.displayName;
   String? get pronouns => summary.pronouns;
   String? get avatarUrl => summary.avatarUrl;
+  String? get coverUrl => summary.coverUrl;
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(

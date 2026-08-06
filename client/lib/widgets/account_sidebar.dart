@@ -10,6 +10,7 @@ import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/shareable_link.dart';
+import 'profile_cover_header.dart';
 import 'profile_identity.dart';
 
 /// Sezione profilo e account nella sidebar / drawer.
@@ -135,78 +136,73 @@ class _ActiveProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        ProfileAvatar(profile: profile, radius: 28, fontSize: 22),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ProfileIdentityLines(
-                profile: profile,
-                nameStyle: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 17,
-                  color: AlfredColors.textPrimary,
+    return ProfileCoverHeader(
+      profile: profile,
+      presentation: ProfileCoverPresentation.compact,
+      showPronouns: false,
+      extraBelowIdentity: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isDisconnected)
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                'Disconnesso',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AlfredColors.textSecondary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              if (isDisconnected)
-                const Padding(
-                  padding: EdgeInsets.only(top: 4),
-                  child: Text(
-                    'Disconnesso',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AlfredColors.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+            ),
+          if (profile.isGroup)
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Text(
+                'Gruppo',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AlfredColors.textSecondary,
+                  fontWeight: FontWeight.w600,
                 ),
-              if (profile.isGroup)
-                const Padding(
-                  padding: EdgeInsets.only(top: 2),
-                  child: Text(
-                    'Gruppo',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AlfredColors.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    ),
+              ),
+            ),
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Builder(
+            builder: (buttonContext) => IconButton(
+              icon: const Icon(Icons.share_outlined, size: 22),
+              color: AlfredColors.textSecondary,
+              tooltip: 'Condividi',
+              onPressed: () {
+                final box = buttonContext.findRenderObject() as RenderBox?;
+                final origin = box != null
+                    ? box.localToGlobal(Offset.zero) & box.size
+                    : null;
+                shareShareableProfileLink(
+                  context,
+                  profileForSharing(
+                    profile,
+                    fallbackUsername: manifestUsername,
                   ),
-                ),
-            ],
+                  shareTitle: profile.displayName,
+                  sharePositionOrigin: origin,
+                );
+              },
+            ),
           ),
-        ),
-        Builder(
-          builder: (buttonContext) => IconButton(
-            icon: const Icon(Icons.share_outlined, size: 22),
+          IconButton(
+            icon: const Icon(Icons.logout_outlined, size: 22),
             color: AlfredColors.textSecondary,
-            tooltip: 'Condividi',
-            onPressed: () {
-              final box = buttonContext.findRenderObject() as RenderBox?;
-              final origin = box != null
-                  ? box.localToGlobal(Offset.zero) & box.size
-                  : null;
-              shareShareableProfileLink(
-                context,
-                profileForSharing(
-                  profile,
-                  fallbackUsername: manifestUsername,
-                ),
-                shareTitle: profile.displayName,
-                sharePositionOrigin: origin,
-              );
-            },
+            tooltip: 'Chiudi account',
+            onPressed: () =>
+                context.read<AuthController>().removeAccount(userId),
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.logout_outlined, size: 22),
-          color: AlfredColors.textSecondary,
-          tooltip: 'Chiudi account',
-          onPressed: () => context.read<AuthController>().removeAccount(userId),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

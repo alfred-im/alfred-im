@@ -13,7 +13,7 @@ class ProfileService {
   final SupabaseClient _client;
 
   static const _publicProfileColumns =
-      'id, username, display_name, avatar_url, pronouns, profile_kind';
+      'id, username, display_name, avatar_url, cover_url, pronouns, profile_kind';
 
   static String? normalizeOptional(String? value) {
     if (value == null) return null;
@@ -27,6 +27,8 @@ class ProfileService {
     String? bio,
     String? pronouns,
     String? avatarUrl,
+    String? coverUrl,
+    bool clearCoverUrl = false,
   }) async {
     final row = await _client
         .from('profiles')
@@ -34,7 +36,8 @@ class ProfileService {
           'display_name': displayName.trim(),
           'bio': normalizeOptional(bio),
           'pronouns': normalizeOptional(pronouns),
-          'avatar_url': ?avatarUrl,
+          'avatar_url': avatarUrl,
+          'cover_url': clearCoverUrl ? null : coverUrl,
           'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', userId)

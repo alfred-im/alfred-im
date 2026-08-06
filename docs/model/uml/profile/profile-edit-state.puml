@@ -1,13 +1,14 @@
 @startuml profile-edit-state
 ' Context: profile
 ' SDD: PROM-PROFILE-IDENTITY
-' Revision: 2026-07-19
+' Revision: 2026-08-06
 
 title Profile — ProfileMachine (own profile)
 
 state Idle
 state Saving
 state UploadingAvatar
+state UploadingCover
 
 [*] --> Idle
 
@@ -18,7 +19,10 @@ Saving --> Idle : ProfileSaveFailed
 Idle --> UploadingAvatar : UploadAvatar
 UploadingAvatar --> Saving : SaveProfile
 UploadingAvatar --> Idle : AvatarUploadFailed
-UploadingAvatar --> Idle : AvatarUploadFailed
+
+Idle --> UploadingCover : UploadCover
+UploadingCover --> Saving : SaveProfile
+UploadingCover --> Idle : CoverUploadFailed
 
 note right of Saving
   Policy: RefreshAuthProfile

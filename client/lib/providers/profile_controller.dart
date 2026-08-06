@@ -33,6 +33,8 @@ class ProfileController extends ChangeNotifier {
 
   bool get isUploadingAvatar => _coordinator.isUploadingAvatar;
 
+  bool get isUploadingCover => _coordinator.isUploadingCover;
+
   String? get error => _coordinator.error;
 
   Future<UserProfile> save({
@@ -40,12 +42,16 @@ class ProfileController extends ChangeNotifier {
     String? bio,
     String? pronouns,
     String? avatarUrl,
+    String? coverUrl,
+    bool clearCoverUrl = false,
   }) =>
       _coordinator.save(
         displayName: displayName,
         bio: bio,
         pronouns: pronouns,
         avatarUrl: avatarUrl,
+        coverUrl: coverUrl,
+        clearCoverUrl: clearCoverUrl,
       );
 
   Future<UserProfile> uploadAndSaveAvatar({
@@ -55,6 +61,7 @@ class ProfileController extends ChangeNotifier {
     required String displayName,
     String? bio,
     String? pronouns,
+    String? coverUrl,
   }) =>
       _coordinator.uploadAndSaveAvatar(
         bytes: bytes,
@@ -63,6 +70,26 @@ class ProfileController extends ChangeNotifier {
         displayName: displayName,
         bio: bio,
         pronouns: pronouns,
+        coverUrl: coverUrl,
+      );
+
+  Future<UserProfile> uploadAndSaveCover({
+    required Uint8List bytes,
+    required String extension,
+    required String contentType,
+    required String displayName,
+    String? bio,
+    String? pronouns,
+    String? avatarUrl,
+  }) =>
+      _coordinator.uploadAndSaveCover(
+        bytes: bytes,
+        extension: extension,
+        contentType: contentType,
+        displayName: displayName,
+        bio: bio,
+        pronouns: pronouns,
+        avatarUrl: avatarUrl,
       );
 
   Future<String> uploadAvatar({
@@ -71,6 +98,17 @@ class ProfileController extends ChangeNotifier {
     required String contentType,
   }) =>
       _coordinator.uploadAvatar(
+        bytes: bytes,
+        extension: extension,
+        contentType: contentType,
+      );
+
+  Future<String> uploadCover({
+    required Uint8List bytes,
+    required String extension,
+    required String contentType,
+  }) =>
+      _coordinator.uploadCover(
         bytes: bytes,
         extension: extension,
         contentType: contentType,

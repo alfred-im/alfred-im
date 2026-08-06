@@ -11,7 +11,7 @@ Comandi della **scheda peer** (surfaccia delegata): [peer-profile/commands](../p
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `UpdateOwnProfile` | Utente | Salva nome, bio, pronomi, avatar. |
+| `UpdateOwnProfile` | Utente | Salva nome, bio, pronomi, avatar, copertina. |
 
 ---
 

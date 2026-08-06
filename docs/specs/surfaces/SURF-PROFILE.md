@@ -4,7 +4,7 @@
 |-------|--------|
 | **Superficie ID** | `SURF-PROFILE` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Ultima revisione** | 2026-08-06 |
 | **Promesse** | [SYS-PROFILE](../promises/system/SYS-PROFILE.md) |
 | **PR** | #118, #134 |
 
@@ -19,7 +19,7 @@ Binding UX modifica profilo proprio: form edit, avatar, campi read-only identit�
 | Schermata | `client/lib/screens/profile_screen.dart` |
 | Controller | `ProfileController` — stato save/upload |
 | Servizi | `ProfileService`, `ProfileAvatarService` |
-| Widget condivisi | `ProfileAvatar`, `ProfileIdentityLines` (`profile_identity.dart`) |
+| Widget condivisi | `ProfileAvatar`, `ProfileIdentityLines`, `ProfileCoverHeader` (`profile_identity.dart`, `profile_cover_header.dart`) |
 | Modello | `ProfileSummary`, `UserProfile` |
 
 ---
@@ -32,11 +32,12 @@ Binding UX modifica profilo proprio: form edit, avatar, campi read-only identit�
 |----|----------|
 | **SURF-PROFILE-001** | Email GoTrue: solo lettura in UI profilo; usata per login/recupero |
 | **SURF-PROFILE-002** | Username: `@username` read-only sotto avatar — non modificabile da schermata profilo (scope attuale) |
-| **SURF-PROFILE-003** | Campi editabili: `display_name` (obbligatorio), `bio`, `pronouns`, foto avatar |
-| **SURF-PROFILE-004** | Modello UI unificato `ProfileSummary`: `id`, `displayName`, `username?`, `avatarUrl?`, `pronouns?` |
+| **SURF-PROFILE-003** | Campi editabili: `display_name` (obbligatorio), `bio`, `pronouns`, foto avatar, immagine copertina |
+| **SURF-PROFILE-004** | Modello UI unificato `ProfileSummary`: `id`, `displayName`, `username?`, `avatarUrl?`, `coverUrl?`, `pronouns?` |
 | **SURF-PROFILE-005** | Widget condivisi: `ProfileAvatar` (foto o iniziale colorata), `ProfileIdentityLines` (nome, `@username`, pronomi) |
 | **SURF-PROFILE-006** | Dopo salvataggio: `AuthController.refreshProfile()` → aggiorna manifest account (`OpenAccount.profile`) |
 | **SURF-PROFILE-007** | Foto: tap camera → file picker → upload bucket `avatars` + save profilo |
+| **SURF-PROFILE-008** | Copertina: tap banner → file picker → upload `{userId}/cover.{ext}` + save; pulsante rimuovi → `cover_url` null |
 
 ### SHOULD
 
@@ -45,6 +46,7 @@ Binding UX modifica profilo proprio: form edit, avatar, campi read-only identit�
 | **SURF-PROFILE-008** | Stringhe opzionali (`bio`, `pronouns`) salvate come `null` se vuote dopo trim |
 | **SURF-PROFILE-009** | Fallback avatar: `CircleAvatar` con iniziale da `display_name` e colore deterministico per `id` |
 | **SURF-PROFILE-010** | Pronomi: hint con esempi; bio multilinea |
+| **SURF-PROFILE-011** | Fallback copertina: gradiente charcoal se `coverUrl` assente |
 
 ### MUST NOT
 
