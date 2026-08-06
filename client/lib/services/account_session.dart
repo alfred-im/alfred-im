@@ -378,7 +378,7 @@ class AccountSession {
 
     final row = await client
         .from('profiles')
-        .select('id, display_name, username, avatar_url, pronouns, profile_kind')
+        .select('id, display_name, username, avatar_url, cover_url, pronouns, profile_kind')
         .eq('id', userId)
         .maybeSingle();
 

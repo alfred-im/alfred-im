@@ -49,6 +49,7 @@ storage: chat-media, avatars
 | `display_name` | text | Obbligatorio |
 | `bio` | text | Opzionale |
 | `avatar_url` | text | URL bucket `avatars` |
+| `cover_url` | text | URL copertina bucket `avatars` |
 | `pronouns` | text | Opzionale (#134) |
 | `created_at`, `updated_at` | timestamptz | |
 

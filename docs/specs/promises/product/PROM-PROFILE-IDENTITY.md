@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-PROFILE-IDENTITY` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
+| **Ultima revisione** | 2026-08-06 |
 | **PR origine** | #118 (username/email), #134 (avatar, pronomi, `ProfileSummary`) |
 
 Promessa di prodotto: modello e widget condivisi per identità pubblica (`ProfileSummary`) su sidebar, inbox, chat, manifest multi-account e rubrica.
@@ -26,11 +26,12 @@ Schema backend (`profiles`, bucket `avatars`): [SYS-PROFILE](../system/SYS-PROFI
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PROFILE-IDENTITY-001** | Identità pubblica unificata (id, nome, username opzionale, avatar, pronomi) — coerente in sidebar, inbox, manifest multi-account e rubrica |
-| **PROM-PROFILE-IDENTITY-002** | Widget condivisi per avatar (foto o iniziale) e righe identità (nome, username, pronomi) |
+| **PROM-PROFILE-IDENTITY-001** | Identità pubblica unificata (id, nome, username opzionale, avatar, copertina, pronomi) — coerente in sidebar, inbox, manifest multi-account e rubrica |
+| **PROM-PROFILE-IDENTITY-002** | Widget condivisi per avatar (foto o iniziale), copertina (`ProfileCoverHeader`) e righe identità (nome, username, pronomi) |
 | **PROM-PROFILE-IDENTITY-003** | Dopo salvataggio profilo proprio: identità aggiornata in sidebar e manifest senza riavvio app |
-| **PROM-PROFILE-IDENTITY-004** | Peer in inbox: campi profilo peer (`peer_avatar_url`, `peer_pronouns`) da `list_inbox()` |
-| **PROM-PROFILE-IDENTITY-005** | Risoluzione username → profilo: `find_profile_by_username` ritorna `avatar_url`, `pronouns` |
+| **PROM-PROFILE-IDENTITY-004** | Peer in inbox: campi profilo peer (`peer_avatar_url`, `peer_cover_url`, `peer_pronouns`) da `list_inbox()` |
+| **PROM-PROFILE-IDENTITY-005** | Risoluzione username → profilo: `find_profile_by_username` ritorna `avatar_url`, `cover_url`, `pronouns` |
+| **PROM-PROFILE-IDENTITY-006** | `coverUrl` in `ProfileSummary` e manifest `OpenAccount`; aggiornato dopo save profilo come `avatarUrl` |
 
 ### SHOULD
 
