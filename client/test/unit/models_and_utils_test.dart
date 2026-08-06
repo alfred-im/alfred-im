@@ -116,6 +116,7 @@ void main() {
         'username': 'alice',
         'display_name': 'Alice',
         'avatar_url': 'https://example.com/a.jpg',
+        'cover_url': 'https://example.com/c.jpg',
         'pronouns': 'lei/ella',
       });
 
@@ -123,6 +124,7 @@ void main() {
       expect(summary.handle, '@alice');
       expect(summary.displayName, 'Alice');
       expect(summary.avatarUrl, 'https://example.com/a.jpg');
+      expect(summary.coverUrl, 'https://example.com/c.jpg');
       expect(summary.pronouns, 'lei/ella');
     });
   });
@@ -180,6 +182,7 @@ void main() {
         'unread_count': 2,
         'peer_profile_id': 'peer-1',
         'peer_avatar_url': 'https://example.com/a.jpg',
+        'peer_cover_url': 'https://example.com/c.jpg',
         'peer_pronouns': 'lei/ella',
         'peer_profile_kind': 'group',
       });
@@ -192,6 +195,7 @@ void main() {
       expect(peer.protocol, 'internal');
       expect(peer.lastMessageAt, at);
       expect(peer.profile.avatarUrl, 'https://example.com/a.jpg');
+      expect(peer.profile.coverUrl, 'https://example.com/c.jpg');
       expect(peer.profile.pronouns, 'lei/ella');
       expect(peer.isGroup, isTrue);
     });

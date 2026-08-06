@@ -26,6 +26,8 @@ class _FakeProfileService extends ProfileService {
     String? bio,
     String? pronouns,
     String? avatarUrl,
+    String? coverUrl,
+    bool clearCoverUrl = false,
   }) async {
     lastUpdate = {
       'userId': userId,
@@ -33,6 +35,7 @@ class _FakeProfileService extends ProfileService {
       'bio': bio,
       'pronouns': pronouns,
       'avatarUrl': avatarUrl,
+      'coverUrl': clearCoverUrl ? null : coverUrl,
     };
     return UserProfile(
       summary: ProfileSummary(
@@ -40,6 +43,7 @@ class _FakeProfileService extends ProfileService {
         username: 'user',
         displayName: displayName,
         avatarUrl: avatarUrl,
+        coverUrl: clearCoverUrl ? null : coverUrl,
         pronouns: pronouns,
       ),
       bio: bio,
@@ -60,6 +64,16 @@ class _FakeAvatarService extends ProfileAvatarService {
     required String contentType,
   }) async {
     return 'https://cdn.example/$userId/avatar.$extension';
+  }
+
+  @override
+  Future<String> uploadCover({
+    required Uint8List bytes,
+    required String userId,
+    required String extension,
+    required String contentType,
+  }) async {
+    return 'https://cdn.example/$userId/cover.$extension';
   }
 }
 

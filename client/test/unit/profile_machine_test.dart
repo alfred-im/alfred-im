@@ -16,6 +16,8 @@ class _RecordingProfileEffects implements ProfileEffects {
   String? lastBio;
   String? lastPronouns;
   String? lastAvatarUrl;
+  String? lastCoverUrl;
+  bool lastClearCoverUrl = false;
   Uint8List? lastUploadBytes;
   String? lastUploadExtension;
   String? lastUploadContentType;
@@ -27,12 +29,16 @@ class _RecordingProfileEffects implements ProfileEffects {
     String? bio,
     String? pronouns,
     String? avatarUrl,
+    String? coverUrl,
+    bool clearCoverUrl = false,
   }) async {
     saveCount++;
     lastDisplayName = displayName;
     lastBio = bio;
     lastPronouns = pronouns;
     lastAvatarUrl = avatarUrl;
+    lastCoverUrl = coverUrl;
+    lastClearCoverUrl = clearCoverUrl;
   }
 
   @override
@@ -49,6 +55,22 @@ class _RecordingProfileEffects implements ProfileEffects {
       throw Exception('upload failed');
     }
     return 'https://cdn.example/avatar.png';
+  }
+
+  @override
+  Future<String> uploadCover({
+    required Uint8List bytes,
+    required String extension,
+    required String contentType,
+  }) async {
+    uploadCount++;
+    lastUploadBytes = bytes;
+    lastUploadExtension = extension;
+    lastUploadContentType = contentType;
+    if (uploadThrows) {
+      throw Exception('upload failed');
+    }
+    return 'https://cdn.example/cover.png';
   }
 
   @override

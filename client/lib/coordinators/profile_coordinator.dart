@@ -14,10 +14,11 @@ import '../services/profile_service.dart';
 class ProfileEditUiState {
   bool isSaving = false;
   bool isUploadingAvatar = false;
+  bool isUploadingCover = false;
   String? error;
 }
 
-/// Orchestrazione save/upload avatar profilo proprio.
+/// Orchestrazione save/upload avatar/cover profilo proprio.
 class ProfileCoordinator {
   ProfileCoordinator({
     required this._userId,
@@ -41,6 +42,7 @@ class ProfileCoordinator {
 
   bool get isSaving => state.isSaving;
   bool get isUploadingAvatar => state.isUploadingAvatar;
+  bool get isUploadingCover => state.isUploadingCover;
   String? get error => state.error;
 
   Future<UserProfile> save({
@@ -48,6 +50,8 @@ class ProfileCoordinator {
     String? bio,
     String? pronouns,
     String? avatarUrl,
+    String? coverUrl,
+    bool clearCoverUrl = false,
   }) async {
     state.error = null;
     _notify();
@@ -57,6 +61,8 @@ class ProfileCoordinator {
         bio: bio,
         pronouns: pronouns,
         avatarUrl: avatarUrl,
+        coverUrl: coverUrl,
+        clearCoverUrl: clearCoverUrl,
       ),
     );
     if (state.error != null) {
@@ -74,6 +80,7 @@ class ProfileCoordinator {
     required String displayName,
     String? bio,
     String? pronouns,
+    String? coverUrl,
   }) async {
     state.error = null;
     _notify();
@@ -85,6 +92,35 @@ class ProfileCoordinator {
         displayName: displayName,
         bio: bio,
         pronouns: pronouns,
+        coverUrl: coverUrl,
+      ),
+    );
+    if (state.error != null) {
+      throw StateError(state.error!);
+    }
+    return _lastSavedProfile!;
+  }
+
+  Future<UserProfile> uploadAndSaveCover({
+    required Uint8List bytes,
+    required String extension,
+    required String contentType,
+    required String displayName,
+    String? bio,
+    String? pronouns,
+    String? avatarUrl,
+  }) async {
+    state.error = null;
+    _notify();
+    await _machine.send(
+      UploadCover(
+        bytes: bytes,
+        extension: extension,
+        contentType: contentType,
+        displayName: displayName,
+        bio: bio,
+        pronouns: pronouns,
+        avatarUrl: avatarUrl,
       ),
     );
     if (state.error != null) {
@@ -117,13 +153,41 @@ class ProfileCoordinator {
     }
   }
 
+  Future<String> uploadCover({
+    required Uint8List bytes,
+    required String extension,
+    required String contentType,
+  }) async {
+    state.error = null;
+    state.isUploadingCover = true;
+    _notify();
+    try {
+      return await _avatarService.uploadCover(
+        bytes: bytes,
+        userId: _userId,
+        extension: extension,
+        contentType: contentType,
+      );
+    } catch (e) {
+      state.error = e.toString();
+      rethrow;
+    } finally {
+      state.isUploadingCover = false;
+      _notify();
+    }
+  }
+
   Future<void> refreshAuthProfile() async {
     await _onRefreshAuthProfile?.call();
   }
 
   void _syncSavingFromMachine() {
     state.isSaving = _machine.editState == ProfileEditState.saving ||
+        _machine.editState == ProfileEditState.uploadingAvatar ||
+        _machine.editState == ProfileEditState.uploadingCover;
+    state.isUploadingAvatar =
         _machine.editState == ProfileEditState.uploadingAvatar;
+    state.isUploadingCover = _machine.editState == ProfileEditState.uploadingCover;
   }
 
   void _notify() => _onStateChanged();
@@ -142,6 +206,8 @@ class _LiveProfileEffects implements ProfileEffects {
     String? bio,
     String? pronouns,
     String? avatarUrl,
+    String? coverUrl,
+    bool clearCoverUrl = false,
   }) async {
     try {
       _c._lastSavedProfile = await _c._profileService.updateProfile(
@@ -150,6 +216,8 @@ class _LiveProfileEffects implements ProfileEffects {
         bio: bio,
         pronouns: pronouns,
         avatarUrl: avatarUrl,
+        coverUrl: coverUrl,
+        clearCoverUrl: clearCoverUrl,
       );
       _c.state.error = null;
       await _c._machine.send(const ProfileSaved());
@@ -170,6 +238,19 @@ class _LiveProfileEffects implements ProfileEffects {
     required String contentType,
   }) {
     return _c.uploadAvatar(
+      bytes: bytes,
+      extension: extension,
+      contentType: contentType,
+    );
+  }
+
+  @override
+  Future<String> uploadCover({
+    required Uint8List bytes,
+    required String extension,
+    required String contentType,
+  }) {
+    return _c.uploadCover(
       bytes: bytes,
       extension: extension,
       contentType: contentType,
