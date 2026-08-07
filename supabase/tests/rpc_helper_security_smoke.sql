@@ -39,5 +39,21 @@ BEGIN
     RAISE EXCEPTION 'alfred_delivery.erogate_group_message must not be executable by authenticated';
   END IF;
 
+  IF has_function_privilege(
+    'authenticated',
+    'public.mailbox_is_message_participant(uuid, uuid)',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'mailbox_is_message_participant must not be executable by authenticated';
+  END IF;
+
+  IF has_function_privilege(
+    'authenticated',
+    'public.message_reaction_latest_fact(uuid, uuid)',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'message_reaction_latest_fact must not be executable by authenticated';
+  END IF;
+
   RAISE NOTICE 'rpc_helper_security_smoke_ok';
 END $$;

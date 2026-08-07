@@ -1,7 +1,7 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-07-25  
-**Status**: `implemented` su `main` (migrazioni fino a `20260725100000`, 40 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-08-07  
+**Status**: `implemented` su `main` (migrazioni fino a `20260807200000`, 43 totali in `supabase/migrations/`)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
@@ -16,6 +16,7 @@ profiles 1──* contacts (owner_id)
 profiles 1──* reception_allowlist (owner_id → allowed_profile_id)
 profiles 1──* messages (owner_id = archivio; author_id = autore contenuto)
 messages *── peer profiles (peer_profile_id denormalizzato)
+logical_message_id (λ) 1──* message_reaction_facts (append-only; nessuna FK — λ non univoco su messages)
 messages 1──* outbox (ogni invio/lettura può accodare eventi)
 profiles 1──* sync_cursors (profile_id, peer_profile_id, protocol, cursor_key)
 profiles 1──* push_subscriptions (user_id, device_id)
@@ -36,6 +37,7 @@ storage: chat-media, avatars
 | `message_delivery_status` | `pending`, `sent`, `delivered`, `read`, `failed` | Enum legacy (pre-mailbox); **non** usato da `outbox`/`bridge_jobs` su `main` |
 | `queue_status` | `queued`, `processing`, `completed`, `failed` | `outbox`, `bridge_jobs` |
 | `profile_kind` | `user`, `group` | Tipo account — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
+| `message_reaction_kind` | `applied`, `withdrawn` | Fatto reaction su λ — [messaging](../../../domain/messaging/commands-and-events.md) |
 
 ---
 
@@ -127,6 +129,29 @@ storage: chat-media, avatars
 **RLS**: SELECT e UPDATE `owner_id = auth.uid()` — **nessuna** policy INSERT (insert solo via RPC `SECURITY DEFINER`).
 
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md).
+
+---
+
+## `message_reaction_facts`
+
+Fatti immutabili (append-only) sulle reaction — ancorati a `logical_message_id` (λ), non a `messages.id`.
+
+| Colonna | Tipo | Note |
+|---------|------|------|
+| `id` | uuid PK | Identità del fatto |
+| `logical_message_id` | uuid NOT NULL | λ del messaggio target |
+| `reactor_id` | uuid FK → profiles | Chi compie l'azione |
+| `kind` | message_reaction_kind | `applied` \| `withdrawn` |
+| `emoji` | text nullable | Obbligatorio se `applied`; assente se `withdrawn` (max 32 char) |
+| `occurred_at` | timestamptz | default `now()` |
+
+**CHECK**: `applied` ↔ `emoji` valorizzato; `withdrawn` ↔ `emoji` null.
+
+**RLS**: SELECT se esiste `messages` con stesso λ e `owner_id = auth.uid()` — **nessuna** policy INSERT/UPDATE/DELETE (solo RPC `SECURITY DEFINER`).
+
+**Realtime**: publication `supabase_realtime`.
+
+**Dominio**: [messaging/commands-and-events.md](../../../domain/messaging/commands-and-events.md).
 
 ---
 

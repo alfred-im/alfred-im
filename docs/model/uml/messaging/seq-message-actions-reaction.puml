@@ -1,0 +1,41 @@
+@startuml seq-message-actions-reaction
+' Context: messaging
+' Profile: client
+' Revision: 2026-08-07
+
+title Menu messaggio — applica reaction
+
+actor Utente
+participant "UI" as UI
+participant "MessageActionsMachine" as MAM
+participant "MessagingMachine" as MM
+participant "AccountManager" as AM
+participant "Supabase" as SB
+
+Utente -> UI : tap messaggio
+UI -> MAM : OpenMessageActions
+MAM --> UI : MessageActionsOpened
+
+Utente -> UI : sceglie emoji
+UI -> MAM : ApplyReaction
+
+alt logical_message_id assente (pending)
+  MAM --> UI : no-op
+else emoji già attiva (idempotenza)
+  MAM --> UI : no-op
+else nuovo fatto
+  MAM -> AM : runAsOwner
+  AM -> SB : ApplyReaction
+  SB --> AM : ReactionApplied
+  AM --> MAM : ReactionApplied
+  MAM -> MM : ConversationUpdated
+  MM --> UI : ReactionSummary aggiornato
+end
+
+opt chiudi menu
+  Utente -> UI : dismiss
+  UI -> MAM : CloseMessageActions
+  MAM --> UI : MessageActionsClosed
+end
+
+@enduml

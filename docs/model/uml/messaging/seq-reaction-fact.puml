@@ -1,0 +1,33 @@
+@startuml seq-reaction-fact
+' Context: messaging
+' Profile: platform
+' Revision: 2026-08-07
+
+title seq-reaction-fact — persistenza append-only
+
+participant "AccountBoundary" as AB
+participant "MailboxArchive" as MSG
+database "ReactionFactStore" as RFS
+
+AB -> MSG : assertParticipant(logical_message_id)
+alt non partecipante
+  MSG --> AB : ReactionRejected
+else partecipante
+  MSG --> AB : ok
+  AB -> RFS : InsertReactionFact
+  note right of RFS
+    kind = applied | withdrawn
+    emoji se applied
+    occurred_at = now()
+    solo INSERT — mai UPDATE/DELETE
+  end note
+  RFS --> AB : ReactionFactRecorded
+  AB --> AB : ReactionApplied | ReactionWithdrawn
+end
+
+note over MSG, RFS
+  Stato corrente e ReactionSummary
+  derivati dai fatti — non persistiti.
+end note
+
+@enduml

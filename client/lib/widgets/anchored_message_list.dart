@@ -22,6 +22,8 @@ class AnchoredMessageList extends StatefulWidget {
     this.hasMoreOlder = false,
     this.isLoadingOlder = false,
     this.onLoadOlder,
+    this.onMessageTap,
+    this.onReactionSummaryTap,
   });
 
   final List<ChatMessage> messages;
@@ -33,6 +35,8 @@ class AnchoredMessageList extends StatefulWidget {
   final bool hasMoreOlder;
   final bool isLoadingOlder;
   final VoidCallback? onLoadOlder;
+  final void Function(ChatMessage message)? onMessageTap;
+  final void Function(ChatMessage message, String emoji)? onReactionSummaryTap;
 
   @override
   State<AnchoredMessageList> createState() => _AnchoredMessageListState();
@@ -224,6 +228,13 @@ class _AnchoredMessageListState extends State<AnchoredMessageList> {
               showAuthorLabel: widget.showAuthorLabels,
               viewerUsername: widget.viewerUsername,
               onMentionTap: widget.onMentionTap,
+              onTap: widget.onMessageTap != null && message.canReact
+                  ? () => widget.onMessageTap!(message)
+                  : null,
+              onReactionSummaryTap: widget.onReactionSummaryTap == null
+                  ? null
+                  : (emoji) =>
+                      widget.onReactionSummaryTap!(message, emoji),
               onRetry: message.canRetry && widget.onRetryMessage != null
                   ? () => widget.onRetryMessage!(message.id)
                   : null,

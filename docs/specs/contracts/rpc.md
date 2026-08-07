@@ -196,6 +196,49 @@ Effetti (solo confine lettore — [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-
 
 ---
 
+## `apply_message_reaction`
+
+```sql
+apply_message_reaction(p_logical_message_id uuid, p_emoji text) → message_reaction_facts
+```
+
+Registra un fatto `applied` su λ. Richiede partecipazione (`messages.owner_id = auth.uid()` per quel λ).
+
+- **Idempotenza**: stessa emoji già attiva → ritorna l'ultimo fatto `applied` senza nuovo INSERT.
+- **Cambio emoji**: nuovo fatto `applied`; i fatti precedenti restano nello storico.
+
+**Migrazione**: `20260807200000_message_reaction_facts.sql`.
+
+---
+
+## `withdraw_message_reaction`
+
+```sql
+withdraw_message_reaction(p_logical_message_id uuid) → message_reaction_facts | null
+```
+
+Registra un fatto `withdrawn` su λ. **No-op** (ritorna `null`) se nessuna reaction attiva.
+
+---
+
+## `list_message_reactions`
+
+```sql
+list_message_reactions(p_logical_message_ids uuid[]) → table (
+  logical_message_id uuid,
+  emoji text,
+  reaction_count bigint,
+  reactor_ids uuid[],
+  includes_me boolean
+)
+```
+
+Stato corrente **derivato**: ultimo fatto per `(λ, reactor_id)`; solo `applied` entra nell'aggregato.
+
+Solo λ presenti nel mio archivio (`owner_id = auth.uid()`).
+
+---
+
 ## `find_profile_by_username`
 
 ```sql
@@ -289,6 +332,7 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 | `supabase/tests/reception_outbound_gate_smoke.sql` | Errore outbound se destinatario ∉ allow list mittente |
 | `supabase/tests/rpc_helper_security_smoke.sql` | Helper interni non eseguibili da `authenticated` |
 | `supabase/tests/group_schema_smoke.sql` | `list_owner_messages`, `profile_kind`, `broadcast_message_to_allowlist` |
+| `supabase/tests/message_reaction_facts_smoke.sql` | Apply/withdraw/idempotenza/cambio emoji su λ |
 
 Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/test.sh e2e-multi`
 
@@ -304,6 +348,9 @@ Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/te
 | `list_peer_messages` | `MessageService.fetchPeerMessages` |
 | `list_owner_messages` | `MessageService.fetchOwnerMessages` |
 | `mark_peer_read` | `InboxService.markPeerRead` |
+| `apply_message_reaction` | `PeerMessageService.applyReaction` |
+| `withdraw_message_reaction` | `PeerMessageService.withdrawReaction` |
+| `list_message_reactions` | `PeerMessageService.fetchReactionSummaries` |
 | `find_profile_by_username` | `ComposeService` / profile lookup |
 | `is_username_available` | Registrazione / validazione username |
 | `search_profiles` | `ContactService.searchProfiles` |

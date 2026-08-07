@@ -1,8 +1,8 @@
 @startuml messaging-state
 ' Context: messaging
 ' Profile: client
-' Revision: 2026-07-27
-' Statechart: ConversationLoadMachine, OutboundSendMachine, RealtimeAttachmentMachine
+' Revision: 2026-08-07
+' Statechart: ConversationLoadMachine, OutboundSendMachine, RealtimeAttachmentMachine, MessageActionsMachine
 
 title Messaging — stato conversazione (composite)
 
@@ -40,12 +40,31 @@ state RealtimeAttachment {
   Attached --> Detached : CloseConversation
 }
 
+state MessageActions {
+  state Closed
+  state Open
+
+  [*] --> Closed
+  Closed --> Open : OpenMessageActions
+  Open --> Closed : CloseMessageActions
+  Open --> Open : ApplyReaction
+  Open --> Open : WithdrawReaction
+}
+
 note right of Ready
   ConversationUpdated mentre Attached
-  (RealtimeReceived: INSERT + UPDATE spunte)
+  (RealtimeReceived: INSERT messaggi + fatti reaction;
+   UPDATE spunte — eccezione append-only)
   LoadOlderMessages: side-effect in Ready
   (hasMoreOlder / isLoadingOlder)
   markRead: side-effect all'apertura
+end note
+
+note right of Open
+  MessageActionsOpened / MessageActionsClosed
+  ReactionApplied / ReactionWithdrawn
+  → merge ReactionSummary in ConversationMessageStore
+  ApplyReaction richiede logical_message_id (no pending)
 end note
 
 @enduml

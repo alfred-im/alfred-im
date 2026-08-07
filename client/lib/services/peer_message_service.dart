@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/voice_config.dart';
 import '../models/message.dart';
+import '../models/reaction_summary.dart';
 import '../utils/mailbox_message_filter.dart';
 
 /// RPC e realtime messaggi 1:1 verso un profilo peer.
@@ -44,6 +45,45 @@ class PeerMessageService {
         )
         .where((m) => m.hasRenderableContent)
         .toList();
+  }
+
+  Future<Map<String, List<ReactionSummary>>> fetchReactionSummaries(
+    List<String> logicalMessageIds,
+  ) async {
+    if (logicalMessageIds.isEmpty) return {};
+    final rows = await _client.rpc(
+      'list_message_reactions',
+      params: {'p_logical_message_ids': logicalMessageIds},
+    );
+    final rawRows = (rows as List<dynamic>).cast<Map<String, dynamic>>();
+    final grouped = <String, List<ReactionSummary>>{};
+    for (final row in rawRows) {
+      final lambda = row['logical_message_id'] as String;
+      grouped
+          .putIfAbsent(lambda, () => [])
+          .add(ReactionSummary.fromJson(row));
+    }
+    return grouped;
+  }
+
+  Future<void> applyReaction({
+    required String logicalMessageId,
+    required String emoji,
+  }) async {
+    await _client.rpc(
+      'apply_message_reaction',
+      params: {
+        'p_logical_message_id': logicalMessageId,
+        'p_emoji': emoji,
+      },
+    );
+  }
+
+  Future<void> withdrawReaction({required String logicalMessageId}) async {
+    await _client.rpc(
+      'withdraw_message_reaction',
+      params: {'p_logical_message_id': logicalMessageId},
+    );
   }
 
   Future<ChatMessage> sendToProfile({
@@ -214,6 +254,7 @@ class PeerMessageService {
     required String currentUserId,
     required String peerProfileId,
     required void Function(ChatMessage message) onMessage,
+    void Function(String logicalMessageId)? onReactionFact,
   }) {
     bool isRelevant(Map<String, dynamic> record) =>
         isMailboxPeerMessageRelevant(
@@ -234,7 +275,16 @@ class PeerMessageService {
       onMessage(message);
     }
 
-    return _client
+    void handleReaction(PostgresChangePayload payload) {
+      if (onReactionFact == null) return;
+      final record = payload.newRecord;
+      if (record.isEmpty) return;
+      final lambda = record['logical_message_id'] as String?;
+      if (lambda == null || lambda.isEmpty) return;
+      onReactionFact(lambda);
+    }
+
+    final channel = _client
         .channel('messages-peer-$currentUserId-$peerProfileId')
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
@@ -257,8 +307,18 @@ class PeerMessageService {
             value: currentUserId,
           ),
           callback: handle,
-        )
-        .subscribe();
+        );
+
+    if (onReactionFact != null) {
+      channel.onPostgresChanges(
+        event: PostgresChangeEvent.insert,
+        schema: 'public',
+        table: 'message_reaction_facts',
+        callback: handleReaction,
+      );
+    }
+
+    return channel.subscribe();
   }
 
   void disposeChannel(RealtimeChannel? channel) {

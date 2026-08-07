@@ -7,7 +7,7 @@
 | Livello | File |
 |---------|------|
 | Dominio | [glossary.md](./glossary.md), [commands-and-events.md](./commands-and-events.md), [conversation-data-plane.md](./conversation-data-plane.md) |
-| UML | [messaging-state.puml](../../model/uml/messaging/messaging-state.puml) |
+| UML | [messaging-state.puml](../../model/uml/messaging/messaging-state.puml), [seq-message-actions-reaction.puml](../../model/uml/messaging/seq-message-actions-reaction.puml), [seq-reaction-fact.puml](../../model/uml/messaging/seq-reaction-fact.puml) |
 | Statechart | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/) |
 
 ## Mapping dominio → implementazione
@@ -24,6 +24,10 @@
 | `RefreshConversation` | `RefreshConversation` | `MessagingCoordinator.reload()` |
 | `LoadOlderMessages` | — (side-effect in `Ready`) | `MessagingCoordinator.loadOlderMessages()` |
 | `CloseConversation` | `DetachRealtime` | `MessagingCoordinator.dispose()` |
+| `OpenMessageActions` | `OpenMessageActions` | tap bolla → `MessageActionsMachine` |
+| `CloseMessageActions` | `CloseMessageActions` | dismiss menu |
+| `ApplyReaction` | `ApplyReaction` | `PeerMessageService.applyReaction` |
+| `WithdrawReaction` | `WithdrawReaction` | `PeerMessageService.withdrawReaction` |
 
 ### Eventi
 
@@ -33,7 +37,11 @@
 | `ConversationUnavailable` | `ConversationUnavailable` | `ConversationLoadMachine` → `sessionBlocked` |
 | `ContentSent` | `ContentSent` | `notifySendEnded(false)` |
 | `ContentSendFailed` | `ContentSendFailed` | `notifySendEnded(true)` |
-| `ConversationUpdated` | `RealtimeReceived` | merge in `ConversationMessageStore` (INSERT messaggi + UPDATE spunte) |
+| `ConversationUpdated` | `RealtimeReceived` | merge in `ConversationMessageStore` (INSERT messaggi + fatti reaction + UPDATE spunte) |
+| `MessageActionsOpened` | `MessageActionsOpened` | `MessagesController.openMessageActions` |
+| `MessageActionsClosed` | `MessageActionsClosed` | `MessagesController.closeMessageActions` |
+| `ReactionApplied` | `ReactionApplied` | `MessagingCoordinator.applyReaction` |
+| `ReactionWithdrawn` | `ReactionWithdrawn` | `MessagingCoordinator.withdrawReaction` |
 
 Eventi statechart **solo interni** (non in dominio): `LoadFailed` (errore fetch recuperabile → `ready` con banner), `QueueEmptied`, `FailedQueueRestored`.
 
@@ -49,6 +57,8 @@ Eventi statechart **solo interni** (non in dominio): `LoadFailed` (errore fetch 
 | `FailedQueue` | `failedQueue` |
 | `Detached` | `detached` |
 | `Attached` | `attached` |
+| `Closed` (MessageActions) | `closed` |
+| `Open` (MessageActions) | `open` |
 
 ### Componenti
 

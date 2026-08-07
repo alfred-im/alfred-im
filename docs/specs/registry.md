@@ -48,6 +48,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **PROM-PUSH-NOTIFY** | Push multi-device / multi-account, anteprima, soppressione, **politica sync** (amend) | `implemented` | [PROM-PUSH-NOTIFY.md](./promises/product/PROM-PUSH-NOTIFY.md) |
 | **PROM-CONVERSATION-SCOPE** | Ambito unico conversazione attiva (account + peer + sessione) | `implemented` | [PROM-CONVERSATION-SCOPE.md](./promises/product/PROM-CONVERSATION-SCOPE.md) |
 | **PROM-MESSAGE-MENTION** | Tag `@username` cliccabili in body messaggio | `approved` | [PROM-MESSAGE-MENTION.md](./promises/product/PROM-MESSAGE-MENTION.md) |
+| **PROM-MESSAGE-REACTIONS** | Reaction emoji su messaggi (menu tap, append-only) | `approved` | [PROM-MESSAGE-REACTIONS.md](./promises/product/PROM-MESSAGE-REACTIONS.md) |
 
 ---
 

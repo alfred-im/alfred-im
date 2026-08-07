@@ -142,7 +142,10 @@ class MessagingCoordinator {
     if (realtimeMachine.state == RealtimeAttachmentState.attached) {
       return;
     }
-    _channel = effects.attachRealtime(_handleRealtimeMessage);
+    _channel = effects.attachRealtime(
+      _handleRealtimeMessage,
+      onReactionFact: _handleReactionFact,
+    );
     realtimeMachine.send(const AttachRealtime());
     _notify();
   }
@@ -153,6 +156,19 @@ class MessagingCoordinator {
     realtimeMachine.send(const DetachRealtime());
     _notify();
   }
+
+  void _handleReactionFact(String logicalMessageId) {
+    unawaited(effects.refreshReactionsForLogicalId(logicalMessageId));
+  }
+
+  Future<void> applyReaction({
+    required String logicalMessageId,
+    required String emoji,
+  }) =>
+      effects.applyReaction(logicalMessageId: logicalMessageId, emoji: emoji);
+
+  Future<void> withdrawReaction({required String logicalMessageId}) =>
+      effects.withdrawReaction(logicalMessageId: logicalMessageId);
 
   void _handleRealtimeMessage(ChatMessage message) {
     realtimeMachine.send(RealtimeReceived(message));

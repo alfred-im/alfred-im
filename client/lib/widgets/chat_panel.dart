@@ -17,6 +17,7 @@ import 'peer_profile_overlay.dart';
 import 'profile_identity.dart';
 import 'anchored_message_list.dart';
 import 'chat_input_bar.dart';
+import 'message_action_menu.dart';
 
 /// Ingresso chat: header peer + spinner, senza [MessagesController].
 class ChatIngressPanel extends StatelessWidget {
@@ -108,6 +109,19 @@ class ChatPanel extends StatelessWidget {
                     ? () => unawaited(messagesController.loadOlderMessages())
                     : null,
                 onRetryMessage: messagesController.retryMessage,
+                onMessageTap: (message) => unawaited(
+                  showMessageActionMenu(
+                    context: context,
+                    message: message,
+                    controller: messagesController,
+                  ),
+                ),
+                onReactionSummaryTap: (message, emoji) => unawaited(
+                  messagesController.applyReaction(
+                    message: message,
+                    emoji: emoji,
+                  ),
+                ),
               ),
             ),
           ChatInputBar(

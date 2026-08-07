@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 
 import '../machines/messaging/conversation_message_store.dart';
 import '../machines/messaging/messaging_conversation_state.dart';
+import '../machines/messaging/message_actions_machine.dart';
 import '../machines/messaging/messaging_coordinator.dart';
 import '../machines/messaging/messaging_effects.dart';
 import '../models/conversation_scope.dart';
@@ -90,6 +91,7 @@ class MessagesController extends ChangeNotifier {
   late final MessagingConversationState _state;
   late final MessagesControllerEffects _effects;
   late final MessagingCoordinator _coordinator;
+  final MessageActionsMachine messageActionsMachine = MessageActionsMachine();
   bool _notifierDisposed = false;
 
   List<ChatMessage> get messages => _coordinator.messages;
@@ -175,6 +177,38 @@ class MessagesController extends ChangeNotifier {
 
   Future<void> retryMessage(String clientId) =>
       _coordinator.retryMessage(clientId);
+
+  void openMessageActions(ChatMessage message) {
+    if (!message.canReact) return;
+    messageActionsMachine.send(OpenMessageActions(message.id));
+    notifyListeners();
+  }
+
+  void closeMessageActions() {
+    messageActionsMachine.send(const CloseMessageActions());
+    notifyListeners();
+  }
+
+  Future<void> applyReaction({
+    required ChatMessage message,
+    required String emoji,
+  }) async {
+    final lambda = message.logicalMessageId;
+    if (lambda == null) return;
+    final mine = message.reactions.where((r) => r.includesMe).toList();
+    if (mine.length == 1 &&
+        mine.first.emoji == emoji &&
+        mine.first.count == 1) {
+      await _coordinator.withdrawReaction(logicalMessageId: lambda);
+    } else {
+      await _coordinator.applyReaction(
+        logicalMessageId: lambda,
+        emoji: emoji,
+      );
+    }
+    messageActionsMachine.send(const CloseMessageActions());
+    notifyListeners();
+  }
 
   @override
   void notifyListeners() {

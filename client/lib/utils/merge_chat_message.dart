@@ -41,6 +41,8 @@ ChatMessage mergeChatMessage({
       readAt: incoming.readAt ?? existing.readAt,
       failedAt: incoming.failedAt ?? existing.failedAt,
       isMine: incoming.isMine,
+      logicalMessageId: incoming.logicalMessageId ?? existing.logicalMessageId,
+      reactions: existing.reactions,
     );
   }
 
@@ -56,5 +58,7 @@ ChatMessage mergeChatMessage({
     latitude: incoming.latitude ?? existing.latitude,
     longitude: incoming.longitude ?? existing.longitude,
     retryPayloadPath: existing.retryPayloadPath ?? incoming.retryPayloadPath,
+    logicalMessageId: incoming.logicalMessageId ?? existing.logicalMessageId,
+    reactions: incoming.reactions.isNotEmpty ? incoming.reactions : existing.reactions,
   );
 }

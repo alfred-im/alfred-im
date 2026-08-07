@@ -29,6 +29,7 @@ import '../../utils/prepare_image_for_upload.dart';
 import '../../utils/conversation_session_access.dart';
 import '../../utils/diagnostic_log.dart';
 import '../../utils/video_duration.dart';
+import '../../utils/message_reactions_merge.dart';
 import '../../utils/video_file_extension.dart';
 import 'conversation_message_store.dart';
 import 'messaging_conversation_state.dart';
@@ -48,7 +49,16 @@ abstract class MessagingEffects {
   Future<void> enrichAuthorNamesIfNeeded();
   bool get hasGroupPeerAuthorEnrichment;
   Future<void> markRead();
-  RealtimeChannel? attachRealtime(void Function(ChatMessage message) onMessage);
+  RealtimeChannel? attachRealtime(
+    void Function(ChatMessage message) onMessage, {
+    void Function(String logicalMessageId)? onReactionFact,
+  });
+  Future<void> applyReaction({
+    required String logicalMessageId,
+    required String emoji,
+  });
+  Future<void> withdrawReaction({required String logicalMessageId});
+  Future<void> refreshReactionsForLogicalId(String logicalMessageId);
   void disposeRealtime(RealtimeChannel? channel);
   void startRetryTimer(void Function() onTick);
   void stopRetryTimer();
@@ -217,7 +227,9 @@ class MessagesControllerEffects implements MessagingEffects {
       return false;
     }
     final enriched = dedupeMessages(
-      await _enrichMessages(loaded.map(withTimeLabel).toList()),
+      await _hydrateReactions(
+        await _enrichMessages(loaded.map(withTimeLabel).toList()),
+      ),
     );
     return messageStore.applyLoadedMessages(
       scope,
@@ -261,7 +273,9 @@ class MessagesControllerEffects implements MessagingEffects {
     if (gen != _fetchGeneration || _disposed) return false;
     if (!_scopeIsActive()) return false;
 
-    final enriched = await _enrichMessages(loaded.map(withTimeLabel).toList());
+    final enriched = await _hydrateReactions(
+      await _enrichMessages(loaded.map(withTimeLabel).toList()),
+    );
     final merged = prependOlderMessages(
       existing: snapshot.messages,
       older: enriched,
@@ -284,8 +298,59 @@ class MessagesControllerEffects implements MessagingEffects {
     _onChanged();
   }
   @override Future<void> markRead() => inboxService.markRead(peerProfileId);
+
+  Future<List<ChatMessage>> _hydrateReactions(List<ChatMessage> messages) async {
+    final ids = collectLogicalMessageIds(messages);
+    if (ids.isEmpty) return messages;
+    final summaries = await messageService.peer.fetchReactionSummaries(ids);
+    return attachReactionsToMessages(messages, summaries);
+  }
+
   @override
-  RealtimeChannel? attachRealtime(void Function(ChatMessage message) onMessage) {
+  Future<void> refreshReactionsForLogicalId(String logicalMessageId) async {
+    if (!_scopeIsActive()) return;
+    final summaries =
+        await messageService.peer.fetchReactionSummaries([logicalMessageId]);
+    final reactions = summaries[logicalMessageId] ?? const [];
+    _mutateMessages(
+      (messages) => messages
+          .map(
+            (message) => message.logicalMessageId == logicalMessageId
+                ? message.copyWith(reactions: reactions)
+                : message,
+          )
+          .toList(),
+    );
+    _onChanged();
+  }
+
+  @override
+  Future<void> applyReaction({
+    required String logicalMessageId,
+    required String emoji,
+  }) async {
+    if (!_scopeIsActive()) return;
+    await messageService.peer.applyReaction(
+      logicalMessageId: logicalMessageId,
+      emoji: emoji,
+    );
+    await refreshReactionsForLogicalId(logicalMessageId);
+  }
+
+  @override
+  Future<void> withdrawReaction({required String logicalMessageId}) async {
+    if (!_scopeIsActive()) return;
+    await messageService.peer.withdrawReaction(
+      logicalMessageId: logicalMessageId,
+    );
+    await refreshReactionsForLogicalId(logicalMessageId);
+  }
+
+  @override
+  RealtimeChannel? attachRealtime(
+    void Function(ChatMessage message) onMessage, {
+    void Function(String logicalMessageId)? onReactionFact,
+  }) {
     return messageService.subscribeToPeerMessages(
       currentUserId: userId,
       peerProfileId: peerProfileId,
@@ -293,6 +358,12 @@ class MessagesControllerEffects implements MessagingEffects {
         if (!_scopeIsActive()) return;
         onMessage(message);
       },
+      onReactionFact: onReactionFact == null
+          ? null
+          : (logicalMessageId) {
+              if (!_scopeIsActive()) return;
+              onReactionFact(logicalMessageId);
+            },
     );
   }
   @override void disposeRealtime(RealtimeChannel? channel) => messageService.disposeChannel(channel);
