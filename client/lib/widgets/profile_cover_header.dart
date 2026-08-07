@@ -108,12 +108,12 @@ class ProfileCoverHeader extends StatelessWidget {
                   color: AlfredColors.panel,
                   padding: EdgeInsets.fromLTRB(
                     _compactIdentityLeftPadding,
-                    36,
-                    8,
+                    32,
+                    4,
                     12,
                   ),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
                         child: Column(
@@ -150,6 +150,7 @@ class ProfileCoverHeader extends StatelessWidget {
                 fontSize: _avatarFontSize,
                 onTap: onAvatarTap,
                 overlay: avatarOverlay,
+                compact: true,
               ),
             ),
           ],
@@ -546,6 +547,7 @@ class _AvatarFrame extends StatelessWidget {
     required this.fontSize,
     this.onTap,
     this.overlay,
+    this.compact = false,
   });
 
   final ProfileSummary profile;
@@ -553,24 +555,35 @@ class _AvatarFrame extends StatelessWidget {
   final double fontSize;
   final VoidCallback? onTap;
   final Widget? overlay;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    Widget avatar = Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.85),
-          width: 3,
-        ),
+    final decoration = BoxDecoration(
+      shape: BoxShape.circle,
+      boxShadow: compact
+          ? [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.16),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ]
+          : [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+      border: Border.all(
+        color: Colors.white,
+        width: compact ? 2 : 3,
       ),
+    );
+
+    Widget avatar = DecoratedBox(
+      decoration: decoration,
       child: ProfileAvatar(
         profile: profile,
         radius: radius,
