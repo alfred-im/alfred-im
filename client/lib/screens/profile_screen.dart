@@ -13,6 +13,8 @@ import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
 import '../providers/profile_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/image_bytes.dart';
+import '../utils/prepare_image_for_upload.dart';
 import '../widgets/profile_cover_header.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -92,15 +94,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final bytes = file?.bytes;
     if (bytes == null || bytes.isEmpty) return;
 
-    final extension = _imageExtension(file?.extension);
-    final contentType = _imageContentType(extension);
-
     try {
+      final normalized = await prepareImageForUpload(Uint8List.fromList(bytes));
       if (forCover) {
         final saved = await profileController.uploadAndSaveCover(
-          bytes: Uint8List.fromList(bytes),
-          extension: extension,
-          contentType: contentType,
+          bytes: normalized.bytes,
+          extension: normalized.extension,
+          contentType: normalized.mime,
           displayName: _displayNameController.text,
           bio: _bioController.text,
           pronouns: _pronounsController.text,
@@ -114,9 +114,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       } else {
         final saved = await profileController.uploadAndSaveAvatar(
-          bytes: Uint8List.fromList(bytes),
-          extension: extension,
-          contentType: contentType,
+          bytes: normalized.bytes,
+          extension: normalized.extension,
+          contentType: normalized.mime,
           displayName: _displayNameController.text,
           bio: _bioController.text,
           pronouns: _pronounsController.text,
@@ -129,6 +129,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(successMessage)),
+        );
+      }
+    } on UnsupportedImageFormatException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.userMessage)),
         );
       }
     } catch (_) {
@@ -174,23 +180,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       }
-    }
-  }
-
-  String _imageExtension(String? raw) {
-    final ext = (raw ?? 'jpg').toLowerCase();
-    if (ext == 'jpeg') return 'jpg';
-    return ext;
-  }
-
-  String _imageContentType(String extension) {
-    switch (extension) {
-      case 'png':
-        return 'image/png';
-      case 'webp':
-        return 'image/webp';
-      default:
-        return 'image/jpeg';
     }
   }
 

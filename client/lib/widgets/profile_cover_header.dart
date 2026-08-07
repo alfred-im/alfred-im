@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/profile_summary.dart';
@@ -74,6 +75,9 @@ class ProfileCoverHeader extends StatelessWidget {
 
   double get _avatarFontSize => _resolvedAvatarRadius * (_isCompact ? 0.78 : 0.72);
 
+  double get _compactIdentityLeftPadding =>
+      12 + (_resolvedAvatarRadius * 2) + 8;
+
   @override
   Widget build(BuildContext context) {
     if (_isCompact) {
@@ -102,7 +106,12 @@ class ProfileCoverHeader extends StatelessWidget {
                 ),
                 Container(
                   color: AlfredColors.panel,
-                  padding: const EdgeInsets.fromLTRB(12, 36, 8, 12),
+                  padding: EdgeInsets.fromLTRB(
+                    _compactIdentityLeftPadding,
+                    36,
+                    8,
+                    12,
+                  ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -154,6 +163,7 @@ class ProfileCoverHeader extends StatelessWidget {
         if (heroStyle == ProfileCoverHeroStyle.immersive)
           _ImmersiveCoverBody(
             profile: profile,
+            minHeight: _coverHeight,
             onCoverTap: onCoverTap,
             coverOverlay: coverOverlay,
             overlayTopStart: overlayTopStart,
@@ -281,6 +291,7 @@ class ProfileCoverHeader extends StatelessWidget {
 class _ImmersiveCoverBody extends StatelessWidget {
   const _ImmersiveCoverBody({
     required this.profile,
+    required this.minHeight,
     this.onCoverTap,
     this.coverOverlay,
     this.overlayTopStart,
@@ -298,6 +309,7 @@ class _ImmersiveCoverBody extends StatelessWidget {
   });
 
   final ProfileSummary profile;
+  final double minHeight;
   final VoidCallback? onCoverTap;
   final Widget? coverOverlay;
   final Widget? overlayTopStart;
@@ -316,116 +328,100 @@ class _ImmersiveCoverBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final coverUrl = profile.coverUrl;
-    Widget body = Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: coverUrl == null
-            ? const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AlfredColors.charcoal,
-                  AlfredColors.charcoalActive,
+    Widget body = ConstrainedBox(
+      constraints: BoxConstraints(minHeight: minHeight),
+      child: SizedBox(
+        width: double.infinity,
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            Positioned.fill(
+              child: _CoverImageFill(coverUrl: coverUrl),
+            ),
+            Positioned.fill(
+              child: _CoverScrim(coverUrl: coverUrl),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  _AvatarFrame(
+                    profile: profile,
+                    radius: avatarRadius,
+                    fontSize: avatarFontSize,
+                    onTap: onAvatarTap,
+                    overlay: avatarOverlay,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    profile.displayName,
+                    textAlign: TextAlign.center,
+                    style: nameStyle ??
+                        const TextStyle(
+                          color: AlfredColors.textOnDark,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                        ),
+                  ),
+                  if (profile.hasUsername) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      profile.handle,
+                      textAlign: TextAlign.center,
+                      style: usernameStyle ??
+                          TextStyle(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 16,
+                          ),
+                    ),
+                  ],
+                  if (showPronouns && profile.hasPronouns) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      profile.pronouns!,
+                      textAlign: TextAlign.center,
+                      style: pronounsStyle ??
+                          TextStyle(
+                            color: Colors.white.withValues(alpha: 0.65),
+                            fontSize: 14,
+                          ),
+                    ),
+                  ],
+                  if (showGroupBadge && profile.isGroup) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'Account gruppo',
+                        style: TextStyle(
+                          color: AlfredColors.textOnDark,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                  ?extraBelowIdentity,
                 ],
-              )
-            : null,
-        image: coverUrl != null
-            ? DecorationImage(
-                image: NetworkImage(coverUrl),
-                fit: BoxFit.cover,
-              )
-            : null,
-      ),
-      foregroundDecoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: coverUrl == null ? 0 : 0.15),
-            Colors.black.withValues(alpha: coverUrl == null ? 0 : 0.45),
+              ),
+            ),
+            if (overlayTopStart != null)
+              Positioned(top: 4, left: 4, child: overlayTopStart!),
+            if (overlayTopEnd != null)
+              Positioned(top: 4, right: 4, child: overlayTopEnd!),
+            ?coverOverlay,
           ],
         ),
-      ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 8),
-                _AvatarFrame(
-                  profile: profile,
-                  radius: avatarRadius,
-                  fontSize: avatarFontSize,
-                  onTap: onAvatarTap,
-                  overlay: avatarOverlay,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  profile.displayName,
-                  textAlign: TextAlign.center,
-                  style: nameStyle ??
-                      const TextStyle(
-                        color: AlfredColors.textOnDark,
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                ),
-                if (profile.hasUsername) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    profile.handle,
-                    textAlign: TextAlign.center,
-                    style: usernameStyle ??
-                        TextStyle(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 16,
-                        ),
-                  ),
-                ],
-                if (showPronouns && profile.hasPronouns) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    profile.pronouns!,
-                    textAlign: TextAlign.center,
-                    style: pronounsStyle ??
-                        TextStyle(
-                          color: Colors.white.withValues(alpha: 0.65),
-                          fontSize: 14,
-                        ),
-                  ),
-                ],
-                if (showGroupBadge && profile.isGroup) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Account gruppo',
-                      style: TextStyle(
-                        color: AlfredColors.textOnDark,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-                ?extraBelowIdentity,
-              ],
-            ),
-          ),
-          ?overlayTopStart,
-          ?overlayTopEnd,
-          ?coverOverlay,
-        ],
       ),
     );
 
@@ -461,42 +457,20 @@ class _CoverBackground extends StatelessWidget {
         ? BorderRadius.vertical(top: Radius.circular(borderRadius))
         : null;
 
-    final decoration = BoxDecoration(
-      borderRadius: border,
-      gradient: coverUrl == null
-          ? const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AlfredColors.charcoal,
-                AlfredColors.charcoalActive,
-              ],
-            )
-          : null,
-      image: coverUrl != null
-          ? DecorationImage(
-              image: NetworkImage(coverUrl!),
-              fit: BoxFit.cover,
-            )
-          : null,
-    );
-
-    Widget child = Container(
-      height: height,
-      width: double.infinity,
-      decoration: decoration,
-      foregroundDecoration: BoxDecoration(
-        borderRadius: border,
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: coverUrl == null ? 0 : 0.15),
-            Colors.black.withValues(alpha: coverUrl == null ? 0 : 0.45),
+    Widget child = ClipRRect(
+      borderRadius: border ?? BorderRadius.zero,
+      child: SizedBox(
+        height: height,
+        width: double.infinity,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _CoverImageFill(coverUrl: coverUrl),
+            _CoverScrim(coverUrl: coverUrl),
+            ?overlay,
           ],
         ),
       ),
-      child: overlay,
     );
 
     if (onTap != null) {
@@ -507,6 +481,61 @@ class _CoverBackground extends StatelessWidget {
     }
 
     return child;
+  }
+}
+
+class _CoverImageFill extends StatelessWidget {
+  const _CoverImageFill({required this.coverUrl});
+
+  final String? coverUrl;
+
+  static const _fallbackGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      AlfredColors.charcoal,
+      AlfredColors.charcoalActive,
+    ],
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    if (coverUrl == null) {
+      return const DecoratedBox(decoration: BoxDecoration(gradient: _fallbackGradient));
+    }
+
+    return Image.network(
+      coverUrl!,
+      fit: BoxFit.cover,
+      gaplessPlayback: true,
+      webHtmlElementStrategy:
+          kIsWeb ? WebHtmlElementStrategy.prefer : WebHtmlElementStrategy.never,
+      errorBuilder: (context, error, stackTrace) {
+        return const DecoratedBox(decoration: BoxDecoration(gradient: _fallbackGradient));
+      },
+    );
+  }
+}
+
+class _CoverScrim extends StatelessWidget {
+  const _CoverScrim({required this.coverUrl});
+
+  final String? coverUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.black.withValues(alpha: coverUrl == null ? 0 : 0.15),
+            Colors.black.withValues(alpha: coverUrl == null ? 0 : 0.45),
+          ],
+        ),
+      ),
+    );
   }
 }
 
