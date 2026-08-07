@@ -1,7 +1,7 @@
 # Alfred
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
-[![CI](https://github.com/alfred-im/alfred-im/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/alfred-im/alfred-im/actions/workflows/deploy-pages.yml)
+[![Deploy client](https://github.com/alfred-im/alfred-im/actions/workflows/deploy-client.yml/badge.svg)](https://github.com/alfred-im/alfred-im/actions/workflows/deploy-client.yml)
 [![Spec sync](https://github.com/alfred-im/alfred-im/actions/workflows/spec-sync.yml/badge.svg)](https://github.com/alfred-im/alfred-im/actions/workflows/spec-sync.yml)
 [![Flutter](https://img.shields.io/badge/Flutter-stable-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 

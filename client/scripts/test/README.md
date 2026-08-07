@@ -15,7 +15,7 @@ bash scripts/test.sh manual        # flusso-reale + integration + e2e-multi + li
 
 ## Tier 1 — Gate CI (igiene codice, non prodotto)
 
-Eseguito da `verify.sh` e da GitHub Actions (`deploy-pages.yml`) su ogni PR/push `client/**`.
+Eseguito da `verify.sh` e da GitHub Actions (`release-suite.yml`) su ogni PR/push che tocca `client/**` (o stack release).
 
 **Cosa fa davvero:** `flutter analyze`, sync spec/modello, `flutter test` su pezzi isolati (mock, fake, harness sintetici). **Non** apre l’app, **non** usa il telefono, **non** dimostra che messaggi, media, multi-account o auth funzionano per l’utente.
 
@@ -83,7 +83,7 @@ Incidente 2026-07: il gate era tutto verde e il bug era in produzione. **`flusso
 
 ## Tier 2 — Release (stack locale, in CI)
 
-Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/client-full-tests.yml`.
+Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/release-suite.yml`.
 
 | Suite | Comando | Cosa verifica |
 |-------|---------|---------------|
