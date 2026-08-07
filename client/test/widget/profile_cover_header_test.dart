@@ -32,6 +32,31 @@ void main() {
     expect(find.byType(Image), findsNothing);
   });
 
+  testWidgets('ProfileCoverHeader compact edgeToEdge skips rounded card clip',
+      (tester) async {
+    const profile = ProfileSummary(
+      id: 'u1',
+      username: 'alice',
+      displayName: 'Alice',
+      coverUrl: 'https://example.com/cover.jpg',
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: ProfileCoverHeader(
+            profile: profile,
+            presentation: ProfileCoverPresentation.compact,
+            edgeToEdge: true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(ClipRRect), findsNothing);
+    expect(find.text('Alice'), findsOneWidget);
+  });
+
   testWidgets('ProfileCoverHeader immersive places close and share on opposite sides',
       (tester) async {
     const profile = ProfileSummary(
