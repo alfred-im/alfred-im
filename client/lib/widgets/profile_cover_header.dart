@@ -84,7 +84,7 @@ class ProfileCoverHeader extends StatelessWidget {
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Stack(
-          clipBehavior: Clip.none,
+          clipBehavior: Clip.hardEdge,
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -94,7 +94,6 @@ class ProfileCoverHeader extends StatelessWidget {
                     _CoverBackground(
                       coverUrl: profile.coverUrl,
                       height: _coverHeight,
-                      borderRadius: 12,
                       onTap: onCoverTap,
                       overlay: coverOverlay,
                     ),
@@ -441,38 +440,31 @@ class _CoverBackground extends StatelessWidget {
   const _CoverBackground({
     required this.coverUrl,
     required this.height,
-    this.borderRadius = 0,
     this.onTap,
     this.overlay,
   });
 
   final String? coverUrl;
   final double height;
-  final double borderRadius;
   final VoidCallback? onTap;
   final Widget? overlay;
 
   @override
   Widget build(BuildContext context) {
-    final border = borderRadius > 0
-        ? BorderRadius.vertical(top: Radius.circular(borderRadius))
-        : null;
-
-    Widget child = ClipRRect(
-      borderRadius: border ?? BorderRadius.zero,
-      child: SizedBox(
-        height: height,
-        width: double.infinity,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            _CoverImageFill(coverUrl: coverUrl),
-            _CoverScrim(coverUrl: coverUrl),
-            ?overlay,
-          ],
-        ),
+    final coverStack = SizedBox(
+      height: height,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _CoverImageFill(coverUrl: coverUrl),
+          _CoverScrim(coverUrl: coverUrl),
+          ?overlay,
+        ],
       ),
     );
+
+    Widget child = coverStack;
 
     if (onTap != null) {
       child = Material(
@@ -505,15 +497,26 @@ class _CoverImageFill extends StatelessWidget {
       return const DecoratedBox(decoration: BoxDecoration(gradient: _fallbackGradient));
     }
 
-    return Image.network(
-      coverUrl!,
-      fit: BoxFit.cover,
-      gaplessPlayback: true,
-      webHtmlElementStrategy:
-          kIsWeb ? WebHtmlElementStrategy.prefer : WebHtmlElementStrategy.never,
-      errorBuilder: (context, error, stackTrace) {
-        return const DecoratedBox(decoration: BoxDecoration(gradient: _fallbackGradient));
-      },
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const ColoredBox(color: AlfredColors.charcoal),
+        Image.network(
+          coverUrl!,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          gaplessPlayback: true,
+          webHtmlElementStrategy: kIsWeb
+              ? WebHtmlElementStrategy.prefer
+              : WebHtmlElementStrategy.never,
+          errorBuilder: (context, error, stackTrace) {
+            return const DecoratedBox(
+              decoration: BoxDecoration(gradient: _fallbackGradient),
+            );
+          },
+        ),
+      ],
     );
   }
 }
