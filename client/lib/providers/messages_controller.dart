@@ -194,7 +194,9 @@ class MessagesController extends ChangeNotifier {
     required String emoji,
   }) async {
     final lambda = message.logicalMessageId;
-    if (lambda == null) return;
+    if (lambda == null) {
+      throw StateError('Messaggio non ancora confermato dal server.');
+    }
     final mine = message.reactions.where((r) => r.includesMe).toList();
     if (mine.length == 1 &&
         mine.first.emoji == emoji &&

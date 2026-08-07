@@ -329,7 +329,9 @@ class MessagesControllerEffects implements MessagingEffects {
     required String logicalMessageId,
     required String emoji,
   }) async {
-    if (!_scopeIsActive()) return;
+    if (!_scopeIsActive()) {
+      throw StateError(MessagesControllerEffects.sessionExpiredMessage);
+    }
     await messageService.peer.applyReaction(
       logicalMessageId: logicalMessageId,
       emoji: emoji,
@@ -339,7 +341,9 @@ class MessagesControllerEffects implements MessagingEffects {
 
   @override
   Future<void> withdrawReaction({required String logicalMessageId}) async {
-    if (!_scopeIsActive()) return;
+    if (!_scopeIsActive()) {
+      throw StateError(MessagesControllerEffects.sessionExpiredMessage);
+    }
     await messageService.peer.withdrawReaction(
       logicalMessageId: logicalMessageId,
     );

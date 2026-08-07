@@ -10,6 +10,8 @@ class EmojiCatalog {
 
   static final List<String> _glyphs = List.unmodifiable(_buildGlyphs());
 
+  static List<String> get all => _glyphs;
+
   static int get totalCount => _glyphs.length;
 
   static List<String> page({required int offset, int? limit}) {
