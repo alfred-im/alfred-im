@@ -141,18 +141,18 @@ Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (
 
 | Target | Meccanismo |
 |--------|------------|
-| Web client (GitHub Pages) | `/alfred-im/` — job `deploy-pages` |
+| Web client (GitHub Pages) | `/alfred-im/` — workflow `deploy-client` |
 | Supabase | Migrazioni in repo → MCP/dashboard |
 
 **Try it:** https://alfred-im.github.io/alfred-im/ — panoramica pubblica in [`README.md`](../../README.md).
 
 **Verifica PWA prima del merge**: ogni PR su `main` con path `client/**` pubblica su GitHub Pages dopo build verde — **stessa URL** della PWA. L’utente può provare dal telefono **senza** attendere il merge; il merge non è prerequisito per la review.
 
-**Non deducibile**: URL live = ultimo `deploy-pages` riuscito (PR o push su `main`), non sempre = tip di `main`.
+**Non deducibile**: URL live = ultimo `deploy-client` riuscito (PR o push su `main`), non sempre = tip di `main`.
 
 **Web**: `passkeys` `bundle.js` obbligatorio in `client/web/index.html` (PR #110).
 
-Dettaglio deploy: `PROJECT_MAP.md` § Build, workflow `.github/workflows/deploy-pages.yml`.
+Dettaglio deploy: `PROJECT_MAP.md` § Build, workflow `.github/workflows/deploy-client.yml`.
 
 ---
 

@@ -1,17 +1,17 @@
-name: Deploy Flutter client to GitHub Pages
+name: Deploy client
 
 on:
   push:
     branches:
       - main
     paths:
-      - '.github/workflows/deploy-pages.yml'
+      - '.github/workflows/deploy-client.yml'
       - 'client/**'
   pull_request:
     branches:
       - main
     paths:
-      - '.github/workflows/deploy-pages.yml'
+      - '.github/workflows/deploy-client.yml'
       - 'client/**'
   workflow_dispatch:
 
@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-client:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -37,12 +37,12 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Verify (analyze + test)
-        run: bash scripts/verify.sh
+      - name: Flutter pub get
+        run: flutter pub get
         working-directory: client
 
       - name: Build Flutter web (GitHub Pages base path)
-        run: flutter build web --release --base-href "/alfred-im/"
+        run: flutter build web --release --base-href "/alfred-im/" --no-pub
         working-directory: client
 
       - name: SPA fallback for GitHub Pages
@@ -57,33 +57,34 @@ jobs:
         with:
           path: client/build/web
 
-  # Web client: ogni build (PR o main) pubblica su https://alfred-im.github.io/alfred-im/
+  # Gate (verify.sh) in release-suite.yml — non duplicato qui per preview Pages più rapida.
+  # Ogni build (PR o main) pubblica su https://alfred-im.github.io/alfred-im/
   # Richiede ambiente github-pages con «Deployment branches: All branches»
   # (Settings → Environments → github-pages). Default repo: solo main → PR falliscono.
-  deploy-pages:
+  deploy-client:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-client
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry1.outputs.page_url || steps.deployment_retry2.outputs.page_url }}
     steps:
-      - name: Deploy web client (GitHub Pages)
+      - name: Deploy client to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
         continue-on-error: true
 
-      - name: Deploy dev demo (retry 1)
+      - name: Deploy client (retry 1)
         if: steps.deployment.outcome == 'failure'
         id: deployment_retry1
         uses: actions/deploy-pages@v4
         continue-on-error: true
 
-      - name: Deploy dev demo (retry 2)
+      - name: Deploy client (retry 2)
         if: steps.deployment.outcome == 'failure' && steps.deployment_retry1.outcome == 'failure'
         id: deployment_retry2
         uses: actions/deploy-pages@v4
 
-      - name: Verify Pages deployment
+      - name: Fail if Pages deployment failed
         if: >-
           steps.deployment.outcome == 'failure'
           && steps.deployment_retry1.outcome == 'failure'

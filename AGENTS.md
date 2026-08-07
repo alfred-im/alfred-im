@@ -115,7 +115,7 @@ backend out of the box.
   (`MATRIX_PORT`, default 8081). Both return `{"status":"ok",...}`. **Port clash:** the XMPP bridge default 8080
   collides with the `flutter run` example port below — run the web app on a different port (e.g. 8090) if both run.
 - **Fly.io + GitHub Pages are the user's test/review environment**, fed automatically by pushing to git (Pages via
-  `.github/workflows/deploy-pages.yml`; Fly via its own deploy-on-push). Do **not** `flyctl deploy` or write to the
+  `.github/workflows/deploy-client.yml`; Fly via its own deploy-on-push). Do **not** `flyctl deploy` or write to the
   live Supabase from this dev VM without explicit user confirmation — that is their review surface, not a dev target.
 
 ### Lint / test / build
@@ -153,8 +153,8 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 
 - **Try it:** https://alfred-im.github.io/alfred-im/ — vedi [README.md](README.md) per la panoramica pubblica.
 - Build web: `bash scripts/verify.sh --build` (base-href `/alfred-im/`).
-- **Verifica PWA prima del merge**: non serve il merge su `main`. Ogni **PR su `main`** che tocca `client/**` esegue `deploy-pages` sulla stessa URL Pages. L'utente prova dal telefono quando il deploy è pronto (badge Actions / URL Pages) — **l'agente non attende** il workflow (vedi § GitHub Actions sopra). Il merge non è prerequisito per la review utente.
-- **Non** assumere che l'URL rifletta il branch `main`: `deploy-pages` pubblica da **PR su `main`** e da **push su `main`** (ultimo deploy riuscito vince). Vedi `docs/architecture/full-stack.md` §7.
+- **Verifica PWA prima del merge**: non serve il merge su `main`. Ogni **PR su `main`** che tocca `client/**` esegue `deploy-client` sulla stessa URL Pages. L'utente prova dal telefono quando il deploy è pronto (badge Actions / URL Pages) — **l'agente non attende** il workflow (vedi § GitHub Actions sopra). Il merge non è prerequisito per la review utente.
+- **Non** assumere che l'URL rifletta il branch `main`: `deploy-client` pubblica da **PR su `main`** e da **push su `main`** (ultimo deploy riuscito vince). Vedi `docs/architecture/full-stack.md` §7.
 
 ### Fly.io bridges
 
