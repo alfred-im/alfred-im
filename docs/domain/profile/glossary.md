@@ -10,7 +10,7 @@
 
 | Termine | Definizione |
 |---------|-------------|
-| **Profile summary** | Identità pubblica: id, nome, username, avatar, pronomi, tipo account. |
+| **Profile summary** | Identità pubblica: id, nome, username, avatar, copertina, pronomi, tipo account. |
 | **User profile** | Profilo completo proprio: summary + bio + timestamp. |
 | **Public profile fields** | Campi esposti in query batch identità pubblica. |
 | **Own profile edit** | Modifica campi propri (nome, bio, pronomi, avatar) — username read-only. |

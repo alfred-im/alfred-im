@@ -8,6 +8,6 @@ Identità **propria** dell'account autenticato (`UpdateOwnProfile`). Per la sche
 
 | Dominio | Statechart | Codice |
 |---------|------------|--------|
-| `UpdateOwnProfile` | `SaveProfile`, `UploadAvatar` | `ProfileService`, `ProfileAvatarService` |
+| `UpdateOwnProfile` | `SaveProfile`, `UploadAvatar`, `UploadCover` | `ProfileService`, `ProfileAvatarService` |
 
 Statechart: `client/lib/machines/profile/` · `ProfileCoordinator` (solo edit profilo proprio)

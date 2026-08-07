@@ -11,9 +11,17 @@ abstract class ProfileEffects {
     String? bio,
     String? pronouns,
     String? avatarUrl,
+    String? coverUrl,
+    bool clearCoverUrl = false,
   });
 
   Future<String> uploadAvatar({
+    required Uint8List bytes,
+    required String extension,
+    required String contentType,
+  });
+
+  Future<String> uploadCover({
     required Uint8List bytes,
     required String extension,
     required String contentType,

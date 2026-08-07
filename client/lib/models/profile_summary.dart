@@ -25,6 +25,7 @@ class ProfileSummary {
     required this.displayName,
     this.username,
     this.avatarUrl,
+    this.coverUrl,
     this.pronouns,
     this.profileKind = ProfileKind.user,
   });
@@ -33,6 +34,7 @@ class ProfileSummary {
   final String displayName;
   final String? username;
   final String? avatarUrl;
+  final String? coverUrl;
   final String? pronouns;
   final ProfileKind profileKind;
 
@@ -48,9 +50,11 @@ class ProfileSummary {
     String? displayName,
     String? username,
     String? avatarUrl,
+    String? coverUrl,
     String? pronouns,
     ProfileKind? profileKind,
     bool clearAvatarUrl = false,
+    bool clearCoverUrl = false,
     bool clearPronouns = false,
     bool clearUsername = false,
   }) {
@@ -59,6 +63,7 @@ class ProfileSummary {
       displayName: displayName ?? this.displayName,
       username: clearUsername ? null : username ?? this.username,
       avatarUrl: clearAvatarUrl ? null : avatarUrl ?? this.avatarUrl,
+      coverUrl: clearCoverUrl ? null : coverUrl ?? this.coverUrl,
       pronouns: clearPronouns ? null : pronouns ?? this.pronouns,
       profileKind: profileKind ?? this.profileKind,
     );
@@ -70,6 +75,7 @@ class ProfileSummary {
       displayName: other.displayName,
       username: other.username ?? username,
       avatarUrl: other.avatarUrl ?? avatarUrl,
+      coverUrl: other.coverUrl ?? coverUrl,
       pronouns: other.pronouns ?? pronouns,
       profileKind: other.profileKind,
     );
@@ -81,6 +87,7 @@ class ProfileSummary {
       username: json['username'] as String?,
       displayName: json['display_name'] as String,
       avatarUrl: json['avatar_url'] as String?,
+      coverUrl: json['cover_url'] as String?,
       pronouns: json['pronouns'] as String?,
       profileKind: ProfileKind.fromString(json['profile_kind'] as String?),
     );
@@ -91,6 +98,7 @@ class ProfileSummary {
       id: json['peer_profile_id'] as String,
       displayName: json['display_name'] as String,
       avatarUrl: json['peer_avatar_url'] as String?,
+      coverUrl: json['peer_cover_url'] as String?,
       pronouns: json['peer_pronouns'] as String?,
       profileKind: ProfileKind.fromString(
         json['peer_profile_kind'] as String?,
@@ -105,6 +113,7 @@ class ProfileSummary {
       username: username != null && username.isEmpty ? null : username,
       displayName: json['displayName'] as String,
       avatarUrl: json['avatarUrl'] as String?,
+      coverUrl: json['coverUrl'] as String?,
       pronouns: json['pronouns'] as String?,
       profileKind: ProfileKind.fromString(json['profileKind'] as String?),
     );
@@ -115,6 +124,7 @@ class ProfileSummary {
         'username': username ?? '',
         'displayName': displayName,
         'avatarUrl': avatarUrl,
+        'coverUrl': coverUrl,
         'pronouns': pronouns,
         'profileKind': profileKind.wireValue,
       };

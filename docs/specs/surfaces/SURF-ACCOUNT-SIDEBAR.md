@@ -4,7 +4,7 @@
 |-------|--------|
 | **Superficie ID** | `SURF-ACCOUNT-SIDEBAR` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-09 |
+| **Ultima revisione** | 2026-08-06 |
 | **Promesse** | [PROM-MULTI-ACCOUNT](../promises/product/PROM-MULTI-ACCOUNT.md), [PROM-PROFILE-IDENTITY](../promises/product/PROM-PROFILE-IDENTITY.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md) (`ProfileSummary` in manifest), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
 | **PR** | #140, #147, #152, #162, #178 |
 
@@ -39,8 +39,9 @@ Binding UX sidebar account aperti: manifest, focus, switch istantaneo, stato vis
 | **SURF-ACCOUNT-SIDEBAR-007** | `AccountViewState` per `userId`: `activePeer` e stato mobile inbox/chat **persistono** al cambio focus |
 | **SURF-ACCOUNT-SIDEBAR-008** | «Chiudi account» (`removeAccount`): rimuove manifest + `alfred_auth_{userId}`; se era focus → primo rimasto o null |
 | **SURF-ACCOUNT-SIDEBAR-009** | Token refresh: sessione attiva aggiorna propria entry manifest su `tokenRefreshed` |
-| **SURF-ACCOUNT-SIDEBAR-010** | Sidebar mostra `ProfileSummary` per account in focus e lista account (`ProfileAvatar`, `ProfileIdentityLines`) |
+| **SURF-ACCOUNT-SIDEBAR-010** | Sidebar mostra `ProfileSummary` per account in focus e lista account (`ProfileAvatar`, `ProfileIdentityLines`, `ProfileCoverHeader` compatto per focus) |
 | **SURF-ACCOUNT-SIDEBAR-014** | Card account in focus: pulsante **Condividi** immediatamente a sinistra di «Chiudi account» — share di sistema link `#indirizzo` profilo attivo — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
+| **SURF-ACCOUNT-SIDEBAR-015** | Card account in focus: `coverUrl` come sfondo banner compatto; senza copertina, gradiente charcoal |
 
 ### SHOULD
 
@@ -72,6 +73,7 @@ Binding UX sidebar account aperti: manifest, focus, switch istantaneo, stato vis
 | SURF-ACCOUNT-SIDEBAR-009 | `auth_service_multi_account_test.dart` |
 | SURF-ACCOUNT-SIDEBAR-013 | `account_sidebar_test.dart` |
 | SURF-ACCOUNT-SIDEBAR-014 | `account_sidebar_test.dart` — Condividi account attivo |
+| SURF-ACCOUNT-SIDEBAR-015 | `profile_cover_header_test.dart`; `account_sidebar_test.dart` |
 
 Gate: `verify.sh` + `integration` + `e2e-multi`
 
