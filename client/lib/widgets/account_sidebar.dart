@@ -28,6 +28,8 @@ class AccountSidebar extends StatelessWidget {
   final VoidCallback? onAccountSwitched;
   final bool compact;
 
+  static const _contentPadding = EdgeInsets.fromLTRB(12, 0, 12, 0);
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
@@ -38,75 +40,97 @@ class AccountSidebar extends StatelessWidget {
         .where((a) => a.userId != activeUserId)
         .toList();
 
+    final profileHeader = profile != null && activeUserId != null
+        ? _ActiveProfileCard(
+            profile: profile,
+            userId: activeUserId,
+            isDisconnected: activeDisconnected,
+            manifestUsername: auth.openAccounts
+                .where((a) => a.userId == activeUserId)
+                .map((a) => a.username)
+                .firstWhere(
+                  (username) => username.isNotEmpty,
+                  orElse: () => '',
+                ),
+          )
+        : Padding(
+            padding: EdgeInsets.fromLTRB(12, compact ? 8 : 16, 12, 0),
+            child: const ListTile(
+              leading: Icon(Icons.person_outline),
+              title: Text('Nessun account in primo piano'),
+              subtitle: Text('Apri un account per iniziare'),
+            ),
+          );
+
+    final paddedBody = Padding(
+      padding: _contentPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (activeUserId != null) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onEditProfile,
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Modifica profilo'),
+              ),
+            ),
+          ],
+          if (otherAccounts.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Text(
+              'Altri account',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: AlfredColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            ...otherAccounts.map(
+              (account) => _AccountTile(
+                account: account,
+                onTap: () => _switchFocus(context, account),
+                onReconnect: account.isDisconnected
+                    ? () => context
+                        .read<AuthController>()
+                        .promptReconnectFocusedAccount()
+                    : null,
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(Icons.person_add_alt_1_outlined),
+            title: const Text('Aggiungi account'),
+            contentPadding: EdgeInsets.zero,
+            onTap: onAddAccount,
+          ),
+        ],
+      ),
+    );
+
     return Material(
       color: AlfredColors.panel,
       child: SafeArea(
-        child: ListView(
-          shrinkWrap: compact,
-          physics: compact ? const NeverScrollableScrollPhysics() : null,
-          padding: EdgeInsets.fromLTRB(12, compact ? 8 : 16, 12, 16),
-          children: [
-            if (profile != null && activeUserId != null)
-              _ActiveProfileCard(
-                profile: profile,
-                userId: activeUserId,
-                isDisconnected: activeDisconnected,
-                manifestUsername: auth.openAccounts
-                    .where((a) => a.userId == activeUserId)
-                    .map((a) => a.username)
-                    .firstWhere(
-                      (username) => username.isNotEmpty,
-                      orElse: () => '',
-                    ),
+        child: compact
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  profileHeader,
+                  paddedBody,
+                  const SizedBox(height: 16),
+                ],
               )
-            else
-              const ListTile(
-                leading: Icon(Icons.person_outline),
-                title: Text('Nessun account in primo piano'),
-                subtitle: Text('Apri un account per iniziare'),
+            : ListView(
+                padding: const EdgeInsets.only(bottom: 16),
+                children: [
+                  profileHeader,
+                  paddedBody,
+                ],
               ),
-            if (activeUserId != null) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: onEditProfile,
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  label: const Text('Modifica profilo'),
-                ),
-              ),
-            ],
-            if (otherAccounts.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              Text(
-                'Altri account',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AlfredColors.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: 4),
-              ...otherAccounts.map(
-                (account) => _AccountTile(
-                  account: account,
-                  onTap: () => _switchFocus(context, account),
-                  onReconnect: account.isDisconnected
-                      ? () => context
-                          .read<AuthController>()
-                          .promptReconnectFocusedAccount()
-                      : null,
-                ),
-              ),
-            ],
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.person_add_alt_1_outlined),
-              title: const Text('Aggiungi account'),
-              contentPadding: EdgeInsets.zero,
-              onTap: onAddAccount,
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -139,6 +163,7 @@ class _ActiveProfileCard extends StatelessWidget {
     return ProfileCoverHeader(
       profile: profile,
       presentation: ProfileCoverPresentation.compact,
+      edgeToEdge: true,
       showPronouns: false,
       extraBelowIdentity: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

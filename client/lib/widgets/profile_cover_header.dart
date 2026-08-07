@@ -43,6 +43,7 @@ class ProfileCoverHeader extends StatelessWidget {
     this.showPronouns = true,
     this.showGroupBadge = true,
     this.extraBelowIdentity,
+    this.edgeToEdge = false,
   });
 
   final ProfileSummary profile;
@@ -63,6 +64,8 @@ class ProfileCoverHeader extends StatelessWidget {
   final bool showPronouns;
   final bool showGroupBadge;
   final Widget? extraBelowIdentity;
+  /// Compact: copertina a tutta larghezza del contenitore (sidebar), senza card arrotondata.
+  final bool edgeToEdge;
 
   bool get _isCompact => presentation == ProfileCoverPresentation.compact;
 
@@ -81,79 +84,83 @@ class ProfileCoverHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (_isCompact) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Stack(
-          clipBehavior: Clip.hardEdge,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Stack(
+      final compactStack = Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Stack(
+                children: [
+                  _CoverBackground(
+                    coverUrl: profile.coverUrl,
+                    height: _coverHeight,
+                    onTap: onCoverTap,
+                    overlay: coverOverlay,
+                  ),
+                  if (overlayTopStart != null)
+                    Positioned(top: 4, left: 4, child: overlayTopStart!),
+                  if (overlayTopEnd != null)
+                    Positioned(top: 4, right: 4, child: overlayTopEnd!),
+                ],
+              ),
+              Container(
+                color: AlfredColors.panel,
+                padding: EdgeInsets.fromLTRB(
+                  _compactIdentityLeftPadding,
+                  32,
+                  4,
+                  12,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _CoverBackground(
-                      coverUrl: profile.coverUrl,
-                      height: _coverHeight,
-                      onTap: onCoverTap,
-                      overlay: coverOverlay,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ProfileIdentityLines(
+                            profile: profile,
+                            nameStyle: nameStyle ??
+                                const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
+                                  color: AlfredColors.textPrimary,
+                                ),
+                            usernameStyle: usernameStyle,
+                            pronounsStyle: pronounsStyle,
+                            showPronouns: showPronouns,
+                          ),
+                          ?extraBelowIdentity,
+                        ],
+                      ),
                     ),
-                    if (overlayTopStart != null)
-                      Positioned(top: 4, left: 4, child: overlayTopStart!),
-                    if (overlayTopEnd != null)
-                      Positioned(top: 4, right: 4, child: overlayTopEnd!),
+                    ?trailing,
                   ],
                 ),
-                Container(
-                  color: AlfredColors.panel,
-                  padding: EdgeInsets.fromLTRB(
-                    _compactIdentityLeftPadding,
-                    32,
-                    4,
-                    12,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ProfileIdentityLines(
-                              profile: profile,
-                              nameStyle: nameStyle ??
-                                  const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 17,
-                                    color: AlfredColors.textPrimary,
-                                  ),
-                              usernameStyle: usernameStyle,
-                              pronounsStyle: pronounsStyle,
-                              showPronouns: showPronouns,
-                            ),
-                            ?extraBelowIdentity,
-                          ],
-                        ),
-                      ),
-                      ?trailing,
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Positioned(
-              left: 12,
-              top: _coverHeight - _resolvedAvatarRadius,
-              child: _AvatarFrame(
-                profile: profile,
-                radius: _resolvedAvatarRadius,
-                fontSize: _avatarFontSize,
-                onTap: onAvatarTap,
-                overlay: avatarOverlay,
-                compact: true,
               ),
+            ],
+          ),
+          Positioned(
+            left: 12,
+            top: _coverHeight - _resolvedAvatarRadius,
+            child: _AvatarFrame(
+              profile: profile,
+              radius: _resolvedAvatarRadius,
+              fontSize: _avatarFontSize,
+              onTap: onAvatarTap,
+              overlay: avatarOverlay,
+              compact: true,
             ),
-          ],
-        ),
+          ),
+        ],
+      );
+
+      if (edgeToEdge) return compactStack;
+
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: compactStack,
       );
     }
 
