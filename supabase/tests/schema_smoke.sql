@@ -70,6 +70,19 @@ BEGIN
   IF to_regprocedure('public.find_profile_by_username(text)') IS NULL THEN
     RAISE EXCEPTION 'Missing RPC find_profile_by_username';
   END IF;
+  IF to_regprocedure('public.apply_message_reaction(uuid,text)') IS NULL THEN
+    RAISE EXCEPTION 'Missing RPC apply_message_reaction';
+  END IF;
+  IF to_regprocedure('public.withdraw_message_reaction(uuid)') IS NULL THEN
+    RAISE EXCEPTION 'Missing RPC withdraw_message_reaction';
+  END IF;
+  IF to_regprocedure('public.list_message_reactions(uuid[])') IS NULL THEN
+    RAISE EXCEPTION 'Missing RPC list_message_reactions';
+  END IF;
+
+  IF to_regclass('public.message_reaction_facts') IS NULL THEN
+    RAISE EXCEPTION 'Missing table message_reaction_facts';
+  END IF;
 
   RAISE NOTICE 'alfred_schema_smoke_ok';
 END $$;

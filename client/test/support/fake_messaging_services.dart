@@ -206,6 +206,7 @@ class FakeMessageService extends MessageService {
     required String currentUserId,
     required String peerProfileId,
     required void Function(ChatMessage message) onMessage,
+    void Function(String logicalMessageId)? onReactionFact,
   }) {
     _realtimeHandlers[conversationKey(
       userId: currentUserId,

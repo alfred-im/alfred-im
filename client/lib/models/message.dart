@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'reaction_summary.dart';
+
 enum MessageStatus { sent, delivered, read, pending, failed }
 
 enum MessageContentType { text, gif, voice, location, image, video }
@@ -86,6 +88,8 @@ class ChatMessage {
     this.deliveredAt,
     this.readAt,
     this.failedAt,
+    this.logicalMessageId,
+    this.reactions = const [],
   }) : authorId = authorId ?? senderId;
 
   final String id;
@@ -112,6 +116,8 @@ class ChatMessage {
   final DateTime? deliveredAt;
   final DateTime? readAt;
   final DateTime? failedAt;
+  final String? logicalMessageId;
+  final List<ReactionSummary> reactions;
 
   /// Chi ha scritto il contenuto — campo canonico (sempre valorizzato nei flussi gruppo).
   String? get contentAuthorId => originalAuthorId;
@@ -154,6 +160,8 @@ class ChatMessage {
 
   bool get canRetry => isMine && status == MessageStatus.failed;
 
+  bool get canReact => logicalMessageId != null && logicalMessageId!.isNotEmpty;
+
   factory ChatMessage.fromJson({
     required Map<String, dynamic> json,
     required String currentUserId,
@@ -181,6 +189,7 @@ class ChatMessage {
           );
 
     final clientMessageId = json['client_message_id'] as String?;
+    final logicalMessageId = json['logical_message_id'] as String?;
 
     return ChatMessage(
       id: json['id'] as String,
@@ -202,6 +211,7 @@ class ChatMessage {
       deliveredAt: deliveredAt,
       readAt: readAt,
       failedAt: failedAt,
+      logicalMessageId: logicalMessageId,
     );
   }
 
@@ -230,6 +240,8 @@ class ChatMessage {
     DateTime? deliveredAt,
     DateTime? readAt,
     DateTime? failedAt,
+    String? logicalMessageId,
+    List<ReactionSummary>? reactions,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -256,6 +268,8 @@ class ChatMessage {
       deliveredAt: deliveredAt ?? this.deliveredAt,
       readAt: readAt ?? this.readAt,
       failedAt: failedAt ?? this.failedAt,
+      logicalMessageId: logicalMessageId ?? this.logicalMessageId,
+      reactions: reactions ?? this.reactions,
     );
   }
 }

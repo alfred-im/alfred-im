@@ -13,6 +13,7 @@ import 'location_message_content.dart';
 import 'message_author_header.dart';
 import 'video_message_content.dart';
 import 'mention_body_text.dart';
+import 'message_reaction_bar.dart';
 import 'voice_message_content.dart';
 
 const double _mediaMaxWidth = 240;
@@ -72,6 +73,8 @@ class MessageBubble extends StatelessWidget {
     this.onRetry,
     this.viewerUsername,
     this.onMentionTap,
+    this.onTap,
+    this.onReactionSummaryTap,
   });
 
   final ChatMessage message;
@@ -80,6 +83,8 @@ class MessageBubble extends StatelessWidget {
   /// Username account in focus — soppressione link `@self` su messaggi propri.
   final String? viewerUsername;
   final void Function(String username)? onMentionTap;
+  final VoidCallback? onTap;
+  final void Function(String emoji)? onReactionSummaryTap;
 
   @override
   Widget build(BuildContext context) {
@@ -89,8 +94,13 @@ class MessageBubble extends StatelessWidget {
         message.authorDisplayName != null &&
         message.authorDisplayName!.isNotEmpty;
 
-    final bubble = Container(
-        margin: const EdgeInsets.only(bottom: 6),
+    final hasReactions = message.reactions.isNotEmpty;
+
+    final bubble = GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: EdgeInsets.only(bottom: hasReactions ? 14 : 6),
         padding: message.isMedia
             ? const EdgeInsets.all(4)
             : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -180,7 +190,8 @@ class MessageBubble extends StatelessWidget {
             ],
           ],
         ),
-      );
+      ),
+    );
 
     return Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
@@ -189,7 +200,28 @@ class MessageBubble extends StatelessWidget {
             isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           if (showHeader) MessageAuthorHeader(message: message),
-          bubble,
+          Stack(
+            clipBehavior: Clip.none,
+            alignment:
+                isMine ? Alignment.bottomLeft : Alignment.bottomRight,
+            children: [
+              bubble,
+              if (hasReactions)
+                Positioned(
+                  bottom: -2,
+                  left: isMine ? 10 : null,
+                  right: isMine ? null : 10,
+                  child: MessageReactionBar(
+                    reactions: message.reactions,
+                    compact: true,
+                    onReactionTap: onReactionSummaryTap == null
+                        ? null
+                        : (summary) =>
+                            onReactionSummaryTap!(summary.emoji),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );

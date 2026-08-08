@@ -242,11 +242,13 @@ class MessageService {
     required String currentUserId,
     required String peerProfileId,
     required void Function(ChatMessage message) onMessage,
+    void Function(String logicalMessageId)? onReactionFact,
   }) =>
       _peer.subscribeToPeerMessages(
         currentUserId: currentUserId,
         peerProfileId: peerProfileId,
         onMessage: onMessage,
+        onReactionFact: onReactionFact,
       );
 
   void disposeChannel(RealtimeChannel? channel) =>

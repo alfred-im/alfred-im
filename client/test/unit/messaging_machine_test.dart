@@ -4,6 +4,7 @@
 
 import 'dart:typed_data';
 
+import 'package:alfred_client/machines/messaging/message_actions_machine.dart';
 import 'package:alfred_client/machines/messaging/conversation_message_store.dart';
 import 'package:alfred_client/machines/messaging/conversation_load_machine.dart';
 import 'package:alfred_client/models/conversation_scope.dart';
@@ -67,10 +68,25 @@ class _RecordingEffects implements MessagingEffects {
   Future<void> markRead() async => markReadCount++;
 
   @override
-  RealtimeChannel? attachRealtime(void Function(ChatMessage message) onMessage) {
+  RealtimeChannel? attachRealtime(
+    void Function(ChatMessage message) onMessage, {
+    void Function(String logicalMessageId)? onReactionFact,
+  }) {
     attachCount++;
     return null;
   }
+
+  @override
+  Future<void> applyReaction({
+    required String logicalMessageId,
+    required String emoji,
+  }) async {}
+
+  @override
+  Future<void> withdrawReaction({required String logicalMessageId}) async {}
+
+  @override
+  Future<void> refreshReactionsForLogicalId(String logicalMessageId) async {}
 
   @override
   void disposeRealtime(RealtimeChannel? channel) {}
@@ -246,6 +262,24 @@ void main() {
       await coordinator.loadOlderMessages();
 
       expect(effects.prependCount, 1);
+    });
+  });
+
+  group('MessageActionsMachine', () {
+    test('OpenMessageActions → open with target', () {
+      final machine = MessageActionsMachine();
+      machine.send(const OpenMessageActions('msg-1'));
+      expect(machine.state, MessageActionsState.open);
+      expect(machine.targetMessageId, 'msg-1');
+    });
+
+    test('ApplyReaction keeps open until close', () {
+      final machine = MessageActionsMachine();
+      machine.send(const OpenMessageActions('msg-1'));
+      machine.send(const ApplyReaction());
+      expect(machine.state, MessageActionsState.open);
+      machine.send(const CloseMessageActions());
+      expect(machine.state, MessageActionsState.closed);
     });
   });
 }
