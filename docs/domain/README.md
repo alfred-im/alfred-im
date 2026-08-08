@@ -1,9 +1,11 @@
 # Modello di dominio — Alfred
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-27
+**Ultima revisione**: 2026-08-08
 
-Questo documento definisce il **metodo di rappresentazione** dell'applicazione Alfred a strati di astrazione crescente. È la fonte di verità **ingegneristica**; non duplica le promesse SDD.
+**SSOT significato** (comandi, eventi, invarianti): questa cartella + UML + `client/lib/machines/`. **SSOT confine prodotto:** [specs/registry.md](../specs/registry.md). **Indice:** [SSOT.md](../SSOT.md).
+
+Questo documento definisce il **metodo di rappresentazione** — non duplica le promesse SDD.
 
 ---
 

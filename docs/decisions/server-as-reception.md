@@ -1,11 +1,13 @@
 # Ricezione = ricezione sul server (client cloud)
 
-> **Contratto promessa**: [SYS-MAILBOX.md](../specs/promises/system/SYS-MAILBOX.md) — questo ADR resta vincolante (semantica cloud).
+> **SSOT semantica spunte UI** (cosa significa ✓ / ✓✓ / blu per l'utente). **Meccanica** delivery/worker: [mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md) — non duplicare qui.
+
+> **Contratto promessa**: [SYS-MAILBOX.md](../specs/promises/system/SYS-MAILBOX.md)
 
 **Data**: 2026-06-26  
 **Status**: ✅ Accettata — **concept vincolante** dell'applicazione  
 **Categoria**: Messaggistica, spunte, modello cloud  
-**Correlata**: [bridge-stateless.md](./bridge-stateless.md), [full-stack.md](../architecture/full-stack.md) §3
+**Correlata**: [bridge-stateless.md](./bridge-stateless.md), [SSOT.md](../SSOT.md)
 
 ---
 

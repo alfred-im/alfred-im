@@ -5,14 +5,13 @@
 **Categoria**: Chat, inbox, rubrica, client, piattaforma  
 **Correlata**: [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md), [server-as-reception.md](./server-as-reception.md)
 
-### Contratti e architettura (fonti canoniche — non duplicare qui)
+### Contratti e architettura
 
-| Tema | Documento |
-|------|-----------|
-| Archivio mailbox, confine account, outbox, worker | [mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md) |
-| Promesse SYSTEM | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md), [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) |
-| Firme RPC e semantica SQL | [contracts/rpc.md](../specs/contracts/rpc.md) |
-| Rubrica | [SYS-CONTACTS](../specs/promises/system/SYS-CONTACTS.md), [PROM-PERSONAL-CONTACTS](../specs/promises/product/PROM-PERSONAL-CONTACTS.md) |
+Vedi [SSOT.md](../SSOT.md) — non duplicare RPC/tabelle qui. Riferimenti rapidi:
+
+- [mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md)
+- [contracts/rpc.md](../specs/contracts/rpc.md)
+- [registry.md](../specs/registry.md)
 
 ---
 

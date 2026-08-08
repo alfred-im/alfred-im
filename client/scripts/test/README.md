@@ -1,5 +1,9 @@
 # Suite test Alfred (`client/`)
 
+**SSOT catalogo comandi** — altri file (`AGENTS.md`, `PROJECT_MAP.md`, `README.md`) rimandano qui.
+
+**Filosofia gate vs release:** [docs/testing/strategy.md](../../docs/testing/strategy.md) · **SSOT indice:** [docs/SSOT.md](../../SSOT.md)
+
 Punto unico per **scoprire** e **lanciare** tutti i test del client.
 
 **Entry point:** dalla cartella `client/`:

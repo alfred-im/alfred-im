@@ -1,5 +1,7 @@
 # AGENTS.md
 
+**SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — questo file copre **solo** toolchain Cloud Agent e gotchas VM; non duplica promesse, RPC, test completi né account debug.
+
 ## Regola prioritaria — completare il task
 
 In questa repository, **completare un task** (issue, PR, richiesta Cloud Agent) significa **seguire integralmente** [`.cursor-rules.md`](.cursor-rules.md) — **non** modificare il codice al primo turno e **non** saltare la SDD.
@@ -119,15 +121,15 @@ backend out of the box.
   live Supabase from this dev VM without explicit user confirmation — that is their review surface, not a dev target.
 
 ### Lint / test / build
-- **Hub test:** `cd client && bash scripts/test.sh list` — catalogo completo ([`scripts/test/README.md`](client/scripts/test/README.md)).
-- **Gate CI (igiene):** `bash scripts/test.sh gate` (= `verify.sh`: analyze + test Dart isolati). Obbligatorio su PR; **non** valida che l’app funzioni sul telefono.
-- **Validazione release:** `bash scripts/test.sh release` — stack locale completo (stesso percorso del telefono). Obbligatorio per ogni release su media / multi-account / auth / push.
-- **Scrivere test nuovi:** copiare [`client/e2e/photo-resume-session-repro.spec.ts`](client/e2e/photo-resume-session-repro.spec.ts) — **riferimento obbligatorio** ([`docs/testing/strategy.md`](docs/testing/strategy.md#come-si-scrivono-i-test-di-release)). Non aggiungere unit test Dart al gate sperando di coprire il telefono.
-- **Suite manuali complete:** `bash scripts/test.sh release` (= gate locale + sql-smoke + integration + e2e stack + stack Dart).
-- Web build: `bash scripts/verify.sh --build` (or `flutter build web --release --base-href "/alfred-im/"`).
-- **Prima di qualsiasi test GUI**: `bash scripts/test.sh diagnose` — se fallisce su CDP: `bash scripts/reset-chrome-cdp.sh` (kill Chrome + profilo pulito `/tmp/chrome-cdp-profile`).
-- **Integrazione API** (no browser): `bash scripts/test.sh integration` — agent1/agent2 + RPC.
-- **E2E multi-account** (browser parziale): `bash scripts/test.sh e2e-multi`
+
+**SSOT:** [docs/testing/strategy.md](docs/testing/strategy.md) (gate vs release) · [client/scripts/test/README.md](client/scripts/test/README.md) (catalogo comandi).
+
+- Hub: `cd client && bash scripts/test.sh list`
+- Gate: `bash scripts/test.sh gate` (= `verify.sh`) — obbligatorio su PR; **non** valida il telefono
+- Release: `bash scripts/test.sh release` (alias `manual`, `ci`) — stack locale completo
+- Riferimento test release: [`client/e2e/photo-resume-session-repro.spec.ts`](client/e2e/photo-resume-session-repro.spec.ts) — vedi strategy § Come si scrivono i test di release
+- Web build: `bash scripts/verify.sh --build`
+- Prima di test GUI: `bash scripts/test.sh diagnose` — CDP morto → `bash scripts/reset-chrome-cdp.sh`
 
 ### Log diagnostici (`ALFRED_DIAGNOSTIC_LOG`)
 

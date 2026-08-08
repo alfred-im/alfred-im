@@ -1,5 +1,7 @@
 # Strategia test client Alfred
 
+**SSOT comandi suite:** [client/scripts/test/README.md](../../client/scripts/test/README.md) · **SSOT indice doc:** [SSOT.md](../SSOT.md)
+
 Piano a livelli allineato a **dominio → UML → statechart → composition root** (`client/lib/screens/`, Provider, chiavi di scope sessione).
 
 **Hub comandi:** `client/scripts/test.sh` · **Gate CI:** `client/scripts/verify.sh`

@@ -4,6 +4,8 @@
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
 **Stato**: prodotto stabile su `main`
 
+> **SSOT:** [SSOT.md](../SSOT.md) — panoramica stack; non duplica catalogo promesse, RPC né flussi delivery.
+
 > **Contratti (SDD)**: [docs/specs/registry.md](../specs/registry.md)
 
 ---
@@ -77,22 +79,11 @@ Dettaglio: [guides/shareable-link.md](../guides/shareable-link.md).
 
 ---
 
-## 3. Promesse → area
+## 3. Promesse e guide
 
-| Area | Spec | Guida |
-|------|------|-------|
-| Multi-account, overlay auth | [PROM-MULTI-ACCOUNT](../specs/promises/product/PROM-MULTI-ACCOUNT.md), [SURF-AUTH](../specs/surfaces/SURF-AUTH.md) | [multi-account.md](../guides/multi-account.md) |
-| Archivio, inbox, media, spunte | [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md), [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) | [media.md](../guides/media.md), [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) |
-| Confine account | [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) | — |
-| Ricerca liste | [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md) | [inbox.md](../guides/inbox.md) |
-| Profilo, rubrica, allow list | [SYS-PROFILE](../specs/promises/system/SYS-PROFILE.md), [SYS-CONTACTS](../specs/promises/system/SYS-CONTACTS.md), [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) | [peer-profile.md](../guides/peer-profile.md) |
-| Link condivisibili | [PROM-SHAREABLE-LINK](../specs/promises/product/PROM-SHAREABLE-LINK.md) | [shareable-link.md](../guides/shareable-link.md) |
-| Account gruppo | [SYS-GROUP](../specs/promises/system/SYS-GROUP.md) | [groups.md](../guides/groups.md) |
-| Scroll chat | [chat-scroll.md](../guides/chat-scroll.md) | [chat-scroll.md](../guides/chat-scroll.md) |
-| Push | [SYS-PUSH](../specs/promises/system/SYS-PUSH.md), [PROM-PUSH-NOTIFY](../specs/promises/product/PROM-PUSH-NOTIFY.md) | — |
-| Ambito conversazione | [PROM-CONVERSATION-SCOPE](../specs/promises/product/PROM-CONVERSATION-SCOPE.md) | — |
-| Reazioni | [PROM-MESSAGE-REACTIONS](../specs/promises/product/PROM-MESSAGE-REACTIONS.md) | — |
-| @mentions | [PROM-MESSAGE-MENTION](../specs/promises/product/PROM-MESSAGE-MENTION.md) | — |
+**SSOT catalogo:** [specs/registry.md](../specs/registry.md) · **SSOT guide operative:** [guides/README.md](../guides/README.md)
+
+Non mantenere qui tabelle promessa duplicate — aggiornare solo il registry e i file `PROM-*` / `SURF-*` / `SYS-*`.
 
 ---
 
@@ -104,19 +95,7 @@ Migrazioni: [`supabase/migrations/`](../../supabase/migrations/)
 
 ### Integrazione bridge (non implementata)
 
-```
-Client → send_message_to_profile (account mittente)
-       → INSERT copia mittente (✓)
-       → INSERT outbox (event_kind=deliver)
-       → alfred_delivery.process_outbox (stessa transazione, internal):
-            gate reception_allowlist(destinatario)
-            SE allowed: copia destinatario + delivered_at mittente (✓✓)
-            ALTRIMENTI: skip silenzioso (✓ permanente)
-Bridge → claim outbox federato; aggiorna external_id, sync_cursors
-       → stesso gate allow list prima di materializzare copia ingresso (fase B)
-```
-
-Vedi [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md), [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md), [bridge-stateless.md](../decisions/bridge-stateless.md), [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md).
+Flusso delivery e gate allow list: **SSOT** [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Consegna. Bridge stateless: [bridge-stateless.md](../decisions/bridge-stateless.md).
 
 ---
 
@@ -130,13 +109,7 @@ Vedi [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md), [
 
 ## 6. Testing
 
-| Livello | Path |
-|---------|------|
-| Gate CI | `client/scripts/verify.sh` |
-| SDD sync | `scripts/check-spec-sync.sh` |
-| Integrazione | `client/scripts/integration-multi-account.sh` · `bash scripts/test.sh integration-ticks` |
-| E2E | `client/e2e/` |
-| SQL smoke | `supabase/tests/` |
+**SSOT:** [testing/strategy.md](../testing/strategy.md) · [client/scripts/test/README.md](../../client/scripts/test/README.md)
 
 Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (`registry.md`).
 

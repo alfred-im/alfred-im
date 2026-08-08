@@ -32,20 +32,17 @@ Build native mobile/desktop non è focus del progetto oggi; la superficie suppor
 
 ## Test
 
-Catalogo e launcher unificato:
+**SSOT:** [scripts/test/README.md](scripts/test/README.md) · [docs/testing/strategy.md](../docs/testing/strategy.md)
 
 ```bash
 cd client
-bash scripts/test.sh list        # tutte le suite (gate + manuali)
-bash scripts/test.sh gate        # gate CI — obbligatorio prima di git push
-bash scripts/test.sh flusso-reale  # ★ release — stesso percorso del telefono
-bash scripts/test.sh e2e-multi   # Playwright multi-account (scope attuale)
-bash scripts/test.sh manual      # alias di `release` — stack locale completo (vedi test/README)
+bash scripts/test.sh list        # catalogo
+bash scripts/test.sh gate        # gate CI — obbligatorio prima di push
+bash scripts/test.sh flusso-reale  # release — percorso telefono
+bash scripts/test.sh release       # stack locale (alias manual)
 ```
 
-Dettaglio: [`scripts/test/README.md`](scripts/test/README.md)
-
-Gate CI (equivale a `test.sh gate`): `bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ## Struttura
 

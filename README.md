@@ -151,7 +151,7 @@ bash scripts/check-composition-sync.sh
 | **Flusso reale** | `cd client && bash scripts/test.sh flusso-reale` | **Release:** stesso percorso del telefono (browser + DB) |
 | Catalogo completo | [`client/scripts/test/README.md`](client/scripts/test/README.md) | Tutte le suite manuali |
 
-**Verde al gate ≠ Alfred funziona.** Vedi [docs/testing/strategy.md](docs/testing/strategy.md).
+**Verde al gate ≠ Alfred funziona.** SSOT: [docs/testing/strategy.md](docs/testing/strategy.md) · comandi: [client/scripts/test/README.md](client/scripts/test/README.md)
 
 ---
 
@@ -178,11 +178,11 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 | Document | Purpose |
 |----------|---------|
-| [`PROJECT_MAP.md`](PROJECT_MAP.md) | Full project map |
+| [`docs/SSOT.md`](docs/SSOT.md) | **Single source of truth** — where each fact lives |
+| [`PROJECT_MAP.md`](PROJECT_MAP.md) | Session map (stack, URLs, structure) |
 | [`docs/INDICE.md`](docs/INDICE.md) | Documentation index |
-| [`docs/architecture/full-stack.md`](docs/architecture/full-stack.md) | Architecture overview |
-| [`docs/decisions/README.md`](docs/decisions/README.md) | Architecture decision records (ADR) |
-| [`client/README.md`](client/README.md) | Client-specific notes |
+| [`docs/specs/registry.md`](docs/specs/registry.md) | Product promise catalog |
+| [`client/README.md`](client/README.md) | Client entry (links to SSOT for test/setup) |
 
 ---
 

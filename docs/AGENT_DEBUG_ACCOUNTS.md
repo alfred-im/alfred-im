@@ -2,7 +2,7 @@
 
 **Audience:** agenti AI / Cursor Cloud — **non** documentazione utente.
 
-**Fonte unica** per regole account di test. Altri file (`AGENTS.md`, promesse, guide) **rimandano qui** — non duplicare credenziali o istruzioni.
+**Fonte unica** per regole account di test — vedi anche [SSOT.md](../SSOT.md). Altri file (`AGENTS.md`, promesse) **rimandano qui**.
 
 ---
 

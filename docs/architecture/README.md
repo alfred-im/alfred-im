@@ -1,12 +1,12 @@
 # Architettura
 
-Documentazione architetturale per AI. Panoramica pubblica: [`README.md`](../../README.md).
+Documentazione architetturale per AI. **SSOT:** [SSOT.md](../SSOT.md)
 
-## Documenti attivi
+| SSOT per… | File |
+|-----------|------|
+| Panoramica stack client ↔ Supabase | [full-stack.md](./full-stack.md) |
+| Modello mailbox, outbox, worker | [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) |
+| Decisioni vincolanti (ADR) | [decisions/README.md](../decisions/README.md) |
+| Mappa sessione (URL, deploy, toolchain) | [PROJECT_MAP.md](../../PROJECT_MAP.md) |
 
-| File | Contenuto |
-|------|-----------|
-| [full-stack.md](./full-stack.md) | Architettura — client Flutter + Supabase |
-| [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) | Modello caselle — archivio per owner, outbox sempre |
-
-Dettaglio operativo: `PROJECT_MAP.md`.
+Ingresso pubblico: [`README.md`](../../README.md).

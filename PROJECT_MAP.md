@@ -3,6 +3,8 @@
 **Ultimo aggiornamento**: 2026-08-08  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
+**SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — per ogni tipo di informazione, un solo file canonico; questo documento è **mappa sessione**, non duplica promesse/RPC/test.
+
 ---
 
 ## 📋 Indice
@@ -29,7 +31,7 @@
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
 | **Cronologia merge** | `CHANGELOG.md` |
-| **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — confine prodotto |
+| **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — confine prodotto · SSOT: [docs/SSOT.md](docs/SSOT.md) |
 | **Modello** | `docs/domain/` · `docs/model/uml/` · `client/lib/machines/` — 13 bounded context con stato **`verified`** o **`documented`**; torre DDD→UML→statechart con profili UML Client/Platform; gate `scripts/check-model-sync.sh`; indice: [bounded-contexts.md](docs/domain/bounded-contexts.md) |
 
 **Non deducibile — URL live ≠ branch `main`**: https://alfred-im.github.io/alfred-im/ pubblica l’**ultimo** `deploy-client` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-dev-demo` → ultimo vince). Panoramica pubblica: `README.md`.
@@ -195,11 +197,11 @@ cd client
 bash scripts/verify.sh           # gate CI — igiene codice (obbligatorio prima del push)
 bash scripts/verify.sh --build   # + build web
 bash scripts/test.sh flusso-reale  # release — valida il prodotto (browser + DB)
-bash scripts/test.sh manual      # flusso-reale + integration + e2e-multi + live
+bash scripts/test.sh release       # stack locale completo (alias: manual, ci)
 ```
 
-- **Gate CI** (`verify.sh`): lint, compile, **481** test Dart con mock — non sostituisce test sul telefono. Vedi [docs/testing/strategy.md](docs/testing/strategy.md).
-- **Validazione release:** `flusso-reale` (test di release), poi `integration`, `e2e-multi`, ecc. — [client/scripts/test/README.md](client/scripts/test/README.md)
+- **Test:** SSOT comandi → [client/scripts/test/README.md](client/scripts/test/README.md); filosofia gate vs release → [docs/testing/strategy.md](docs/testing/strategy.md)
+- **Gate CI** (`verify.sh`): lint + test Dart isolati — non sostituisce test sul telefono
 - CI deploy: `.github/workflows/deploy-client.yml` → GitHub Pages; gate: `release-suite.yml` → `verify.sh`
 - **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (deploy da PR)
 - E2E: `client/e2e/` (Playwright)
