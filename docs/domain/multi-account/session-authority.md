@@ -1,9 +1,9 @@
 # SessionAuthority — servizio di dominio (enforcement identità)
 
 **Bounded context:** `multi-account` (servizio interno al contesto)  
-**Ultima revisione:** 2026-08-02  
+**Ultima revisione:** 2026-08-08  
 **Stato:** `wired` — `client/lib/services/session_authority.dart` (`part of account_manager.dart`)  
-**UML:** [session-authority-state.puml](../../model/uml/multi-account/session-authority-state.puml) · [seq-run-as-owner.puml](../../model/uml/multi-account/seq-run-as-owner.puml) · [seq-identity-lease-media.puml](../../model/uml/multi-account/seq-identity-lease-media.puml)
+**UML:** [session-authority-state.puml](../../model/uml/multi-account/session-authority-state.puml) (profilo **service** — stati logici, non enum Dart) · [seq-run-as-owner.puml](../../model/uml/multi-account/seq-run-as-owner.puml) · [seq-identity-lease-media.puml](../../model/uml/multi-account/seq-identity-lease-media.puml)
 
 ---
 
@@ -77,6 +77,15 @@ Eventi statechart multi-account (`AccountFocused`, `SessionRestoreFailed`) resta
 ---
 
 ## Stati (SessionAuthority)
+
+Diagramma UML = **specifica logica** osservabile (`activeOwnerId`, lease, transitorio switch). L'implementazione Dart è un **servizio imperativo** senza enum stato — non va confuso con `MultiAccountMachine` né con un file in `client/lib/machines/multi-account/`.
+
+| Stato logico | Osservabile in codice |
+|--------------|------------------------|
+| `NoActiveIdentity` | `activeOwnerId == null` |
+| `OwnerActive` | JWT attivo, `hasActiveLease == false` |
+| `OwnerActiveLeased` | JWT attivo, `hasActiveLease == true` |
+| `SwitchingOwner` | durante `_executeFocus` / `_consolidateSessionForAccount` |
 
 | Stato | Descrizione |
 |-------|-------------|

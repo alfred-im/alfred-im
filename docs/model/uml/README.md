@@ -1,7 +1,7 @@
 # UML 2.5 — Alfred
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-19
+**Ultima revisione**: 2026-08-08
 
 Formalizzazione del modello di dominio in **UML 2.5** (PlantUML). È il livello **forma** tra significato (DDD) ed esecuzione (statechart / codice).
 
@@ -57,6 +57,18 @@ Contesti: delivery, federation, gate recapito in reception (sequence cross-bound
 
 **Esempio target:** partecipante `DeliveryWorker`, freccia `DeliverInternal` — non `DI -> MSG : INSERT …`.
 
+### Profilo **Service** (servizi dominio senza statechart Dart)
+
+Esempi: [multi-account/session-authority-state.puml](./multi-account/session-authority-state.puml).
+
+| Consentito | Vietato |
+|------------|---------|
+| Stati **logici** osservabili dal servizio (`activeOwnerId`, lease, transitorio switch) | Presentare il diagramma come `*Machine` in `client/lib/machines/` |
+| Comandi da `commands-and-events.md` del contesto | Duplicare stati di `MultiAccountMachine` |
+| Nota esplicita `Profile: service` nel file `.puml` | Estrarre enum stato Dart obbligatorio dal solo diagramma |
+
+L'implementazione resta in `client/lib/services/` (es. `session_authority.dart`) — vedi [session-authority.md](../../domain/multi-account/session-authority.md).
+
 ---
 
 ## Convenzioni
@@ -64,7 +76,7 @@ Contesti: delivery, federation, gate recapito in reception (sequence cross-bound
 ### Nomi
 
 - **Stati:** `PascalCase` — es. `InboxVisible`, `ReconnectingFocus`
-- **Eventi / comandi sulle transizioni:** stesso nome del dominio — es. `FocusAccount`, `OpenFromPushTap`
+- **Eventi / comandi sulle transizioni:** stesso nome del dominio — es. `FocusAccount`, `OpenChatFromNotification`
 - **Attori Client:** `Utente`, `UI`, `<Context>Machine`, `AccountManager`, `Supabase`, `ServiceWorker`
 - **Attori Platform:** `AccountBoundary`, `DeliveryWorker`, `ReceptionGate`, `Outbox`, `BridgeWorker`
 
@@ -100,7 +112,7 @@ docs/model/uml/
 
 ## Statechart client
 
-Per contesti con UI a stati, l'interprete Dart in `client/lib/machines/<context>/` deve rispecchiare **1:1** stati, eventi, guard e azioni del diagramma.
+Per contesti con UI a stati, l'interprete Dart in `client/lib/machines/<context>/` deve rispecchiare **1:1** stati, eventi, guard e azioni del diagramma (profilo **client**). I diagrammi profilo **service** descrivono servizi in `client/lib/services/` — vedi § Profilo Service.
 
 Design visuale opzionale: [Stately](https://stately.ai/) / XState v5 — export come riferimento; runtime in Dart.
 
