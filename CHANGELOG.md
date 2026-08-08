@@ -16,6 +16,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Documentazione
 
+- **#249** — Revisione multi-agente documentazione: SSOT/mailbox outbound gate, dedupe diagrammi delivery, tracciabilità push, `SYS-PUSH-PAYLOAD`, guide `reactions.md`, `AGENTS.md` snellito, alias `ci`→release, gate `check-spec-sync` rafforzato
 - Post-merge **#246**: dominio/UML reaction, contratti schema/RPC, SURF-CHAT + registry; migrazione `20260807200000_message_reaction_facts.sql`
 
 ---
