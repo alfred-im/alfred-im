@@ -4,8 +4,8 @@
 |-------|--------|
 | **Promessa ID** | `PROM-MESSAGE-MENTION` |
 | **Classe** | PRODUCT |
-| **Status** | `approved` |
-| **Ultima revisione** | 2026-08-02 |
+| **Status** | `implemented` |
+| **Ultima revisione** | 2026-08-08 |
 
 Promessa di prodotto: nel **rendering** del body testo, sequenze `@username` valide sono link che aprono la conversazione 1:1 con quel peer. Il body persistito resta testo puro; nessuna struttura mention nel DB.
 
