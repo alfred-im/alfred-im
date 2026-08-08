@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-08-01  
+**Ultimo aggiornamento**: 2026-08-08  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 ---
@@ -57,6 +57,8 @@
 - **GIF / voice / location / foto / video**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client — [PROM-CHAT-MEDIA](docs/specs/promises/product/PROM-CHAT-MEDIA.md)
 - **Federazione**: outbox `queued` — attende bridge
 - **Spunte**: `delivered_at` / `read_at` sulla copia mittente — ✓ = accettato server; ✓✓/blu via worker [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md) (`deliver` + `read_receipt` outbox); lettura locale `mark_peer_read` sul destinatario — promesse `SYS-MAILBOX`, `PROM-MESSAGE-STATUS`
+- **Reazioni messaggio**: overlay reazioni su tap messaggio — `PROM-MESSAGE-REACTIONS` (PR #246)
+- **@mentions**: evidenziazione e navigazione @username in chat — `PROM-MESSAGE-MENTION`
 - **Brand**: `#2D2926`, layout responsive stile WhatsApp Web
 
 ### Tecnologie
@@ -182,7 +184,7 @@ Avvio container: `scripts/start-bridges.sh` (`CMD ["/bin/sh", "/start.sh"]`). De
 
 RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_profile`, `list_peer_messages`, `list_owner_messages`, `broadcast_message_to_allowlist`, `mark_peer_read`.
 
-Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §3.
+Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §4 e [contracts/schema.md](docs/specs/contracts/schema.md).
 
 ---
 
@@ -196,7 +198,7 @@ bash scripts/test.sh flusso-reale  # release — valida il prodotto (browser + D
 bash scripts/test.sh manual      # flusso-reale + integration + e2e-multi + live
 ```
 
-- **Gate CI** (`verify.sh`): lint, compile, ~400 test Dart con mock — non sostituisce test sul telefono. Vedi [docs/testing/strategy.md](docs/testing/strategy.md).
+- **Gate CI** (`verify.sh`): lint, compile, **481** test Dart con mock — non sostituisce test sul telefono. Vedi [docs/testing/strategy.md](docs/testing/strategy.md).
 - **Validazione release:** `flusso-reale` (test di release), poi `integration`, `e2e-multi`, ecc. — [client/scripts/test/README.md](client/scripts/test/README.md)
 - CI deploy: `.github/workflows/deploy-client.yml` → GitHub Pages; gate: `release-suite.yml` → `verify.sh`
 - **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (deploy da PR)
@@ -251,7 +253,7 @@ Test: `bash scripts/test.sh integration-ticks`
 
 ### Gate CI (igiene)
 
-`verify.sh` — sync spec/modello + analyze + test Dart isolati (~400). **Non** valida il prodotto. Smoke SQL server: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, …
+`verify.sh` — sync spec/modello + analyze + test Dart isolati (**481**). **Non** valida il prodotto. Smoke SQL server: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, …
 
 Validazione release: `bash scripts/test.sh flusso-reale` · catalogo in [client/scripts/test/README.md](client/scripts/test/README.md)
 

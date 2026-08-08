@@ -54,7 +54,7 @@ Prima implementazione: [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md). Estendibile 
 
 ## 3. Modello (riferimento)
 
-Pattern UI trasversale — nessun bounded context dedicato. Prima implementazione: [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md) · UML overlay: [seq-peer-profile-overlay.puml](../../model/uml/profile/seq-peer-profile-overlay.puml).
+Pattern UI trasversale — nessun bounded context dedicato. Prima implementazione: [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md) · UML overlay: [seq-peer-profile-overlay.puml](../../../model/uml/profile/seq-peer-profile-overlay.puml).
 
 **Implementazione (non vincolante):** tracciabilità §6; binding [SURF-PEER-PROFILE](../../surfaces/SURF-PEER-PROFILE.md).
 

@@ -48,7 +48,7 @@ L'utente vede il proprio messaggio subito in chat (stato pending) mentre il clie
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/) |
-| UML | [docs/model/uml/messaging/messaging-state.puml](../../model/uml/messaging/messaging-state.puml) |
+| UML | [docs/model/uml/messaging/messaging-state.puml](../../../model/uml/messaging/messaging-state.puml) |
 | Statechart client | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/) |
 | Invio contenuto | `SendContent` → `ContentSent` / `ContentSendFailed` |
 

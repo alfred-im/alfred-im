@@ -1,6 +1,6 @@
 # Alfred — Architettura (panoramica)
 
-**Data**: 2026-07-19  
+**Data**: 2026-08-08  
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
 **Stato**: prodotto stabile su `main`
 
@@ -32,11 +32,12 @@
 
 | ADR | Scelta |
 |-----|--------|
-| D-008 | Flutter parla **solo** con Supabase |
-| D-051 | Stato bridge in piattaforma (`outbox`, `sync_cursors`, `bridge_jobs`) |
-| D-034 | Protocollo **mai** visibile in UI contatti/inbox |
-| D-024 | Multi-account — manifest + focus; una GoTrue attiva |
-| D-031 | Web **online-only** |
+| [address-based-messaging](../decisions/address-based-messaging.md) | Messaggistica per indirizzo; rubrica isolata |
+| [bridge-stateless](../decisions/bridge-stateless.md) | Stato bridge in piattaforma (`outbox`, `sync_cursors`, `bridge_jobs`) |
+| [no-internal-external-chat-distinction](../decisions/no-internal-external-chat-distinction.md) | Protocollo **mai** visibile in UI contatti/inbox |
+| [multi-account-parallel-sessions](../decisions/multi-account-parallel-sessions.md) | Multi-account — manifest + focus; una GoTrue attiva |
+| [server-as-reception](../decisions/server-as-reception.md) | Ricezione filtrata (allow list) |
+| [single-device-logout-open](../decisions/single-device-logout-open.md) | Logout = chiusura locale account (no `signOut` globale) |
 
 ---
 
@@ -87,7 +88,11 @@ Dettaglio: [guides/shareable-link.md](../guides/shareable-link.md).
 | Profilo, rubrica, allow list | [SYS-PROFILE](../specs/promises/system/SYS-PROFILE.md), [SYS-CONTACTS](../specs/promises/system/SYS-CONTACTS.md), [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) | [peer-profile.md](../guides/peer-profile.md) |
 | Link condivisibili | [PROM-SHAREABLE-LINK](../specs/promises/product/PROM-SHAREABLE-LINK.md) | [shareable-link.md](../guides/shareable-link.md) |
 | Account gruppo | [SYS-GROUP](../specs/promises/system/SYS-GROUP.md) | [groups.md](../guides/groups.md) |
-| Scroll chat | backlog `PROM-BOTTOM-ANCHOR` | [chat-scroll.md](../guides/chat-scroll.md) |
+| Scroll chat | [chat-scroll.md](../guides/chat-scroll.md) | [chat-scroll.md](../guides/chat-scroll.md) |
+| Push | [SYS-PUSH](../specs/promises/system/SYS-PUSH.md), [PROM-PUSH-NOTIFY](../specs/promises/product/PROM-PUSH-NOTIFY.md) | — |
+| Ambito conversazione | [PROM-CONVERSATION-SCOPE](../specs/promises/product/PROM-CONVERSATION-SCOPE.md) | — |
+| Reazioni | [PROM-MESSAGE-REACTIONS](../specs/promises/product/PROM-MESSAGE-REACTIONS.md) | — |
+| @mentions | [PROM-MESSAGE-MENTION](../specs/promises/product/PROM-MESSAGE-MENTION.md) | — |
 
 ---
 
@@ -95,7 +100,7 @@ Dettaglio: [guides/shareable-link.md](../guides/shareable-link.md).
 
 Schema, enum, RLS, storage: **[contracts/schema.md](../specs/contracts/schema.md)**  
 RPC business logic: **[contracts/rpc.md](../specs/contracts/rpc.md)**  
-Migrazioni: [`supabase/migrations/`](../../../supabase/migrations/)
+Migrazioni: [`supabase/migrations/`](../../supabase/migrations/)
 
 ### Integrazione bridge (non implementata)
 

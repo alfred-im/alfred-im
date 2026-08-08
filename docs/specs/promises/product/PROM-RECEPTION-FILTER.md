@@ -79,9 +79,9 @@ Su tentativo invio **outbound** senza consenso proprio: errore server struttural
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/reception/](../../../domain/reception/), [docs/domain/delivery/](../../../domain/delivery/) |
-| UML | [docs/model/uml/reception/](../../model/uml/reception/), [docs/model/uml/delivery/seq-reception-gate.puml](../../model/uml/delivery/seq-reception-gate.puml) |
+| UML | [docs/model/uml/reception/](../../../model/uml/reception/), [docs/model/uml/delivery/seq-reception-gate.puml](../../../model/uml/delivery/seq-reception-gate.puml) |
 | Statechart client | [client/lib/machines/reception/](../../../client/lib/machines/reception/) |
-| Gate recapito | `EvaluateInboundDelivery` — [seq-reception-delivery-gate.puml](../../model/uml/reception/seq-reception-delivery-gate.puml) |
+| Gate recapito | `EvaluateInboundDelivery` — [seq-reception-delivery-gate.puml](../../../model/uml/reception/seq-reception-delivery-gate.puml) |
 
 **Implementazione (non vincolante):** [docs/domain/reception/README.md](../../../domain/reception/README.md) · schema: [SYS-RECEPTION](../system/SYS-RECEPTION.md)
 

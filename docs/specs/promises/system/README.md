@@ -1,6 +1,6 @@
 # Promesse SYSTEM — piattaforma
 
-**Ultima revisione**: 2026-07-12
+**Ultima revisione**: 2026-08-08
 
 Le promesse **SYSTEM** sono il contratto tra client, piattaforma Supabase e bridge. Panoramica repository: [`README.md`](../../../../README.md). Il dettaglio backend resta nei documenti canonici sotto.
 
@@ -28,6 +28,7 @@ Ogni modifica a schema o RPC **deve** aggiornare questi contratti e la promessa 
 | SYS-RECEPTION | [SYS-RECEPTION.md](./SYS-RECEPTION.md) | Allow list, gate recapito |
 | SYS-ACCOUNT-BOUNDARY | [SYS-ACCOUNT-BOUNDARY.md](./SYS-ACCOUNT-BOUNDARY.md) | Confine account (legge madre) |
 | SYS-DELIVERY | [SYS-DELIVERY.md](./SYS-DELIVERY.md) | Outbox + worker delivery |
+| SYS-PUSH | [SYS-PUSH.md](./SYS-PUSH.md) | Web Push, subscription, payload |
 
 Indice completo: [registry.md](../../registry.md).
 

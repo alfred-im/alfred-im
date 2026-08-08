@@ -1,6 +1,6 @@
 # Bounded context — Alfred
 
-**Ultima revisione**: 2026-07-19
+**Ultima revisione**: 2026-08-08
 
 Ogni riga è un **contesto delimitato** (DDD): propri glossario, comandi/eventi e diagrammi UML. I contesti comunicano tramite comandi ed eventi espliciti, non logica condivisa implicita nel codice.
 

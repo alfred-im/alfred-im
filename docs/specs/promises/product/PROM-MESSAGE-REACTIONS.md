@@ -70,7 +70,7 @@ L'utente esprime una reaction emoji su un messaggio in conversazione, la vede su
 
 | PROM-ID | Verifica |
 |---------|----------|
-| `PROM-MESSAGE-REACTIONS-001`–`008` | `client/test/unit/message_reactions_test.dart`, `message_actions_machine_test.dart` |
+| `PROM-MESSAGE-REACTIONS-001`–`008` | `client/test/unit/message_reactions_test.dart`, `messaging_machine_test.dart` |
 | Persistenza | `supabase/tests/message_reaction_facts_smoke.sql` |
 
 ---

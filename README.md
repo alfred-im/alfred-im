@@ -57,6 +57,8 @@ The client talks to a Supabase platform layer (Postgres, Auth, Realtime, Storage
 | Peer profiles and shareable `#username` links | ✅ |
 | **Group accounts** | ✅ |
 | Message delivery status (✓ / ✓✓) | ✅ |
+| Message reactions | ✅ |
+| @mentions in chat (approved, shipping) | ✅ |
 | XMPP / Matrix federation | Planned (bridge stubs today) |
 
 ---
@@ -119,7 +121,7 @@ flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0
 
 Open http://localhost:8080/
 
-See [`client/README.md`](client/README.md) for client-specific setup, including a local Supabase stack.
+See [`client/README.md`](client/README.md) for client-specific setup. For an isolated local Supabase stack, see [AGENTS.md](AGENTS.md) (Whole-stack local dev).
 
 ---
 
@@ -131,10 +133,12 @@ bash scripts/verify.sh          # required before push
 bash scripts/verify.sh --build  # optional web build
 ```
 
-When changing specs or database migrations:
+When changing specs, domain model, or database migrations, `verify.sh` runs sync checks automatically. Manual run from repo root:
 
 ```bash
 bash scripts/check-spec-sync.sh
+bash scripts/check-model-sync.sh
+bash scripts/check-composition-sync.sh
 ```
 
 ---

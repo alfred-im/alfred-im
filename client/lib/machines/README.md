@@ -1,7 +1,7 @@
 # Statechart — client Flutter
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-19
+**Ultima revisione**: 2026-08-08
 
 Implementazione **eseguibile** del modello UML per il client web (Flutter).
 
@@ -52,7 +52,7 @@ client/lib/machines/<context>/
 | navigation | `navigation/` | `verified` |
 | shareable-link | `shareable-link/` | `verified` |
 | notifications | `notifications/` | `verified` |
-| messaging | `messaging/` | `verified` (3 macchine + coordinator) |
+| messaging | `messaging/` | `verified` (4 macchine + coordinator) |
 | contacts | `contacts/` | `verified` |
 | profile | `profile/` | `verified` |
 | reception | `reception/` | `verified` |

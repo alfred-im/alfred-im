@@ -29,7 +29,7 @@ Le istruzioni Cloud Agent (branch, commit, push, PR, «completa la richiesta») 
 | Vietato | Consentito |
 |---------|------------|
 | `gh run watch`, polling in loop, «aspetto che la CI sia verde» prima di rispondere/merge | Push, aprire/aggiornare PR, comunicare link al run |
-| Trattenere merge/commit solo perché `full-suite` è `in_progress` | Gate **locale** `bash scripts/verify.sh` prima del push |
+| Trattenere merge/commit solo perché `release-suite` è `in_progress` | Gate **locale** `bash scripts/verify.sh` prima del push |
 | Chiedere all'utente di attendere la CI | Eventuale `gh run view` **una tantum** per diagnosi se l'utente chiede perché è fallita |
 
 Dopo push: **fine turno** (o merge se l'utente lo chiede esplicitamente). Lo stato Actions lo verifica chi merge/review — non l'agente in polling.
@@ -102,7 +102,7 @@ backend out of the box.
   `--dart-define=SUPABASE_URL=http://localhost:54321 --dart-define=SUPABASE_ANON_KEY=<local anon>`
   (get the anon key from `supabase status`). Prefer local for anything that writes, so you never touch the
   user's live/test data.
-- **`supabase start` works on a fresh apply** (all 39 migrations + `seed.sql`). It needs the Docker daemon
+- **`supabase start` works on a fresh apply** (all 43 migrations + `seed.sql`). It needs the Docker daemon
   running (see below). Local users can be created confirmed via the GoTrue admin API with the `service_role`
   key (`POST /auth/v1/admin/users`, `email_confirm:true`, `user_metadata.username`); the `handle_new_user`
   trigger then creates the `profiles` row. Note: the async delivery worker (`alfred_delivery.process_outbox`)
@@ -122,7 +122,7 @@ backend out of the box.
 - **Hub test:** `cd client && bash scripts/test.sh list` — catalogo completo ([`scripts/test/README.md`](client/scripts/test/README.md)).
 - **Gate CI (igiene):** `bash scripts/test.sh gate` (= `verify.sh`: analyze + test Dart isolati). Obbligatorio su PR; **non** valida che l’app funzioni sul telefono.
 - **Validazione release:** `bash scripts/test.sh release` — stack locale completo (stesso percorso del telefono). Obbligatorio per ogni release su media / multi-account / auth / push.
-- **Scrivere test nuovi:** copiare [`client/e2e/photo-resume-session-repro.spec.ts`](client/e2e/photo-resume-session-repro.spec.ts) — **riferimento obbligatorio** ([`docs/testing/strategy.md`](../docs/testing/strategy.md#come-si-scrivono-i-test-di-release)). Non aggiungere unit test Dart al gate sperando di coprire il telefono.
+- **Scrivere test nuovi:** copiare [`client/e2e/photo-resume-session-repro.spec.ts`](client/e2e/photo-resume-session-repro.spec.ts) — **riferimento obbligatorio** ([`docs/testing/strategy.md`](docs/testing/strategy.md#come-si-scrivono-i-test-di-release)). Non aggiungere unit test Dart al gate sperando di coprire il telefono.
 - **Suite manuali complete:** `bash scripts/test.sh release` (= gate locale + sql-smoke + integration + e2e stack + stack Dart).
 - Web build: `bash scripts/verify.sh --build` (or `flutter build web --release --base-href "/alfred-im/"`).
 - **Prima di qualsiasi test GUI**: `bash scripts/test.sh diagnose` — se fallisce su CDP: `bash scripts/reset-chrome-cdp.sh` (kill Chrome + profilo pulito `/tmp/chrome-cdp-profile`).

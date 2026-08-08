@@ -46,9 +46,9 @@ L'utente apre e naviga conversazioni per **indirizzo peer** (username interno / 
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/), [docs/domain/navigation/](../../../domain/navigation/) |
-| UML | [docs/model/uml/messaging/](../../model/uml/messaging/), [docs/model/uml/navigation/](../../model/uml/navigation/) |
+| UML | [docs/model/uml/messaging/](../../../model/uml/messaging/), [docs/model/uml/navigation/](../../../model/uml/navigation/) |
 | Statechart client | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/), [client/lib/machines/navigation/](../../../client/lib/machines/navigation/) |
-| Apertura conversazione | `OpenConversation` · [navigation-shell-state.puml](../../model/uml/navigation/navigation-shell-state.puml) |
+| Apertura conversazione | `OpenConversation` · [navigation-shell-state.puml](../../../model/uml/navigation/navigation-shell-state.puml) |
 
 **Implementazione (non vincolante):** [docs/domain/messaging/README.md](../../../domain/messaging/README.md) · schema: [SYS-MAILBOX](../system/SYS-MAILBOX.md)
 

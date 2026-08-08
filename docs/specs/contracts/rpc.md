@@ -1,7 +1,7 @@
 # Contratto RPC — messaggistica
 
-**Ultima revisione**: 2026-07-25  
-**Status**: `implemented` su `main` (migrazioni fino a `20260725100000`, 40 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-08-08  
+**Status**: `implemented` su `main` (migrazioni fino a `20260807200000`, 43 totali in `supabase/migrations/`)  
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) (`implemented`)
 
 Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
@@ -136,6 +136,7 @@ list_inbox() → table (
   peer_profile_id uuid,
   peer_external_address text,
   peer_avatar_url text,
+  peer_cover_url text,
   peer_pronouns text,
   peer_profile_kind profile_kind,
   last_message_preview text,
@@ -152,7 +153,7 @@ Aggregazione su `messages` WHERE `owner_id = auth.uid()`:
 
 Preview per tipo: testo troncato, `[GIF]`, `format_voice_preview`, `format_location_preview`.
 
-**Migrazioni**: `20260627230000`, `20260628100000`, aggiornamenti voice/location, `20260704120000`, `20260706130000`.
+**Migrazioni**: `20260627230000`, `20260628100000`, aggiornamenti voice/location, `20260704120000`, `20260706130000`, `20260806190000_profile_cover_url.sql`.
 
 ---
 
@@ -243,12 +244,14 @@ Solo λ presenti nel mio archivio (`owner_id = auth.uid()`).
 
 ```sql
 find_profile_by_username(p_username text) → table (
-  id uuid, username text, display_name text, avatar_url text, pronouns text,
+  id uuid, username text, display_name text, avatar_url text, cover_url text, pronouns text,
   profile_kind profile_kind
 )
 ```
 
-Risoluzione indirizzo Alfred interno → profilo pubblico (#134: avatar e pronomi; `profile_kind` per routing shell). Richiede `auth.uid()`; **esclude** il proprio profilo (`p.id <> auth.uid()`).
+Risoluzione indirizzo Alfred interno → profilo pubblico (avatar, cover, pronomi; `profile_kind` per routing shell). Richiede `auth.uid()`; **esclude** il proprio profilo (`p.id <> auth.uid()`).
+
+**Migrazioni**: `20260806190000_profile_cover_url.sql` (`cover_url`).
 
 **Spec**: [SYS-PROFILE](../promises/system/SYS-PROFILE.md).
 

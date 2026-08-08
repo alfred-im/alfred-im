@@ -23,8 +23,10 @@ Client web collegato a Supabase (contatti, inbox, chat realtime, profilo, **mult
 | **Profilo peer** | Overlay fullscreen al tap avatar — Allow + rubrica + CTA «Inizia a chattare» + Condividi — `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE` |
 | **Link condivisibili** | Fragment `#username` / `#username/chat`; share di sistema — `PROM-SHAREABLE-LINK` |
 | **Gruppi** | Account `profile_kind = group`; `GroupHomePanel` + chat; partecipazione allow list bidirezionale — `SYS-GROUP` |
+| **Reazioni** | Tap messaggio → overlay reazioni — `PROM-MESSAGE-REACTIONS` |
+| **@mentions** | Evidenziazione e navigazione @username in chat — `PROM-MESSAGE-MENTION` |
 | **Invio** | `send_message_to_profile` |
-| **Gate test** | `verify.sh` — **377** test unit/widget (zero issue analyze) |
+| **Gate test** | `verify.sh` — **481** test unit/widget (zero issue analyze) |
 
 Build native mobile/desktop non è focus del progetto oggi; la superficie supportata è il web client.
 
@@ -36,8 +38,9 @@ Catalogo e launcher unificato:
 cd client
 bash scripts/test.sh list        # tutte le suite (gate + manuali)
 bash scripts/test.sh gate        # gate CI — obbligatorio prima di git push
+bash scripts/test.sh flusso-reale  # ★ release — stesso percorso del telefono
 bash scripts/test.sh e2e-multi   # Playwright multi-account (scope attuale)
-bash scripts/test.sh manual      # integration + e2e-multi + live
+bash scripts/test.sh manual      # alias di `release` — stack locale completo (vedi test/README)
 ```
 
 Dettaglio: [`scripts/test/README.md`](scripts/test/README.md)
@@ -58,4 +61,10 @@ lib/
 └── widgets/       # AuthOverlay, InboxPanel, ChatPanel, PeerProfileOverlay, …
 ```
 
-Vedi `docs/guides/multi-account.md`, `docs/guides/groups.md`, `docs/guides/peer-profile.md`, `docs/decisions/multi-account-parallel-sessions.md`, `PROJECT_MAP.md`.
+## Local Supabase (optional)
+
+Isolated backend for writes/tests: `supabase start` from repo root, then launch the client with `--dart-define=SUPABASE_URL=http://localhost:54321` and the local anon key from `supabase status`. Full steps: [AGENTS.md](../AGENTS.md) (Whole-stack local dev) and [`scripts/test/README.md`](scripts/test/README.md).
+
+## Documentazione
+
+Vedi [`../docs/guides/multi-account.md`](../docs/guides/multi-account.md), [`../docs/guides/groups.md`](../docs/guides/groups.md), [`../docs/guides/peer-profile.md`](../docs/guides/peer-profile.md), [`../docs/decisions/multi-account-parallel-sessions.md`](../docs/decisions/multi-account-parallel-sessions.md), [`../PROJECT_MAP.md`](../PROJECT_MAP.md).

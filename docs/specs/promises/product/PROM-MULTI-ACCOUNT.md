@@ -85,9 +85,9 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/multi-account/](../../../domain/multi-account/), [docs/domain/auth/](../../../domain/auth/) |
-| UML | [docs/model/uml/multi-account/](../../model/uml/multi-account/), [docs/model/uml/auth/](../../model/uml/auth/) |
+| UML | [docs/model/uml/multi-account/](../../../model/uml/multi-account/), [docs/model/uml/auth/](../../../model/uml/auth/) |
 | Statechart client | [client/lib/machines/multi-account/](../../../client/lib/machines/multi-account/), [client/lib/machines/auth/](../../../client/lib/machines/auth/) |
-| Focus account | `FocusAccount` · [seq-focus-switch.puml](../../model/uml/multi-account/seq-focus-switch.puml) |
+| Focus account | `FocusAccount` · [seq-focus-switch.puml](../../../model/uml/multi-account/seq-focus-switch.puml) |
 
 **Implementazione (non vincolante):** [docs/domain/multi-account/README.md](../../../domain/multi-account/README.md) · [docs/guides/multi-account.md](../../../guides/multi-account.md)
 

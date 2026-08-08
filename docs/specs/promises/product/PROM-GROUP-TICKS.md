@@ -53,8 +53,8 @@ Quando un utente invia a un gruppo, le spunte sulla **propria** copia indicano s
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/groups/](../../../domain/groups/), [docs/domain/delivery/](../../../domain/delivery/) |
-| UML | [docs/model/uml/groups/](../../model/uml/groups/) — [seq-broadcast.puml](../../model/uml/groups/seq-broadcast.puml) |
-| Erogazione | `ErogateGroupMessage` — [seq-process-outbox.puml](../../model/uml/delivery/seq-process-outbox.puml) |
+| UML | [docs/model/uml/groups/](../../../model/uml/groups/) — [seq-broadcast.puml](../../../model/uml/groups/seq-broadcast.puml) |
+| Erogazione | `ErogateGroupMessage` — [seq-process-outbox.puml](../../../model/uml/delivery/seq-process-outbox.puml) |
 
 **Implementazione (non vincolante):** [docs/domain/groups/README.md](../../../domain/groups/README.md) · [docs/guides/groups.md](../../../guides/groups.md)
 

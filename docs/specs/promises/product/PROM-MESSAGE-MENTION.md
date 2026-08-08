@@ -50,8 +50,8 @@ L'utente può citare un account Alfred con `@username` nel messaggio; chi legge 
 
 | Elemento | Artefatto |
 |----------|-----------|
-| Glossario | [docs/domain/messaging/glossary.md](../../domain/messaging/glossary.md) — mention display-only |
-| Navigazione | [navigation](../../domain/navigation/) — riuso `OpenFromCompose` / `openPeerOnFocusedAccount` |
+| Glossario | [docs/domain/messaging/glossary.md](../../../domain/messaging/glossary.md) — mention display-only |
+| Navigazione | [navigation](../../../domain/navigation/) — riuso `OpenFromCompose` / `openPeerOnFocusedAccount` |
 | Statechart messaging | Nessuna nuova transizione — solo presentazione |
 
 ---

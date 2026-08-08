@@ -70,7 +70,7 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 |----------|-----------|
 | Glossario / comandi surfaccia | [docs/domain/peer-profile/](../../../domain/peer-profile/) |
 | Contesti delegati | [reception](../../../domain/reception/), [contacts](../../../domain/contacts/), [navigation](../../../domain/navigation/) |
-| UML | [docs/model/uml/profile/seq-peer-profile-overlay.puml](../../model/uml/profile/seq-peer-profile-overlay.puml) |
+| UML | [docs/model/uml/profile/seq-peer-profile-overlay.puml](../../../model/uml/profile/seq-peer-profile-overlay.puml) |
 | Statechart client | **Nessuno** per overlay peer — delega a `ReceptionMachine`, `ContactsMachine`, `NavigationMachine` (vedi peer-profile README) |
 | Overlay dismiss | [PROM-OVERLAY-DISMISS](./PROM-OVERLAY-DISMISS.md) |
 

@@ -89,4 +89,4 @@ Navigazione per AI. **Modello**: [domain/README.md](./domain/README.md) · **Pro
 - [WISHLIST.md](./WISHLIST.md) — backlog funzionalità (XMPP, UI)
 - [specs/contracts/schema.md](./specs/contracts/schema.md) · [rpc.md](./specs/contracts/rpc.md)
 
-**Ultimo aggiornamento**: 2026-08-03
+**Ultimo aggiornamento**: 2026-08-08

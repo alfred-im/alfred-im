@@ -1,6 +1,6 @@
 # Follow-up: suite CI e Playwright (post-merge PR #231)
 
-**Data:** 2026-08-01 (agg. fine sessione)  
+**Data:** 2026-08-08 (snapshot stato suite)  
 **Contesto:** tier Playwright in CI ripristinati a spec documentati (PR #232+).
 
 ---
@@ -9,8 +9,8 @@
 
 | Layer | Stato |
 |-------|--------|
-| Gate Dart (`verify.sh`) | ✅ ~446 test |
-| CI full-suite step 1–5 | ✅ stack, SQL smoke, integration, Dart `@stack`, build web |
+| Gate Dart (`verify.sh`) | ✅ 481 test |
+| CI release-suite step 1–5 | ✅ stack, SQL smoke, integration, Dart `@stack`, build web |
 | CI Playwright step 6 | ✅ **9 spec** (`e2e/` intero, ~2.6 min headless) |
 
 ### Spec in `client/e2e/` (9)

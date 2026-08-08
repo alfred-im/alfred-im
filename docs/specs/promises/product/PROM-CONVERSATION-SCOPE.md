@@ -7,10 +7,10 @@
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-01 |
 
-[NavigationMachine](../../client/lib/machines/navigation/navigation_machine.dart) possiede l'unico `ConversationScope` commesso. `activePeer` in view-state è proiezione UI. Messaging legge solo scope commesso.
+[NavigationMachine](../../../client/lib/machines/navigation/navigation_machine.dart) possiede l'unico `ConversationScope` commesso. `activePeer` in view-state è proiezione UI. Messaging legge solo scope commesso.
 
-**Dominio (invarianti):** [invariants.md](../../domain/navigation/invariants.md)  
-**Implementazione:** [conversation_session_access.dart](../../client/lib/utils/conversation_session_access.dart)  
+**Dominio (invarianti):** [invariants.md](../../../domain/navigation/invariants.md)  
+**Implementazione:** [conversation_session_access.dart](../../../client/lib/utils/conversation_session_access.dart)  
 **UML:** `docs/model/uml/navigation/navigation-shell-state.puml`, `seq-open-conversation-unified.puml`
 
 ---
@@ -26,7 +26,7 @@
 | **PROM-CONVERSATION-SCOPE-005** | UI chat e `MessagesController` non mostrano messaggi se scope non commesso e coerente |
 | **PROM-CONVERSATION-SCOPE-006** | Fetch/realtime ignorano risultati se scope non più attivo (generation guard) |
 | **PROM-CONVERSATION-SCOPE-007** | Inbox, push, link, compose usano la stessa transazione `OpenConversation` con `OpenConversationSource` |
-| **PROM-CONVERSATION-SCOPE-008** | **Session identity** per conversazione commessa: regole in [invariants.md](../../domain/navigation/invariants.md); consolidate **prima di fetch/send/upload** (non prima della shell chat); UI/fetch/send/upload bloccati se l'invariante fallisce; messaggio utente «Sessione scaduta — accedi di nuovo» |
+| **PROM-CONVERSATION-SCOPE-008** | **Session identity** per conversazione commessa: regole in [invariants.md](../../../domain/navigation/invariants.md); consolidate **prima di fetch/send/upload** (non prima della shell chat); UI/fetch/send/upload bloccati se l'invariante fallisce; messaggio utente «Sessione scaduta — accedi di nuovo» |
 | **PROM-CONVERSATION-SCOPE-009** | Su `OpenConversation`, la transizione shell verso chat (`ConversationVisible`: header del peer + indicatore caricamento) avviene **sincronamente** al tap/intento, **prima** di I/O async non necessario alla risoluzione immediata del peer |
 | **PROM-CONVERSATION-SCOPE-010** | `OpenConversation` **non** attende `refreshFocusedInbox` né altre operazioni inbox come prerequisito alla navigazione |
 | **PROM-CONVERSATION-SCOPE-011** | Consolidazione sessione (se richiesta) e caricamento messaggi avvengono **dopo** l'ingresso UI; risultati ignorati se `loadSeq` cambia o scope invalidato (abort su `CloseConversation` / apertura altro peer) |
