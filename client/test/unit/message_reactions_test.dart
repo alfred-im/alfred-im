@@ -46,4 +46,37 @@ void main() {
       expect(merged.single.reactions, isEmpty);
     });
   });
+
+  group('shouldWithdrawReactionOnTap', () {
+    test('withdraws when emoji is mine even if count is shared', () {
+      const reactions = [
+        ReactionSummary(emoji: '\u{1F600}', count: 2, includesMe: true),
+        ReactionSummary(emoji: '\u{2764}', count: 1, includesMe: false),
+      ];
+      expect(
+        shouldWithdrawReactionOnTap(reactions: reactions, emoji: '\u{1F600}'),
+        isTrue,
+      );
+    });
+
+    test('applies when emoji is only from others', () {
+      const reactions = [
+        ReactionSummary(emoji: '\u{1F600}', count: 2, includesMe: false),
+      ];
+      expect(
+        shouldWithdrawReactionOnTap(reactions: reactions, emoji: '\u{1F600}'),
+        isFalse,
+      );
+    });
+
+    test('withdraws solo reaction', () {
+      const reactions = [
+        ReactionSummary(emoji: '\u{1F600}', count: 1, includesMe: true),
+      ];
+      expect(
+        shouldWithdrawReactionOnTap(reactions: reactions, emoji: '\u{1F600}'),
+        isTrue,
+      );
+    });
+  });
 }

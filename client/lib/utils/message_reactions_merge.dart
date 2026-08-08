@@ -41,3 +41,12 @@ List<String> collectLogicalMessageIds(List<ChatMessage> messages) {
       .toSet()
       .toList();
 }
+
+/// Tap su emoji già attiva dall'utente corrente → ritiro, anche se altri
+/// condividono la stessa emoji (count aggregato > 1).
+bool shouldWithdrawReactionOnTap({
+  required List<ReactionSummary> reactions,
+  required String emoji,
+}) {
+  return reactions.any((r) => r.emoji == emoji && r.includesMe);
+}

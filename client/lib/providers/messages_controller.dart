@@ -21,6 +21,7 @@ import '../services/message_service.dart';
 import '../services/outbound_message_queue.dart';
 import '../groups/group_peer_author_enrichment.dart';
 import '../services/profile_service.dart';
+import '../utils/message_reactions_merge.dart';
 
 class MessagesController extends ChangeNotifier {
   MessagesController({
@@ -197,10 +198,10 @@ class MessagesController extends ChangeNotifier {
     if (lambda == null) {
       throw StateError('Messaggio non ancora confermato dal server.');
     }
-    final mine = message.reactions.where((r) => r.includesMe).toList();
-    if (mine.length == 1 &&
-        mine.first.emoji == emoji &&
-        mine.first.count == 1) {
+    if (shouldWithdrawReactionOnTap(
+      reactions: message.reactions,
+      emoji: emoji,
+    )) {
       await _coordinator.withdrawReaction(logicalMessageId: lambda);
     } else {
       await _coordinator.applyReaction(
