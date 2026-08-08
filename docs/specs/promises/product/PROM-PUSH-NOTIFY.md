@@ -169,8 +169,8 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 
 ## 6. Scenario manuale (accettazione)
 
-1. Browser A: login `alfredagent1` + `alfredagent2` (multi-account); concedi permesso notifiche.
-2. Browser B: solo `alfredagent2`.
+1. Stack locale: browser A — login `ciagent1` + `ciagent2` (multi-account, vedi `scripts/ci-agents.env.sh`); concedi permesso notifiche.
+2. Browser B — solo `ciagent2`.
 3. Da B invia messaggio ad agent1 → A mostra push (account agent1 in background).
 4. Su A: focus agent1, apri chat con agent2 → invio da B → **nessuna** push visibile.
 5. Su A: focus agent1, torna inbox (chat chiusa) → invio da B → push visibile con anteprima testo.
