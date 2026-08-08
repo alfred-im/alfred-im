@@ -2,7 +2,7 @@
 
 **SSOT catalogo comandi** — altri file (`AGENTS.md`, `PROJECT_MAP.md`, `README.md`) rimandano qui.
 
-**Filosofia gate vs release:** [docs/testing/strategy.md](../../docs/testing/strategy.md) · **SSOT indice:** [docs/SSOT.md](../../SSOT.md)
+**Filosofia gate vs release:** [docs/testing/strategy.md](../../../docs/testing/strategy.md) · **SSOT indice:** [docs/SSOT.md](../../../docs/SSOT.md)
 
 Punto unico per **scoprire** e **lanciare** tutti i test del client.
 
@@ -44,7 +44,7 @@ Opzione build web: `bash scripts/verify.sh --build`
 | SCOPE-008 wiring | `wiring/navigation_wiring_test.dart` | Stack produzione: open peer + sessione |
 | **SCOPE-009–012** | `wiring/navigation_open_ingress_test.dart`; `widget/conversation_scope_ingress_test.dart` | Ingresso UI sync prima di refresh inbox; header peer senza sessione in RAM; inbox silent refresh |
 
-**Strategia completa:** [docs/testing/strategy.md](../../docs/testing/strategy.md) — gate = igiene; `flusso-reale` = riferimento prodotto.
+**Strategia completa:** [docs/testing/strategy.md](../../../docs/testing/strategy.md) — gate = igiene; `flusso-reale` = riferimento prodotto.
 
 ### Tier 1c — Composition (gate)
 
@@ -71,7 +71,7 @@ Gate script: `scripts/check-composition-sync.sh`
 
 [`client/e2e/photo-resume-session-repro.spec.ts`](../../e2e/photo-resume-session-repro.spec.ts)
 
-Checklist completa: [docs/testing/strategy.md § Come si scrivono i test di release](../../docs/testing/strategy.md#come-si-scrivono-i-test-di-release).
+Checklist completa: [docs/testing/strategy.md § Come si scrivono i test di release](../../../docs/testing/strategy.md#come-si-scrivono-i-test-di-release).
 
 In sintesi: percorso telefono intero, stack locale reale, login da UI, assert su Postgres — **non** altri unit test al posto di questo.
 

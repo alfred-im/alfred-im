@@ -48,7 +48,7 @@ Ogni promessa vincolante: `PROM-{NAME}-NNN`.
 |----------|-----------|
 | Glossario / comandi | [docs/domain/<context>/](../../../domain/<context>/) |
 | UML | [docs/model/uml/<context>/](../../../model/uml/<context>/) |
-| Statechart client | [client/lib/machines/<context>/](../../../client/lib/machines/<context>/) (se applicabile) |
+| Statechart client | [client/lib/machines/<context>/](../../../../client/lib/machines/<context>/) (se applicabile) |
 
 **Implementazione (non vincolante):** [docs/domain/<context>/README.md](../../../domain/<context>/README.md) · guide operative se presenti.
 
@@ -74,8 +74,8 @@ Ogni promessa vincolante: `PROM-{NAME}-NNN`.
 
 | Documento | Ruolo |
 |-----------|--------|
-| [registry.md](../../registry.md) | Indice promesse |
+| [registry.md](./registry.md) (da `promises/product/`: `../../registry.md`) | Indice promesse |
 
-Aggiornare [registry.md](../../registry.md) quando si crea o cambia stato questa promessa.
+Aggiornare il registry quando si crea o cambia stato questa promessa.
 
-> **Path:** questo template va in `docs/specs/promises/product/` — usare `../../../` per `domain/`, `model/` e `client/`.
+> **Path:** questo template va in `docs/specs/promises/product/` — usare `../../../` per `domain/` e `model/`; `../../../../` per `client/` (da `promises/product/`).
