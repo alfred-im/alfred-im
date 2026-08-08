@@ -1,6 +1,8 @@
 # Inbox e liste
 
-**Contratto**: [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](../specs/surfaces/SURF-INBOX.md)
+**Regole prodotto:** [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](../specs/surfaces/SURF-INBOX.md), [PROM-REALTIME-OWNER](../specs/promises/product/PROM-REALTIME-OWNER.md)
+
+**Ultima revisione:** 2026-08-08
 
 ---
 
@@ -23,7 +25,7 @@ Provider contatti/profilo: `ChangeNotifierProxyProvider` legati ad `AuthControll
 | Rubrica | `filterByQueryFields` su nome/username |
 | Persone consentite | idem |
 
-L'anteprima messaggio in ogni riga inbox (`last_message_preview` da `list_inbox`) corrisponde all'ultimo messaggio nel mio archivio con quel peer; aprendo la chat, quel messaggio è nella finestra iniziale caricata ([SURF-CHAT-015](../specs/surfaces/SURF-CHAT.md), [SYS-MAILBOX-057](../specs/promises/system/SYS-MAILBOX.md)).
+Anteprima inbox (`last_message_preview` da `list_inbox`) allineata alla finestra iniziale chat — vedi [SURF-CHAT-015](../specs/surfaces/SURF-CHAT.md).
 
 ---
 

@@ -121,7 +121,7 @@ flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0
 
 Open http://localhost:8080/
 
-See [`client/README.md`](client/README.md) for client-specific setup. For an isolated local Supabase stack, see [AGENTS.md](AGENTS.md) (Whole-stack local dev).
+See [`client/README.md`](client/README.md) for client-specific setup and an isolated local Supabase stack (`supabase start` from repo root, then `supabase status` for URL and anon key).
 
 ---
 

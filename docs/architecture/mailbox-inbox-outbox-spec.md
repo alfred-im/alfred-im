@@ -155,11 +155,14 @@ Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 ### Flusso internal (sintesi)
 
 ```
-Invio (account mittente)
+Invio (account mittente) — send_message_to_profile
+  → gate outbound: is_sender_allowed_for_reception(mittente, destinatario)
+       SE violazione: raise exception 'recipient not in reception allowlist'
+                      — nessuna INSERT copia mittente
   → INSERT copia mittente (λ) — ✓
   → INSERT outbox (event_kind=deliver)
   → alfred_delivery.process_outbox:
-       gate reception_allowlist(destinatario)
+       gate inbound: reception_allowlist(destinatario)
        SE allowed: INSERT copia destinatario + delivered_at mittente — ✓✓ grigie
        ALTRIMENTI: reception_rejected, delivered_at null — ✓ permanente
 

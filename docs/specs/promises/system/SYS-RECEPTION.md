@@ -5,7 +5,7 @@
 | **Promessa ID** | `SYS-RECEPTION` |
 | **Classe** | SYSTEM |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-08-01 |
+| **Ultima revisione** | 2026-08-08 |
 | **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) |
 | **PR** | #161, #179 |
 
@@ -40,15 +40,15 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 | **SYS-RECEPTION-013** | Nuovo account: lista vuota di default (nessuno può scrivere finché non si aggiunge qualcuno) |
 | **SYS-RECEPTION-014** | Filtro sempre attivo — **nessun** flag globale enable/disable a livello utente o piattaforma |
 | **SYS-RECEPTION-018** | Stesso gate documentato per recapito **federato** (bridge XMPP/Matrix fase B): prima di materializzare copia ingresso su Alfred, verificare allow list del destinatario; stesso silenzio verso mittente esterno |
+| **SYS-RECEPTION-029** | Gate **outbound** in `send_message_to_profile` **prima** di INSERT copia mittente |
+| **SYS-RECEPTION-030** | Condizione outbound: `is_sender_allowed_for_reception(auth.uid(), recipient_profile_id)` |
+| **SYS-RECEPTION-031** | Su violazione outbound: `raise exception 'recipient not in reception allowlist'` — nessuna riga messaggio mittente |
 
 ### SHOULD
 
 | ID | Promessa |
 |----|----------|
 | **SYS-RECEPTION-019** | Lista ordinata per `display_name` del profilo consentito (join `profiles`) |
-| **SYS-RECEPTION-029** | Gate **outbound** in `send_message_to_profile` **prima** di INSERT copia mittente |
-| **SYS-RECEPTION-030** | Condizione outbound: `is_sender_allowed_for_reception(auth.uid(), recipient_profile_id)` |
-| **SYS-RECEPTION-031** | Su violazione outbound: `raise exception 'recipient not in reception allowlist'` — nessuna riga messaggio mittente |
 
 ### MUST NOT
 
@@ -69,19 +69,7 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 
 ### Gate recapito (internal)
 
-```
-send_message_to_profile (account mittente)
-  → SE NOT is_sender_allowed_for_reception(mittente, destinatario):
-       raise exception 'recipient not in reception allowlist'  (outbound)
-  → INSERT copia mittente (livello ✓) + outbox event_kind=deliver
-  → alfred_delivery.process_outbox:
-       SE EXISTS reception_allowlist(owner=dest, allowed=mittente):
-         INSERT copia destinatario
-         UPDATE mittente delivered_at = now()  (livello ✓✓)
-       ALTRIMENTI:
-         skip copia destinatario; delivered_at null; reception_rejected in payload
-  → RETURN copia mittente
-```
+Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md) § Consegna / Flusso internal
 
 Helper interno: `is_sender_allowed_for_reception(p_owner_id, p_sender_profile_id) boolean` — `SECURITY DEFINER`, usata da RPC invio (outbound + idempotenza) e worker delivery (inbound).
 

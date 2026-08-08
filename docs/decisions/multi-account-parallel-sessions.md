@@ -156,7 +156,7 @@ Dettaglio: `docs/guides/multi-account.md`
 | Documento | Contenuto |
 |-----------|-----------|
 | [multi-account.md](../guides/multi-account.md) | Dettaglio file, flussi, overlay, una GoTrue attiva |
-| [full-stack.md](../architecture/full-stack.md) §3 | Architettura client aggiornata |
+| [full-stack.md](../architecture/full-stack.md) | Architettura client aggiornata (§2) |
 | `PROJECT_MAP.md` | Mappa sintetica non deducibile |
 
 **Codice**: `client/lib/services/account_manager.dart`, `account_session.dart`, `client/lib/widgets/auth_overlay.dart`

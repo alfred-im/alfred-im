@@ -1,6 +1,6 @@
 @startuml context-map
 ' Alfred — bounded context map (relazioni principali)
-' Revision: 2026-07-19
+' Revision: 2026-08-08
 ' Metodo: docs/domain/bounded-contexts.md
 
 title Alfred — bounded context map
@@ -61,7 +61,7 @@ end note
 
 note bottom of messaging
   MessagingCoordinator
-  (3 regioni: load / send / realtime)
+  (4 regioni: load / send / realtime / messageActions)
 end note
 
 note bottom of delivery

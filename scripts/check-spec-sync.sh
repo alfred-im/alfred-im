@@ -21,7 +21,7 @@ if [[ ! -f "$REGISTRY" ]]; then
   echo "ERROR: manca $REGISTRY" >&2
   ERR=1
 fi
-for contract in docs/specs/contracts/rpc.md docs/specs/contracts/schema.md; do
+for contract in docs/specs/contracts/rpc.md docs/specs/contracts/schema.md docs/specs/contracts/push-payload.md; do
   if [[ ! -f "$contract" ]]; then
     echo "ERROR: manca $contract" >&2
     ERR=1
@@ -122,6 +122,31 @@ if [[ -f "$SYS_MAILBOX" ]]; then
     fi
   done < <(grep -oE 'supabase/tests/[a-z0-9_]+\.sql' "$SYS_MAILBOX" | sort -u)
 fi
+
+echo "==> SDD: SYS-PUSH-PAYLOAD in registry"
+if [[ -f docs/specs/contracts/push-payload.md ]]; then
+  if ! grep -q 'SYS-PUSH-PAYLOAD' "$REGISTRY"; then
+    echo "ERROR: push-payload.md presente ma SYS-PUSH-PAYLOAD mancante in $REGISTRY" >&2
+    ERR=1
+  fi
+else
+  echo "ERROR: manca docs/specs/contracts/push-payload.md" >&2
+  ERR=1
+fi
+
+echo "==> SDD: tracciabilità — path .md citati esistono"
+while IFS= read -r rel; do
+  [[ -n "$rel" ]] || continue
+  if [[ ! -f "$rel" ]]; then
+    echo "ERROR: path tracciabilità inesistente: $rel" >&2
+    ERR=1
+  fi
+done < <(
+  grep -rhoE '(docs|client|supabase)/[a-zA-Z0-9_./-]+\.md' \
+    docs/specs/promises docs/specs/surfaces 2>/dev/null \
+    | grep -vE '\.\./' \
+    | sort -u
+)
 
 echo "==> SDD: smoke SQL tracciati SYS-GROUP"
 SYS_GROUP="docs/specs/promises/system/SYS-GROUP.md"

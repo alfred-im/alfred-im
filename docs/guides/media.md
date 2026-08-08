@@ -1,12 +1,14 @@
 # Media in chat (voice, location, foto, video)
 
-**Contratto**: [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md) · [PROM-CHAT-MEDIA](../specs/promises/product/PROM-CHAT-MEDIA.md)
+**Regole prodotto:** [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md), [PROM-CHAT-MEDIA](../specs/promises/product/PROM-CHAT-MEDIA.md), [SURF-CHAT-014](../specs/surfaces/SURF-CHAT.md)
+
+**Ultima revisione:** 2026-08-08
 
 ---
 
 ## Composer UX
 
-**Superficie**: [SURF-CHAT-014](../specs/surfaces/SURF-CHAT.md) — `ChatInputBar`
+`ChatInputBar` (`chat_input_bar.dart`)
 
 | Elemento | Comportamento |
 |----------|---------------|
@@ -32,7 +34,7 @@ Max **10 MB**. Path: `{userId}/{uuid}.{ext}`.
 
 **HEIC/HEIF** (iPhone): accettato dal picker; conversione JPEG lato client prima dell’upload (`prepareImageForUpload`).
 
-**UX** (`ChatInputBar`, [SURF-CHAT-014](../specs/surfaces/SURF-CHAT.md)): graffetta → icona galleria o fotocamera nel pannello (`image_picker`); didascalia nel campo testo prima dell'invio. Bolla ottimistica con preview da `OutboundMediaCache` (`pending://`) **prima** della conversione/upload.
+**UX** (`ChatInputBar`): graffetta → icona galleria o fotocamera nel pannello (`image_picker`); didascalia nel campo testo prima dell'invio. Bolla ottimistica con preview da `OutboundMediaCache` (`pending://`) **prima** della conversione/upload.
 
 File: `message_media_service.dart` (`uploadImage`), `MessagesController.sendImage`, `prepare_image_for_upload_*.dart`
 
@@ -50,7 +52,7 @@ File: `message_media_service.dart` (`uploadImage`), `MessagesController.sendImag
 
 Max **50 MB**. Solo picker file (no registrazione).
 
-**UX** ([SURF-CHAT-014](../specs/surfaces/SURF-CHAT.md)): graffetta → icona video nel pannello; bolla video subito dopo la selezione file; byte letti in background; su web blob > 4 MB non persistiti in SharedPreferences (`ChatMediaConfig.webOutboundPersistMaxBytes`). Probe durata con timeout 6 s (`media_probe_timeout.dart`).
+**UX**: graffetta → icona video nel pannello; bolla video subito dopo la selezione file; byte letti in background; su web blob > 4 MB non persistiti in SharedPreferences (`ChatMediaConfig.webOutboundPersistMaxBytes`). Probe durata con timeout 6 s (`media_probe_timeout.dart`).
 
 File: `video_message_content.dart`, `video_duration.dart`, `MessagesController.sendVideo` / `sendVideoFromPicker`
 
@@ -63,7 +65,7 @@ File: `video_message_content.dart`, `video_duration.dart`, `MessagesController.s
 | `content_type` | `gif` |
 | `media_url` | bucket `chat-media` |
 
-**UX** ([SURF-CHAT-014](../specs/surfaces/SURF-CHAT.md)): graffetta → icona GIF nel pannello; file picker `.gif` (`FilePicker`, `withData: true`); invio immediato senza didascalia separata.
+**UX**: graffetta → icona GIF nel pannello; file picker `.gif` (`FilePicker`, `withData: true`); invio immediato senza didascalia separata.
 
 File: `ChatInputBar._pickGif`, `MessagesController.sendGif`
 
@@ -95,7 +97,7 @@ File: `voice_recording_service.dart`, `voice_encoding_*.dart`, `MessageMediaServ
 
 Nessun bucket — solo coordinate in Postgres.
 
-**UX invio** ([SURF-CHAT-014](../specs/surfaces/SURF-CHAT.md)): graffetta → icona posizione nel pannello → overlay mappa OSM a schermo intero; affinamento GPS; conferma invio.  
+**UX invio**: graffetta → icona posizione nel pannello → overlay mappa OSM a schermo intero; affinamento GPS; conferma invio.  
 **UX ricezione**: tile OSM in bolla (`flutter_map`); tap apre OSM in browser.
 
 File: `location_service.dart`, `LocationMessageContent`, `ChatInputBar._beginLocationShare`

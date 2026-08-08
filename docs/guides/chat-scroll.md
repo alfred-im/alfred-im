@@ -1,38 +1,8 @@
 # Aggancio al fondo conversazione
 
-Promessa PRODUCT: [PROM-BOTTOM-ANCHOR](../specs/promises/product/PROM-BOTTOM-ANCHOR.md) (`implemented`).  
-Caricamento storico verso l'alto: [SURF-CHAT-015](../specs/surfaces/SURF-CHAT.md).
+**Regole prodotto:** [PROM-BOTTOM-ANCHOR](../specs/promises/product/PROM-BOTTOM-ANCHOR.md), [SURF-CHAT-015](../specs/surfaces/SURF-CHAT.md) (caricamento storico verso l'alto).
 
----
-
-## Caricamento storico verso l'alto (SURF-CHAT-015)
-
-| Aspetto | Valore |
-|---------|--------|
-| Apertura chat | Ultimi 100 messaggi (`list_peer_messages` senza cursore) — allineati all'anteprima inbox |
-| Trigger | Scroll verso messaggi più vecchi; `AnchoredMessageList` chiama `onLoadOlder` entro ~120 px dal bordo alto |
-| RPC | `list_peer_messages` con `p_before_created_at` = `created_at` del messaggio più vecchio già in lista |
-| Pagina | 100 messaggi; `hasMoreOlder` finché la pagina restituita è piena |
-| UX | Prepend senza saltare la posizione visibile (`prependOlderMessages` / `fetchAndPrependOlderMessages`) |
-
-Promesse: [SURF-CHAT-015](../specs/surfaces/SURF-CHAT.md), [SYS-MAILBOX-036/057](../specs/promises/system/SYS-MAILBOX.md).
-
----
-
-## Aggancio al fondo (PROM-BOTTOM-ANCHOR)
-
-| Stato | Condizione | Effetto |
-|-------|------------|---------|
-| Agganciato | Entro 48 px dal fondo | Nuovi messaggi → auto-scroll |
-| Staccato | Scroll verso storico | Nuovi messaggi altrui non spostano la vista |
-| Riaggancio | Scroll al fondo o tap pulsante ↓ | Riprende agganciato; badge azzerato |
-| Pulsante ↓ | Visibile solo se staccato | Tap → scroll animato al fondo; badge = messaggi arrivati mentre staccato |
-
-Regole:
-
-1. Apertura chat → fondo (agganciato)
-2. Messaggio inviato dall'utente → sempre fondo
-3. Soglia: `ConversationScrollAnchor.defaultThreshold` = 48 px
+**Ultima revisione:** 2026-08-08
 
 ---
 
@@ -40,8 +10,15 @@ Regole:
 
 `AnchoredMessageList` — `ListView` reverse in `anchored_message_list.dart`.
 
-### Pulsante salta al fondo (`_JumpToBottomButton`)
+| Concetto | File / costante |
+|----------|-----------------|
+| Soglia aggancio | `ConversationScrollAnchor.defaultThreshold` = 48 px |
+| Caricamento storico | `onLoadOlder` → `list_peer_messages` con `p_before_created_at` |
+| Prepend senza salto | `prependOlderMessages` / `fetchAndPrependOlderMessages` in `MessagesController` |
+| Pulsante ↓ + badge | `_JumpToBottomButton` in `anchored_message_list.dart` (`_pendingBelow`, cap `99+`) |
 
-Quando la lista è **staccata** (`!_isAttached`), compare in basso a destra un FAB circolare con icona `keyboard_arrow_down` (↓). Ogni batch di messaggi in arrivo mentre l'utente legge lo storico incrementa `_pendingBelow`; il badge rosso sul pulsante mostra il conteggio (cap `99+`). Tap su ↓: `animateTo(0)`, `_isAttached = true`, `_pendingBelow = 0`. Riaggancio manuale scrollando al fondo azzera il badge senza animazione dedicata.
+### Pulsante salta al fondo
+
+Quando la lista è **staccata** (`!_isAttached`), FAB circolare in basso a destra. Tap → `animateTo(0)`, riaggancio e azzeramento badge.
 
 File: `anchored_message_list.dart` (`_JumpToBottomButton`, `_onJumpTap`, `didUpdateWidget`)

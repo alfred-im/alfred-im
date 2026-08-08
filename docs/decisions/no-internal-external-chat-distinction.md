@@ -1,6 +1,6 @@
 # Nessuna distinzione chat interna / esterna
 
-**Data**: 2026-06-27  
+**Data**: 2026-08-08  
 **Status**: ✅ Accettata — **regola vincolante**  
 **Categoria**: Chat, UX, client, piattaforma, bridge  
 **Correlata**: [bridge-stateless.md](./bridge-stateless.md), [server-as-reception.md](./server-as-reception.md)
@@ -69,8 +69,6 @@ La semantica «consegnato = ricevuto sul server» vale **per tutte le conversazi
 
 Eventuali differenze di **tempistica** (messaggio subito in piattaforma vs in coda outbox fino ad ack bridge) sono proprietà del **pipeline di recapito**, non di due tipi di chat. Stessi timestamp mailbox (`delivered_at` / `read_at`), stessa UI spunte, stesso modello messaggio — handler di trasporto diversi dove serve.
 
-Documentazione e codice che contraddistinguono «chat interna» vs «federata» per spunte o delivery vanno **riallineati** a questa regola (linguaggio e implementazione).
-
 ---
 
 ## Implicazioni per l'aggancio al fondo
@@ -101,4 +99,4 @@ Riferimenti che **violavano** questa regola; stato dopo `20260704120000`:
 - [bridge-stateless.md](./bridge-stateless.md) — handler recapito uscente
 - [server-as-reception.md](./server-as-reception.md) — semantica spunte lato server (unificata per tutte le chat)
 - [chat-scroll.md](../guides/chat-scroll.md) — aggancio al fondo
-- [full-stack.md](../architecture/full-stack.md) — da riallineare dove cita tipi di chat distinti
+- [full-stack.md](../architecture/full-stack.md) — panoramica stack (modello unificato mailbox)
