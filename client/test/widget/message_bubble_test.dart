@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:alfred_client/models/message.dart';
+import 'package:alfred_client/models/reaction_summary.dart';
 import 'package:alfred_client/services/outbound_media_cache.dart';
 import 'package:alfred_client/theme/alfred_theme.dart';
 import 'package:alfred_client/widgets/message_bubble.dart';
@@ -406,5 +407,35 @@ void main() {
     await tester.tap(find.textContaining('@bob'));
     await tester.pump();
     expect(tapped, isNull);
+  });
+
+  testWidgets('MessageBubble overlays reactions on bubble inner corner', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AlfredTheme.light,
+        home: Scaffold(
+          body: MessageBubble(
+            message: ChatMessage(
+              id: '12',
+              body: 'ciao',
+              timeLabel: '12:41',
+              isMine: true,
+              logicalMessageId: '11111111-1111-1111-1111-111111111111',
+              reactions: const [
+                ReactionSummary(emoji: '\u{1F600}', count: 2, includesMe: true),
+                ReactionSummary(emoji: '\u{2764}', count: 1, includesMe: false),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('\u{1F600}'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('\u{2764}'), findsOneWidget);
+    expect(find.byType(ActionChip), findsNothing);
   });
 }

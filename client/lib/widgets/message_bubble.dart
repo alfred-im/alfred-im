@@ -94,11 +94,13 @@ class MessageBubble extends StatelessWidget {
         message.authorDisplayName != null &&
         message.authorDisplayName!.isNotEmpty;
 
+    final hasReactions = message.reactions.isNotEmpty;
+
     final bubble = GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 6),
+        margin: EdgeInsets.only(bottom: hasReactions ? 14 : 6),
         padding: message.isMedia
             ? const EdgeInsets.all(4)
             : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -198,14 +200,28 @@ class MessageBubble extends StatelessWidget {
             isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           if (showHeader) MessageAuthorHeader(message: message),
-          bubble,
-          if (message.reactions.isNotEmpty)
-            MessageReactionBar(
-              reactions: message.reactions,
-              onReactionTap: onReactionSummaryTap == null
-                  ? null
-                  : (summary) => onReactionSummaryTap!(summary.emoji),
-            ),
+          Stack(
+            clipBehavior: Clip.none,
+            alignment:
+                isMine ? Alignment.bottomLeft : Alignment.bottomRight,
+            children: [
+              bubble,
+              if (hasReactions)
+                Positioned(
+                  bottom: -2,
+                  left: isMine ? 10 : null,
+                  right: isMine ? null : 10,
+                  child: MessageReactionBar(
+                    reactions: message.reactions,
+                    compact: true,
+                    onReactionTap: onReactionSummaryTap == null
+                        ? null
+                        : (summary) =>
+                            onReactionSummaryTap!(summary.emoji),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
