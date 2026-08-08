@@ -12,7 +12,7 @@ Punto unico per **scoprire** e **lanciare** tutti i test del client.
 bash scripts/test.sh list          # catalogo completo
 bash scripts/test.sh gate          # gate CI (default)
 bash scripts/test.sh flusso-reale  # ★ release — stesso percorso del telefono
-bash scripts/test.sh manual        # alias di `release` — stack locale completo (`ci-release-tests.sh`)
+bash scripts/test.sh release       # suite release completa (alias: manual, ci)
 ```
 
 ---
@@ -28,6 +28,7 @@ Eseguito da `verify.sh` e da GitHub Actions (`release-suite.yml`) su ogni PR/pus
 | Suite | Comando | Cosa verifica |
 |-------|---------|---------------|
 | **gate** | `bash scripts/test.sh gate` | Lint + compile + test isolati (esclusi tag `stack`, `diagnostic`) |
+| **unit** | `bash scripts/test.sh unit` | Solo `flutter test` (esclusi tag `stack`) — senza analyze |
 
 Equivalente diretto: `bash scripts/verify.sh`  
 Opzione build web: `bash scripts/verify.sh --build`
@@ -159,12 +160,13 @@ Default `e2e-multi`: stack locale (`supabase start` + Flutter release su `:8080`
 
 Account CI (solo stack locale): `scripts/ci-agents.env.sh` — `ci-agent1@e2e.local.test` / `ci-agent2@e2e.local.test`.
 
-### Utilità ambiente GUI
+### Utilità
 
 | Script | Comando |
 |--------|---------|
 | Diagnostica | `bash scripts/test.sh diagnose` |
 | Reset Chrome CDP | `bash scripts/reset-chrome-cdp.sh` |
+| SDD spec sync | `bash scripts/test.sh spec-sync` (alias: `sdd`) |
 
 Prima di test browser: `bash scripts/diagnose-test-env.sh` (o `test.sh diagnose`).
 
