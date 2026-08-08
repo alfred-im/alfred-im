@@ -54,7 +54,7 @@ Pattern UI trasversale — nessun bounded context dedicato.
 | Superficie | Stato | File |
 |------------|-------|------|
 | SURF-CHAT | `implemented` | [SURF-CHAT.md](../../surfaces/SURF-CHAT.md) — SURF-CHAT-019 |
-| SURF-GROUP-CONVERSATION | `implemented` | [SURF-GROUP-CONVERSATION.md](../../surfaces/SURF-GROUP-CONVERSATION.md) |
+| SURF-GROUP-CONVERSATION | `implemented` | [SURF-GROUP-CONVERSATION.md](../../surfaces/SURF-GROUP-CONVERSATION.md) — SURF-GROUP-CONVERSATION-015 |
 
 ---
 
