@@ -30,7 +30,7 @@ package "Server / infrastruttura" #F5F5F5 {
 }
 
 ' Ingressi esterni → shell
-notifications --> navigation : OpenChatFromNotification\n(adapter: openFromPushTap)
+notifications --> navigation : OpenFromPushTap
 shareablelink --> navigation : OpenFromShareableLink
 
 ' Shell e sessione
@@ -52,7 +52,7 @@ federation --> delivery : outbox queued\n(consumer bridge stub)
 
 note right of notifications
   OpenChatFromNotification
-  (adapter openFromPushTap)
+  → OpenFromPushTap (navigation)
 end note
 
 note right of shareablelink

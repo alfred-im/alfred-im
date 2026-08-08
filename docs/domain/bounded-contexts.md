@@ -31,7 +31,7 @@ Mappa relazioni: [context-map.puml](../model/context-map.puml).
 ## Dipendenze principali (solo riferimento)
 
 ```text
-notifications ──OpenFromPushTap──► navigation
+notifications ──OpenChatFromNotification──► navigation
 shareable-link ──OpenFromShareableLink──► navigation
 navigation ──FocusAccount──► multi-account
 multi-account ──sessione──► auth

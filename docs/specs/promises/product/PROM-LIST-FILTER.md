@@ -92,7 +92,7 @@ Pattern UI trasversale — nessun bounded context dedicato. Binding per superfic
 | PROM-LIST-FILTER-020 | `collapsible_list_search.dart` (widget condiviso) |
 | PROM-LIST-FILTER-020–021 | `home_screen.dart` — `ValueKey(accountUserId)` su `InboxPanel` |
 | PROM-LIST-FILTER-030 | Nessuna RPC ricerca lista; solo memoria |
-| PROM-LIST-FILTER-031–033 | `inbox-search-toggle.md`; dismiss centralizzato |
+| PROM-LIST-FILTER-031–033 | [docs/guides/inbox.md](../../../guides/inbox.md) § ricerca collassabile; `collapsible_list_search.dart`; `inbox_panel_test.dart` |
 | SURF-CONTACTS (estensione) | `contacts_screen.dart` + `contacts_screen_test.dart` |
 | SURF-ALLOWLIST (estensione) | `allowed_people_screen.dart` + `allowed_people_screen_test.dart` |
 

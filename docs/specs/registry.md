@@ -23,6 +23,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **SYS-ACCOUNT-BOUNDARY** | Legge madre confine account (nessun cross-boundary) | `implemented` | [SYS-ACCOUNT-BOUNDARY.md](./promises/system/SYS-ACCOUNT-BOUNDARY.md) |
 | **SYS-DELIVERY** | Piano recapito outbox + worker `alfred_delivery` | `implemented` | [SYS-DELIVERY.md](./promises/system/SYS-DELIVERY.md) |
 | **SYS-PUSH** | Web Push VAPID, subscription, Edge Function | `implemented` | [SYS-PUSH.md](./promises/system/SYS-PUSH.md) |
+| **SYS-PUSH-PAYLOAD** | Wire format push (SW ↔ client, Edge Function) | `implemented` | [push-payload.md](./contracts/push-payload.md) — infrastruttura: SYS-PUSH |
 
 ---
 
@@ -58,7 +59,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | Superficie ID | Titolo | Stato | Promesse principali | File |
 |---------------|--------|-------|---------------------|------|
 | **SURF-AUTH** | Overlay login/registrazione | `implemented` | PROM-MULTI-ACCOUNT, PROM-SHAREABLE-LINK | [SURF-AUTH.md](./surfaces/SURF-AUTH.md) |
-| **SURF-APP-SHELL** | `HomeScreen` sempre visibile | `implemented` | PROM-MULTI-ACCOUNT | (in SURF-AUTH) |
+| **SURF-APP-SHELL** | `HomeScreen` sempre visibile | `implemented` | PROM-MULTI-ACCOUNT | [SURF-AUTH.md](./surfaces/SURF-AUTH.md) § SURF-APP-SHELL (alias SURF-AUTH-001) |
 | **SURF-ACCOUNT-SIDEBAR** | Manifest account in sidebar | `implemented` | PROM-MULTI-ACCOUNT, PROM-PROFILE-IDENTITY, PROM-SHAREABLE-LINK | [SURF-ACCOUNT-SIDEBAR.md](./surfaces/SURF-ACCOUNT-SIDEBAR.md) |
 | **SURF-INBOX** | Lista conversazioni | `implemented` | PROM-LIST-FILTER, PROM-REALTIME-OWNER | [SURF-INBOX.md](./surfaces/SURF-INBOX.md) |
 | **SURF-CHAT** | Conversazione 1:1 | `implemented` | PROM-CHAT-PEER-KEY, PROM-MESSAGE-STATUS, PROM-OUTBOUND-SEND, PROM-CHAT-MEDIA, PROM-SHAREABLE-LINK, PROM-CONVERSATION-SCOPE, PROM-MESSAGE-MENTION, PROM-MESSAGE-REACTIONS, PROM-BOTTOM-ANCHOR | [SURF-CHAT.md](./surfaces/SURF-CHAT.md) |

@@ -30,7 +30,7 @@
 | Contesto | Relazione |
 |----------|-----------|
 | **multi-account** | Manifest account aperti; sync subscription per ogni account. |
-| **navigation** | Tap notifica → comando `OpenFromPushTap` (adapter verso `NavigationMachine`). |
+| **navigation** | Tap notifica → comando dominio `OpenChatFromNotification` → adapter `openFromPushTap` → `NavigationMachine`. |
 | **messaging** | Server invia push solo post-recapito; anteprima come inbox. |
 | **delivery** / **reception** | Push solo se messaggio recapitato e allow list superata (server). |
 

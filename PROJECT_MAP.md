@@ -241,15 +241,11 @@ bash scripts/test.sh release       # stack locale completo (alias: manual, ci)
 
 ### Allow list ricezione
 
-Ogni account parte con **`reception_allowlist` vuota** → nessun recapito finché non si aggiunge qualcuno in **Persone consentite** o dalla scheda profilo peer. Mittente non in lista: RPC ok, copia mittente (✓), **mai** `delivered_at` — worker segna `reception_rejected` in outbox. Rubrica (`contacts`) **≠** allow list.
+Regole prodotto: [SYS-RECEPTION](docs/specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER](docs/specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST](docs/specs/surfaces/SURF-ALLOWLIST.md). Semantica spunte: [server-as-reception.md](docs/decisions/server-as-reception.md).
 
 ### Spunte (delivery plane)
 
-| Spunta | Copia mittente | Chi imposta |
-|--------|----------------|-------------|
-| ✓ | `delivered_at` null | Account mittente (accettato server) |
-| ✓✓ grigie | `delivered_at` set | Worker `deliver` dopo gate destinatario |
-| ✓✓ blu | `read_at` set | Lettore → worker `read_receipt` |
+Regole prodotto: [SYS-MAILBOX](docs/specs/promises/system/SYS-MAILBOX.md), [PROM-MESSAGE-STATUS](docs/specs/promises/product/PROM-MESSAGE-STATUS.md), [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md). Semantica UI: [server-as-reception.md](docs/decisions/server-as-reception.md).
 
 Test: `bash scripts/test.sh integration-ticks`
 

@@ -10,6 +10,10 @@
 
 Binding UX overlay login/registrazione sulla shell `HomeScreen` — credenziali come card temporanea, mai schermata full-screen.
 
+## SURF-APP-SHELL
+
+Alias registry (vedi [registry.md](../registry.md)): shell `HomeScreen` sempre visibile — promessa **SURF-AUTH-001** (sidebar + inbox + chat sotto overlay auth).
+
 ---
 
 ## 1. Superficie

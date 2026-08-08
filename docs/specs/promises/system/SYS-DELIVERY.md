@@ -5,7 +5,7 @@
 | **Promessa ID** | `SYS-DELIVERY` |
 | **Classe** | SYSTEM |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
+| **Ultima revisione** | 2026-08-08 |
 | **ADR** | [bridge-stateless.md](../../../decisions/bridge-stateless.md), [server-as-reception.md](../../../decisions/server-as-reception.md) |
 | **PR origine** | #179 |
 
@@ -71,23 +71,7 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 
 ### Flussi (internal sincrono)
 
-```
-send_message_to_profile (account mittente)
-  → INSERT messages (solo owner=mittente)
-  → INSERT outbox (event_kind=deliver, queued)
-  → alfred_delivery.process_outbox
-       → gate reception (lato destinatario)
-       → SE ok: INSERT destinatario/gruppo + delivered_at mittente
-       → push_notify (se SYS-PUSH implemented)
-       → outbox completed
-
-mark_peer_read (account lettore)
-  → UPDATE messages (solo owner=lettore, in entrata)
-  → INSERT outbox (event_kind=read_receipt) per ogni λ
-  → alfred_delivery.process_outbox
-       → UPDATE read_at copia mittente
-       → outbox completed
-```
+Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md) § Consegna / Flusso internal
 
 ---
 

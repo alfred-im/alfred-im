@@ -1,10 +1,11 @@
 @startuml session-authority-state
 ' Context: multi-account
-' Profile: client
+' Profile: service (specifica logica — NON statechart Dart in client/lib/machines/)
 ' SDD: PROM-MULTI-ACCOUNT (enforcement interno — nessun amend osservabile)
-' Revision: 2026-08-02
+' Revision: 2026-08-08
+' Implementazione: client/lib/services/session_authority.dart (servizio imperativo)
 
-title SessionAuthority — stati identità attiva\n(enforcement una GoTrue in RAM)
+title SessionAuthority — stati logici identità attiva\n(servizio dominio — non MultiAccountMachine)
 
 state NoActiveIdentity
 state OwnerActive : activeOwnerId + JWT\nleaseCount = 0

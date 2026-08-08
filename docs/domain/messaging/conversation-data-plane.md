@@ -1,7 +1,9 @@
 # Archivio messaggi conversazione — design
 
+> **Flusso canonico:** [seq-open-conversation-unified.puml](../../model/uml/navigation/seq-open-conversation-unified.puml). Questo doc è storico implementazione — non sostituisce il diagramma di sequenza unificato.
+
 **Stato:** `implemented`  
-**Ultima revisione:** 2026-08-01  
+**Ultima revisione:** 2026-08-08  
 **Promessa:** [PROM-CONVERSATION-SCOPE](../../specs/promises/product/PROM-CONVERSATION-SCOPE.md)
 
 ## Scopo

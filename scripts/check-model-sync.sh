@@ -84,14 +84,42 @@ for readme in "$DOMAIN_DIR"/*/README.md; do
   fi
 done
 
-echo "==> Model: invarianti canoniche (contesti verified con client)"
-for ctx in navigation multi-account auth notifications; do
+echo "==> Model: invarianti canoniche (tutti i contesti verified)"
+for readme in "$DOMAIN_DIR"/*/README.md; do
+  [[ -f "$readme" ]] || continue
+  stato_line="$(grep -E '^\*\*Stato modellazione:\*\*' "$readme" || true)"
+  [[ -n "$stato_line" ]] || continue
+  if ! echo "$stato_line" | grep -q '`verified`'; then
+    continue
+  fi
+  ctx="$(basename "$(dirname "$readme")")"
   inv="$DOMAIN_DIR/$ctx/invariants.md"
   if [[ ! -f "$inv" ]]; then
-    echo "ERROR: contesto $ctx manca $inv" >&2
+    echo "ERROR: contesto $ctx (verified) manca $inv" >&2
     ERR=1
   fi
 done
+
+echo "==> Model: allineamento bounded-contexts.md ↔ README dominio"
+BC="docs/domain/bounded-contexts.md"
+if [[ -f "$BC" ]]; then
+  for readme in "$DOMAIN_DIR"/*/README.md; do
+    [[ -f "$readme" ]] || continue
+    ctx="$(basename "$(dirname "$readme")")"
+    stato_line="$(grep -E '^\*\*Stato modellazione:\*\*' "$readme" || true)"
+    [[ -n "$stato_line" ]] || continue
+    stato="$(echo "$stato_line" | sed -n 's/^\*\*Stato modellazione:\*\* `\([^`]*\)`.*/\1/p')"
+    bc_stato="$(grep -E "^\| \*\*${ctx}\*\* \|" "$BC" | head -1 | sed -n 's/^| \*\*[^*]*\*\* | `\([^`]*\)`.*/\1/p')"
+    if [[ -z "$bc_stato" ]]; then
+      echo "WARN: contesto $ctx assente da $BC" >&2
+      continue
+    fi
+    if [[ "$stato" != "$bc_stato" ]]; then
+      echo "ERROR: stato $ctx diverge: README=$stato bounded-contexts=$bc_stato" >&2
+      ERR=1
+    fi
+  done
+fi
 
 echo "==> Model: bounded-contexts.md non deve usare stato implemented"
 BC="docs/domain/bounded-contexts.md"

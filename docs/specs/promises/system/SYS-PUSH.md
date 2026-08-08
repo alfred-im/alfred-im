@@ -6,7 +6,7 @@
 | **Classe** | SYSTEM |
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-15 |
-| **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) |
+| **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) · [push-payload.md](../../contracts/push-payload.md) |
 | **Correlata** | [SYS-DELIVERY](./SYS-DELIVERY.md), [SYS-RECEPTION](./SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](./SYS-ACCOUNT-BOUNDARY.md) |
 
 Promessa SYSTEM — infrastruttura **non-account** per notifiche Web Push VAPID: persistenza subscription, invio post-recapito, Edge Function `send-push`.
@@ -31,7 +31,7 @@ L'utente Alfred riceve notifiche su **tutti i dispositivi** dove ha aperto un ac
 |----|----------|
 | **SYS-PUSH-001** | Tabella `push_subscriptions`: `id` uuid PK, `user_id` FK → `auth.users`, `device_id` uuid NOT NULL, `endpoint` text NOT NULL, `p256dh_key` text NOT NULL, `auth_key` text NOT NULL, `user_agent` text nullable, `created_at` timestamptz, `last_seen_at` timestamptz |
 | **SYS-PUSH-002** | UNIQUE `(user_id, device_id)` — un record per account per dispositivo |
-| **SYS-PUSH-003** | UNIQUE `(user_id, device_id)` — un record per account Alfred per dispositivo; UNIQUE `(user_id, endpoint)` — stesso endpoint FCM può essere condiviso da account diversi sullo stesso browser (multi-account), ma non duplicato per lo stesso account |
+| **SYS-PUSH-003** | UNIQUE `(user_id, endpoint)` — estende SYS-PUSH-002: stesso endpoint FCM può essere condiviso da account diversi sullo stesso browser (multi-account), ma non duplicato per lo stesso account |
 | **SYS-PUSH-004** | RLS: SELECT, INSERT, UPDATE, DELETE solo `user_id = auth.uid()` |
 | **SYS-PUSH-005** | Nessun `GRANT` invio push a `authenticated` — solo infrastruttura delivery / Edge Function |
 
@@ -104,6 +104,7 @@ L'utente Alfred riceve notifiche su **tutti i dispositivi** dove ha aperto un ac
 
 | Documento | Ruolo |
 |-----------|--------|
+| [push-payload.md](../../contracts/push-payload.md) | Wire format payload SW ↔ client |
 | [SYS-DELIVERY](./SYS-DELIVERY.md) | Hook post-recapito `push_notify` |
 | [PROM-PUSH-NOTIFY](../product/PROM-PUSH-NOTIFY.md) | Regole prodotto multi-device / multi-account |
 | [SURF-NOTIFICATIONS](../../surfaces/SURF-NOTIFICATIONS.md) | Service worker e permesso browser |

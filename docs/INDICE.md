@@ -84,6 +84,7 @@ Navigazione per AI.
 - [guides/media.md](./guides/media.md)
 - [guides/inbox.md](./guides/inbox.md)
 - [guides/chat-scroll.md](./guides/chat-scroll.md)
+- [guides/reactions.md](./guides/reactions.md)
 
 ---
 

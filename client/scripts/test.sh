@@ -136,7 +136,7 @@ case "$CMD" in
   list|help|-h|--help)
     print_catalog
     ;;
-  gate|ci|verify)
+  gate|verify)
     run_gate "$@"
     ;;
   sql-smoke|sql)
