@@ -9,7 +9,7 @@
 | `QueueFederatedSend` | outbox `protocol = xmpp\|matrix` |
 | `FederatedSendQueued` | outbox `status = queued` |
 | `DeliverToFederatedPeer` | bridge claim outbox + translate protocollo |
-| `FederatedMessageDelivered` | UPDATE `delivery_status` mittente + ack esterno |
+| `FederatedMessageDelivered` | UPDATE `delivered_at` / ack esterno sulla copia mittente |
 | `ReceiveFromFederatedPeer` | bridge ingest + `EvaluateInboundDelivery` + INSERT copia destinatario |
 | `InboundFederatedMessageReceived` | copia destinatario materializzata |
 | `ApplyFederatedAck` | UPDATE spunte via `external_id` / λ |

@@ -112,7 +112,7 @@ Federazione **in pausa** — vedi [address-based-messaging.md](../../../decision
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/shareable-link/](../../../domain/shareable-link/) |
-| UML | [docs/model/uml/shareable-link/](../../model/uml/shareable-link/) — [seq-open-from-fragment.puml](../../model/uml/shareable-link/seq-open-from-fragment.puml) |
+| UML | [docs/model/uml/shareable-link/](../../../model/uml/shareable-link/) — [seq-open-from-fragment.puml](../../../model/uml/shareable-link/seq-open-from-fragment.puml) |
 | Statechart client | [client/lib/machines/shareable-link/](../../../client/lib/machines/shareable-link/) |
 | Apertura chat da link | `OpenSharedChat` → `OpenFromShareableLink` (navigation) — vedi [docs/domain/shareable-link/README.md](../../../domain/shareable-link/README.md) |
 

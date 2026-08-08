@@ -4,8 +4,8 @@
 |-------|--------|
 | **Superficie ID** | `SURF-GROUP-CONVERSATION` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
-| **Promesse** | — |
+| **Ultima revisione** | 2026-08-08 |
+| **Promesse** | [PROM-GROUP-AUTHOR-DISPLAY](../promises/product/PROM-GROUP-AUTHOR-DISPLAY.md), [PROM-GROUP-TICKS](../promises/product/PROM-GROUP-TICKS.md), [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md), [PROM-MESSAGE-MENTION](../promises/product/PROM-MESSAGE-MENTION.md), [PROM-BOTTOM-ANCHOR](../promises/product/PROM-BOTTOM-ANCHOR.md), [SURF-GROUP-HOME](./SURF-GROUP-HOME.md) |
 | **PR** | #162 |
 
 Binding UX messaggistica gruppo: attribuzione autore contenuto, header avatar+nome, storico gruppo, preview inbox erogati.
@@ -40,6 +40,7 @@ Binding UX messaggistica gruppo: attribuzione autore contenuto, header avatar+no
 | **SURF-GROUP-CONVERSATION-012** | Header chat allineato a [SURF-CHAT](./SURF-CHAT.md) `ChatPanel`: back su mobile, avatar + nome gruppo, bordo inferiore — **senza** entry allow list né sottotitolo «Account gruppo» |
 | **SURF-GROUP-CONVERSATION-013** | Composer gruppo: stesso `ChatInputBar` di [SURF-CHAT-014](./SURF-CHAT.md) (graffetta + pannello icone scrollabile; microfono a destra) |
 | **SURF-GROUP-CONVERSATION-014** | Body testo in bolla: `@username` validi come link → chat 1:1 — [PROM-MESSAGE-MENTION](../promises/product/PROM-MESSAGE-MENTION.md) (stesso `MessageBubble` di SURF-CHAT-018) |
+| **SURF-GROUP-CONVERSATION-015** | Aggancio lista al fondo — [PROM-BOTTOM-ANCHOR](../promises/product/PROM-BOTTOM-ANCHOR.md) (stesso `AnchoredMessageList` di SURF-CHAT-019) |
 
 ### SHOULD
 

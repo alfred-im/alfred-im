@@ -1,6 +1,6 @@
 # Wishlist Funzionalità
 
-**Ultimo aggiornamento**: 2026-07-19
+**Ultimo aggiornamento**: 2026-08-08
 
 Funzionalità **future** desiderate per Alfred (client Flutter + piattaforma + bridge).
 
@@ -19,6 +19,7 @@ Funzionalità **future** desiderate per Alfred (client Flutter + piattaforma + b
 | Account gruppo + erogazione | ✅ | [SYS-GROUP.md](./specs/promises/system/SYS-GROUP.md), [groups.md](./guides/groups.md) |
 | Link condivisibili `#indirizzo` | ✅ | [PROM-SHAREABLE-LINK.md](./specs/promises/product/PROM-SHAREABLE-LINK.md), [shareable-link.md](./guides/shareable-link.md) |
 | Multi-account (manifest + focus) | ✅ | [PROM-MULTI-ACCOUNT.md](./specs/promises/product/PROM-MULTI-ACCOUNT.md), [multi-account.md](./guides/multi-account.md) |
+| Reazioni messaggio | ✅ | [PROM-MESSAGE-REACTIONS.md](./specs/promises/product/PROM-MESSAGE-REACTIONS.md) |
 | Federazione XMPP/Matrix | ⏸ Outbox only | [bridge-stateless.md](./decisions/bridge-stateless.md) |
 
 Spunte federate (XEP-0184 / XEP-0333 via bridge): da implementare con i bridge Python.
@@ -47,6 +48,8 @@ Spunte federate (XEP-0184 / XEP-0333 via bridge): da implementare con i bridge P
 
 ### XEP-0045: Multi-User Chat (MUC)
 **Riferimento**: [XEP-0045](https://xmpp.org/extensions/xep-0045.html)
+
+> **Non è Alfred SYS-GROUP:** i gruppi Alfred sono account `profile_kind = group` con allow list bidirezionale — vedi [groups.md](./guides/groups.md) e [SYS-GROUP.md](./specs/promises/system/SYS-GROUP.md). XEP-0045 è federazione XMPP futura.
 
 **Descrizione**: Chat di gruppo con più partecipanti, ruoli e moderazione.
 

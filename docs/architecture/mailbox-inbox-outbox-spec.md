@@ -1,10 +1,12 @@
 # Modello caselle (mailbox) — implementato
 
-**Ultima revisione**: 2026-07-19  
+**Ultima revisione**: 2026-08-08  
 **Status**: ✅ **Implementato su `main`** (PR #159; gruppi #162; delivery plane #179) — promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` `implemented`  
 **Audience**: AI / implementazione
 
-**Su `main`** vale il modello caselle descritto qui e nelle promesse SDD. L’ADR [address-based-messaging.md](../decisions/address-based-messaging.md) resta riferimento per indirizzamento e rubrica isolata.
+**SSOT meccanica mailbox / outbox / worker.** Semantica UI spunte (✓ / ✓✓ / blu): [server-as-reception.md](../decisions/server-as-reception.md). **SSOT indice:** [SSOT.md](../SSOT.md).
+
+L’ADR [address-based-messaging.md](../decisions/address-based-messaging.md) resta riferimento per indirizzamento e rubrica isolata.
 
 ---
 

@@ -1,5 +1,7 @@
 # AGENTS.md
 
+**SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — questo file copre **solo** toolchain Cloud Agent e gotchas VM; non duplica promesse, RPC, test completi né account debug.
+
 ## Regola prioritaria — completare il task
 
 In questa repository, **completare un task** (issue, PR, richiesta Cloud Agent) significa **seguire integralmente** [`.cursor-rules.md`](.cursor-rules.md) — **non** modificare il codice al primo turno e **non** saltare la SDD.
@@ -29,7 +31,7 @@ Le istruzioni Cloud Agent (branch, commit, push, PR, «completa la richiesta») 
 | Vietato | Consentito |
 |---------|------------|
 | `gh run watch`, polling in loop, «aspetto che la CI sia verde» prima di rispondere/merge | Push, aprire/aggiornare PR, comunicare link al run |
-| Trattenere merge/commit solo perché `full-suite` è `in_progress` | Gate **locale** `bash scripts/verify.sh` prima del push |
+| Trattenere merge/commit solo perché `release-suite` è `in_progress` | Gate **locale** `bash scripts/verify.sh` prima del push |
 | Chiedere all'utente di attendere la CI | Eventuale `gh run view` **una tantum** per diagnosi se l'utente chiede perché è fallita |
 
 Dopo push: **fine turno** (o merge se l'utente lo chiede esplicitamente). Lo stato Actions lo verifica chi merge/review — non l'agente in polling.
@@ -102,7 +104,7 @@ backend out of the box.
   `--dart-define=SUPABASE_URL=http://localhost:54321 --dart-define=SUPABASE_ANON_KEY=<local anon>`
   (get the anon key from `supabase status`). Prefer local for anything that writes, so you never touch the
   user's live/test data.
-- **`supabase start` works on a fresh apply** (all 39 migrations + `seed.sql`). It needs the Docker daemon
+- **`supabase start` works on a fresh apply** (all 43 migrations + `seed.sql`). It needs the Docker daemon
   running (see below). Local users can be created confirmed via the GoTrue admin API with the `service_role`
   key (`POST /auth/v1/admin/users`, `email_confirm:true`, `user_metadata.username`); the `handle_new_user`
   trigger then creates the `profiles` row. Note: the async delivery worker (`alfred_delivery.process_outbox`)
@@ -119,15 +121,15 @@ backend out of the box.
   live Supabase from this dev VM without explicit user confirmation — that is their review surface, not a dev target.
 
 ### Lint / test / build
-- **Hub test:** `cd client && bash scripts/test.sh list` — catalogo completo ([`scripts/test/README.md`](client/scripts/test/README.md)).
-- **Gate CI (igiene):** `bash scripts/test.sh gate` (= `verify.sh`: analyze + test Dart isolati). Obbligatorio su PR; **non** valida che l’app funzioni sul telefono.
-- **Validazione release:** `bash scripts/test.sh release` — stack locale completo (stesso percorso del telefono). Obbligatorio per ogni release su media / multi-account / auth / push.
-- **Scrivere test nuovi:** copiare [`client/e2e/photo-resume-session-repro.spec.ts`](client/e2e/photo-resume-session-repro.spec.ts) — **riferimento obbligatorio** ([`docs/testing/strategy.md`](../docs/testing/strategy.md#come-si-scrivono-i-test-di-release)). Non aggiungere unit test Dart al gate sperando di coprire il telefono.
-- **Suite manuali complete:** `bash scripts/test.sh release` (= gate locale + sql-smoke + integration + e2e stack + stack Dart).
-- Web build: `bash scripts/verify.sh --build` (or `flutter build web --release --base-href "/alfred-im/"`).
-- **Prima di qualsiasi test GUI**: `bash scripts/test.sh diagnose` — se fallisce su CDP: `bash scripts/reset-chrome-cdp.sh` (kill Chrome + profilo pulito `/tmp/chrome-cdp-profile`).
-- **Integrazione API** (no browser): `bash scripts/test.sh integration` — agent1/agent2 + RPC.
-- **E2E multi-account** (browser parziale): `bash scripts/test.sh e2e-multi`
+
+**SSOT:** [docs/testing/strategy.md](docs/testing/strategy.md) (gate vs release) · [client/scripts/test/README.md](client/scripts/test/README.md) (catalogo comandi).
+
+- Hub: `cd client && bash scripts/test.sh list`
+- Gate: `bash scripts/test.sh gate` (= `verify.sh`) — obbligatorio su PR; **non** valida il telefono
+- Release: `bash scripts/test.sh release` (alias `manual`, `ci`) — stack locale completo
+- Riferimento test release: [`client/e2e/photo-resume-session-repro.spec.ts`](client/e2e/photo-resume-session-repro.spec.ts) — vedi strategy § Come si scrivono i test di release
+- Web build: `bash scripts/verify.sh --build`
+- Prima di test GUI: `bash scripts/test.sh diagnose` — CDP morto → `bash scripts/reset-chrome-cdp.sh`
 
 ### Log diagnostici (`ALFRED_DIAGNOSTIC_LOG`)
 
@@ -163,12 +165,12 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 
 ### Auth / messaging gotchas (non-obvious, hit during setup)
 - Registration: GoTrue rejects unrealistic email domains (e.g. `@example.com` → "Email address is invalid"). Use a realistic domain like `gmail.com`.
-- **Non fare `signUp` su Supabase live con email inventate/fake** — rischio bounce e incidenti deliverability (vedi incidente 2026-07-09 in `docs/AGENT_DEBUG_ACCOUNTS.md`). Per test redirect/auth usare account agente confermati (`alfredagent1` / `alfredagent2`).
+- **Non fare `signUp` su Supabase live con email inventate/fake** — vedi [docs/AGENT_DEBUG_ACCOUNTS.md](docs/AGENT_DEBUG_ACCOUNTS.md).
 - New signups require **email confirmation** before login. For testing, confirm directly in Supabase:
   `update auth.users set email_confirmed_at = now() where email = '<addr>';` (via the Supabase MCP `execute_sql`).
 - Supabase enforces an **email send rate limit**; rapid repeated signups fail with "email rate limit exceeded".
 - Messaging needs a real recipient profile: **self-messaging fails** ("Utente non trovato") and external `user@server` addresses are **unsupported** without federation ("Indirizzo esterno non ancora supportato"). Seeded recipients exist in the live DB (e.g. `test1`, `test2`, `test3`).
-- **Account debug agente:** usare **solo** `alfredagent1` / `alfredagent2` (credenziali in `docs/AGENT_DEBUG_ACCOUNTS.md`). **Non modificare mai** password o dati di `test1`/`test2`/`test3`/`test4` — vedi incidente documentato in quel file (2026-06-29).
+- **Account debug / test:** regole e percorso locale — **solo** [docs/AGENT_DEBUG_ACCOUNTS.md](docs/AGENT_DEBUG_ACCOUNTS.md) (non duplicare qui).
 
 ### Browser (computerUse) testing of Flutter web
 - **Eseguire sempre `bash scripts/diagnose-test-env.sh` prima.** Se Chrome CDP `:9222` non risponde: `bash scripts/reset-chrome-cdp.sh` poi ritestare. Non usare computerUse con CDP morto.

@@ -1,8 +1,7 @@
 # Aggancio al fondo conversazione
 
-**Backlog SDD**: `PROM-BOTTOM-ANCHOR` in [registry.md](../specs/registry.md) — non ancora promessa PRODUCT.
-
-**Implementato (SURF-CHAT-015)**: caricamento storico verso l'alto — vedi sezione sotto.
+Promessa PRODUCT: [PROM-BOTTOM-ANCHOR](../specs/promises/product/PROM-BOTTOM-ANCHOR.md) (`implemented`).  
+Caricamento storico verso l'alto: [SURF-CHAT-015](../specs/surfaces/SURF-CHAT.md).
 
 ---
 
@@ -20,7 +19,7 @@ Promesse: [SURF-CHAT-015](../specs/surfaces/SURF-CHAT.md), [SYS-MAILBOX-036/057]
 
 ---
 
-## Aggancio al fondo (PROM-BOTTOM-ANCHOR backlog)
+## Aggancio al fondo (PROM-BOTTOM-ANCHOR)
 
 | Stato | Condizione | Effetto |
 |-------|------------|---------|

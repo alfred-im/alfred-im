@@ -1,5 +1,7 @@
 # Strategia test client Alfred
 
+**SSOT comandi suite:** [client/scripts/test/README.md](../../client/scripts/test/README.md) · **SSOT indice doc:** [SSOT.md](../SSOT.md)
+
 Piano a livelli allineato a **dominio → UML → statechart → composition root** (`client/lib/screens/`, Provider, chiavi di scope sessione).
 
 **Hub comandi:** `client/scripts/test.sh` · **Gate CI:** `client/scripts/verify.sh`
@@ -13,14 +15,14 @@ Usare **sempre** questa distinzione in README, promesse, guide e `AGENTS.md`:
 | Termine | Significato | Comando tipico |
 |---------|-------------|----------------|
 | **Gate CI / igiene** | Lint, compile, test Dart isolati (mock/fake). **Non** dimostra che l’app funziona per l’utente. | `cd client && bash scripts/verify.sh` |
-| **Validazione release** | Browser e/o DB reali, percorso utente o contratto end-to-end. **È** il criterio di release. | `bash scripts/test.sh manual` o suite singole sotto |
+| **Validazione release** | Browser e/o DB reali, percorso utente o contratto end-to-end. **È** il criterio di release. | `cd client && bash scripts/test.sh release` (alias `manual`) o suite singole sotto |
 
 **Tier di riferimento** per «funziona sul telefono»: `bash scripts/test.sh flusso-reale` (`@real-flow`).  
 **Riferimento per scrivere nuovi test:** [`client/e2e/photo-resume-session-repro.spec.ts`](../../client/e2e/photo-resume-session-repro.spec.ts) — vedi sezione [Come si scrivono i test di release](#come-si-scrivono-i-test-di-release) sotto.
 
 Altre suite manuali (`integration`, `e2e-multi`, …) coprono **parti** del prodotto; i test legacy vanno riallineati a questo modello quando si toccano.
 
-**Frase vietata nelle spec:** implicare che `verify.sh` o «377 test» validino il comportamento utente.
+**Frase vietata nelle spec:** implicare che `verify.sh` o il conteggio gate validino il comportamento utente.
 
 **Frase corretta in fondo alle promesse SURFACE/PRODUCT:**
 
@@ -82,7 +84,7 @@ Gate: `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutt
 
 **CI completa:** `.github/workflows/release-suite.yml` — un job sequenziale: gate → docker-smoke → `ci-release-tests.sh` (target wall clock ~10 min, timeout 15).
 
-**Nota:** `flutter test` senza `--exclude-tags` include i test `diagnostic` (falliscono by design senza define). Il gate usa `verify.sh` — **441** test al 2026-07-27.
+**Nota:** `flutter test` senza `--exclude-tags` include i test `diagnostic` (falliscono by design senza define). Il gate usa `verify.sh` — **481** test al 2026-08-08 (tag `stack` e `diagnostic` esclusi).
 
 ---
 

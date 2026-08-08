@@ -48,7 +48,7 @@ L'utente può condividere foto e video nelle conversazioni 1:1 e nei broadcast d
 | Elemento | Artefatto |
 |----------|-----------|
 | Glossario / comandi | [docs/domain/media/](../../../domain/media/), [docs/domain/messaging/](../../../domain/messaging/) |
-| UML | [docs/model/uml/media/media-state.puml](../../model/uml/media/media-state.puml) |
+| UML | [docs/model/uml/media/media-state.puml](../../../model/uml/media/media-state.puml) |
 | Invio media | `PrepareImage` / `PrepareVideo` → `SendContent` (messaging) |
 
 **Implementazione (non vincolante):** [docs/domain/media/README.md](../../../domain/media/README.md) · [docs/guides/media.md](../../../guides/media.md)

@@ -1,6 +1,10 @@
 # Indice documentazione
 
-Navigazione per AI. **Modello**: [domain/README.md](./domain/README.md) · **Promesse**: [specs/registry.md](./specs/registry.md) · **SDD**: [specs/README.md](./specs/README.md)
+Navigazione per AI.
+
+**SSOT (fonti canoniche — evita duplicati):** [SSOT.md](./SSOT.md)
+
+**Modello:** [domain/README.md](./domain/README.md) · **Promesse:** [specs/registry.md](./specs/registry.md) · **SDD:** [specs/README.md](./specs/README.md)
 
 ---
 
@@ -18,6 +22,7 @@ Navigazione per AI. **Modello**: [domain/README.md](./domain/README.md) · **Pro
 
 | File | Uso |
 |------|-----|
+| [SSOT.md](./SSOT.md) | **Fonti canoniche** — evita duplicati in tutta la doc |
 | [README.md](../README.md) | Panoramica pubblica e link rapidi |
 | [PROJECT_MAP.md](../PROJECT_MAP.md) | Mappa progetto — leggere all'inizio di ogni sessione |
 | [domain/README.md](./domain/README.md) | Metodo modello (DDD → UML → statechart) |
@@ -89,4 +94,4 @@ Navigazione per AI. **Modello**: [domain/README.md](./domain/README.md) · **Pro
 - [WISHLIST.md](./WISHLIST.md) — backlog funzionalità (XMPP, UI)
 - [specs/contracts/schema.md](./specs/contracts/schema.md) · [rpc.md](./specs/contracts/rpc.md)
 
-**Ultimo aggiornamento**: 2026-08-03
+**Ultimo aggiornamento**: 2026-08-08

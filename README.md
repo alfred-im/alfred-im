@@ -57,6 +57,8 @@ The client talks to a Supabase platform layer (Postgres, Auth, Realtime, Storage
 | Peer profiles and shareable `#username` links | ✅ |
 | **Group accounts** | ✅ |
 | Message delivery status (✓ / ✓✓) | ✅ |
+| Message reactions | ✅ |
+| @mentions in chat (approved, shipping) | ✅ |
 | XMPP / Matrix federation | Planned (bridge stubs today) |
 
 ---
@@ -119,7 +121,7 @@ flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0
 
 Open http://localhost:8080/
 
-See [`client/README.md`](client/README.md) for client-specific setup, including a local Supabase stack.
+See [`client/README.md`](client/README.md) for client-specific setup. For an isolated local Supabase stack, see [AGENTS.md](AGENTS.md) (Whole-stack local dev).
 
 ---
 
@@ -131,10 +133,12 @@ bash scripts/verify.sh          # required before push
 bash scripts/verify.sh --build  # optional web build
 ```
 
-When changing specs or database migrations:
+When changing specs, domain model, or database migrations, `verify.sh` runs sync checks automatically. Manual run from repo root:
 
 ```bash
 bash scripts/check-spec-sync.sh
+bash scripts/check-model-sync.sh
+bash scripts/check-composition-sync.sh
 ```
 
 ---
@@ -147,7 +151,7 @@ bash scripts/check-spec-sync.sh
 | **Flusso reale** | `cd client && bash scripts/test.sh flusso-reale` | **Release:** stesso percorso del telefono (browser + DB) |
 | Catalogo completo | [`client/scripts/test/README.md`](client/scripts/test/README.md) | Tutte le suite manuali |
 
-**Verde al gate ≠ Alfred funziona.** Vedi [docs/testing/strategy.md](docs/testing/strategy.md).
+**Verde al gate ≠ Alfred funziona.** SSOT: [docs/testing/strategy.md](docs/testing/strategy.md) · comandi: [client/scripts/test/README.md](client/scripts/test/README.md)
 
 ---
 
@@ -174,11 +178,11 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 | Document | Purpose |
 |----------|---------|
-| [`PROJECT_MAP.md`](PROJECT_MAP.md) | Full project map |
+| [`docs/SSOT.md`](docs/SSOT.md) | **Single source of truth** — where each fact lives |
+| [`PROJECT_MAP.md`](PROJECT_MAP.md) | Session map (stack, URLs, structure) |
 | [`docs/INDICE.md`](docs/INDICE.md) | Documentation index |
-| [`docs/architecture/full-stack.md`](docs/architecture/full-stack.md) | Architecture overview |
-| [`docs/decisions/README.md`](docs/decisions/README.md) | Architecture decision records (ADR) |
-| [`client/README.md`](client/README.md) | Client-specific notes |
+| [`docs/specs/registry.md`](docs/specs/registry.md) | Product promise catalog |
+| [`client/README.md`](client/README.md) | Client entry (links to SSOT for test/setup) |
 
 ---
 

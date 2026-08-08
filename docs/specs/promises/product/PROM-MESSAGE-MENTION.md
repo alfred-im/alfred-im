@@ -4,8 +4,8 @@
 |-------|--------|
 | **Promessa ID** | `PROM-MESSAGE-MENTION` |
 | **Classe** | PRODUCT |
-| **Status** | `approved` |
-| **Ultima revisione** | 2026-08-02 |
+| **Status** | `implemented` |
+| **Ultima revisione** | 2026-08-08 |
 
 Promessa di prodotto: nel **rendering** del body testo, sequenze `@username` valide sono link che aprono la conversazione 1:1 con quel peer. Il body persistito resta testo puro; nessuna struttura mention nel DB.
 
@@ -50,8 +50,8 @@ L'utente può citare un account Alfred con `@username` nel messaggio; chi legge 
 
 | Elemento | Artefatto |
 |----------|-----------|
-| Glossario | [docs/domain/messaging/glossary.md](../../domain/messaging/glossary.md) — mention display-only |
-| Navigazione | [navigation](../../domain/navigation/) — riuso `OpenFromCompose` / `openPeerOnFocusedAccount` |
+| Glossario | [docs/domain/messaging/glossary.md](../../../domain/messaging/glossary.md) — mention display-only |
+| Navigazione | [navigation](../../../domain/navigation/) — riuso `OpenFromCompose` / `openPeerOnFocusedAccount` |
 | Statechart messaging | Nessuna nuova transizione — solo presentazione |
 
 ---

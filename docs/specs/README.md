@@ -1,8 +1,10 @@
 # Spec-Driven Development (SDD) — Alfred
 
 **Audience**: AI / implementazione  
-**Ultima revisione**: 2026-07-19  
+**Ultima revisione**: 2026-08-08  
 **Versione metodo**: SDD — registro promesse prodotto
+
+**SSOT documentazione:** [SSOT.md](../SSOT.md) · catalogo promesse: [registry.md](./registry.md)
 
 Alfred è software stabile: la SDD governa **ciò che il prodotto promette** all'utente — schema, RPC, comportamento riusabile e binding per superficie.
 
@@ -225,7 +227,7 @@ Verifica: registry, promesse PRODUCT/SURFACE/SYSTEM, contratti `contracts/`, coe
 | **Quando** | Ogni PR (`client/**`) | Ogni release / dopo cambi che l’utente vede |
 | **Cosa dimostra** | Il codice compila e i pezzi isolati non regrediscono | L’app funziona sul percorso reale |
 
-Documentazione canonica: [docs/testing/strategy.md](../testing/strategy.md) · catalogo: [client/scripts/test/README.md](../../client/scripts/test/README.md)
+**SSOT test:** [SSOT.md](../SSOT.md) · [testing/strategy.md](../testing/strategy.md) · [client/scripts/test/README.md](../../client/scripts/test/README.md)
 
 ---
 

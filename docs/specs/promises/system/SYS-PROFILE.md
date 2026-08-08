@@ -5,7 +5,7 @@
 | **Promessa ID** | `SYS-PROFILE` |
 | **Classe** | SYSTEM |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-08-06 |
+| **Ultima revisione** | 2026-08-08 |
 | **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) |
 | **PR** | #118, #134 |
 
@@ -56,10 +56,10 @@ Ogni utente Alfred ha un profilo pubblico legato 1:1 a `auth.users`. Il backend 
 | `profiles` | RLS: SELECT authenticated; UPDATE solo propria riga |
 | `profiles.pronouns` | Testo libero opzionale |
 | Bucket `avatars` | Pubblico; MIME jpeg/png/webp; 2 MB; RLS cartella = `auth.uid()` |
-| `list_inbox()` | Join `profiles` → `peer_avatar_url`, `peer_pronouns` |
-| `find_profile_by_username` | Risoluzione username → profilo pubblico |
+| `list_inbox()` | Join `profiles` → `peer_avatar_url`, `peer_cover_url`, `peer_pronouns` |
+| `find_profile_by_username` | Risoluzione username → profilo pubblico (`avatar_url`, `cover_url`, `pronouns`, …) |
 
-Migrazioni: `20260624200000_alfred_domain_schema.sql`, `20260628000000_profile_pronouns_avatars.sql`, `20260628100000_inbox_peer_profile_fields.sql`.
+Migrazioni: `20260624200000_alfred_domain_schema.sql`, `20260628000000_profile_pronouns_avatars.sql`, `20260628100000_inbox_peer_profile_fields.sql`, `20260806190000_profile_cover_url.sql`.
 
 Nessuna RPC dedicata `update_profile` — client usa PostgREST `.from('profiles').update()`.
 

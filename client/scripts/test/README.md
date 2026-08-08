@@ -1,5 +1,9 @@
 # Suite test Alfred (`client/`)
 
+**SSOT catalogo comandi** — altri file (`AGENTS.md`, `PROJECT_MAP.md`, `README.md`) rimandano qui.
+
+**Filosofia gate vs release:** [docs/testing/strategy.md](../../docs/testing/strategy.md) · **SSOT indice:** [docs/SSOT.md](../../SSOT.md)
+
 Punto unico per **scoprire** e **lanciare** tutti i test del client.
 
 **Entry point:** dalla cartella `client/`:
@@ -8,7 +12,7 @@ Punto unico per **scoprire** e **lanciare** tutti i test del client.
 bash scripts/test.sh list          # catalogo completo
 bash scripts/test.sh gate          # gate CI (default)
 bash scripts/test.sh flusso-reale  # ★ release — stesso percorso del telefono
-bash scripts/test.sh manual        # flusso-reale + integration + e2e-multi + live
+bash scripts/test.sh manual        # alias di `release` — stack locale completo (`ci-release-tests.sh`)
 ```
 
 ---
@@ -23,7 +27,7 @@ Eseguito da `verify.sh` e da GitHub Actions (`release-suite.yml`) su ogni PR/pus
 
 | Suite | Comando | Cosa verifica |
 |-------|---------|---------------|
-| **gate** | `bash scripts/test.sh gate` | Lint + compile + test isolati (esclusi tag `live`, `diagnostic`) |
+| **gate** | `bash scripts/test.sh gate` | Lint + compile + test isolati (esclusi tag `stack`, `diagnostic`) |
 
 Equivalente diretto: `bash scripts/verify.sh`  
 Opzione build web: `bash scripts/verify.sh --build`
@@ -59,7 +63,7 @@ Gate script: `scripts/check-composition-sync.sh`
 
 **Comando:** `bash scripts/test.sh flusso-reale`  
 **Alias:** `real-flow`, `integration-photo-repro`, `photo-repro`  
-**Incluso in:** `bash scripts/test.sh manual` (primo step)
+**Relazione con `release`:** suite separata (`flutter run`); `release` include lo stesso spec via build statica in step 6 — vedi tier 2 sotto. Obbligatorio prima di release su media / multi-account / auth.
 
 ### Riferimento per scrivere test
 

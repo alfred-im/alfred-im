@@ -196,7 +196,13 @@ Worker infrastruttura **non-account** — unico attore autorizzato a attraversar
 | `group_erogate(uuid)` | Broadcast gruppo → allow list |
 | `erogate_group_message(...)` | Fan-out proxy partecipanti |
 
-**GRANT**: nessuno su `authenticated`. Migrazione `20260711190000`.
+**Tabelle infrastruttura** (non API client):
+
+| Tabella | Ruolo |
+|---------|--------|
+| `push_settings` | Singleton VAPID / config dispatch push — `REVOKE` authenticated; lettura solo worker / service_role |
+
+**GRANT**: nessuno su `authenticated`. Migrazioni: `20260711190000`, `20260714100000_push_subscriptions.sql`, `20260714223000_push_settings_vapid_config.sql`.
 
 ---
 
