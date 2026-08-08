@@ -4,9 +4,9 @@
 |-------|--------|
 | **Superficie ID** | `SURF-CHAT` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-08-01 |
+| **Ultima revisione** | 2026-08-08 |
 | **Promesse** | [PROM-CHAT-PEER-KEY](../promises/product/PROM-CHAT-PEER-KEY.md), [PROM-MESSAGE-STATUS](../promises/product/PROM-MESSAGE-STATUS.md), [PROM-OUTBOUND-SEND](../promises/product/PROM-OUTBOUND-SEND.md), [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md), [PROM-CONVERSATION-SCOPE](../promises/product/PROM-CONVERSATION-SCOPE.md), [PROM-MESSAGE-MENTION](../promises/product/PROM-MESSAGE-MENTION.md), [PROM-MESSAGE-REACTIONS](../promises/product/PROM-MESSAGE-REACTIONS.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) (semantica spunte) |
-| **PR** | #159, #178, #210, #234 |
+| **PR** | #159, #178, #210, #234, #246 |
 
 Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pieno, spunte, invio optimistic, preview inbox.
 

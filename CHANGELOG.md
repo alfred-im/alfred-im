@@ -4,6 +4,22 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
+## [Unreleased] - 2026-08-08
+
+### Aggiunto
+
+- **#246** — Reaction emoji su messaggi 1:1: `message_reaction_facts` append-only, RPC `apply_message_reaction` / `withdraw_message_reaction` / `list_message_reactions`, menu picker emoji, pillola reaction sulla bolla, realtime; PROM-MESSAGE-REACTIONS → `implemented`
+
+### Corretto
+
+- **#246** — Toggle ritiro reaction con emoji condivisa tra peer (`includesMe` senza `count == 1`)
+
+### Documentazione
+
+- Post-merge **#246**: dominio/UML reaction, contratti schema/RPC, SURF-CHAT + registry; migrazione `20260807200000_message_reaction_facts.sql`
+
+---
+
 ## [Unreleased] - 2026-08-01
 
 ### Corretto
