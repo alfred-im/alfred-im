@@ -83,7 +83,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | SURF-NOTIFICATIONS-006–007 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/push-full.spec.ts` |
 | SURF-NOTIFICATIONS-008 | `client/test/unit/push_suppression_test.dart` |
 | SURF-NOTIFICATIONS-011 | `client/e2e/photo-resume-session-repro.spec.ts` (`flusso-reale`) |
-| SURF-NOTIFICATIONS-012–013 | da implementare (`e2e-push-local` multi-account; grant permesso OS) |
+| SURF-NOTIFICATIONS-012–013 | `client/test/unit/push_sync_policy_test.dart` (scope `FocusedAccount` / `AllOpenAccounts`, grant transition); `e2e-push-local` parziale (`push-tap-multi-account.spec.ts`); backlog e2e: `push-permission-grant-multi-account` (nome proposto — grant OS → tutti gli account) |
 | PROM-PUSH-NOTIFY-022 | Scenario manuale in [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) §6 |
 
 **Gate**: `bash scripts/check-spec-sync.sh` + `verify.sh` + `bash scripts/test.sh e2e-push-local` (stack locale)
@@ -106,5 +106,5 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 |-----------|--------|
 | [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) | Regole prodotto |
 | [SYS-PUSH](../promises/system/SYS-PUSH.md) | Server e VAPID |
-| [SURF-APP-SHELL](./SURF-AUTH.md) | Shell sempre visibile |
+| [SURF-APP-SHELL](./SURF-AUTH.md#surf-app-shell) | Shell sempre visibile (alias SURF-AUTH-001) |
 | [registry.md](../registry.md) | Indice promesse |

@@ -71,7 +71,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | **SYS-MAILBOX-019** | **Outbox sempre**: INSERT `outbox` (`event_kind = deliver`) per ogni invio, incluso `protocol = internal` |
 | **SYS-MAILBOX-020** | Driver internal: worker [SYS-DELIVERY](./SYS-DELIVERY.md) nella stessa transazione RPC — **se** gate reception → materializza copia destinatario + `delivered_at` mittente; **altrimenti** rifiuto silenzioso |
 | **SYS-MAILBOX-021** | Idempotenza: retry stesso `(owner_id, client_message_id)` → stessa riga mittente, no duplicati |
-| **SYS-MAILBOX-022** | Tipi `content_type`: `text`, `gif`, `voice`, `location`, `image`, `video` — validazione in [PROM-CHAT-MEDIA](../product/PROM-CHAT-MEDIA.md) |
+| **SYS-MAILBOX-022** | Tipi `content_type`: `text`, `gif`, `voice`, `location`, `image`, `video` — validazione `text`/`gif`/`voice`/`location` in [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md); `image`/`video` anche [PROM-CHAT-MEDIA](../product/PROM-CHAT-MEDIA.md) |
 | **SYS-MAILBOX-023** | Bucket storage `chat-media`: path `{auth.uid()}/{uuid}.*` (upload prima RPC) |
 | **SYS-MAILBOX-024** | Outbox retry: `attempts`, `last_error`, `status` → `failed` dopo soglia (default 5 tentativi worker/cron futuro; internal sincrono non fallisce salvo errore transazione) |
 | **SYS-MAILBOX-025** | Invio fallito server: `failed_at` timestamptz sulla copia mittente (opzionale null se non applicabile) |

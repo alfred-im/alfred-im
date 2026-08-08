@@ -23,11 +23,11 @@ Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri fi
 | **Processo SDD** (lifecycle, classi) | [`specs/README.md`](./specs/README.md) | `README.md` Contributing (teaser) |
 | **DDL, enum, RLS, tabelle** | [`specs/contracts/schema.md`](./specs/contracts/schema.md) | `SYS-*.md` §3 sintesi; ADR |
 | **Firme RPC, semantica SQL** | [`specs/contracts/rpc.md`](./specs/contracts/rpc.md) | ADR; `SYS-*.md` §3 |
-| **Payload push** (campi SW) | [`specs/contracts/push-payload.md`](./specs/contracts/push-payload.md) | `SYS-PUSH` (riferimento) |
+| **Payload push** (campi SW) | [`specs/contracts/push-payload.md`](./specs/contracts/push-payload.md) | `SYS-PUSH` · `SYS-PUSH-PAYLOAD` in [registry.md](./specs/registry.md) |
 | **Modello mailbox** (archivio, outbox, worker, λ) | [`architecture/mailbox-inbox-outbox-spec.md`](./architecture/mailbox-inbox-outbox-spec.md) | `full-stack.md`; ADR (principi) |
 | **Semantica spunte UI** (✓ / ✓✓ / blu = cloud) | [`decisions/server-as-reception.md`](./decisions/server-as-reception.md) | Mailbox (meccanica, non significato UI) |
 | **Indirizzo + rubrica isolata** | [`decisions/address-based-messaging.md`](./decisions/address-based-messaging.md) | Guide compose |
-| **Altri ADR** (bridge, multi-account, …) | [`decisions/`](./decisions/) | `full-stack.md` ID `D-*` |
+| **Altri ADR** (bridge, multi-account, …) | [`decisions/`](./decisions/) | `full-stack.md` |
 | **Metodo modello** (DDD → UML → statechart) | [`domain/README.md`](./domain/README.md) | `specs/README.md` (solo confine) |
 | **Comandi/eventi per contesto** | `domain/<context>/` | Guide; promesse (link) |
 | **Diagrammi UML** | `model/uml/<context>/` | Guide |

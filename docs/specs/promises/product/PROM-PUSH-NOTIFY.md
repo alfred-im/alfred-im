@@ -159,9 +159,9 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 | PROM-PUSH-NOTIFY-002–003 | `client/e2e/push-full.spec.ts` |
 | PROM-PUSH-NOTIFY-030 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/push-full.spec.ts` |
 | PROM-PUSH-NOTIFY-022 | Scenario manuale §6 |
-| **PROM-PUSH-NOTIFY-045–047** | `client/e2e/photo-resume-session-repro.spec.ts` (`flusso-reale`); test unit sync scope (da implementare) |
-| **PROM-PUSH-NOTIFY-048–049, 053** | `e2e-push-local` multi-account esteso; `push-permission-grant-multi-account` (da implementare) |
-| **PROM-PUSH-NOTIFY-047** | `flusso-reale`; gate upload+picker (da implementare) |
+| **PROM-PUSH-NOTIFY-045–047** | `client/e2e/photo-resume-session-repro.spec.ts` (`flusso-reale`); `client/test/unit/push_sync_policy_test.dart`; `client/test/unit/session_authority_test.dart` |
+| **PROM-PUSH-NOTIFY-048–049, 053** | `client/test/unit/push_sync_policy_test.dart` (scope + `notificationPermissionJustGranted`); `e2e-push-local` (`push-tap-multi-account.spec.ts` — tap/focus parziale); backlog e2e: `push-permission-grant-multi-account` (nome proposto) |
+| **PROM-PUSH-NOTIFY-047** | `flusso-reale`; `push_sync_policy_test.dart` (`PushMediaSyncGuard`) |
 
 **Gate**: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` + smoke SQL + `bash scripts/test.sh e2e-push-local`
 
