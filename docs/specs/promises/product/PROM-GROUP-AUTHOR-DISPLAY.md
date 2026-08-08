@@ -54,7 +54,7 @@ In una chat con gruppo come peer, l'utente distingue **chi ha scritto** il conte
 |----------|-----------|
 | Glossario / comandi | [docs/domain/groups/](../../../domain/groups/), [docs/domain/messaging/](../../../domain/messaging/) |
 | UML | [docs/model/uml/groups/groups-state.puml](../../../model/uml/groups/groups-state.puml) |
-| Statechart client | [client/lib/machines/groups/](../../../client/lib/machines/groups/) |
+| Statechart client | [client/lib/machines/groups/](../../../../client/lib/machines/groups/) |
 
 **Implementazione (non vincolante):** [docs/domain/groups/README.md](../../../domain/groups/README.md) · [docs/guides/groups.md](../../../guides/groups.md)
 

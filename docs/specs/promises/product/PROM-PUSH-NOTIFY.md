@@ -129,7 +129,7 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 |----------|-----------|
 | Glossario / comandi | [docs/domain/notifications/](../../../domain/notifications/) |
 | UML | [docs/model/uml/notifications/](../../../model/uml/notifications/) |
-| Statechart client | [client/lib/machines/notifications/](../../../client/lib/machines/notifications/) |
+| Statechart client | [client/lib/machines/notifications/](../../../../client/lib/machines/notifications/) |
 | Tap → chat | `OpenChatFromNotification` → [seq-notification-click.puml](../../../model/uml/notifications/seq-notification-click.puml) → contesto `navigation` |
 
 **Implementazione (non vincolante):** [docs/domain/notifications/README.md](../../../domain/notifications/README.md) · payload: [contracts/push-payload.md](../../contracts/push-payload.md)

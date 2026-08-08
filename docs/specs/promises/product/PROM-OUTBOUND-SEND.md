@@ -49,7 +49,7 @@ L'utente vede il proprio messaggio subito in chat (stato pending) mentre il clie
 |----------|-----------|
 | Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/) |
 | UML | [docs/model/uml/messaging/messaging-state.puml](../../../model/uml/messaging/messaging-state.puml) |
-| Statechart client | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/) |
+| Statechart client | [client/lib/machines/messaging/](../../../../client/lib/machines/messaging/) |
 | Invio contenuto | `SendContent` → `ContentSent` / `ContentSendFailed` |
 
 **Implementazione (non vincolante):** [docs/domain/messaging/README.md](../../../domain/messaging/README.md) · RPC: [contracts/rpc.md](../../contracts/rpc.md)

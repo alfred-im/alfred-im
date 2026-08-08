@@ -7,10 +7,10 @@
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-01 |
 
-[NavigationMachine](../../../client/lib/machines/navigation/navigation_machine.dart) possiede l'unico `ConversationScope` commesso. `activePeer` in view-state è proiezione UI. Messaging legge solo scope commesso.
+[NavigationMachine](../../../../client/lib/machines/navigation/navigation_machine.dart) possiede l'unico `ConversationScope` commesso. `activePeer` in view-state è proiezione UI. Messaging legge solo scope commesso.
 
 **Dominio (invarianti):** [invariants.md](../../../domain/navigation/invariants.md)  
-**Implementazione:** [conversation_session_access.dart](../../../client/lib/utils/conversation_session_access.dart)  
+**Implementazione:** [conversation_session_access.dart](../../../../client/lib/utils/conversation_session_access.dart)  
 **UML:** `docs/model/uml/navigation/navigation-shell-state.puml`, `seq-open-conversation-unified.puml`
 
 ---

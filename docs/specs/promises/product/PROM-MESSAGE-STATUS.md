@@ -63,7 +63,7 @@ Il mittente interpreta lo stato del proprio messaggio da date nullable sulla **p
 |----------|-----------|
 | Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/), [docs/domain/delivery/](../../../domain/delivery/) |
 | UML | [docs/model/uml/messaging/](../../../model/uml/messaging/), [docs/model/uml/delivery/seq-process-outbox.puml](../../../model/uml/delivery/seq-process-outbox.puml) |
-| Statechart client | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/) |
+| Statechart client | [client/lib/machines/messaging/](../../../../client/lib/machines/messaging/) |
 | Spunte server | `DeliverInternal`, `ProcessReadReceipt` — [SYS-DELIVERY](../system/SYS-DELIVERY.md) |
 
 **Implementazione (non vincolante):** [docs/domain/messaging/README.md](../../../domain/messaging/README.md) · [docs/domain/delivery/README.md](../../../domain/delivery/README.md)

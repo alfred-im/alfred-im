@@ -65,7 +65,7 @@ Multi-account: realtime solo sull'account in focus — [PROM-MULTI-ACCOUNT](./PR
 |----------|-----------|
 | Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/), [docs/domain/multi-account/](../../../domain/multi-account/) |
 | UML | [docs/model/uml/messaging/](../../../model/uml/messaging/) |
-| Statechart client | [client/lib/machines/messaging/](../../../client/lib/machines/messaging/) |
+| Statechart client | [client/lib/machines/messaging/](../../../../client/lib/machines/messaging/) |
 | Eventi realtime | `RealtimeReceived` → `ConversationUpdated` (statechart messaging); spunte mittente via UPDATE `read_at` |
 
 **Implementazione (non vincolante):** [docs/domain/messaging/README.md](../../../domain/messaging/README.md)

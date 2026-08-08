@@ -37,7 +37,7 @@ storage: chat-media, avatars
 | `message_delivery_status` | `pending`, `sent`, `delivered`, `read`, `failed` | Enum legacy (pre-mailbox); **non** usato da `outbox`/`bridge_jobs` su `main` |
 | `queue_status` | `queued`, `processing`, `completed`, `failed` | `outbox`, `bridge_jobs` |
 | `profile_kind` | `user`, `group` | Tipo account — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
-| `message_reaction_kind` | `applied`, `withdrawn` | Fatto reaction su λ — [messaging](../../../domain/messaging/commands-and-events.md) |
+| `message_reaction_kind` | `applied`, `withdrawn` | Fatto reaction su λ — [messaging](../../domain/messaging/commands-and-events.md) |
 
 ---
 
@@ -151,7 +151,7 @@ Fatti immutabili (append-only) sulle reaction — ancorati a `logical_message_id
 
 **Realtime**: publication `supabase_realtime`.
 
-**Dominio**: [messaging/commands-and-events.md](../../../domain/messaging/commands-and-events.md).
+**Dominio**: [messaging/commands-and-events.md](../../domain/messaging/commands-and-events.md).
 
 ---
 

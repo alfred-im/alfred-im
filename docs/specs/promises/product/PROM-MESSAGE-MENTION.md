@@ -82,4 +82,4 @@ L'utente può citare un account Alfred con `@username` nel messaggio; chi legge 
 |-----------|--------|
 | [PROM-SHAREABLE-LINK](./PROM-SHAREABLE-LINK.md) | UI «risorsa non trovata» |
 | [PROM-CHAT-PEER-KEY](./PROM-CHAT-PEER-KEY.md) | Apertura chat per peer |
-| [registry.md](../registry.md) | Indice promesse |
+| [registry.md](../../registry.md) | Indice promesse |
