@@ -332,7 +332,7 @@ class FakePeerMessageService extends PeerMessageService {
 }
 
 class FakeGroupArchiveService extends GroupArchiveService {
-  FakeGroupArchiveService(this._host, SupabaseClient client) : super(client);
+  FakeGroupArchiveService(this._host, super.client);
 
   final FakeMessageService _host;
 
@@ -468,10 +468,9 @@ class FakeGroupArchiveService extends GroupArchiveService {
 /// [FakeMessageService] con ritardo artificiale sul fetch (race scope in test).
 class DelayedFakeMessageService extends FakeMessageService {
   DelayedFakeMessageService(
-    SupabaseClient client, {
+    super.client, {
     this.fetchDelay = const Duration(milliseconds: 50),
   }) : super(
-          client,
           buildPeer: (host) =>
               _DelayedFakePeerMessageService(host, fetchDelay: fetchDelay),
         );

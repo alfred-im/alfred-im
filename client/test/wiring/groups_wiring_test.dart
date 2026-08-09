@@ -62,6 +62,8 @@ void main() {
       final session = await AccountSession.createForTest(
         profile: groupProfile,
         client: client,
+        peerMessages: messageService.peerMessages,
+        groupArchive: messageService.groupArchive,
         messageMediaService: MessageMediaService(client),
       );
       session.fullProfile = UserProfile(
@@ -109,6 +111,7 @@ void main() {
             profileKind: ProfileKind.group,
           ),
           client: client,
+          groupArchive: messageService.groupArchive,
           messageMediaService: MessageMediaService(client),
         ),
         profile: const ProfileSummary(
@@ -127,6 +130,7 @@ void main() {
 
       final messages = GroupMessagesController(
         userId: groupId,
+        groupArchive: messageService.groupArchive,
         messageMediaService: MessageMediaService(client),
         profileService: FakeProfileService(client),
         ownerArchiveCache: home.ownerArchiveCache,
@@ -145,6 +149,7 @@ void main() {
 
       final controller = GroupMessagesController(
         userId: groupId,
+        groupArchive: messageService.groupArchive,
         messageMediaService: MessageMediaService(client),
         profileService: FakeProfileService(client),
       );

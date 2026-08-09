@@ -95,6 +95,7 @@ void main() {
       messageStore: testMessageStoreFor(frozenScope),
       userId: ownerId,
       peerProfileId: peerId,
+      peerMessages: sessionV2.peerMessages,
       messageMediaService: mediaService,
       inboxService: FakeInboxService(),
       outboundQueue: OutboundMessageQueue(),

@@ -1,6 +1,7 @@
 // Copyright (C) 2026 im.alfred
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
+// ignore_for_file: prefer_initializing_formals
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

@@ -38,9 +38,11 @@ void main() {
     );
 
     final client = createTestSupabaseClient();
+    final messageService = FakeMessageService(client);
     final session = await AccountSession.createForTest(
       profile: groupProfile,
       client: client,
+      groupArchive: messageService.groupArchive,
       messageMediaService: MessageMediaService(client),
     );
     session.fullProfile = UserProfile(
@@ -92,9 +94,11 @@ void main() {
     );
 
     final client = createTestSupabaseClient();
+    final messageService = FakeMessageService(client);
     final session = await AccountSession.createForTest(
       profile: groupProfile,
       client: client,
+      groupArchive: messageService.groupArchive,
       messageMediaService: MessageMediaService(client),
     );
     session.fullProfile = UserProfile(

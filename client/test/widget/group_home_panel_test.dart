@@ -47,6 +47,7 @@ void main() {
     final session = await AccountSession.createForTest(
       profile: groupProfile,
       client: client,
+      groupArchive: messageService.groupArchive,
       messageMediaService: MessageMediaService(client),
     );
     session.fullProfile = UserProfile(
