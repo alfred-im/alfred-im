@@ -212,7 +212,10 @@ class _NoOpFocus implements AccountFocusCommand {
   final AccountManager _manager;
 
   @override
-  Future<void> focusAccount(String accountUserId) async {
+  Future<void> focusAccount(
+    String accountUserId, {
+    bool deferProfileSync = false,
+  }) async {
     if (_manager.focusUserId == accountUserId) return;
   }
 }

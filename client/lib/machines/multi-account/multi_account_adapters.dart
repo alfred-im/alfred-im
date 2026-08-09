@@ -8,7 +8,10 @@ import 'multi_account_machine.dart';
 
 /// Comando focus account — solo I/O GoTrue; scope/navigation restano in [NavigationMachine].
 abstract class AccountFocusCommand {
-  Future<void> focusAccount(String accountUserId);
+  Future<void> focusAccount(
+    String accountUserId, {
+    bool deferProfileSync = false,
+  });
 }
 
 /// Mappa ingressi attuali → eventi macchina multi-account.
@@ -35,8 +38,16 @@ class MultiAccountAdapters implements AccountFocusCommand {
   }
 
   @override
-  Future<void> focusAccount(String accountUserId) {
-    return _machine.send(FocusAccount(accountUserId));
+  Future<void> focusAccount(
+    String accountUserId, {
+    bool deferProfileSync = false,
+  }) {
+    return _machine.send(
+      FocusAccount(
+        accountUserId,
+        deferProfileSync: deferProfileSync,
+      ),
+    );
   }
 
   Future<void> reconnectFocusedSession() {

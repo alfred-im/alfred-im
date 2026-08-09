@@ -26,9 +26,7 @@ void main() {
         allowlistService: service,
       );
 
-      for (var i = 0; i < 200 && controller.isLoading; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
+      await controller.load();
 
       expect(controller.isLoading, isFalse);
       expect(controller.allowedPeople, isEmpty);
@@ -41,9 +39,7 @@ void main() {
         allowlistService: service,
       );
 
-      for (var i = 0; i < 200 && controller.isLoading; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
+      await controller.load();
 
       await controller.addProfile(alice);
 

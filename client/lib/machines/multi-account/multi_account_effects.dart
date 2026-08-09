@@ -33,7 +33,10 @@ abstract class MultiAccountEffects {
   Future<ManifestBootstrap> loadManifestBootstrap();
 
   /// Esegue focus I/O (persist + dispose + restore) per [userId] deciso dalla macchina.
-  Future<void> executeFocus(String userId);
+  Future<void> executeFocus(
+    String userId, {
+    bool deferProfileSync = false,
+  });
 
   Future<void> reconnectFocusedSession(String focusUserId);
 

@@ -22,8 +22,14 @@ class _SessionAuthorityFocusCommand implements AccountFocusCommand {
   final SessionAuthority _authority;
 
   @override
-  Future<void> focusAccount(String accountUserId) {
-    return _authority.requestFocusSwitch(accountUserId);
+  Future<void> focusAccount(
+    String accountUserId, {
+    bool deferProfileSync = false,
+  }) {
+    return _authority.requestFocusSwitch(
+      accountUserId,
+      deferProfileSync: deferProfileSync,
+    );
   }
 }
 
@@ -96,8 +102,14 @@ class NavigationCoordinator {
     _notifyStateChanged();
   }
 
-  Future<void> switchToAccount(String accountUserId) async {
-    await adapters.switchToAccount(accountUserId);
+  Future<void> switchToAccount(
+    String accountUserId, {
+    bool deferProfileSync = false,
+  }) async {
+    await adapters.switchToAccount(
+      accountUserId,
+      deferProfileSync: deferProfileSync,
+    );
     await _manager.refreshFocusedInbox();
     _notifyStateChanged();
   }

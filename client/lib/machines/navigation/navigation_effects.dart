@@ -7,7 +7,10 @@ import '../../models/open_conversation_source.dart';
 
 /// Effetti navigation → account manager + commit scope su [NavigationMachine].
 abstract class NavigationEffects {
-  Future<void> focusAccount(String accountUserId);
+  Future<void> focusAccount(
+    String accountUserId, {
+    bool deferProfileSync = false,
+  });
 
   /// Transazione unica OpenConversation — policy per [OpenConversationSource].
   Future<bool> openConversation({

@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,7 +17,8 @@ import '../theme/alfred_colors.dart';
 import '../utils/conversation_scope_guard.dart';
 import '../utils/conversation_session_access.dart';
 import '../utils/session_scope_keys.dart';
-import '../widgets/chat_panel.dart';
+import '../widgets/chat_ingress_panel.dart';
+import '../widgets/chat_panel.dart' deferred as chat_panel;
 
 /// Detail pane for a committed 1:1 or group DM conversation scope.
 class ConversationScopePane extends StatelessWidget {
@@ -179,12 +182,68 @@ class _ChatWithMessages extends StatelessWidget {
         },
         messageStore: auth.navigation.messageStore,
       ),
-      child: ChatPanel(
+      child: _DeferredChatPanel(
         peer: peer,
         showBackButton: showBackButton,
         onBack: onBack,
         showAuthorLabels: peer.isGroup,
       ),
+    );
+  }
+}
+
+class _DeferredChatPanel extends StatefulWidget {
+  const _DeferredChatPanel({
+    required this.peer,
+    required this.showBackButton,
+    this.onBack,
+    required this.showAuthorLabels,
+  });
+
+  final ChatPeer peer;
+  final bool showBackButton;
+  final VoidCallback? onBack;
+  final bool showAuthorLabels;
+
+  @override
+  State<_DeferredChatPanel> createState() => _DeferredChatPanelState();
+}
+
+class _DeferredChatPanelState extends State<_DeferredChatPanel> {
+  late final Future<void> _library;
+
+  @override
+  void initState() {
+    super.initState();
+    _library = chat_panel.loadLibrary();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _library,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return ChatIngressPanel(
+            peer: widget.peer,
+            showBackButton: widget.showBackButton,
+            onBack: widget.onBack,
+          );
+        }
+        if (snapshot.hasError) {
+          return ChatIngressPanel(
+            peer: widget.peer,
+            showBackButton: widget.showBackButton,
+            onBack: widget.onBack,
+          );
+        }
+        return chat_panel.ChatPanel(
+          peer: widget.peer,
+          showBackButton: widget.showBackButton,
+          onBack: widget.onBack,
+          showAuthorLabels: widget.showAuthorLabels,
+        );
+      },
     );
   }
 }

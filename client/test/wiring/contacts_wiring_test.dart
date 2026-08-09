@@ -37,9 +37,7 @@ void main() {
         contactService: service,
       );
 
-      for (var i = 0; i < 200 && controller.isLoading; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
+      await controller.load();
 
       expect(controller.isLoading, isFalse);
       expect(controller.contacts, hasLength(1));
@@ -53,9 +51,7 @@ void main() {
         contactService: service,
       );
 
-      for (var i = 0; i < 200 && controller.isLoading; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
+      await controller.load();
 
       final contact = await controller.addInternal(alice);
 

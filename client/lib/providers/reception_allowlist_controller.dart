@@ -24,6 +24,7 @@ class ReceptionAllowlistController extends ChangeNotifier {
 
   final String ownerId;
   late final ReceptionCoordinator _coordinator;
+  Future<void>? _loadFuture;
 
   List<AllowedPerson> get allowedPeople => _coordinator.state.allowedPeople;
 
@@ -42,6 +43,9 @@ class ReceptionAllowlistController extends ChangeNotifier {
   void setSearchQuery(String value) => _coordinator.setSearchQuery(value);
 
   Future<void> load() => _coordinator.load();
+
+  /// Carica allow list on-demand (chat, schermata lista, overlay profilo).
+  Future<void> ensureLoaded() => _loadFuture ??= load();
 
   Future<List<ProfileSummary>> searchProfiles(String query) =>
       _coordinator.searchProfiles(query);

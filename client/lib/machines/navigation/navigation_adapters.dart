@@ -14,8 +14,16 @@ class NavigationAdapters {
 
   final NavigationMachine _machine;
 
-  Future<void> switchToAccount(String accountUserId) {
-    return _machine.send(SwitchToAccount(accountUserId));
+  Future<void> switchToAccount(
+    String accountUserId, {
+    bool deferProfileSync = false,
+  }) {
+    return _machine.send(
+      SwitchToAccount(
+        accountUserId,
+        deferProfileSync: deferProfileSync,
+      ),
+    );
   }
 
   Future<void> openPeerOnFocusedAccount(ChatPeer peer) {

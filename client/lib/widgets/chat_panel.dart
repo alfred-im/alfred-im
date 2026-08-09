@@ -13,44 +13,14 @@ import '../providers/reception_allowlist_controller.dart';
 import '../utils/auth_controller_scope.dart';
 import '../utils/mention_navigation.dart';
 import '../theme/alfred_colors.dart';
-import 'peer_profile_overlay.dart';
-import 'profile_identity.dart';
 import 'anchored_message_list.dart';
+import 'chat_ingress_panel.dart';
 import 'chat_input_bar.dart';
 import 'message_action_menu.dart';
 
-/// Ingresso chat: header peer + spinner, senza [MessagesController].
-class ChatIngressPanel extends StatelessWidget {
-  const ChatIngressPanel({
-    super.key,
-    required this.peer,
-    this.showBackButton = false,
-    this.onBack,
-  });
+export 'chat_ingress_panel.dart' show ChatIngressPanel, ChatPanelHeader;
 
-  final ChatPeer peer;
-  final bool showBackButton;
-  final VoidCallback? onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AlfredColors.surface,
-      child: Column(
-        children: [
-          _ChatHeader(
-            peer: peer,
-            showBackButton: showBackButton,
-            onBack: onBack,
-          ),
-          const Expanded(child: Center(child: CircularProgressIndicator())),
-        ],
-      ),
-    );
-  }
-}
-
-class ChatPanel extends StatelessWidget {
+class ChatPanel extends StatefulWidget {
   const ChatPanel({
     super.key,
     required this.peer,
@@ -65,6 +35,20 @@ class ChatPanel extends StatelessWidget {
   final bool showAuthorLabels;
 
   @override
+  State<ChatPanel> createState() => _ChatPanelState();
+}
+
+class _ChatPanelState extends State<ChatPanel> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<ReceptionAllowlistController?>()?.ensureLoaded();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final messagesController = context.watch<MessagesController>();
     final auth = watchAuthControllerOrNull(context);
@@ -72,16 +56,16 @@ class ChatPanel extends StatelessWidget {
     final messages = messagesController.messages;
     final canCompose = allowlist != null &&
         !allowlist.isLoading &&
-        allowlist.isProfileAllowed(peer.profileId);
+        allowlist.isProfileAllowed(widget.peer.profileId);
 
     return ColoredBox(
       color: AlfredColors.surface,
       child: Column(
         children: [
-          _ChatHeader(
-            peer: peer,
-            showBackButton: showBackButton,
-            onBack: onBack,
+          ChatPanelHeader(
+            peer: widget.peer,
+            showBackButton: widget.showBackButton,
+            onBack: widget.onBack,
           ),
           if (messagesController.isLoading)
             const Expanded(child: Center(child: CircularProgressIndicator()))
@@ -97,7 +81,7 @@ class ChatPanel extends StatelessWidget {
               child: AnchoredMessageList(
                 messages: messages,
                 isLoading: messagesController.isLoading,
-                showAuthorLabels: showAuthorLabels,
+                showAuthorLabels: widget.showAuthorLabels,
                 viewerUsername: auth?.username,
                 onMentionTap: auth != null
                     ? (username) =>
@@ -147,67 +131,6 @@ class ChatPanel extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ChatHeader extends StatelessWidget {
-  const _ChatHeader({
-    required this.peer,
-    required this.showBackButton,
-    this.onBack,
-  });
-
-  final ChatPeer peer;
-  final bool showBackButton;
-  final VoidCallback? onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AlfredColors.panel,
-      child: Container(
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AlfredColors.border)),
-        ),
-        padding: const EdgeInsets.fromLTRB(4, 8, 12, 8),
-        child: SafeArea(
-          bottom: false,
-          child: Row(
-            children: [
-              if (showBackButton)
-                IconButton(
-                  onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back),
-                ),
-              ProfileAvatar(
-                profile: peer.profile,
-                radius: 20,
-                fontSize: 16,
-                onTap: () => showPeerProfileOverlay(context, peer.profile),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ProfileIdentityLines(
-                  profile: peer.profile,
-                  showUsername: false,
-                  nameStyle: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: AlfredColors.textPrimary,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: null,
-                icon: const Icon(Icons.videocam_outlined),
-              ),
-              IconButton(onPressed: null, icon: const Icon(Icons.call_outlined)),
-              IconButton(onPressed: null, icon: const Icon(Icons.more_vert)),
-            ],
-          ),
-        ),
       ),
     );
   }

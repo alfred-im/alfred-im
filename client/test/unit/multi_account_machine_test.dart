@@ -30,7 +30,10 @@ class _RecordingEffects implements MultiAccountEffects {
   }
 
   @override
-  Future<void> executeFocus(String accountUserId) async {
+  Future<void> executeFocus(
+    String accountUserId, {
+    bool deferProfileSync = false,
+  }) async {
     focusCalls++;
     lastFocusUserId = accountUserId;
     if (focusShouldThrow) {

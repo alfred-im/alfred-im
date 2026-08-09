@@ -44,8 +44,14 @@ class AccountNavigationEffects implements NavigationEffects {
   int _ingressPrepGeneration = 0;
 
   @override
-  Future<void> focusAccount(String accountUserId) async {
-    await _focusCommand.focusAccount(accountUserId);
+  Future<void> focusAccount(
+    String accountUserId, {
+    bool deferProfileSync = false,
+  }) async {
+    await _focusCommand.focusAccount(
+      accountUserId,
+      deferProfileSync: deferProfileSync,
+    );
   }
 
   @override
