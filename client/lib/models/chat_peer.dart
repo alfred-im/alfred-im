@@ -17,8 +17,6 @@ class ChatPeer {
     this.timeLabel = '',
     this.unreadCount = 0,
     this.lastMessageAt,
-    this.protocol = 'internal',
-    this.peerExternalAddress,
     this.avatarColor,
   });
 
@@ -28,8 +26,6 @@ class ChatPeer {
   final String timeLabel;
   final int unreadCount;
   final DateTime? lastMessageAt;
-  final String protocol;
-  final String? peerExternalAddress;
   final Color? avatarColor;
 
   String get profileId => profile.id;
@@ -55,8 +51,6 @@ class ChatPeer {
       timeLabel: formatConversationTime(lastAt),
       unreadCount: json['unread_count'] as int? ?? 0,
       lastMessageAt: lastAt,
-      protocol: json['protocol'] as String? ?? 'internal',
-      peerExternalAddress: json['peer_external_address'] as String?,
     );
   }
 
@@ -75,8 +69,6 @@ class ChatPeer {
       timeLabel: inboxRow.timeLabel,
       unreadCount: inboxRow.unreadCount,
       lastMessageAt: inboxRow.lastMessageAt,
-      protocol: inboxRow.protocol,
-      peerExternalAddress: inboxRow.peerExternalAddress,
       avatarColor: avatarColor,
     );
   }

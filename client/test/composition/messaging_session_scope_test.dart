@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:alfred_client/providers/auth_controller.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
 import 'package:alfred_client/services/message_media_service.dart';
-import 'package:alfred_client/utils/session_scope_keys.dart';
 
 import '../support/composition_harness.dart';
+import '../support/session_scope_keys_test_helpers.dart';
 import 'package:alfred_client/utils/conversation_session_access.dart';
 
 import '../support/fake_messaging_services.dart';

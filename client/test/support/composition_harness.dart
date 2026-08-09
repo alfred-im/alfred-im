@@ -15,7 +15,7 @@ import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
 import 'package:alfred_client/services/message_media_service.dart';
 import 'package:alfred_client/utils/conversation_session_access.dart';
-import 'package:alfred_client/utils/session_scope_keys.dart';
+import 'session_scope_keys_test_helpers.dart';
 
 import 'fake_messaging_services.dart';
 import 'wiring_test_fixtures.dart';

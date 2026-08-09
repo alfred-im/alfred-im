@@ -110,7 +110,6 @@
 ├── supabase/               # Migrazioni e config piattaforma
 ├── bridge-xmpp/            # Demone bridge XMPP (stub)
 ├── bridge-matrix/          # Demone bridge Matrix (stub)
-├── deploy/                 # Manifest deploy (supabase.json, fly-bridges.json)
 ├── docs/                   # Documentazione tecnica AI
 │   ├── domain/             # DDD + Event Storming (significato)
 │   └── model/uml/          # UML 2.5 PlantUML (forma)
@@ -156,7 +155,7 @@
 
 ### Supabase (`tvwpoxxcqwphryvuyqzu`, EU)
 
-- Config: `supabase/config.toml`, `supabase/migrations/`, `deploy/supabase.json`
+- Config: `supabase/config.toml`, `supabase/migrations/`
 - MCP agente: `execute_sql`, `apply_migration`, `list_migrations`
 - **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web pubblico = sempre web client GitHub Pages (`githubPagesDefault`); solo `localhost`/`127.0.0.1` usano origine corrente (dev agente). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere `https://alfred-im.github.io/alfred-im/**` (rimuovere `XmppTest/**` se presente); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
 

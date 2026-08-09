@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/utils/session_scope_keys.dart';
 
+import '../support/session_scope_keys_test_helpers.dart';
 import '../support/wiring_test_fixtures.dart';
 
 void main() {

@@ -192,7 +192,6 @@ void main() {
       expect(peer.displayName, 'Alice');
       expect(peer.preview, 'Ciao!');
       expect(peer.unreadCount, 2);
-      expect(peer.protocol, 'internal');
       expect(peer.lastMessageAt, at);
       expect(peer.profile.avatarUrl, 'https://example.com/a.jpg');
       expect(peer.profile.coverUrl, 'https://example.com/c.jpg');
