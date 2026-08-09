@@ -10,6 +10,7 @@ import { test, expect } from '@playwright/test';
 
 import { enableFlutterAccessibility } from './helpers/flutter-a11y';
 import { expectFocusedUserId } from './helpers/focus';
+import { addReceptionAllowlist } from './helpers/local-push-setup';
 import { prepareLocalMessagingPair, setupTwoLocalAccounts } from './helpers/local-multi-account';
 import { isLocalSupabaseStack } from './helpers/local-auth';
 import {
@@ -100,6 +101,12 @@ test('riproduzione push tap — messaggi mailbox corretti', async ({
   });
   const yJson = (await yRes.json()) as { id: string };
   const yId = yJson.id;
+
+  await addReceptionAllowlist({
+    ownerUserId: acct2.userId,
+    allowedProfileId: yId,
+    ownerAccessToken: session2.accessToken,
+  });
 
   await send(session1.accessToken, acct2.userId, MSG_A, `legit-a-${stamp}`);
   await send(session2.accessToken, acct1.userId, MSG_B, `legit-b-${stamp}`);

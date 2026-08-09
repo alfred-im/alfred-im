@@ -37,19 +37,18 @@ export async function sendPhotoFromGalleryAfterPickerResume(page: Page) {
   await waitForChatInput(page);
   await enableFlutterAccessibility(page);
 
-  const fileChooserPromise = page.waitForEvent('filechooser', {
-    timeout: E2E_TIMEOUT.ui,
-  });
   await page.getByRole('button', { name: 'Allega' }).click({
     timeout: E2E_TIMEOUT.ui,
+  });
+  const fileChooserPromise = page.waitForEvent('filechooser', {
+    timeout: E2E_TIMEOUT.message * 2,
   });
   await page.getByRole('button', { name: 'Galleria foto' }).click({
     timeout: E2E_TIMEOUT.ui,
   });
 
-  await simulateAppBackground(page);
-
   const fileChooser = await fileChooserPromise;
+  await simulateAppBackground(page);
   await fileChooser.setFiles(FIXTURE_IMAGE);
 
   await simulateAppResume(page);
@@ -71,11 +70,11 @@ export async function sendPhotoFromGallery(
     await fillFlutterTextField(page, field, options.caption);
   }
 
-  const fileChooserPromise = page.waitForEvent('filechooser', {
-    timeout: E2E_TIMEOUT.ui,
-  });
   await page.getByRole('button', { name: 'Allega' }).click({
     timeout: E2E_TIMEOUT.ui,
+  });
+  const fileChooserPromise = page.waitForEvent('filechooser', {
+    timeout: E2E_TIMEOUT.message,
   });
   await page.getByRole('button', { name: 'Galleria foto' }).click({
     timeout: E2E_TIMEOUT.ui,

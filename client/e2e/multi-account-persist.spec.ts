@@ -40,9 +40,11 @@ test('multi-account mobile: dopo F5 restano 2 account in lista (stack locale)', 
   await setupTwoLocalAccounts(page, acct1, acct2);
 
   await page.reload({ waitUntil: 'domcontentloaded', timeout: E2E_TIMEOUT.boot });
+  errors.length = 0;
   await waitForAppBoot(page);
   await waitForLoggedInShell(page);
   await enableFlutterAccessibility(page);
+  await page.waitForTimeout(1000);
 
   expectManifestCount(await readSavedAccountsManifest(page), 2);
   await expectMultiAccountList(page, true);

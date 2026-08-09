@@ -23,15 +23,20 @@ class AccountDrawerTrigger extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      tooltip: 'Account',
-      padding: const EdgeInsets.all(8),
-      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-      icon: ProfileAvatar(
-        profile: profile,
-        radius: avatarRadius,
-        fontSize: avatarRadius * 0.9,
+    return Semantics(
+      label: 'Menu account',
+      button: true,
+      excludeSemantics: true,
+      child: IconButton(
+        onPressed: onTap,
+        tooltip: 'Menu account',
+        padding: const EdgeInsets.all(8),
+        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+        icon: ProfileAvatar(
+          profile: profile,
+          radius: avatarRadius,
+          fontSize: avatarRadius * 0.9,
+        ),
       ),
     );
   }
