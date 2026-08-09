@@ -72,6 +72,7 @@ class NavigationCoordinator {
   /// Dopo ogni transazione navigation completata (scope commesso o invalidato).
   VoidCallback? onStateChanged;
 
+  @visibleForTesting
   NavigationMachine get machine => _machine;
 
   ConversationScope? get committedScope => _machine.committedScope;

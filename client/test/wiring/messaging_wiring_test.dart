@@ -13,7 +13,7 @@ import '../support/fake_messaging_services.dart';
 const _userId = 'user-a';
 const _peerId = 'peer-b';
 
-/// Wiring: MessagesController → MessagingCoordinator → MessagesControllerEffects
+/// Wiring: MessagesController → MessagingCoordinator → _LiveMessagingEffects
 /// (effects live). Fake solo su MessageService (confine RPC).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

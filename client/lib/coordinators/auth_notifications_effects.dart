@@ -5,7 +5,7 @@
 import '../../models/push_conversation_key.dart';
 import '../../providers/auth_controller.dart';
 import '../../utils/push_platform.dart';
-import 'notifications_effects.dart';
+import '../machines/notifications/notifications_effects.dart';
 
 /// Effetti notifications → [AuthController] e [PushPlatform].
 class AuthNotificationsEffects implements NotificationsEffects {

@@ -4,16 +4,6 @@
 
 import 'notifications_effects.dart';
 
-/// Stato subscription lato client — allineato a
-/// `docs/model/uml/notifications/notifications-client-state.puml`.
-enum NotificationsSubscriptionState {
-  pushUnsupported,
-  permissionDenied,
-  idle,
-  syncing,
-  active,
-}
-
 /// Stato gestione tap / pending open chat — regione parallela client.
 enum NotificationsOpenChatState {
   idle,
@@ -24,34 +14,6 @@ enum NotificationsOpenChatState {
 /// Eventi — allineati a `docs/domain/notifications/commands-and-events.md`.
 sealed class NotificationsEvent {
   const NotificationsEvent();
-}
-
-final class PushUnsupportedDetected extends NotificationsEvent {
-  const PushUnsupportedDetected();
-}
-
-final class PermissionDeniedDetected extends NotificationsEvent {
-  const PermissionDeniedDetected();
-}
-
-final class SubscriptionIdleReached extends NotificationsEvent {
-  const SubscriptionIdleReached();
-}
-
-final class SyncSubscriptionsRequested extends NotificationsEvent {
-  const SyncSubscriptionsRequested();
-}
-
-final class PushRegistrationSucceeded extends NotificationsEvent {
-  const PushRegistrationSucceeded();
-}
-
-final class PushRegistrationFailed extends NotificationsEvent {
-  const PushRegistrationFailed();
-}
-
-final class UnregisterSubscriptionRequested extends NotificationsEvent {
-  const UnregisterSubscriptionRequested();
 }
 
 final class OpenChatFromNotification extends NotificationsEvent {
@@ -72,17 +34,15 @@ final class SessionBecameReady extends NotificationsEvent {
   const SessionBecameReady();
 }
 
-/// Macchina notifications — interprete statechart client.
+/// Macchina notifications — interprete statechart client (open chat).
 ///
 /// Ingresso open chat: [NotificationsAdapters] da [PushNotificationListener].
-/// Sync subscription: eventi da [PushCoordinator.syncPushSubscriptions].
+/// Sync subscription: [PushCoordinator] (non passa da questa macchina).
 class NotificationsMachine {
   NotificationsMachine({this._effects});
 
   final NotificationsEffects? _effects;
 
-  NotificationsSubscriptionState subscriptionState =
-      NotificationsSubscriptionState.idle;
   NotificationsOpenChatState openChatState = NotificationsOpenChatState.idle;
 
   final List<({String recipientUserId, String peerProfileId})> _pendingWhileBusy =
@@ -91,32 +51,6 @@ class NotificationsMachine {
 
   void send(NotificationsEvent event) {
     switch (event) {
-      case PushUnsupportedDetected():
-        subscriptionState = NotificationsSubscriptionState.pushUnsupported;
-      case PermissionDeniedDetected():
-        subscriptionState = NotificationsSubscriptionState.permissionDenied;
-      case SubscriptionIdleReached():
-        if (subscriptionState != NotificationsSubscriptionState.pushUnsupported &&
-            subscriptionState !=
-                NotificationsSubscriptionState.permissionDenied) {
-          subscriptionState = NotificationsSubscriptionState.idle;
-        }
-      case SyncSubscriptionsRequested():
-        if (subscriptionState == NotificationsSubscriptionState.pushUnsupported ||
-            subscriptionState == NotificationsSubscriptionState.permissionDenied) {
-          return;
-        }
-        subscriptionState = NotificationsSubscriptionState.syncing;
-      case PushRegistrationSucceeded():
-        subscriptionState = NotificationsSubscriptionState.active;
-      case PushRegistrationFailed():
-        if (subscriptionState == NotificationsSubscriptionState.syncing) {
-          subscriptionState = NotificationsSubscriptionState.idle;
-        }
-      case UnregisterSubscriptionRequested():
-        if (subscriptionState == NotificationsSubscriptionState.active) {
-          subscriptionState = NotificationsSubscriptionState.idle;
-        }
       case OpenChatFromNotification():
         _handleOpenChatFromNotification(event);
       case SessionBecameReady():

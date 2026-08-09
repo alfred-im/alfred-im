@@ -4,8 +4,6 @@
 
 import 'package:flutter/foundation.dart';
 
-import '../machines/notifications/notifications_adapters.dart';
-import '../machines/notifications/notifications_machine.dart';
 import '../models/open_account.dart';
 import '../models/push_sync_scope.dart';
 import '../services/account_manager.dart';
@@ -13,12 +11,10 @@ import '../services/push_subscription_service.dart';
 import '../utils/push_permission_flow.dart';
 import '../utils/push_platform.dart';
 
-/// Orchestrazione push: permessi, macchina notifications, sync subscription.
+/// Orchestrazione push: permessi e sync subscription.
 class PushCoordinator {
   PushCoordinator({
     required this._manager,
-    required this._notificationsAdapters,
-    this._notificationsMachine,
     PushSubscriptionService? pushService,
     SessionAuthority? sessionAuthority,
   })  : _authority = sessionAuthority ?? _manager.sessionAuthority,
@@ -26,11 +22,7 @@ class PushCoordinator {
 
   final AccountManager _manager;
   final SessionAuthority _authority;
-  final NotificationsAdapters _notificationsAdapters;
-  final NotificationsMachine? _notificationsMachine;
   final PushSubscriptionService _pushService;
-
-  NotificationsMachine? get notificationsMachine => _notificationsMachine;
 
   /// Re-registra subscription push secondo [scope] e [reason] espliciti.
   Future<void> syncPushSubscriptions({
@@ -48,10 +40,6 @@ class PushCoordinator {
     if (!decision.authorized) return;
 
     if (kIsWeb) {
-      _notificationsAdapters.onPushSupportChecked(
-        supported: PushPlatform.isPushSupported,
-        permission: PushPlatform.notificationPermission,
-      );
       if (!shouldAttemptPushSubscription(
         isPushSupported: PushPlatform.isPushSupported,
         notificationPermission: PushPlatform.notificationPermission,
@@ -60,7 +48,6 @@ class PushCoordinator {
       }
     }
 
-    _notificationsAdapters.onSyncSubscriptionsRequested();
     try {
       await _pushService.syncOpenAccounts(
         _manager.openAccounts,
@@ -68,9 +55,8 @@ class PushCoordinator {
         focusedSession: _manager.focusedSession,
         newAccountUserId: newAccountUserId ?? _resolveNewAccountUserId(reason),
       );
-      _notificationsAdapters.onPushRegistrationSucceeded();
     } catch (_) {
-      _notificationsAdapters.onPushRegistrationFailed();
+      // Sync fallita — nessuno stato subscription esposto alla UI.
     }
   }
 
@@ -84,7 +70,6 @@ class PushCoordinator {
     required OpenAccount? account,
     required bool isLastAccountOnDevice,
   }) {
-    _notificationsAdapters.onUnregisterSubscription();
     return _pushService.unregisterAccount(
       userId: userId,
       account: account,

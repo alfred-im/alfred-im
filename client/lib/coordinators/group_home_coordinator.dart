@@ -43,8 +43,6 @@ class GroupHomeCoordinator {
   late final GroupHomeMachine _machine;
   final GroupHomeUiState state = GroupHomeUiState();
 
-  GroupHomeMachine get machine => _machine;
-
   String get userId => _session.userId;
 
   Future<void> load() => _machine.send(const LoadGroupHome());

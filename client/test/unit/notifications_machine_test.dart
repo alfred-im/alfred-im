@@ -38,57 +38,6 @@ class _RecordingEffects implements NotificationsEffects {
 }
 
 void main() {
-  group('NotificationsMachine subscription', () {
-    test('SyncSubscriptions da idle → syncing → active', () {
-      final machine = NotificationsMachine();
-
-      machine.send(const SyncSubscriptionsRequested());
-      expect(machine.subscriptionState, NotificationsSubscriptionState.syncing);
-
-      machine.send(const PushRegistrationSucceeded());
-      expect(machine.subscriptionState, NotificationsSubscriptionState.active);
-    });
-
-    test('permission denied blocca sync', () {
-      final machine = NotificationsMachine()
-        ..send(const PermissionDeniedDetected());
-
-      machine.send(const SyncSubscriptionsRequested());
-      expect(
-        machine.subscriptionState,
-        NotificationsSubscriptionState.permissionDenied,
-      );
-    });
-
-    test('push unsupported blocca sync', () {
-      final machine = NotificationsMachine()
-        ..send(const PushUnsupportedDetected());
-
-      machine.send(const SyncSubscriptionsRequested());
-      expect(
-        machine.subscriptionState,
-        NotificationsSubscriptionState.pushUnsupported,
-      );
-    });
-
-    test('sync fallita torna idle', () {
-      final machine = NotificationsMachine()
-        ..send(const SyncSubscriptionsRequested());
-
-      machine.send(const PushRegistrationFailed());
-      expect(machine.subscriptionState, NotificationsSubscriptionState.idle);
-    });
-
-    test('unregister da active torna idle', () {
-      final machine = NotificationsMachine()
-        ..send(const SyncSubscriptionsRequested())
-        ..send(const PushRegistrationSucceeded());
-
-      machine.send(const UnregisterSubscriptionRequested());
-      expect(machine.subscriptionState, NotificationsSubscriptionState.idle);
-    });
-  });
-
   group('NotificationsMachine open chat', () {
     test('session not ready → queued + persist', () {
       final effects = _RecordingEffects();

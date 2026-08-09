@@ -4,10 +4,10 @@
 
 import 'package:flutter/material.dart';
 
-import '../../models/profile_summary.dart';
-import '../../providers/auth_controller.dart';
-import '../../widgets/peer_profile_overlay.dart';
-import 'shareable_link_effects.dart';
+import '../models/profile_summary.dart';
+import '../providers/auth_controller.dart';
+import '../widgets/peer_profile_overlay.dart';
+import '../machines/shareable-link/shareable_link_effects.dart';
 
 /// Effetti shareable-link → [AuthController] / navigation.
 class AuthShareableLinkEffects implements ShareableLinkEffects {

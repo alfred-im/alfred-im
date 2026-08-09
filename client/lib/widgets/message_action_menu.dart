@@ -15,7 +15,6 @@ Future<void> showMessageActionMenu({
   required MessagesController controller,
 }) async {
   if (!message.canReact) return;
-  controller.openMessageActions(message);
   final rootMessenger = ScaffoldMessenger.maybeOf(context);
   await showModalBottomSheet<void>(
     context: context,
@@ -29,7 +28,6 @@ Future<void> showMessageActionMenu({
       rootMessenger: rootMessenger,
     ),
   );
-  controller.closeMessageActions();
 }
 
 class _MessageActionMenuSheet extends StatefulWidget {

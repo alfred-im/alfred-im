@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../machines/shareable-link/auth_shareable_link_effects.dart';
+import '../coordinators/auth_shareable_link_effects.dart';
 import '../machines/shareable-link/shareable_link_adapters.dart';
 import '../machines/shareable-link/shareable_link_effects.dart';
 import '../machines/shareable-link/shareable_link_machine.dart';

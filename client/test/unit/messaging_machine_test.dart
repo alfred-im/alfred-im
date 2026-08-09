@@ -4,12 +4,11 @@
 
 import 'dart:typed_data';
 
-import 'package:alfred_client/machines/messaging/message_actions_machine.dart';
 import 'package:alfred_client/machines/messaging/conversation_message_store.dart';
 import 'package:alfred_client/machines/messaging/conversation_load_machine.dart';
 import 'package:alfred_client/models/conversation_scope.dart';
 import 'package:alfred_client/machines/messaging/messaging_conversation_state.dart';
-import 'package:alfred_client/machines/messaging/messaging_coordinator.dart';
+import 'package:alfred_client/coordinators/messaging_coordinator.dart';
 import 'package:alfred_client/machines/messaging/messaging_effects.dart';
 import 'package:alfred_client/machines/messaging/outbound_send_machine.dart';
 import 'package:alfred_client/machines/messaging/realtime_attachment_machine.dart';
@@ -192,14 +191,14 @@ void main() {
       expect(machine.state, OutboundSendState.idle);
     });
 
-    test('ContentSendFailed → failedQueue', () {
+    test('ContentSendFailed → idle', () {
       final machine = OutboundSendMachine()..state = OutboundSendState.sending;
       machine.send(const ContentSendFailed());
-      expect(machine.state, OutboundSendState.failedQueue);
+      expect(machine.state, OutboundSendState.idle);
     });
 
     test('RetryFailedSend → sending', () {
-      final machine = OutboundSendMachine()..state = OutboundSendState.failedQueue;
+      final machine = OutboundSendMachine();
       machine.send(const RetryFailedSend());
       expect(machine.state, OutboundSendState.sending);
     });
@@ -218,7 +217,7 @@ void main() {
   group('MessagingCoordinator', () {
     test('init wires load, markRead, realtime', () async {
       final effects = _RecordingEffects();
-      final coordinator = MessagingCoordinator(
+      final coordinator = MessagingCoordinator.test(
         state: MessagingConversationState(),
         effects: effects,
         onChanged: () {},
@@ -252,7 +251,7 @@ void main() {
         ],
         hasMoreOlder: true,
       );
-      final coordinator = MessagingCoordinator(
+      final coordinator = MessagingCoordinator.test(
         state: MessagingConversationState(),
         effects: effects,
         onChanged: () {},
@@ -262,24 +261,6 @@ void main() {
       await coordinator.loadOlderMessages();
 
       expect(effects.prependCount, 1);
-    });
-  });
-
-  group('MessageActionsMachine', () {
-    test('OpenMessageActions → open with target', () {
-      final machine = MessageActionsMachine();
-      machine.send(const OpenMessageActions('msg-1'));
-      expect(machine.state, MessageActionsState.open);
-      expect(machine.targetMessageId, 'msg-1');
-    });
-
-    test('ApplyReaction keeps open until close', () {
-      final machine = MessageActionsMachine();
-      machine.send(const OpenMessageActions('msg-1'));
-      machine.send(const ApplyReaction());
-      expect(machine.state, MessageActionsState.open);
-      machine.send(const CloseMessageActions());
-      expect(machine.state, MessageActionsState.closed);
     });
   });
 }

@@ -25,7 +25,7 @@ class ContactsCoordinator {
     required this._contactService,
     required this._onStateChanged,
   }) {
-    _machine = ContactsMachine(LiveContactsEffects(this));
+    _machine = ContactsMachine(_LiveContactsEffects(this));
   }
 
   final String ownerId;
@@ -33,8 +33,6 @@ class ContactsCoordinator {
   final void Function() _onStateChanged;
   late final ContactsMachine _machine;
   final ContactsState state = ContactsState();
-
-  ContactsMachine get machine => _machine;
 
   ContactService get contactService => _contactService;
 
@@ -114,4 +112,57 @@ class ContactsCoordinator {
   }
 
   void _notify() => _onStateChanged();
+}
+
+class _LiveContactsEffects implements ContactsEffects {
+  _LiveContactsEffects(this._coordinator);
+
+  final ContactsCoordinator _coordinator;
+
+  ContactsCoordinator get _c => _coordinator;
+
+  @override
+  Future<void> loadContacts() async {
+    try {
+      _c.state.contacts =
+          await _c.contactService.fetchContacts(_c.ownerId);
+      _c.state.error = null;
+      await _c._machine.send(const ContactsLoaded());
+    } catch (e) {
+      _c.state.error = e.toString();
+      await _c._machine.send(const ContactsLoadFailed());
+    } finally {
+      _c.syncLoadingFromMachine();
+      _c.notifyStateChanged();
+    }
+  }
+
+  @override
+  Future<void> addInternal(ProfileSummary profile) async {
+    await _c.contactService.addInternalContact(
+      ownerId: _c.ownerId,
+      profile: profile,
+    );
+  }
+
+  @override
+  Future<void> addExternal({
+    required ContactProtocol protocol,
+    required String address,
+    required String displayName,
+  }) async {
+    await _c.contactService.addExternalContact(
+      ownerId: _c.ownerId,
+      protocol: protocol,
+      externalAddress: address,
+      displayName: displayName,
+    );
+  }
+
+  @override
+  Future<void> removeInternalByProfileId(String profileId) async {
+    final contact = _c.contactForProfileId(profileId);
+    if (contact == null) return;
+    await _c.contactService.deleteContact(contact.id);
+  }
 }

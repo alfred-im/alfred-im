@@ -5,7 +5,7 @@
 import '../../models/push_conversation_key.dart';
 import 'notifications_machine.dart';
 
-/// Mappa ingressi attuali → eventi macchina notifications.
+/// Mappa ingressi attuali → eventi macchina notifications (open chat).
 ///
 /// Adapter verso navigation: l'effetto [NotificationsEffects.forwardOpenFromPushTap]
 /// chiama `AuthController.openConversationAfterPushTap` → `openFromPushTap`.
@@ -15,37 +15,6 @@ class NotificationsAdapters {
   NotificationsAdapters(this._machine);
 
   final NotificationsMachine _machine;
-
-  void onPushSupportChecked({
-    required bool supported,
-    required String? permission,
-  }) {
-    if (!supported) {
-      _machine.send(const PushUnsupportedDetected());
-      return;
-    }
-    if (permission == 'denied') {
-      _machine.send(const PermissionDeniedDetected());
-      return;
-    }
-    _machine.send(const SubscriptionIdleReached());
-  }
-
-  void onSyncSubscriptionsRequested() {
-    _machine.send(const SyncSubscriptionsRequested());
-  }
-
-  void onPushRegistrationSucceeded() {
-    _machine.send(const PushRegistrationSucceeded());
-  }
-
-  void onPushRegistrationFailed() {
-    _machine.send(const PushRegistrationFailed());
-  }
-
-  void onUnregisterSubscription() {
-    _machine.send(const UnregisterSubscriptionRequested());
-  }
 
   void onOpenChatFromNotification({
     required PushConversationKey conversation,

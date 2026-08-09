@@ -22,7 +22,7 @@ import '../services/profile_service.dart';
 import '../utils/author_display.dart' show enrichMessageAuthor;
 import '../utils/date_format.dart';
 import '../utils/merge_chat_message.dart';
-import '../utils/prepare_image_for_upload.dart';
+import '../utils/outbound_media_send_helper.dart';
 import '../utils/picked_file_bytes.dart';
 import '../utils/video_duration.dart';
 import '../utils/video_file_extension.dart';
@@ -77,6 +77,11 @@ class GroupMessagesCoordinator {
   RealtimeChannel? _channel;
   Future<ChatMessage> Function(String clientId)? _pendingBroadcast;
 
+  OutboundMediaSendHelper get _mediaHelper => OutboundMediaSendHelper(
+        mediaService: _messageMediaService,
+        userId: _userId,
+      );
+
   GroupMessagesMachine get machine => _machine;
 
   Future<void> load() => _machine.send(const LoadGroupMessages());
@@ -99,10 +104,7 @@ class GroupMessagesCoordinator {
         _GroupMediaBroadcastSpec(
           isReady: () => bytes.isNotEmpty && !state.isSending,
           send: (clientId) async {
-            final mediaUrl = await _messageMediaService.uploadGif(
-              bytes: bytes,
-              userId: _userId,
-            );
+            final mediaUrl = await _mediaHelper.uploadGif(bytes);
             return _messageService.broadcastGifToAllowlist(
               mediaUrl: mediaUrl,
               currentUserId: _userId,
@@ -122,10 +124,7 @@ class GroupMessagesCoordinator {
       _GroupMediaBroadcastSpec(
         isReady: () => bytes.isNotEmpty && !state.isSending,
         send: (clientId) async {
-          final mediaUrl = await _messageMediaService.uploadVoice(
-            bytes: bytes,
-            userId: _userId,
-          );
+          final mediaUrl = await _mediaHelper.uploadVoice(bytes);
           return _messageService.broadcastVoiceToAllowlist(
             mediaUrl: mediaUrl,
             durationSeconds: durationSeconds,
@@ -147,17 +146,11 @@ class GroupMessagesCoordinator {
       _GroupMediaBroadcastSpec(
         isReady: () => bytes.isNotEmpty && !state.isSending,
         send: (clientId) async {
-          final normalized = await prepareImageForUpload(bytes);
-          final mediaUrl = await _messageMediaService.uploadImage(
-            bytes: normalized.bytes,
-            userId: _userId,
-            extension: normalized.extension,
-            contentType: normalized.mime,
-          );
+          final upload = await _mediaHelper.prepareAndUploadImage(bytes);
           return _messageService.broadcastImageToAllowlist(
-            mediaUrl: mediaUrl,
-            mediaMime: normalized.mime,
-            mediaSizeBytes: normalized.bytes.length,
+            mediaUrl: upload.mediaUrl,
+            mediaMime: upload.normalized.mime,
+            mediaSizeBytes: upload.normalized.bytes.length,
             currentUserId: _userId,
             clientMessageId: clientId,
             body: body,
@@ -205,9 +198,8 @@ class GroupMessagesCoordinator {
       _GroupMediaBroadcastSpec(
         isReady: () => bytes.isNotEmpty && !state.isSending,
         send: (clientId) async {
-          final mediaUrl = await _messageMediaService.uploadVideo(
+          final mediaUrl = await _mediaHelper.uploadVideo(
             bytes: bytes,
-            userId: _userId,
             extension: extension,
             contentType: mime,
           );

@@ -14,7 +14,7 @@ import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
-import 'package:alfred_client/services/navigation_coordinator.dart';
+import 'package:alfred_client/coordinators/navigation_coordinator.dart';
 import 'package:alfred_client/services/outbound_message_queue.dart';
 import 'package:alfred_client/utils/conversation_scope_guard.dart';
 import 'package:alfred_client/utils/diagnostic_log.dart';

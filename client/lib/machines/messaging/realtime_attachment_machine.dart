@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import '../../models/message.dart';
-
 enum RealtimeAttachmentState { detached, attached }
 
 sealed class RealtimeAttachmentEvent { const RealtimeAttachmentEvent(); }
@@ -11,11 +9,6 @@ sealed class RealtimeAttachmentEvent { const RealtimeAttachmentEvent(); }
 final class AttachRealtime extends RealtimeAttachmentEvent { const AttachRealtime(); }
 /// Adapter interno — dominio: `CloseConversation` (via coordinator.dispose).
 final class DetachRealtime extends RealtimeAttachmentEvent { const DetachRealtime(); }
-/// Adapter interno — dominio: `ConversationUpdated` (INSERT messaggi + UPDATE spunte).
-final class RealtimeReceived extends RealtimeAttachmentEvent {
-  const RealtimeReceived(this.message);
-  final ChatMessage message;
-}
 
 class RealtimeAttachmentMachine {
   RealtimeAttachmentState state = RealtimeAttachmentState.detached;
@@ -23,7 +16,6 @@ class RealtimeAttachmentMachine {
     switch (event) {
       case AttachRealtime(): state = RealtimeAttachmentState.attached;
       case DetachRealtime(): state = RealtimeAttachmentState.detached;
-      case RealtimeReceived(): break;
     }
   }
 }

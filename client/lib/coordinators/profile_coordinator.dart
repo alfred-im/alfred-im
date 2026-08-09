@@ -38,8 +38,6 @@ class ProfileCoordinator {
   late final ProfileMachine _machine;
   final ProfileEditUiState state = ProfileEditUiState();
 
-  ProfileMachine get machine => _machine;
-
   bool get isSaving => state.isSaving;
   bool get isUploadingAvatar => state.isUploadingAvatar;
   bool get isUploadingCover => state.isUploadingCover;

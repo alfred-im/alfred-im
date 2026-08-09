@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:alfred_client/services/account_manager.dart';
-import 'package:alfred_client/services/navigation_coordinator.dart';
+import 'package:alfred_client/coordinators/navigation_coordinator.dart';
 
 import '../support/open_conversation_stale_harness.dart';
 
