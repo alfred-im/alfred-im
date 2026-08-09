@@ -17,6 +17,7 @@ import '../utils/avatar_color.dart';
 import '../widgets/collapsible_list_search.dart';
 import '../widgets/peer_profile_overlay.dart';
 import '../widgets/profile_identity.dart';
+import '../widgets/profile_search_sheet.dart';
 
 class ContactsScreen extends StatefulWidget {
   const ContactsScreen({super.key});
@@ -55,7 +56,14 @@ class _ContactsScreenState extends State<ContactsScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => const _AddContactSheet(),
+      builder: (ctx) => _AddContactSheet(
+        onSearch: (query) =>
+            ctx.read<ContactsController>().searchProfiles(query),
+        onAddInternal: (profile) async {
+          await ctx.read<ContactsController>().addInternal(profile);
+          if (ctx.mounted) Navigator.pop(ctx);
+        },
+      ),
     );
   }
 
@@ -129,7 +137,13 @@ class _ContactsScreenState extends State<ContactsScreen> {
 }
 
 class _AddContactSheet extends StatefulWidget {
-  const _AddContactSheet();
+  const _AddContactSheet({
+    required this.onSearch,
+    required this.onAddInternal,
+  });
+
+  final Future<List<ProfileSummary>> Function(String query) onSearch;
+  final Future<void> Function(ProfileSummary profile) onAddInternal;
 
   @override
   State<_AddContactSheet> createState() => _AddContactSheetState();
@@ -138,12 +152,9 @@ class _AddContactSheet extends StatefulWidget {
 class _AddContactSheetState extends State<_AddContactSheet>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs;
-  final _searchController = TextEditingController();
   final _addressController = TextEditingController();
   final _nameController = TextEditingController();
   ContactProtocol _externalProtocol = ContactProtocol.xmpp;
-  List<ProfileSummary> _results = [];
-  bool _searching = false;
 
   @override
   void initState() {
@@ -154,22 +165,9 @@ class _AddContactSheetState extends State<_AddContactSheet>
   @override
   void dispose() {
     _tabs.dispose();
-    _searchController.dispose();
     _addressController.dispose();
     _nameController.dispose();
     super.dispose();
-  }
-
-  Future<void> _search() async {
-    setState(() => _searching = true);
-    final contacts = context.read<ContactsController>();
-    final results = await contacts.searchProfiles(_searchController.text);
-    if (mounted) {
-      setState(() {
-        _results = results;
-        _searching = false;
-      });
-    }
   }
 
   @override
@@ -195,38 +193,10 @@ class _AddContactSheetState extends State<_AddContactSheet>
             child: TabBarView(
               controller: _tabs,
               children: [
-                Column(
-                  children: [
-                    TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Cerca utente Alfred',
-                        suffixIcon: IconButton(
-                          onPressed: _search,
-                          icon: const Icon(Icons.search),
-                        ),
-                      ),
-                      onSubmitted: (_) => _search(),
-                    ),
-                    const SizedBox(height: 8),
-                    if (_searching) const LinearProgressIndicator(),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: _results.length,
-                        itemBuilder: (context, index) {
-                          final profile = _results[index];
-                          return ListTile(
-                            title: Text(profile.displayName),
-                            subtitle: Text(profile.handle),
-                            onTap: () async {
-                              await contacts.addInternal(profile);
-                              if (context.mounted) Navigator.pop(context);
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                ProfileSearchSheet(
+                  embedded: true,
+                  onSearch: widget.onSearch,
+                  onProfileSelected: widget.onAddInternal,
                 ),
                 Column(
                   children: [

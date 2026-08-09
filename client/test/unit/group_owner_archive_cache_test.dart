@@ -20,14 +20,8 @@ void main() {
       final client = createTestSupabaseClient();
       final messageService = FakeMessageService(client);
 
-      final cache = GroupOwnerArchiveCache.forMessageService(
-        userId: userId,
-        messageService: messageService,
-      );
-      final other = GroupOwnerArchiveCache.forMessageService(
-        userId: userId,
-        messageService: messageService,
-      );
+      final cache = GroupOwnerArchiveCache.forGroupArchive(userId: userId, groupArchiveService: messageService.groupArchive);
+      final other = GroupOwnerArchiveCache.forGroupArchive(userId: userId, groupArchiveService: messageService.groupArchive);
 
       expect(identical(cache, other), isTrue);
     });
@@ -45,10 +39,7 @@ void main() {
         ),
       ];
 
-      final cache = GroupOwnerArchiveCache.forMessageService(
-        userId: userId,
-        messageService: messageService,
-      );
+      final cache = GroupOwnerArchiveCache.forGroupArchive(userId: userId, groupArchiveService: messageService.groupArchive);
 
       final first = await cache.fetch();
       messageService.ownerMessagesByUserId[userId] = const [];

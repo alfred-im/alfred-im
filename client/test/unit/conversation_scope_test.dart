@@ -11,7 +11,7 @@ import 'package:alfred_client/models/open_conversation_source.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
-import 'package:alfred_client/services/navigation_coordinator.dart';
+import 'package:alfred_client/coordinators/navigation_coordinator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/fake_messaging_services.dart';
@@ -57,7 +57,6 @@ void main() {
         inboxService: FakeInboxService(
           peers: [ChatPeer(profile: peer)],
         ),
-        messageService: FakeMessageService(client),
       );
       sessionA2 = await AccountSession.createForTest(
         profile: sessionA.profile,
@@ -65,7 +64,6 @@ void main() {
         inboxService: FakeInboxService(
           peers: [ChatPeer(profile: peer)],
         ),
-        messageService: FakeMessageService(client),
       );
       manager.focusTestSession(sessionA);
     });

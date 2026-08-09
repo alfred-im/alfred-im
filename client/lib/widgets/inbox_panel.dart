@@ -8,9 +8,9 @@ import '../models/chat_peer.dart';
 import '../models/profile_summary.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/compose_address.dart';
+import 'account_shell_header.dart';
 import 'collapsible_list_search.dart';
 import 'inbox_peer_tile.dart';
-import 'profile_identity.dart';
 
 class InboxPanel extends StatefulWidget {
   const InboxPanel({
@@ -68,14 +68,40 @@ class _InboxPanelState extends State<InboxPanel> {
               child: Column(
                 children: [
                   if (widget.showTopBar)
-                    _Header(
+                    AccountShellHeader(
+                      title: 'Alfred',
+                      titleStyle: const TextStyle(
+                        color: AlfredColors.textOnDark,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
+                      backgroundColor: AlfredColors.charcoal,
+                      padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
                       showBackButton: widget.showBackButton,
                       onBack: widget.onBack,
-                      onDrawerTap: widget.onDrawerTap,
                       drawerProfile: widget.drawerProfile,
-                      onContactsTap: widget.onContactsTap,
-                      onAllowedPeopleTap: widget.onAllowedPeopleTap,
-                      searchLens: search.lensButton,
+                      onDrawerTap: widget.onDrawerTap,
+                      actions: [
+                        search.lensButton,
+                        if (widget.onAllowedPeopleTap != null)
+                          IconButton(
+                            onPressed: widget.onAllowedPeopleTap,
+                            icon: const Icon(
+                              Icons.verified_user_outlined,
+                              color: AlfredColors.textOnDark,
+                            ),
+                            tooltip: 'Persone consentite',
+                          ),
+                        IconButton(
+                          onPressed: widget.onContactsTap,
+                          icon: const Icon(
+                            Icons.people_outline,
+                            color: AlfredColors.textOnDark,
+                          ),
+                          tooltip: 'Contatti',
+                        ),
+                      ],
                     )
                   else
                     Padding(
@@ -249,74 +275,6 @@ class _NewMessageDialogState extends State<_NewMessageDialog> {
           child: const Text('Continua'),
         ),
       ],
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.showBackButton,
-    this.onBack,
-    this.onDrawerTap,
-    this.drawerProfile,
-    required this.onContactsTap,
-    this.onAllowedPeopleTap,
-    required this.searchLens,
-  });
-
-  final bool showBackButton;
-  final VoidCallback? onBack;
-  final VoidCallback? onDrawerTap;
-  final ProfileSummary? drawerProfile;
-  final VoidCallback onContactsTap;
-  final VoidCallback? onAllowedPeopleTap;
-  final Widget searchLens;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AlfredColors.charcoal,
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          children: [
-            if (showBackButton)
-              IconButton(
-                onPressed: onBack,
-                icon: const Icon(Icons.arrow_back, color: AlfredColors.textOnDark),
-              ),
-            if (onDrawerTap != null && drawerProfile != null)
-              AccountDrawerTrigger(
-                profile: drawerProfile!,
-                onTap: onDrawerTap!,
-              ),
-            const Expanded(
-              child: Text(
-                'Alfred',
-                style: TextStyle(
-                  color: AlfredColors.textOnDark,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ),
-            searchLens,
-            if (onAllowedPeopleTap != null)
-              IconButton(
-                onPressed: onAllowedPeopleTap,
-                icon: const Icon(Icons.verified_user_outlined, color: AlfredColors.textOnDark),
-                tooltip: 'Persone consentite',
-              ),
-            IconButton(
-              onPressed: onContactsTap,
-              icon: const Icon(Icons.people_outline, color: AlfredColors.textOnDark),
-              tooltip: 'Contatti',
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

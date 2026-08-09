@@ -136,33 +136,3 @@ export async function waitForMessageInDb(
     `messaggio "${options.body}" assente su DB (viewer=${options.viewerEmail}, peer=${options.peerProfileId}). Ultimi body: ${JSON.stringify(lastBodies.slice(-8))}`,
   );
 }
-
-/** Verifica bidirezionale: mittente e destinatario vedono lo stesso messaggio su DB. */
-export async function expectMessagePersistedBothSides(options: {
-  body: string;
-  senderUserId: string;
-  recipientUserId: string;
-  senderEmail: string;
-  senderPassword: string;
-  recipientEmail: string;
-  recipientPassword: string;
-  contentType?: string;
-}) {
-  const contentType = options.contentType ?? 'text';
-  await waitForMessageInDb({
-    viewerEmail: options.senderEmail,
-    viewerPassword: options.senderPassword,
-    peerProfileId: options.recipientUserId,
-    body: options.body,
-    expectedSenderId: options.senderUserId,
-    contentType,
-  });
-  await waitForMessageInDb({
-    viewerEmail: options.recipientEmail,
-    viewerPassword: options.recipientPassword,
-    peerProfileId: options.senderUserId,
-    body: options.body,
-    expectedSenderId: options.senderUserId,
-    contentType,
-  });
-}

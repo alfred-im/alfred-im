@@ -11,7 +11,7 @@ import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
-import 'package:alfred_client/services/navigation_coordinator.dart';
+import 'package:alfred_client/coordinators/navigation_coordinator.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

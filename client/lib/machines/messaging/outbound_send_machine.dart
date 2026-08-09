@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-enum OutboundSendState { idle, sending, failedQueue }
+enum OutboundSendState { idle, sending }
 
 sealed class OutboundSendEvent { const OutboundSendEvent(); }
 
@@ -18,11 +18,6 @@ final class ContentSendFailed extends OutboundSendEvent { const ContentSendFaile
 /// Dominio: `RetryFailedSend`.
 final class RetryFailedSend extends OutboundSendEvent { const RetryFailedSend(); }
 
-final class QueueEmptied extends OutboundSendEvent { const QueueEmptied(); }
-final class FailedQueueRestored extends OutboundSendEvent {
-  const FailedQueueRestored();
-}
-
 class OutboundSendMachine {
   OutboundSendState state = OutboundSendState.idle;
   void send(OutboundSendEvent event) {
@@ -31,15 +26,8 @@ class OutboundSendMachine {
       case RetryFailedSend():
         state = OutboundSendState.sending;
       case ContentSent():
-        state = OutboundSendState.idle;
       case ContentSendFailed():
-        state = OutboundSendState.failedQueue;
-      case FailedQueueRestored():
-        if (state != OutboundSendState.sending) {
-          state = OutboundSendState.failedQueue;
-        }
-      case QueueEmptied():
-        if (state != OutboundSendState.sending) state = OutboundSendState.idle;
+        state = OutboundSendState.idle;
     }
   }
 }

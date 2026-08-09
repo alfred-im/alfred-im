@@ -140,7 +140,7 @@ class _ChatWithMessages extends StatelessWidget {
         scope: committed,
         userId: liveSession.userId,
         peerProfileId: peer.profileId,
-        messageService: liveSession.messageService,
+        peerMessages: liveSession.peerMessages,
         messageMediaService: liveSession.messageMediaService,
         inboxService: liveSession.inboxService,
         profileService: liveSession.profileService,

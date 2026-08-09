@@ -142,6 +142,8 @@ void main() {
       final sessionA = await AccountSession.createForTest(
         profile: accountA,
         client: clientA,
+        peerMessages: messageServiceA.peerMessages,
+        groupArchive: messageServiceA.groupArchive,
         inboxService: FakeInboxService(
           peers: [ChatPeer(profile: accountB)],
         ),
@@ -149,11 +151,12 @@ void main() {
           'account-b': accountB,
           'account-y': accountY,
         }),
-        messageService: messageServiceA,
       );
       final sessionB = await AccountSession.createForTest(
         profile: accountB,
         client: clientB,
+        peerMessages: messageServiceB.peerMessages,
+        groupArchive: messageServiceB.groupArchive,
         inboxService: FakeInboxService(
           peers: [
             ChatPeer(profile: accountA),
@@ -164,7 +167,6 @@ void main() {
           'account-a': accountA,
           'account-y': accountY,
         }),
-        messageService: messageServiceB,
       );
 
       sessionA.wireStorage(storage);

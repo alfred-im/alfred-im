@@ -13,7 +13,7 @@ import '../support/fake_messaging_services.dart';
 const _userId = 'user-a';
 const _peerId = 'peer-b';
 
-/// Wiring: MessagesController → MessagingCoordinator → MessagesControllerEffects
+/// Wiring: MessagesController → MessagingCoordinator → _LiveMessagingEffects
 /// (effects live). Fake solo su MessageService (confine RPC).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +41,7 @@ void main() {
         messageStore: testMessageStoreFor(scope),
         userId: _userId,
         peerProfileId: _peerId,
-        messageService: messageService,
+        peerMessages: messageService.peerMessages,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: inboxService,
         hasValidSession: () => sessionValid,
@@ -68,7 +68,7 @@ void main() {
         messageStore: testMessageStoreFor(scope),
         userId: _userId,
         peerProfileId: _peerId,
-        messageService: messageService,
+        peerMessages: messageService.peerMessages,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: inboxService,
         isScopeCommitted: () => true,

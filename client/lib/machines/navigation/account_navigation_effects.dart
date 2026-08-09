@@ -13,7 +13,7 @@ import '../../services/account_manager.dart';
 import '../../services/account_session.dart';
 import '../../utils/diagnostic_log.dart';
 import '../multi-account/multi_account_adapters.dart';
-import 'account_view_state_store.dart';
+import '../../stores/account_view_state_store.dart';
 import 'navigation_effects.dart';
 
 /// Implementazione effetti navigation — logica ex-[NavigationCoordinator].

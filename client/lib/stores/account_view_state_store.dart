@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import '../../models/account_view_state.dart';
-import '../../models/chat_peer.dart';
-import '../../services/account_manager.dart';
+import '../models/account_view_state.dart';
+import '../models/chat_peer.dart';
+import '../services/account_manager.dart';
 
 /// Applica transizioni [AccountViewState] sullo storage per-account.
 /// Unico punto di mutazione view-state (via navigation).

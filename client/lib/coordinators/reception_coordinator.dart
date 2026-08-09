@@ -37,8 +37,6 @@ class ReceptionCoordinator {
   late final ReceptionMachine _machine;
   final ReceptionState state = ReceptionState();
 
-  ReceptionMachine get machine => _machine;
-
   List<AllowedPerson> get filteredAllowedPeople => filterByQuery(
         state.allowedPeople,
         _machine.searchQuery,

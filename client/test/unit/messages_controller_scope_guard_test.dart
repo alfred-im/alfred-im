@@ -68,7 +68,7 @@ void main() {
         messageStore: testMessageStoreFor(scopeAtoB),
         userId: _accountA,
         peerProfileId: _accountB,
-        messageService: service,
+        peerMessages: service.peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
         isScopeCommitted: () => isMessagesScopeActive(
@@ -116,7 +116,7 @@ void main() {
         messageStore: testMessageStoreFor(scopeAtoB),
         userId: _accountA,
         peerProfileId: _accountB,
-        messageService: service,
+        peerMessages: service.peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
         isScopeCommitted: () => true,
@@ -129,19 +129,13 @@ void main() {
 
     test('epoch reconciled su scope congelato resta attivo se conversation ready', () async {
       final client = createTestSupabaseClient();
-      final service = DelayedFakeMessageService(
-        client,
-        fetchDelay: const Duration(milliseconds: 80),
-      );
       final sessionV1 = await AccountSession.createForTest(
         profile: _profile(_accountA),
         client: client,
-        messageService: service,
       );
       final sessionV2 = await AccountSession.createForTest(
         profile: _profile(_accountA),
         client: client,
-        messageService: service,
       );
       final peerB = ChatPeer(profile: _profile(_accountB));
       final frozenScope = testConversationScope(
@@ -196,7 +190,6 @@ void main() {
       final liveSession = await AccountSession.createForTest(
         profile: _profile(_accountA),
         client: client,
-        messageService: service,
       );
 
       final controller = MessagesController(
@@ -204,7 +197,7 @@ void main() {
         messageStore: testMessageStoreFor(staleScope),
         userId: _accountA,
         peerProfileId: _accountB,
-        messageService: service,
+        peerMessages: service.peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
         isScopeCommitted: () => isMessagesScopeActive(

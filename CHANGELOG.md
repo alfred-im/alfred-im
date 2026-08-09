@@ -4,6 +4,23 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
+## [Unreleased] - 2026-08-09
+
+### Corretto
+
+- **Code review cleanup** — Migrazione `20260809130000`: revoca UPDATE diretto su `messages` (solo RPC), ripristino FK `outbox.message_id`, drop oggetti morti (`platform_agent_smoke`, enum `message_delivery_status`, indice ridondante allowlist)
+- **CI** — Bootstrap agenti una sola volta per run release; rimosso step `integration-push` ridondante (già in `sql-smoke`); `run-push-e2e-local.sh` usa `e2e-local-stack.sh`
+- **Client/bridge** — Rimosso codice morto (config media, voice encoding, push sync, diagnostic sink, helper e2e duplicati); bridge stub solo `aiohttp`; eliminati Dockerfile per-bridge non usati
+- **Architettura client** — `MessagingCoordinator` in `coordinators/`; `_LiveMessagingEffects`; `OutboundMediaSendHelper`; `NavigationCoordinator` spostato; rimossi `MessageActionsMachine` e stato subscription write-only; fix layering contacts/auth effects
+- **UI DRY** — `InlineErrorRetry`, `AccountShellHeader`, `ProfileSearchSheet`; header chat unificato; `formatProfileBirthDate` in `date_format.dart`
+- **Completamento review** — `InboxMachine` + `InboxCoordinator`; rimossa facade `MessageService` (`PeerMessageService` + `GroupArchiveService`); `ShareableLinkCoordinator`; ingresso intent unificato su `ExternalIntentAdapter`; `AccountViewStateStore` in `stores/`; split `groups_machine`; `ChatPeer` snellito; `deploy/*.json` rimossi; `messagesSessionKey` solo test
+
+### Documentazione
+
+- Contratti `schema.md` / `rpc.md`: RLS `messages`, FK `outbox`, oggetti rimossi, conteggio migrazioni 46, mapping RPC → `PeerMessageService` / `GroupArchiveService`; `AGENTS.md`, hub test push; `PROJECT_MAP.md` layering
+
+---
+
 ## [Unreleased] - 2026-08-08
 
 ### Aggiunto

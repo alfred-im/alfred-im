@@ -73,7 +73,7 @@ void main() {
         messageStore: testMessageStoreFor(scopeAgent1),
         userId: _agent1,
         peerProfileId: _agent2,
-        messageService: messageService,
+        peerMessages: messageService.peerMessages,
         messageMediaService: mediaService,
         inboxService: inboxService,
         outboundQueue: outboundQueue,
@@ -91,7 +91,7 @@ void main() {
         messageStore: testMessageStoreFor(scopeAgent2),
         userId: _agent2,
         peerProfileId: _agent1,
-        messageService: messageService,
+        peerMessages: messageService.peerMessages,
         messageMediaService: mediaService,
         inboxService: inboxService,
         outboundQueue: OutboundMessageQueue(),
@@ -120,7 +120,7 @@ void main() {
     });
 
     test('load surfaces service errors instead of silent empty chat', () async {
-      final broken = _BrokenMessageService();
+      final broken = _BrokenPeerMessageService();
       final brokenScope = testConversationScope(
         userId: _agent1,
         peerProfileId: _agent2,
@@ -131,7 +131,7 @@ void main() {
         messageStore: testMessageStoreFor(brokenScope),
         userId: _agent1,
         peerProfileId: _agent2,
-        messageService: broken,
+        peerMessages: broken,
         messageMediaService: mediaService,
         inboxService: inboxService,
         outboundQueue: OutboundMessageQueue(),
@@ -156,7 +156,7 @@ void main() {
         messageStore: testMessageStoreFor(expiredScope),
         userId: _agent1,
         peerProfileId: _agent2,
-        messageService: messageService,
+        peerMessages: messageService.peerMessages,
         messageMediaService: mediaService,
         inboxService: inboxService,
         outboundQueue: OutboundMessageQueue(),
@@ -185,7 +185,7 @@ void main() {
         messageStore: testMessageStoreFor(realtimeScope),
         userId: _agent1,
         peerProfileId: _agent2,
-        messageService: messageService,
+        peerMessages: messageService.peerMessages,
         messageMediaService: mediaService,
         inboxService: inboxService,
         outboundQueue: OutboundMessageQueue(),
@@ -232,8 +232,9 @@ void main() {
   });
 }
 
-class _BrokenMessageService extends FakeMessageService {
-  _BrokenMessageService() : super(createTestSupabaseClient());
+class _BrokenPeerMessageService extends FakePeerMessageService {
+  _BrokenPeerMessageService() : super(FakeMessageService(createTestSupabaseClient()));
+
   @override
   Future<List<ChatMessage>> fetchPeerMessages({
     required String peerProfileId,

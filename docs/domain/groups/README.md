@@ -8,7 +8,7 @@
 |---------|------------|--------|
 | `ViewGroupHome` | `LoadGroupHome` | `GroupHomeMachine` |
 | `OpenGroupConversation` | `InitGroupMessages` | `GroupMessagesMachine` |
-| `BroadcastToGroup` | `BroadcastRequested` | `MessageService.broadcast*ToAllowlist` |
+| `BroadcastToGroup` | `BroadcastRequested` | `GroupArchiveService.broadcast*ToAllowlist` |
 | `GroupHomeReady` | `GroupHomeLoaded` | `GroupHomeCoordinator` |
 | `GroupConversationReady` | `GroupMessagesLoaded` | `GroupMessagesCoordinator` |
 | `GroupBroadcastSent` | `BroadcastAcknowledged` | reload storico owner |

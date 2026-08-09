@@ -14,7 +14,7 @@ import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
-import 'package:alfred_client/services/navigation_coordinator.dart';
+import 'package:alfred_client/coordinators/navigation_coordinator.dart';
 import 'package:alfred_client/services/outbound_message_queue.dart';
 import 'package:alfred_client/utils/conversation_scope_guard.dart';
 import 'package:alfred_client/utils/diagnostic_log.dart';
@@ -56,12 +56,10 @@ void main() {
         displayName: 'User A',
       ),
       client: client,
-      messageService: FakeMessageService(client),
     );
     final sessionV2 = await AccountSession.createForTest(
       profile: sessionV1.profile,
       client: client,
-      messageService: FakeMessageService(client),
     );
     expect(sessionV2.epoch, isNot(sessionV1.epoch));
 
@@ -97,7 +95,7 @@ void main() {
       messageStore: testMessageStoreFor(frozenScope),
       userId: ownerId,
       peerProfileId: peerId,
-      messageService: sessionV2.messageService,
+      peerMessages: sessionV2.peerMessages,
       messageMediaService: mediaService,
       inboxService: FakeInboxService(),
       outboundQueue: OutboundMessageQueue(),

@@ -14,9 +14,9 @@ import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
 import 'package:alfred_client/services/message_media_service.dart';
 import 'package:alfred_client/utils/diagnostic_log.dart';
-import 'package:alfred_client/utils/session_scope_keys.dart';
 
 import '../support/diagnostic_harness.dart';
+import '../support/session_scope_keys_test_helpers.dart';
 import '../support/fake_messaging_services.dart';
 import '../support/wiring_test_fixtures.dart';
 
@@ -63,7 +63,7 @@ void main() {
         messageStore: testMessageStoreFor(scope),
         userId: userId,
         peerProfileId: peerId,
-        messageService: FakeMessageService(client),
+        peerMessages: FakeMessageService(client).peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
         hasValidSession: () => false,
@@ -114,7 +114,7 @@ void main() {
         messageStore: testMessageStoreFor(scope),
         userId: userId,
         peerProfileId: peerId,
-        messageService: FakeMessageService(client),
+        peerMessages: FakeMessageService(client).peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
         hasValidSession: () => sessionValid,
@@ -180,7 +180,7 @@ void main() {
         messageStore: testMessageStoreFor(scope),
         userId: userA,
         peerProfileId: peerId,
-        messageService: FakeMessageService(client),
+        peerMessages: FakeMessageService(client).peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
         hasValidSession: () => sessionValid,
@@ -204,7 +204,7 @@ void main() {
         messageStore: testMessageStoreFor(reboundScope),
         userId: userA,
         peerProfileId: peerId,
-        messageService: FakeMessageService(createTestSupabaseClient()),
+        peerMessages: liveSession.peerMessages,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: FakeInboxService(),
         hasValidSession: () => true,
@@ -268,7 +268,7 @@ void main() {
         messageStore: testMessageStoreFor(scope),
         userId: userA,
         peerProfileId: peerId,
-        messageService: FakeMessageService(client),
+        peerMessages: FakeMessageService(client).peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
         hasValidSession: () => sessionValid,
@@ -312,7 +312,7 @@ void main() {
         messageStore: testMessageStoreFor(scope),
         userId: userId,
         peerProfileId: peerId,
-        messageService: FakeMessageService(client),
+        peerMessages: FakeMessageService(client).peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
         hasValidSession: () => true,

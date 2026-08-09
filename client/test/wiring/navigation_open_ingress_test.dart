@@ -7,7 +7,7 @@ import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/inbox_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../support/fake_messaging_services.dart';
+import '../support/fake_inbox_service.dart';
 
 /// PROM-CONVERSATION-SCOPE-010 / SURF-INBOX-011 — refresh inbox non blocca ingresso chat.
 void main() {

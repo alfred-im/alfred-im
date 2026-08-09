@@ -126,7 +126,7 @@ void main() {
       final session = await AccountSession.createForTest(
         profile: groupProfile,
         client: client,
-        messageService: messageService,
+        groupArchive: messageService.groupArchive,
         messageMediaService: MessageMediaService(client),
       );
       session.fullProfile = UserProfile(
@@ -139,7 +139,6 @@ void main() {
       final controller = GroupHomeController(
         session: session,
         profile: groupProfile,
-        messageService: messageService,
         profileService: profileService,
       );
       addTearDown(controller.dispose);

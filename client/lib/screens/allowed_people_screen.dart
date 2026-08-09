@@ -8,12 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/allowed_person.dart';
-import '../models/profile_summary.dart';
 import '../providers/reception_allowlist_controller.dart';
 import '../theme/alfred_colors.dart';
 import '../widgets/collapsible_list_search.dart';
 import '../widgets/peer_profile_overlay.dart';
 import '../widgets/profile_identity.dart';
+import '../widgets/profile_search_sheet.dart';
 
 class AllowedPeopleScreen extends StatefulWidget {
   const AllowedPeopleScreen({super.key});
@@ -33,10 +33,34 @@ class _AllowedPeopleScreenState extends State<AllowedPeopleScreen> {
   }
 
   Future<void> _showAddPerson() async {
+    final allowlist = context.read<ReceptionAllowlistController>();
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => const _AddAllowedPersonSheet(),
+      builder: (ctx) => ProfileSearchSheet(
+        title: 'Aggiungi persona consentita',
+        showAvatar: true,
+        onSearch: allowlist.searchProfiles,
+        isProfileSelectable: (profile) =>
+            !allowlist.allowedProfileIds.contains(profile.id),
+        profileTrailing: (profile) {
+          if (allowlist.allowedProfileIds.contains(profile.id)) {
+            return const Icon(Icons.check, color: AlfredColors.textSecondary);
+          }
+          return null;
+        },
+        onProfileSelected: (profile) async {
+          try {
+            await allowlist.addProfile(profile);
+            if (ctx.mounted) Navigator.pop(ctx);
+          } catch (e) {
+            if (!ctx.mounted) return;
+            ScaffoldMessenger.of(ctx).showSnackBar(
+              SnackBar(content: Text(e.toString())),
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -157,104 +181,6 @@ class _AllowedPeopleScreenState extends State<AllowedPeopleScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _AddAllowedPersonSheet extends StatefulWidget {
-  const _AddAllowedPersonSheet();
-
-  @override
-  State<_AddAllowedPersonSheet> createState() => _AddAllowedPersonSheetState();
-}
-
-class _AddAllowedPersonSheetState extends State<_AddAllowedPersonSheet> {
-  final _searchController = TextEditingController();
-  List<ProfileSummary> _results = [];
-  bool _searching = false;
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _search() async {
-    setState(() => _searching = true);
-    final allowlist = context.read<ReceptionAllowlistController>();
-    final results = await allowlist.searchProfiles(_searchController.text);
-    if (mounted) {
-      setState(() {
-        _results = results;
-        _searching = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final allowlist = context.watch<ReceptionAllowlistController>();
-    final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    final alreadyAllowed = allowlist.allowedProfileIds;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Aggiungi persona consentita',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Cerca utente Alfred',
-              suffixIcon: IconButton(
-                onPressed: _search,
-                icon: const Icon(Icons.search),
-              ),
-            ),
-            onSubmitted: (_) => _search(),
-          ),
-          const SizedBox(height: 8),
-          if (_searching) const LinearProgressIndicator(),
-          SizedBox(
-            height: 280,
-            child: ListView.builder(
-              itemCount: _results.length,
-              itemBuilder: (context, index) {
-                final profile = _results[index];
-                final isAllowed = alreadyAllowed.contains(profile.id);
-                return ListTile(
-                  leading: ProfileAvatar(profile: profile),
-                  title: Text(profile.displayName),
-                  subtitle: Text(profile.handle),
-                  trailing: isAllowed
-                      ? const Icon(Icons.check, color: AlfredColors.textSecondary)
-                      : null,
-                  enabled: !isAllowed,
-                  onTap: isAllowed
-                      ? null
-                      : () async {
-                          try {
-                            await allowlist.addProfile(profile);
-                            if (context.mounted) Navigator.pop(context);
-                          } catch (e) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(e.toString())),
-                            );
-                          }
-                        },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

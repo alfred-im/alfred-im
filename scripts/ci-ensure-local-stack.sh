@@ -27,6 +27,7 @@ export SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-${SERVICE_ROLE_KE
 export DATABASE_URL="${DATABASE_URL:-${DB_URL:-}}"
 export ALFRED_BASE_URL="${ALFRED_BASE_URL:-$CI_LOCAL_BASE_URL}"
 
+# bootstrap-once: guard in ci-bootstrap-agents.sh (/tmp/alfred-ci-bootstrap.done)
 bash "$REPO_ROOT/scripts/ci-bootstrap-agents.sh"
 
 echo "ci_local_stack_ok SUPABASE_URL=${SUPABASE_URL} ALFRED_BASE_URL=${ALFRED_BASE_URL}"

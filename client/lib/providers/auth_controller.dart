@@ -12,7 +12,7 @@ import '../coordinators/navigation_session_access.dart';
 import '../coordinators/push_coordinator.dart';
 import '../machines/auth/auth_adapters.dart';
 import '../machines/auth/auth_machine.dart';
-import '../machines/notifications/auth_notifications_effects.dart';
+import '../coordinators/auth_notifications_effects.dart';
 import '../machines/notifications/notifications_adapters.dart';
 import '../machines/notifications/notifications_machine.dart';
 import '../machines/multi-account/account_multi_account_effects.dart';
@@ -28,7 +28,7 @@ import '../models/profile.dart';
 import '../models/push_sync_scope.dart';
 import '../services/account_manager.dart';
 import '../services/account_session.dart';
-import '../services/navigation_coordinator.dart';
+import '../coordinators/navigation_coordinator.dart';
 import '../utils/friendly_auth_error.dart';
 import '../utils/push_media_sync_guard.dart';
 
@@ -61,8 +61,6 @@ class AuthController extends ChangeNotifier {
     _sessionState = AuthSessionState();
     _pushCoordinator = PushCoordinator(
       manager: _manager,
-      notificationsAdapters: notificationsAdapters,
-      notificationsMachine: notificationsMachine,
     );
     PushMediaSyncGuard.bind(_manager.sessionAuthority);
     _sessionCoordinator = AuthSessionCoordinator(
@@ -247,7 +245,7 @@ class AuthController extends ChangeNotifier {
     bool allowProfileFallback = true,
   }) async {
     try {
-      final ok = await _navigation.openFromCompose(
+      final ok = await _navigation.externalIntents.openFromCompose(
         accountUserId: accountUserId,
         peerProfileId: peerProfileId,
         allowProfileFallback: allowProfileFallback,

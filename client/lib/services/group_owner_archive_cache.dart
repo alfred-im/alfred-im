@@ -4,7 +4,6 @@
 
 import '../models/message.dart';
 import 'group_archive_service.dart';
-import 'message_service.dart';
 
 /// Cache sessione per `list_owner_messages` — condivisa tra home e conversazione
 /// gruppo per evitare fetch duplicati sullo stesso owner.
@@ -31,14 +30,14 @@ class GroupOwnerArchiveCache {
     return cache;
   }
 
-  /// Retrocompat: estrae [GroupArchiveService] dalla facade [MessageService].
-  static GroupOwnerArchiveCache forMessageService({
+  /// Istanza condivisa per [userId] con [groupArchiveService] esplicito.
+  static GroupOwnerArchiveCache forGroupArchive({
     required String userId,
-    required MessageService messageService,
+    required GroupArchiveService groupArchiveService,
   }) =>
       forUserId(
         userId: userId,
-        groupArchiveService: messageService.groupArchive,
+        groupArchiveService: groupArchiveService,
       );
 
   /// Rimuove la cache quando la sessione account viene smontata.

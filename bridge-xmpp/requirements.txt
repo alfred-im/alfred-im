@@ -1,2 +1,1 @@
-slixmpp>=1.15.0
 aiohttp>=3.11.0

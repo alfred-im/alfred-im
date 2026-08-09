@@ -16,6 +16,7 @@ import '../theme/alfred_colors.dart';
 import 'anchored_message_list.dart';
 import 'chat_ingress_panel.dart';
 import 'chat_input_bar.dart';
+import 'inline_error_retry.dart';
 import 'message_action_menu.dart';
 
 export 'chat_ingress_panel.dart' show ChatIngressPanel, ChatPanelHeader;
@@ -71,9 +72,11 @@ class _ChatPanelState extends State<ChatPanel> {
             const Expanded(child: Center(child: CircularProgressIndicator()))
           else if (messagesController.error != null)
             Expanded(
-              child: _ChatLoadError(
+              child: InlineErrorRetry(
                 message: messagesController.error!,
                 onRetry: () => unawaited(messagesController.reload()),
+                icon: Icons.chat_bubble_outline,
+                retryWithIcon: true,
               ),
             )
           else
@@ -131,49 +134,6 @@ class _ChatPanelState extends State<ChatPanel> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ChatLoadError extends StatelessWidget {
-  const _ChatLoadError({
-    required this.message,
-    required this.onRetry,
-  });
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.chat_bubble_outline,
-              size: 40,
-              color: AlfredColors.textSecondary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AlfredColors.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Riprova'),
-            ),
-          ],
-        ),
       ),
     );
   }

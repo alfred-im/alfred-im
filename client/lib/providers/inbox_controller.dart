@@ -2,105 +2,53 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../coordinators/inbox_coordinator.dart';
 import '../models/chat_peer.dart';
 import '../services/inbox_service.dart';
-import '../utils/list_filter.dart';
 
+/// Facade UI inbox — orchestrazione in [InboxCoordinator].
 class InboxController extends ChangeNotifier {
   InboxController({
     required this.userId,
-    required this.inboxService,
+    required InboxService inboxService,
     this.enableRealtime = true,
     this.enableInboxLoads = true,
   }) {
-    unawaited(_bootstrap());
+    _coordinator = InboxCoordinator(
+      userId: userId,
+      inboxService: inboxService,
+      onStateChanged: notifyListeners,
+      enableRealtime: enableRealtime,
+      enableInboxLoads: enableInboxLoads,
+    );
   }
 
   final String userId;
   final bool enableRealtime;
   final bool enableInboxLoads;
-  final InboxService inboxService;
-  RealtimeChannel? _channel;
-  int _loadGeneration = 0;
-  bool _realtimeAttached = false;
+  late final InboxCoordinator _coordinator;
 
-  List<ChatPeer> peers = [];
-  bool isLoading = true;
-  String? error;
-  String _searchQuery = '';
+  List<ChatPeer> get peers => _coordinator.state.peers;
 
-  List<ChatPeer> get filteredPeers => filterByQueryFields(
-        peers,
-        _searchQuery,
-        (peer) => [peer.displayName, peer.preview, peer.address ?? ''],
-      );
+  bool get isLoading => _coordinator.state.isLoading;
 
-  void setSearchQuery(String value) {
-    _searchQuery = value;
-    notifyListeners();
-  }
+  String? get error => _coordinator.state.error;
 
-  ChatPeer? findByProfileId(String profileId) {
-    for (final peer in peers) {
-      if (peer.profileId == profileId) return peer;
-    }
-    return null;
-  }
+  List<ChatPeer> get filteredPeers => _coordinator.filteredPeers;
 
-  Future<void> _bootstrap() async {
-    if (!enableInboxLoads) {
-      isLoading = false;
-      notifyListeners();
-      return;
-    }
-    await load();
-    if (enableRealtime) _attachRealtime();
-  }
+  void setSearchQuery(String value) => _coordinator.setSearchQuery(value);
 
-  void _attachRealtime() {
-    if (_realtimeAttached) return;
-    _realtimeAttached = true;
-    _channel = inboxService.subscribeToInbox(userId, load);
-  }
+  ChatPeer? findByProfileId(String profileId) =>
+      _coordinator.findByProfileId(profileId);
 
-  Future<void> load({bool showLoadingIndicator = true}) async {
-    if (!enableInboxLoads) return;
-    final generation = ++_loadGeneration;
-    if (showLoadingIndicator) {
-      isLoading = true;
-      error = null;
-      notifyListeners();
-    }
-
-    try {
-      final loaded = await inboxService
-          .fetchInbox()
-          .timeout(const Duration(seconds: 30));
-      if (generation != _loadGeneration) return;
-      peers = loaded;
-      error = null;
-    } on TimeoutException {
-      if (generation != _loadGeneration) return;
-      error = 'Timeout caricamento inbox. Riprova.';
-    } catch (e) {
-      if (generation != _loadGeneration) return;
-      error = e.toString();
-    } finally {
-      if (generation == _loadGeneration) {
-        isLoading = false;
-        notifyListeners();
-      }
-    }
-  }
+  Future<void> load({bool showLoadingIndicator = true}) =>
+      _coordinator.load(showLoadingIndicator: showLoadingIndicator);
 
   @override
   void dispose() {
-    inboxService.disposeChannel(_channel);
+    _coordinator.dispose();
     super.dispose();
   }
 }

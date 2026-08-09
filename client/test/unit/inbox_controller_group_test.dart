@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:alfred_client/providers/inbox_controller.dart';
 
-import '../support/fake_messaging_services.dart';
+import '../support/fake_inbox_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

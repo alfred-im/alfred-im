@@ -48,7 +48,7 @@ void main() {
         messageStore: testMessageStoreFor(scope),
         userId: _agent1,
         peerProfileId: _agent2,
-        messageService: messageService,
+        peerMessages: messageService.peerMessages,
         messageMediaService: mediaService,
         inboxService: FakeInboxService(),
         outboundQueue: outboundQueue,

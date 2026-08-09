@@ -12,7 +12,7 @@ import '../models/open_account.dart';
 import '../models/push_sync_scope.dart';
 import '../models/profile_summary.dart';
 import '../services/account_manager.dart';
-import '../services/navigation_coordinator.dart';
+import 'navigation_coordinator.dart';
 import '../utils/auth_identity.dart';
 import '../utils/friendly_auth_error.dart';
 import 'push_coordinator.dart';

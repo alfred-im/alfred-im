@@ -72,6 +72,7 @@ class NavigationCoordinator {
   /// Dopo ogni transazione navigation completata (scope commesso o invalidato).
   VoidCallback? onStateChanged;
 
+  @visibleForTesting
   NavigationMachine get machine => _machine;
 
   ConversationScope? get committedScope => _machine.committedScope;
@@ -141,32 +142,6 @@ class NavigationCoordinator {
     bool allowProfileFallback = true,
   }) async {
     final ok = await adapters.openConversationOnAccount(
-      accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
-      allowProfileFallback: allowProfileFallback,
-    );
-    _notifyStateChanged();
-    return ok;
-  }
-
-  Future<bool> openFromShareableLink({
-    required String accountUserId,
-    required String peerProfileId,
-  }) async {
-    final ok = await externalIntents.openFromShareableLink(
-      accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
-    );
-    _notifyStateChanged();
-    return ok;
-  }
-
-  Future<bool> openFromCompose({
-    required String accountUserId,
-    required String peerProfileId,
-    bool allowProfileFallback = true,
-  }) async {
-    final ok = await externalIntents.openFromCompose(
       accountUserId: accountUserId,
       peerProfileId: peerProfileId,
       allowProfileFallback: allowProfileFallback,

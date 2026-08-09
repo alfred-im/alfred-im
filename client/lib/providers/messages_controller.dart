@@ -7,20 +7,18 @@ import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 
+import '../coordinators/messaging_coordinator.dart';
 import '../machines/messaging/conversation_message_store.dart';
-import '../machines/messaging/messaging_conversation_state.dart';
-import '../machines/messaging/message_actions_machine.dart';
-import '../machines/messaging/messaging_coordinator.dart';
-import '../machines/messaging/messaging_effects.dart';
 import '../models/conversation_scope.dart';
 import '../models/message.dart';
 import '../models/push_conversation_key.dart';
 import '../services/inbox_service.dart';
 import '../services/message_media_service.dart';
-import '../services/message_service.dart';
+import '../services/peer_message_service.dart';
 import '../services/outbound_message_queue.dart';
 import '../groups/group_peer_author_enrichment.dart';
 import '../services/profile_service.dart';
+import '../utils/conversation_session_access.dart';
 import '../utils/message_reactions_merge.dart';
 
 class MessagesController extends ChangeNotifier {
@@ -29,7 +27,7 @@ class MessagesController extends ChangeNotifier {
     required this.messageStore,
     required this.userId,
     required this.peerProfileId,
-    required this.messageService,
+    required this.peerMessages,
     required this.messageMediaService,
     required this.inboxService,
     this.profileService,
@@ -40,14 +38,12 @@ class MessagesController extends ChangeNotifier {
     this.isScopeCommitted,
     OutboundMessageQueue? outboundQueue,
   }) {
-    _state = MessagingConversationState();
-    _effects = MessagesControllerEffects(
-      state: _state,
+    _coordinator = MessagingCoordinator(
       scope: scope,
       messageStore: messageStore,
       userId: userId,
       peerProfileId: peerProfileId,
-      messageService: messageService,
+      peerMessages: peerMessages,
       messageMediaService: messageMediaService,
       inboxService: inboxService,
       profileService: profileService,
@@ -59,21 +55,13 @@ class MessagesController extends ChangeNotifier {
       outboundQueue: outboundQueue,
       onChanged: notifyListeners,
     );
-    _coordinator = MessagingCoordinator(
-      state: _state,
-      effects: _effects,
-      onChanged: notifyListeners,
-    );
-    _effects.onSendLifecycleStart = _coordinator.notifySendStarted;
-    _effects.onSendLifecycleEnd = _coordinator.notifySendEnded;
     messageStore.addListener(_onMessageStoreChanged);
     unawaited(_coordinator.init());
   }
 
   void _onMessageStoreChanged() => notifyListeners();
 
-  static const sessionExpiredMessage =
-      MessagesControllerEffects.sessionExpiredMessage;
+  static const sessionExpiredMessage = conversationSessionExpiredMessage;
 
   final ConversationScope scope;
   final ConversationMessageStore messageStore;
@@ -83,16 +71,13 @@ class MessagesController extends ChangeNotifier {
   final bool Function()? hasValidSession;
   final MessageMediaService Function()? resolveMessageMediaService;
   final bool Function()? isScopeCommitted;
-  final MessageService messageService;
+  final PeerMessageService peerMessages;
   final MessageMediaService messageMediaService;
   final InboxService inboxService;
   final ProfileService? profileService;
   final GroupPeerAuthorEnrichment? groupPeerAuthorEnrichment;
 
-  late final MessagingConversationState _state;
-  late final MessagesControllerEffects _effects;
   late final MessagingCoordinator _coordinator;
-  final MessageActionsMachine messageActionsMachine = MessageActionsMachine();
   bool _notifierDisposed = false;
 
   List<ChatMessage> get messages => _coordinator.messages;
@@ -179,17 +164,6 @@ class MessagesController extends ChangeNotifier {
   Future<void> retryMessage(String clientId) =>
       _coordinator.retryMessage(clientId);
 
-  void openMessageActions(ChatMessage message) {
-    if (!message.canReact) return;
-    messageActionsMachine.send(OpenMessageActions(message.id));
-    notifyListeners();
-  }
-
-  void closeMessageActions() {
-    messageActionsMachine.send(const CloseMessageActions());
-    notifyListeners();
-  }
-
   Future<void> applyReaction({
     required ChatMessage message,
     required String emoji,
@@ -209,7 +183,6 @@ class MessagesController extends ChangeNotifier {
         emoji: emoji,
       );
     }
-    messageActionsMachine.send(const CloseMessageActions());
     notifyListeners();
   }
 
@@ -224,7 +197,6 @@ class MessagesController extends ChangeNotifier {
     if (_notifierDisposed) return;
     _notifierDisposed = true;
     messageStore.removeListener(_onMessageStoreChanged);
-    _effects.markDisposed();
     _coordinator.dispose();
     super.dispose();
   }

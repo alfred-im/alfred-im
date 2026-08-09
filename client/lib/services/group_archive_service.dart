@@ -209,4 +209,10 @@ class GroupArchiveService {
         )
         .subscribe();
   }
+
+  void disposeChannel(RealtimeChannel? channel) {
+    if (channel != null) {
+      _client.removeChannel(channel);
+    }
+  }
 }

@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'package:alfred_client/machines/groups/group_home_aggregates.dart';
+import 'package:alfred_client/machines/groups/groups_effects.dart';
 import 'package:alfred_client/machines/groups/groups_machine.dart';
 import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/message.dart';
@@ -108,12 +110,11 @@ void main() {
   });
 
   group('GroupMessagesMachine', () {
-    test('starts loading with detached realtime', () {
+    test('starts loading', () {
       final machine = GroupMessagesMachine(_RecordingGroupMessagesEffects());
 
       expect(machine.loadState, GroupMessagesLoadState.loading);
       expect(machine.broadcastState, GroupBroadcastState.idle);
-      expect(machine.realtimeState, GroupRealtimeState.detached);
     });
 
     test('InitGroupMessages loads and attaches realtime', () async {
@@ -124,20 +125,17 @@ void main() {
 
       expect(effects.loadCount, 1);
       expect(effects.attachCount, 1);
-      expect(machine.realtimeState, GroupRealtimeState.attached);
     });
 
     test('LoadGroupMessages reloads without attaching realtime', () async {
       final effects = _RecordingGroupMessagesEffects();
       final machine = GroupMessagesMachine(effects)
-        ..realtimeState = GroupRealtimeState.detached
         ..loadState = GroupMessagesLoadState.ready;
 
       await machine.send(const LoadGroupMessages());
 
       expect(effects.loadCount, 1);
       expect(effects.attachCount, 0);
-      expect(machine.realtimeState, GroupRealtimeState.detached);
       expect(machine.loadState, GroupMessagesLoadState.loading);
     });
 
@@ -207,13 +205,11 @@ void main() {
 
     test('DisposeGroupMessages detaches realtime', () async {
       final effects = _RecordingGroupMessagesEffects();
-      final machine = GroupMessagesMachine(effects)
-        ..realtimeState = GroupRealtimeState.attached;
+      final machine = GroupMessagesMachine(effects);
 
       await machine.send(const DisposeGroupMessages());
 
       expect(effects.disposeCount, 1);
-      expect(machine.realtimeState, GroupRealtimeState.detached);
     });
   });
 

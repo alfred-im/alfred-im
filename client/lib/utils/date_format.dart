@@ -28,3 +28,24 @@ String formatConversationTime(DateTime? dateTime) {
   if (dateTime == null) return '';
   return formatMessageTime(dateTime);
 }
+
+const _italianMonthsShort = [
+  'gen',
+  'feb',
+  'mar',
+  'apr',
+  'mag',
+  'giu',
+  'lug',
+  'ago',
+  'set',
+  'ott',
+  'nov',
+  'dic',
+];
+
+/// Data di nascita / creazione profilo in italiano (es. «12 mar 2026»).
+String formatProfileBirthDate(DateTime dateTime) {
+  final local = dateTime.toLocal();
+  return '${local.day} ${_italianMonthsShort[local.month - 1]} ${local.year}';
+}

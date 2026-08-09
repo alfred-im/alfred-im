@@ -6,7 +6,7 @@ import '../machines/messaging/conversation_message_store.dart';
 import '../models/chat_peer.dart';
 import '../models/conversation_scope.dart';
 import '../services/account_session.dart';
-import '../services/navigation_coordinator.dart';
+import 'navigation_coordinator.dart';
 
 /// Confine read + command navigation per la sessione UI (shell chat / inbox).
 class NavigationSessionAccess {

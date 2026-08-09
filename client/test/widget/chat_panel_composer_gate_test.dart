@@ -53,7 +53,7 @@ void main() {
       messageStore: testMessageStoreFor(scope),
       userId: ownerId,
       peerProfileId: peer.id,
-      messageService: messageService,
+      peerMessages: messageService.peerMessages,
       messageMediaService: FakeMessageMediaService(),
       inboxService: FakeInboxService(),
       isScopeCommitted: () => true,

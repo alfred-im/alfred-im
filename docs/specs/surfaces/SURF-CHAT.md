@@ -18,7 +18,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 |----------|--------|
 | Widget | `client/lib/widgets/chat_panel.dart` (`ChatPanel`, `ChatIngressPanel`), `conversation_scope_pane.dart`, `message_bubble.dart` |
 | Controller | `MessagesController` — solo dopo scope commesso; ingresso usa `ChatIngressPanel` senza controller |
-| Servizi | `MessageService`, `OutboundMessageQueue` |
+| Servizi | `PeerMessageService`, `OutboundMessageQueue` |
 | Parent | `HomeScreen` → `ConversationScopePane` (`auth.activePeer`, `showBackButton` su mobile) |
 | Modello | `ChatPeer`, `ChatMessage` — `isMine` da `author_id == currentUserId` |
 

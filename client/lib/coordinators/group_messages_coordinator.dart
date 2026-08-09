@@ -1,6 +1,7 @@
 // Copyright (C) 2026 im.alfred
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
+// ignore_for_file: prefer_initializing_formals
 
 import 'dart:async';
 
@@ -12,17 +13,18 @@ import 'package:uuid/uuid.dart';
 import '../config/chat_media_config.dart';
 import '../config/location_config.dart';
 import '../config/voice_config.dart';
+import '../machines/groups/groups_effects.dart';
 import '../machines/groups/groups_machine.dart';
 import '../models/message.dart';
 import '../models/profile_summary.dart';
 import '../services/group_owner_archive_cache.dart';
+import '../services/group_archive_service.dart';
 import '../services/message_media_service.dart';
-import '../services/message_service.dart';
 import '../services/profile_service.dart';
 import '../utils/author_display.dart' show enrichMessageAuthor;
 import '../utils/date_format.dart';
 import '../utils/merge_chat_message.dart';
-import '../utils/prepare_image_for_upload.dart';
+import '../utils/outbound_media_send_helper.dart';
 import '../utils/picked_file_bytes.dart';
 import '../utils/video_duration.dart';
 import '../utils/video_file_extension.dart';
@@ -50,20 +52,25 @@ class _GroupMediaBroadcastSpec {
 /// Orchestrazione storico owner, broadcast e realtime gruppo.
 class GroupMessagesCoordinator {
   GroupMessagesCoordinator({
-    required this._userId,
-    required this._messageService,
-    required this._messageMediaService,
-    required this._profileService,
-    required this._ownerArchiveCache,
-    required this._onStateChanged,
+    required String userId,
+    required GroupArchiveService groupArchive,
+    required MessageMediaService messageMediaService,
+    required ProfileService profileService,
+    required GroupOwnerArchiveCache ownerArchiveCache,
+    required void Function() onStateChanged,
     this.onMessagesChanged,
-  }) {
+  })  : _userId = userId,
+        _groupArchive = groupArchive,
+        _messageMediaService = messageMediaService,
+        _profileService = profileService,
+        _ownerArchiveCache = ownerArchiveCache,
+        _onStateChanged = onStateChanged {
     _machine = GroupMessagesMachine(_LiveGroupMessagesEffects._(this));
     unawaited(_machine.send(const InitGroupMessages()));
   }
 
   final String _userId;
-  final MessageService _messageService;
+  final GroupArchiveService _groupArchive;
   final MessageMediaService _messageMediaService;
   final ProfileService _profileService;
   final GroupOwnerArchiveCache _ownerArchiveCache;
@@ -77,6 +84,11 @@ class GroupMessagesCoordinator {
   RealtimeChannel? _channel;
   Future<ChatMessage> Function(String clientId)? _pendingBroadcast;
 
+  OutboundMediaSendHelper get _mediaHelper => OutboundMediaSendHelper(
+        mediaService: _messageMediaService,
+        userId: _userId,
+      );
+
   GroupMessagesMachine get machine => _machine;
 
   Future<void> load() => _machine.send(const LoadGroupMessages());
@@ -87,7 +99,7 @@ class GroupMessagesCoordinator {
     final trimmed = body.trim();
     if (trimmed.isEmpty || state.isSending) return;
     await _broadcast(
-      (clientId) => _messageService.broadcastToAllowlist(
+      (clientId) => _groupArchive.broadcastToAllowlist(
         body: trimmed,
         currentUserId: _userId,
         clientMessageId: clientId,
@@ -99,11 +111,8 @@ class GroupMessagesCoordinator {
         _GroupMediaBroadcastSpec(
           isReady: () => bytes.isNotEmpty && !state.isSending,
           send: (clientId) async {
-            final mediaUrl = await _messageMediaService.uploadGif(
-              bytes: bytes,
-              userId: _userId,
-            );
-            return _messageService.broadcastGifToAllowlist(
+            final mediaUrl = await _mediaHelper.uploadGif(bytes);
+            return _groupArchive.broadcastGifToAllowlist(
               mediaUrl: mediaUrl,
               currentUserId: _userId,
               clientMessageId: clientId,
@@ -122,11 +131,8 @@ class GroupMessagesCoordinator {
       _GroupMediaBroadcastSpec(
         isReady: () => bytes.isNotEmpty && !state.isSending,
         send: (clientId) async {
-          final mediaUrl = await _messageMediaService.uploadVoice(
-            bytes: bytes,
-            userId: _userId,
-          );
-          return _messageService.broadcastVoiceToAllowlist(
+          final mediaUrl = await _mediaHelper.uploadVoice(bytes);
+          return _groupArchive.broadcastVoiceToAllowlist(
             mediaUrl: mediaUrl,
             durationSeconds: durationSeconds,
             mediaSizeBytes: bytes.length,
@@ -147,17 +153,11 @@ class GroupMessagesCoordinator {
       _GroupMediaBroadcastSpec(
         isReady: () => bytes.isNotEmpty && !state.isSending,
         send: (clientId) async {
-          final normalized = await prepareImageForUpload(bytes);
-          final mediaUrl = await _messageMediaService.uploadImage(
-            bytes: normalized.bytes,
-            userId: _userId,
-            extension: normalized.extension,
-            contentType: normalized.mime,
-          );
-          return _messageService.broadcastImageToAllowlist(
-            mediaUrl: mediaUrl,
-            mediaMime: normalized.mime,
-            mediaSizeBytes: normalized.bytes.length,
+          final upload = await _mediaHelper.prepareAndUploadImage(bytes);
+          return _groupArchive.broadcastImageToAllowlist(
+            mediaUrl: upload.mediaUrl,
+            mediaMime: upload.normalized.mime,
+            mediaSizeBytes: upload.normalized.bytes.length,
             currentUserId: _userId,
             clientMessageId: clientId,
             body: body,
@@ -205,13 +205,12 @@ class GroupMessagesCoordinator {
       _GroupMediaBroadcastSpec(
         isReady: () => bytes.isNotEmpty && !state.isSending,
         send: (clientId) async {
-          final mediaUrl = await _messageMediaService.uploadVideo(
+          final mediaUrl = await _mediaHelper.uploadVideo(
             bytes: bytes,
-            userId: _userId,
             extension: extension,
             contentType: mime,
           );
-          return _messageService.broadcastVideoToAllowlist(
+          return _groupArchive.broadcastVideoToAllowlist(
             mediaUrl: mediaUrl,
             mediaMime: mime,
             durationSeconds: durationSeconds,
@@ -233,7 +232,7 @@ class GroupMessagesCoordinator {
     final lat = LocationConfig.roundCoordinate(latitude);
     final lng = LocationConfig.roundCoordinate(longitude);
     await _broadcast(
-      (clientId) => _messageService.broadcastLocationToAllowlist(
+      (clientId) => _groupArchive.broadcastLocationToAllowlist(
         latitude: lat,
         longitude: lng,
         currentUserId: _userId,
@@ -292,7 +291,7 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
   @override
   void attachRealtime() {
     if (_c._channel != null) return;
-    _c._channel = _c._messageService.subscribeToOwnerMessages(
+    _c._channel = _c._groupArchive.subscribeToOwnerMessages(
       currentUserId: _c._userId,
       onMessage: (message) {
         unawaited(_c._machine.send(OwnerRealtimeReceived(message)));
@@ -302,7 +301,7 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
 
   @override
   void disposeRealtime() {
-    _c._messageService.disposeChannel(_c._channel);
+    _c._groupArchive.disposeChannel(_c._channel);
     _c._channel = null;
   }
 
