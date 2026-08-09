@@ -406,12 +406,39 @@ function inboxPeerButton(page: Page, displayName: string) {
     .filter({ hasNotText: /@/ });
 }
 
-/** Shell autenticata: inbox (FAB) oppure chat ripristinata (input messaggio). */
+/** Inbox account utente (non gruppo): FAB o ricerca messaggi. */
+async function isUserInboxShell(page: Page): Promise<boolean> {
+  await enableFlutterAccessibility(page);
+  if (
+    await page
+      .getByRole('button', { name: 'Nuovo messaggio' })
+      .isVisible()
+      .catch(() => false)
+  ) {
+    return true;
+  }
+  return page
+    .getByRole('button', { name: 'Cerca messaggi' })
+    .isVisible()
+    .catch(() => false);
+}
+
+/** Shell gruppo — niente FAB né ricerca inbox. */
+async function isGroupAccountShell(page: Page): Promise<boolean> {
+  await enableFlutterAccessibility(page);
+  const groupNav = await page
+    .getByRole('button', { name: 'Persone consentite' })
+    .isVisible()
+    .catch(() => false);
+  if (!groupNav) {
+    return false;
+  }
+  return !(await isUserInboxShell(page));
+}
+
+/** Shell autenticata: inbox utente (FAB/ricerca) oppure chat ripristinata. */
 export async function waitForAccountShell(page: Page) {
-  const fab = page.getByRole('button', { name: 'Nuovo messaggio' });
-  const chatInput = page
-    .getByRole('textbox', { name: /Scrivi un messaggio/i })
-    .or(page.locator('flt-semantics[role="textbox"]').last());
+  const chatInput = chatInputField(page);
   const emailField = page.getByRole('textbox', { name: 'Email' });
   await expect
     .poll(
@@ -432,11 +459,17 @@ export async function waitForAccountShell(page: Page) {
           .getByText('Nessun account aperto')
           .isVisible()
           .catch(() => false));
-        const inboxReady = await fab.isVisible().catch(() => false);
+        const userInbox = await isUserInboxShell(page);
         const chatReady = await chatInput.isVisible().catch(() => false);
-        return overlayClosed && noPlaceholder && (inboxReady || chatReady);
+        const stillOnGroup = await isGroupAccountShell(page);
+        return (
+          overlayClosed &&
+          noPlaceholder &&
+          !stillOnGroup &&
+          (userInbox || chatReady)
+        );
       },
-      { timeout: E2E_TIMEOUT.auth, intervals: [...E2E_POLL] },
+      { timeout: E2E_TIMEOUT.shell, intervals: [...E2E_POLL] },
     )
     .toBe(true);
 }
@@ -445,45 +478,67 @@ export async function waitForAccountShell(page: Page) {
  * Cambia focus account dal drawer mobile.
  * Clic solo nel drawer — non sulla riga inbox (stesso nome del destinatario).
  */
+async function clickDrawerAccountEntry(
+  page: Page,
+  byButton: Locator,
+  byText: Locator,
+) {
+  if ((await byButton.count()) > 0) {
+    const target = byButton.first();
+    await target.scrollIntoViewIfNeeded();
+    await target.click({ timeout: E2E_TIMEOUT.ui });
+    return;
+  }
+  await byText.scrollIntoViewIfNeeded();
+  await byText.click({ timeout: E2E_TIMEOUT.ui });
+}
+
 export async function switchToAccountByDisplayName(
   page: Page,
   displayName: string,
   userId?: string,
 ) {
-  await openAccountDrawer(page);
-  await enableFlutterAccessibility(page);
-
   const namePattern = new RegExp(escapeRegExp(displayName));
-  const byButton = page.getByRole('button', { name: namePattern });
-  const byText = page.getByText(displayName, { exact: true });
+  const byButton = () =>
+    page.getByRole('button', { name: namePattern });
+  const byText = () => page.getByText(displayName, { exact: true });
 
-  await expect
-    .poll(
-      async () => {
-        await enableFlutterAccessibility(page);
-        return (
-          (await byButton.count()) > 0 ||
-          (await byText.isVisible().catch(() => false))
-        );
-      },
-      { timeout: E2E_TIMEOUT.ui, intervals: [...E2E_POLL] },
-    )
-    .toBe(true);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await openAccountDrawer(page);
+    await enableFlutterAccessibility(page);
 
-  if ((await byButton.count()) > 0) {
-    await byButton.first().click({ timeout: E2E_TIMEOUT.ui });
-  } else {
-    await byText.click({ timeout: E2E_TIMEOUT.ui });
+    await expect
+      .poll(
+        async () => {
+          await enableFlutterAccessibility(page);
+          return (
+            (await byButton().count()) > 0 ||
+            (await byText().isVisible().catch(() => false))
+          );
+        },
+        { timeout: E2E_TIMEOUT.ui, intervals: [...E2E_POLL] },
+      )
+      .toBe(true);
+
+    await clickDrawerAccountEntry(page, byButton(), byText());
+
+    await page.waitForTimeout(400);
+    await tryCloseDrawerIfOpen(page);
+
+    if (userId) {
+      await expectFocusedUserId(page, userId);
+    }
+
+    try {
+      await waitForAccountShell(page);
+      return;
+    } catch (error) {
+      if (attempt === 1) {
+        throw error;
+      }
+      await page.waitForTimeout(800);
+    }
   }
-
-  await page.waitForTimeout(400);
-  await tryCloseDrawerIfOpen(page);
-
-  if (userId) {
-    await expectFocusedUserId(page, userId);
-  }
-
-  await waitForAccountShell(page);
 }
 
 function chatInputField(page: Page) {
