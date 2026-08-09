@@ -4,6 +4,7 @@
 
 import 'package:flutter/foundation.dart';
 
+import '../../models/manifest_bootstrap.dart';
 import '../../models/profile_summary.dart';
 import '../../services/account_manager.dart';
 import 'multi_account_effects.dart';

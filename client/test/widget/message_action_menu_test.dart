@@ -41,7 +41,6 @@ void main() {
                 messageStore: store,
                 userId: 'u1',
                 peerProfileId: 'p1',
-                messageService: messageService,
                 messageMediaService: FakeMessageMediaService(),
                 inboxService: FakeInboxService(),
                 isScopeCommitted: () => true,

@@ -7,7 +7,6 @@ import 'dart:typed_data';
 import 'package:alfred_client/machines/messaging/conversation_message_store.dart';
 import 'package:alfred_client/machines/messaging/conversation_load_machine.dart';
 import 'package:alfred_client/models/conversation_scope.dart';
-import 'package:alfred_client/machines/messaging/messaging_conversation_state.dart';
 import 'package:alfred_client/coordinators/messaging_coordinator.dart';
 import 'package:alfred_client/machines/messaging/messaging_effects.dart';
 import 'package:alfred_client/machines/messaging/outbound_send_machine.dart';
@@ -218,7 +217,6 @@ void main() {
     test('init wires load, markRead, realtime', () async {
       final effects = _RecordingEffects();
       final coordinator = MessagingCoordinator.test(
-        state: MessagingConversationState(),
         effects: effects,
         onChanged: () {},
       );
@@ -252,7 +250,6 @@ void main() {
         hasMoreOlder: true,
       );
       final coordinator = MessagingCoordinator.test(
-        state: MessagingConversationState(),
         effects: effects,
         onChanged: () {},
       );

@@ -7,8 +7,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../machines/multi-account/multi_account_effects.dart';
-import '../machines/navigation/account_view_state_store.dart';
+import '../models/manifest_bootstrap.dart';
+import '../stores/account_view_state_store.dart';
 import '../models/account_view_state.dart';
 import '../models/open_account.dart';
 import '../models/profile_summary.dart';

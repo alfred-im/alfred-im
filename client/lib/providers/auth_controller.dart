@@ -245,7 +245,7 @@ class AuthController extends ChangeNotifier {
     bool allowProfileFallback = true,
   }) async {
     try {
-      final ok = await _navigation.openFromCompose(
+      final ok = await _navigation.externalIntents.openFromCompose(
         accountUserId: accountUserId,
         peerProfileId: peerProfileId,
         allowProfileFallback: allowProfileFallback,

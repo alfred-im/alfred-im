@@ -36,7 +36,6 @@ void main() {
     final session = await AccountSession.createForTest(
       profile: groupProfile,
       client: client,
-      messageService: messageService,
       messageMediaService: MessageMediaService(client),
     );
     addTearDown(() => session.disposeResources(clearAuthStorage: false));

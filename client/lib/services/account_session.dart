@@ -19,8 +19,9 @@ import 'account_storage_service.dart';
 import 'compose_service.dart';
 import 'contact_service.dart';
 import 'inbox_service.dart';
+import 'group_archive_service.dart';
 import 'message_media_service.dart';
-import 'message_service.dart';
+import 'peer_message_service.dart';
 import 'profile_avatar_service.dart';
 import 'profile_service.dart';
 import 'reception_allowlist_service.dart';
@@ -34,7 +35,8 @@ class AccountSession {
     required this.epoch,
     required this.client,
     required this.inboxService,
-    required this.messageService,
+    required this.peerMessages,
+    required this.groupArchive,
     required this.profileService,
     required this.contactService,
     required this.receptionAllowlistService,
@@ -52,7 +54,8 @@ class AccountSession {
 
   final SupabaseClient client;
   final InboxService inboxService;
-  final MessageService messageService;
+  final PeerMessageService peerMessages;
+  final GroupArchiveService groupArchive;
   final ProfileService profileService;
   final ContactService contactService;
   final ReceptionAllowlistService receptionAllowlistService;
@@ -322,7 +325,8 @@ class AccountSession {
       epoch: ++_nextEpoch,
       client: client,
       inboxService: inboxService,
-      messageService: MessageService(client),
+      peerMessages: PeerMessageService(client),
+      groupArchive: GroupArchiveService(client),
       profileService: profileService,
       contactService: ContactService(client),
       receptionAllowlistService: ReceptionAllowlistService(client),
@@ -451,7 +455,8 @@ class AccountSession {
     String refreshToken = 'test-refresh-token',
     SupabaseClient? client,
     InboxService? inboxService,
-    MessageService? messageService,
+    PeerMessageService? peerMessages,
+    GroupArchiveService? groupArchive,
     MessageMediaService? messageMediaService,
     ProfileService? profileService,
   }) async {
@@ -464,7 +469,8 @@ class AccountSession {
       epoch: ++_nextEpoch,
       client: resolvedClient,
       inboxService: resolvedInboxService,
-      messageService: messageService ?? MessageService(resolvedClient),
+      peerMessages: peerMessages ?? PeerMessageService(resolvedClient),
+      groupArchive: groupArchive ?? GroupArchiveService(resolvedClient),
       profileService: resolvedProfileService,
       contactService: ContactService(resolvedClient),
       receptionAllowlistService: ReceptionAllowlistService(resolvedClient),

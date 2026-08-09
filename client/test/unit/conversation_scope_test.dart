@@ -57,7 +57,6 @@ void main() {
         inboxService: FakeInboxService(
           peers: [ChatPeer(profile: peer)],
         ),
-        messageService: FakeMessageService(client),
       );
       sessionA2 = await AccountSession.createForTest(
         profile: sessionA.profile,
@@ -65,7 +64,6 @@ void main() {
         inboxService: FakeInboxService(
           peers: [ChatPeer(profile: peer)],
         ),
-        messageService: FakeMessageService(client),
       );
       manager.focusTestSession(sessionA);
     });

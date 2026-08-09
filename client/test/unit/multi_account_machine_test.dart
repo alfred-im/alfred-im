@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'package:alfred_client/models/manifest_bootstrap.dart';
 import 'package:alfred_client/machines/multi-account/multi_account_adapters.dart';
 import 'package:alfred_client/machines/multi-account/multi_account_effects.dart';
 import 'package:alfred_client/machines/multi-account/multi_account_machine.dart';

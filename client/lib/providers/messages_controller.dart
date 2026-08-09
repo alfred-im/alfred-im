@@ -14,7 +14,7 @@ import '../models/message.dart';
 import '../models/push_conversation_key.dart';
 import '../services/inbox_service.dart';
 import '../services/message_media_service.dart';
-import '../services/message_service.dart';
+import '../services/peer_message_service.dart';
 import '../services/outbound_message_queue.dart';
 import '../groups/group_peer_author_enrichment.dart';
 import '../services/profile_service.dart';
@@ -27,7 +27,7 @@ class MessagesController extends ChangeNotifier {
     required this.messageStore,
     required this.userId,
     required this.peerProfileId,
-    required this.messageService,
+    required this.peerMessages,
     required this.messageMediaService,
     required this.inboxService,
     this.profileService,
@@ -43,7 +43,7 @@ class MessagesController extends ChangeNotifier {
       messageStore: messageStore,
       userId: userId,
       peerProfileId: peerProfileId,
-      messageService: messageService,
+      peerMessages: peerMessages,
       messageMediaService: messageMediaService,
       inboxService: inboxService,
       profileService: profileService,
@@ -71,7 +71,7 @@ class MessagesController extends ChangeNotifier {
   final bool Function()? hasValidSession;
   final MessageMediaService Function()? resolveMessageMediaService;
   final bool Function()? isScopeCommitted;
-  final MessageService messageService;
+  final PeerMessageService peerMessages;
   final MessageMediaService messageMediaService;
   final InboxService inboxService;
   final ProfileService? profileService;

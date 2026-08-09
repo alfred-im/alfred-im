@@ -15,7 +15,6 @@ import '../config/voice_config.dart';
 import '../groups/group_peer_author_enrichment.dart';
 import '../machines/messaging/conversation_load_machine.dart';
 import '../machines/messaging/conversation_message_store.dart';
-import '../machines/messaging/messaging_conversation_state.dart';
 import '../machines/messaging/messaging_effects.dart';
 import '../machines/messaging/messaging_message_list.dart';
 import '../machines/messaging/outbound_send_machine.dart';
@@ -25,7 +24,7 @@ import '../models/message.dart';
 import '../models/outbound_queue_item.dart';
 import '../services/inbox_service.dart';
 import '../services/message_media_service.dart';
-import '../services/message_service.dart';
+import '../services/peer_message_service.dart';
 import '../services/outbound_media_cache.dart';
 import '../services/outbound_message_queue.dart';
 import '../services/profile_service.dart';
@@ -47,7 +46,7 @@ class MessagingCoordinator {
     required ConversationMessageStore messageStore,
     required String userId,
     required String peerProfileId,
-    required MessageService messageService,
+    required PeerMessageService peerMessages,
     required MessageMediaService messageMediaService,
     required InboxService inboxService,
     required this.onChanged,
@@ -58,14 +57,14 @@ class MessagingCoordinator {
     MessageMediaService Function()? resolveMessageMediaService,
     bool Function()? isScopeCommitted,
     OutboundMessageQueue? outboundQueue,
-  }) : state = MessagingConversationState() {
+  }) {
     _effects = _LiveMessagingEffects._(
       this,
       scope: scope,
       messageStore: messageStore,
       userId: userId,
       peerProfileId: peerProfileId,
-      messageService: messageService,
+      peerMessages: peerMessages,
       messageMediaService: messageMediaService,
       inboxService: inboxService,
       profileService: profileService,
@@ -80,14 +79,14 @@ class MessagingCoordinator {
 
   @visibleForTesting
   MessagingCoordinator.test({
-    required this.state,
+    this.error,
     required MessagingEffects effects,
     required this.onChanged,
   }) {
     _effects = effects;
   }
 
-  final MessagingConversationState state;
+  String? error;
   final VoidCallback onChanged;
   late final MessagingEffects _effects;
 
@@ -99,7 +98,6 @@ class MessagingCoordinator {
 
   List<ChatMessage> get messages =>
       _effects.messageStore.snapshotFor(_effects.scope).messages;
-  String? get error => state.error;
   bool get isLoading => loadMachine.state == ConversationLoadState.loading;
   bool get isSending => sendMachine.state == OutboundSendState.sending;
   bool get hasMoreOlder =>
@@ -122,7 +120,7 @@ class MessagingCoordinator {
 
   Future<void> reload() async {
     loadMachine.send(const RefreshConversation());
-    state.error = null;
+    error = null;
     _effects.messageStore.beginLoad(_effects.scope);
     _notify();
     await load();
@@ -177,17 +175,17 @@ class MessagingCoordinator {
           trace.fail('load.blocked', 'scope_inactive');
           return;
         }
-        state.error = conversationSessionExpiredMessage;
+        error = conversationSessionExpiredMessage;
         loadMachine.send(const ConversationUnavailable());
         trace.fail('load.blocked', 'fetch_exhausted');
         _notify();
         return;
       }
-      state.error = null;
+      error = null;
       loadMachine.send(const ConversationReady());
       trace.end(data: {'messageCount': messages.length});
     } catch (e) {
-      state.error = friendlyMessagingError(e);
+      error = friendlyMessagingError(e);
       loadMachine.send(const LoadFailed());
       trace.fail('load.fail', e.runtimeType.toString());
     }
@@ -348,7 +346,7 @@ class MessagingCoordinator {
         data: {'op': op},
       );
       if (notifyOnBusy) {
-        state.error = 'Invio già in corso, attendi il completamento.';
+        error = 'Invio già in corso, attendi il completamento.';
         _notify();
       }
       return true;
@@ -385,7 +383,7 @@ class _LiveMessagingEffects implements MessagingEffects {
     required this.messageStore,
     required this.userId,
     required this.peerProfileId,
-    required this.messageService,
+    required this.peerMessages,
     required this.messageMediaService,
     required this.inboxService,
     this.profileService,
@@ -412,7 +410,7 @@ class _LiveMessagingEffects implements MessagingEffects {
   final bool Function()? hasValidSession;
   final MessageMediaService Function()? resolveMessageMediaService;
   final bool Function()? isScopeCommitted;
-  final MessageService messageService;
+  final PeerMessageService peerMessages;
   final MessageMediaService messageMediaService;
   final InboxService inboxService;
   final ProfileService? profileService;
@@ -478,7 +476,7 @@ class _LiveMessagingEffects implements MessagingEffects {
     );
     await _outboundQueue.remove(clientId);
     await _outboundQueue.deleteMediaFile(mediaPath, clientId: clientId);
-    _c.state.error = null;
+    _c.error = null;
     if (onMessagesChanged != null) {
       await onMessagesChanged!();
     }
@@ -499,7 +497,7 @@ class _LiveMessagingEffects implements MessagingEffects {
         retryPayloadPath: mediaPath,
       ),
     );
-    _c.state.error = error;
+    _c.error = error;
   }
 
   void _endOutboundLifecycle(bool sendFailed) {
@@ -513,7 +511,7 @@ class _LiveMessagingEffects implements MessagingEffects {
     if (!_scopeIsActive()) return false;
     messageStore.beginLoad(scope);
     _c._notify();
-    final loaded = await messageService.fetchPeerMessages(
+    final loaded = await peerMessages.fetchPeerMessages(
       peerProfileId: peerProfileId,
       currentUserId: userId,
       limit: _peerMessagesPageSize,
@@ -565,7 +563,7 @@ class _LiveMessagingEffects implements MessagingEffects {
     messageStore.setLoadingOlder(scope, true);
     _c._notify();
 
-    final loaded = await messageService.fetchPeerMessages(
+    final loaded = await peerMessages.fetchPeerMessages(
       peerProfileId: peerProfileId,
       currentUserId: userId,
       limit: _peerMessagesPageSize,
@@ -604,7 +602,7 @@ class _LiveMessagingEffects implements MessagingEffects {
   Future<List<ChatMessage>> _hydrateReactions(List<ChatMessage> messages) async {
     final ids = collectLogicalMessageIds(messages);
     if (ids.isEmpty) return messages;
-    final summaries = await messageService.peer.fetchReactionSummaries(ids);
+    final summaries = await peerMessages.fetchReactionSummaries(ids);
     return attachReactionsToMessages(messages, summaries);
   }
 
@@ -612,7 +610,7 @@ class _LiveMessagingEffects implements MessagingEffects {
   Future<void> refreshReactionsForLogicalId(String logicalMessageId) async {
     if (!_scopeIsActive()) return;
     final summaries =
-        await messageService.peer.fetchReactionSummaries([logicalMessageId]);
+        await peerMessages.fetchReactionSummaries([logicalMessageId]);
     final reactions = summaries[logicalMessageId] ?? const [];
     _mutateMessages(
       (messages) => messages
@@ -634,7 +632,7 @@ class _LiveMessagingEffects implements MessagingEffects {
     if (!_scopeIsActive()) {
       throw StateError(conversationSessionExpiredMessage);
     }
-    await messageService.peer.applyReaction(
+    await peerMessages.applyReaction(
       logicalMessageId: logicalMessageId,
       emoji: emoji,
     );
@@ -646,7 +644,7 @@ class _LiveMessagingEffects implements MessagingEffects {
     if (!_scopeIsActive()) {
       throw StateError(conversationSessionExpiredMessage);
     }
-    await messageService.peer.withdrawReaction(
+    await peerMessages.withdrawReaction(
       logicalMessageId: logicalMessageId,
     );
     await refreshReactionsForLogicalId(logicalMessageId);
@@ -657,7 +655,7 @@ class _LiveMessagingEffects implements MessagingEffects {
     void Function(ChatMessage message) onMessage, {
     void Function(String logicalMessageId)? onReactionFact,
   }) {
-    return messageService.subscribeToPeerMessages(
+    return peerMessages.subscribeToPeerMessages(
       currentUserId: userId,
       peerProfileId: peerProfileId,
       onMessage: (message) {
@@ -672,7 +670,7 @@ class _LiveMessagingEffects implements MessagingEffects {
             },
     );
   }
-  @override void disposeRealtime(RealtimeChannel? channel) => messageService.disposeChannel(channel);
+  @override void disposeRealtime(RealtimeChannel? channel) => peerMessages.disposeChannel(channel);
   @override void startRetryTimer(void Function() onTick) {
     if (_disposed) return;
     _retryTimer?.cancel();
@@ -709,12 +707,12 @@ class _LiveMessagingEffects implements MessagingEffects {
           'peerProfileId': peerProfileId,
         },
       );
-      _c.state.error = conversationSessionExpiredMessage;
+      _c.error = conversationSessionExpiredMessage;
       _c._notify();
       return false;
     }
     if (!_messagingSessionReady()) {
-      final client = messageService.client;
+      final client = peerMessages.client;
       final reason = clientHasGoTrueSession(client)
           ? 'identity_mismatch'
           : 'jwt_missing';
@@ -728,7 +726,7 @@ class _LiveMessagingEffects implements MessagingEffects {
           'authUserId': client.auth.currentUser?.id,
         },
       );
-      _c.state.error = conversationSessionExpiredMessage;
+      _c.error = conversationSessionExpiredMessage;
       _c._notify();
       return false;
     }
@@ -751,7 +749,7 @@ class _LiveMessagingEffects implements MessagingEffects {
       return hasValidSession!();
     }
     return isMessagingSessionReady(
-      client: messageService.client,
+      client: peerMessages.client,
       ownerUserId: userId,
       peerProfileId: peerProfileId,
     );
@@ -783,7 +781,7 @@ class _LiveMessagingEffects implements MessagingEffects {
         queuedAt: DateTime.now(),
         body: body.trim(),
       ),
-      send: (id) => messageService.sendToProfile(
+      send: (id) => peerMessages.sendToProfile(
         recipientProfileId: peerProfileId,
         body: body.trim(),
         currentUserId: userId,
@@ -821,7 +819,7 @@ class _LiveMessagingEffects implements MessagingEffects {
       send: (id) async {
         _requireValidSessionForUpload();
         final mediaUrl = await _mediaHelper().uploadGif(bytes);
-        return messageService.sendGifToProfile(
+        return peerMessages.sendGifToProfile(
           recipientProfileId: peerProfileId,
           mediaUrl: mediaUrl,
           currentUserId: userId,
@@ -841,7 +839,7 @@ class _LiveMessagingEffects implements MessagingEffects {
 
     final rawFormat = detectImageFormat(bytes);
     if (rawFormat == DetectedImageFormat.unknown) {
-      _c.state.error = UnsupportedImageFormatException.unsupported().userMessage;
+      _c.error = UnsupportedImageFormatException.unsupported().userMessage;
       _c._notify();
       return;
     }
@@ -953,7 +951,7 @@ class _LiveMessagingEffects implements MessagingEffects {
     final mediaUrl = await _mediaHelper().uploadNormalizedImage(
       NormalizedImageBytes(bytes: bytes, mime: mime, extension: extension),
     );
-    return messageService.sendImageToProfile(
+    return peerMessages.sendImageToProfile(
       recipientProfileId: peerProfileId,
       mediaUrl: mediaUrl,
       mediaMime: mime,
@@ -1080,7 +1078,7 @@ class _LiveMessagingEffects implements MessagingEffects {
         extension: extension,
         contentType: mime,
       );
-      final saved = await messageService.sendVideoToProfile(
+      final saved = await peerMessages.sendVideoToProfile(
         recipientProfileId: peerProfileId,
         mediaUrl: mediaUrl,
         mediaMime: mime,
@@ -1160,7 +1158,7 @@ class _LiveMessagingEffects implements MessagingEffects {
       ),
       send: (id) async {
         final mediaUrl = await _mediaHelper().uploadVoice(bytes);
-        return messageService.sendVoiceToProfile(
+        return peerMessages.sendVoiceToProfile(
           recipientProfileId: peerProfileId,
           mediaUrl: mediaUrl,
           durationSeconds: durationSeconds,
@@ -1200,7 +1198,7 @@ class _LiveMessagingEffects implements MessagingEffects {
         latitude: lat,
         longitude: lng,
       ),
-      send: (id) => messageService.sendLocationToProfile(
+      send: (id) => peerMessages.sendLocationToProfile(
         recipientProfileId: peerProfileId,
         latitude: lat,
         longitude: lng,
@@ -1264,7 +1262,7 @@ class _LiveMessagingEffects implements MessagingEffects {
           retryPayloadPath: queueItem.localMediaPath,
         ),
       );
-      _c.state.error = friendlyMessagingError(e);
+      _c.error = friendlyMessagingError(e);
     } finally {
       _endOutboundLifecycle(sendFailed);
     }
@@ -1359,7 +1357,7 @@ class _LiveMessagingEffects implements MessagingEffects {
       final ChatMessage saved;
       switch (item.kind) {
         case OutboundContentKind.text:
-          saved = await messageService.sendToProfile(
+          saved = await peerMessages.sendToProfile(
             recipientProfileId: peerProfileId,
             body: item.body ?? '',
             currentUserId: userId,
@@ -1374,7 +1372,7 @@ class _LiveMessagingEffects implements MessagingEffects {
             throw StateError('GIF retry payload missing');
           }
           final mediaUrl = await _mediaHelper().uploadGif(bytes);
-          saved = await messageService.sendGifToProfile(
+          saved = await peerMessages.sendGifToProfile(
             recipientProfileId: peerProfileId,
             mediaUrl: mediaUrl,
             currentUserId: userId,
@@ -1391,7 +1389,7 @@ class _LiveMessagingEffects implements MessagingEffects {
           final durationSeconds = item.durationSeconds ??
               (bytes.length / 16000).ceil().clamp(1, VoiceConfig.maxDurationSeconds);
           final mediaUrl = await _mediaHelper().uploadVoice(bytes);
-          saved = await messageService.sendVoiceToProfile(
+          saved = await peerMessages.sendVoiceToProfile(
             recipientProfileId: peerProfileId,
             mediaUrl: mediaUrl,
             durationSeconds: durationSeconds,
@@ -1405,7 +1403,7 @@ class _LiveMessagingEffects implements MessagingEffects {
           if (latitude == null || longitude == null) {
             throw StateError('Location retry payload missing');
           }
-          saved = await messageService.sendLocationToProfile(
+          saved = await peerMessages.sendLocationToProfile(
             recipientProfileId: peerProfileId,
             latitude: latitude,
             longitude: longitude,
@@ -1423,7 +1421,7 @@ class _LiveMessagingEffects implements MessagingEffects {
           final upload = await _mediaHelper().prepareAndUploadImage(rawBytes);
           final normalized = upload.normalized;
           final mediaUrl = upload.mediaUrl;
-          saved = await messageService.sendImageToProfile(
+          saved = await peerMessages.sendImageToProfile(
             recipientProfileId: peerProfileId,
             mediaUrl: mediaUrl,
             mediaMime: normalized.mime,
@@ -1451,7 +1449,7 @@ class _LiveMessagingEffects implements MessagingEffects {
             extension: extension,
             contentType: mime,
           );
-          saved = await messageService.sendVideoToProfile(
+          saved = await peerMessages.sendVideoToProfile(
             recipientProfileId: peerProfileId,
             mediaUrl: mediaUrl,
             mediaMime: mime,
@@ -1469,7 +1467,7 @@ class _LiveMessagingEffects implements MessagingEffects {
         item.localMediaPath,
         clientId: item.clientId,
       );
-      _c.state.error = null;
+      _c.error = null;
       if (onMessagesChanged != null) {
         await onMessagesChanged!();
       }
@@ -1484,7 +1482,7 @@ class _LiveMessagingEffects implements MessagingEffects {
                 : message,
           )
           .toList());
-      _c.state.error = friendlyMessagingError(e);
+      _c.error = friendlyMessagingError(e);
     } finally {
       _c._notify();
     }

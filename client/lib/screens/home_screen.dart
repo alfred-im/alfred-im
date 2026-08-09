@@ -164,7 +164,6 @@ class _HomeScreenState extends State<HomeScreen> {
         create: (_) => GroupHomeController(
           session: session,
           profile: session.profile,
-          messageService: session.messageService,
           profileService: session.profileService,
         ),
         child: GroupAccountShell(

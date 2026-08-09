@@ -62,7 +62,6 @@ void main() {
       final session = await AccountSession.createForTest(
         profile: groupProfile,
         client: client,
-        messageService: messageService,
         messageMediaService: MessageMediaService(client),
       );
       session.fullProfile = UserProfile(
@@ -75,7 +74,6 @@ void main() {
       final controller = GroupHomeController(
         session: session,
         profile: groupProfile,
-        messageService: messageService,
         profileService: profileService,
       );
       addTearDown(controller.dispose);
@@ -111,7 +109,6 @@ void main() {
             profileKind: ProfileKind.group,
           ),
           client: client,
-          messageService: messageService,
           messageMediaService: MessageMediaService(client),
         ),
         profile: const ProfileSummary(
@@ -120,7 +117,6 @@ void main() {
           username: 'famiglia',
           profileKind: ProfileKind.group,
         ),
-        messageService: messageService,
         profileService: FakeProfileService(client),
       );
       addTearDown(home.dispose);
@@ -131,7 +127,6 @@ void main() {
 
       final messages = GroupMessagesController(
         userId: groupId,
-        messageService: messageService,
         messageMediaService: MessageMediaService(client),
         profileService: FakeProfileService(client),
         ownerArchiveCache: home.ownerArchiveCache,
@@ -150,7 +145,6 @@ void main() {
 
       final controller = GroupMessagesController(
         userId: groupId,
-        messageService: messageService,
         messageMediaService: MessageMediaService(client),
         profileService: FakeProfileService(client),
       );

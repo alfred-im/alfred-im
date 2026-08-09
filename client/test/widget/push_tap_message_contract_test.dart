@@ -149,7 +149,6 @@ void main() {
           'account-b': accountB,
           'account-y': accountY,
         }),
-        messageService: messageServiceA,
       );
       final sessionB = await AccountSession.createForTest(
         profile: accountB,
@@ -164,7 +163,6 @@ void main() {
           'account-a': accountA,
           'account-y': accountY,
         }),
-        messageService: messageServiceB,
       );
 
       sessionA.wireStorage(storage);

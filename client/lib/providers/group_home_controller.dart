@@ -10,7 +10,6 @@ import '../models/group_active_author.dart';
 import '../models/profile_summary.dart';
 import '../services/account_session.dart';
 import '../services/group_owner_archive_cache.dart';
-import '../services/message_service.dart';
 import '../services/profile_service.dart';
 
 /// Facade UI home gruppo — orchestrazione in [GroupHomeCoordinator].
@@ -18,13 +17,12 @@ class GroupHomeController extends ChangeNotifier {
   GroupHomeController({
     required this.session,
     required this.profile,
-    required MessageService messageService,
     required ProfileService profileService,
     GroupOwnerArchiveCache? ownerArchiveCache,
   }) : ownerArchiveCache = ownerArchiveCache ??
-            GroupOwnerArchiveCache.forMessageService(
+            GroupOwnerArchiveCache.forGroupArchive(
               userId: session.userId,
-              messageService: messageService,
+              groupArchiveService: session.groupArchive,
             ) {
     _coordinator = GroupHomeCoordinator(
       session: session,

@@ -56,12 +56,10 @@ void main() {
         displayName: 'User A',
       ),
       client: client,
-      messageService: FakeMessageService(client),
     );
     final sessionV2 = await AccountSession.createForTest(
       profile: sessionV1.profile,
       client: client,
-      messageService: FakeMessageService(client),
     );
     expect(sessionV2.epoch, isNot(sessionV1.epoch));
 
@@ -97,7 +95,6 @@ void main() {
       messageStore: testMessageStoreFor(frozenScope),
       userId: ownerId,
       peerProfileId: peerId,
-      messageService: sessionV2.messageService,
       messageMediaService: mediaService,
       inboxService: FakeInboxService(),
       outboundQueue: OutboundMessageQueue(),

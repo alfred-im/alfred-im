@@ -51,20 +51,25 @@ class _GroupMediaBroadcastSpec {
 /// Orchestrazione storico owner, broadcast e realtime gruppo.
 class GroupMessagesCoordinator {
   GroupMessagesCoordinator({
-    required this._userId,
-    required this._messageService,
-    required this._messageMediaService,
-    required this._profileService,
-    required this._ownerArchiveCache,
-    required this._onStateChanged,
+    required String userId,
+    required GroupArchiveService groupArchive,
+    required MessageMediaService messageMediaService,
+    required ProfileService profileService,
+    required GroupOwnerArchiveCache ownerArchiveCache,
+    required void Function() onStateChanged,
     this.onMessagesChanged,
-  }) {
+  })  : _userId = userId,
+        _groupArchive = groupArchive,
+        _messageMediaService = messageMediaService,
+        _profileService = profileService,
+        _ownerArchiveCache = ownerArchiveCache,
+        _onStateChanged = onStateChanged {
     _machine = GroupMessagesMachine(_LiveGroupMessagesEffects._(this));
     unawaited(_machine.send(const InitGroupMessages()));
   }
 
   final String _userId;
-  final MessageService _messageService;
+  final GroupArchiveService _groupArchive;
   final MessageMediaService _messageMediaService;
   final ProfileService _profileService;
   final GroupOwnerArchiveCache _ownerArchiveCache;
@@ -93,7 +98,7 @@ class GroupMessagesCoordinator {
     final trimmed = body.trim();
     if (trimmed.isEmpty || state.isSending) return;
     await _broadcast(
-      (clientId) => _messageService.broadcastToAllowlist(
+      (clientId) => _groupArchive.broadcastToAllowlist(
         body: trimmed,
         currentUserId: _userId,
         clientMessageId: clientId,
@@ -106,7 +111,7 @@ class GroupMessagesCoordinator {
           isReady: () => bytes.isNotEmpty && !state.isSending,
           send: (clientId) async {
             final mediaUrl = await _mediaHelper.uploadGif(bytes);
-            return _messageService.broadcastGifToAllowlist(
+            return _groupArchive.broadcastGifToAllowlist(
               mediaUrl: mediaUrl,
               currentUserId: _userId,
               clientMessageId: clientId,
@@ -126,7 +131,7 @@ class GroupMessagesCoordinator {
         isReady: () => bytes.isNotEmpty && !state.isSending,
         send: (clientId) async {
           final mediaUrl = await _mediaHelper.uploadVoice(bytes);
-          return _messageService.broadcastVoiceToAllowlist(
+          return _groupArchive.broadcastVoiceToAllowlist(
             mediaUrl: mediaUrl,
             durationSeconds: durationSeconds,
             mediaSizeBytes: bytes.length,
@@ -148,7 +153,7 @@ class GroupMessagesCoordinator {
         isReady: () => bytes.isNotEmpty && !state.isSending,
         send: (clientId) async {
           final upload = await _mediaHelper.prepareAndUploadImage(bytes);
-          return _messageService.broadcastImageToAllowlist(
+          return _groupArchive.broadcastImageToAllowlist(
             mediaUrl: upload.mediaUrl,
             mediaMime: upload.normalized.mime,
             mediaSizeBytes: upload.normalized.bytes.length,
@@ -204,7 +209,7 @@ class GroupMessagesCoordinator {
             extension: extension,
             contentType: mime,
           );
-          return _messageService.broadcastVideoToAllowlist(
+          return _groupArchive.broadcastVideoToAllowlist(
             mediaUrl: mediaUrl,
             mediaMime: mime,
             durationSeconds: durationSeconds,
@@ -226,7 +231,7 @@ class GroupMessagesCoordinator {
     final lat = LocationConfig.roundCoordinate(latitude);
     final lng = LocationConfig.roundCoordinate(longitude);
     await _broadcast(
-      (clientId) => _messageService.broadcastLocationToAllowlist(
+      (clientId) => _groupArchive.broadcastLocationToAllowlist(
         latitude: lat,
         longitude: lng,
         currentUserId: _userId,
@@ -285,7 +290,7 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
   @override
   void attachRealtime() {
     if (_c._channel != null) return;
-    _c._channel = _c._messageService.subscribeToOwnerMessages(
+    _c._channel = _c._groupArchive.subscribeToOwnerMessages(
       currentUserId: _c._userId,
       onMessage: (message) {
         unawaited(_c._machine.send(OwnerRealtimeReceived(message)));
@@ -295,7 +300,7 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
 
   @override
   void disposeRealtime() {
-    _c._messageService.disposeChannel(_c._channel);
+    _c._groupArchive.disposeChannel(_c._channel);
     _c._channel = null;
   }
 

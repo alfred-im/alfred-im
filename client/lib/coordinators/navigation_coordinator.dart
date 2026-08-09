@@ -150,32 +150,6 @@ class NavigationCoordinator {
     return ok;
   }
 
-  Future<bool> openFromShareableLink({
-    required String accountUserId,
-    required String peerProfileId,
-  }) async {
-    final ok = await externalIntents.openFromShareableLink(
-      accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
-    );
-    _notifyStateChanged();
-    return ok;
-  }
-
-  Future<bool> openFromCompose({
-    required String accountUserId,
-    required String peerProfileId,
-    bool allowProfileFallback = true,
-  }) async {
-    final ok = await externalIntents.openFromCompose(
-      accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
-      allowProfileFallback: allowProfileFallback,
-    );
-    _notifyStateChanged();
-    return ok;
-  }
-
   Future<void> closeConversation() async {
     await adapters.closeConversation();
     _notifyStateChanged();

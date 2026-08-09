@@ -8,27 +8,27 @@ import 'package:flutter/foundation.dart';
 import '../coordinators/group_messages_coordinator.dart';
 import '../models/message.dart';
 import '../services/group_owner_archive_cache.dart';
+import '../services/group_archive_service.dart';
 import '../services/message_media_service.dart';
-import '../services/message_service.dart';
 import '../services/profile_service.dart';
 
 /// Facade UI conversazione gruppo — orchestrazione in [GroupMessagesCoordinator].
 class GroupMessagesController extends ChangeNotifier {
   GroupMessagesController({
     required this.userId,
-    required this.messageService,
+    required this.groupArchive,
     required this.messageMediaService,
     required this.profileService,
     GroupOwnerArchiveCache? ownerArchiveCache,
     this.onMessagesChanged,
   }) : ownerArchiveCache = ownerArchiveCache ??
-            GroupOwnerArchiveCache.forMessageService(
+            GroupOwnerArchiveCache.forGroupArchive(
               userId: userId,
-              messageService: messageService,
+              groupArchiveService: groupArchive,
             ) {
     _coordinator = GroupMessagesCoordinator(
       userId: userId,
-      messageService: messageService,
+      groupArchive: groupArchive,
       messageMediaService: messageMediaService,
       profileService: profileService,
       ownerArchiveCache: this.ownerArchiveCache,
@@ -38,7 +38,7 @@ class GroupMessagesController extends ChangeNotifier {
   }
 
   final String userId;
-  final MessageService messageService;
+  final GroupArchiveService groupArchive;
   final MessageMediaService messageMediaService;
   final ProfileService profileService;
   final GroupOwnerArchiveCache ownerArchiveCache;

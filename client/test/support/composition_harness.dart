@@ -51,7 +51,6 @@ Future<({
       final session = await AccountSession.createForTest(
         profile: account.profile,
         client: client,
-        messageService: messageService,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
       );
@@ -178,7 +177,6 @@ class _SessionScopedMessagesBody extends StatelessWidget {
           messageStore: testMessageStoreFor(scope),
           userId: liveSession.userId,
           peerProfileId: peer.profileId,
-          messageService: liveSession.messageService,
           messageMediaService: liveSession.messageMediaService,
           inboxService: liveSession.inboxService,
           hasValidSession: _focusedSessionValid,

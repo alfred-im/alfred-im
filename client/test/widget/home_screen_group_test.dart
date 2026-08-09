@@ -41,7 +41,6 @@ void main() {
     final session = await AccountSession.createForTest(
       profile: groupProfile,
       client: client,
-      messageService: FakeMessageService(client),
       messageMediaService: MessageMediaService(client),
     );
     session.fullProfile = UserProfile(
@@ -96,7 +95,6 @@ void main() {
     final session = await AccountSession.createForTest(
       profile: groupProfile,
       client: client,
-      messageService: FakeMessageService(client),
       messageMediaService: MessageMediaService(client),
     );
     session.fullProfile = UserProfile(

@@ -75,7 +75,6 @@ void main() {
         peers: [ChatPeer(profile: peer)],
       ),
       profileService: _FakeProfileService({'peer-uuid': peer}),
-      messageService: FakeMessageService(client),
     );
     final manager = AccountManager();
     manager.focusTestSession(session);
@@ -156,7 +155,6 @@ void main() {
       client: client,
       inboxService: FakeInboxService(),
       profileService: _FakeProfileService({'account-b': accountB}),
-      messageService: FakeMessageService(client),
     );
     final sessionB = await AccountSession.createForTest(
       profile: accountB,
@@ -165,7 +163,6 @@ void main() {
         peers: [ChatPeer(profile: accountA)],
       ),
       profileService: _FakeProfileService({'account-a': accountA}),
-      messageService: FakeMessageService(client),
     );
 
     sessionA.wireStorage(storage);
@@ -294,7 +291,6 @@ void main() {
           peers: [ChatPeer(profile: accountB)],
         ),
         profileService: _FakeProfileService({'account-b': accountB}),
-        messageService: messageServiceA,
       );
       await installTestAuthSession(clientA, userId: 'account-a');
       final sessionB = await AccountSession.createForTest(
@@ -304,7 +300,6 @@ void main() {
           peers: [ChatPeer(profile: accountA)],
         ),
         profileService: _FakeProfileService({'account-a': accountA}),
-        messageService: messageServiceB,
       );
       await installTestAuthSession(clientB, userId: 'account-b');
 

@@ -43,7 +43,7 @@ class GroupConversationScreen extends StatelessWidget {
       key: groupSessionKey(session, 'group-messages'),
       create: (_) => GroupMessagesController(
         userId: session.userId,
-        messageService: session.messageService,
+        groupArchive: session.groupArchive,
         messageMediaService: session.messageMediaService,
         profileService: session.profileService,
         onMessagesChanged: onMessagesChanged,

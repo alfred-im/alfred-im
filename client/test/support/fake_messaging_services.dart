@@ -14,7 +14,7 @@ import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
 import 'package:alfred_client/services/group_archive_service.dart';
 import 'package:alfred_client/services/inbox_service.dart';
-import 'package:alfred_client/services/message_service.dart';
+import 'package:alfred_client/services/peer_message_service.dart';
 import 'package:alfred_client/services/profile_service.dart';
 
 SupabaseClient createTestSupabaseClient() {
@@ -58,62 +58,78 @@ String conversationKey({
 }) =>
     '$userId|$peerProfileId';
 
-class FakeMessageService extends MessageService {
-  FakeMessageService(this._clientForTest) : super(_clientForTest) {
-    _groupArchiveOverride = _FakeGroupArchiveService(this, _clientForTest);
+/// Facade test che compone [FakePeerMessageService] e [FakeGroupArchiveService].
+class FakeMessageService {
+  FakeMessageService(
+    SupabaseClient client, {
+    FakePeerMessageService Function(FakeMessageService host)? buildPeer,
+  }) : _client = client {
+    peerMessages = buildPeer?.call(this) ?? FakePeerMessageService(this);
+    groupArchive = FakeGroupArchiveService(this, client);
   }
 
-  final SupabaseClient _clientForTest;
-  late final _FakeGroupArchiveService _groupArchiveOverride;
+  final SupabaseClient _client;
 
-  @override
-  SupabaseClient get client => _clientForTest;
+  SupabaseClient get client => _client;
 
-  @override
-  GroupArchiveService get groupArchive => _groupArchiveOverride;
+  late final FakePeerMessageService peerMessages;
+  late final FakeGroupArchiveService groupArchive;
 
   final Map<String, List<ChatMessage>> messagesByConversation = {};
   final Map<String, List<ChatMessage>> ownerMessagesByUserId = {};
-  final Map<String, void Function(ChatMessage message)> _realtimeHandlers = {};
-  final Map<String, void Function(ChatMessage message)> _ownerRealtimeHandlers = {};
+
+  List<String> get sentBodies => peerMessages.sentBodies;
+
+  List<String> get broadcastBodies => groupArchive.broadcastBodies;
+
+  List<Map<String, Object?>> get gifProfileSends => peerMessages.gifProfileSends;
+
+  bool get sendShouldFail => peerMessages.sendShouldFail;
+
+  set sendShouldFail(bool value) => peerMessages.sendShouldFail = value;
+
+  List<Map<String, Object?>> get imageProfileSends => peerMessages.imageProfileSends;
+
+  List<Map<String, Object?>> get videoProfileSends => peerMessages.videoProfileSends;
+
+  List<Map<String, Object?>> get imageBroadcasts => groupArchive.imageBroadcasts;
+
+  List<Map<String, Object?>> get videoBroadcasts => groupArchive.videoBroadcasts;
+
+  void emitRealtimeMessage({
+    required String userId,
+    required String peerProfileId,
+    required ChatMessage message,
+  }) =>
+      peerMessages.emitRealtimeMessage(
+        userId: userId,
+        peerProfileId: peerProfileId,
+        message: message,
+      );
+}
+
+class FakePeerMessageService extends PeerMessageService {
+  FakePeerMessageService(this._host) : super(_host.client);
+
+  final FakeMessageService _host;
 
   final List<String> sentBodies = [];
-  final List<String> broadcastBodies = [];
   final List<Map<String, Object?>> gifProfileSends = [];
+  final imageProfileSends = <Map<String, Object?>>[];
+  final videoProfileSends = <Map<String, Object?>>[];
+  final Map<String, void Function(ChatMessage message)> _realtimeHandlers = {};
+
   bool sendShouldFail = false;
 
   /// Come `send_message_to_profile` su Postgres (`P0001`).
   void enforceSendToProfileBoundary(String recipientProfileId) {
-    final me = _clientForTest.auth.currentUser?.id;
+    final me = _host.client.auth.currentUser?.id;
     if (me != null && recipientProfileId == me) {
       throw const PostgrestException(
         message: 'cannot message yourself',
         code: 'P0001',
       );
     }
-  }
-
-  @override
-  Future<ChatMessage> broadcastToAllowlist({
-    required String body,
-    required String currentUserId,
-    required String clientMessageId,
-  }) async {
-    broadcastBodies.add(body);
-    final message = ChatMessage(
-      id: 'broadcast-$clientMessageId',
-      body: body,
-      timeLabel: '12:00',
-      isMine: true,
-      status: MessageStatus.sent,
-      createdAt: DateTime.utc(2026, 7, 14, 12),
-      clientMessageId: clientMessageId,
-      senderId: currentUserId,
-    );
-    ownerMessagesByUserId
-        .putIfAbsent(currentUserId, () => [])
-        .add(message);
-    return message;
   }
 
   @override
@@ -142,7 +158,7 @@ class FakeMessageService extends MessageService {
       userId: currentUserId,
       peerProfileId: recipientProfileId,
     );
-    messagesByConversation.putIfAbsent(key, () => []).add(message);
+    _host.messagesByConversation.putIfAbsent(key, () => []).add(message);
     return message;
   }
 
@@ -175,7 +191,7 @@ class FakeMessageService extends MessageService {
     DateTime? beforeCreatedAt,
   }) async {
     final all = List<ChatMessage>.from(
-      messagesByConversation[conversationKey(
+      _host.messagesByConversation[conversationKey(
             userId: currentUserId,
             peerProfileId: peerProfileId,
           )] ??
@@ -212,7 +228,7 @@ class FakeMessageService extends MessageService {
       userId: currentUserId,
       peerProfileId: peerProfileId,
     )] = onMessage;
-    return _clientForTest
+    return _host.client
         .channel('test-$currentUserId-$peerProfileId')
         .subscribe();
   }
@@ -227,11 +243,6 @@ class FakeMessageService extends MessageService {
       peerProfileId: peerProfileId,
     )]?.call(message);
   }
-
-  final imageProfileSends = <Map<String, Object?>>[];
-  final videoProfileSends = <Map<String, Object?>>[];
-  final imageBroadcasts = <Map<String, Object?>>[];
-  final videoBroadcasts = <Map<String, Object?>>[];
 
   @override
   Future<ChatMessage> sendImageToProfile({
@@ -292,6 +303,66 @@ class FakeMessageService extends MessageService {
       durationSeconds: durationSeconds,
       body: body,
     );
+  }
+
+  ChatMessage _mediaMessage({
+    required String clientMessageId,
+    required String currentUserId,
+    required MessageContentType contentType,
+    required String mediaUrl,
+    String? mediaMime,
+    int? durationSeconds,
+    String body = '',
+  }) {
+    return ChatMessage(
+      id: 'server-$clientMessageId',
+      body: body,
+      timeLabel: '12:00',
+      isMine: true,
+      status: MessageStatus.sent,
+      createdAt: DateTime.utc(2026, 7, 14, 12),
+      clientMessageId: clientMessageId,
+      senderId: currentUserId,
+      contentType: contentType,
+      mediaUrl: mediaUrl,
+      mediaMime: mediaMime,
+      durationSeconds: durationSeconds,
+    );
+  }
+}
+
+class FakeGroupArchiveService extends GroupArchiveService {
+  FakeGroupArchiveService(this._host, SupabaseClient client) : super(client);
+
+  final FakeMessageService _host;
+
+  final List<String> broadcastBodies = [];
+  final imageBroadcasts = <Map<String, Object?>>[];
+  final videoBroadcasts = <Map<String, Object?>>[];
+  final Map<String, void Function(ChatMessage message)> _ownerRealtimeHandlers =
+      {};
+
+  @override
+  Future<ChatMessage> broadcastToAllowlist({
+    required String body,
+    required String currentUserId,
+    required String clientMessageId,
+  }) async {
+    broadcastBodies.add(body);
+    final message = ChatMessage(
+      id: 'broadcast-$clientMessageId',
+      body: body,
+      timeLabel: '12:00',
+      isMine: true,
+      status: MessageStatus.sent,
+      createdAt: DateTime.utc(2026, 7, 14, 12),
+      clientMessageId: clientMessageId,
+      senderId: currentUserId,
+    );
+    _host.ownerMessagesByUserId
+        .putIfAbsent(currentUserId, () => [])
+        .add(message);
+    return message;
   }
 
   @override
@@ -380,7 +451,7 @@ class FakeMessageService extends MessageService {
     int limit = 200,
   }) async {
     return List<ChatMessage>.from(
-      ownerMessagesByUserId[currentUserId] ?? const [],
+      _host.ownerMessagesByUserId[currentUserId] ?? const [],
     );
   }
 
@@ -390,135 +461,28 @@ class FakeMessageService extends MessageService {
     required void Function(ChatMessage message) onMessage,
   }) {
     _ownerRealtimeHandlers[currentUserId] = onMessage;
-    return _clientForTest.channel('test-owner-$currentUserId').subscribe();
+    return _host.client.channel('test-owner-$currentUserId').subscribe();
   }
-}
-
-/// Delega al [FakeMessageService] così [GroupOwnerArchiveCache] usa i dati fake.
-class _FakeGroupArchiveService extends GroupArchiveService {
-  _FakeGroupArchiveService(this._messageService, SupabaseClient client)
-      : super(client);
-
-  final FakeMessageService _messageService;
-
-  @override
-  Future<List<ChatMessage>> fetchOwnerMessages({
-    required String currentUserId,
-    int limit = 200,
-  }) =>
-      _messageService.fetchOwnerMessages(
-        currentUserId: currentUserId,
-        limit: limit,
-      );
-
-  @override
-  Future<ChatMessage> broadcastToAllowlist({
-    required String body,
-    required String currentUserId,
-    required String clientMessageId,
-  }) =>
-      _messageService.broadcastToAllowlist(
-        body: body,
-        currentUserId: currentUserId,
-        clientMessageId: clientMessageId,
-      );
-
-  @override
-  Future<ChatMessage> broadcastGifToAllowlist({
-    required String mediaUrl,
-    required String currentUserId,
-    required String clientMessageId,
-  }) =>
-      _messageService.broadcastGifToAllowlist(
-        mediaUrl: mediaUrl,
-        currentUserId: currentUserId,
-        clientMessageId: clientMessageId,
-      );
-
-  @override
-  Future<ChatMessage> broadcastVoiceToAllowlist({
-    required String mediaUrl,
-    required int durationSeconds,
-    required int mediaSizeBytes,
-    required String currentUserId,
-    required String clientMessageId,
-  }) =>
-      _messageService.broadcastVoiceToAllowlist(
-        mediaUrl: mediaUrl,
-        durationSeconds: durationSeconds,
-        mediaSizeBytes: mediaSizeBytes,
-        currentUserId: currentUserId,
-        clientMessageId: clientMessageId,
-      );
-
-  @override
-  Future<ChatMessage> broadcastLocationToAllowlist({
-    required double latitude,
-    required double longitude,
-    required String currentUserId,
-    required String clientMessageId,
-  }) =>
-      _messageService.broadcastLocationToAllowlist(
-        latitude: latitude,
-        longitude: longitude,
-        currentUserId: currentUserId,
-        clientMessageId: clientMessageId,
-      );
-
-  @override
-  Future<ChatMessage> broadcastImageToAllowlist({
-    required String mediaUrl,
-    required String mediaMime,
-    required int mediaSizeBytes,
-    required String currentUserId,
-    required String clientMessageId,
-    String body = '',
-  }) =>
-      _messageService.broadcastImageToAllowlist(
-        mediaUrl: mediaUrl,
-        mediaMime: mediaMime,
-        mediaSizeBytes: mediaSizeBytes,
-        currentUserId: currentUserId,
-        clientMessageId: clientMessageId,
-        body: body,
-      );
-
-  @override
-  Future<ChatMessage> broadcastVideoToAllowlist({
-    required String mediaUrl,
-    required String mediaMime,
-    required int durationSeconds,
-    required int mediaSizeBytes,
-    required String currentUserId,
-    required String clientMessageId,
-    String body = '',
-  }) =>
-      _messageService.broadcastVideoToAllowlist(
-        mediaUrl: mediaUrl,
-        mediaMime: mediaMime,
-        durationSeconds: durationSeconds,
-        mediaSizeBytes: mediaSizeBytes,
-        currentUserId: currentUserId,
-        clientMessageId: clientMessageId,
-        body: body,
-      );
-
-  @override
-  RealtimeChannel subscribeToOwnerMessages({
-    required String currentUserId,
-    required void Function(ChatMessage message) onMessage,
-  }) =>
-      _messageService.subscribeToOwnerMessages(
-        currentUserId: currentUserId,
-        onMessage: onMessage,
-      );
 }
 
 /// [FakeMessageService] con ritardo artificiale sul fetch (race scope in test).
 class DelayedFakeMessageService extends FakeMessageService {
   DelayedFakeMessageService(
-    super.client, {
+    SupabaseClient client, {
     this.fetchDelay = const Duration(milliseconds: 50),
+  }) : super(
+          client,
+          buildPeer: (host) =>
+              _DelayedFakePeerMessageService(host, fetchDelay: fetchDelay),
+        );
+
+  final Duration fetchDelay;
+}
+
+class _DelayedFakePeerMessageService extends FakePeerMessageService {
+  _DelayedFakePeerMessageService(
+    super.host, {
+    required this.fetchDelay,
   });
 
   final Duration fetchDelay;

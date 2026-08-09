@@ -35,7 +35,6 @@ void main() {
       mediaService = FakeMessageMediaService();
       controller = GroupMessagesController(
         userId: _groupUser,
-        messageService: messageService,
         messageMediaService: mediaService,
         profileService: FakeProfileService(client),
       );
