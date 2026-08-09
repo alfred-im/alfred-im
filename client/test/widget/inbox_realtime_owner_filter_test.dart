@@ -5,6 +5,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/providers/inbox_controller.dart';
 import 'package:alfred_client/services/inbox_service.dart';
 
