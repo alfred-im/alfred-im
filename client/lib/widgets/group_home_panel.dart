@@ -9,7 +9,9 @@ import '../models/profile_summary.dart';
 import '../models/group_active_author.dart';
 import '../providers/group_home_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../widgets/account_shell_header.dart';
 import '../widgets/inbox_peer_tile.dart';
+import '../widgets/inline_error_retry.dart';
 import '../widgets/profile_identity.dart';
 
 /// Home account gruppo — guscio uniforme a [InboxPanel], senza ricerca né FAB.
@@ -39,39 +41,39 @@ class GroupHomePanel extends StatelessWidget {
       color: AlfredColors.panel,
       child: Column(
         children: [
-          _Header(
+          AccountShellHeader(
             title: profile.displayName,
-            profile: profile,
+            titleStyle: const TextStyle(
+              color: AlfredColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+            drawerProfile: profile,
             onDrawerTap: onDrawerTap,
-            onProfileTap: onProfileTap,
-            onAllowedPeopleTap: onAllowedPeopleTap,
+            actions: [
+              IconButton(
+                onPressed: onProfileTap,
+                icon: const Icon(Icons.person_outline),
+                tooltip: 'Profilo',
+              ),
+              IconButton(
+                onPressed: onAllowedPeopleTap,
+                icon: const Icon(Icons.verified_user_outlined),
+                tooltip: 'Persone consentite',
+              ),
+            ],
           ),
           const Divider(height: 1),
           Expanded(
             child: controller.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : controller.error != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                controller.error!,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: AlfredColors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              FilledButton(
-                                onPressed: () =>
-                                    context.read<GroupHomeController>().reload(),
-                                child: const Text('Riprova'),
-                              ),
-                            ],
-                          ),
+                    ? InlineErrorRetry(
+                        message: controller.error!,
+                        onRetry: () =>
+                            context.read<GroupHomeController>().reload(),
+                        messageStyle: const TextStyle(
+                          color: AlfredColors.textSecondary,
                         ),
                       )
                     : ListView(
@@ -93,63 +95,6 @@ class GroupHomePanel extends StatelessWidget {
                       ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.title,
-    required this.profile,
-    this.onDrawerTap,
-    required this.onProfileTap,
-    required this.onAllowedPeopleTap,
-  });
-
-  final String title;
-  final ProfileSummary profile;
-  final VoidCallback? onDrawerTap;
-  final VoidCallback onProfileTap;
-  final VoidCallback onAllowedPeopleTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 4, 0),
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          children: [
-            if (onDrawerTap != null)
-              AccountDrawerTrigger(
-                profile: profile,
-                onTap: onDrawerTap!,
-              ),
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AlfredColors.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            IconButton(
-              onPressed: onProfileTap,
-              icon: const Icon(Icons.person_outline),
-              tooltip: 'Profilo',
-            ),
-            IconButton(
-              onPressed: onAllowedPeopleTap,
-              icon: const Icon(Icons.verified_user_outlined),
-              tooltip: 'Persone consentite',
-            ),
-          ],
-        ),
       ),
     );
   }

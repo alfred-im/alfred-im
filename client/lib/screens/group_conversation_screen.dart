@@ -15,8 +15,8 @@ import '../theme/alfred_colors.dart';
 import '../utils/session_scope_keys.dart';
 import '../widgets/anchored_message_list.dart';
 import '../widgets/chat_input_bar.dart';
-import '../widgets/peer_profile_overlay.dart';
-import '../widgets/profile_identity.dart';
+import '../widgets/chat_ingress_panel.dart';
+import '../widgets/inline_error_retry.dart';
 import '../services/account_session.dart';
 
 /// Conversazione account gruppo — header allineato a [ChatPanel].
@@ -52,10 +52,11 @@ class GroupConversationScreen extends StatelessWidget {
         color: AlfredColors.surface,
         child: Column(
           children: [
-            _GroupChatHeader(
+            ChatPanelHeader(
               profile: profile,
               showBackButton: showBackButton,
               onBack: onBack,
+              showCallActions: false,
             ),
             Expanded(
               child: Consumer<GroupMessagesController>(
@@ -64,21 +65,11 @@ class GroupConversationScreen extends StatelessWidget {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (controller.error != null) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(controller.error!),
-                            const SizedBox(height: 12),
-                            FilledButton(
-                              onPressed: () => unawaited(controller.reload()),
-                              child: const Text('Riprova'),
-                            ),
-                          ],
-                        ),
-                      ),
+                    return InlineErrorRetry(
+                      message: controller.error!,
+                      onRetry: () => unawaited(controller.reload()),
+                      gapBeforeRetry: 12,
+                      messageStyle: Theme.of(context).textTheme.bodyMedium,
                     );
                   }
                   return AnchoredMessageList(
@@ -120,61 +111,6 @@ class GroupConversationScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GroupChatHeader extends StatelessWidget {
-  const _GroupChatHeader({
-    required this.profile,
-    required this.showBackButton,
-    this.onBack,
-  });
-
-  final ProfileSummary profile;
-  final bool showBackButton;
-  final VoidCallback? onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AlfredColors.panel,
-      child: Container(
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AlfredColors.border)),
-        ),
-        padding: const EdgeInsets.fromLTRB(4, 8, 12, 8),
-        child: SafeArea(
-          bottom: false,
-          child: Row(
-            children: [
-              if (showBackButton)
-                IconButton(
-                  onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back),
-                ),
-              ProfileAvatar(
-                profile: profile,
-                radius: 20,
-                fontSize: 16,
-                onTap: () => showPeerProfileOverlay(context, profile),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ProfileIdentityLines(
-                  profile: profile,
-                  showUsername: false,
-                  nameStyle: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: AlfredColors.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

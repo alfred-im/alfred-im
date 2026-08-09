@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/chat_peer.dart';
+import '../models/profile_summary.dart';
 import '../theme/alfred_colors.dart';
 import 'peer_profile_overlay.dart';
 import 'profile_identity.dart';
@@ -42,21 +43,29 @@ class ChatIngressPanel extends StatelessWidget {
   }
 }
 
-/// Header condiviso tra ingresso e [ChatPanel].
+/// Header condiviso tra ingresso, [ChatPanel] e [GroupConversationScreen].
 class ChatPanelHeader extends StatelessWidget {
   const ChatPanelHeader({
     super.key,
-    required this.peer,
+    this.peer,
+    this.profile,
     required this.showBackButton,
     this.onBack,
-  });
+    this.showCallActions = true,
+  }) : assert(peer != null || profile != null);
 
-  final ChatPeer peer;
+  final ChatPeer? peer;
+  final ProfileSummary? profile;
   final bool showBackButton;
   final VoidCallback? onBack;
+  final bool showCallActions;
+
+  ProfileSummary get _profile => peer?.profile ?? profile!;
 
   @override
   Widget build(BuildContext context) {
+    final resolvedProfile = _profile;
+
     return Material(
       color: AlfredColors.panel,
       child: Container(
@@ -74,15 +83,15 @@ class ChatPanelHeader extends StatelessWidget {
                   icon: const Icon(Icons.arrow_back),
                 ),
               ProfileAvatar(
-                profile: peer.profile,
+                profile: resolvedProfile,
                 radius: 20,
                 fontSize: 16,
-                onTap: () => showPeerProfileOverlay(context, peer.profile),
+                onTap: () => showPeerProfileOverlay(context, resolvedProfile),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: ProfileIdentityLines(
-                  profile: peer.profile,
+                  profile: resolvedProfile,
                   showUsername: false,
                   nameStyle: const TextStyle(
                     fontWeight: FontWeight.w600,
@@ -91,12 +100,20 @@ class ChatPanelHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              IconButton(
-                onPressed: null,
-                icon: const Icon(Icons.videocam_outlined),
-              ),
-              IconButton(onPressed: null, icon: const Icon(Icons.call_outlined)),
-              IconButton(onPressed: null, icon: const Icon(Icons.more_vert)),
+              if (showCallActions) ...[
+                IconButton(
+                  onPressed: null,
+                  icon: const Icon(Icons.videocam_outlined),
+                ),
+                IconButton(
+                  onPressed: null,
+                  icon: const Icon(Icons.call_outlined),
+                ),
+                IconButton(
+                  onPressed: null,
+                  icon: const Icon(Icons.more_vert),
+                ),
+              ],
             ],
           ),
         ),
