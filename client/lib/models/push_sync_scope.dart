@@ -16,5 +16,4 @@ enum PushSyncReason {
   focusChanged,
   permissionGranted,
   appResumed,
-  subscriptionRotated,
 }

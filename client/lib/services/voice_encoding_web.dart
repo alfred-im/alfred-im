@@ -9,9 +9,6 @@ import 'voice_encoding_platform.dart';
 
 class VoiceEncodingImpl implements VoiceEncodingPlatform {
   @override
-  bool get isSourceAlreadyCanonical => true;
-
-  @override
   Future<Uint8List> toCanonicalWebm({
     required String sourcePath,
     required Uint8List? sourceBytes,

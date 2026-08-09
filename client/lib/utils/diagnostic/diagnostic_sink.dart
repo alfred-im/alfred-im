@@ -52,19 +52,3 @@ class MemoryDiagnosticSink implements DiagnosticSink {
     });
   }
 }
-
-/// Compositore: tutti i sink registrati ricevono ogni evento.
-class CompositeDiagnosticSink implements DiagnosticSink {
-  CompositeDiagnosticSink(this._sinks);
-
-  final List<DiagnosticSink> _sinks;
-
-  void add(DiagnosticSink sink) => _sinks.add(sink);
-
-  @override
-  void onEvent(DiagnosticEvent event) {
-    for (final sink in _sinks) {
-      sink.onEvent(event);
-    }
-  }
-}
