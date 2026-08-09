@@ -14,7 +14,7 @@ import '../utils/list_filter.dart';
 /// Stato contacts esposto alla UI tramite [ContactsController].
 class ContactsState {
   List<Contact> contacts = [];
-  bool isLoading = true;
+  bool isLoading = false;
   String? error;
 }
 
@@ -26,7 +26,6 @@ class ContactsCoordinator {
     required this._onStateChanged,
   }) {
     _machine = ContactsMachine(LiveContactsEffects(this));
-    unawaited(load());
   }
 
   final String ownerId;

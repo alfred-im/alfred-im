@@ -22,8 +22,13 @@ sealed class NavigationEvent {
 }
 
 final class SwitchToAccount extends NavigationEvent {
-  const SwitchToAccount(this.accountUserId);
+  const SwitchToAccount(
+    this.accountUserId, {
+    this.deferProfileSync = false,
+  });
+
   final String accountUserId;
+  final bool deferProfileSync;
 }
 
 final class OpenPeerOnFocusedAccount extends NavigationEvent {
@@ -190,9 +195,15 @@ class NavigationMachine {
 
   Future<void> send(NavigationEvent event) async {
     switch (event) {
-      case SwitchToAccount(:final accountUserId):
+      case SwitchToAccount(
+        :final accountUserId,
+        :final deferProfileSync,
+      ):
         invalidateCommittedScope();
-        await _effects.focusAccount(accountUserId);
+        await _effects.focusAccount(
+          accountUserId,
+          deferProfileSync: deferProfileSync,
+        );
         resetShellToAccountHome();
         _syncShellStateFromCommittedScope();
       case OpenPeerOnFocusedAccount(:final peer):

@@ -34,9 +34,13 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
   }
 
   @override
-  Future<void> executeFocus(String userId) async {
+  Future<void> executeFocus(
+    String userId, {
+    bool deferProfileSync = false,
+  }) async {
     await _authority.requestFocusSwitch(
       userId,
+      deferProfileSync: deferProfileSync,
       onFocusIdentityChanged: onFocusIdentityChanged,
     );
   }

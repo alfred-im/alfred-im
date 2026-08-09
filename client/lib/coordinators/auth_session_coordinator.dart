@@ -61,10 +61,15 @@ class AuthSessionCoordinator {
       );
     } finally {
       _state.isLoading = false;
-      _state.sessionReady = true;
-      _notificationsAdapters.onSessionBecameReady();
       _notify();
     }
+  }
+
+  /// Dopo restore focus al boot: abilita shell UI, notifiche e sync push.
+  Future<void> completeBootstrap() async {
+    _state.sessionReady = true;
+    _notificationsAdapters.onSessionBecameReady();
+    _notify();
     unawaited(
       _pushCoordinator.syncPushSubscriptions(
         scope: PushSyncScope.allOpenAccounts,

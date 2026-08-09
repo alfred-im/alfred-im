@@ -14,7 +14,7 @@ import '../utils/list_filter.dart';
 /// Stato allow list esposto alla UI tramite [ReceptionAllowlistController].
 class ReceptionState {
   List<AllowedPerson> allowedPeople = [];
-  bool isLoading = true;
+  bool isLoading = false;
   String? error;
 }
 
@@ -29,7 +29,6 @@ class ReceptionCoordinator {
       _LiveReceptionEffects._(this),
       ownerId: _ownerId,
     );
-    unawaited(load());
   }
 
   final String _ownerId;

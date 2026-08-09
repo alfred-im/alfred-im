@@ -38,8 +38,13 @@ final class FocusActivationCompleted extends MultiAccountEvent {
 }
 
 final class FocusAccount extends MultiAccountEvent {
-  const FocusAccount(this.accountUserId);
+  const FocusAccount(
+    this.accountUserId, {
+    this.deferProfileSync = false,
+  });
+
   final String accountUserId;
+  final bool deferProfileSync;
 }
 
 final class AccountFocused extends MultiAccountEvent {
@@ -141,8 +146,11 @@ class MultiAccountMachine {
         );
       case FocusActivationCompleted(:final hasFocusedSession):
         _applyFocusActivationCompleted(hasFocusedSession: hasFocusedSession);
-      case FocusAccount(:final accountUserId):
-        await _handleFocusAccount(accountUserId);
+      case FocusAccount(:final accountUserId, :final deferProfileSync):
+        await _handleFocusAccount(
+          accountUserId,
+          deferProfileSync: deferProfileSync,
+        );
       case AccountFocused():
         _applyAccountFocused();
       case SessionRestoreFailed():
@@ -180,7 +188,10 @@ class MultiAccountMachine {
     }
   }
 
-  Future<void> _handleFocusAccount(String accountUserId) async {
+  Future<void> _handleFocusAccount(
+    String accountUserId, {
+    bool deferProfileSync = false,
+  }) async {
     if (focusState == MultiAccountFocusState.noOpenAccounts) return;
 
     focusUserId = accountUserId;
@@ -193,7 +204,10 @@ class MultiAccountMachine {
     }
 
     try {
-      await effects.executeFocus(accountUserId);
+      await effects.executeFocus(
+        accountUserId,
+        deferProfileSync: deferProfileSync,
+      );
       if (effects.hasFocusedSession) {
         _applyAccountFocused();
       } else {

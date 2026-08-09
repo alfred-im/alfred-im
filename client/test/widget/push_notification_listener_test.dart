@@ -16,6 +16,7 @@ import 'package:alfred_client/services/profile_service.dart';
 import 'package:alfred_client/theme/alfred_theme.dart';
 import 'package:alfred_client/utils/push_stub.dart';
 import 'package:alfred_client/widgets/push_notification_listener.dart';
+import 'package:alfred_client/widgets/chat_panel.dart' deferred as chat_panel; // ignore: unused_import
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -43,6 +44,9 @@ class _FakeProfileService extends ProfileService {
 }
 
 void main() {
+  setUpAll(() async {
+    await chat_panel.loadLibrary();
+  });
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
@@ -365,7 +369,8 @@ void main() {
             auth.isConversationReady(
               session: auth.focusedSession!,
               peer: auth.activePeer!,
-            )) {
+            ) &&
+            find.byType(CircularProgressIndicator).evaluate().isEmpty) {
           break;
         }
       }

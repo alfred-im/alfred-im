@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +23,15 @@ class AllowedPeopleScreen extends StatefulWidget {
 }
 
 class _AllowedPeopleScreenState extends State<AllowedPeopleScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(context.read<ReceptionAllowlistController>().ensureLoaded());
+    });
+  }
+
   Future<void> _showAddPerson() async {
     await showModalBottomSheet<void>(
       context: context,

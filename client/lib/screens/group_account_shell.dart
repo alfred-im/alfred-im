@@ -10,10 +10,11 @@ import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
 import '../services/account_session.dart';
 import '../utils/session_scope_keys.dart';
+import '../theme/alfred_colors.dart';
 import '../widgets/conversation_scope_pane.dart';
 import '../widgets/group_home_panel.dart';
 import '../widgets/split_shell_layout.dart';
-import 'group_conversation_screen.dart';
+import 'group_conversation_screen.dart' deferred as group_chat;
 
 /// Group-account shell: group home list + group chat detail.
 class GroupAccountShell extends StatelessWidget {
@@ -76,7 +77,7 @@ class GroupAccountShell extends StatelessWidget {
   }
 }
 
-class _GroupChatWithMessages extends StatelessWidget {
+class _GroupChatWithMessages extends StatefulWidget {
   const _GroupChatWithMessages({
     super.key,
     required this.session,
@@ -93,13 +94,43 @@ class _GroupChatWithMessages extends StatelessWidget {
   final Future<void> Function(BuildContext providerContext) onMessagesChanged;
 
   @override
+  State<_GroupChatWithMessages> createState() => _GroupChatWithMessagesState();
+}
+
+class _GroupChatWithMessagesState extends State<_GroupChatWithMessages> {
+  late final Future<void> _library;
+
+  @override
+  void initState() {
+    super.initState();
+    _library = group_chat.loadLibrary();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return GroupConversationScreen(
-      session: session,
-      profile: profile,
-      showBackButton: showBackButton,
-      onBack: onBack,
-      onMessagesChanged: () => onMessagesChanged(context),
+    return FutureBuilder<void>(
+      future: _library,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const ColoredBox(
+            color: AlfredColors.surface,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError) {
+          return const ColoredBox(
+            color: AlfredColors.surface,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return group_chat.GroupConversationScreen(
+          session: widget.session,
+          profile: widget.profile,
+          showBackButton: widget.showBackButton,
+          onBack: widget.onBack,
+          onMessagesChanged: () => widget.onMessagesChanged(context),
+        );
+      },
     );
   }
 }

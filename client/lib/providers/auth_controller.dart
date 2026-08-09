@@ -171,12 +171,16 @@ class AuthController extends ChangeNotifier {
     final focus = multiAccountMachine.focusUserId;
     if (focus != null) {
       try {
-        await _navigation.switchToAccount(focus);
+        await _navigation.switchToAccount(
+          focus,
+          deferProfileSync: true,
+        );
         error = null;
       } catch (e) {
         error = friendlyAuthError(e);
       }
     }
+    await _sessionCoordinator.completeBootstrap();
     notifyListeners();
   }
 

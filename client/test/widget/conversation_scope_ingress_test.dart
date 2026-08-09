@@ -9,7 +9,7 @@ import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
 import 'package:alfred_client/theme/alfred_theme.dart';
-import 'package:alfred_client/widgets/chat_panel.dart';
+import 'package:alfred_client/widgets/chat_ingress_panel.dart';
 import 'package:alfred_client/widgets/conversation_scope_pane.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
