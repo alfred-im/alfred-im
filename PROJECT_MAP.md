@@ -129,9 +129,9 @@
 | **Gate CI** | `scripts/verify.sh` — igiene: sync spec/modello + analyze + test Dart isolati (**non** valida il prodotto) |
 | **Build web** | `flutter build web --base-href "/alfred-im/"` |
 
-**Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `group_home`, `group_messages` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — ingresso unificato push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `machines/messaging/` (facade: `MessagesController`).
+**Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `inbox`, `messaging`, `navigation`, `group_home`, `group_messages`, `shareable_link` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — **unico ingresso** push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `coordinators/` (facade: `MessagesController`).
 
-**Non deducibile — multi-account client**: `MultiAccountMachine` **possiede** `focusUserId` (intent focus); `AccountManager` esegue dispose/restore GoTrue via effetti. Manifest `alfred_saved_accounts` elenca **tutti** gli account aperti; in RAM **al massimo una** `AccountSession` GoTrue (quella in focus). Storage auth per account: `SharedPreferencesLocalStorage` → `alfred_auth_{userId}`. Persistenza **dichiarativa** per entry (`persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). **Vista UI** (`AccountViewState` per `userId`): mutazione **solo** via `AccountViewStateStore` (`machines/navigation/`) — chat aperta + inbox/chat su mobile **indipendenti per account**. Inbox UI: `HomeScreen` + `ListenableBuilder` su `focusedSession?.inboxController`. Coda invio: `userId|peerProfileId`. Overlay credenziali su `HomeScreen`. Doc: `docs/guides/multi-account.md`, `docs/decisions/multi-account-parallel-sessions.md`.
+**Non deducibile — multi-account client**: `MultiAccountMachine` **possiede** `focusUserId` (intent focus); `AccountManager` esegue dispose/restore GoTrue via effetti. Manifest `alfred_saved_accounts` elenca **tutti** gli account aperti; in RAM **al massimo una** `AccountSession` GoTrue (quella in focus). Storage auth per account: `SharedPreferencesLocalStorage` → `alfred_auth_{userId}`. Persistenza **dichiarativa** per entry (`persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). **Vista UI** (`AccountViewState` per `userId`): mutazione **solo** via `AccountViewStateStore` (`client/lib/stores/`) — chat aperta + inbox/chat su mobile **indipendenti per account**. Inbox: `InboxCoordinator` + `InboxController` (macchina in `machines/inbox/`). Coda invio: `userId|peerProfileId`. Overlay credenziali su `HomeScreen`. Doc: `docs/guides/multi-account.md`, `docs/decisions/multi-account-parallel-sessions.md`.
 
 **Non deducibile — auth bootstrap**: login/add-account usa client effimero; **non** chiamare `signOut` sul bootstrap dopo adozione sessione dedicata (revoca refresh GoTrue). PKCE: `EphemeralPkceStorage`. **Chiudi account** = logout **solo locale** (`close()` cancella storage, nessuna `POST /auth/v1/logout`). Doc: `docs/guides/multi-account.md`.
 
@@ -262,10 +262,11 @@ Validazione release: `bash scripts/test.sh flusso-reale` · catalogo in [client/
 | Coordinatori | `client/lib/coordinators/` |
 | Intent esterni | `client/lib/adapters/external_intent_adapter.dart` |
 | Focus account | `client/lib/machines/multi-account/multi_account_machine.dart` |
-| View-state UI | `client/lib/machines/navigation/account_view_state_store.dart` |
-| Messaggistica 1:1 | `client/lib/machines/messaging/messaging_coordinator.dart` |
+| View-state UI | `client/lib/stores/account_view_state_store.dart` |
+| Messaggistica 1:1 | `client/lib/coordinators/messaging_coordinator.dart` |
+| Inbox | `client/lib/coordinators/inbox_coordinator.dart` |
 | Multi-account I/O | `client/lib/services/account_manager.dart` |
-| Invio / spunte UI | `message_service.dart`, `message.dart`, `message_bubble.dart` |
+| Invio / spunte UI | `peer_message_service.dart`, `message.dart`, `message_bubble.dart` |
 
 ### Limiti noti
 

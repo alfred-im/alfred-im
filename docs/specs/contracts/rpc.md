@@ -345,11 +345,11 @@ Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/te
 
 | RPC | Service Dart |
 |-----|--------------|
-| `send_message_to_profile` | `MessageService.sendToProfile` |
-| `broadcast_message_to_allowlist` | `MessageService.broadcastToAllowlist` / `broadcastGifToAllowlist` / … |
+| `send_message_to_profile` | `PeerMessageService.sendToProfile` |
+| `broadcast_message_to_allowlist` | `GroupArchiveService.broadcastToAllowlist` / `broadcastGifToAllowlist` / … |
 | `list_inbox` | `InboxService.fetchInbox` |
-| `list_peer_messages` | `MessageService.fetchPeerMessages` |
-| `list_owner_messages` | `MessageService.fetchOwnerMessages` |
+| `list_peer_messages` | `PeerMessageService.fetchPeerMessages` |
+| `list_owner_messages` | `GroupArchiveService.fetchOwnerMessages` |
 | `mark_peer_read` | `InboxService.markPeerRead` |
 | `apply_message_reaction` | `PeerMessageService.applyReaction` |
 | `withdraw_message_reaction` | `PeerMessageService.withdrawReaction` |
