@@ -9,7 +9,6 @@ abstract final class ChatMediaConfig {
   static const videoMaxBytes = 50 * 1024 * 1024;
   static const maxVideoDurationSeconds = 3600;
 
-  static const imageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
   static const videoExtensions = ['mp4', 'webm'];
 
   /// Web SharedPreferences cannot hold large video blobs; keep in RAM only.
@@ -38,20 +37,5 @@ abstract final class ChatMediaConfig {
   static String? videoMimeForExtension(String? extension) {
     if (extension == null) return null;
     return videoMimeTypes[extension.toLowerCase()];
-  }
-
-  static String imageExtensionForMime(String mime) {
-    switch (mime) {
-      case 'image/png':
-        return 'png';
-      case 'image/webp':
-        return 'webp';
-      default:
-        return 'jpg';
-    }
-  }
-
-  static String videoExtensionForMime(String mime) {
-    return mime == 'video/webm' ? 'webm' : 'mp4';
   }
 }

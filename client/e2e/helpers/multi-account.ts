@@ -11,36 +11,6 @@ import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
 export const BASE_URL =
   process.env.ALFRED_BASE_URL ?? 'http://localhost:8080/';
 
-export const ACCOUNT1 = {
-  email:
-    process.env.ALFRED_ACCOUNT1_EMAIL ??
-    process.env.CI_AGENT1_EMAIL ??
-    'ci-agent1@e2e.local.test',
-  password:
-    process.env.ALFRED_ACCOUNT1_PASSWORD ??
-    process.env.CI_AGENT1_PASS ??
-    'CiAgentPass1!',
-  username:
-    process.env.ALFRED_ACCOUNT1_USERNAME ??
-    process.env.CI_AGENT1_USERNAME ??
-    'ciagent1',
-};
-
-export const ACCOUNT2 = {
-  email:
-    process.env.ALFRED_ACCOUNT2_EMAIL ??
-    process.env.CI_AGENT2_EMAIL ??
-    'ci-agent2@e2e.local.test',
-  password:
-    process.env.ALFRED_ACCOUNT2_PASSWORD ??
-    process.env.CI_AGENT2_PASS ??
-    'CiAgentPass2!',
-  username:
-    process.env.ALFRED_ACCOUNT2_USERNAME ??
-    process.env.CI_AGENT2_USERNAME ??
-    'ciagent2',
-};
-
 /** Attende fine splash «Caricamento Alfred» prima di cercare UI. */
 export async function waitForAppBoot(page: Page) {
   await expect
@@ -359,29 +329,6 @@ export type TwoAccountSetup = {
   account1: ManifestEntry;
   account2: ManifestEntry;
 };
-
-/** Login account 1, aggiunge account 2; al termine il focus è su account 2. */
-export async function setupTwoAccounts(page: Page): Promise<TwoAccountSetup> {
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: E2E_TIMEOUT.boot });
-  await clearAppData(page);
-  await loginInAuthForm(page, ACCOUNT1.email, ACCOUNT1.password);
-  expectManifestCount(await readSavedAccountsManifest(page), 1);
-  await expectMultiAccountList(page, false);
-
-  await clickAggiungiAccount(page);
-  await waitForAuthForm(page);
-  await loginInAuthForm(page, ACCOUNT2.email, ACCOUNT2.password, {
-    minAccounts: 2,
-  });
-  expectManifestCount(await readSavedAccountsManifest(page), 2);
-  await expectMultiAccountList(page, true);
-
-  const manifest = (await readSavedAccountsManifest(page))!;
-  return {
-    account1: manifestEntryForUsername(manifest, ACCOUNT1.username),
-    account2: manifestEntryForUsername(manifest, ACCOUNT2.username),
-  };
-}
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
