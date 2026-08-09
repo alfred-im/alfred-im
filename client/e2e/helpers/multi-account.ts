@@ -302,7 +302,11 @@ export async function expectLoggedInShell(page: Page) {
 export async function expectMultiAccountList(page: Page, visible: boolean) {
   await openAccountDrawer(page);
   await enableFlutterAccessibility(page);
-  const section = page.getByText('Altri account', { exact: true });
+  // Semantics(header: true) → role banner in Flutter web a11y (non getByText).
+  const section = page
+    .getByRole('banner', { name: 'Altri account', exact: true })
+    .or(page.getByRole('heading', { name: 'Altri account', exact: true }))
+    .or(page.getByText('Altri account', { exact: true }));
   const aggiungi = page.getByRole('button', {
     name: 'Aggiungi account',
     exact: true,
@@ -313,11 +317,7 @@ export async function expectMultiAccountList(page: Page, visible: boolean) {
       .poll(
         async () => {
           await enableFlutterAccessibility(page);
-          if (await section.isVisible().catch(() => false)) {
-            return true;
-          }
-          const manifest = await readSavedAccountsManifest(page);
-          return (manifest?.length ?? 0) >= 2;
+          return section.isVisible().catch(() => false);
         },
         { timeout: E2E_TIMEOUT.auth, intervals: [...E2E_POLL] },
       )
