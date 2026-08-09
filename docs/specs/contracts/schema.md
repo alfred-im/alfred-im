@@ -126,7 +126,7 @@ storage: chat-media, avatars
 
 **UNIQUE**: `(owner_id, client_message_id)` WHERE `client_message_id IS NOT NULL`; `(owner_id, logical_message_id)`.
 
-**RLS**: SELECT e UPDATE `owner_id = auth.uid()` — **nessuna** policy INSERT (insert solo via RPC `SECURITY DEFINER`).
+**RLS**: SELECT `owner_id = auth.uid()` — **nessuna** policy INSERT/UPDATE/DELETE (mutazioni solo via RPC `SECURITY DEFINER`).
 
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md).
 
