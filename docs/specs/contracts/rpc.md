@@ -1,7 +1,7 @@
 # Contratto RPC — messaggistica
 
 **Ultima revisione**: 2026-08-08  
-**Status**: `implemented` su `main` (migrazioni fino a `20260807200000`, 43 totali in `supabase/migrations/`)  
+**Status**: `implemented` su `main` (migrazioni fino a `20260809130000`, 46 totali in `supabase/migrations/`)  
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) (`implemented`)
 
 Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.

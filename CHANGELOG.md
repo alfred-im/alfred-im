@@ -4,6 +4,20 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
+## [Unreleased] - 2026-08-09
+
+### Corretto
+
+- **Code review cleanup** — Migrazione `20260809130000`: revoca UPDATE diretto su `messages` (solo RPC), ripristino FK `outbox.message_id`, drop oggetti morti (`platform_agent_smoke`, enum `message_delivery_status`, indice ridondante allowlist)
+- **CI** — Bootstrap agenti una sola volta per run release; rimosso step `integration-push` ridondante (già in `sql-smoke`); `run-push-e2e-local.sh` usa `e2e-local-stack.sh`
+- **Client/bridge** — Rimosso codice morto (config media, voice encoding, push sync, diagnostic sink, helper e2e duplicati); bridge stub solo `aiohttp`; eliminati Dockerfile per-bridge non usati
+
+### Documentazione
+
+- Contratti `schema.md` / `rpc.md`: RLS `messages`, FK `outbox`, oggetti rimossi, conteggio migrazioni 46; `AGENTS.md`, hub test push
+
+---
+
 ## [Unreleased] - 2026-08-08
 
 ### Aggiunto

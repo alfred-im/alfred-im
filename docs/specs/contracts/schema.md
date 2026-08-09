@@ -1,7 +1,7 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-08-07  
-**Status**: `implemented` su `main` (migrazioni fino a `20260807200000`, 43 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-08-09  
+**Status**: `implemented` su `main` (migrazioni fino a `20260809130000`, 46 totali in `supabase/migrations/`)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
@@ -34,7 +34,6 @@ storage: chat-media, avatars
 |------|--------|-----|
 | `contact_protocol` | `internal`, `xmpp`, `matrix` | Routing backend; invisibile in UI inbox |
 | `message_content_type` | `text`, `gif`, `voice`, `location`, `image`, `video` | Tipo contenuto messaggio |
-| `message_delivery_status` | `pending`, `sent`, `delivered`, `read`, `failed` | Enum legacy (pre-mailbox); **non** usato da `outbox`/`bridge_jobs` su `main` |
 | `queue_status` | `queued`, `processing`, `completed`, `failed` | `outbox`, `bridge_jobs` |
 | `profile_kind` | `user`, `group` | Tipo account — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
 | `message_reaction_kind` | `applied`, `withdrawn` | Fatto reaction su λ — [messaging](../../domain/messaging/commands-and-events.md) |
@@ -175,6 +174,8 @@ Coda eventi — popolata per **ogni** invio (internal + federato) e per ogni `re
 
 Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`. Stato colonna `status`: tipo `queue_status`.
 
+**FK**: `message_id` → `messages(id)` ON DELETE CASCADE (`outbox_message_id_fkey`).
+
 Consumer internal: worker `alfred_delivery.process_outbox` (sincrono in transazione RPC account); federato: fase B bridge (stub).
 
 **RLS**: DENY per `authenticated`.
@@ -256,6 +257,10 @@ Pubblici (scope attuale) (URL diretti in Realtime).
 | `message_read_receipts` | `20260704120000_mailbox_per_owner_archive.sql` |
 | `messages.delivery_status`, `sender_id`, `recipient_profile_id`, `marker_type`, `marker_for` | `20260704120000` (tabella ricreata) |
 | Trigger `on_message_inserted` | `20260704120000` |
+| `platform_agent_smoke` (tabella smoke) | `20260809130000_security_integrity_cleanup.sql` |
+| Enum `message_delivery_status` | `20260809130000` (legacy pre-mailbox, nessuna colonna su `main`) |
+| Policy `messages_update_own` (UPDATE diretto PostgREST) | `20260809130000` — mutazioni solo via RPC |
+| Indice `reception_allowlist_owner_id_idx` | `20260809130000` (ridondante con UNIQUE `(owner_id, allowed_profile_id)`) |
 
 Verifica: `supabase/tests/schema_smoke.sql`, `mailbox_schema_smoke.sql`.
 

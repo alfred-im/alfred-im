@@ -95,7 +95,7 @@ Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/r
 | **sql-smoke** | `bash scripts/test.sh sql-smoke` | Tutti gli smoke SQL (`supabase/tests/*.sql`) |
 | **integration** | `bash scripts/test.sh integration` | Login agenti CI + RPC inbox/peer + **contratto spunte** |
 | **integration-ticks** | `bash scripts/test.sh integration-ticks` | Solo contratto spunte delivery plane (3 fasi) |
-| **integration-push** | `bash scripts/test.sh integration-push` | Smoke SQL `push_*` su stack locale |
+| **integration-push** | `bash scripts/test.sh integration-push` | Smoke SQL `push_*` su stack locale (ad-hoc; **release** li esegue già via `sql-smoke`) |
 | **e2e-push-local** | `bash scripts/test.sh e2e-push-local` | Playwright push locale: ricezione SW + **tap multi-account** |
 | **e2e-nav-local** | `bash scripts/test.sh e2e-nav-local` | Playwright navigation locale: inbox tap, switch account restore, push tap/poison |
 | **e2e** | `bash scripts/test.sh e2e` | Tutti i Playwright in `client/e2e/` (stack locale) |
