@@ -80,12 +80,15 @@ class AccountSidebar extends StatelessWidget {
           ],
           if (otherAccounts.isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text(
-              'Altri account',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: AlfredColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
+            Semantics(
+              header: true,
+              child: Text(
+                'Altri account',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: AlfredColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
             ),
             const SizedBox(height: 4),
             ...otherAccounts.map(
@@ -245,47 +248,51 @@ class _AccountTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: ProfileAvatar(
-        profile: account.profile,
-        radius: 20,
-        fontSize: 16,
-      ),
-      title: Text(account.displayName),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (account.isDisconnected)
-            const Text(
-              'Disconnesso',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AlfredColors.textSecondary,
+    return Semantics(
+      button: true,
+      label: account.displayName,
+      child: ListTile(
+        leading: ProfileAvatar(
+          profile: account.profile,
+          radius: 20,
+          fontSize: 16,
+        ),
+        title: Text(account.displayName),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (account.isDisconnected)
+              const Text(
+                'Disconnesso',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AlfredColors.textSecondary,
+                ),
               ),
-            ),
-          if (account.profile.isGroup)
-            const Text(
-              'Gruppo',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AlfredColors.textSecondary,
+            if (account.profile.isGroup)
+              const Text(
+                'Gruppo',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AlfredColors.textSecondary,
+                ),
               ),
-            ),
-          if (account.profile.hasUsername) Text(account.profile.handle),
-          if (account.profile.hasPronouns)
-            Text(
-              account.profile.pronouns!,
-              style: const TextStyle(fontSize: 12),
-            ),
-        ],
+            if (account.profile.hasUsername) Text(account.profile.handle),
+            if (account.profile.hasPronouns)
+              Text(
+                account.profile.pronouns!,
+                style: const TextStyle(fontSize: 12),
+              ),
+          ],
+        ),
+        isThreeLine: account.isDisconnected ||
+            account.profile.isGroup ||
+            account.profile.hasPronouns,
+        contentPadding: EdgeInsets.zero,
+        onTap: account.isDisconnected ? onReconnect ?? onTap : onTap,
       ),
-      isThreeLine: account.isDisconnected ||
-          account.profile.isGroup ||
-          account.profile.hasPronouns,
-      contentPadding: EdgeInsets.zero,
-      onTap: account.isDisconnected ? onReconnect ?? onTap : onTap,
     );
   }
 }

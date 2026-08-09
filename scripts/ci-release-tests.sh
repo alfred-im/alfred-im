@@ -9,6 +9,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CLIENT_ROOT="$REPO_ROOT/client"
 cd "$CLIENT_ROOT"
+export CI=true
 
 cleanup() {
   if [[ -n "${CI_FLUTTER_SERVE_PID:-}" ]]; then

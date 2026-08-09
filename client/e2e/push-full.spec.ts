@@ -75,6 +75,11 @@ test('push locale: permesso, messaggio e notifica ricevuta nel service worker', 
     allowedProfileId: sender.userId,
     ownerAccessToken: recipientSession.accessToken,
   });
+  await addReceptionAllowlist({
+    ownerUserId: sender.userId,
+    allowedProfileId: recipient.userId,
+    ownerAccessToken: senderSession.accessToken,
+  });
 
   await installPushSubscribeMock(page);
   await installNotificationPermissionMock(page);

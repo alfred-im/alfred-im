@@ -71,16 +71,18 @@ test('4 user + gruppo: galleria dopo resume → foto in archivio (flusso telefon
 
   await setupFiveLocalAccounts(page, manifest);
   await closeDrawerIfOpen(page);
-  await waitForLoggedInShell(page);
-  await waitForBrowserPushGranted(page);
 
   const saved = (await readSavedAccountsManifest(page))!;
   const u2entry = manifestEntryForUsername(saved, user2.username);
+  // Setup termina sul gruppo (no FAB): passa a user2 prima di push e compose.
   await switchToAccountByDisplayName(
     page,
     u2entry.displayName ?? `E2E u2${stamp}`,
     user2.userId,
   );
+  await waitForLoggedInShell(page);
+  await waitForBrowserPushGranted(page);
+
   await composeNewMessage(page, user1.username);
 
   await sendPhotoFromGalleryAfterPickerResume(page);

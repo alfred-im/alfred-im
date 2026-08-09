@@ -86,7 +86,7 @@ void main() {
     expect(find.text('Alfred'), findsOneWidget);
     expect(find.text('M'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Account'));
+    await tester.tap(find.byTooltip('Menu account'));
     await tester.pump();
     expect(drawerTapped, isTrue);
 
