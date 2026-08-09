@@ -11,6 +11,7 @@ import '../models/profile_summary.dart';
 import '../services/account_session.dart';
 import '../services/group_owner_archive_cache.dart';
 import '../services/profile_service.dart';
+import '../utils/date_format.dart';
 
 /// Stato home gruppo esposto alla UI tramite [GroupHomeController].
 class GroupHomeUiState {
@@ -49,24 +50,8 @@ class GroupHomeCoordinator {
 
   Future<void> reload() => load();
 
-  static String formatBirthDate(DateTime dateTime) {
-    const months = [
-      'gen',
-      'feb',
-      'mar',
-      'apr',
-      'mag',
-      'giu',
-      'lug',
-      'ago',
-      'set',
-      'ott',
-      'nov',
-      'dic',
-    ];
-    final local = dateTime.toLocal();
-    return '${local.day} ${months[local.month - 1]} ${local.year}';
-  }
+  static String formatBirthDate(DateTime dateTime) =>
+      formatProfileBirthDate(dateTime);
 
   void _applySnapshot(GroupHomeSnapshot snapshot) {
     state.createdAt = snapshot.createdAt;

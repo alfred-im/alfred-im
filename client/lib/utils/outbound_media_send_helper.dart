@@ -11,19 +11,19 @@ import 'prepare_image_for_upload.dart';
 /// Upload path condiviso tra peer messaging e broadcast gruppo.
 class OutboundMediaSendHelper {
   OutboundMediaSendHelper({
-    required MessageMediaService mediaService,
+    required this.mediaService,
     required this.userId,
-  }) : _mediaService = mediaService;
+  });
 
-  final MessageMediaService _mediaService;
+  final MessageMediaService mediaService;
   final String userId;
 
   Future<String> uploadGif(Uint8List bytes) {
-    return _mediaService.uploadGif(bytes: bytes, userId: userId);
+    return mediaService.uploadGif(bytes: bytes, userId: userId);
   }
 
   Future<String> uploadVoice(Uint8List bytes) {
-    return _mediaService.uploadVoice(bytes: bytes, userId: userId);
+    return mediaService.uploadVoice(bytes: bytes, userId: userId);
   }
 
   Future<OutboundImageUpload> prepareAndUploadImage(Uint8List bytes) async {
@@ -33,7 +33,7 @@ class OutboundMediaSendHelper {
   }
 
   Future<String> uploadNormalizedImage(NormalizedImageBytes normalized) {
-    return _mediaService.uploadImage(
+    return mediaService.uploadImage(
       bytes: normalized.bytes,
       userId: userId,
       extension: normalized.extension,
@@ -46,7 +46,7 @@ class OutboundMediaSendHelper {
     required String extension,
     required String contentType,
   }) {
-    return _mediaService.uploadVideo(
+    return mediaService.uploadVideo(
       bytes: bytes,
       userId: userId,
       extension: extension,
