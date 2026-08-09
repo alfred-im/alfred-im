@@ -13,6 +13,7 @@ if ! docker ps --format '{{.Names}}' | grep -q '^supabase_db_alfred$'; then
   exit 1
 fi
 
+# bootstrap-once: guard in ci-bootstrap-agents.sh (/tmp/alfred-ci-bootstrap.done)
 bash "$REPO_ROOT/scripts/ci-bootstrap-agents.sh"
 
 echo "==> SQL smoke (supabase/tests/*.sql)"

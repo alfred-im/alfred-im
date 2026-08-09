@@ -19,6 +19,7 @@ source "$ROOT/scripts/lib/e2e-local-stack.sh"
 
 e2e_ensure_supabase
 e2e_load_supabase_env
+# bootstrap-once: guard in ci-bootstrap-agents.sh (/tmp/alfred-ci-bootstrap.done)
 bash "$REPO_ROOT/scripts/ci-bootstrap-agents.sh"
 
 SUPABASE_URL="${SUPABASE_URL:-http://127.0.0.1:54321}"

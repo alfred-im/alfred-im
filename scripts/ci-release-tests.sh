@@ -30,9 +30,9 @@ echo "==> [2/6] SQL smoke"
 bash "$REPO_ROOT/scripts/run-sql-smoke.sh"
 
 echo "==> [3/6] integration API"
+# push_*.sql già in run-sql-smoke (supabase/tests/*.sql); integration-push.sh resta nel hub test.sh
 bash scripts/integration-multi-account.sh
 INTEGRATION_MODE=ticks bash scripts/integration-multi-account.sh
-bash scripts/integration-push.sh
 
 echo "==> [4/6] stack Dart (GoTrue locale)"
 flutter pub get
