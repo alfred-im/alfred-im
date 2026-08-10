@@ -146,6 +146,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
     if (_ensureLoadedStarted) return;
     _ensureLoadedStarted = true;
     unawaited(context.read<ReceptionAllowlistController?>()?.ensureLoaded());
+    unawaited(context.read<ContactsController?>()?.ensureLoaded());
   }
 
   Future<void> _toggleRubrica({required bool inRubrica}) async {

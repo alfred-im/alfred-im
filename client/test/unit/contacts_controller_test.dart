@@ -45,6 +45,25 @@ void main() {
     expect(controller.contactForProfileId('missing'), isNull);
   });
 
+  test('ensureLoaded loads contacts once', () async {
+    service.contacts = [
+      Contact(
+        id: 'c1',
+        ownerId: ownerId,
+        protocol: ContactProtocol.internal,
+        linkedProfileId: alice.id,
+        displayName: alice.displayName,
+        createdAt: DateTime.utc(2026, 1, 1),
+      ),
+    ];
+
+    await controller.ensureLoaded();
+
+    expect(controller.contactForProfileId(alice.id)?.id, 'c1');
+    await controller.ensureLoaded();
+    expect(controller.contacts, hasLength(1));
+  });
+
   test('removeInternalByProfileId deletes contact', () async {
     service.contacts = [
       Contact(

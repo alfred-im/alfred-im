@@ -24,6 +24,7 @@ class ContactsController extends ChangeNotifier {
 
   final String ownerId;
   late final ContactsCoordinator _coordinator;
+  Future<void>? _loadFuture;
 
   List<Contact> get contacts => _coordinator.state.contacts;
 
@@ -39,6 +40,9 @@ class ContactsController extends ChangeNotifier {
   void setSearchQuery(String value) => _coordinator.setSearchQuery(value);
 
   Future<void> load() => _coordinator.load();
+
+  /// Carica rubrica on-demand (chat, overlay profilo, schermata rubrica).
+  Future<void> ensureLoaded() => _loadFuture ??= load();
 
   Future<List<ProfileSummary>> searchProfiles(String query) =>
       _coordinator.searchProfiles(query);

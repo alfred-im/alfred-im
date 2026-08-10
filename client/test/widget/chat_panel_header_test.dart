@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'package:alfred_client/models/chat_peer.dart';
+import 'package:alfred_client/models/contact.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/contacts_controller.dart';
 import 'package:alfred_client/providers/reception_allowlist_controller.dart';
@@ -119,6 +120,58 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(allowlist.isProfileAllowed('peer-id'), isTrue);
+  });
+
+  testWidgets('menu header riflette rubrica già presente a DB', (tester) async {
+    final allowlistService = FakeReceptionAllowlistService();
+    final contactService = FakeContactService()
+      ..contacts = [
+        Contact(
+          id: 'contact-peer-id',
+          ownerId: 'owner-id',
+          protocol: ContactProtocol.internal,
+          linkedProfileId: 'peer-id',
+          displayName: 'Mario Rossi',
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      ];
+    final allowlist = ReceptionAllowlistController(
+      ownerId: 'owner-id',
+      allowlistService: allowlistService,
+    );
+    final contacts = ContactsController(
+      ownerId: 'owner-id',
+      contactService: contactService,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ReceptionAllowlistController>.value(
+              value: allowlist,
+            ),
+            ChangeNotifierProvider<ContactsController>.value(
+              value: contacts,
+            ),
+          ],
+          child: const Scaffold(
+            body: ChatPanelHeader(
+              peer: peer,
+              showBackButton: false,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rimuovi dalla rubrica'), findsOneWidget);
+    expect(find.text('Aggiungi alla rubrica'), findsNothing);
   });
 
   testWidgets('header gruppo non mostra menu peer', (tester) async {

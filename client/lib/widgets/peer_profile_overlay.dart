@@ -91,6 +91,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     _hydrateStarted = true;
     unawaited(_hydrateProfileFromServer());
     context.read<ReceptionAllowlistController?>()?.ensureLoaded();
+    unawaited(context.read<ContactsController?>()?.ensureLoaded());
   }
 
   Future<void> _hydrateProfileFromServer() async {
