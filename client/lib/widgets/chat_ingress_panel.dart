@@ -51,7 +51,7 @@ class ChatPanelHeader extends StatelessWidget {
     this.profile,
     required this.showBackButton,
     this.onBack,
-    this.showCallActions = true,
+    this.showCallActions = false,
   }) : assert(peer != null || profile != null);
 
   final ChatPeer? peer;
