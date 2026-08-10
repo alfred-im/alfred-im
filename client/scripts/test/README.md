@@ -112,6 +112,7 @@ Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/r
 | `multi-account-messages.spec.ts` | `e2e-multi` | Testo, foto, switch e spunte (assert DB; img canvas opzionale) |
 | `inbox-open-chat.spec.ts` | `e2e-nav-local` | Tap inbox → input chat visibile (cattura spinner infinito) |
 | `account-switch-restore.spec.ts` | `e2e-nav-local` | Switch sidebar → inbox + riapertura chat peer |
+| **`peer-relationship-actions.spec.ts`** | **`e2e-nav-local`** | **Menu ⋮ + profilo: rubrica e consenso dopo switch account (assert Postgres)** |
 | `manual-push-poison-repro.spec.ts` | `e2e-nav-local` | Push tap multi-account + mailbox poison |
 | `push-tap-multi-account.spec.ts` | `e2e-nav-local`, `e2e-push-local` | Due account → tap notifica → focus destinatario + chat |
 | `push-full.spec.ts` | `e2e-push-local`, CI step 6 | Permesso → subscribe → messaggio → notifica in SW |

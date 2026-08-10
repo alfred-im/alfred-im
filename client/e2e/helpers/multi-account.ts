@@ -593,6 +593,23 @@ export async function openPeerInInbox(page: Page, displayName: string) {
   await waitForChatInput(page);
 }
 
+/** Apre chat peer senza richiedere composer (es. allowlist mancante). */
+export async function openPeerInInboxView(page: Page, displayName: string) {
+  await expect(page.getByRole('button', { name: 'Nuovo messaggio' })).toBeVisible(
+    { timeout: E2E_TIMEOUT.ui },
+  );
+  const row = inboxPeerButton(page, displayName);
+  await expect(
+    row.first(),
+    `inbox senza conversazione con ${displayName}`,
+  ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+  await row.first().click();
+  await enableFlutterAccessibility(page);
+  await expect(
+    page.getByRole('button', { name: 'Altre azioni', exact: true }),
+  ).toBeVisible({ timeout: E2E_TIMEOUT.auth });
+}
+
 export async function backToInboxFromChat(page: Page) {
   await page.locator('flt-semantics[role="button"]').first().click();
   await expect(page.getByRole('button', { name: 'Nuovo messaggio' })).toBeVisible(
