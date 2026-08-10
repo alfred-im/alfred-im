@@ -13,6 +13,7 @@ import '../services/reception_allowlist_service.dart';
 class ReceptionAllowlistController extends ChangeNotifier {
   ReceptionAllowlistController({
     required this.ownerId,
+    this.sessionEpoch = 0,
     required ReceptionAllowlistService allowlistService,
   }) {
     _coordinator = ReceptionCoordinator(
@@ -23,6 +24,10 @@ class ReceptionAllowlistController extends ChangeNotifier {
   }
 
   final String ownerId;
+
+  /// Allineato a [AccountSession.epoch] — invalida il controller su restore sessione.
+  final int sessionEpoch;
+
   late final ReceptionCoordinator _coordinator;
   Future<void>? _loadFuture;
 

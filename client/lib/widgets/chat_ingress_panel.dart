@@ -14,6 +14,7 @@ import '../providers/auth_controller.dart';
 import '../providers/contacts_controller.dart';
 import '../providers/reception_allowlist_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/peer_relationship_actions.dart';
 import 'peer_profile_overlay.dart';
 import 'profile_identity.dart';
 
@@ -139,6 +140,15 @@ class _ChatPeerOverflowMenu extends StatefulWidget {
 
 class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
   bool _busy = false;
+  bool _primed = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_primed) return;
+    _primed = true;
+    unawaited(PeerRelationshipActions.prime(context));
+  }
 
   ChatPeer _resolvedPeer(AuthController auth) {
     return auth.activePeer?.profileId == widget.peer.profileId
@@ -147,6 +157,15 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
   }
 
   PeerRelationship _relationshipFor(ChatPeer peer) {
+    if (PeerRelationshipActions.controllersSettled(context)) {
+      return PeerRelationship(
+        inContacts: PeerRelationshipActions.isInContacts(
+          context,
+          peer.profileId,
+        ),
+        isAllowed: PeerRelationshipActions.isAllowed(context, peer.profileId),
+      );
+    }
     return peer.relationship ??
         const PeerRelationship(inContacts: false, isAllowed: false);
   }
@@ -162,17 +181,17 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
     required AuthController auth,
     required bool inRubrica,
   }) async {
-    final contacts = context.read<ContactsController?>();
-    if (contacts == null || _busy) return;
+    if (_busy) return;
 
     final peer = _resolvedPeer(auth);
     setState(() => _busy = true);
     try {
-      if (inRubrica) {
-        await contacts.removeInternalByProfileId(peer.profileId);
-      } else {
-        await contacts.addInternal(peer.profile);
-      }
+      await PeerRelationshipActions.toggleRubrica(
+        context: context,
+        profileId: peer.profileId,
+        profile: peer.profile,
+        inRubrica: inRubrica,
+      );
       if (mounted) {
         _patchPeerRelationship(
           auth,
@@ -180,28 +199,24 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
+      if (mounted) PeerRelationshipActions.showError(context, e);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<void> _setAllowed(AuthController auth, bool value) async {
-    final allowlist = context.read<ReceptionAllowlistController?>();
-    if (allowlist == null || _busy) return;
+    if (_busy) return;
 
     final peer = _resolvedPeer(auth);
     setState(() => _busy = true);
     try {
-      if (value) {
-        await allowlist.addProfile(peer.profile);
-      } else {
-        await allowlist.removeByProfileId(peer.profileId);
-      }
+      await PeerRelationshipActions.setAllowed(
+        context: context,
+        profileId: peer.profileId,
+        profile: peer.profile,
+        value: value,
+      );
       if (mounted) {
         _patchPeerRelationship(
           auth,
@@ -209,11 +224,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
+      if (mounted) PeerRelationshipActions.showError(context, e);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -222,11 +233,12 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
-    final allowlist = context.watch<ReceptionAllowlistController?>();
-    final contacts = context.watch<ContactsController?>();
+    context.watch<ReceptionAllowlistController?>();
+    context.watch<ContactsController?>();
     final peer = _resolvedPeer(auth);
     final relationship = _relationshipFor(peer);
-    final actionsEnabled = allowlist != null && contacts != null && !_busy;
+    final actionsEnabled =
+        PeerRelationshipActions.controllersReady(context) && !_busy;
 
     return PopupMenuButton<_ChatPeerMenuAction>(
       tooltip: 'Altre azioni',

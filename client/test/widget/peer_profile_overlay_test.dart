@@ -97,6 +97,48 @@ void main() {
     expect(find.text('Inizia a chattare'), findsOneWidget);
   });
 
+  testWidgets('PeerProfileOverlay aggiunge rubrica e consente messaggi',
+      (tester) async {
+    final allowlistService = FakeReceptionAllowlistService();
+    final contactService = FakeContactService();
+    final allowlist = ReceptionAllowlistController(
+      ownerId: 'owner-id',
+      allowlistService: allowlistService,
+    );
+    final contacts = ContactsController(
+      ownerId: 'owner-id',
+      contactService: contactService,
+    );
+
+    await allowlist.load();
+    await contacts.load();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ReceptionAllowlistController>.value(
+              value: allowlist,
+            ),
+            ChangeNotifierProvider<ContactsController>.value(
+              value: contacts,
+            ),
+          ],
+          child: PeerProfileOverlay(profile: peer),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Aggiungi alla rubrica'));
+    await tester.pumpAndSettle();
+    expect(contacts.contactForProfileId('peer-id'), isNotNull);
+
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    expect(allowlist.isProfileAllowed('peer-id'), isTrue);
+  });
+
   testWidgets('Inizia a chattare closes overlay and opens conversation',
       (tester) async {
     final client = createTestSupabaseClient();

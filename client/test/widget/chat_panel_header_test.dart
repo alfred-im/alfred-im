@@ -148,6 +148,8 @@ void main() {
       relationship: PeerRelationship(inContacts: true, isAllowed: false),
     );
 
+    await contacts.addInternal(peerProfile);
+
     await tester.pumpWidget(
       MaterialApp(
         home: MultiProvider(
