@@ -87,6 +87,10 @@ class AccountNavigationEffects implements NavigationEffects {
     _viewState.mergeActivePeerFromInbox(inboxRow);
   }
 
+  void patchActivePeer(String accountUserId, ChatPeer peer) {
+    _viewState.patchActivePeer(accountUserId, peer);
+  }
+
   @override
   Future<bool> openPeerOnFocusedAccount(ChatPeer peer) async {
     final focus = _manager.focusUserId;
@@ -299,9 +303,13 @@ class AccountNavigationEffects implements NavigationEffects {
 
       var peer = session.inboxController.findByProfileId(peerProfileId);
       if (peer == null) {
-        final summary = await session.profileService.findById(peerProfileId);
-        if (summary == null || summary.id == session.userId) return;
-        peer = ChatPeer(profile: summary);
+        peer = await session.profileService.getPeerContext(peerProfileId);
+        if (peer == null || peer.profileId == session.userId) return;
+      } else if (!peer.hasRelationship) {
+        final enriched = await session.profileService.getPeerContext(peerProfileId);
+        if (enriched != null) {
+          peer = peer.withRelationship(enriched.relationship!);
+        }
       }
 
       if (generation != _ingressPrepGeneration) return;
@@ -310,6 +318,7 @@ class AccountNavigationEffects implements NavigationEffects {
         return;
       }
 
+      _viewState.patchActivePeer(accountUserId, peer);
       _commitScope(ConversationScope.fromSession(session, peer));
       _onIngressPrepComplete?.call();
 
@@ -419,14 +428,14 @@ class AccountNavigationEffects implements NavigationEffects {
     if (!allowProfileFallback) return null;
 
     try {
-      final summary = await session.profileService.findById(peerProfileId);
-      if (summary != null && summary.id != session.userId) {
+      final peer = await session.profileService.getPeerContext(peerProfileId);
+      if (peer != null && peer.profileId != session.userId) {
         diagLog(
           'nav',
           logSource,
-          data: {'source': 'profile_fallback'},
+          data: {'source': 'peer_context'},
         );
-        return ChatPeer(profile: summary);
+        return peer;
       }
     } catch (e) {
       diagLogFail(

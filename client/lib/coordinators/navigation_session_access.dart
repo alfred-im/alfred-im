@@ -36,5 +36,7 @@ class NavigationSessionAccess {
   Future<void> backToGroupHome() => _coordinator.backToGroupHome();
 
   void mergeActivePeerFromInbox(ChatPeer inboxRow) =>
-      _coordinator.adapters.mergeActivePeerFromInbox(inboxRow);
+      _coordinator.mergeActivePeerFromInbox(inboxRow);
+
+  void patchActivePeer(ChatPeer peer) => _coordinator.patchActivePeer(peer);
 }

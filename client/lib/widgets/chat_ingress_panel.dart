@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
+import '../models/peer_relationship.dart';
 import '../models/profile_summary.dart';
+import '../providers/auth_controller.dart';
 import '../providers/contacts_controller.dart';
 import '../providers/reception_allowlist_controller.dart';
 import '../theme/alfred_colors.dart';
@@ -115,8 +117,7 @@ class ChatPanelHeader extends StatelessWidget {
                   icon: const Icon(Icons.call_outlined),
                 ),
               ],
-              if (peer != null)
-                _ChatPeerOverflowMenu(profile: resolvedProfile),
+              if (peer != null) _ChatPeerOverflowMenu(peer: peer!),
             ],
           ),
         ),
@@ -128,9 +129,9 @@ class ChatPanelHeader extends StatelessWidget {
 enum _ChatPeerMenuAction { rubrica, allow }
 
 class _ChatPeerOverflowMenu extends StatefulWidget {
-  const _ChatPeerOverflowMenu({required this.profile});
+  const _ChatPeerOverflowMenu({required this.peer});
 
-  final ProfileSummary profile;
+  final ChatPeer peer;
 
   @override
   State<_ChatPeerOverflowMenu> createState() => _ChatPeerOverflowMenuState();
@@ -138,15 +139,16 @@ class _ChatPeerOverflowMenu extends StatefulWidget {
 
 class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
   bool _busy = false;
-  bool _ensureLoadedStarted = false;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_ensureLoadedStarted) return;
-    _ensureLoadedStarted = true;
-    unawaited(context.read<ReceptionAllowlistController?>()?.ensureLoaded());
-    unawaited(context.read<ContactsController?>()?.ensureLoaded());
+  PeerRelationship get _relationship =>
+      widget.peer.relationship ??
+      const PeerRelationship(inContacts: false, isAllowed: false);
+
+  bool get _hasRelationship => widget.peer.hasRelationship;
+
+  void _patchPeerRelationship(PeerRelationship relationship) {
+    final auth = context.read<AuthController>();
+    auth.patchActivePeer(widget.peer.withRelationship(relationship));
   }
 
   Future<void> _toggleRubrica({required bool inRubrica}) async {
@@ -156,9 +158,14 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
     setState(() => _busy = true);
     try {
       if (inRubrica) {
-        await contacts.removeInternalByProfileId(widget.profile.id);
+        await contacts.removeInternalByProfileId(widget.peer.profileId);
       } else {
-        await contacts.addInternal(widget.profile);
+        await contacts.addInternal(widget.peer.profile);
+      }
+      if (mounted) {
+        _patchPeerRelationship(
+          _relationship.copyWith(inContacts: !inRubrica),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -178,9 +185,12 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
     setState(() => _busy = true);
     try {
       if (value) {
-        await allowlist.addProfile(widget.profile);
+        await allowlist.addProfile(widget.peer.profile);
       } else {
-        await allowlist.removeByProfileId(widget.profile.id);
+        await allowlist.removeByProfileId(widget.peer.profileId);
+      }
+      if (mounted) {
+        _patchPeerRelationship(_relationship.copyWith(isAllowed: value));
       }
     } catch (e) {
       if (mounted) {
@@ -195,13 +205,12 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
 
   @override
   Widget build(BuildContext context) {
-    final allowlist = context.watch<ReceptionAllowlistController?>();
-    final contacts = context.watch<ContactsController?>();
-
-    final isAllowed =
-        allowlist?.allowedProfileIds.contains(widget.profile.id) ?? false;
-    final inRubrica = contacts?.contactForProfileId(widget.profile.id) != null;
-    final actionsEnabled = allowlist != null && contacts != null && !_busy;
+    final auth = context.watch<AuthController>();
+    final resolvedPeer = auth.activePeer?.profileId == widget.peer.profileId
+        ? auth.activePeer!
+        : widget.peer;
+    final relationship = resolvedPeer.relationship ?? _relationship;
+    final actionsEnabled = _hasRelationship && !_busy;
 
     return PopupMenuButton<_ChatPeerMenuAction>(
       tooltip: 'Altre azioni',
@@ -211,9 +220,11 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
           ? (action) {
               switch (action) {
                 case _ChatPeerMenuAction.rubrica:
-                  unawaited(_toggleRubrica(inRubrica: inRubrica));
+                  unawaited(
+                    _toggleRubrica(inRubrica: relationship.inContacts),
+                  );
                 case _ChatPeerMenuAction.allow:
-                  unawaited(_setAllowed(!isAllowed));
+                  unawaited(_setAllowed(!relationship.isAllowed));
               }
             }
           : null,
@@ -221,12 +232,14 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
         PopupMenuItem(
           value: _ChatPeerMenuAction.rubrica,
           child: Text(
-            inRubrica ? 'Rimuovi dalla rubrica' : 'Aggiungi alla rubrica',
+            relationship.inContacts
+                ? 'Rimuovi dalla rubrica'
+                : 'Aggiungi alla rubrica',
           ),
         ),
         PopupMenuItem(
           value: _ChatPeerMenuAction.allow,
-          child: Text(isAllowed ? 'Revoca' : 'Consenti'),
+          child: Text(relationship.isAllowed ? 'Revoca' : 'Consenti'),
         ),
       ],
     );

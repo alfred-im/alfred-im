@@ -46,6 +46,15 @@ class AccountViewState {
     );
   }
 
+  AccountViewState patchActivePeer(ChatPeer peer) {
+    if (activePeer?.profileId != peer.profileId) return this;
+    return AccountViewState(
+      activePeer: peer,
+      showInboxOnMobile: showInboxOnMobile,
+      groupChatOpen: groupChatOpen,
+    );
+  }
+
   /// Evita chat aperte verso sé stessi (stato incoerente dopo switch account).
   AccountViewState sanitizedForAccount(String accountUserId) {
     if (activePeer?.profileId == accountUserId) {

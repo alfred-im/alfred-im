@@ -185,6 +185,8 @@ void main() {
         'peer_cover_url': 'https://example.com/c.jpg',
         'peer_pronouns': 'lei/ella',
         'peer_profile_kind': 'group',
+        'peer_in_contacts': true,
+        'peer_is_allowed': true,
       });
 
       expect(peer.profileId, 'peer-1');
@@ -197,6 +199,8 @@ void main() {
       expect(peer.profile.coverUrl, 'https://example.com/c.jpg');
       expect(peer.profile.pronouns, 'lei/ella');
       expect(peer.isGroup, isTrue);
+      expect(peer.peerInContacts, isTrue);
+      expect(peer.peerIsAllowed, isTrue);
     });
   });
 

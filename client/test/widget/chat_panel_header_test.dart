@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'package:alfred_client/models/chat_peer.dart';
-import 'package:alfred_client/models/contact.dart';
+import 'package:alfred_client/models/peer_relationship.dart';
 import 'package:alfred_client/models/profile_summary.dart';
+import 'package:alfred_client/providers/auth_controller.dart';
 import 'package:alfred_client/providers/contacts_controller.dart';
 import 'package:alfred_client/providers/reception_allowlist_controller.dart';
 import 'package:alfred_client/widgets/chat_ingress_panel.dart';
@@ -24,9 +25,13 @@ void main() {
     username: 'mario',
     displayName: 'Mario Rossi',
   );
-  const peer = ChatPeer(profile: peerProfile);
+  const peer = ChatPeer(
+    profile: peerProfile,
+    relationship: PeerRelationship(inContacts: false, isAllowed: false),
+  );
 
   testWidgets('header chat 1:1 mostra menu rubrica e consenso', (tester) async {
+    final auth = AuthController();
     final allowlistService = FakeReceptionAllowlistService();
     final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
@@ -45,6 +50,7 @@ void main() {
       MaterialApp(
         home: MultiProvider(
           providers: [
+            ChangeNotifierProvider<AuthController>.value(value: auth),
             ChangeNotifierProvider<ReceptionAllowlistController>.value(
               value: allowlist,
             ),
@@ -72,6 +78,7 @@ void main() {
   });
 
   testWidgets('menu header aggiunge rubrica e consente messaggi', (tester) async {
+    final auth = AuthController();
     final allowlistService = FakeReceptionAllowlistService();
     final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
@@ -90,6 +97,7 @@ void main() {
       MaterialApp(
         home: MultiProvider(
           providers: [
+            ChangeNotifierProvider<AuthController>.value(value: auth),
             ChangeNotifierProvider<ReceptionAllowlistController>.value(
               value: allowlist,
             ),
@@ -122,19 +130,10 @@ void main() {
     expect(allowlist.isProfileAllowed('peer-id'), isTrue);
   });
 
-  testWidgets('menu header riflette rubrica già presente a DB', (tester) async {
+  testWidgets('menu header mostra rimuovi se peer già in rubrica', (tester) async {
+    final auth = AuthController();
     final allowlistService = FakeReceptionAllowlistService();
-    final contactService = FakeContactService()
-      ..contacts = [
-        Contact(
-          id: 'contact-peer-id',
-          ownerId: 'owner-id',
-          protocol: ContactProtocol.internal,
-          linkedProfileId: 'peer-id',
-          displayName: 'Mario Rossi',
-          createdAt: DateTime.utc(2026, 1, 1),
-        ),
-      ];
+    final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
       ownerId: 'owner-id',
       allowlistService: allowlistService,
@@ -144,10 +143,16 @@ void main() {
       contactService: contactService,
     );
 
+    const peerInRubrica = ChatPeer(
+      profile: peerProfile,
+      relationship: PeerRelationship(inContacts: true, isAllowed: false),
+    );
+
     await tester.pumpWidget(
       MaterialApp(
         home: MultiProvider(
           providers: [
+            ChangeNotifierProvider<AuthController>.value(value: auth),
             ChangeNotifierProvider<ReceptionAllowlistController>.value(
               value: allowlist,
             ),
@@ -157,7 +162,7 @@ void main() {
           ],
           child: const Scaffold(
             body: ChatPanelHeader(
-              peer: peer,
+              peer: peerInRubrica,
               showBackButton: false,
             ),
           ),
@@ -165,13 +170,26 @@ void main() {
       ),
     );
 
-    await tester.pumpAndSettle();
-
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
 
     expect(find.text('Rimuovi dalla rubrica'), findsOneWidget);
     expect(find.text('Aggiungi alla rubrica'), findsNothing);
+  });
+
+  test('fromInboxRow mappa flag relazione peer', () {
+    final parsed = ChatPeer.fromInboxRow({
+      'protocol': 'internal',
+      'display_name': 'Mario Rossi',
+      'peer_profile_id': 'peer-id',
+      'peer_in_contacts': true,
+      'peer_is_allowed': false,
+      'last_message_preview': 'Ciao',
+      'unread_count': 0,
+    });
+
+    expect(parsed.peerInContacts, isTrue);
+    expect(parsed.peerIsAllowed, isFalse);
   });
 
   testWidgets('header gruppo non mostra menu peer', (tester) async {

@@ -2,9 +2,10 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:alfred_client/models/allowed_person.dart';
 import 'package:alfred_client/models/chat_peer.dart';
+import 'package:alfred_client/models/peer_relationship.dart';
 import 'package:alfred_client/models/profile_summary.dart';
+import 'package:alfred_client/providers/auth_controller.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
 import 'package:alfred_client/providers/reception_allowlist_controller.dart';
 import 'package:alfred_client/theme/alfred_theme.dart';
@@ -28,7 +29,10 @@ void main() {
     username: 'mario',
     displayName: 'Mario Rossi',
   );
-  final chatPeer = ChatPeer(profile: peer);
+  final chatPeer = ChatPeer(
+    profile: peer,
+    relationship: const PeerRelationship(inContacts: false, isAllowed: false),
+  );
 
   late FakeMessageService messageService;
   late FakeReceptionAllowlistService allowlistService;
@@ -67,12 +71,16 @@ void main() {
     allowlist.dispose();
   });
 
-  Future<void> pumpChatPanel(WidgetTester tester) async {
+  Future<void> pumpChatPanel(WidgetTester tester, ChatPeer peer) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(tester.view.resetPhysicalSize);
+    final auth = AuthController();
     await tester.pumpWidget(
       MaterialApp(
         theme: AlfredTheme.light,
         home: MultiProvider(
           providers: [
+            ChangeNotifierProvider<AuthController>.value(value: auth),
             ChangeNotifierProvider<MessagesController>.value(
               value: messagesController,
             ),
@@ -80,7 +88,7 @@ void main() {
               value: allowlist,
             ),
           ],
-          child: Scaffold(body: ChatPanel(peer: chatPeer)),
+          child: Scaffold(body: ChatPanel(peer: peer)),
         ),
       ),
     );
@@ -92,16 +100,16 @@ void main() {
   }
 
   testWidgets('ChatInputBar disabled when peer not in allow list', (tester) async {
-    await pumpChatPanel(tester);
+    await pumpChatPanel(tester, chatPeer);
     expect(textFieldEnabled(tester), isFalse);
   });
 
   testWidgets('ChatInputBar enabled when peer is allowed', (tester) async {
-    allowlistService.people = [
-      AllowedPerson(entryId: 'entry-1', profile: peer),
-    ];
-    await allowlist.load();
-    await pumpChatPanel(tester);
+    final allowedPeer = ChatPeer(
+      profile: peer,
+      relationship: const PeerRelationship(inContacts: false, isAllowed: true),
+    );
+    await pumpChatPanel(tester, allowedPeer);
     expect(textFieldEnabled(tester), isTrue);
   });
 }

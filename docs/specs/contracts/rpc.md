@@ -139,6 +139,8 @@ list_inbox() → table (
   peer_cover_url text,
   peer_pronouns text,
   peer_profile_kind profile_kind,
+  peer_in_contacts boolean,
+  peer_is_allowed boolean,
   last_message_preview text,
   last_message_at timestamptz,
   unread_count integer
@@ -153,7 +155,9 @@ Aggregazione su `messages` WHERE `owner_id = auth.uid()`:
 
 Preview per tipo: testo troncato, `[GIF]`, `format_voice_preview`, `format_location_preview`.
 
-**Migrazioni**: `20260627230000`, `20260628100000`, aggiornamenti voice/location, `20260704120000`, `20260706130000`, `20260806190000_profile_cover_url.sql`.
+`peer_in_contacts` / `peer_is_allowed`: relazione viewer↔peer (rubrica internal + `reception_allowlist`).
+
+**Migrazioni**: `20260627230000`, `20260628100000`, aggiornamenti voice/location, `20260704120000`, `20260706130000`, `20260806190000_profile_cover_url.sql`, `20260810120000_peer_relationship_flags.sql`.
 
 ---
 
@@ -245,13 +249,34 @@ Solo λ presenti nel mio archivio (`owner_id = auth.uid()`).
 ```sql
 find_profile_by_username(p_username text) → table (
   id uuid, username text, display_name text, avatar_url text, cover_url text, pronouns text,
-  profile_kind profile_kind
+  profile_kind profile_kind,
+  peer_in_contacts boolean,
+  peer_is_allowed boolean
 )
 ```
 
 Risoluzione indirizzo Alfred interno → profilo pubblico (avatar, cover, pronomi; `profile_kind` per routing shell). Richiede `auth.uid()`; **esclude** il proprio profilo (`p.id <> auth.uid()`).
 
-**Migrazioni**: `20260806190000_profile_cover_url.sql` (`cover_url`).
+**Migrazioni**: `20260806190000_profile_cover_url.sql` (`cover_url`); `20260810120000_peer_relationship_flags.sql` (flag relazione viewer).
+
+**Spec**: [SYS-PROFILE](../promises/system/SYS-PROFILE.md).
+
+---
+
+## `get_peer_context`
+
+```sql
+get_peer_context(p_peer_profile_id uuid) → table (
+  id uuid, username text, display_name text, avatar_url text, cover_url text, pronouns text,
+  profile_kind profile_kind,
+  peer_in_contacts boolean,
+  peer_is_allowed boolean
+)
+```
+
+Profilo pubblico + flag relazione viewer↔peer. Usato quando il peer non è ancora in `list_inbox()` (push, link, compose). Esclude il proprio profilo.
+
+**Migrazioni**: `20260810120000_peer_relationship_flags.sql`.
 
 **Spec**: [SYS-PROFILE](../promises/system/SYS-PROFILE.md).
 
@@ -273,7 +298,9 @@ Verifica namespace username (registrazione). **`GRANT EXECUTE` a `anon` e `authe
 
 ```sql
 search_profiles(p_query text, p_limit integer default 20) → table (
-  id uuid, username text, display_name text, avatar_url text
+  id uuid, username text, display_name text, avatar_url text,
+  peer_in_contacts boolean,
+  peer_is_allowed boolean
 )
 ```
 
