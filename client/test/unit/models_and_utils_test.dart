@@ -202,6 +202,19 @@ void main() {
       expect(peer.peerInContacts, isTrue);
       expect(peer.peerIsAllowed, isTrue);
     });
+
+    test('without relationship flags relationship is null', () {
+      final peer = ChatPeer.fromInboxRow({
+        'protocol': 'internal',
+        'display_name': 'Alice',
+        'peer_profile_id': 'peer-1',
+        'last_message_preview': 'Ciao!',
+        'unread_count': 0,
+      });
+
+      expect(peer.relationship, isNull);
+      expect(peer.hasRelationship, isFalse);
+    });
   });
 
   group('ChatMessage.fromJson', () {

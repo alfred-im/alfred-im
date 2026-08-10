@@ -114,7 +114,16 @@ class AccountNavigationEffects implements NavigationEffects {
       return false;
     }
 
-    _enterConversationUi(peer);
+    var peerForUi = peer;
+    final session = _manager.focusedSession;
+    if (session != null) {
+      final fromInbox = session.inboxController.findByProfileId(peer.profileId);
+      if (fromInbox != null) {
+        peerForUi = fromInbox;
+      }
+    }
+
+    _enterConversationUi(peerForUi);
     unawaited(
       _prepareConversationAfterIngress(
         accountUserId: focus,

@@ -60,7 +60,7 @@ class ChatPeer {
       timeLabel: formatConversationTime(lastAt),
       unreadCount: json['unread_count'] as int? ?? 0,
       lastMessageAt: lastAt,
-      relationship: PeerRelationship.fromRow(json),
+      relationship: PeerRelationship.tryFromRow(json),
     );
   }
 

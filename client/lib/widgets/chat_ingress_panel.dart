@@ -140,31 +140,43 @@ class _ChatPeerOverflowMenu extends StatefulWidget {
 class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
   bool _busy = false;
 
-  PeerRelationship get _relationship =>
-      widget.peer.relationship ??
-      const PeerRelationship(inContacts: false, isAllowed: false);
-
-  bool get _hasRelationship => widget.peer.hasRelationship;
-
-  void _patchPeerRelationship(PeerRelationship relationship) {
-    final auth = context.read<AuthController>();
-    auth.patchActivePeer(widget.peer.withRelationship(relationship));
+  ChatPeer _resolvedPeer(AuthController auth) {
+    return auth.activePeer?.profileId == widget.peer.profileId
+        ? auth.activePeer!
+        : widget.peer;
   }
 
-  Future<void> _toggleRubrica({required bool inRubrica}) async {
+  PeerRelationship _relationshipFor(ChatPeer peer) {
+    return peer.relationship ??
+        const PeerRelationship(inContacts: false, isAllowed: false);
+  }
+
+  void _patchPeerRelationship(
+    AuthController auth,
+    PeerRelationship relationship,
+  ) {
+    auth.patchActivePeer(_resolvedPeer(auth).withRelationship(relationship));
+  }
+
+  Future<void> _toggleRubrica({
+    required AuthController auth,
+    required bool inRubrica,
+  }) async {
     final contacts = context.read<ContactsController?>();
     if (contacts == null || _busy) return;
 
+    final peer = _resolvedPeer(auth);
     setState(() => _busy = true);
     try {
       if (inRubrica) {
-        await contacts.removeInternalByProfileId(widget.peer.profileId);
+        await contacts.removeInternalByProfileId(peer.profileId);
       } else {
-        await contacts.addInternal(widget.peer.profile);
+        await contacts.addInternal(peer.profile);
       }
       if (mounted) {
         _patchPeerRelationship(
-          _relationship.copyWith(inContacts: !inRubrica),
+          auth,
+          _relationshipFor(peer).copyWith(inContacts: !inRubrica),
         );
       }
     } catch (e) {
@@ -178,19 +190,23 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
     }
   }
 
-  Future<void> _setAllowed(bool value) async {
+  Future<void> _setAllowed(AuthController auth, bool value) async {
     final allowlist = context.read<ReceptionAllowlistController?>();
     if (allowlist == null || _busy) return;
 
+    final peer = _resolvedPeer(auth);
     setState(() => _busy = true);
     try {
       if (value) {
-        await allowlist.addProfile(widget.peer.profile);
+        await allowlist.addProfile(peer.profile);
       } else {
-        await allowlist.removeByProfileId(widget.peer.profileId);
+        await allowlist.removeByProfileId(peer.profileId);
       }
       if (mounted) {
-        _patchPeerRelationship(_relationship.copyWith(isAllowed: value));
+        _patchPeerRelationship(
+          auth,
+          _relationshipFor(peer).copyWith(isAllowed: value),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -206,11 +222,11 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
-    final resolvedPeer = auth.activePeer?.profileId == widget.peer.profileId
-        ? auth.activePeer!
-        : widget.peer;
-    final relationship = resolvedPeer.relationship ?? _relationship;
-    final actionsEnabled = _hasRelationship && !_busy;
+    final allowlist = context.watch<ReceptionAllowlistController?>();
+    final contacts = context.watch<ContactsController?>();
+    final peer = _resolvedPeer(auth);
+    final relationship = _relationshipFor(peer);
+    final actionsEnabled = allowlist != null && contacts != null && !_busy;
 
     return PopupMenuButton<_ChatPeerMenuAction>(
       tooltip: 'Altre azioni',
@@ -221,10 +237,13 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
               switch (action) {
                 case _ChatPeerMenuAction.rubrica:
                   unawaited(
-                    _toggleRubrica(inRubrica: relationship.inContacts),
+                    _toggleRubrica(
+                      auth: auth,
+                      inRubrica: relationship.inContacts,
+                    ),
                   );
                 case _ChatPeerMenuAction.allow:
-                  unawaited(_setAllowed(!relationship.isAllowed));
+                  unawaited(_setAllowed(auth, !relationship.isAllowed));
               }
             }
           : null,
