@@ -2,10 +2,15 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
 import '../models/profile_summary.dart';
+import '../providers/contacts_controller.dart';
+import '../providers/reception_allowlist_controller.dart';
 import '../theme/alfred_colors.dart';
 import 'peer_profile_overlay.dart';
 import 'profile_identity.dart';
@@ -109,15 +114,120 @@ class ChatPanelHeader extends StatelessWidget {
                   onPressed: null,
                   icon: const Icon(Icons.call_outlined),
                 ),
-                IconButton(
-                  onPressed: null,
-                  icon: const Icon(Icons.more_vert),
-                ),
               ],
+              if (peer != null)
+                _ChatPeerOverflowMenu(profile: resolvedProfile),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+enum _ChatPeerMenuAction { rubrica, allow }
+
+class _ChatPeerOverflowMenu extends StatefulWidget {
+  const _ChatPeerOverflowMenu({required this.profile});
+
+  final ProfileSummary profile;
+
+  @override
+  State<_ChatPeerOverflowMenu> createState() => _ChatPeerOverflowMenuState();
+}
+
+class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
+  bool _busy = false;
+  bool _ensureLoadedStarted = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ensureLoadedStarted) return;
+    _ensureLoadedStarted = true;
+    unawaited(context.read<ReceptionAllowlistController?>()?.ensureLoaded());
+  }
+
+  Future<void> _toggleRubrica({required bool inRubrica}) async {
+    final contacts = context.read<ContactsController?>();
+    if (contacts == null || _busy) return;
+
+    setState(() => _busy = true);
+    try {
+      if (inRubrica) {
+        await contacts.removeInternalByProfileId(widget.profile.id);
+      } else {
+        await contacts.addInternal(widget.profile);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _setAllowed(bool value) async {
+    final allowlist = context.read<ReceptionAllowlistController?>();
+    if (allowlist == null || _busy) return;
+
+    setState(() => _busy = true);
+    try {
+      if (value) {
+        await allowlist.addProfile(widget.profile);
+      } else {
+        await allowlist.removeByProfileId(widget.profile.id);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final allowlist = context.watch<ReceptionAllowlistController?>();
+    final contacts = context.watch<ContactsController?>();
+
+    final isAllowed =
+        allowlist?.allowedProfileIds.contains(widget.profile.id) ?? false;
+    final inRubrica = contacts?.contactForProfileId(widget.profile.id) != null;
+    final actionsEnabled = allowlist != null && contacts != null && !_busy;
+
+    return PopupMenuButton<_ChatPeerMenuAction>(
+      tooltip: 'Altre azioni',
+      enabled: actionsEnabled,
+      icon: const Icon(Icons.more_vert),
+      onSelected: actionsEnabled
+          ? (action) {
+              switch (action) {
+                case _ChatPeerMenuAction.rubrica:
+                  unawaited(_toggleRubrica(inRubrica: inRubrica));
+                case _ChatPeerMenuAction.allow:
+                  unawaited(_setAllowed(!isAllowed));
+              }
+            }
+          : null,
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: _ChatPeerMenuAction.rubrica,
+          child: Text(
+            inRubrica ? 'Rimuovi dalla rubrica' : 'Aggiungi alla rubrica',
+          ),
+        ),
+        PopupMenuItem(
+          value: _ChatPeerMenuAction.allow,
+          child: Text(isAllowed ? 'Revoca' : 'Consenti'),
+        ),
+      ],
     );
   }
 }
