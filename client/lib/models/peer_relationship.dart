@@ -19,14 +19,6 @@ class PeerRelationship {
     );
   }
 
-  /// Null when the row has no relationship flags (legacy inbox payload).
-  static PeerRelationship? tryFromRow(Map<String, dynamic> json) {
-    final hasContacts = json.containsKey('peer_in_contacts');
-    final hasAllowed = json.containsKey('peer_is_allowed');
-    if (!hasContacts && !hasAllowed) return null;
-    return PeerRelationship.fromRow(json);
-  }
-
   PeerRelationship copyWith({
     bool? inContacts,
     bool? isAllowed,

@@ -220,30 +220,25 @@ class _DeferredChatPanelState extends State<_DeferredChatPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthController>();
-    final livePeer = auth.activePeer?.profileId == widget.peer.profileId
-        ? auth.activePeer!
-        : widget.peer;
-
     return FutureBuilder<void>(
       future: _library,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return ChatIngressPanel(
-            peer: livePeer,
+            peer: widget.peer,
             showBackButton: widget.showBackButton,
             onBack: widget.onBack,
           );
         }
         if (snapshot.hasError) {
           return ChatIngressPanel(
-            peer: livePeer,
+            peer: widget.peer,
             showBackButton: widget.showBackButton,
             onBack: widget.onBack,
           );
         }
         return chat_panel.ChatPanel(
-          peer: livePeer,
+          peer: widget.peer,
           showBackButton: widget.showBackButton,
           onBack: widget.onBack,
           showAuthorLabels: widget.showAuthorLabels,
