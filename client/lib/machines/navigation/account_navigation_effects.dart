@@ -305,10 +305,11 @@ class AccountNavigationEffects implements NavigationEffects {
       if (peer == null) {
         peer = await session.profileService.getPeerContext(peerProfileId);
         if (peer == null || peer.profileId == session.userId) return;
-      } else if (!peer.hasRelationship) {
-        final enriched = await session.profileService.getPeerContext(peerProfileId);
-        if (enriched != null) {
-          peer = peer.withRelationship(enriched.relationship!);
+      } else {
+        final enriched =
+            await session.profileService.getPeerContext(peerProfileId);
+        if (enriched?.relationship != null) {
+          peer = peer.withRelationship(enriched!.relationship!);
         }
       }
 

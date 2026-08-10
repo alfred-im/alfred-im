@@ -60,7 +60,7 @@ class ChatPeer {
       timeLabel: formatConversationTime(lastAt),
       unreadCount: json['unread_count'] as int? ?? 0,
       lastMessageAt: lastAt,
-      relationship: PeerRelationship.fromRow(json),
+      relationship: PeerRelationship.tryFromRow(json),
     );
   }
 
@@ -68,7 +68,8 @@ class ChatPeer {
     return ChatPeer(
       profile: ProfileSummary.fromProfilesRow(json),
       address: json['username'] as String?,
-      relationship: PeerRelationship.fromRow(json),
+      relationship: PeerRelationship.tryFromRow(json) ??
+          PeerRelationship.fromRow(json),
     );
   }
 
