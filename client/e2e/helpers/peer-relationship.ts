@@ -90,6 +90,77 @@ export async function expectAllowlistInDb(
     .toBe(1);
 }
 
+export async function expectContactAbsentInDb(
+  ownerUserId: string,
+  peerProfileId: string,
+): Promise<void> {
+  await expect
+    .poll(() => countContactsInDb(ownerUserId, peerProfileId), {
+      timeout: E2E_TIMEOUT.db,
+    })
+    .toBe(0);
+}
+
+/** Inserisce riga rubrica interna viewer→peer (setup «già in rubrica»). */
+export function insertContactInDb(
+  ownerUserId: string,
+  peerProfileId: string,
+  displayName: string,
+): void {
+  const safeName = displayName.replace(/'/g, "''");
+  const sql =
+    `INSERT INTO public.contacts (owner_id, protocol, linked_profile_id, display_name) ` +
+    `VALUES ('${ownerUserId}', 'internal', '${peerProfileId}', '${safeName}') ` +
+    `ON CONFLICT DO NOTHING;`;
+  execSync(
+    `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
+    { stdio: 'pipe' },
+  );
+}
+
+/**
+ * Due utenti con conversazione in inbox; acct1 ha già acct2 in rubrica **e** allow list.
+ * Riproduce il telefono: relazione già presente in DB, UI deve rifletterla dopo switch.
+ */
+export async function prepareLocalPeerWithRubricaAndConsent(
+  label1: string,
+  label2: string,
+): Promise<LocalPeerRelationshipPair> {
+  configureLocalChatMediaBucket();
+  const acct1 = await createLocalConfirmedUser(label1);
+  const acct2 = await createLocalConfirmedUser(label2);
+
+  const session1 = await loginSupabase(acct1.email, acct1.password);
+  const session2 = await loginSupabase(acct2.email, acct2.password);
+
+  await addReceptionAllowlist({
+    ownerUserId: acct1.userId,
+    allowedProfileId: acct2.userId,
+    ownerAccessToken: session1.accessToken,
+  });
+  await addReceptionAllowlist({
+    ownerUserId: acct2.userId,
+    allowedProfileId: acct1.userId,
+    ownerAccessToken: session2.accessToken,
+  });
+
+  insertContactInDb(acct1.userId, acct2.userId, `E2E ${label2}`);
+
+  const stamp = Date.now();
+  const seedMessage = `rubrica-consent-${stamp}`;
+  await sendMessageToProfile({
+    senderAccessToken: session1.accessToken,
+    recipientProfileId: acct2.userId,
+    body: seedMessage,
+    clientMessageId: `rubrica-consent-${stamp}`,
+  });
+
+  expect(countAllowlistInDb(acct1.userId, acct2.userId)).toBe(1);
+  expect(countContactsInDb(acct1.userId, acct2.userId)).toBe(1);
+
+  return { acct1, acct2, session1, session2, seedMessage };
+}
+
 export async function expectAllowlistAbsentInDb(
   ownerUserId: string,
   peerProfileId: string,
