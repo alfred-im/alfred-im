@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
 import '../models/message.dart';
+import '../models/peer_relationship.dart';
 import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
 import '../providers/contacts_controller.dart';
@@ -121,6 +122,26 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     return _profile;
   }
 
+  PeerRelationship? _peerFlags(BuildContext context) {
+    final AuthController auth;
+    try {
+      auth = context.read<AuthController>();
+    } on ProviderNotFoundException {
+      return null;
+    }
+    final peer = auth.activePeer;
+    if (peer?.profileId != _profile.id) return null;
+    return peer?.relationship;
+  }
+
+  PeerRelationship _relationshipFor(BuildContext context) {
+    return PeerRelationshipActions.relationshipForPeer(
+      context,
+      profileId: _profile.id,
+      peerFlags: _peerFlags(context),
+    );
+  }
+
   Future<void> _setAllowed(bool value) async {
     if (_allowBusy) return;
 
@@ -131,6 +152,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
         profileId: _profile.id,
         profile: _profile,
         value: value,
+        peerFlags: _peerFlags(context),
       );
     } catch (e) {
       if (mounted) PeerRelationshipActions.showError(context, e);
@@ -149,6 +171,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
         profileId: widget.profile.id,
         profile: _profile,
         inRubrica: inRubrica,
+        peerFlags: _peerFlags(context),
       );
     } catch (e) {
       if (mounted) PeerRelationshipActions.showError(context, e);
@@ -183,13 +206,13 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
   @override
   Widget build(BuildContext context) {
     final profile = _profile;
-    final allowlist = context.watch<ReceptionAllowlistController?>();
-    final contacts = context.watch<ContactsController?>();
+    context.watch<ReceptionAllowlistController?>();
+    context.watch<ContactsController?>();
 
-    final isAllowed =
-        allowlist?.allowedProfileIds.contains(profile.id) ?? false;
-    final inRubrica = contacts?.contactForProfileId(profile.id) != null;
-    final actionsEnabled = allowlist != null && contacts != null;
+    final relationship = _relationshipFor(context);
+    final isAllowed = relationship.isAllowed;
+    final inRubrica = relationship.inContacts;
+    final actionsEnabled = PeerRelationshipActions.controllersReady(context);
 
     return Material(
       color: AlfredColors.surface,

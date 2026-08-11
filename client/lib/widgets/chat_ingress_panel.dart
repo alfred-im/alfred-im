@@ -157,17 +157,11 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
   }
 
   PeerRelationship _relationshipFor(ChatPeer peer) {
-    if (PeerRelationshipActions.controllersSettled(context)) {
-      return PeerRelationship(
-        inContacts: PeerRelationshipActions.isInContacts(
-          context,
-          peer.profileId,
-        ),
-        isAllowed: PeerRelationshipActions.isAllowed(context, peer.profileId),
-      );
-    }
-    return peer.relationship ??
-        const PeerRelationship(inContacts: false, isAllowed: false);
+    return PeerRelationshipActions.relationshipForPeer(
+      context,
+      profileId: peer.profileId,
+      peerFlags: peer.relationship,
+    );
   }
 
   void _patchPeerRelationship(
@@ -191,6 +185,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
         profileId: peer.profileId,
         profile: peer.profile,
         inRubrica: inRubrica,
+        peerFlags: peer.relationship,
       );
       if (mounted) {
         _patchPeerRelationship(
@@ -216,6 +211,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
         profileId: peer.profileId,
         profile: peer.profile,
         value: value,
+        peerFlags: peer.relationship,
       );
       if (mounted) {
         _patchPeerRelationship(
