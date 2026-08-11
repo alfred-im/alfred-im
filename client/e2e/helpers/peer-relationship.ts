@@ -90,6 +90,67 @@ export async function expectAllowlistInDb(
     .toBe(1);
 }
 
+export async function expectAllowlistAbsentInDb(
+  ownerUserId: string,
+  peerProfileId: string,
+): Promise<void> {
+  await expect
+    .poll(() => countAllowlistInDb(ownerUserId, peerProfileId), {
+      timeout: E2E_TIMEOUT.db,
+    })
+    .toBe(0);
+}
+
+/**
+ * Due utenti con conversazione in inbox; acct1 ha già acct2 in allow list (profilo consentito).
+ * Solo rubrica eventualmente pulita — le azioni consenso partono da «già consentito».
+ */
+export async function prepareLocalConsentedPeerPair(
+  label1: string,
+  label2: string,
+): Promise<LocalPeerRelationshipPair> {
+  configureLocalChatMediaBucket();
+  const acct1 = await createLocalConfirmedUser(label1);
+  const acct2 = await createLocalConfirmedUser(label2);
+
+  const session1 = await loginSupabase(acct1.email, acct1.password);
+  const session2 = await loginSupabase(acct2.email, acct2.password);
+
+  await addReceptionAllowlist({
+    ownerUserId: acct1.userId,
+    allowedProfileId: acct2.userId,
+    ownerAccessToken: session1.accessToken,
+  });
+  await addReceptionAllowlist({
+    ownerUserId: acct2.userId,
+    allowedProfileId: acct1.userId,
+    ownerAccessToken: session2.accessToken,
+  });
+
+  const stamp = Date.now();
+  const seedMessage = `consent-toggle-${stamp}`;
+  await sendMessageToProfile({
+    senderAccessToken: session1.accessToken,
+    recipientProfileId: acct2.userId,
+    body: seedMessage,
+    clientMessageId: `consent-toggle-${stamp}`,
+  });
+
+  // Rubrica pulita; allow list acct1→acct2 resta (profilo già consentito).
+  const sql =
+    `DELETE FROM public.contacts ` +
+    `WHERE owner_id = '${acct1.userId}' AND linked_profile_id = '${acct2.userId}';`;
+  execSync(
+    `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
+    { stdio: 'pipe' },
+  );
+
+  expect(countAllowlistInDb(acct1.userId, acct2.userId)).toBe(1);
+  expect(countContactsInDb(acct1.userId, acct2.userId)).toBe(0);
+
+  return { acct1, acct2, session1, session2, seedMessage };
+}
+
 /**
  * Due utenti con conversazione già in inbox su acct1, poi rubrica/allow acct1→acct2
  * rimossi così le azioni UI devono ricreare le righe.
@@ -175,6 +236,8 @@ export async function openPeerProfileFromChatHeader(page: Page): Promise<void> {
 
 export async function expectNoRelationshipError(page: Page): Promise<void> {
   await expect(
-    page.getByText(/PostgrestException|42501|Sessione non disponibile/i),
-  ).not.toBeVisible({ timeout: 2_000 });
+    page.getByText(
+      /PostgrestException|42501|23505|duplicate key|Sessione non disponibile/i,
+    ),
+  ).not.toBeVisible({ timeout: 3_000 });
 }
