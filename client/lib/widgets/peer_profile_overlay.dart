@@ -142,6 +142,17 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     );
   }
 
+  void _patchActivePeerRelationship(PeerRelationship relationship) {
+    try {
+      final auth = context.read<AuthController>();
+      final peer = auth.activePeer;
+      if (peer?.profileId != _profile.id) return;
+      auth.patchActivePeer(peer!.withRelationship(relationship));
+    } on ProviderNotFoundException {
+      // Profilo aperto fuori da una chat attiva.
+    }
+  }
+
   Future<void> _setAllowed(bool value) async {
     if (_allowBusy) return;
 
@@ -154,6 +165,12 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
         value: value,
         peerFlags: _peerFlags(context),
       );
+      if (mounted) {
+        _patchActivePeerRelationship(
+          _relationshipFor(context).copyWith(isAllowed: value),
+        );
+        setState(() {});
+      }
     } catch (e) {
       if (mounted) PeerRelationshipActions.showError(context, e);
     } finally {
@@ -173,6 +190,12 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
         inRubrica: inRubrica,
         peerFlags: _peerFlags(context),
       );
+      if (mounted) {
+        _patchActivePeerRelationship(
+          _relationshipFor(context).copyWith(inContacts: !inRubrica),
+        );
+        setState(() {});
+      }
     } catch (e) {
       if (mounted) PeerRelationshipActions.showError(context, e);
     } finally {
