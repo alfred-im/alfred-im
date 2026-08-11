@@ -183,16 +183,13 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
   @override
   Widget build(BuildContext context) {
     final profile = _profile;
-    context.watch<ReceptionAllowlistController?>();
-    context.watch<ContactsController?>();
+    final allowlist = context.watch<ReceptionAllowlistController?>();
+    final contacts = context.watch<ContactsController?>();
 
-    final isAllowed = PeerRelationshipActions.controllersSettled(context)
-        ? PeerRelationshipActions.isAllowed(context, profile.id)
-        : false;
-    final inRubrica = PeerRelationshipActions.controllersSettled(context)
-        ? PeerRelationshipActions.isInContacts(context, profile.id)
-        : false;
-    final actionsEnabled = PeerRelationshipActions.controllersReady(context);
+    final isAllowed =
+        allowlist?.allowedProfileIds.contains(profile.id) ?? false;
+    final inRubrica = contacts?.contactForProfileId(profile.id) != null;
+    final actionsEnabled = allowlist != null && contacts != null;
 
     return Material(
       color: AlfredColors.surface,
