@@ -44,6 +44,10 @@ backend out of the box.
   `.github/workflows/deploy-client.yml`; Fly via its own deploy-on-push). Do **not** `flyctl deploy` or write to the
   live Supabase from this dev VM without explicit user confirmation — that is their review surface, not a dev target.
 
+### Merge e CI
+
+Se l'utente chiede di fare merge («fai merge», «merge completa», «merge e pulisci», ecc.): **non attendere** GitHub Actions (`gh run watch`, `gh pr checks` in loop, polling finché verde). Merge e pulizia **subito** se la PR è mergeable — vedi `.cursor-rules.md` § Build → «Merge su main». Gate obbligatorio prima del push = locale `verify_ok`; CI post-merge è informativa.
+
 ### Lint / test / build
 
 **SSOT:** [docs/testing/strategy.md](docs/testing/strategy.md) (gate vs release) · [client/scripts/test/README.md](client/scripts/test/README.md) (catalogo comandi).
