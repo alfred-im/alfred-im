@@ -122,34 +122,18 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     return _profile;
   }
 
-  PeerRelationship? _peerFlags(BuildContext context) {
-    final AuthController auth;
-    try {
-      auth = context.read<AuthController>();
-    } on ProviderNotFoundException {
-      return null;
-    }
-    final peer = auth.activePeer;
-    if (peer?.profileId != _profile.id) return null;
-    return peer?.relationship;
-  }
-
   PeerRelationship _relationshipFor(BuildContext context) {
     return PeerRelationshipActions.relationshipForPeer(
       context,
       profileId: _profile.id,
-      peerFlags: _peerFlags(context),
     );
   }
 
-  void _patchActivePeerRelationship(PeerRelationship relationship) {
+  void _watchAuthIfPresent(BuildContext context) {
     try {
-      final auth = context.read<AuthController>();
-      final peer = auth.activePeer;
-      if (peer?.profileId != _profile.id) return;
-      auth.patchActivePeer(peer!.withRelationship(relationship));
+      context.watch<AuthController>();
     } on ProviderNotFoundException {
-      // Profilo aperto fuori da una chat attiva.
+      // Harness test senza AuthController.
     }
   }
 
@@ -163,14 +147,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
         profileId: _profile.id,
         profile: _profile,
         value: value,
-        peerFlags: _peerFlags(context),
       );
-      if (mounted) {
-        _patchActivePeerRelationship(
-          _relationshipFor(context).copyWith(isAllowed: value),
-        );
-        setState(() {});
-      }
     } catch (e) {
       if (mounted) PeerRelationshipActions.showError(context, e);
     } finally {
@@ -188,14 +165,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
         profileId: widget.profile.id,
         profile: _profile,
         inRubrica: inRubrica,
-        peerFlags: _peerFlags(context),
       );
-      if (mounted) {
-        _patchActivePeerRelationship(
-          _relationshipFor(context).copyWith(inContacts: !inRubrica),
-        );
-        setState(() {});
-      }
     } catch (e) {
       if (mounted) PeerRelationshipActions.showError(context, e);
     } finally {
@@ -229,6 +199,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
   @override
   Widget build(BuildContext context) {
     final profile = _profile;
+    _watchAuthIfPresent(context);
     context.watch<ReceptionAllowlistController?>();
     context.watch<ContactsController?>();
 

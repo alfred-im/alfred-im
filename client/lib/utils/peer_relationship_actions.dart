@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/peer_relationship.dart';
 import '../models/profile_summary.dart';
+import '../providers/auth_controller.dart';
 import '../providers/contacts_controller.dart';
 import '../providers/reception_allowlist_controller.dart';
 
@@ -43,18 +44,63 @@ class PeerRelationshipActions {
         false;
   }
 
-  /// Controller in RAM **oppure** flag inbox sul peer — evita label/insert falsi.
+  /// Flag inbox sul peer in chat aperta, se coincide con [profileId].
+  static PeerRelationship? peerFlagsForProfile(
+    BuildContext context,
+    String profileId,
+  ) {
+    try {
+      final peer = context.read<AuthController>().activePeer;
+      if (peer?.profileId != profileId) return null;
+      return peer?.relationship;
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
+  /// Solo controller — verità dopo mutazione e reload.
+  static PeerRelationship relationshipFromControllers(
+    BuildContext context, {
+    required String profileId,
+  }) {
+    return PeerRelationship(
+      inContacts: isInContacts(context, profileId),
+      isAllowed: isAllowed(context, profileId),
+    );
+  }
+
+  /// Lettura UI: controller **oppure** flag sul peer attivo (cache vuota dopo switch).
   static PeerRelationship relationshipForPeer(
     BuildContext context, {
     required String profileId,
     PeerRelationship? peerFlags,
   }) {
+    final flags = peerFlags ?? peerFlagsForProfile(context, profileId);
     return PeerRelationship(
       inContacts: isInContacts(context, profileId) ||
-          (peerFlags?.inContacts ?? false),
+          (flags?.inContacts ?? false),
       isAllowed:
-          isAllowed(context, profileId) || (peerFlags?.isAllowed ?? false),
+          isAllowed(context, profileId) || (flags?.isAllowed ?? false),
     );
+  }
+
+  /// Dopo ogni mutazione: allinea [AuthController.activePeer] ai controller.
+  static void syncActivePeerRelationship(
+    BuildContext context, {
+    required String profileId,
+  }) {
+    try {
+      final auth = context.read<AuthController>();
+      final peer = auth.activePeer;
+      if (peer?.profileId != profileId) return;
+      auth.patchActivePeer(
+        peer!.withRelationship(
+          relationshipFromControllers(context, profileId: profileId),
+        ),
+      );
+    } on ProviderNotFoundException {
+      // Profilo aperto senza AuthController (test / contesto isolato).
+    }
   }
 
   static bool _isDuplicateKey(Object error) {
@@ -94,21 +140,24 @@ class PeerRelationshipActions {
 
     await contacts.ensureLoaded();
     if (!context.mounted) return;
+
     if (inRubrica) {
       await contacts.removeInternalByProfileId(profileId);
-      return;
+    } else {
+      final relationship = relationshipForPeer(
+        context,
+        profileId: profileId,
+        peerFlags: peerFlags,
+      );
+      await _addIdempotent(
+        alreadyPresent: relationship.inContacts,
+        add: () => contacts.addInternal(profile),
+        reload: contacts.load,
+      );
     }
 
-    final relationship = relationshipForPeer(
-      context,
-      profileId: profileId,
-      peerFlags: peerFlags,
-    );
-    await _addIdempotent(
-      alreadyPresent: relationship.inContacts,
-      add: () => contacts.addInternal(profile),
-      reload: contacts.load,
-    );
+    if (!context.mounted) return;
+    syncActivePeerRelationship(context, profileId: profileId);
   }
 
   static Future<void> setAllowed({
@@ -123,21 +172,24 @@ class PeerRelationshipActions {
 
     await allowlist.ensureLoaded();
     if (!context.mounted) return;
+
     if (!value) {
       await allowlist.removeByProfileId(profileId);
-      return;
+    } else {
+      final relationship = relationshipForPeer(
+        context,
+        profileId: profileId,
+        peerFlags: peerFlags,
+      );
+      await _addIdempotent(
+        alreadyPresent: relationship.isAllowed,
+        add: () => allowlist.addProfile(profile),
+        reload: allowlist.load,
+      );
     }
 
-    final relationship = relationshipForPeer(
-      context,
-      profileId: profileId,
-      peerFlags: peerFlags,
-    );
-    await _addIdempotent(
-      alreadyPresent: relationship.isAllowed,
-      add: () => allowlist.addProfile(profile),
-      reload: allowlist.load,
-    );
+    if (!context.mounted) return;
+    syncActivePeerRelationship(context, profileId: profileId);
   }
 
   static void showError(BuildContext context, Object error) {

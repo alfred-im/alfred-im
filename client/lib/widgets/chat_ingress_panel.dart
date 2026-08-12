@@ -160,15 +160,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
     return PeerRelationshipActions.relationshipForPeer(
       context,
       profileId: peer.profileId,
-      peerFlags: peer.relationship,
     );
-  }
-
-  void _patchPeerRelationship(
-    AuthController auth,
-    PeerRelationship relationship,
-  ) {
-    auth.patchActivePeer(_resolvedPeer(auth).withRelationship(relationship));
   }
 
   Future<void> _toggleRubrica({
@@ -185,14 +177,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
         profileId: peer.profileId,
         profile: peer.profile,
         inRubrica: inRubrica,
-        peerFlags: peer.relationship,
       );
-      if (mounted) {
-        _patchPeerRelationship(
-          auth,
-          _relationshipFor(peer).copyWith(inContacts: !inRubrica),
-        );
-      }
     } catch (e) {
       if (mounted) PeerRelationshipActions.showError(context, e);
     } finally {
@@ -211,14 +196,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
         profileId: peer.profileId,
         profile: peer.profile,
         value: value,
-        peerFlags: peer.relationship,
       );
-      if (mounted) {
-        _patchPeerRelationship(
-          auth,
-          _relationshipFor(peer).copyWith(isAllowed: value),
-        );
-      }
     } catch (e) {
       if (mounted) PeerRelationshipActions.showError(context, e);
     } finally {
