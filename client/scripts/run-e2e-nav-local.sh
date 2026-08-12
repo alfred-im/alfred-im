@@ -47,7 +47,7 @@ npx playwright test \
   e2e/account-switch-restore.spec.ts \
   e2e/peer-relationship-actions.spec.ts \
   e2e/peer-relationship-consent-toggle.spec.ts \
-  e2e/peer-profile-rubrica-repro.spec.ts \
+  e2e/peer-profile-rubrica.spec.ts \
   e2e/push-tap-multi-account.spec.ts \
   e2e/manual-push-poison-repro.spec.ts \
   --workers=1 \

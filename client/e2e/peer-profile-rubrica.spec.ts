@@ -2,13 +2,21 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-/** Repro: profilo mostra «Aggiungi alla rubrica», tap → label deve cambiare. */
+/**
+ * E2E UX — rubrica da overlay profilo (tap «Aggiungi» → pulsante aggiornato).
+ *
+ * Cattura il bug telefono: profilo mostra «Aggiungi alla rubrica», tap,
+ * nessun PostgrestException, label diventa «Rimuovi dalla rubrica».
+ *
+ * Gate: `bash scripts/test.sh e2e-nav-local`
+ */
 import { test, expect } from '@playwright/test';
 
 import { enableFlutterAccessibility } from './helpers/flutter-a11y';
 import { isLocalSupabaseStack } from './helpers/local-auth';
 import { setupTwoLocalAccounts } from './helpers/local-multi-account';
 import {
+  expectContactAbsentInDb,
   expectContactInDb,
   expectNoRelationshipError,
   openPeerProfileFromChatHeader,
@@ -29,7 +37,7 @@ test.beforeAll(() => {
   test.skip(!isLocalSupabaseStack(), 'richiede stack locale');
 });
 
-test('overlay profilo: Aggiungi alla rubrica aggiorna il pulsante', async ({
+test('overlay da chat: Aggiungi alla rubrica aggiorna il pulsante', async ({
   page,
 }) => {
   const stamp = Date.now();
@@ -75,7 +83,7 @@ test('overlay profilo: Aggiungi alla rubrica aggiorna il pulsante', async ({
   await expect(addButton).not.toBeVisible({ timeout: 2_000 });
 });
 
-test('overlay profilo: Aggiungi con riga già in DB (stale UI) aggiorna pulsante', async ({
+test('overlay da chat dopo switch: ciclo Rimuovi → Aggiungi', async ({
   page,
 }) => {
   const stamp = Date.now();
@@ -112,33 +120,30 @@ test('overlay profilo: Aggiungi con riga già in DB (stale UI) aggiorna pulsante
 
   await openPeerProfileFromChatHeader(page);
 
-  const addButton = page.getByRole('button', {
-    name: 'Aggiungi alla rubrica',
-    exact: true,
-  });
   const removeButton = page.getByRole('button', {
     name: 'Rimuovi dalla rubrica',
     exact: true,
   });
+  await expect(removeButton).toBeVisible({ timeout: E2E_TIMEOUT.ui });
 
-  if (await removeButton.isVisible().catch(() => false)) {
-    test.info().annotations.push({
-      type: 'note',
-      description: 'UI corretta (Rimuovi) — skip tap Aggiungi',
-    });
-    return;
-  }
+  await removeButton.click();
+  await page.waitForTimeout(800);
+  await expectNoRelationshipError(page);
+  await expectContactAbsentInDb(acct1.userId, acct2.userId);
 
+  const addButton = page.getByRole('button', {
+    name: 'Aggiungi alla rubrica',
+    exact: true,
+  });
   await expect(addButton).toBeVisible({ timeout: E2E_TIMEOUT.ui });
   await addButton.click();
   await page.waitForTimeout(800);
   await expectNoRelationshipError(page);
-
+  await expectContactInDb(acct1.userId, acct2.userId);
   await expect(removeButton).toBeVisible({ timeout: E2E_TIMEOUT.ui });
-  await expect(addButton).not.toBeVisible({ timeout: 2_000 });
 });
 
-test('overlay profilo da inbox (senza chat): Aggiungi aggiorna pulsante', async ({
+test('overlay da inbox (senza chat): Aggiungi aggiorna pulsante', async ({
   page,
 }) => {
   const stamp = Date.now();
