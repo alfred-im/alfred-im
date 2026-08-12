@@ -165,6 +165,18 @@ class NavigationCoordinator {
     _notifyStateChanged();
   }
 
+  void mergeActivePeerFromInbox(ChatPeer inboxRow) {
+    adapters.mergeActivePeerFromInbox(inboxRow);
+    _notifyStateChanged();
+  }
+
+  void patchActivePeer(ChatPeer peer) {
+    final userId = _manager.focusUserId;
+    if (userId == null) return;
+    _effects.patchActivePeer(userId, peer);
+    _notifyStateChanged();
+  }
+
   @visibleForTesting
   Future<ChatPeer?> resolvePeerInInboxForTest({
     required AccountSession session,

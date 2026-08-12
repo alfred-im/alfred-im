@@ -81,6 +81,11 @@ class AccountViewStateStore {
     apply(userId, (view) => view.mergeActivePeer(inboxRow));
   }
 
+  void patchActivePeer(String accountUserId, ChatPeer peer) {
+    if (!_manager.hasOpenAccount(accountUserId)) return;
+    apply(accountUserId, (view) => view.patchActivePeer(peer));
+  }
+
   /// Dopo cambio account: shell inbox (o home gruppo), senza commettere scope chat.
   void resetShellToAccountHome() {
     final userId = _manager.focusUserId;

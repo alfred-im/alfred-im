@@ -9,11 +9,13 @@ import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
 import '../models/message.dart';
+import '../models/peer_relationship.dart';
 import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
 import '../providers/contacts_controller.dart';
 import '../providers/reception_allowlist_controller.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/peer_relationship_actions.dart';
 import '../utils/shareable_link.dart';
 import 'profile_cover_header.dart';
 
@@ -90,7 +92,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     if (_hydrateStarted) return;
     _hydrateStarted = true;
     unawaited(_hydrateProfileFromServer());
-    context.read<ReceptionAllowlistController?>()?.ensureLoaded();
+    unawaited(PeerRelationshipActions.prime(context));
   }
 
   Future<void> _hydrateProfileFromServer() async {
@@ -120,45 +122,52 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     return _profile;
   }
 
+  PeerRelationship _relationshipFor(BuildContext context) {
+    return PeerRelationshipActions.relationshipForPeer(
+      context,
+      profileId: _profile.id,
+    );
+  }
+
+  void _watchAuthIfPresent(BuildContext context) {
+    try {
+      context.watch<AuthController>();
+    } on ProviderNotFoundException {
+      // Harness test senza AuthController.
+    }
+  }
+
   Future<void> _setAllowed(bool value) async {
-    final allowlist = context.read<ReceptionAllowlistController?>();
-    if (allowlist == null || _allowBusy) return;
+    if (_allowBusy) return;
 
     setState(() => _allowBusy = true);
     try {
-      if (value) {
-        await allowlist.addProfile(_profile);
-      } else {
-        await allowlist.removeByProfileId(_profile.id);
-      }
+      await PeerRelationshipActions.setAllowed(
+        context: context,
+        profileId: _profile.id,
+        profile: _profile,
+        value: value,
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
+      if (mounted) PeerRelationshipActions.showError(context, e);
     } finally {
       if (mounted) setState(() => _allowBusy = false);
     }
   }
 
   Future<void> _toggleRubrica({required bool inRubrica}) async {
-    final contacts = context.read<ContactsController?>();
-    if (contacts == null || _rubricaBusy) return;
+    if (_rubricaBusy) return;
 
     setState(() => _rubricaBusy = true);
     try {
-      if (inRubrica) {
-        await contacts.removeInternalByProfileId(widget.profile.id);
-      } else {
-        await contacts.addInternal(_profile);
-      }
+      await PeerRelationshipActions.toggleRubrica(
+        context: context,
+        profileId: widget.profile.id,
+        profile: _profile,
+        inRubrica: inRubrica,
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
+      if (mounted) PeerRelationshipActions.showError(context, e);
     } finally {
       if (mounted) setState(() => _rubricaBusy = false);
     }
@@ -190,13 +199,14 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
   @override
   Widget build(BuildContext context) {
     final profile = _profile;
-    final allowlist = context.watch<ReceptionAllowlistController?>();
-    final contacts = context.watch<ContactsController?>();
+    _watchAuthIfPresent(context);
+    context.watch<ReceptionAllowlistController?>();
+    context.watch<ContactsController?>();
 
-    final isAllowed =
-        allowlist?.allowedProfileIds.contains(profile.id) ?? false;
-    final inRubrica = contacts?.contactForProfileId(profile.id) != null;
-    final actionsEnabled = allowlist != null && contacts != null;
+    final relationship = _relationshipFor(context);
+    final isAllowed = relationship.isAllowed;
+    final inRubrica = relationship.inContacts;
+    final actionsEnabled = PeerRelationshipActions.controllersReady(context);
 
     return Material(
       color: AlfredColors.surface,

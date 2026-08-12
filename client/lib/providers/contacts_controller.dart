@@ -13,6 +13,7 @@ import '../services/contact_service.dart';
 class ContactsController extends ChangeNotifier {
   ContactsController({
     required this.ownerId,
+    this.sessionEpoch = 0,
     required ContactService contactService,
   }) {
     _coordinator = ContactsCoordinator(
@@ -23,7 +24,12 @@ class ContactsController extends ChangeNotifier {
   }
 
   final String ownerId;
+
+  /// Allineato a [AccountSession.epoch] — invalida il controller su restore sessione.
+  final int sessionEpoch;
+
   late final ContactsCoordinator _coordinator;
+  Future<void>? _loadFuture;
 
   List<Contact> get contacts => _coordinator.state.contacts;
 
@@ -39,6 +45,9 @@ class ContactsController extends ChangeNotifier {
   void setSearchQuery(String value) => _coordinator.setSearchQuery(value);
 
   Future<void> load() => _coordinator.load();
+
+  /// Carica rubrica on-demand (chat, overlay profilo, schermata rubrica).
+  Future<void> ensureLoaded() => _loadFuture ??= load();
 
   Future<List<ProfileSummary>> searchProfiles(String query) =>
       _coordinator.searchProfiles(query);

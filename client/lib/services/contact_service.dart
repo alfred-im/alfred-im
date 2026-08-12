@@ -14,6 +14,14 @@ class ContactService {
   final SupabaseClient _client;
   final ProfileSearchService _profileSearch;
 
+  String get _authOwnerId {
+    final id = _client.auth.currentUser?.id;
+    if (id == null || id.isEmpty) {
+      throw const AuthException('Sessione non disponibile.');
+    }
+    return id;
+  }
+
   Future<List<Contact>> fetchContacts(String ownerId) async {
     final rows = await _client
         .from('contacts')
@@ -35,7 +43,7 @@ class ContactService {
     final row = await _client
         .from('contacts')
         .insert({
-          'owner_id': ownerId,
+          'owner_id': _authOwnerId,
           'protocol': 'internal',
           'linked_profile_id': profile.id,
           'display_name': profile.displayName,
@@ -56,7 +64,7 @@ class ContactService {
     final row = await _client
         .from('contacts')
         .insert({
-          'owner_id': ownerId,
+          'owner_id': _authOwnerId,
           'protocol': protocol.name,
           'external_address': externalAddress,
           'display_name': displayName,

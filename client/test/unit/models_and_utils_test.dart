@@ -185,6 +185,8 @@ void main() {
         'peer_cover_url': 'https://example.com/c.jpg',
         'peer_pronouns': 'lei/ella',
         'peer_profile_kind': 'group',
+        'peer_in_contacts': true,
+        'peer_is_allowed': true,
       });
 
       expect(peer.profileId, 'peer-1');
@@ -197,6 +199,21 @@ void main() {
       expect(peer.profile.coverUrl, 'https://example.com/c.jpg');
       expect(peer.profile.pronouns, 'lei/ella');
       expect(peer.isGroup, isTrue);
+      expect(peer.peerInContacts, isTrue);
+      expect(peer.peerIsAllowed, isTrue);
+    });
+
+    test('without relationship flags relationship is null', () {
+      final peer = ChatPeer.fromInboxRow({
+        'protocol': 'internal',
+        'display_name': 'Alice',
+        'peer_profile_id': 'peer-1',
+        'last_message_preview': 'Ciao!',
+        'unread_count': 0,
+      });
+
+      expect(peer.relationship, isNull);
+      expect(peer.hasRelationship, isFalse);
     });
   });
 

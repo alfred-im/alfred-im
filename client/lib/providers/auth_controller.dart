@@ -300,6 +300,11 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void patchActivePeer(ChatPeer peer) {
+    _navigationAccess.patchActivePeer(peer);
+    notifyListeners();
+  }
+
   Future<void> signIn(String email, String password) =>
       _sessionCoordinator.signIn(email, password);
 

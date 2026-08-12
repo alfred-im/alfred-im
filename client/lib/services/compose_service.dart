@@ -21,15 +21,12 @@ class ComposeService {
       case ComposeAddressKind.externalServer:
         throw StateError('Indirizzo esterno non ancora supportato');
       case ComposeAddressKind.internalUsername:
-        final profile =
-            await profileService.findByUsername(parsed.normalized);
-        if (profile == null) {
+        final peer =
+            await profileService.findPeerByUsername(parsed.normalized);
+        if (peer == null) {
           throw StateError('Utente non trovato');
         }
-        return ChatPeer.fromProfile(
-          profile: profile,
-          address: profile.username,
-        );
+        return peer;
     }
   }
 

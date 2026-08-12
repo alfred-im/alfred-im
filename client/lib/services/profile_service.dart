@@ -4,6 +4,7 @@
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/chat_peer.dart';
 import '../models/profile.dart';
 import '../models/profile_summary.dart';
 
@@ -48,6 +49,11 @@ class ProfileService {
   }
 
   Future<ProfileSummary?> findByUsername(String username) async {
+    final peer = await findPeerByUsername(username);
+    return peer?.profile;
+  }
+
+  Future<ChatPeer?> findPeerByUsername(String username) async {
     final normalized = username.trim().toLowerCase();
     if (normalized.length < 3) return null;
 
@@ -59,9 +65,23 @@ class ProfileService {
     if (row == null) return null;
     if (row is List) {
       if (row.isEmpty) return null;
-      return ProfileSummary.fromProfilesRow(row.first as Map<String, dynamic>);
+      return ChatPeer.fromPeerContextRow(row.first as Map<String, dynamic>);
     }
-    return ProfileSummary.fromProfilesRow(row as Map<String, dynamic>);
+    return ChatPeer.fromPeerContextRow(row as Map<String, dynamic>);
+  }
+
+  Future<ChatPeer?> getPeerContext(String profileId) async {
+    final row = await _client.rpc(
+      'get_peer_context',
+      params: {'p_peer_profile_id': profileId},
+    );
+
+    if (row == null) return null;
+    if (row is List) {
+      if (row.isEmpty) return null;
+      return ChatPeer.fromPeerContextRow(row.first as Map<String, dynamic>);
+    }
+    return ChatPeer.fromPeerContextRow(row as Map<String, dynamic>);
   }
 
   Future<List<ProfileSummary>> fetchSummariesByIds(List<String> ids) async {

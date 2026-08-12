@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
+import '../providers/auth_controller.dart';
 import '../providers/messages_controller.dart';
 import '../providers/reception_allowlist_controller.dart';
 import '../utils/auth_controller_scope.dart';
@@ -40,13 +41,12 @@ class ChatPanel extends StatefulWidget {
 }
 
 class _ChatPanelState extends State<ChatPanel> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      context.read<ReceptionAllowlistController?>()?.ensureLoaded();
-    });
+  ChatPeer _resolvedPeer(AuthController? auth) {
+    final active = auth?.activePeer;
+    if (active != null && active.profileId == widget.peer.profileId) {
+      return active;
+    }
+    return widget.peer;
   }
 
   @override
@@ -54,17 +54,20 @@ class _ChatPanelState extends State<ChatPanel> {
     final messagesController = context.watch<MessagesController>();
     final auth = watchAuthControllerOrNull(context);
     final allowlist = context.watch<ReceptionAllowlistController?>();
+    final peer = _resolvedPeer(auth);
     final messages = messagesController.messages;
-    final canCompose = allowlist != null &&
-        !allowlist.isLoading &&
-        allowlist.isProfileAllowed(widget.peer.profileId);
+    final canCompose = peer.hasRelationship
+        ? peer.peerIsAllowed
+        : allowlist != null &&
+            !allowlist.isLoading &&
+            allowlist.isProfileAllowed(peer.profileId);
 
     return ColoredBox(
       color: AlfredColors.surface,
       child: Column(
         children: [
           ChatPanelHeader(
-            peer: widget.peer,
+            peer: peer,
             showBackButton: widget.showBackButton,
             onBack: widget.onBack,
           ),

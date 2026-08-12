@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'package:alfred_client/models/chat_peer.dart';
+import 'package:alfred_client/models/peer_relationship.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
@@ -61,6 +62,19 @@ class _HarnessProfileService extends ProfileService {
 
   @override
   Future<ProfileSummary?> findById(String id) async => _peers[id];
+
+  @override
+  Future<ChatPeer?> getPeerContext(String profileId) async {
+    final summary = _peers[profileId];
+    if (summary == null) return null;
+    return ChatPeer.fromProfile(
+      profile: summary,
+      relationship: const PeerRelationship(
+        inContacts: false,
+        isAllowed: false,
+      ),
+    );
+  }
 }
 
 class OpenConversationStaleFixture {

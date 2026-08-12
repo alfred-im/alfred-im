@@ -77,12 +77,17 @@ class ProfileAvatar extends StatelessWidget {
 
     if (onTap == null) return avatar;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: CircleBorder(),
-        child: avatar,
+    return Semantics(
+      label: 'Apri profilo',
+      button: true,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: avatar,
+        ),
       ),
     );
   }
