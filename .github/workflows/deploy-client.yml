@@ -41,63 +41,10 @@ jobs:
         run: flutter pub get
         working-directory: client
 
-      - name: Write deploy config (config.json + manifest.json)
-        env:
-          DEPLOY_SUPABASE_URL: ${{ secrets.DEPLOY_SUPABASE_URL }}
-          DEPLOY_SUPABASE_ANON_KEY: ${{ secrets.DEPLOY_SUPABASE_ANON_KEY }}
-          DEPLOY_PUBLIC_BASE_URL: ${{ secrets.DEPLOY_PUBLIC_BASE_URL }}
-          DEPLOY_INSTANCE_NAME: ${{ secrets.DEPLOY_INSTANCE_NAME }}
+      - name: Copy instance deploy config (GitHub Pages)
         run: |
-          if [[ -z "$DEPLOY_SUPABASE_URL" || -z "$DEPLOY_SUPABASE_ANON_KEY" ]]; then
-            echo "DEPLOY_SUPABASE_URL e DEPLOY_SUPABASE_ANON_KEY devono essere configurati nei secrets del repository." >&2
-            exit 1
-          fi
-          export public_base="${DEPLOY_PUBLIC_BASE_URL:-https://alfred-im.github.io/alfred-im/}"
-          export instance_name="${DEPLOY_INSTANCE_NAME:-Messaging}"
-          python3 - <<'PY'
-          import json, os
-          public_base = os.environ["public_base"]
-          if not public_base.endswith("/"):
-              public_base += "/"
-          config = {
-              "supabaseUrl": os.environ["DEPLOY_SUPABASE_URL"],
-              "supabaseAnonKey": os.environ["DEPLOY_SUPABASE_ANON_KEY"],
-              "publicBaseUrl": public_base,
-          }
-          with open("client/web/config.json", "w", encoding="utf-8") as f:
-              json.dump(config, f, indent=2)
-              f.write("\n")
-          manifest = {
-              "name": os.environ["instance_name"],
-              "short_name": os.environ["instance_name"],
-              "start_url": ".",
-              "display": "standalone",
-              "background_color": "#2D2926",
-              "theme_color": "#2D2926",
-              "description": "Messaggistica consent-first",
-              "orientation": "any",
-              "prefer_related_applications": False,
-              "icons": [
-                  {"src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png"},
-                  {"src": "icons/Icon-512.png", "sizes": "512x512", "type": "image/png"},
-                  {
-                      "src": "icons/Icon-maskable-192.png",
-                      "sizes": "192x192",
-                      "type": "image/png",
-                      "purpose": "maskable",
-                  },
-                  {
-                      "src": "icons/Icon-maskable-512.png",
-                      "sizes": "512x512",
-                      "type": "image/png",
-                      "purpose": "maskable",
-                  },
-              ],
-          }
-          with open("client/web/manifest.json", "w", encoding="utf-8") as f:
-              json.dump(manifest, f, indent=4)
-              f.write("\n")
-          PY
+          cp client/deploy/github-pages/config.json client/web/config.json
+          cp client/deploy/github-pages/manifest.json client/web/manifest.json
 
       - name: Build Flutter web (GitHub Pages base path)
         run: flutter build web --release --base-href "/alfred-im/" --no-pub --no-wasm-dry-run
