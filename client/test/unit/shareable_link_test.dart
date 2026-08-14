@@ -6,8 +6,12 @@ import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/utils/shareable_link.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../support/instance_test_runtime.dart';
+
 // spec: PROM-SHAREABLE-LINK-001, 002, 030
 void main() {
+  setUp(() => installTestDeployAndInstance());
+  tearDown(resetTestDeployAndInstance);
   group('parseShareableFragment', () {
     test('profile with bare username', () {
       final target = parseShareableFragment('test2');

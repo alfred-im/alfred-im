@@ -2,5 +2,8 @@
 client/node_modules/
 client/test-results/
 
+# Deploy-time instance wiring (locale — vedi config.json.example)
+client/web/config.json
+
 # Python venv per i bridge (dev locale)
 .venv/
