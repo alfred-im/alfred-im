@@ -7,8 +7,10 @@ import 'package:provider/provider.dart';
 
 import '../models/profile_summary.dart';
 import '../providers/auth_controller.dart';
+import '../runtime/instance_runtime.dart';
 import '../theme/alfred_colors.dart';
-import '../widgets/alfred_logo.dart';
+import '../widgets/instance_brand_mark.dart';
+import '../widgets/instance_legal_footer.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({
@@ -117,6 +119,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
+    final serviceName = InstanceRuntime.require.displayName;
 
     return Card(
       elevation: 8,
@@ -129,14 +132,14 @@ class _AuthScreenState extends State<AuthScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const AlfredLogo(size: 56),
+            InstanceBrandMark(size: 56),
             const SizedBox(height: 16),
             Text(
               widget.addingAccount
-                  ? 'Aggiungi account Alfred'
+                  ? 'Aggiungi account'
                   : _isSignUp
-                      ? 'Crea account Alfred'
-                      : 'Accedi ad Alfred',
+                      ? 'Crea account su $serviceName'
+                      : 'Accedi a $serviceName',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -251,6 +254,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 onPressed: widget.onCancel,
                 child: const Text('Annulla'),
               ),
+            const InstanceLegalFooter(),
           ],
         ),
       ),

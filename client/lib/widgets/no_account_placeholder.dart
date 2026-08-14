@@ -4,14 +4,17 @@
 
 import 'package:flutter/material.dart';
 
+import '../runtime/instance_runtime.dart';
 import '../theme/alfred_colors.dart';
-import 'alfred_logo.dart';
+import 'instance_brand_mark.dart';
 
 class NoAccountPlaceholder extends StatelessWidget {
   const NoAccountPlaceholder({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final serviceName = InstanceRuntime.require.displayName;
+
     return ColoredBox(
       color: AlfredColors.surface,
       child: Center(
@@ -20,7 +23,7 @@ class NoAccountPlaceholder extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const AlfredLogo(size: 48),
+              const InstanceBrandMark(size: 48),
               const SizedBox(height: 16),
               Text(
                 'Nessun account aperto',
@@ -30,7 +33,7 @@ class NoAccountPlaceholder extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Apri o crea un account Alfred per vedere le conversazioni.',
+                'Apri o crea un account su $serviceName per vedere le conversazioni.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AlfredColors.textSecondary,

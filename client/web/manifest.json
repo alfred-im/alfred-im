@@ -1,12 +1,12 @@
 {
-    "name": "Alfred",
-    "short_name": "Alfred",
+    "name": "Local",
+    "short_name": "Local",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#2D2926",
     "theme_color": "#2D2926",
-    "description": "Alfred — messaggistica istantanea",
-    "orientation": "portrait-primary",
+    "description": "Messaggistica consent-first — sviluppo locale",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

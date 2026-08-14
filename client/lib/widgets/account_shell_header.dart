@@ -19,6 +19,7 @@ class AccountShellHeader extends StatelessWidget {
     this.onBack,
     this.drawerProfile,
     this.onDrawerTap,
+    this.leading,
     this.actions = const [],
   });
 
@@ -30,6 +31,7 @@ class AccountShellHeader extends StatelessWidget {
   final VoidCallback? onBack;
   final ProfileSummary? drawerProfile;
   final VoidCallback? onDrawerTap;
+  final Widget? leading;
   final List<Widget> actions;
 
   @override
@@ -53,6 +55,7 @@ class AccountShellHeader extends StatelessWidget {
                 profile: drawerProfile!,
                 onTap: onDrawerTap!,
               ),
+            ?leading,
             Expanded(
               child: Text(
                 title,

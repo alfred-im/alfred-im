@@ -10,14 +10,18 @@ import '../providers/contacts_controller.dart';
 import '../providers/profile_controller.dart';
 import '../providers/reception_allowlist_controller.dart';
 import '../providers/shareable_link_controller.dart';
+import '../runtime/instance_runtime.dart';
+import '../screens/app_shell.dart';
+import '../screens/deploy_config_error_screen.dart';
 import '../services/account_session.dart';
 import '../services/supabase_bootstrap.dart';
-import 'screens/app_shell.dart';
-import 'theme/alfred_theme.dart';
+import '../theme/alfred_theme.dart';
 
 Future<void> main() async {
-  await bootstrapApp();
-  runApp(const AlfredApp());
+  await runAppWithDeployConfig(
+    bootstrapApp,
+    () => const AlfredApp(),
+  );
 }
 
 /// Rebuilds a session-scoped [ChangeNotifier] when focus changes.
@@ -45,6 +49,9 @@ class AlfredApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final runtime = InstanceRuntime.require;
+    final themeColor = _parseThemeColor(runtime.branding.themeColor);
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
@@ -85,11 +92,24 @@ class AlfredApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-        title: 'Alfred',
+        title: runtime.displayName,
         debugShowCheckedModeBanner: false,
-        theme: AlfredTheme.light,
+        theme: AlfredTheme.light.copyWith(
+          colorScheme: themeColor != null
+              ? AlfredTheme.light.colorScheme.copyWith(primary: themeColor)
+              : null,
+        ),
         home: const AppShell(),
       ),
     );
+  }
+
+  Color? _parseThemeColor(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    final normalized = raw.replaceFirst('#', '');
+    if (normalized.length != 6) return null;
+    final value = int.tryParse(normalized, radix: 16);
+    if (value == null) return null;
+    return Color(0xFF000000 | value);
   }
 }
