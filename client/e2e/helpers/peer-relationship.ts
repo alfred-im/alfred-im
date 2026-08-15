@@ -134,14 +134,14 @@ export async function prepareLocalPeerWithRubricaAndConsent(
   const session2 = await loginSupabase(acct2.email, acct2.password);
 
   await addReceptionAllowlist({
-    focusUserId: acct1.userId,
+    recipientUserId: acct1.userId,
     allowedProfileId: acct2.userId,
-    focusAccessToken: session1.accessToken,
+    recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
-    focusUserId: acct2.userId,
+    recipientUserId: acct2.userId,
     allowedProfileId: acct1.userId,
-    focusAccessToken: session2.accessToken,
+    recipientAccessToken: session2.accessToken,
   });
 
   insertContactInDb(acct1.userId, acct2.userId, `E2E ${label2}`);
@@ -188,14 +188,14 @@ export async function prepareLocalConsentedPeerPair(
   const session2 = await loginSupabase(acct2.email, acct2.password);
 
   await addReceptionAllowlist({
-    focusUserId: acct1.userId,
+    recipientUserId: acct1.userId,
     allowedProfileId: acct2.userId,
-    focusAccessToken: session1.accessToken,
+    recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
-    focusUserId: acct2.userId,
+    recipientUserId: acct2.userId,
     allowedProfileId: acct1.userId,
-    focusAccessToken: session2.accessToken,
+    recipientAccessToken: session2.accessToken,
   });
 
   const stamp = Date.now();
@@ -238,14 +238,14 @@ export async function prepareLocalPeerRelationshipPair(
   const session2 = await loginSupabase(acct2.email, acct2.password);
 
   await addReceptionAllowlist({
-    focusUserId: acct1.userId,
+    recipientUserId: acct1.userId,
     allowedProfileId: acct2.userId,
-    focusAccessToken: session1.accessToken,
+    recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
-    focusUserId: acct2.userId,
+    recipientUserId: acct2.userId,
     allowedProfileId: acct1.userId,
-    focusAccessToken: session2.accessToken,
+    recipientAccessToken: session2.accessToken,
   });
 
   const stamp = Date.now();
