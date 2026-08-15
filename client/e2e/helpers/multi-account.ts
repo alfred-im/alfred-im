@@ -11,17 +11,15 @@ import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
 export const BASE_URL =
   process.env.ALFRED_BASE_URL ?? 'http://localhost:8080/';
 
-/** Attende fine splash «Caricamento Alfred» prima di cercare UI. */
+/** Attende fine splash boot prima di cercare UI. */
 export async function waitForAppBoot(page: Page) {
+  const splash = page.locator('#alfred-boot-splash');
   await expect
     .poll(
       async () => {
         await enableFlutterAccessibility(page);
-        const loading = await page
-          .getByText('Caricamento Alfred')
-          .isVisible()
-          .catch(() => false);
-        return !loading;
+        const splashVisible = await splash.isVisible().catch(() => false);
+        return !splashVisible;
       },
       { timeout: E2E_TIMEOUT.boot * 4, intervals: [...E2E_POLL] },
     )
@@ -391,11 +389,11 @@ export async function waitForAccountShell(page: Page) {
     .poll(
       async () => {
         await enableFlutterAccessibility(page);
-        const loading = await page
-          .getByText('Caricamento Alfred')
+        const splashVisible = await page
+          .locator('#alfred-boot-splash')
           .isVisible()
           .catch(() => false);
-        if (loading) {
+        if (splashVisible) {
           return false;
         }
         if (await isDrawerOpen(page)) {

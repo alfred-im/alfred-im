@@ -24,7 +24,7 @@
 |--------|-------------|
 | `InboxVisible` | Inbox dell'account utente in focus visibile. |
 | `ConversationVisible` | Shell chat 1:1 visibile con peer noto (header + spinner in ingresso); **non** implica ancora `ConversationScope` commesso — vedi `ConversationScopeCommitted`. |
-| `ConversationScopeCommitted` | Ambito `(owner, peer, epoch)` registrato — messaging autorizzato. |
+| `ConversationScopeCommitted` | Ambito `(archive_user, peer, epoch)` registrato — messaging autorizzato. |
 | `ConversationScopeInvalidated` | Ambito azzerato — messaging non mostra dati fino a nuovo commit. |
 | `GroupHomeVisible` | Home gruppo visibile (`GroupShell`, `groupChatOpen = false`). |
 | `GroupConversationVisible` | Chat gruppo visibile (`GroupShell`, `groupChatOpen = true`). |

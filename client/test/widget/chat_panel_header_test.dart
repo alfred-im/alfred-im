@@ -35,11 +35,11 @@ void main() {
     final allowlistService = FakeReceptionAllowlistService();
     final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       allowlistService: allowlistService,
     );
     final contacts = ContactsController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       contactService: contactService,
     );
 
@@ -82,11 +82,11 @@ void main() {
     final allowlistService = FakeReceptionAllowlistService();
     final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       allowlistService: allowlistService,
     );
     final contacts = ContactsController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       contactService: contactService,
     );
 
@@ -135,11 +135,11 @@ void main() {
     final allowlistService = FakeReceptionAllowlistService();
     final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       allowlistService: allowlistService,
     );
     final contacts = ContactsController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       contactService: contactService,
     );
 

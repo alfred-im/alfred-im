@@ -13,7 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/fake_messaging_services.dart';
 
 bool contactsKeepPrevious(ContactsController previous, AccountSession session) {
-  return previous.ownerId == session.userId &&
+  return previous.focusUserId == session.userId &&
       previous.sessionEpoch == session.epoch;
 }
 
@@ -21,7 +21,7 @@ bool allowlistKeepPrevious(
   ReceptionAllowlistController previous,
   AccountSession session,
 ) {
-  return previous.ownerId == session.userId &&
+  return previous.focusUserId == session.userId &&
       previous.sessionEpoch == session.epoch;
 }
 
@@ -31,9 +31,9 @@ void main() {
     final client = createTestSupabaseClient();
     final sessionV1 = await AccountSession.createForTest(
       profile: const ProfileSummary(
-        id: 'owner-id',
-        username: 'owner',
-        displayName: 'Owner',
+        id: 'focus-id',
+        username: 'alice',
+        displayName: 'ArchiveUser',
       ),
       client: client,
     );
@@ -46,12 +46,12 @@ void main() {
     expect(sessionV1.epoch, isNot(sessionV2.epoch));
 
     final contacts = ContactsController(
-      ownerId: sessionV1.userId,
+      focusUserId: sessionV1.userId,
       sessionEpoch: sessionV1.epoch,
       contactService: ContactService(client),
     );
     final allowlist = ReceptionAllowlistController(
-      ownerId: sessionV1.userId,
+      focusUserId: sessionV1.userId,
       sessionEpoch: sessionV1.epoch,
       allowlistService: ReceptionAllowlistService(client),
     );

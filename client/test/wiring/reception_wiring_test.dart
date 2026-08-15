@@ -12,7 +12,7 @@ import '../support/fake_reception_allowlist_service.dart';
 /// Wiring: ReceptionAllowlistController → ReceptionCoordinator → _LiveReceptionEffects.
 void main() {
   group('reception wiring', () {
-    const ownerId = 'owner-1';
+    const focusUserId = 'focus-1';
     final alice = ProfileSummary(
       id: 'alice-id',
       username: 'alice',
@@ -22,7 +22,7 @@ void main() {
     test('load attraversa coordinator ed effects live', () async {
       final service = FakeReceptionAllowlistService();
       final controller = ReceptionAllowlistController(
-        ownerId: ownerId,
+        focusUserId: focusUserId,
         allowlistService: service,
       );
 
@@ -35,7 +35,7 @@ void main() {
     test('addProfile attraversa macchina e service', () async {
       final service = FakeReceptionAllowlistService();
       final controller = ReceptionAllowlistController(
-        ownerId: ownerId,
+        focusUserId: focusUserId,
         allowlistService: service,
       );
 

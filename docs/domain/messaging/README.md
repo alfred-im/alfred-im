@@ -69,4 +69,4 @@ Eventi statechart **solo interni** (non in dominio): `LoadFailed` (errore fetch 
 | `MessagesControllerEffects` | RPC, coda, media, realtime |
 | `ConversationMessageStore` | Unica mutazione lista DM |
 | `PeerMessageService` | Piattaforma mailbox peer + realtime 1:1 |
-| `GroupArchiveService` | Archivio owner gruppo + broadcast allowlist |
+| `GroupArchiveService` | Archivio archive_user gruppo + broadcast allowlist |

@@ -17,7 +17,7 @@ Binding UX home account `profile_kind = group`: riepilogo, persone più attive, 
 | Elemento | Valore |
 |----------|--------|
 | Widget | `client/lib/widgets/group_home_panel.dart` (nuovo) |
-| Controller | `GroupHomeController` (nuovo) — aggregazione su storico `list_owner_messages` |
+| Controller | `GroupHomeController` (nuovo) — aggregazione su storico `list_archive_messages` |
 | Parent | `client/lib/screens/home_screen.dart` — branch `profileKind == group` |
 | Riuso visivo | Guscio `InboxPanel` (`AlfredColors.panel`, header, divider); `InboxPeerTile` per riga conversazione; `ProfileAvatar` |
 | Navigazione chat | Tap riga conversazione → [SURF-GROUP-CONVERSATION](./SURF-GROUP-CONVERSATION.md) |
@@ -33,7 +33,7 @@ Binding UX home account `profile_kind = group`: riepilogo, persone più attive, 
 | **SURF-GROUP-HOME-001** | Account gruppo in focus: schermata **default** = home gruppo (non conversazione) — vedi [SURF-GROUP-SHELL](./SURF-GROUP-SHELL.md) |
 | **SURF-GROUP-HOME-002** | Guscio visivo **uniforme** a `InboxPanel`: stesso pannello (`AlfredColors.panel`), header con drawer su mobile (trigger = `ProfileAvatar` del gruppo, non hamburger — [SURF-INBOX](./SURF-INBOX.md) SURF-INBOX-012), divider, tipografia e spaziatura lista |
 | **SURF-GROUP-HOME-003** | Header home: titolo = **nome del gruppo** (`display_name`); entry profilo proprio e entry allow list **propria** (icone come inbox user per allow list) |
-| **SURF-GROUP-HOME-004** | Blocco riepilogo: data **nascita** gruppo da `profiles.created_at` (profilo completo account in focus); conteggio **totale messaggi** nello storico `owner_id = gruppo` |
+| **SURF-GROUP-HOME-004** | Blocco riepilogo: data **nascita** gruppo da `profiles.created_at` (profilo completo account in focus); conteggio **totale messaggi** nello storico `archive_user_id = gruppo` |
 | **SURF-GROUP-HOME-005** | Sezione **«Persone più attive»**: elenco autori che hanno scritto almeno un messaggio nello storico del gruppo, ordinati per **conteggio messaggi decrescente**; ogni riga: avatar, nome leggibile, numero messaggi |
 | **SURF-GROUP-HOME-006** | Autore per aggregazione: `original_author_id` (UI: `ChatMessage.contentAuthorId`); escludere messaggi il cui autore contenuto è l’id del **gruppo** stesso (broadcast tecnici) |
 | **SURF-GROUP-HOME-007** | **Una** riga conversazione in fondo all’area lista, stile `InboxPeerTile`: titolo = **nome del gruppo**; anteprima ultimo messaggio e etichetta tempo come inbox user ([SURF-CHAT](./SURF-CHAT.md) SURF-CHAT-008 per tipi media) |
@@ -65,7 +65,7 @@ Binding UX home account `profile_kind = group`: riepilogo, persone più attive, 
 | UI | Fonte |
 |----|--------|
 | Nome, avatar, nascita | Profilo proprio (`profiles` account gruppo) |
-| Totale messaggi, ultimo messaggio, tile anteprima | `list_owner_messages` / archivio `owner_id = gruppo` |
+| Totale messaggi, ultimo messaggio, tile anteprima | `list_archive_messages` / archivio `archive_user_id = gruppo` |
 | Persone più attive | Aggregazione client su `original_author_id` nello stesso archivio |
 | Allow list | Solo navigazione alla **propria** schermata allow list — non statistiche membership |
 

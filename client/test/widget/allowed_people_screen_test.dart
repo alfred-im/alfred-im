@@ -28,7 +28,7 @@ void main() {
       (tester) async {
     final service = FakeReceptionAllowlistService();
     final controller = ReceptionAllowlistController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       allowlistService: service,
     );
     addTearDown(controller.dispose);
@@ -72,7 +72,7 @@ void main() {
         const AllowedPerson(entryId: 'entry-1', profile: alice),
       ];
     final controller = ReceptionAllowlistController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       allowlistService: service,
     );
     addTearDown(controller.dispose);

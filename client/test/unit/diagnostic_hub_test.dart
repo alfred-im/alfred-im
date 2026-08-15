@@ -26,7 +26,7 @@ void main() {
       DiagnosticFlows.scope,
       'inactive',
       'scope_mismatch',
-      data: {'ownerUserId': 'a'},
+      data: {'focusUserId': 'a'},
     );
 
     expect(sink.events, hasLength(2));

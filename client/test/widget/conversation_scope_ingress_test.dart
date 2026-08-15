@@ -23,7 +23,7 @@ import '../support/seed_multi_account_machine.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const owner = ProfileSummary(
+  const focusProfile = ProfileSummary(
     id: 'account-a',
     username: 'agent_a',
     displayName: 'Agent A',
@@ -44,7 +44,7 @@ void main() {
     manager = AccountManager(storage: storage);
 
     sessionA = await AccountSession.createForTest(
-      profile: owner,
+      profile: focusProfile,
       client: createTestSupabaseClient(),
       inboxService: FakeInboxService(
         peers: const [ChatPeer(profile: peer)],

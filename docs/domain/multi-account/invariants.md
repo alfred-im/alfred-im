@@ -2,7 +2,7 @@
 
 **Bounded context:** `multi-account`  
 **Implementazione:** [SessionAuthority](session-authority.md) (`client/lib/services/session_authority.dart`, `part of account_manager.dart`)  
-**Verifica sessione:** `AccountManager.isSessionReadyForAccount` + `SessionAuthority.ensureOwnerReady`  
+**Verifica sessione:** `AccountManager.isSessionReadyForAccount` + `SessionAuthority.ensureFocusReady`  
 **Confine prodotto:** [PROM-MULTI-ACCOUNT](../../specs/promises/product/PROM-MULTI-ACCOUNT.md)
 
 ---

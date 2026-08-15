@@ -109,7 +109,7 @@ class _ChatWithMessages extends StatelessWidget {
   bool _messagingSessionReady(AccountSession liveSession) {
     return isMessagingSessionReady(
       client: liveSession.client,
-      ownerUserId: liveSession.userId,
+      focusUserId: liveSession.userId,
       peerProfileId: peer.profileId,
     );
   }
@@ -121,7 +121,7 @@ class _ChatWithMessages extends StatelessWidget {
     if (liveSession == null ||
         committed == null ||
         !committed.isSameConversationAs(scope) ||
-        liveSession.userId != scope.ownerUserId ||
+        liveSession.userId != scope.focusUserId ||
         !_messagingSessionReady(liveSession) ||
         !auth.navigation.isConversationReady(
           session: liveSession,

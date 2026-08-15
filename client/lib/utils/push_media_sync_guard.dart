@@ -20,13 +20,13 @@ class PushMediaSyncGuard {
 
   static Future<T> run<T>(
     Future<T> Function() action, {
-    String? ownerUserId,
+    String? recipientUserId,
     IdentityLeaseReason reason = IdentityLeaseReason.mediaPicker,
   }) async {
     final authority = _authority;
-    final owner = ownerUserId ?? authority?.activeOwnerId;
-    if (authority != null && owner != null) {
-      return authority.runWithLease(owner, reason, action);
+    final focusAccountId = recipientUserId ?? authority?.activeFocusUserId;
+    if (authority != null && focusAccountId != null) {
+      return authority.runWithLease(focusAccountId, reason, action);
     }
 
     _fallbackDepth++;

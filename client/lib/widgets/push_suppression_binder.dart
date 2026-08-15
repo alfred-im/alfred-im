@@ -86,7 +86,7 @@ class _PushSuppressionBinderState extends State<PushSuppressionBinder>
     final visible = lifecycle == AppLifecycleState.resumed;
     final peer = auth.activePeer;
     PushPlatform.updateSuppression(
-      focusUserId: auth.userId,
+      recipientUserId: auth.userId,
       activePeerProfileId: visible ? peer?.profileId : null,
       appVisible: visible,
     );

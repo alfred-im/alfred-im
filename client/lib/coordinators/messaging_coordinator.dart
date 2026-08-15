@@ -141,7 +141,7 @@ class MessagingCoordinator {
       DiagnosticFlows.messaging,
       op: DiagnosticOps.loadConversation,
       data: {
-        'ownerUserId': _effects.scope.ownerUserId,
+        'focusUserId': _effects.scope.focusUserId,
         'peerProfileId': _effects.scope.peerProfileId,
       },
     );
@@ -750,7 +750,7 @@ class _LiveMessagingEffects implements MessagingEffects {
     }
     return isMessagingSessionReady(
       client: peerMessages.client,
-      ownerUserId: userId,
+      focusUserId: userId,
       peerProfileId: peerProfileId,
     );
   }

@@ -24,8 +24,8 @@ Future<void> showPeerProfileOverlay(
   BuildContext context,
   ProfileSummary profile,
 ) async {
-  final ownerId = context.read<AuthController>().userId;
-  if (ownerId == null || ownerId == profile.id) return;
+  final focusUserId = context.read<AuthController>().userId;
+  if (focusUserId == null || focusUserId == profile.id) return;
 
   await showGeneralDialog<void>(
     context: context,

@@ -11,7 +11,7 @@ import '../models/chat_peer.dart';
 import '../models/group_active_author.dart';
 import '../models/profile_summary.dart';
 import '../services/account_session.dart';
-import '../services/group_owner_archive_cache.dart';
+import '../services/group_archive_cache.dart';
 import '../services/profile_service.dart';
 import '../utils/date_format.dart';
 
@@ -31,7 +31,7 @@ class GroupHomeCoordinator {
     required this._session,
     required this._profile,
     required this._profileService,
-    required this._ownerArchiveCache,
+    required this._archiveCache,
     required this._onStateChanged,
   }) {
     _machine = GroupHomeMachine(_LiveGroupHomeEffects._(this));
@@ -41,7 +41,7 @@ class GroupHomeCoordinator {
   final AccountSession _session;
   final ProfileSummary _profile;
   final ProfileService _profileService;
-  final GroupOwnerArchiveCache _ownerArchiveCache;
+  final GroupArchiveCache _archiveCache;
   final void Function() _onStateChanged;
   late final GroupHomeMachine _machine;
   final GroupHomeUiState state = GroupHomeUiState();
@@ -86,7 +86,7 @@ class _LiveGroupHomeEffects implements GroupHomeEffects {
         _c._session.fullProfile = fullProfile;
       }
 
-      final messages = await _c._ownerArchiveCache.fetch();
+      final messages = await _c._archiveCache.fetch();
       final aggregates = await buildGroupHomeAggregates(
         messages: messages,
         profile: _c._profile,

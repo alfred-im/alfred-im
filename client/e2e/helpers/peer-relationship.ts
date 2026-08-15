@@ -33,14 +33,14 @@ function runPsqlScalar(sql: string): string {
 
 /** Rimuove rubrica e allow list viewer→peer (setup pulito per insert da UI). */
 export function clearPeerRelationshipInDb(
-  ownerUserId: string,
+  focusUserId: string,
   peerProfileId: string,
 ): void {
   const sql =
     `DELETE FROM public.contacts ` +
-    `WHERE owner_id = '${ownerUserId}' AND linked_profile_id = '${peerProfileId}'; ` +
+    `WHERE archive_user_id = '${focusUserId}' AND linked_profile_id = '${peerProfileId}'; ` +
     `DELETE FROM public.reception_allowlist ` +
-    `WHERE owner_id = '${ownerUserId}' AND allowed_profile_id = '${peerProfileId}';`;
+    `WHERE archive_user_id = '${focusUserId}' AND allowed_profile_id = '${peerProfileId}';`;
   execSync(
     `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
     { stdio: 'pipe' },
@@ -48,54 +48,54 @@ export function clearPeerRelationshipInDb(
 }
 
 export function countContactsInDb(
-  ownerUserId: string,
+  focusUserId: string,
   peerProfileId: string,
 ): number {
   const sql =
     `SELECT count(*)::int FROM public.contacts ` +
-    `WHERE owner_id = '${ownerUserId}' AND linked_profile_id = '${peerProfileId}' ` +
+    `WHERE archive_user_id = '${focusUserId}' AND linked_profile_id = '${peerProfileId}' ` +
     `AND protocol = 'internal';`;
   return Number.parseInt(runPsqlScalar(sql), 10);
 }
 
 export function countAllowlistInDb(
-  ownerUserId: string,
+  focusUserId: string,
   peerProfileId: string,
 ): number {
   const sql =
     `SELECT count(*)::int FROM public.reception_allowlist ` +
-    `WHERE owner_id = '${ownerUserId}' AND allowed_profile_id = '${peerProfileId}';`;
+    `WHERE archive_user_id = '${focusUserId}' AND allowed_profile_id = '${peerProfileId}';`;
   return Number.parseInt(runPsqlScalar(sql), 10);
 }
 
 export async function expectContactInDb(
-  ownerUserId: string,
+  focusUserId: string,
   peerProfileId: string,
 ): Promise<void> {
   await expect
-    .poll(() => countContactsInDb(ownerUserId, peerProfileId), {
+    .poll(() => countContactsInDb(focusUserId, peerProfileId), {
       timeout: E2E_TIMEOUT.db,
     })
     .toBe(1);
 }
 
 export async function expectAllowlistInDb(
-  ownerUserId: string,
+  focusUserId: string,
   peerProfileId: string,
 ): Promise<void> {
   await expect
-    .poll(() => countAllowlistInDb(ownerUserId, peerProfileId), {
+    .poll(() => countAllowlistInDb(focusUserId, peerProfileId), {
       timeout: E2E_TIMEOUT.db,
     })
     .toBe(1);
 }
 
 export async function expectContactAbsentInDb(
-  ownerUserId: string,
+  focusUserId: string,
   peerProfileId: string,
 ): Promise<void> {
   await expect
-    .poll(() => countContactsInDb(ownerUserId, peerProfileId), {
+    .poll(() => countContactsInDb(focusUserId, peerProfileId), {
       timeout: E2E_TIMEOUT.db,
     })
     .toBe(0);
@@ -103,14 +103,14 @@ export async function expectContactAbsentInDb(
 
 /** Inserisce riga rubrica interna viewer→peer (setup «già in rubrica»). */
 export function insertContactInDb(
-  ownerUserId: string,
+  focusUserId: string,
   peerProfileId: string,
   displayName: string,
 ): void {
   const safeName = displayName.replace(/'/g, "''");
   const sql =
-    `INSERT INTO public.contacts (owner_id, protocol, linked_profile_id, display_name) ` +
-    `VALUES ('${ownerUserId}', 'internal', '${peerProfileId}', '${safeName}') ` +
+    `INSERT INTO public.contacts (archive_user_id, protocol, linked_profile_id, display_name) ` +
+    `VALUES ('${focusUserId}', 'internal', '${peerProfileId}', '${safeName}') ` +
     `ON CONFLICT DO NOTHING;`;
   execSync(
     `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
@@ -134,14 +134,14 @@ export async function prepareLocalPeerWithRubricaAndConsent(
   const session2 = await loginSupabase(acct2.email, acct2.password);
 
   await addReceptionAllowlist({
-    ownerUserId: acct1.userId,
+    recipientUserId: acct1.userId,
     allowedProfileId: acct2.userId,
-    ownerAccessToken: session1.accessToken,
+    recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
-    ownerUserId: acct2.userId,
+    recipientUserId: acct2.userId,
     allowedProfileId: acct1.userId,
-    ownerAccessToken: session2.accessToken,
+    recipientAccessToken: session2.accessToken,
   });
 
   insertContactInDb(acct1.userId, acct2.userId, `E2E ${label2}`);
@@ -162,11 +162,11 @@ export async function prepareLocalPeerWithRubricaAndConsent(
 }
 
 export async function expectAllowlistAbsentInDb(
-  ownerUserId: string,
+  focusUserId: string,
   peerProfileId: string,
 ): Promise<void> {
   await expect
-    .poll(() => countAllowlistInDb(ownerUserId, peerProfileId), {
+    .poll(() => countAllowlistInDb(focusUserId, peerProfileId), {
       timeout: E2E_TIMEOUT.db,
     })
     .toBe(0);
@@ -188,14 +188,14 @@ export async function prepareLocalConsentedPeerPair(
   const session2 = await loginSupabase(acct2.email, acct2.password);
 
   await addReceptionAllowlist({
-    ownerUserId: acct1.userId,
+    recipientUserId: acct1.userId,
     allowedProfileId: acct2.userId,
-    ownerAccessToken: session1.accessToken,
+    recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
-    ownerUserId: acct2.userId,
+    recipientUserId: acct2.userId,
     allowedProfileId: acct1.userId,
-    ownerAccessToken: session2.accessToken,
+    recipientAccessToken: session2.accessToken,
   });
 
   const stamp = Date.now();
@@ -210,7 +210,7 @@ export async function prepareLocalConsentedPeerPair(
   // Rubrica pulita; allow list acct1→acct2 resta (profilo già consentito).
   const sql =
     `DELETE FROM public.contacts ` +
-    `WHERE owner_id = '${acct1.userId}' AND linked_profile_id = '${acct2.userId}';`;
+    `WHERE archive_user_id = '${acct1.userId}' AND linked_profile_id = '${acct2.userId}';`;
   execSync(
     `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
     { stdio: 'pipe' },
@@ -238,14 +238,14 @@ export async function prepareLocalPeerRelationshipPair(
   const session2 = await loginSupabase(acct2.email, acct2.password);
 
   await addReceptionAllowlist({
-    ownerUserId: acct1.userId,
+    recipientUserId: acct1.userId,
     allowedProfileId: acct2.userId,
-    ownerAccessToken: session1.accessToken,
+    recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
-    ownerUserId: acct2.userId,
+    recipientUserId: acct2.userId,
     allowedProfileId: acct1.userId,
-    ownerAccessToken: session2.accessToken,
+    recipientAccessToken: session2.accessToken,
   });
 
   const stamp = Date.now();

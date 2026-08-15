@@ -20,11 +20,11 @@ BEGIN
     true
   );
 
-  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
   VALUES
     (v_sender, v_recipient),
     (v_recipient, v_sender)
-  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
+  ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
   SELECT * INTO v_msg FROM public.send_message_to_profile(
     v_recipient,
@@ -33,7 +33,7 @@ BEGIN
     'text'::public.message_content_type
   );
 
-  IF v_msg.owner_id <> v_sender OR v_msg.peer_profile_id <> v_recipient THEN
+  IF v_msg.archive_user_id <> v_sender OR v_msg.peer_profile_id <> v_recipient THEN
     RAISE EXCEPTION 'Unexpected mailbox parties';
   END IF;
 

@@ -37,7 +37,7 @@ par Fase B — piano dati (async, abortibile)
     Nav -> MAM : FocusAccount
     MAM --> Nav : sessione
   end
-  Nav -> SA : EnsureOwnerReady(account)
+  Nav -> SA : EnsureFocusReady(account)
   SA --> Nav : ok | session expired
   alt peer ancora attivo (loadSeq invariato)
     Nav -> Nav : CommitConversationScope (reconcile)

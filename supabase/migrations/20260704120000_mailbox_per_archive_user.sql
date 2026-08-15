@@ -2,7 +2,7 @@
 --
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
--- Mailbox per-owner archive: drop message-centric shared rows, recreate messages.
+-- Mailbox per-archive user: drop message-centric shared rows, recreate messages.
 
 -- ---------------------------------------------------------------------------
 -- Teardown legacy message-centric
@@ -24,12 +24,12 @@ drop table if exists public.message_read_receipts cascade;
 drop table if exists public.messages cascade;
 
 -- ---------------------------------------------------------------------------
--- messages (per-owner archive)
+-- messages (per-archive user)
 -- ---------------------------------------------------------------------------
 
 create table public.messages (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references public.profiles (id) on delete cascade,
+  archive_user_id uuid not null references public.profiles (id) on delete cascade,
   author_id uuid not null references public.profiles (id) on delete cascade,
   peer_profile_id uuid references public.profiles (id) on delete set null,
   peer_external_address text,
@@ -62,15 +62,15 @@ create table public.messages (
   )
 );
 
-create unique index messages_owner_client_id_idx
-  on public.messages (owner_id, client_message_id)
+create unique index messages_archive_user_client_id_idx
+  on public.messages (archive_user_id, client_message_id)
   where client_message_id is not null;
 
-create unique index messages_owner_logical_id_idx
-  on public.messages (owner_id, logical_message_id);
+create unique index messages_archive_user_logical_id_idx
+  on public.messages (archive_user_id, logical_message_id);
 
-create index messages_owner_peer_created_idx
-  on public.messages (owner_id, peer_profile_id, created_at);
+create index messages_archive_user_peer_created_idx
+  on public.messages (archive_user_id, peer_profile_id, created_at);
 
 create index messages_logical_message_id_idx
   on public.messages (logical_message_id);
@@ -83,12 +83,12 @@ alter table public.messages enable row level security;
 
 create policy messages_select_own
   on public.messages for select to authenticated
-  using (owner_id = auth.uid());
+  using (archive_user_id = auth.uid());
 
 create policy messages_update_own
   on public.messages for update to authenticated
-  using (owner_id = auth.uid())
-  with check (owner_id = auth.uid());
+  using (archive_user_id = auth.uid())
+  with check (archive_user_id = auth.uid());
 
 -- Inserts via SECURITY DEFINER RPC only.
 
@@ -166,7 +166,7 @@ begin
   if p_client_message_id is not null then
     select m.id into v_sender_id
     from public.messages m
-    where m.owner_id = v_me
+    where m.archive_user_id = v_me
       and m.client_message_id = p_client_message_id
     limit 1;
 
@@ -214,7 +214,7 @@ begin
   v_lambda := gen_random_uuid();
 
   insert into public.messages (
-    owner_id,
+    archive_user_id,
     author_id,
     peer_profile_id,
     logical_message_id,
@@ -269,7 +269,7 @@ begin
   );
 
   insert into public.messages (
-    owner_id,
+    archive_user_id,
     author_id,
     peer_profile_id,
     logical_message_id,
@@ -357,12 +357,12 @@ as $$
       m.body,
       m.duration_seconds,
       m.author_id,
-      m.owner_id,
+      m.archive_user_id,
       m.read_at
     from public.messages m
     cross join me
     where me.uid is not null
-      and m.owner_id = me.uid
+      and m.archive_user_id = me.uid
       and m.protocol = 'internal'
       and m.peer_profile_id is not null
       and public.mailbox_has_renderable_content(m.body, m.content_type)
@@ -384,7 +384,7 @@ as $$
       d.peer_profile_id,
       count(*)::integer as unread_count
     from direct d
-    where d.author_id <> d.owner_id
+    where d.author_id <> d.archive_user_id
       and d.read_at is null
     group by d.peer_profile_id
   )
@@ -432,7 +432,7 @@ as $$
   from public.messages m
   where auth.uid() is not null
     and p_peer_profile_id is not null
-    and m.owner_id = auth.uid()
+    and m.archive_user_id = auth.uid()
     and m.peer_profile_id = p_peer_profile_id
     and public.mailbox_has_renderable_content(m.body, m.content_type)
   order by m.created_at asc
@@ -465,7 +465,7 @@ begin
 
   update public.messages m
   set read_at = now()
-  where m.owner_id = v_me
+  where m.archive_user_id = v_me
     and m.peer_profile_id = p_peer_profile_id
     and m.author_id = p_peer_profile_id
     and m.read_at is null
@@ -474,11 +474,11 @@ begin
   update public.messages sender_copy
   set read_at = now()
   from public.messages incoming
-  where incoming.owner_id = v_me
+  where incoming.archive_user_id = v_me
     and incoming.peer_profile_id = p_peer_profile_id
     and incoming.author_id = p_peer_profile_id
     and incoming.read_at is not null
-    and sender_copy.owner_id = p_peer_profile_id
+    and sender_copy.archive_user_id = p_peer_profile_id
     and sender_copy.author_id = p_peer_profile_id
     and sender_copy.logical_message_id = incoming.logical_message_id
     and sender_copy.read_at is null;

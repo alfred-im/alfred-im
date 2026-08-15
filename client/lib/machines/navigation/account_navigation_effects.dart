@@ -361,7 +361,7 @@ class AccountNavigationEffects implements NavigationEffects {
       if (_manager.focusUserId != accountUserId) {
         await _focusCommand.focusAccount(accountUserId);
       }
-      final ok = await _authority.ensureOwnerReady(accountUserId);
+      final ok = await _authority.ensureFocusReady(accountUserId);
       if (!ok) {
         diagLogFail(
           'nav',

@@ -49,10 +49,10 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 | **SYS-DELIVERY-011** | `process_outbox(outbox_id)` — dispatcher per `event_kind`; internal sincrono nella stessa transazione RPC account |
 | **SYS-DELIVERY-012** | `deliver_internal`: valuta [SYS-RECEPTION](./SYS-RECEPTION.md); se consentito → INSERT copia destinatario (o archivio gruppo) + UPDATE `delivered_at` mittente; altrimenti skip silenzioso |
 | **SYS-DELIVERY-013** | Destinatario gruppo: gate bidirezionale; INSERT archivio gruppo; `erogate_group_message` verso allow list |
-| **SYS-DELIVERY-014** | `propagate_read_receipt`: UPDATE copia mittente `read_at` WHERE `owner_id = sender_profile_id` AND `logical_message_id = λ` |
+| **SYS-DELIVERY-014** | `propagate_read_receipt`: UPDATE copia mittente `read_at` WHERE `archive_user_id = sender_profile_id` AND `logical_message_id = λ` |
 | **SYS-DELIVERY-015** | `group_erogate`: per ogni partecipante allow list con gate → INSERT riga erogata (stesso λ) |
 | **SYS-DELIVERY-016** | Al termine: `outbox.status = completed` (o `failed` con `last_error` su errore transazione) |
-| **SYS-DELIVERY-017** | Idempotenza destinatario: `ON CONFLICT (owner_id, logical_message_id) DO NOTHING` |
+| **SYS-DELIVERY-017** | Idempotenza destinatario: `ON CONFLICT (archive_user_id, logical_message_id) DO NOTHING` |
 | **SYS-DELIVERY-018** | ✓ singola: copia mittente con `delivered_at` null permanente se gate rifiuta |
 | **SYS-DELIVERY-019** | ✓✓ grigie: worker `deliver` valorizza `delivered_at` su copia mittente; `read_at` null |
 | **SYS-DELIVERY-020** | ✓✓ blu: lettore aggiorna solo archivio locale; worker `read_receipt` propaga `read_at` alla copia mittente |

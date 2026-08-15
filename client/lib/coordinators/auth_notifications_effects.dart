@@ -31,7 +31,7 @@ class AuthNotificationsEffects implements NotificationsEffects {
   }) {
     PushPlatform.persistPendingOpenChat(
       PushConversationKey(
-        ownerUserId: recipientUserId,
+        recipientUserId: recipientUserId,
         peerProfileId: peerProfileId,
       ),
     );

@@ -16,7 +16,7 @@ import '../support/fake_message_media_service.dart';
 import '../support/fake_messaging_services.dart';
 import '../support/mock_path_provider.dart';
 
-const _ownerA = 'efd885fe-b36e-48fc-a796-0e3f153e40d6';
+const _archiveUserA = 'efd885fe-b36e-48fc-a796-0e3f153e40d6';
 const _peerB = '0a81f785-173c-4f1c-b5df-3937086a2482';
 
 final _minimalGifBytes = Uint8List.fromList([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);
@@ -28,16 +28,16 @@ void main() {
     group('invarianti', () {
       test('account allineato con JWT valido', () async {
         final client = createTestSupabaseClient();
-        await installTestAuthSession(client, userId: _ownerA);
+        await installTestAuthSession(client, userId: _archiveUserA);
 
         expect(
-          isAccountSessionReady(client: client, ownerUserId: _ownerA),
+          isAccountSessionReady(client: client, focusUserId: _archiveUserA),
           isTrue,
         );
         expect(
           isMessagingSessionReady(
             client: client,
-            ownerUserId: _ownerA,
+            focusUserId: _archiveUserA,
             peerProfileId: _peerB,
           ),
           isTrue,
@@ -51,7 +51,7 @@ void main() {
         expect(
           isMessagingSessionReady(
             client: client,
-            ownerUserId: _ownerA,
+            focusUserId: _archiveUserA,
             peerProfileId: _peerB,
           ),
           isFalse,
@@ -86,14 +86,14 @@ void main() {
 
       MessagesController misalignedController() {
         final scope = testConversationScope(
-          userId: _ownerA,
+          userId: _archiveUserA,
           peerProfileId: _peerB,
           sessionEpoch: 1,
         );
         return MessagesController(
           scope: scope,
           messageStore: testMessageStoreFor(scope),
-          userId: _ownerA,
+          userId: _archiveUserA,
           peerProfileId: _peerB,
           peerMessages: messageService.peerMessages,
           messageMediaService: mediaService,
@@ -101,7 +101,7 @@ void main() {
           outboundQueue: OutboundMessageQueue(),
           hasValidSession: () => isMessagingSessionReady(
             client: messageService.client,
-            ownerUserId: _ownerA,
+            focusUserId: _archiveUserA,
             peerProfileId: _peerB,
             whenNoGoTrueSession: () => false,
           ),

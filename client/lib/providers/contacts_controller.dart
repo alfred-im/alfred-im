@@ -12,18 +12,18 @@ import '../services/contact_service.dart';
 /// Facade UI rubrica — orchestrazione in [ContactsCoordinator].
 class ContactsController extends ChangeNotifier {
   ContactsController({
-    required this.ownerId,
+    required this.focusUserId,
     this.sessionEpoch = 0,
     required ContactService contactService,
   }) {
     _coordinator = ContactsCoordinator(
-      ownerId: ownerId,
+      focusUserId: focusUserId,
       contactService: contactService,
       onStateChanged: notifyListeners,
     );
   }
 
-  final String ownerId;
+  final String focusUserId;
 
   /// Allineato a [AccountSession.epoch] — invalida il controller su restore sessione.
   final int sessionEpoch;

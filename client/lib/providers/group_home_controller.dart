@@ -9,7 +9,7 @@ import '../models/chat_peer.dart';
 import '../models/group_active_author.dart';
 import '../models/profile_summary.dart';
 import '../services/account_session.dart';
-import '../services/group_owner_archive_cache.dart';
+import '../services/group_archive_cache.dart';
 import '../services/profile_service.dart';
 
 /// Facade UI home gruppo — orchestrazione in [GroupHomeCoordinator].
@@ -18,9 +18,9 @@ class GroupHomeController extends ChangeNotifier {
     required this.session,
     required this.profile,
     required ProfileService profileService,
-    GroupOwnerArchiveCache? ownerArchiveCache,
-  }) : ownerArchiveCache = ownerArchiveCache ??
-            GroupOwnerArchiveCache.forGroupArchive(
+    GroupArchiveCache? archiveCache,
+  }) : archiveCache = archiveCache ??
+            GroupArchiveCache.forGroupArchive(
               userId: session.userId,
               groupArchiveService: session.groupArchive,
             ) {
@@ -28,14 +28,14 @@ class GroupHomeController extends ChangeNotifier {
       session: session,
       profile: profile,
       profileService: profileService,
-      ownerArchiveCache: this.ownerArchiveCache,
+      archiveCache: this.archiveCache,
       onStateChanged: notifyListeners,
     );
   }
 
   final AccountSession session;
   final ProfileSummary profile;
-  final GroupOwnerArchiveCache ownerArchiveCache;
+  final GroupArchiveCache archiveCache;
   late final GroupHomeCoordinator _coordinator;
 
   DateTime? get createdAt => _coordinator.state.createdAt;
@@ -61,7 +61,7 @@ class GroupHomeController extends ChangeNotifier {
 
   @override
   void dispose() {
-    GroupOwnerArchiveCache.evict(session.userId);
+    GroupArchiveCache.evict(session.userId);
     super.dispose();
   }
 }

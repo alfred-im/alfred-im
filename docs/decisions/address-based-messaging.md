@@ -22,7 +22,7 @@ Vedi [SSOT.md](../SSOT.md) — non duplicare RPC/tabelle qui. Riferimenti rapidi
 | Concetto | Ruolo |
 |----------|--------|
 | **Indirizzo** | Destinatario: `username` (Alfred) o `username@server` (esterno) |
-| **Messaggi** | Archivio **per owner** in `messages` — vedi mailbox spec |
+| **Messaggi** | Archivio **per titolare archivio** in `messages` — vedi mailbox spec |
 | **Inbox** | Aggregazione **on-read** sul mio archivio (`list_inbox()`), raggruppata per `peer_profile_id` — **nessuna tabella inbox** |
 | **Rubrica (`contacts`)** | Strumento personale opzionale; **isolata** dalle dinamiche di chat |
 
@@ -61,10 +61,10 @@ Vedi [SSOT.md](../SSOT.md) — non duplicare RPC/tabelle qui. Riferimenti rapidi
 
 L’inbox **non** è tabella né vista materializzata. È query sul **mio** archivio a ogni `list_inbox()`:
 
-1. Fonte: `messages` WHERE `owner_id = auth.uid()` (+ join `profiles`)
+1. Fonte: `messages` WHERE `archive_user_id = auth.uid()` (+ join `profiles`)
 2. Calcolo: `GROUP BY peer_profile_id`, ultimo messaggio, unread (`read_at IS NULL` su entrata)
-3. Realtime inbox: subscribe `messages` (`owner_id = io`); reload `list_inbox()` su INSERT
-4. Realtime chat: filtro server `owner_id = io`; client `peer_profile_id`
+3. Realtime inbox: subscribe `messages` (`archive_user_id = io`); reload `list_inbox()` su INSERT
+4. Realtime chat: filtro server `archive_user_id = io`; client `peer_profile_id`
 
 Equivalente: `VIEW` SQL normale (non `MATERIALIZED`). L’RPC serve per `security definer`, `auth.uid()` e payload formattato — dettaglio in [contracts/rpc.md](../specs/contracts/rpc.md#list_inbox).
 
@@ -78,7 +78,7 @@ Questo ADR **non** definisce RPC né worker. Regola di confine:
 
 | Attore | Può toccare |
 |--------|-------------|
-| RPC account (`send_message_to_profile`, `mark_peer_read`, …) | **Solo** archivio `owner_id = auth.uid()` + INSERT `outbox` |
+| RPC account (`send_message_to_profile`, `mark_peer_read`, …) | **Solo** archivio `archive_user_id = auth.uid()` + INSERT `outbox` |
 | Worker `alfred_delivery` | Materializza copia destinatario, `delivered_at` / `read_at` mittente (via λ), gate allow list |
 
 Flusso internal (un solo posto con diagramma completo): [mailbox-inbox-outbox-spec.md § Consegna](../architecture/mailbox-inbox-outbox-spec.md#consegna--stessa-pipeline-ovunque-vincolante).  
@@ -104,5 +104,5 @@ Solo storico **indirizzamento** e drop cache inbox; delivery plane (#159, #179) 
 - `20260627210000_message_centric_messaging.sql` — messaggi peer-based
 - `20260627220000_fix_send_message_to_profile_overload.sql` — PostgREST overload
 - `20260627230000_messages_only_inbox.sql` — drop `inbox_threads`
-- `20260704120000_mailbox_per_owner_archive.sql` — archivio per owner (#159)
+- `20260704120000_mailbox_per_archive_user.sql` — archivio per titolare archivio (#159)
 - `20260719220000_list_peer_messages_recent_window.sql` — finestra recente + cursore

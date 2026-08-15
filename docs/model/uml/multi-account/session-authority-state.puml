@@ -8,34 +8,34 @@
 title SessionAuthority — stati logici identità attiva\n(servizio dominio — non MultiAccountMachine)
 
 state NoActiveIdentity
-state OwnerActive : activeOwnerId + JWT\nleaseCount = 0
-state OwnerActiveLeased : activeOwnerId + JWT\nleaseCount > 0
-state SwitchingOwner : dispose + restore\nserializzato
+state FocusActive : activeFocusUserId + JWT\nleaseCount = 0
+state FocusActiveLeased : activeFocusUserId + JWT\nleaseCount > 0
+state SwitchingFocus : dispose + restore\nserializzato
 
 [*] --> NoActiveIdentity : bootstrap\n[nessun restore ancora]
 
-NoActiveIdentity --> SwitchingOwner : RequestFocusSwitch\n/ RunAsOwner
-SwitchingOwner --> OwnerActive : IdentityActivated\n[restore ok]
-SwitchingOwner --> NoActiveIdentity : IdentitySwitchFailed
+NoActiveIdentity --> SwitchingFocus : RequestFocusSwitch\n/ RunAsFocus
+SwitchingFocus --> FocusActive : IdentityActivated\n[restore ok]
+SwitchingFocus --> NoActiveIdentity : IdentitySwitchFailed
 
-OwnerActive --> SwitchingOwner : RequestFocusSwitch\n[altro owner,\nleaseCount = 0]
-OwnerActive --> OwnerActiveLeased : AcquireIdentityLease
-OwnerActiveLeased --> OwnerActive : ReleaseIdentityLease\n[leaseCount = 0]
-OwnerActiveLeased --> OwnerActiveLeased : AcquireIdentityLease\n[stesso owner]
+FocusActive --> SwitchingFocus : RequestFocusSwitch\n[altro focus,\nleaseCount = 0]
+FocusActive --> FocusActiveLeased : AcquireIdentityLease
+FocusActiveLeased --> FocusActive : ReleaseIdentityLease\n[leaseCount = 0]
+FocusActiveLeased --> FocusActiveLeased : AcquireIdentityLease\n[stesso focus]
 
-OwnerActiveLeased --> OwnerActiveLeased : RequestFocusSwitch\n[altro owner]\n/ IdentitySwitchDeferred
-OwnerActiveLeased --> SwitchingOwner : RequestFocusSwitch\n[stesso owner,\nreconnect]
+FocusActiveLeased --> FocusActiveLeased : RequestFocusSwitch\n[altro focus]\n/ IdentitySwitchDeferred
+FocusActiveLeased --> SwitchingFocus : RequestFocusSwitch\n[stesso focus,\nreconnect]
 
-OwnerActive --> OwnerActive : RunAsOwner\n[stesso owner]
-OwnerActive --> SwitchingOwner : RunAsOwner\n[altro owner,\nleaseCount = 0]
+FocusActive --> FocusActive : RunAsFocus\n[stesso focus]
+FocusActive --> SwitchingFocus : RunAsFocus\n[altro focus,\nleaseCount = 0]
 
-OwnerActive --> NoActiveIdentity : AccountClosed\n[ultimo account disposed]
+FocusActive --> NoActiveIdentity : AccountClosed\n[ultimo account disposed]
 
-note right of OwnerActiveLeased
+note right of FocusActiveLeased
   Durante lease:
-  - RunAsOwner verso altro owner → deferred
+  - RunAsFocus verso altro focus → deferred
   - AuthorizePushSync(AppResumed) → PushSyncDeferred
-  - messaging/upload continua su activeOwnerId
+  - messaging/upload continua su activeFocusUserId
 end note
 
 @enduml

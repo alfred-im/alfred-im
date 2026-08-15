@@ -13,7 +13,7 @@ import '../support/fake_contact_service.dart';
 /// Wiring: ContactsController → ContactsCoordinator → LiveContactsEffects.
 void main() {
   group('contacts wiring', () {
-    const ownerId = 'owner-1';
+    const focusUserId = 'focus-1';
     final alice = ProfileSummary(
       id: 'alice-id',
       username: 'alice',
@@ -25,7 +25,7 @@ void main() {
         ..contacts = [
           Contact(
             id: 'c1',
-            ownerId: ownerId,
+            archiveUserId: focusUserId,
             protocol: ContactProtocol.internal,
             linkedProfileId: alice.id,
             displayName: alice.displayName,
@@ -33,7 +33,7 @@ void main() {
           ),
         ];
       final controller = ContactsController(
-        ownerId: ownerId,
+        focusUserId: focusUserId,
         contactService: service,
       );
 
@@ -47,7 +47,7 @@ void main() {
     test('addInternal attraversa macchina e service', () async {
       final service = FakeContactService();
       final controller = ContactsController(
-        ownerId: ownerId,
+        focusUserId: focusUserId,
         contactService: service,
       );
 

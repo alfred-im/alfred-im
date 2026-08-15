@@ -104,7 +104,7 @@ void main() {
       final machine = NavigationMachine(effects)
         ..commitScope(
           const ConversationScope(
-            ownerUserId: 'user-a',
+            focusUserId: 'user-a',
             peerProfileId: 'peer-b',
             sessionEpoch: 1,
           ),
@@ -288,7 +288,7 @@ void main() {
       final machine = NavigationMachine(effects)
         ..commitScope(
           const ConversationScope(
-            ownerUserId: 'group-a',
+            focusUserId: 'group-a',
             peerProfileId: 'peer-b',
             sessionEpoch: 1,
           ),

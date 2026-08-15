@@ -1,6 +1,6 @@
 # Inbox e liste
 
-**Regole prodotto:** [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](../specs/surfaces/SURF-INBOX.md), [PROM-REALTIME-OWNER](../specs/promises/product/PROM-REALTIME-OWNER.md)
+**Regole prodotto:** [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](../specs/surfaces/SURF-INBOX.md), [PROM-REALTIME-ARCHIVE](../specs/promises/product/PROM-REALTIME-ARCHIVE.md)
 
 **Ultima revisione:** 2026-08-08
 

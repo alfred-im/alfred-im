@@ -15,7 +15,7 @@ class ReceptionAllowlistService {
   final SupabaseClient _client;
   final ProfileSearchService _profileSearch;
 
-  String get _authOwnerId {
+  String get _authArchiveUserId {
     final id = _client.auth.currentUser?.id;
     if (id == null || id.isEmpty) {
       throw const AuthException('Sessione non disponibile.');
@@ -23,13 +23,13 @@ class ReceptionAllowlistService {
     return id;
   }
 
-  Future<List<AllowedPerson>> fetchAllowedPeople(String ownerId) async {
+  Future<List<AllowedPerson>> fetchAllowedPeople(String archiveUserId) async {
     final rows = await _client
         .from('reception_allowlist')
         .select(
           'id, allowed_profile_id, profiles:allowed_profile_id(id, username, display_name, avatar_url, pronouns)',
         )
-        .eq('owner_id', ownerId)
+        .eq('archive_user_id', archiveUserId)
         .order('created_at');
 
     final people = rows.map((row) {
@@ -56,13 +56,13 @@ class ReceptionAllowlistService {
   }
 
   Future<AllowedPerson> addAllowedProfile({
-    required String ownerId,
+    required String archiveUserId,
     required ProfileSummary profile,
   }) async {
     final row = await _client
         .from('reception_allowlist')
         .insert({
-          'owner_id': _authOwnerId,
+          'archive_user_id': _authArchiveUserId,
           'allowed_profile_id': profile.id,
         })
         .select(

@@ -13,7 +13,7 @@ void main() {
   late FakeContactService service;
   late ContactsController controller;
 
-  const ownerId = 'owner-1';
+  const focusUserId = 'focus-1';
   final alice = ProfileSummary(
     id: 'alice-id',
     username: 'alice',
@@ -23,7 +23,7 @@ void main() {
   setUp(() {
     service = FakeContactService();
     controller = ContactsController(
-      ownerId: ownerId,
+      focusUserId: focusUserId,
       contactService: service,
     );
   });
@@ -32,7 +32,7 @@ void main() {
     service.contacts = [
       Contact(
         id: 'c1',
-        ownerId: ownerId,
+        archiveUserId: focusUserId,
         protocol: ContactProtocol.internal,
         linkedProfileId: alice.id,
         displayName: alice.displayName,
@@ -49,7 +49,7 @@ void main() {
     service.contacts = [
       Contact(
         id: 'c1',
-        ownerId: ownerId,
+        archiveUserId: focusUserId,
         protocol: ContactProtocol.internal,
         linkedProfileId: alice.id,
         displayName: alice.displayName,
@@ -68,7 +68,7 @@ void main() {
     service.contacts = [
       Contact(
         id: 'c1',
-        ownerId: ownerId,
+        archiveUserId: focusUserId,
         protocol: ContactProtocol.internal,
         linkedProfileId: alice.id,
         displayName: alice.displayName,

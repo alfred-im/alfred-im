@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('PushConversationKey', () {
-    test('canonicalKey is owner|peer', () {
+    test('canonicalKey is recipient|peer', () {
       const key = PushConversationKey(
-        ownerUserId: 'account-a',
+        recipientUserId: 'account-a',
         peerProfileId: 'peer-b',
       );
       expect(key.canonicalKey, 'account-a|peer-b');
@@ -17,7 +17,7 @@ void main() {
 
     test('tryParseCanonical round-trips', () {
       const original = PushConversationKey(
-        ownerUserId: 'account-a',
+        recipientUserId: 'account-a',
         peerProfileId: 'peer-b',
       );
       expect(
@@ -40,7 +40,7 @@ void main() {
           'peerProfileId': 'peer-b',
         }),
         const PushConversationKey(
-          ownerUserId: 'account-a',
+          recipientUserId: 'account-a',
           peerProfileId: 'peer-b',
         ),
       );
@@ -50,7 +50,7 @@ void main() {
           'peer_profile_id': 'peer-b',
         }),
         const PushConversationKey(
-          ownerUserId: 'account-a',
+          recipientUserId: 'account-a',
           peerProfileId: 'peer-b',
         ),
       );
@@ -76,7 +76,7 @@ void main() {
 
     test('notificationTag includes account and peer', () {
       const key = PushConversationKey(
-        ownerUserId: 'account-a',
+        recipientUserId: 'account-a',
         peerProfileId: 'peer-b',
       );
       expect(
@@ -88,11 +88,11 @@ void main() {
 
     test('distinct tags for same peer on different accounts', () {
       const keyA = PushConversationKey(
-        ownerUserId: 'account-a',
+        recipientUserId: 'account-a',
         peerProfileId: 'shared-peer',
       );
       const keyB = PushConversationKey(
-        ownerUserId: 'account-b',
+        recipientUserId: 'account-b',
         peerProfileId: 'shared-peer',
       );
       expect(
@@ -104,7 +104,7 @@ void main() {
     test('outboundQueueKey matches canonicalKey', () {
       expect(
         PushConversationKey.outboundQueueKey(
-          ownerUserId: 'account-a',
+          recipientUserId: 'account-a',
           peerProfileId: 'peer-b',
         ),
         'account-a|peer-b',
@@ -113,7 +113,7 @@ void main() {
 
     test('shouldSuppressInForeground matches account+peer only', () {
       const key = PushConversationKey(
-        ownerUserId: 'account-b',
+        recipientUserId: 'account-b',
         peerProfileId: 'peer-a',
       );
       expect(

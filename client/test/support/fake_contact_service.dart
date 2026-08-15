@@ -15,18 +15,18 @@ class FakeContactService extends ContactService {
   final List<String> deletedIds = [];
 
   @override
-  Future<List<Contact>> fetchContacts(String ownerId) async {
+  Future<List<Contact>> fetchContacts(String archiveUserId) async {
     return List.of(contacts);
   }
 
   @override
   Future<Contact> addInternalContact({
-    required String ownerId,
+    required String archiveUserId,
     required ProfileSummary profile,
   }) async {
     final contact = Contact(
       id: 'contact-${profile.id}',
-      ownerId: ownerId,
+      archiveUserId: archiveUserId,
       protocol: ContactProtocol.internal,
       linkedProfileId: profile.id,
       displayName: profile.displayName,

@@ -76,7 +76,7 @@ class FakeMessageService {
   late final FakeGroupArchiveService groupArchive;
 
   final Map<String, List<ChatMessage>> messagesByConversation = {};
-  final Map<String, List<ChatMessage>> ownerMessagesByUserId = {};
+  final Map<String, List<ChatMessage>> archiveMessagesByUserId = {};
 
   List<String> get sentBodies => peerMessages.sentBodies;
 
@@ -339,7 +339,7 @@ class FakeGroupArchiveService extends GroupArchiveService {
   final List<String> broadcastBodies = [];
   final imageBroadcasts = <Map<String, Object?>>[];
   final videoBroadcasts = <Map<String, Object?>>[];
-  final Map<String, void Function(ChatMessage message)> _ownerRealtimeHandlers =
+  final Map<String, void Function(ChatMessage message)> _archiveRealtimeHandlers =
       {};
 
   @override
@@ -359,7 +359,7 @@ class FakeGroupArchiveService extends GroupArchiveService {
       clientMessageId: clientMessageId,
       senderId: currentUserId,
     );
-    _host.ownerMessagesByUserId
+    _host.archiveMessagesByUserId
         .putIfAbsent(currentUserId, () => [])
         .add(message);
     return message;
@@ -446,22 +446,22 @@ class FakeGroupArchiveService extends GroupArchiveService {
   }
 
   @override
-  Future<List<ChatMessage>> fetchOwnerMessages({
+  Future<List<ChatMessage>> fetchArchiveMessages({
     required String currentUserId,
     int limit = 200,
   }) async {
     return List<ChatMessage>.from(
-      _host.ownerMessagesByUserId[currentUserId] ?? const [],
+      _host.archiveMessagesByUserId[currentUserId] ?? const [],
     );
   }
 
   @override
-  RealtimeChannel subscribeToOwnerMessages({
+  RealtimeChannel subscribeToArchiveMessages({
     required String currentUserId,
     required void Function(ChatMessage message) onMessage,
   }) {
-    _ownerRealtimeHandlers[currentUserId] = onMessage;
-    return _host.client.channel('test-owner-$currentUserId').subscribe();
+    _archiveRealtimeHandlers[currentUserId] = onMessage;
+    return _host.client.channel('test-archive-$currentUserId').subscribe();
   }
 }
 
@@ -544,7 +544,7 @@ ConversationScope testConversationScope({
   int loadSeq = 0,
 }) {
   return ConversationScope(
-    ownerUserId: userId,
+    focusUserId: userId,
     peerProfileId: peerProfileId,
     sessionEpoch: sessionEpoch,
     loadSeq: loadSeq,

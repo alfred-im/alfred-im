@@ -62,22 +62,22 @@ class AlfredApp extends StatelessWidget {
         ),
         focusScopedProvider<ContactsController>(
           create: (session, _) => ContactsController(
-            ownerId: session.userId,
+            focusUserId: session.userId,
             sessionEpoch: session.epoch,
             contactService: session.contactService,
           ),
           keepPrevious: (previous, session) =>
-              previous.ownerId == session.userId &&
+              previous.focusUserId == session.userId &&
               previous.sessionEpoch == session.epoch,
         ),
         focusScopedProvider<ReceptionAllowlistController>(
           create: (session, _) => ReceptionAllowlistController(
-            ownerId: session.userId,
+            focusUserId: session.userId,
             sessionEpoch: session.epoch,
             allowlistService: session.receptionAllowlistService,
           ),
           keepPrevious: (previous, session) =>
-              previous.ownerId == session.userId &&
+              previous.focusUserId == session.userId &&
               previous.sessionEpoch == session.epoch,
         ),
         focusScopedProvider<ProfileController>(

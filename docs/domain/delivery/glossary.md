@@ -22,7 +22,7 @@
 | **Synchronous internal** | Su protocollo internal, worker eseguito nella **stessa transazione** del confine account — esito immediato per l'utente. |
 | **DeliverySilentlyBlocked** | Esito gate allow list negato; spunta doppia mittente non valorizzata; nessun errore verso mittente (termine condiviso con reception). |
 | **Logical message id (λ)** | Correlazione tra copie mittente/destinatario e target segnali spunta. |
-| **Recipient idempotency** | Materializzazione copia destinatario idempotente per coppia owner + id logico. |
+| **Recipient idempotency** | Materializzazione copia destinatario idempotente per coppia archive_user + id logico. |
 | **Queue status** | `queued` → `completed` (o `failed` con ultimo errore registrato). |
 | **Delivery tick** | Aggiornamento spunte sulla copia mittente — osservabile via Realtime client. |
 | **Account boundary** | Confine operazioni account: crea solo copia mittente e accoda outbox; non scrive archivi altrui. |

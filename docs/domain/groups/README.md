@@ -11,9 +11,9 @@
 | `BroadcastToGroup` | `BroadcastRequested` | `GroupArchiveService.broadcast*ToAllowlist` |
 | `GroupHomeReady` | `GroupHomeLoaded` | `GroupHomeCoordinator` |
 | `GroupConversationReady` | `GroupMessagesLoaded` | `GroupMessagesCoordinator` |
-| `GroupBroadcastSent` | `BroadcastAcknowledged` | reload storico owner |
+| `GroupBroadcastSent` | `BroadcastAcknowledged` | reload storico archivio |
 | `GroupBroadcastFailed` | `BroadcastFailed` | errore in `GroupMessagesUiState.error` |
-| `GroupConversationUpdated` | `OwnerRealtimeReceived` | realtime archivio owner |
+| `GroupConversationUpdated` | `ArchiveRealtimeReceived` | realtime archivio titolare |
 
 ### Eventi statechart (solo client)
 

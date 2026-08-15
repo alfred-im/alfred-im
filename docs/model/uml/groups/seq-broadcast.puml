@@ -4,7 +4,7 @@
 ' SDD: SYS-GROUP, SYS-DELIVERY (erogazione asincrona)
 ' Revision: 2026-07-27
 
-title Broadcast gruppo → archivio owner (client)
+title Broadcast gruppo → archivio titolare (client)
 
 actor Utente
 participant "GroupMessagesMachine" as GMM

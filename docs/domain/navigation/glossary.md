@@ -17,11 +17,11 @@
 | **GroupShell** | Account gruppo in focus — home gruppo al posto dell'inbox classica. |
 | **GroupHomeVisible** | Home gruppo (`GroupShell`, `groupChatOpen = false`). |
 | **GroupConversationVisible** | Chat gruppo aperta (`GroupShell`, `groupChatOpen = true`). |
-| **ConversationScope** | Ambito atomico commesso `(owner_user_id, peer_profile_id, session_epoch)` — unica autorità per messaging. |
+| **ConversationScope** | Ambito atomico commesso `(focus_user_id, peer_profile_id, session_epoch)` — unica autorità per messaging. |
 | **CommitConversationScope** | Registra scope dopo apertura validata (account + peer + sessione viva). |
 | **InvalidateConversationScope** | Azzera scope (chiusura chat, switch account, apertura verso altro peer). |
-| **OpenConversation** | Transazione navigation: invalida scope stale → focus (se serve) → **fase A (sync)** `OpenChat` + commit scope se sessione in RAM → **fase B (async)** `EnsureOwnerReady`, re-commit, load messaggi, refresh inbox silent. Sorgenti: inbox, push, link, compose. |
-| **EnsureOwnerReady** | All'ingresso chat (fase B): `SessionAuthority.ensureOwnerReady` — vedi [invariants.md](invariants.md) § Session identity |
+| **OpenConversation** | Transazione navigation: invalida scope stale → focus (se serve) → **fase A (sync)** `OpenChat` + commit scope se sessione in RAM → **fase B (async)** `EnsureFocusReady`, re-commit, load messaggi, refresh inbox silent. Sorgenti: inbox, push, link, compose. |
+| **EnsureFocusReady** | All'ingresso chat (fase B): `SessionAuthority.ensureFocusReady` — vedi [invariants.md](invariants.md) § Session identity |
 | **Profile fallback** | Se peer non in inbox, lookup profilo — link/compose sempre; push dopo retry inbox esteso. |
 | **CloseConversation** | Chiude chat; invalida scope; torna a inbox (utente) o home gruppo (gruppo). |
 | **Account view state** | Stato UI per account (`activePeer`, `showInboxOnMobile`, `groupChatOpen`) — proiezione, non autorità messaging. |

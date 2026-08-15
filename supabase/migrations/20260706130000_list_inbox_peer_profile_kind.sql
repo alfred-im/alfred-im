@@ -37,12 +37,12 @@ as $$
       m.body,
       m.duration_seconds,
       m.author_id,
-      m.owner_id,
+      m.archive_user_id,
       m.read_at
     from public.messages m
     cross join me
     where me.uid is not null
-      and m.owner_id = me.uid
+      and m.archive_user_id = me.uid
       and m.protocol = 'internal'
       and m.peer_profile_id is not null
       and public.mailbox_has_renderable_content(m.body, m.content_type)
@@ -64,7 +64,7 @@ as $$
       d.peer_profile_id,
       count(*)::integer as unread_count
     from direct d
-    where d.author_id <> d.owner_id
+    where d.author_id <> d.archive_user_id
       and d.read_at is null
     group by d.peer_profile_id
   )

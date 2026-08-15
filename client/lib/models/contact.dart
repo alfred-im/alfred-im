@@ -16,7 +16,7 @@ ContactProtocol contactProtocolFromString(String value) {
 class Contact {
   const Contact({
     required this.id,
-    required this.ownerId,
+    required this.archiveUserId,
     required this.protocol,
     this.linkedProfileId,
     this.externalAddress,
@@ -26,7 +26,7 @@ class Contact {
   });
 
   final String id;
-  final String ownerId;
+  final String archiveUserId;
   final ContactProtocol protocol;
   final String? linkedProfileId;
   final String? externalAddress;
@@ -37,7 +37,7 @@ class Contact {
   factory Contact.fromJson(Map<String, dynamic> json) {
     return Contact(
       id: json['id'] as String,
-      ownerId: json['owner_id'] as String,
+      archiveUserId: json['archive_user_id'] as String,
       protocol: contactProtocolFromString(json['protocol'] as String),
       linkedProfileId: json['linked_profile_id'] as String?,
       externalAddress: json['external_address'] as String?,

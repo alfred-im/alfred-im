@@ -53,10 +53,10 @@ final class RemoveAllowedByProfileId extends ReceptionEvent {
 ///
 /// Produzione: [ReceptionCoordinator] + [ReceptionAllowlistController].
 class ReceptionMachine {
-  ReceptionMachine(this._effects, {required this.ownerId});
+  ReceptionMachine(this._effects, {required this.focusUserId});
 
   final ReceptionEffects _effects;
-  final String ownerId;
+  final String focusUserId;
 
   ReceptionLoadState loadState = ReceptionLoadState.loading;
   String searchQuery = '';
@@ -73,7 +73,7 @@ class ReceptionMachine {
       case SetSearchQuery(:final query):
         searchQuery = query;
       case AddAllowedProfile(:final profile):
-        if (profile.id == ownerId) return;
+        if (profile.id == focusUserId) return;
         if (_effects.isProfileAllowed(profile.id)) return;
         await _effects.addAllowedProfile(profile);
         await send(const LoadAllowlist());

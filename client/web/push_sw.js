@@ -12,19 +12,19 @@ const PUSH_CHAT_FRAGMENT_PREFIX = 'push-chat/';
 let suppressionState = null;
 
 /** Chiave univoca push: account destinatario + peer (mai solo peer). */
-function pushConversationKey(ownerUserId, peerProfileId) {
-  return ownerUserId + PUSH_KEY_SEPARATOR + peerProfileId;
+function pushConversationKey(recipientUserId, peerProfileId) {
+  return recipientUserId + PUSH_KEY_SEPARATOR + peerProfileId;
 }
 
 function tryParsePushConversation(payload) {
   if (!payload) return null;
-  const owner = payload.recipientUserId || payload.recipient_user_id;
+  const archive_user = payload.recipientUserId || payload.recipient_user_id;
   const peer = payload.peerProfileId || payload.peer_profile_id;
-  if (!owner || !peer || owner === peer) return null;
+  if (!recipient || !peer || archive_user === peer) return null;
   return {
-    ownerUserId: owner,
+    recipientUserId: archive_user,
     peerProfileId: peer,
-    canonicalKey: pushConversationKey(owner, peer),
+    canonicalKey: pushConversationKey(archive_user, peer),
   };
 }
 
@@ -51,7 +51,7 @@ function shouldSuppress(data) {
   const state = suppressionState;
   if (!state || !state.appVisible) return false;
   return (
-    state.focusUserId === conversation.ownerUserId &&
+    state.recipientUserId === conversation.recipientUserId &&
     state.activePeerProfileId === conversation.peerProfileId
   );
 }
@@ -74,7 +74,7 @@ function pushOpenChatUrl(conversation) {
   return (
     './#' +
     PUSH_CHAT_FRAGMENT_PREFIX +
-    conversation.ownerUserId +
+    conversation.recipientUserId +
     '/' +
     conversation.peerProfileId
   );
@@ -99,7 +99,7 @@ self.addEventListener('message', (event) => {
 
   if (data.type === 'alfred_push_suppression') {
     applySuppressionState({
-      focusUserId: data.focusUserId ?? null,
+      recipientUserId: data.recipientUserId ?? null,
       activePeerProfileId: data.activePeerProfileId ?? null,
       appVisible: !!data.appVisible,
     });
@@ -160,7 +160,7 @@ self.addEventListener('notificationclick', (event) => {
 
   const openChatMessage = JSON.stringify({
     type: 'open_chat',
-    recipientUserId: conversation.ownerUserId,
+    recipientUserId: conversation.recipientUserId,
     peerProfileId: conversation.peerProfileId,
   });
   const launchUrl = pushOpenChatUrl(conversation);

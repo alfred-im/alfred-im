@@ -48,7 +48,7 @@ class AccountMultiAccountEffects implements MultiAccountEffects {
 
   @override
   Future<void> reconnectFocusedSession(String focusUserId) {
-    return _authority.reconnectActiveOwner(focusUserId);
+    return _authority.reconnectActiveFocus(focusUserId);
   }
 
   @override

@@ -21,14 +21,14 @@ class ContactsState {
 /// Orchestrazione load, filtro e CRUD rubrica.
 class ContactsCoordinator {
   ContactsCoordinator({
-    required this.ownerId,
+    required this.focusUserId,
     required this._contactService,
     required this._onStateChanged,
   }) {
     _machine = ContactsMachine(_LiveContactsEffects(this));
   }
 
-  final String ownerId;
+  final String focusUserId;
   final ContactService _contactService;
   final void Function() _onStateChanged;
   late final ContactsMachine _machine;
@@ -73,7 +73,7 @@ class ContactsCoordinator {
     return contactForProfileId(profile.id) ??
         Contact(
           id: '',
-          ownerId: ownerId,
+          archiveUserId: focusUserId,
           protocol: ContactProtocol.internal,
           linkedProfileId: profile.id,
           displayName: profile.displayName,
@@ -125,7 +125,7 @@ class _LiveContactsEffects implements ContactsEffects {
   Future<void> loadContacts() async {
     try {
       _c.state.contacts =
-          await _c.contactService.fetchContacts(_c.ownerId);
+          await _c.contactService.fetchContacts(_c.focusUserId);
       _c.state.error = null;
       await _c._machine.send(const ContactsLoaded());
     } catch (e) {
@@ -140,7 +140,7 @@ class _LiveContactsEffects implements ContactsEffects {
   @override
   Future<void> addInternal(ProfileSummary profile) async {
     await _c.contactService.addInternalContact(
-      ownerId: _c.ownerId,
+      archiveUserId: _c.focusUserId,
       profile: profile,
     );
   }
@@ -152,7 +152,7 @@ class _LiveContactsEffects implements ContactsEffects {
     required String displayName,
   }) async {
     await _c.contactService.addExternalContact(
-      ownerId: _c.ownerId,
+      archiveUserId: _c.focusUserId,
       protocol: protocol,
       externalAddress: address,
       displayName: displayName,

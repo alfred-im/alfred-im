@@ -54,7 +54,7 @@
 - **Ricezione filtrata**: allow list personale `reception_allowlist` — sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ singola) — promesse `SYS-RECEPTION`, `PROM-RECEPTION-FILTER`, `SURF-ALLOWLIST`; toggle rapido anche da scheda profilo peer (tap avatar) — promesse `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE`
 - **Link condivisibili**: fragment `#indirizzo` / `#indirizzo/chat`; share di sistema da profilo peer e sidebar account — `PROM-SHAREABLE-LINK` (PR #178)
 - **Gruppi**: account `profile_kind = group` con identità propria; partecipazione **solo** allow list bidirezionale (no membership); shell senza inbox; erogazione automatica verso allow list del gruppo; UI autore (avatar + nome) in chat — promessa `SYS-GROUP` (PR #162)
-- **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` senza federazione); archivio **per owner** in `messages` (`owner_id`, `author_id`, `peer_profile_id`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
+- **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` senza federazione); archivio **per titolare archivio** in `messages` (`archive_user_id`, `author_id`, `peer_profile_id`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca liste on-demand — inbox, rubrica, persone consentite (`PROM-LIST-FILTER`, PR #132, #171)
 - **GIF / voice / location / foto / video**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client — [PROM-CHAT-MEDIA](docs/specs/promises/product/PROM-CHAT-MEDIA.md)
 - **Federazione**: outbox `queued` — attende bridge
@@ -93,7 +93,7 @@
 - **Bridge stateless**: `docs/decisions/bridge-stateless.md`
 - **Chat unificate** (nessuna distinzione interna/esterna): `docs/decisions/no-internal-external-chat-distinction.md`
 - **Dettaglio completo**: `docs/architecture/full-stack.md`
-- **Modello caselle (mailbox)**: `docs/architecture/mailbox-inbox-outbox-spec.md` — archivio per owner + outbox; promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` (PR #159, #179)
+- **Modello caselle (mailbox)**: `docs/architecture/mailbox-inbox-outbox-spec.md` — archivio per titolare archivio + outbox; promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` (PR #159, #179)
 
 ---
 
@@ -137,7 +137,7 @@
 
 **Non deducibile — layout inbox**: `HomeScreen` — mobile drawer `AccountSidebar`; desktop colonna sinistra account + inbox. `AccountSidebar`: chiusura account in card profilo. `InboxPanel`: ricerca on-demand ([PROM-LIST-FILTER](docs/specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](docs/specs/surfaces/SURF-INBOX.md)), `ValueKey(userId)` al cambio focus. Doc: `docs/guides/inbox.md`.
 
-**Non deducibile — ingresso chat 1:1**: `OpenConversation` in due fasi ([PROM-CONVERSATION-SCOPE-009–012](docs/specs/promises/product/PROM-CONVERSATION-SCOPE.md), [SURF-CHAT-016](docs/specs/surfaces/SURF-CHAT.md)): **fase A sync** — `AccountNavigationEffects._enterConversationUi` imposta view-state (`activePeer`, shell mobile chat) e committa scope solo se sessione già in RAM; UI `ChatIngressPanel` (header peer + back + spinner) via `ConversationScopePane`. **Fase B async** — `SessionAuthority.ensureOwnerReady`, re-commit scope, `LoadMessages`, `refreshFocusedInboxSilently` (`InboxController.load(showLoadingIndicator: false)`); abort se utente esce o cambia peer (`_ingressPrepGeneration`). Su mobile: AppBar recovery (`Riconnessione…`) solo se **non** in shell chat (`home_screen.dart`). UML: `docs/model/uml/navigation/seq-open-conversation-unified.puml`, `docs/model/uml/multi-account/seq-run-as-owner.puml`. Test: `conversation_scope_ingress_test.dart`, `navigation_open_ingress_test.dart`.
+**Non deducibile — ingresso chat 1:1**: `OpenConversation` in due fasi ([PROM-CONVERSATION-SCOPE-009–012](docs/specs/promises/product/PROM-CONVERSATION-SCOPE.md), [SURF-CHAT-016](docs/specs/surfaces/SURF-CHAT.md)): **fase A sync** — `AccountNavigationEffects._enterConversationUi` imposta view-state (`activePeer`, shell mobile chat) e committa scope solo se sessione già in RAM; UI `ChatIngressPanel` (header peer + back + spinner) via `ConversationScopePane`. **Fase B async** — `SessionAuthority.ensureFocusReady`, re-commit scope, `LoadMessages`, `refreshFocusedInboxSilently` (`InboxController.load(showLoadingIndicator: false)`); abort se utente esce o cambia peer (`_ingressPrepGeneration`). Su mobile: AppBar recovery (`Riconnessione…`) solo se **non** in shell chat (`home_screen.dart`). UML: `docs/model/uml/navigation/seq-open-conversation-unified.puml`, `docs/model/uml/multi-account/seq-run-as-focus.puml`. Test: `conversation_scope_ingress_test.dart`, `navigation_open_ingress_test.dart`.
 
 **Non deducibile — chat**: `AnchoredMessageList` (`ListView` reverse, soglia 48 px). Storico iniziale = ultimi 100 messaggi (`list_peer_messages` senza cursore); scroll verso l'alto → `loadOlderMessages()` + `p_before_created_at`; anteprima inbox sempre nella prima finestra (SYS-MAILBOX-057 / SURF-CHAT-015). Doc: `docs/guides/chat-scroll.md`, `docs/specs/contracts/rpc.md`.
 
@@ -174,7 +174,7 @@ Avvio container: `scripts/start-bridges.sh` (`CMD ["/bin/sh", "/start.sh"]`). De
 
 ## 💾 Database e Storage
 
-**Fonte di verità messaggistica**: tabella `messages` (archivio per `owner_id`) + `profiles`. Inbox = aggregazione on-read (`list_inbox()`). Invio: RPC account scrive **solo** copia mittente + accoda `outbox`; worker `alfred_delivery.process_outbox` materializza destinatario, `delivered_at`/`read_at` mittente e erogazione gruppo ([SYS-ACCOUNT-BOUNDARY](docs/specs/promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md)).
+**Fonte di verità messaggistica**: tabella `messages` (archivio per `archive_user_id`) + `profiles`. Inbox = aggregazione on-read (`list_inbox()`). Invio: RPC account scrive **solo** copia mittente + accoda `outbox`; worker `alfred_delivery.process_outbox` materializza destinatario, `delivered_at`/`read_at` mittente e erogazione gruppo ([SYS-ACCOUNT-BOUNDARY](docs/specs/promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md)).
 
 | Storage | Uso |
 |---------|-----|
@@ -183,7 +183,7 @@ Avvio container: `scripts/start-bridges.sh` (`CMD ["/bin/sh", "/start.sh"]`). De
 | Storage `avatars` | Foto profilo (`{userId}/avatar.{jpg|png|webp}`, max 2 MB) |
 | Client `SharedPreferences` | Account aperti (`OpenAccount` + refresh token) e `focusUserId` |
 
-RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_profile`, `list_peer_messages`, `list_owner_messages`, `broadcast_message_to_allowlist`, `mark_peer_read`.
+RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_profile`, `list_peer_messages`, `list_archive_messages`, `broadcast_message_to_allowlist`, `mark_peer_read`.
 
 Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §4 e [contracts/schema.md](docs/specs/contracts/schema.md).
 
@@ -194,6 +194,7 @@ Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §4 e [contrac
 ```bash
 cd client
 bash scripts/verify.sh           # gate CI — igiene codice (obbligatorio prima del push)
+bash scripts/test.sh e2e         # e2e locale — obbligatorio a fine lavoro su client/
 bash scripts/verify.sh --build   # + build web
 bash scripts/test.sh flusso-reale  # release — valida il prodotto (browser + DB)
 bash scripts/test.sh release       # stack locale completo (alias: manual, ci)
