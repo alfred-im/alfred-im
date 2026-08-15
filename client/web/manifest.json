@@ -1,6 +1,6 @@
 {
-    "name": "Messaging",
-    "short_name": "Messaging",
+    "name": "Alfred.im Demo",
+    "short_name": "Alfred.im",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#2D2926",
