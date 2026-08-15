@@ -41,6 +41,11 @@ jobs:
         run: flutter pub get
         working-directory: client
 
+      - name: Copy instance deploy config (GitHub Pages)
+        run: |
+          cp client/deploy/github-pages/config.json client/web/config.json
+          cp client/deploy/github-pages/manifest.json client/web/manifest.json
+
       - name: Build Flutter web (GitHub Pages base path)
         run: flutter build web --release --base-href "/alfred-im/" --no-pub --no-wasm-dry-run
         working-directory: client

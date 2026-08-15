@@ -83,7 +83,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Alfred'), findsOneWidget);
+    expect(find.text('Test'), findsOneWidget);
     expect(find.text('M'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Menu account'));

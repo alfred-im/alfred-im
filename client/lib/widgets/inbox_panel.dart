@@ -8,7 +8,7 @@ import '../models/chat_peer.dart';
 import '../models/profile_summary.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/compose_address.dart';
-import 'account_shell_header.dart';
+import '../widgets/instance_shell_header.dart';
 import 'collapsible_list_search.dart';
 import 'inbox_peer_tile.dart';
 
@@ -68,8 +68,7 @@ class _InboxPanelState extends State<InboxPanel> {
               child: Column(
                 children: [
                   if (widget.showTopBar)
-                    AccountShellHeader(
-                      title: 'Alfred',
+                    InstanceShellHeader(
                       titleStyle: const TextStyle(
                         color: AlfredColors.textOnDark,
                         fontSize: 20,

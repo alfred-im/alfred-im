@@ -47,7 +47,12 @@ echo "==> flutter analyze"
 flutter analyze
 
 echo "==> flutter test"
-flutter test --exclude-tags stack --exclude-tags diagnostic
+flutter test \
+  test/composition \
+  test/unit \
+  test/widget \
+  test/wiring \
+  --exclude-tags live
 
 if [[ "$RUN_BUILD" == 1 ]]; then
   echo "==> flutter build web"

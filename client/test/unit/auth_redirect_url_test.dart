@@ -4,32 +4,24 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:alfred_client/config/deploy_config.dart';
 import 'package:alfred_client/utils/auth_redirect_url.dart';
 
 void main() {
-  test('resolve returns GitHub Pages default off-web', () {
-    expect(AuthRedirectUrl.resolve(), AuthRedirectUrl.githubPagesDefault);
+  tearDown(DeployConfig.resetForTest);
+
+  test('resolve uses deploy publicBaseUrl off-web', () {
+    DeployConfig.overrideForTest(
+      DeployConfig(
+        supabaseUrl: 'https://example.supabase.co',
+        supabaseAnonKey: 'anon',
+        publicBaseUrl: 'https://demo.example/app/',
+      ),
+    );
+    expect(AuthRedirectUrl.resolve(), 'https://demo.example/app/');
   });
 
   group('resolveForOrigin', () {
-    test('GitHub Pages origin → githubPagesDefault', () {
-      expect(
-        AuthRedirectUrl.resolveForOrigin(
-          Uri.parse('https://alfred-im.github.io/alfred-im/'),
-        ),
-        AuthRedirectUrl.githubPagesDefault,
-      );
-    });
-
-    test('GitHub Pages without trailing slash → githubPagesDefault', () {
-      expect(
-        AuthRedirectUrl.resolveForOrigin(
-          Uri.parse('https://alfred-im.github.io/alfred-im'),
-        ),
-        AuthRedirectUrl.githubPagesDefault,
-      );
-    });
-
     test('localhost dev → current origin with trailing slash', () {
       expect(
         AuthRedirectUrl.resolveForOrigin(
@@ -48,12 +40,28 @@ void main() {
       );
     });
 
-    test('host non locale → githubPagesDefault', () {
+    test('host non locale → publicBaseUrl da deploy', () {
+      DeployConfig.overrideForTest(
+        DeployConfig(
+          supabaseUrl: 'https://example.supabase.co',
+          supabaseAnonKey: 'anon',
+          publicBaseUrl: 'https://mygarden.example/',
+        ),
+      );
       expect(
         AuthRedirectUrl.resolveForOrigin(
           Uri.parse('https://preview.example.com/app/'),
         ),
-        AuthRedirectUrl.githubPagesDefault,
+        'https://mygarden.example/',
+      );
+    });
+
+    test('host non locale senza deploy → origine corrente', () {
+      expect(
+        AuthRedirectUrl.resolveForOrigin(
+          Uri.parse('https://preview.example.com/app/'),
+        ),
+        'https://preview.example.com/app/',
       );
     });
   });

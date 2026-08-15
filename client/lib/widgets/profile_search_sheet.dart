@@ -103,7 +103,7 @@ class _ProfileSearchSheetState extends State<ProfileSearchSheet> {
         TextField(
           controller: _searchController,
           decoration: InputDecoration(
-            hintText: 'Cerca utente Alfred',
+            hintText: 'Cerca utente su questo server',
             suffixIcon: IconButton(
               onPressed: _search,
               icon: const Icon(Icons.search),

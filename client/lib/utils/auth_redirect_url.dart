@@ -4,28 +4,15 @@
 
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 
+import '../config/deploy_config.dart';
+
 /// URL di ritorno dopo conferma email o reset password (Supabase Auth).
 class AuthRedirectUrl {
   const AuthRedirectUrl._();
 
-  /// Web client pubblicato su GitHub Pages (`alfred-im` repository).
-  static const githubPagesDefault = 'https://alfred-im.github.io/alfred-im/';
-
-  /// Alias storico pre-rinomina repository/path Pages.
-  @Deprecated('Use githubPagesDefault')
-  static const devDemoDefault = githubPagesDefault;
-
-  /// Alias storico; preferire [githubPagesDefault].
-  @Deprecated('Use githubPagesDefault')
-  static const production = githubPagesDefault;
-
   static const _envOverride = String.fromEnvironment('AUTH_REDIRECT_URL');
 
   /// Risolve l'URL da passare a [emailRedirectTo] / [redirectTo].
-  ///
-  /// Su web: istanza pubblica → [githubPagesDefault]; solo `localhost` / `127.0.0.1`
-  /// usano l'origine corrente (dev agente). Fuori web: [AUTH_REDIRECT_URL] o
-  /// [githubPagesDefault].
   static String resolve() {
     if (kIsWeb) {
       return resolveForOrigin(Uri.base);
@@ -35,7 +22,16 @@ class AuthRedirectUrl {
       return _withTrailingSlash(_envOverride);
     }
 
-    return githubPagesDefault;
+    final fromDeploy = DeployConfig.isLoaded
+        ? DeployConfig.require.publicBaseUrl
+        : null;
+    if (fromDeploy != null && fromDeploy.isNotEmpty) {
+      return fromDeploy;
+    }
+
+    throw StateError(
+      'publicBaseUrl non configurato: imposta config.json o AUTH_REDIRECT_URL.',
+    );
   }
 
   @visibleForTesting
@@ -50,7 +46,20 @@ class AuthRedirectUrl {
       ).toString();
     }
 
-    return githubPagesDefault;
+    final fromDeploy = DeployConfig.isLoaded
+        ? DeployConfig.require.publicBaseUrl
+        : null;
+    if (fromDeploy != null && fromDeploy.isNotEmpty) {
+      return fromDeploy;
+    }
+
+    final path = base.path.endsWith('/') ? base.path : '${base.path}/';
+    return Uri(
+      scheme: base.scheme,
+      host: base.host,
+      port: base.hasPort ? base.port : null,
+      path: path,
+    ).toString();
   }
 
   static bool _isLocalDevHost(String host) =>

@@ -57,7 +57,7 @@ function shouldSuppress(data) {
 }
 
 function formatNotificationTitle(payload) {
-  const peer = payload.peerDisplayName || payload.peer_display_name || 'Alfred';
+  const peer = payload.peerDisplayName || payload.peer_display_name || 'Messaggio';
   const account =
     payload.recipientUsername ||
     payload.recipient_username ||

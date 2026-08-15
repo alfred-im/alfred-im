@@ -1,6 +1,6 @@
 {
-    "name": "Alfred.im Demo",
-    "short_name": "Alfred.im",
+    "name": "Your Instance",
+    "short_name": "Instance",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#2D2926",

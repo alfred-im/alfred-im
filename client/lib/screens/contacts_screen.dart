@@ -116,7 +116,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                             title: Text(contact.displayName),
                             subtitle: Text(
                               contact.protocol == ContactProtocol.internal
-                                  ? 'Utente Alfred'
+                                  ? 'Utente interno'
                                   : contact.externalAddress ?? '',
                               style: const TextStyle(fontSize: 12),
                             ),
@@ -183,7 +183,7 @@ class _AddContactSheetState extends State<_AddContactSheet>
           TabBar(
             controller: _tabs,
             tabs: const [
-              Tab(text: 'Alfred'),
+              Tab(text: 'Interni'),
               Tab(text: 'Esterno'),
             ],
           ),
