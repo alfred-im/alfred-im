@@ -28,6 +28,10 @@ export SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:-${ANON_KEY:-}}"
 export SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-${SERVICE_ROLE_KEY:-}}"
 export ALFRED_BASE_URL="${ALFRED_BASE_URL:-http://localhost:8080/}"
 
+# shellcheck source=lib/e2e-local-stack.sh
+source "$ROOT/scripts/lib/e2e-local-stack.sh"
+e2e_write_web_config_json
+
 if ! e2e_resolve_flutter_port; then
   echo "e2e-nav-local richiede flutter su ${ALFRED_BASE_URL}" >&2
   echo "Avvia: E2E_PUSH_REUSE_FLUTTER=0 bash scripts/run-push-e2e-local.sh (poi riusa con E2E_PUSH_REUSE_FLUTTER=1)" >&2

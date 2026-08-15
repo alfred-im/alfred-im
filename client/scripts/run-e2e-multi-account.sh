@@ -26,6 +26,7 @@ if [[ "$USE_LOCAL_STACK" == 1 ]]; then
   e2e_ensure_local_schema
   e2e_load_supabase_env
   export ALFRED_BASE_URL="${ALFRED_BASE_URL:-http://localhost:8080/}"
+  e2e_write_web_config_json
 
   SESSION_NAME="flutter-e2e-multi"
   tmux -f /exec-daemon/tmux.portal.conf kill-session -t "=$SESSION_NAME" 2>/dev/null || true
