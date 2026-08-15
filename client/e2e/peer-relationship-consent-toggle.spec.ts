@@ -7,7 +7,7 @@
  *
  * Percorso telefono dopo switch account:
  * 1. Menu ⋮ mostra «Rimuovi dalla rubrica» + «Revoca» (non Aggiungi/Consenti)
- * 2. Ciclo rubrica da menu: rimuovi → riaggiungi (cattura 23505 contacts_owner_linked_profile_idx)
+ * 2. Ciclo rubrica da menu: rimuovi → riaggiungi (cattura 23505 contacts_archive_user_linked_profile_idx)
  * 3. Ciclo consenso da menu: revoca → concedi (cattura 23505 reception_allowlist)
  * 4. Stesso ciclo da overlay profilo (switch + pulsante rubrica)
  *

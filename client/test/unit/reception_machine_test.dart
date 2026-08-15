@@ -63,13 +63,13 @@ AllowedPerson _allowedPerson({String profileId = 'profile-1'}) =>
     );
 
 void main() {
-  const ownerId = 'owner-1';
+  const focusUserId = 'focus-1';
 
   group('ReceptionMachine load state', () {
     test('starts loading', () {
       final machine = ReceptionMachine(
         _RecordingReceptionEffects(),
-        ownerId: ownerId,
+        focusUserId: focusUserId,
       );
 
       expect(machine.loadState, ReceptionLoadState.loading);
@@ -78,7 +78,7 @@ void main() {
 
     test('LoadAllowlist → loading and calls effect', () async {
       final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, ownerId: ownerId)
+      final machine = ReceptionMachine(effects, focusUserId: focusUserId)
         ..loadState = ReceptionLoadState.ready;
 
       await machine.send(const LoadAllowlist());
@@ -90,7 +90,7 @@ void main() {
     test('AllowlistLoaded → ready', () async {
       final machine = ReceptionMachine(
         _RecordingReceptionEffects(),
-        ownerId: ownerId,
+        focusUserId: focusUserId,
       );
 
       await machine.send(const AllowlistLoaded());
@@ -101,7 +101,7 @@ void main() {
     test('AllowlistLoadFailed → ready', () async {
       final machine = ReceptionMachine(
         _RecordingReceptionEffects(),
-        ownerId: ownerId,
+        focusUserId: focusUserId,
       );
 
       await machine.send(const AllowlistLoadFailed());
@@ -114,7 +114,7 @@ void main() {
     test('SetSearchQuery updates query', () async {
       final machine = ReceptionMachine(
         _RecordingReceptionEffects(),
-        ownerId: ownerId,
+        focusUserId: focusUserId,
       );
 
       await machine.send(const SetSearchQuery('bob'));
@@ -126,7 +126,7 @@ void main() {
   group('ReceptionMachine add allowed profile', () {
     test('AddAllowedProfile adds and reloads', () async {
       final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, ownerId: ownerId);
+      final machine = ReceptionMachine(effects, focusUserId: focusUserId);
       final profile = _profile(id: 'profile-2');
 
       await machine.send(AddAllowedProfile(profile));
@@ -137,11 +137,11 @@ void main() {
       expect(machine.loadState, ReceptionLoadState.loading);
     });
 
-    test('AddAllowedProfile ignored for owner self', () async {
+    test('AddAllowedProfile ignored for archive_user self', () async {
       final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, ownerId: ownerId);
+      final machine = ReceptionMachine(effects, focusUserId: focusUserId);
 
-      await machine.send(AddAllowedProfile(_profile(id: ownerId)));
+      await machine.send(AddAllowedProfile(_profile(id: focusUserId)));
 
       expect(effects.addCount, 0);
       expect(effects.loadCount, 0);
@@ -150,7 +150,7 @@ void main() {
     test('AddAllowedProfile ignored when already allowed', () async {
       final effects = _RecordingReceptionEffects()
         ..allowedProfileIds.add('profile-2');
-      final machine = ReceptionMachine(effects, ownerId: ownerId);
+      final machine = ReceptionMachine(effects, focusUserId: focusUserId);
 
       await machine.send(AddAllowedProfile(_profile(id: 'profile-2')));
 
@@ -162,7 +162,7 @@ void main() {
   group('ReceptionMachine remove allowed', () {
     test('RemoveAllowedPerson removes and reloads', () async {
       final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, ownerId: ownerId);
+      final machine = ReceptionMachine(effects, focusUserId: focusUserId);
       final person = _allowedPerson(profileId: 'profile-3');
 
       await machine.send(RemoveAllowedPerson(person));
@@ -175,7 +175,7 @@ void main() {
 
     test('RemoveAllowedByProfileId removes and reloads', () async {
       final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, ownerId: ownerId);
+      final machine = ReceptionMachine(effects, focusUserId: focusUserId);
 
       await machine.send(const RemoveAllowedByProfileId('profile-99'));
 

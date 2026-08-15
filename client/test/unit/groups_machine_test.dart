@@ -194,11 +194,11 @@ void main() {
       expect(machine.broadcastState, GroupBroadcastState.idle);
     });
 
-    test('OwnerRealtimeReceived forwards to effect', () async {
+    test('ArchiveRealtimeReceived forwards to effect', () async {
       final effects = _RecordingGroupMessagesEffects();
       final machine = GroupMessagesMachine(effects);
 
-      await machine.send(OwnerRealtimeReceived(_message()));
+      await machine.send(ArchiveRealtimeReceived(_message()));
 
       expect(effects.realtimeCount, 1);
     });
@@ -214,7 +214,7 @@ void main() {
   });
 
   group('buildGroupHomeAggregates', () {
-    test('excludes owner and builds conversation tile from last message', () async {
+    test('excludes archive_user and builds conversation tile from last message', () async {
       const groupProfile = ProfileSummary(
         id: 'group-1',
         displayName: 'Famiglia',

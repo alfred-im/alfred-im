@@ -10,38 +10,38 @@
 
 create table public.reception_allowlist (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references public.profiles (id) on delete cascade,
+  archive_user_id uuid not null references public.profiles (id) on delete cascade,
   allowed_profile_id uuid not null references public.profiles (id) on delete cascade,
   created_at timestamptz not null default now(),
-  constraint reception_allowlist_not_self check (allowed_profile_id <> owner_id),
-  constraint reception_allowlist_owner_allowed_unique unique (owner_id, allowed_profile_id)
+  constraint reception_allowlist_not_self check (allowed_profile_id <> archive_user_id),
+  constraint reception_allowlist_archive_user_allowed_unique unique (archive_user_id, allowed_profile_id)
 );
 
-create index reception_allowlist_owner_id_idx on public.reception_allowlist (owner_id);
+create index reception_allowlist_archive_user_id_idx on public.reception_allowlist (archive_user_id);
 
 alter table public.reception_allowlist enable row level security;
 
 create policy reception_allowlist_select_own
   on public.reception_allowlist for select to authenticated
-  using (owner_id = auth.uid());
+  using (archive_user_id = auth.uid());
 
 create policy reception_allowlist_insert_own
   on public.reception_allowlist for insert to authenticated
   with check (
-    owner_id = auth.uid()
+    archive_user_id = auth.uid()
     and allowed_profile_id <> auth.uid()
   );
 
 create policy reception_allowlist_delete_own
   on public.reception_allowlist for delete to authenticated
-  using (owner_id = auth.uid());
+  using (archive_user_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
 -- Gate helper (used by send RPC and future bridge consumers)
 -- ---------------------------------------------------------------------------
 
 create or replace function public.is_sender_allowed_for_reception(
-  p_owner_id uuid,
+  p_archive_user_id uuid,
   p_sender_profile_id uuid
 )
 returns boolean
@@ -53,7 +53,7 @@ as $$
   select exists (
     select 1
     from public.reception_allowlist r
-    where r.owner_id = p_owner_id
+    where r.archive_user_id = p_archive_user_id
       and r.allowed_profile_id = p_sender_profile_id
   );
 $$;
@@ -112,7 +112,7 @@ begin
   if p_client_message_id is not null then
     select m.id into v_sender_id
     from public.messages m
-    where m.owner_id = v_me
+    where m.archive_user_id = v_me
       and m.client_message_id = p_client_message_id
     limit 1;
 
@@ -160,7 +160,7 @@ begin
   v_lambda := gen_random_uuid();
 
   insert into public.messages (
-    owner_id,
+    archive_user_id,
     author_id,
     peer_profile_id,
     logical_message_id,
@@ -212,7 +212,7 @@ begin
 
   if v_allowed then
     insert into public.messages (
-      owner_id,
+      archive_user_id,
       author_id,
       peer_profile_id,
       logical_message_id,

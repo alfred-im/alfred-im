@@ -15,7 +15,7 @@ Key navigationShellKey({
     Object.hash(
       'navigation-shell',
       focusUserId,
-      committedScope?.ownerUserId,
+      committedScope?.focusUserId,
       committedScope?.peerProfileId,
       committedScope?.sessionEpoch,
       committedScope?.loadSeq,

@@ -46,7 +46,7 @@ void main() {
 
       adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
-          ownerUserId: 'user-a',
+          recipientUserId: 'user-a',
           peerProfileId: 'peer-b',
         ),
         sessionReady: false,
@@ -65,7 +65,7 @@ void main() {
 
       adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
-          ownerUserId: 'user-a',
+          recipientUserId: 'user-a',
           peerProfileId: 'peer-b',
         ),
         sessionReady: true,
@@ -85,7 +85,7 @@ void main() {
 
       adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
-          ownerUserId: 'user-a',
+          recipientUserId: 'user-a',
           peerProfileId: 'peer-b',
         ),
         sessionReady: true,
@@ -104,7 +104,7 @@ void main() {
 
       adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
-          ownerUserId: 'user-a',
+          recipientUserId: 'user-a',
           peerProfileId: 'peer-b',
         ),
         sessionReady: true,
@@ -112,7 +112,7 @@ void main() {
       );
       adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
-          ownerUserId: 'user-c',
+          recipientUserId: 'user-c',
           peerProfileId: 'peer-d',
         ),
         sessionReady: true,

@@ -24,7 +24,7 @@
 
 UML platform: [seq-reception-delivery-gate.puml](../../model/uml/reception/seq-reception-delivery-gate.puml) — `DeliveryWorker` → `ReceptionGate` : `EvaluateInboundDelivery`.
 
-Implementazione (non vincolante): helper SQL `is_sender_allowed_for_reception(owner, sender)` invocato da `deliver_internal`.
+Implementazione (non vincolante): helper SQL `is_sender_allowed_for_reception(archive_user, sender)` invocato da `deliver_internal`.
 
 ---
 

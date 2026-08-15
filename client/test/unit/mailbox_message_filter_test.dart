@@ -11,10 +11,10 @@ void main() {
     const me = 'user-a';
     const peer = 'peer-b';
 
-    test('matches owner_id and peer_profile_id', () {
+    test('matches archive_user_id and peer_profile_id', () {
       expect(
         isMailboxPeerMessageRelevant(
-          record: {'owner_id': me, 'peer_profile_id': peer},
+          record: {'archive_user_id': me, 'peer_profile_id': peer},
           currentUserId: me,
           peerProfileId: peer,
         ),
@@ -22,10 +22,10 @@ void main() {
       );
     });
 
-    test('rejects wrong owner', () {
+    test('rejects wrong archive_user', () {
       expect(
         isMailboxPeerMessageRelevant(
-          record: {'owner_id': 'other', 'peer_profile_id': peer},
+          record: {'archive_user_id': 'other', 'peer_profile_id': peer},
           currentUserId: me,
           peerProfileId: peer,
         ),
@@ -36,7 +36,7 @@ void main() {
     test('rejects wrong peer', () {
       expect(
         isMailboxPeerMessageRelevant(
-          record: {'owner_id': me, 'peer_profile_id': 'other'},
+          record: {'archive_user_id': me, 'peer_profile_id': 'other'},
           currentUserId: me,
           peerProfileId: peer,
         ),
@@ -45,18 +45,18 @@ void main() {
     });
   });
 
-  group('isOwnerArchiveRow', () {
-    test('matches owner_id only', () {
+  group('isArchiveUserRow', () {
+    test('matches archive_user_id only', () {
       expect(
-        isOwnerArchiveRow(
-          record: {'owner_id': 'user-a', 'peer_profile_id': 'peer-b'},
+        isArchiveUserRow(
+          record: {'archive_user_id': 'user-a', 'peer_profile_id': 'peer-b'},
           currentUserId: 'user-a',
         ),
         isTrue,
       );
       expect(
-        isOwnerArchiveRow(
-          record: {'owner_id': 'other'},
+        isArchiveUserRow(
+          record: {'archive_user_id': 'other'},
           currentUserId: 'user-a',
         ),
         isFalse,

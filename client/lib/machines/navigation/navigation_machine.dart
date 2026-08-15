@@ -95,7 +95,7 @@ class NavigationMachine {
       'scope.invalidate',
       data: {
         'loadSeq': _loadSeq,
-        'previousOwner': previous?.ownerUserId,
+        'previousFocusUserId': previous?.focusUserId,
         'previousPeer': previous?.peerProfileId,
       },
     );
@@ -108,7 +108,7 @@ class NavigationMachine {
       DiagnosticFlows.nav,
       'scope.commit',
       data: {
-        'ownerUserId': scope.ownerUserId,
+        'focusUserId': scope.focusUserId,
         'peerProfileId': scope.peerProfileId,
         'sessionEpoch': scope.sessionEpoch,
         'loadSeq': _loadSeq,
@@ -120,7 +120,7 @@ class NavigationMachine {
   bool reconcileSessionEpoch(AccountSession session) {
     final committed = committedScope;
     if (committed == null) return false;
-    if (committed.ownerUserId != session.userId) return false;
+    if (committed.focusUserId != session.userId) return false;
     if (committed.sessionEpoch == session.epoch) return true;
     _loadSeq++;
     committedScope = committed.copyWith(
@@ -132,7 +132,7 @@ class NavigationMachine {
       DiagnosticFlows.nav,
       'scope.epoch_reconcile',
       data: {
-        'ownerUserId': session.userId,
+        'focusUserId': session.userId,
         'previousEpoch': committed.sessionEpoch,
         'newEpoch': session.epoch,
         'loadSeq': _loadSeq,
@@ -143,7 +143,7 @@ class NavigationMachine {
 
   bool isScopeCommitted(ConversationScope scope) =>
       isConversationReadyFor(
-        ownerUserId: scope.ownerUserId,
+        focusUserId: scope.focusUserId,
         peerProfileId: scope.peerProfileId,
       );
 
@@ -152,20 +152,20 @@ class NavigationMachine {
     required ChatPeer peer,
   }) {
     return isConversationReadyFor(
-      ownerUserId: session.userId,
+      focusUserId: session.userId,
       peerProfileId: peer.profileId,
       sessionEpoch: session.epoch,
     );
   }
 
   bool isConversationReadyFor({
-    required String ownerUserId,
+    required String focusUserId,
     required String peerProfileId,
     int? sessionEpoch,
   }) {
     final committed = committedScope;
     if (committed == null) return false;
-    if (committed.ownerUserId != ownerUserId ||
+    if (committed.focusUserId != focusUserId ||
         committed.peerProfileId != peerProfileId) {
       return false;
     }

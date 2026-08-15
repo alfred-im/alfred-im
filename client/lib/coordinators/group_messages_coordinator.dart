@@ -17,7 +17,7 @@ import '../machines/groups/groups_effects.dart';
 import '../machines/groups/groups_machine.dart';
 import '../models/message.dart';
 import '../models/profile_summary.dart';
-import '../services/group_owner_archive_cache.dart';
+import '../services/group_archive_cache.dart';
 import '../services/group_archive_service.dart';
 import '../services/message_media_service.dart';
 import '../services/profile_service.dart';
@@ -49,21 +49,21 @@ class _GroupMediaBroadcastSpec {
   final _GroupBroadcastSend send;
 }
 
-/// Orchestrazione storico owner, broadcast e realtime gruppo.
+/// Orchestrazione storico archivio, broadcast e realtime gruppo.
 class GroupMessagesCoordinator {
   GroupMessagesCoordinator({
     required String userId,
     required GroupArchiveService groupArchive,
     required MessageMediaService messageMediaService,
     required ProfileService profileService,
-    required GroupOwnerArchiveCache ownerArchiveCache,
+    required GroupArchiveCache archiveCache,
     required void Function() onStateChanged,
     this.onMessagesChanged,
   })  : _userId = userId,
         _groupArchive = groupArchive,
         _messageMediaService = messageMediaService,
         _profileService = profileService,
-        _ownerArchiveCache = ownerArchiveCache,
+        _archiveCache = archiveCache,
         _onStateChanged = onStateChanged {
     _machine = GroupMessagesMachine(_LiveGroupMessagesEffects._(this));
     unawaited(_machine.send(const InitGroupMessages()));
@@ -73,7 +73,7 @@ class GroupMessagesCoordinator {
   final GroupArchiveService _groupArchive;
   final MessageMediaService _messageMediaService;
   final ProfileService _profileService;
-  final GroupOwnerArchiveCache _ownerArchiveCache;
+  final GroupArchiveCache _archiveCache;
   final void Function() _onStateChanged;
   final Future<void> Function()? onMessagesChanged;
   late final GroupMessagesMachine _machine;
@@ -273,7 +273,7 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
   @override
   Future<void> loadMessages({bool forceRefresh = false}) async {
     try {
-      final loaded = await _c._ownerArchiveCache.fetch(
+      final loaded = await _c._archiveCache.fetch(
         forceRefresh: forceRefresh,
       );
       _c.state.messages = await _enrichMessages(loaded);
@@ -291,10 +291,10 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
   @override
   void attachRealtime() {
     if (_c._channel != null) return;
-    _c._channel = _c._groupArchive.subscribeToOwnerMessages(
+    _c._channel = _c._groupArchive.subscribeToArchiveMessages(
       currentUserId: _c._userId,
       onMessage: (message) {
-        unawaited(_c._machine.send(OwnerRealtimeReceived(message)));
+        unawaited(_c._machine.send(ArchiveRealtimeReceived(message)));
       },
     );
   }
@@ -317,7 +317,7 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
     _c._pendingBroadcast = null;
     try {
       await send(_c._uuid.v4());
-      _c._ownerArchiveCache.invalidate();
+      _c._archiveCache.invalidate();
       await loadMessages(forceRefresh: true);
       await _c.onMessagesChanged?.call();
       _c.state.error = null;

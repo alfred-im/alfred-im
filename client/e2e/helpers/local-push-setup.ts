@@ -32,7 +32,7 @@ export type PushPayload = {
 
 export type SendMessageResult = {
   logical_message_id: string;
-  owner_id: string;
+  archive_user_id: string;
 };
 
 /** Configura push_settings sul DB locale (VAPID + URL Edge Functions). */
@@ -61,11 +61,11 @@ export function configureLocalPushSettings(): void {
   );
 }
 
-function insertAllowlistLocalSql(ownerUserId: string, allowedProfileId: string) {
+function insertAllowlistLocalSql(recipientUserId: string, allowedProfileId: string) {
   const sql =
-    `INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id) ` +
-    `VALUES ('${ownerUserId}', '${allowedProfileId}') ` +
-    `ON CONFLICT (owner_id, allowed_profile_id) DO NOTHING;`;
+    `INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id) ` +
+    `VALUES ('${recipientUserId}', '${allowedProfileId}') ` +
+    `ON CONFLICT (archive_user_id, allowed_profile_id) DO NOTHING;`;
   execSync(
     `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
     { stdio: 'pipe' },
@@ -93,17 +93,17 @@ export function configureLocalChatMediaBucket(): void {
 }
 
 export function addReceptionAllowlist(options: {
-  ownerUserId: string;
+  recipientUserId: string;
   allowedProfileId: string;
-  ownerAccessToken: string;
+  recipientAccessToken: string;
 }): Promise<void> {
   if (isLocalSupabaseStack() && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    insertAllowlistLocalSql(options.ownerUserId, options.allowedProfileId);
+    insertAllowlistLocalSql(options.recipientUserId, options.allowedProfileId);
     return Promise.resolve();
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const authToken = serviceKey ?? options.ownerAccessToken;
+  const authToken = serviceKey ?? options.recipientAccessToken;
   const apiKey = serviceKey ?? ANON_KEY;
 
   return fetch(`${SUPABASE_URL}/rest/v1/reception_allowlist`, {
@@ -115,7 +115,7 @@ export function addReceptionAllowlist(options: {
       Prefer: 'resolution=ignore-duplicates',
     },
     body: JSON.stringify({
-      owner_id: options.ownerUserId,
+      archive_user_id: options.recipientUserId,
       allowed_profile_id: options.allowedProfileId,
     }),
   }).then(async (res) => {
@@ -154,11 +154,11 @@ export async function sendMessageToProfile(options: {
   }
   const json = (await res.json()) as {
     logical_message_id: string;
-    owner_id: string;
+    archive_user_id: string;
   };
   return {
     logical_message_id: json.logical_message_id,
-    owner_id: json.owner_id,
+    archive_user_id: json.archive_user_id,
   };
 }
 

@@ -118,13 +118,13 @@ class PushPlatform {
   }
 
   static void updateSuppression({
-    required String? focusUserId,
+    required String? recipientUserId,
     required String? activePeerProfileId,
     required bool appVisible,
   }) {
     final payload = jsonEncode({
       'type': 'alfred_push_suppression',
-      'focusUserId': focusUserId,
+      'recipientUserId': recipientUserId,
       'activePeerProfileId': activePeerProfileId,
       'appVisible': appVisible,
     });
@@ -148,12 +148,12 @@ class PushPlatform {
       'push',
       'pending.persist',
       data: {
-        'recipientUserId': conversation.ownerUserId,
+        'recipientUserId': conversation.recipientUserId,
         'peerProfileId': conversation.peerProfileId,
       },
     );
     final payload = jsonEncode({
-      'recipientUserId': conversation.ownerUserId,
+      'recipientUserId': conversation.recipientUserId,
       'peerProfileId': conversation.peerProfileId,
     });
     web.window.localStorage.setItem(_pendingOpenChatKey, payload);
@@ -189,7 +189,7 @@ class PushPlatform {
       'push',
       'pending.drain',
       data: {
-        'recipientUserId': intent.conversation.ownerUserId,
+        'recipientUserId': intent.conversation.recipientUserId,
         'peerProfileId': intent.conversation.peerProfileId,
       },
     );
@@ -216,7 +216,7 @@ class PushPlatform {
       'push',
       'open_chat.emit',
       data: {
-        'recipientUserId': conversation.ownerUserId,
+        'recipientUserId': conversation.recipientUserId,
         'peerProfileId': conversation.peerProfileId,
       },
     );
@@ -258,7 +258,7 @@ class PushPlatform {
       logSource,
       data: {
         'type': 'open_chat',
-        'recipientUserId': conversation.ownerUserId,
+        'recipientUserId': conversation.recipientUserId,
         'peerProfileId': conversation.peerProfileId,
       },
     );

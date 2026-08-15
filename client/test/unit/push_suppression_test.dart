@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('push suppression state keys are stable', () {
     PushPlatform.updateSuppression(
-      focusUserId: 'user-a',
+      recipientUserId: 'user-a',
       activePeerProfileId: 'peer-b',
       appVisible: true,
     );
@@ -21,17 +21,20 @@ void main() {
       recipientUserId: 'account-a',
       peerProfileId: 'peer-b',
     );
-    expect(intent.conversation, const PushConversationKey(
-      ownerUserId: 'account-a',
-      peerProfileId: 'peer-b',
-    ));
+    expect(
+      intent.conversation,
+      const PushConversationKey(
+        recipientUserId: 'account-a',
+        peerProfileId: 'peer-b',
+      ),
+    );
     expect(intent.recipientUserId, 'account-a');
     expect(intent.peerProfileId, 'peer-b');
   });
 
   test('cross-account: same peer does not match wrong account suppression', () {
     const pushForAccountB = PushConversationKey(
-      ownerUserId: 'account-b',
+      recipientUserId: 'account-b',
       peerProfileId: 'shared-peer',
     );
     expect(

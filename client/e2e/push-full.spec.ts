@@ -71,14 +71,14 @@ test('push locale: permesso, messaggio e notifica ricevuta nel service worker', 
   );
 
   await addReceptionAllowlist({
-    ownerUserId: recipient.userId,
+    recipientUserId: recipient.userId,
     allowedProfileId: sender.userId,
-    ownerAccessToken: recipientSession.accessToken,
+    recipientAccessToken: recipientSession.accessToken,
   });
   await addReceptionAllowlist({
-    ownerUserId: sender.userId,
+    recipientUserId: sender.userId,
     allowedProfileId: recipient.userId,
-    ownerAccessToken: senderSession.accessToken,
+    recipientAccessToken: senderSession.accessToken,
   });
 
   await installPushSubscribeMock(page);

@@ -56,10 +56,10 @@ void main() {
   testWidgets('open_chat intent apre la conversazione con il peer', (
     tester,
   ) async {
-    const owner = ProfileSummary(
-      id: 'owner-uuid',
-      username: 'e2e_owner',
-      displayName: 'E2E Owner',
+    const focusProfile = ProfileSummary(
+      id: 'focus-uuid',
+      username: 'e2e_focus',
+      displayName: 'E2E Focus',
     );
     const peer = ProfileSummary(
       id: 'peer-uuid',
@@ -69,7 +69,7 @@ void main() {
 
     final client = createTestSupabaseClient();
     final session = await AccountSession.createForTest(
-      profile: owner,
+      profile: focusProfile,
       client: client,
       inboxService: FakeInboxService(
         peers: [ChatPeer(profile: peer)],
@@ -83,8 +83,8 @@ void main() {
       ..sessionReady = true;
     await seedMultiAccountMachineForTest(
       auth,
-      openAccountUserIds: const ['owner-uuid'],
-      focusUserId: 'owner-uuid',
+      openAccountUserIds: const ['focus-uuid'],
+      focusUserId: 'focus-uuid',
     );
 
     addTearDown(() => session.disposeResources(clearAuthStorage: false));
@@ -116,7 +116,7 @@ void main() {
 
     intents.add(
       PushOpenChatIntent.fromParts(
-        recipientUserId: 'owner-uuid',
+        recipientUserId: 'focus-uuid',
         peerProfileId: 'peer-uuid',
       ),
     );
@@ -374,7 +374,7 @@ void main() {
       expect(auth.userId, 'account-b');
       expect(auth.activePeer?.profile.id, 'account-a');
       expect(
-        auth.committedScope?.ownerUserId,
+        auth.committedScope?.focusUserId,
         'account-b',
       );
       expect(

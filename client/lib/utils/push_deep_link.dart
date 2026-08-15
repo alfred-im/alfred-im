@@ -28,5 +28,5 @@ class PushDeepLink {
   }
 
   static String hashFor(PushConversationKey conversation) =>
-      '#$fragmentPrefix${conversation.ownerUserId}/${conversation.peerProfileId}';
+      '#$fragmentPrefix${conversation.recipientUserId}/${conversation.peerProfileId}';
 }

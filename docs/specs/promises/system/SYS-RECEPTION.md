@@ -25,12 +25,12 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 
 | ID | Promessa |
 |----|----------|
-| **SYS-RECEPTION-001** | Tabella `reception_allowlist` scoped per `owner_id` (destinatario che filtra) con RLS `owner_id = auth.uid()` |
-| **SYS-RECEPTION-002** | Colonne: `id` uuid PK, `owner_id` FK → profiles, `allowed_profile_id` FK → profiles, `created_at` timestamptz |
-| **SYS-RECEPTION-003** | Unicità `(owner_id, allowed_profile_id)`; `allowed_profile_id ≠ owner_id` |
+| **SYS-RECEPTION-001** | Tabella `reception_allowlist` scoped per `archive_user_id` (destinatario che filtra) con RLS `archive_user_id = auth.uid()` |
+| **SYS-RECEPTION-002** | Colonne: `id` uuid PK, `archive_user_id` FK → profiles, `allowed_profile_id` FK → profiles, `created_at` timestamptz |
+| **SYS-RECEPTION-003** | Unicità `(archive_user_id, allowed_profile_id)`; `allowed_profile_id ≠ archive_user_id` |
 | **SYS-RECEPTION-004** | CRUD lista via PostgREST diretto su `reception_allowlist` (nessuna RPC dedicata obbligatoria) |
 | **SYS-RECEPTION-005** | Gate server nel worker [SYS-DELIVERY](./SYS-DELIVERY.md) **prima** della materializzazione copia destinatario |
-| **SYS-RECEPTION-006** | Condizione recapito: esiste riga `reception_allowlist` con `owner_id = destinatario` AND `allowed_profile_id = mittente` |
+| **SYS-RECEPTION-006** | Condizione recapito: esiste riga `reception_allowlist` con `archive_user_id = destinatario` AND `allowed_profile_id = mittente` |
 | **SYS-RECEPTION-007** | Lista vuota → **nessun** mittente soddisfa il gate → tutti i messaggi nuovi rifiutati |
 | **SYS-RECEPTION-008** | Su rifiuto: INSERT copia mittente + outbox come oggi; **nessuna** INSERT copia destinatario; `delivered_at` resta null sulla copia mittente |
 | **SYS-RECEPTION-009** | Su rifiuto **inbound**: RPC ritorna la copia mittente senza errore (rifiuto silenzioso) |
@@ -71,7 +71,7 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 
 Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md) § Consegna / Flusso internal
 
-Helper interno: `is_sender_allowed_for_reception(p_owner_id, p_sender_profile_id) boolean` — `SECURITY DEFINER`, usata da RPC invio (outbound + idempotenza) e worker delivery (inbound).
+Helper interno: `is_sender_allowed_for_reception(p_archive_user_id, p_sender_profile_id) boolean` — `SECURITY DEFINER`, usata da RPC invio (outbound + idempotenza) e worker delivery (inbound).
 
 Vedi [contracts/schema.md](../../contracts/schema.md) · [SYS-MAILBOX](./SYS-MAILBOX.md) SYS-MAILBOX-020.
 

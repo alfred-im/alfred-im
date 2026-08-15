@@ -292,7 +292,7 @@ class PeerMessageService {
           table: 'messages',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
+            column: 'archive_user_id',
             value: currentUserId,
           ),
           callback: handle,
@@ -303,7 +303,7 @@ class PeerMessageService {
           table: 'messages',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
+            column: 'archive_user_id',
             value: currentUserId,
           ),
           callback: handle,

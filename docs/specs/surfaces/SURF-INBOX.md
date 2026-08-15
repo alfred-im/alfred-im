@@ -5,7 +5,7 @@
 | **Superficie ID** | `SURF-INBOX` |
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-03 |
-| **Promesse** | [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md), [PROM-REALTIME-OWNER](../promises/product/PROM-REALTIME-OWNER.md) |
+| **Promesse** | [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md), [PROM-REALTIME-ARCHIVE](../promises/product/PROM-REALTIME-ARCHIVE.md) |
 | **PR** | #132, #161 |
 
 Binding promessa PRODUCT filtro lista sulla inbox (`InboxPanel`) + entry «Persone consentite» in header.

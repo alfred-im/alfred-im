@@ -33,7 +33,7 @@ Binding UX messaggistica gruppo: attribuzione autore contenuto, header avatar+no
 | **SURF-GROUP-CONVERSATION-001** | UI messaggio in contesto gruppo: testo attribuito **sempre** a `original_author_id` (campo canonico «chi ha scritto») |
 | **SURF-GROUP-CONVERSATION-002** | Intestazione sopra la bolla con **avatar** (foto o iniziale colorata) e **nome leggibile** (`display_name`, fallback username senza `@`) |
 | **SURF-GROUP-CONVERSATION-003** | Contesto conversazione con **gruppo** (`peer_profile_id`) per messaggi erogati su archivio `user` |
-| **SURF-GROUP-CONVERSATION-004** | Account `group`: storico via query su `messages` WHERE `owner_id = auth.uid()` ORDER BY `created_at` (non `list_inbox`) |
+| **SURF-GROUP-CONVERSATION-004** | Account `group`: storico via query su `messages` WHERE `archive_user_id = auth.uid()` ORDER BY `created_at` (non `list_inbox`) |
 | **SURF-GROUP-CONVERSATION-005** | Account `user`: `list_inbox()` e `list_peer_messages(gruppo)` includono messaggi erogati con `peer_profile_id = gruppo` |
 | **SURF-GROUP-CONVERSATION-006** | Gruppo in focus: compose broadcast (`sendGif` / `sendVoice` / `sendLocation` / `sendImage` / `sendVideo`) verso allow list — [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md) |
 | **SURF-GROUP-CONVERSATION-009** | Apertura da [SURF-GROUP-HOME](./SURF-GROUP-HOME.md): non è schermata default al focus gruppo |
@@ -46,7 +46,7 @@ Binding UX messaggistica gruppo: attribuzione autore contenuto, header avatar+no
 
 | ID | Promessa |
 |----|----------|
-| **SURF-GROUP-CONVERSATION-007** | Realtime: subscribe `messages` `owner_id = io` — account user riceve INSERT erogati; account group riceve INSERT in entrata |
+| **SURF-GROUP-CONVERSATION-007** | Realtime: subscribe `messages` `archive_user_id = io` — account user riceve INSERT erogati; account group riceve INSERT in entrata |
 | **SURF-GROUP-CONVERSATION-008** | Preview inbox per messaggio erogato: prefisso o formato che indica autore umano se `original_author_id` valorizzato |
 
 ### MUST NOT
@@ -68,7 +68,7 @@ Binding UX messaggistica gruppo: attribuzione autore contenuto, header avatar+no
 | SURF-GROUP-CONVERSATION-006 | `group_messages_controller_media_test.dart`, `group_broadcast_smoke.sql` |
 | SURF-GROUP-CONVERSATION-009, 012 | `group_conversation_screen_test.dart`; `home_screen_group_test.dart` |
 | SURF-GROUP-CONVERSATION-013 | `chat_input_bar_test.dart`; `group_conversation_screen.dart` — `ChatInputBar` |
-| SURF-GROUP-CONVERSATION-007 | realtime subscribe `messages` owner filter |
+| SURF-GROUP-CONVERSATION-007 | realtime subscribe `messages` archive filter |
 
 Gate: `check-spec-sync.sh` + `verify.sh` + smoke SQL + `integration`
 

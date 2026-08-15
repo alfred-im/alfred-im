@@ -9,7 +9,7 @@
 
 ## Chiave conversazione push
 
-1. Ogni notifica/intent 1:1 identifica **(owner, peer)** — formato `owner|peer` (`PushConversationKey.canonicalKey`).
+1. Ogni notifica/intent 1:1 identifica **(archive_user, peer)** — formato `recipient|peer` (`PushConversationKey.canonicalKey`).
 2. Stesso formato di outbound queue e scope messaggistica — mai «solo peer» senza account.
 
 ## Tap push

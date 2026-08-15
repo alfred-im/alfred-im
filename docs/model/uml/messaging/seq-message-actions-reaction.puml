@@ -24,7 +24,7 @@ alt logical_message_id assente (pending)
 else emoji già attiva (idempotenza)
   MAM --> UI : no-op
 else nuovo fatto
-  MAM -> AM : runAsOwner
+  MAM -> AM : runAsFocus
   AM -> SB : ApplyReaction
   SB --> AM : ReactionApplied
   AM --> MAM : ReactionApplied

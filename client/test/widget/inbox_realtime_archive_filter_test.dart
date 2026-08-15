@@ -40,7 +40,7 @@ class _SpyInboxService extends InboxService {
 }
 
 void main() {
-  test('InboxController subscribes realtime on owner_id archive', () async {
+  test('InboxController subscribes realtime on archive_user_id archive', () async {
     final client = _createTestSupabaseClient();
     final spy = _SpyInboxService(client);
     const userId = 'efd885fe-b36e-48fc-a796-0e3f153e40d6';

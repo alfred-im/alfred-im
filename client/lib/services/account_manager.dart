@@ -356,7 +356,7 @@ class AccountManager {
     if (clientHasGoTrueSession(session.client)) {
       return isAccountSessionReady(
         client: session.client,
-        ownerUserId: userId,
+        focusUserId: userId,
       );
     }
     if (restoreSessionForTest != null) return true;

@@ -36,7 +36,7 @@ shareable-link ──OpenFromShareableLink──► navigation
 navigation ──FocusAccount──► multi-account
 multi-account ──sessione──► auth
 messaging ──outbox──► reception, delivery
-groups ──broadcast/owner──► delivery, reception
+groups ──broadcast/archive──► delivery, reception
 federation ──outbox queued──► delivery (consumer bridge stub)
 ```
 

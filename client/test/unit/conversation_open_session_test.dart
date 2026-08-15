@@ -83,11 +83,11 @@ void main() {
       await manager.initialize(focusUserId: 'account-a');
     });
 
-    group('SessionAuthority.ensureOwnerReady', () {
+    group('SessionAuthority.ensureFocusReady', () {
       test('ripristina sessione se JWT assente in RAM', () async {
         manager.clearSessionsInRamForTest();
 
-        await manager.sessionAuthority.ensureOwnerReady('account-a');
+        await manager.sessionAuthority.ensureFocusReady('account-a');
 
         expect(restoreCallsForA, greaterThanOrEqualTo(1));
         expect(manager.isSessionReadyForAccount('account-a'), isTrue);
@@ -98,7 +98,7 @@ void main() {
         manager.injectTestSession(sessionB);
         expect(manager.sessions.length, 2);
 
-        await manager.sessionAuthority.ensureOwnerReady('account-a');
+        await manager.sessionAuthority.ensureFocusReady('account-a');
 
         expect(manager.sessions.map((s) => s.userId), ['account-a']);
         expect(manager.isSessionReadyForAccount('account-a'), isTrue);
@@ -126,7 +126,7 @@ void main() {
           return sessionB;
         };
 
-        await manager.sessionAuthority.ensureOwnerReady('account-a');
+        await manager.sessionAuthority.ensureFocusReady('account-a');
 
         expect(restoreCallsForA, greaterThanOrEqualTo(1));
         expect(manager.isSessionReadyForAccount('account-a'), isTrue);
@@ -154,7 +154,7 @@ void main() {
           ),
         );
 
-        expect(navigation.committedScope?.ownerUserId, 'account-a');
+        expect(navigation.committedScope?.focusUserId, 'account-a');
         expect(navigation.committedScope?.peerProfileId, 'account-b');
         expect(manager.viewState.activePeer?.profileId, 'account-b');
 
@@ -199,7 +199,7 @@ void main() {
         expect(ok, isTrue);
         await pumpEventQueue(times: 20);
         expect(manager.isSessionReadyForAccount('account-a'), isTrue);
-        expect(machine.committedScope?.ownerUserId, 'account-a');
+        expect(machine.committedScope?.focusUserId, 'account-a');
         expect(machine.committedScope?.peerProfileId, 'account-b');
       });
     });

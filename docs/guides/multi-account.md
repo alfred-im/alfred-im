@@ -112,7 +112,7 @@ Nessun provider inbox globale — `ChangeNotifierProxyProvider` per contatti/pro
 
 ## Test
 
-**Igiene CI:** `account_storage_test`, `account_manager_view_state_test`, `multi_account_chat_scenario_test`, `inbox_realtime_owner_filter_test`
+**Igiene CI:** `account_storage_test`, `account_manager_view_state_test`, `multi_account_chat_scenario_test`, `inbox_realtime_archive_filter_test`
 
 **Release:**
 

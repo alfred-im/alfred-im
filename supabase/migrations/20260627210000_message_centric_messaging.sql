@@ -11,7 +11,7 @@
 
 create table public.inbox_threads (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references public.profiles (id) on delete cascade,
+  archive_user_id uuid not null references public.profiles (id) on delete cascade,
   peer_profile_id uuid references public.profiles (id) on delete set null,
   peer_external_address text,
   peer_display_name text,
@@ -33,16 +33,16 @@ create table public.inbox_threads (
   )
 );
 
-create unique index inbox_threads_owner_peer_profile_idx
-  on public.inbox_threads (owner_id, peer_profile_id)
+create unique index inbox_threads_archive_user_peer_profile_idx
+  on public.inbox_threads (archive_user_id, peer_profile_id)
   where peer_profile_id is not null;
 
-create unique index inbox_threads_owner_external_idx
-  on public.inbox_threads (owner_id, lower(peer_external_address))
+create unique index inbox_threads_archive_user_external_idx
+  on public.inbox_threads (archive_user_id, lower(peer_external_address))
   where peer_external_address is not null;
 
-create index inbox_threads_owner_last_message_idx
-  on public.inbox_threads (owner_id, last_message_at desc nulls last);
+create index inbox_threads_archive_user_last_message_idx
+  on public.inbox_threads (archive_user_id, last_message_at desc nulls last);
 
 -- ---------------------------------------------------------------------------
 -- messages: destinatario esplicito (niente conversation_id)
@@ -82,7 +82,7 @@ from message_migration mm
 where m.id = mm.message_id;
 
 insert into public.inbox_threads (
-  owner_id,
+  archive_user_id,
   peer_profile_id,
   peer_external_address,
   peer_display_name,
@@ -94,7 +94,7 @@ insert into public.inbox_threads (
   last_read_at
 )
 select
-  cp.profile_id as owner_id,
+  cp.profile_id as archive_user_id,
   case when peer_op.profile_id is distinct from cp.profile_id then peer_op.profile_id end,
   ct.external_address,
   coalesce(
@@ -136,7 +136,7 @@ left join public.conversation_participants cp_peer
   on cp_peer.conversation_id = cp.conversation_id
   and cp_peer.profile_id <> cp.profile_id
 inner join public.inbox_threads it
-  on it.owner_id = cp.profile_id
+  on it.archive_user_id = cp.profile_id
   and (
     (it.peer_profile_id is not null and it.peer_profile_id = cp_peer.profile_id)
     or (
@@ -156,7 +156,7 @@ alter table public.sync_cursors
   drop constraint if exists sync_cursors_profile_id_conversation_id_protocol_cursor_key_key;
 
 alter table public.sync_cursors
-  add constraint sync_cursors_owner_thread_protocol_key_unique
+  add constraint sync_cursors_archive_user_thread_protocol_key_unique
   unique (profile_id, inbox_thread_id, protocol, cursor_key);
 
 -- Rimuovi modello conversazione (policy prima delle dipendenze)
@@ -222,7 +222,7 @@ $$;
 create or replace function public.is_direct_message_visible(
   p_sender_id uuid,
   p_recipient_profile_id uuid,
-  p_owner_id uuid,
+  p_archive_user_id uuid,
   p_peer_profile_id uuid
 )
 returns boolean
@@ -230,10 +230,10 @@ language sql
 immutable
 as $$
   select
-    p_sender_id = p_owner_id
+    p_sender_id = p_archive_user_id
     and p_recipient_profile_id = p_peer_profile_id
     or p_sender_id = p_peer_profile_id
-    and p_recipient_profile_id = p_owner_id;
+    and p_recipient_profile_id = p_archive_user_id;
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -241,7 +241,7 @@ $$;
 -- ---------------------------------------------------------------------------
 
 create or replace function public.upsert_inbox_thread(
-  p_owner_id uuid,
+  p_archive_user_id uuid,
   p_peer_profile_id uuid,
   p_peer_external_address text,
   p_peer_display_name text,
@@ -260,7 +260,7 @@ declare
 begin
   if p_protocol = 'internal' then
     insert into public.inbox_threads (
-      owner_id,
+      archive_user_id,
       peer_profile_id,
       peer_display_name,
       protocol,
@@ -270,23 +270,23 @@ begin
       unread_count
     )
     values (
-      p_owner_id,
+      p_archive_user_id,
       p_peer_profile_id,
       p_peer_display_name,
       p_protocol,
       p_at,
       p_preview,
       p_sender_id,
-      case when p_sender_id = p_owner_id then 0 else 1 end
+      case when p_sender_id = p_archive_user_id then 0 else 1 end
     )
-    on conflict (owner_id, peer_profile_id) where peer_profile_id is not null
+    on conflict (archive_user_id, peer_profile_id) where peer_profile_id is not null
     do update set
       peer_display_name = coalesce(excluded.peer_display_name, inbox_threads.peer_display_name),
       last_message_at = excluded.last_message_at,
       last_message_preview = excluded.last_message_preview,
       last_message_sender_id = excluded.last_message_sender_id,
       unread_count = case
-        when excluded.last_message_sender_id = inbox_threads.owner_id then inbox_threads.unread_count
+        when excluded.last_message_sender_id = inbox_threads.archive_user_id then inbox_threads.unread_count
         else inbox_threads.unread_count + 1
       end,
       updated_at = now()
@@ -294,14 +294,14 @@ begin
   else
     select t.id into v_thread_id
     from public.inbox_threads t
-    where t.owner_id = p_owner_id
+    where t.archive_user_id = p_archive_user_id
       and t.peer_external_address is not null
       and lower(t.peer_external_address) = lower(p_peer_external_address)
     limit 1;
 
     if v_thread_id is null then
       insert into public.inbox_threads (
-        owner_id,
+        archive_user_id,
         peer_external_address,
         peer_display_name,
         protocol,
@@ -311,14 +311,14 @@ begin
         unread_count
       )
       values (
-        p_owner_id,
+        p_archive_user_id,
         p_peer_external_address,
         p_peer_display_name,
         p_protocol,
         p_at,
         p_preview,
         p_sender_id,
-        case when p_sender_id = p_owner_id then 0 else 1 end
+        case when p_sender_id = p_archive_user_id then 0 else 1 end
       )
       returning id into v_thread_id;
     else
@@ -329,7 +329,7 @@ begin
         last_message_preview = p_preview,
         last_message_sender_id = p_sender_id,
         unread_count = case
-          when p_sender_id = owner_id then unread_count
+          when p_sender_id = archive_user_id then unread_count
           else unread_count + 1
         end,
         updated_at = now()
@@ -483,7 +483,7 @@ as $$
     t.unread_count
   from public.inbox_threads t
   left join public.profiles p on p.id = t.peer_profile_id
-  where t.owner_id = auth.uid()
+  where t.archive_user_id = auth.uid()
     and t.last_message_at is not null
   order by t.last_message_at desc nulls last;
 $$;
@@ -507,11 +507,11 @@ as $$
   inner join public.messages m on public.is_direct_message_visible(
     m.sender_id,
     m.recipient_profile_id,
-    t.owner_id,
+    t.archive_user_id,
     t.peer_profile_id
   )
   where t.id = p_thread_id
-    and t.owner_id = auth.uid()
+    and t.archive_user_id = auth.uid()
     and m.marker_type is null
     and (
       trim(m.body) <> ''
@@ -541,7 +541,7 @@ begin
 
   select * into v_thread
   from public.inbox_threads
-  where id = p_thread_id and owner_id = v_me;
+  where id = p_thread_id and archive_user_id = v_me;
 
   if not found then
     raise exception 'thread not found';
@@ -549,7 +549,7 @@ begin
 
   update public.inbox_threads
   set unread_count = 0, last_read_at = now(), updated_at = now()
-  where id = p_thread_id and owner_id = v_me;
+  where id = p_thread_id and archive_user_id = v_me;
 
   insert into public.message_read_receipts (message_id, profile_id, status)
   select m.id, v_me, 'read'::public.message_delivery_status
@@ -557,7 +557,7 @@ begin
   where public.is_direct_message_visible(
       m.sender_id,
       m.recipient_profile_id,
-      v_thread.owner_id,
+      v_thread.archive_user_id,
       v_thread.peer_profile_id
     )
     and m.sender_id <> v_me
@@ -572,11 +572,11 @@ begin
   set delivery_status = 'read'
   from public.inbox_threads t
   where t.id = p_thread_id
-    and t.owner_id = v_me
+    and t.archive_user_id = v_me
     and public.is_direct_message_visible(
       m.sender_id,
       m.recipient_profile_id,
-      t.owner_id,
+      t.archive_user_id,
       t.peer_profile_id
     )
     and m.sender_id = v_me
@@ -725,12 +725,12 @@ alter table public.inbox_threads enable row level security;
 
 create policy inbox_threads_select_own
   on public.inbox_threads for select to authenticated
-  using (owner_id = auth.uid());
+  using (archive_user_id = auth.uid());
 
 create policy inbox_threads_update_own
   on public.inbox_threads for update to authenticated
-  using (owner_id = auth.uid())
-  with check (owner_id = auth.uid());
+  using (archive_user_id = auth.uid())
+  with check (archive_user_id = auth.uid());
 
 create policy messages_select_party
   on public.messages for select to authenticated

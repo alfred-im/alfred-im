@@ -45,9 +45,9 @@ void main() {
 
     final session = await AccountSession.createForTest(
       profile: const ProfileSummary(
-        id: 'owner-id',
-        username: 'owner',
-        displayName: 'Owner',
+        id: 'focus-id',
+        username: 'alice',
+        displayName: 'ArchiveUser',
       ),
       client: createTestSupabaseClient(),
       profileService: _FakeProfileService(peer),

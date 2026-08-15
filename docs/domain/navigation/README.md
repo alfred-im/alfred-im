@@ -41,7 +41,7 @@ Implementazione: `NavigationAdapters` · `ExternalIntentAdapter` · `NavigationC
 | UML / glossario | `NavigationShellState` | `committedScope` |
 |-----------------|--------------------------|------------------|
 | `InboxVisible` | `inboxVisible` | `null` |
-| `ChatOpen` | `chatOpen` | `(owner, peer, epoch)` |
+| `ChatOpen` | `chatOpen` | `(archive_user, peer, epoch)` |
 | `GroupShell` | `groupShell` | `null` (chat gruppo = view-state `groupChatOpen`) |
 
 Eventi osservabili correlati: `InboxVisible`, `ConversationVisible`, `GroupHomeVisible`, `GroupConversationVisible` — vedi [commands-and-events.md](commands-and-events.md).

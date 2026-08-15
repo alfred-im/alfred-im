@@ -12,18 +12,18 @@ import '../services/reception_allowlist_service.dart';
 /// Facade UI allow list — orchestrazione in [ReceptionCoordinator].
 class ReceptionAllowlistController extends ChangeNotifier {
   ReceptionAllowlistController({
-    required this.ownerId,
+    required this.focusUserId,
     this.sessionEpoch = 0,
     required ReceptionAllowlistService allowlistService,
   }) {
     _coordinator = ReceptionCoordinator(
-      ownerId: ownerId,
+      focusUserId: focusUserId,
       allowlistService: allowlistService,
       onStateChanged: notifyListeners,
     );
   }
 
-  final String ownerId;
+  final String focusUserId;
 
   /// Allineato a [AccountSession.epoch] — invalida il controller su restore sessione.
   final int sessionEpoch;

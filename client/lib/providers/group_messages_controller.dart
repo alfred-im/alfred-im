@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import '../coordinators/group_messages_coordinator.dart';
 import '../models/message.dart';
-import '../services/group_owner_archive_cache.dart';
+import '../services/group_archive_cache.dart';
 import '../services/group_archive_service.dart';
 import '../services/message_media_service.dart';
 import '../services/profile_service.dart';
@@ -19,10 +19,10 @@ class GroupMessagesController extends ChangeNotifier {
     required this.groupArchive,
     required this.messageMediaService,
     required this.profileService,
-    GroupOwnerArchiveCache? ownerArchiveCache,
+    GroupArchiveCache? archiveCache,
     this.onMessagesChanged,
-  }) : ownerArchiveCache = ownerArchiveCache ??
-            GroupOwnerArchiveCache.forGroupArchive(
+  }) : archiveCache = archiveCache ??
+            GroupArchiveCache.forGroupArchive(
               userId: userId,
               groupArchiveService: groupArchive,
             ) {
@@ -31,7 +31,7 @@ class GroupMessagesController extends ChangeNotifier {
       groupArchive: groupArchive,
       messageMediaService: messageMediaService,
       profileService: profileService,
-      ownerArchiveCache: this.ownerArchiveCache,
+      archiveCache: this.archiveCache,
       onStateChanged: notifyListeners,
       onMessagesChanged: onMessagesChanged,
     );
@@ -41,7 +41,7 @@ class GroupMessagesController extends ChangeNotifier {
   final GroupArchiveService groupArchive;
   final MessageMediaService messageMediaService;
   final ProfileService profileService;
-  final GroupOwnerArchiveCache ownerArchiveCache;
+  final GroupArchiveCache archiveCache;
   final Future<void> Function()? onMessagesChanged;
   late final GroupMessagesCoordinator _coordinator;
 

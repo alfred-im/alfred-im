@@ -45,7 +45,7 @@ void main() {
 
       final client = createTestSupabaseClient();
       final messageService = FakeMessageService(client);
-      messageService.ownerMessagesByUserId[groupId] = [
+      messageService.archiveMessagesByUserId[groupId] = [
         ChatMessage(
           id: 'm1',
           body: 'ciao',
@@ -88,11 +88,11 @@ void main() {
       expect(controller.activeAuthors.single.profile.id, marioId);
     });
 
-    test('home and messages coordinators share owner archive cache', () async {
+    test('home and messages coordinators share archive user cache', () async {
       SharedPreferences.setMockInitialValues({});
       final client = createTestSupabaseClient();
       final messageService = FakeMessageService(client);
-      messageService.ownerMessagesByUserId[groupId] = [
+      messageService.archiveMessagesByUserId[groupId] = [
         ChatMessage(
           id: 'm1',
           body: 'ciao',
@@ -133,12 +133,12 @@ void main() {
         groupArchive: messageService.groupArchive,
         messageMediaService: MessageMediaService(client),
         profileService: FakeProfileService(client),
-        ownerArchiveCache: home.ownerArchiveCache,
+        archiveCache: home.archiveCache,
       );
       await _waitForGroupController(messages);
       addTearDown(messages.dispose);
 
-      expect(identical(home.ownerArchiveCache, messages.ownerArchiveCache), isTrue);
+      expect(identical(home.archiveCache, messages.archiveCache), isTrue);
       expect(messages.messages, hasLength(1));
     });
 

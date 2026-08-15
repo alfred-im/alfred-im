@@ -82,7 +82,7 @@ void main() {
 
       final client = createTestSupabaseClient();
       final messageService = FakeMessageService(client);
-      messageService.ownerMessagesByUserId['group-1'] = [
+      messageService.archiveMessagesByUserId['group-1'] = [
         ChatMessage(
           id: 'm1',
           body: 'ciao',

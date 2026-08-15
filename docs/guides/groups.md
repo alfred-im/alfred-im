@@ -19,7 +19,7 @@
 | `home_screen.dart` | Branch gruppo → `_GroupAccountLayout` (no `InboxPanel`) |
 | `group_home_panel.dart` | Home gruppo |
 | `group_conversation_screen.dart` | Storico + broadcast |
-| `group_messages_controller.dart` (`providers/`) | `fetchOwnerMessages`, broadcast, realtime su `owner_id` |
+| `group_messages_controller.dart` (`providers/`) | `fetchArchiveMessages`, broadcast, realtime su `archive_user_id` |
 | `group_messages_coordinator.dart` | Wiring macchina gruppo ↔ controller |
 
 Mobile (<720px): `GroupHomePanel` → chat full-width dopo `openGroupChat()`.

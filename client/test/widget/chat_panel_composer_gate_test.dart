@@ -23,7 +23,7 @@ import '../support/fake_reception_allowlist_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const ownerId = 'owner-id';
+  const focusUserId = 'focus-id';
   const peer = ProfileSummary(
     id: 'peer-id',
     username: 'mario',
@@ -44,18 +44,18 @@ void main() {
     messageService = FakeMessageService(createTestSupabaseClient());
     allowlistService = FakeReceptionAllowlistService();
     allowlist = ReceptionAllowlistController(
-      ownerId: ownerId,
+      focusUserId: focusUserId,
       allowlistService: allowlistService,
     );
     final scope = testConversationScope(
-      userId: ownerId,
+      userId: focusUserId,
       peerProfileId: peer.id,
       sessionEpoch: 1,
     );
     messagesController = MessagesController(
       scope: scope,
       messageStore: testMessageStoreFor(scope),
-      userId: ownerId,
+      userId: focusUserId,
       peerProfileId: peer.id,
       peerMessages: messageService.peerMessages,
       messageMediaService: FakeMessageMediaService(),

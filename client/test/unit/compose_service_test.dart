@@ -32,7 +32,7 @@ void main() {
       final peer = composeService.peerFromContact(
         Contact(
           id: 'c1',
-          ownerId: 'owner',
+          archiveUserId: 'alice',
           protocol: ContactProtocol.internal,
           linkedProfileId: 'peer-1',
           displayName: 'Alice',
@@ -50,7 +50,7 @@ void main() {
         () => composeService.peerFromContact(
           Contact(
             id: 'c2',
-            ownerId: 'owner',
+            archiveUserId: 'alice',
             protocol: ContactProtocol.xmpp,
             externalAddress: 'alice@xmpp.example',
             displayName: 'Alice XMPP',

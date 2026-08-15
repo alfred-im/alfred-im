@@ -8,18 +8,18 @@ import '../config/voice_config.dart';
 import '../models/message.dart';
 import '../utils/mailbox_message_filter.dart';
 
-/// RPC e realtime archivio owner (broadcast gruppo / list_owner_messages).
+/// RPC e realtime archivio titolare (broadcast gruppo / list_archive_messages).
 class GroupArchiveService {
   GroupArchiveService(this._client);
 
   final SupabaseClient _client;
 
-  Future<List<ChatMessage>> fetchOwnerMessages({
+  Future<List<ChatMessage>> fetchArchiveMessages({
     required String currentUserId,
     int limit = 200,
   }) async {
     final rows = await _client.rpc(
-      'list_owner_messages',
+      'list_archive_messages',
       params: {'p_limit': limit},
     );
 
@@ -164,14 +164,14 @@ class GroupArchiveService {
     );
   }
 
-  RealtimeChannel subscribeToOwnerMessages({
+  RealtimeChannel subscribeToArchiveMessages({
     required String currentUserId,
     required void Function(ChatMessage message) onMessage,
   }) {
     void handle(PostgresChangePayload payload) {
       final record = payload.newRecord;
       if (record.isEmpty) return;
-      if (!isOwnerArchiveRow(record: record, currentUserId: currentUserId)) {
+      if (!isArchiveUserRow(record: record, currentUserId: currentUserId)) {
         return;
       }
       final message = ChatMessage.fromJson(
@@ -184,14 +184,14 @@ class GroupArchiveService {
     }
 
     return _client
-        .channel('messages-owner-$currentUserId')
+        .channel('messages-archive-$currentUserId')
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'messages',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
+            column: 'archive_user_id',
             value: currentUserId,
           ),
           callback: handle,
@@ -202,7 +202,7 @@ class GroupArchiveService {
           table: 'messages',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
+            column: 'archive_user_id',
             value: currentUserId,
           ),
           callback: handle,

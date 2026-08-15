@@ -21,17 +21,17 @@ class ReceptionState {
 /// Orchestrazione load, filtro e CRUD allow list reception.
 class ReceptionCoordinator {
   ReceptionCoordinator({
-    required this._ownerId,
+    required this._focusUserId,
     required this._allowlistService,
     required this._onStateChanged,
   }) {
     _machine = ReceptionMachine(
       _LiveReceptionEffects._(this),
-      ownerId: _ownerId,
+      focusUserId: _focusUserId,
     );
   }
 
-  final String _ownerId;
+  final String _focusUserId;
   final ReceptionAllowlistService _allowlistService;
   final void Function() _onStateChanged;
   late final ReceptionMachine _machine;
@@ -88,7 +88,7 @@ class _LiveReceptionEffects implements ReceptionEffects {
   Future<void> loadAllowlist() async {
     try {
       _c.state.allowedPeople =
-          await _c._allowlistService.fetchAllowedPeople(_c._ownerId);
+          await _c._allowlistService.fetchAllowedPeople(_c._focusUserId);
       _c.state.error = null;
       await _c._machine.send(const AllowlistLoaded());
     } catch (e) {
@@ -108,7 +108,7 @@ class _LiveReceptionEffects implements ReceptionEffects {
   @override
   Future<void> addAllowedProfile(ProfileSummary profile) async {
     await _c._allowlistService.addAllowedProfile(
-      ownerId: _c._ownerId,
+      archiveUserId: _c._focusUserId,
       profile: profile,
     );
   }

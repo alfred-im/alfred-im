@@ -12,13 +12,13 @@
 | Dominio | Statechart | Codice |
 |---------|------------|--------|
 | `FocusAccount` | `FocusAccount` | `MultiAccountAdapters` → `SessionAuthority.requestFocusSwitch` |
-| `EnsureOwnerReady` | — | `SessionAuthority.ensureOwnerReady` ← navigation ingresso chat |
-| `RunAsOwner` | — | `SessionAuthority.runAsOwner` *(API; percorsi futuri)* |
+| `EnsureFocusReady` | — | `SessionAuthority.ensureFocusReady` ← navigation ingresso chat |
+| `RunAsFocus` | — | `SessionAuthority.runAsFocus` *(API; percorsi futuri)* |
 | `AcquireIdentityLease` | — | `SessionAuthority.runWithLease` ← `PushMediaSyncGuard` / media |
 | `AuthorizePushSync` | — | `SessionAuthority.authorizePushSync` ← `PushCoordinator` |
 | `OpenAccount` | `OpenAccountWithPassword` / `OpenAccountWithSignUp` | `AccountMultiAccountEffects` → `AccountManager` manifest |
 | `CloseAccount` | `CloseAccount` | `AccountManager.removeAccount` |
-| `ReconnectFocusedSession` | `ReconnectFocusedSession` | `SessionAuthority.reconnectActiveOwner` |
+| `ReconnectFocusedSession` | `ReconnectFocusedSession` | `SessionAuthority.reconnectActiveFocus` |
 
 ### Eventi
 
@@ -41,4 +41,4 @@
 
 Statechart: `client/lib/machines/multi-account/` · Effetti: `AccountMultiAccountEffects` → `SessionAuthority` + `AccountManager` · Facade UI: `AuthController`
 
-**UML SessionAuthority:** [session-authority-state.puml](../../model/uml/multi-account/session-authority-state.puml) · [seq-run-as-owner.puml](../../model/uml/multi-account/seq-run-as-owner.puml) · [seq-identity-lease-media.puml](../../model/uml/multi-account/seq-identity-lease-media.puml)
+**UML SessionAuthority:** [session-authority-state.puml](../../model/uml/multi-account/session-authority-state.puml) · [seq-run-as-focus.puml](../../model/uml/multi-account/seq-run-as-focus.puml) · [seq-identity-lease-media.puml](../../model/uml/multi-account/seq-identity-lease-media.puml)

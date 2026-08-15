@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('PushDeepLink', () {
     const conversation = PushConversationKey(
-      ownerUserId: 'account-a',
+      recipientUserId: 'account-a',
       peerProfileId: 'peer-b',
     );
 

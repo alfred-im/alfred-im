@@ -12,7 +12,7 @@
 |---------|-------------|
 | **Group account** | Profilo Alfred di tipo gruppo; identità `@username` come qualsiasi account. |
 | **Participation** | Consenso bidirezionale su allow list: gruppo consente persona **e** persona consente gruppo — nessuna tabella membership. |
-| **Group archive** | Storico unico messaggi con owner = gruppo, ordinato per data creazione. |
+| **Group archive** | Storico unico messaggi con titolare archivio = gruppo, ordinato per data creazione. |
 | **Group shell** | Layout client senza inbox classica: home gruppo + singola conversazione gruppo. |
 | **Broadcast** | Invio dal gruppo verso tutti i partecipanti allow list; una riga archivio gruppo + fan-out worker. |
 | **Erogazione** | Worker inserisce copie proxy su archivi partecipanti dopo recapito al gruppo o broadcast. |
@@ -41,7 +41,7 @@
 
 ## Invarianti
 
-1. Account gruppo **non** espone inbox multi-peer — una sola conversazione (storico owner).
+1. Account gruppo **non** espone inbox multi-peer — una sola conversazione (storico archivio).
 2. Broadcast richiede almeno un destinatario in allow list del gruppo (escluso il gruppo stesso).
 3. Un solo broadcast alla volta nella stessa sessione gruppo (nessuna coda outbound persistente come 1:1).
 4. Dopo broadcast riuscito: storico ricaricato — nessuna bolla optimistic client-side.

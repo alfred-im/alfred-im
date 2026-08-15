@@ -40,7 +40,7 @@ void main() {
   tearDown(() => harness.dispose());
 
   test('epoch reconciled: scope guard attivo e sendImage ok', () async {
-    const ownerId = 'user-a';
+    const focusUserId = 'user-a';
     const peerId = 'peer-b';
     const peerProfile = ProfileSummary(
       id: peerId,
@@ -51,7 +51,7 @@ void main() {
     final client = createTestSupabaseClient();
     final sessionV1 = await AccountSession.createForTest(
       profile: const ProfileSummary(
-        id: ownerId,
+        id: focusUserId,
         username: 'user_a',
         displayName: 'User A',
       ),
@@ -93,7 +93,7 @@ void main() {
     final controller = MessagesController(
       scope: frozenScope,
       messageStore: testMessageStoreFor(frozenScope),
-      userId: ownerId,
+      userId: focusUserId,
       peerProfileId: peerId,
       peerMessages: sessionV2.peerMessages,
       messageMediaService: mediaService,

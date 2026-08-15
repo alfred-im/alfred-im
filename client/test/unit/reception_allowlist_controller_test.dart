@@ -13,7 +13,7 @@ void main() {
   late FakeReceptionAllowlistService service;
   late ReceptionAllowlistController controller;
 
-  const ownerId = 'owner-1';
+  const focusUserId = 'focus-1';
   final alice = ProfileSummary(
     id: 'alice-id',
     username: 'alice',
@@ -28,7 +28,7 @@ void main() {
   setUp(() {
     service = FakeReceptionAllowlistService();
     controller = ReceptionAllowlistController(
-      ownerId: ownerId,
+      focusUserId: focusUserId,
       allowlistService: service,
     );
   });
@@ -47,7 +47,7 @@ void main() {
     await controller.load();
 
     await controller.addProfile(
-      ProfileSummary(id: ownerId, displayName: 'Me'),
+      ProfileSummary(id: focusUserId, displayName: 'Me'),
     );
     expect(service.added, isEmpty);
 

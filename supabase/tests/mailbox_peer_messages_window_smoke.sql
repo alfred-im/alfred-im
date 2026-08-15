@@ -6,7 +6,7 @@
 
 DO $$
 DECLARE
-  v_owner uuid := '5b9fadb5-884a-41f2-89c9-4ced56be07a2';
+  v_archive_user uuid := '5b9fadb5-884a-41f2-89c9-4ced56be07a2';
   v_peer uuid := '8a8d7265-f7ab-4473-87aa-978094383215';
   v_inbox_preview text;
   v_inbox_at timestamptz;
@@ -18,7 +18,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1
     FROM public.messages m
-    WHERE m.owner_id = v_owner
+    WHERE m.archive_user_id = v_archive_user
       AND m.peer_profile_id = v_peer
     HAVING count(*) > 100
   ) THEN
@@ -28,7 +28,7 @@ BEGIN
 
   PERFORM set_config(
     'request.jwt.claims',
-    json_build_object('sub', v_owner::text, 'role', 'authenticated')::text,
+    json_build_object('sub', v_archive_user::text, 'role', 'authenticated')::text,
     true
   );
 

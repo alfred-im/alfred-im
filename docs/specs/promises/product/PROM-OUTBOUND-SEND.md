@@ -69,7 +69,7 @@ L'utente vede il proprio messaggio subito in chat (stato pending) mentre il clie
 | PROM-ID | Verifica |
 |---------|----------|
 | PROM-OUTBOUND-SEND-001–004 | `messages_controller_multi_account_test.dart`, `push_conversation_key_test.dart` |
-| PROM-OUTBOUND-SEND-003 | `mailbox_idempotency_smoke.sql` — dedup `(owner_id, client_message_id)` |
+| PROM-OUTBOUND-SEND-003 | `mailbox_idempotency_smoke.sql` — dedup `(archive_user_id, client_message_id)` |
 | PROM-OUTBOUND-SEND-006 | `push_conversation_key_test.dart` |
 | PROM-OUTBOUND-SEND | `bash scripts/test.sh integration` |
 

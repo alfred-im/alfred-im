@@ -26,7 +26,7 @@ void main() {
   testWidgets('ContactsScreen hides search until lens tap', (tester) async {
     final service = FakeContactService();
     final controller = ContactsController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       contactService: service,
     );
     addTearDown(controller.dispose);
@@ -60,7 +60,7 @@ void main() {
       ..contacts = [
         Contact(
           id: 'c1',
-          ownerId: 'owner-id',
+          archiveUserId: 'focus-id',
           protocol: ContactProtocol.internal,
           linkedProfileId: 'p1',
           displayName: 'Alice',
@@ -68,7 +68,7 @@ void main() {
         ),
         Contact(
           id: 'c2',
-          ownerId: 'owner-id',
+          archiveUserId: 'focus-id',
           protocol: ContactProtocol.internal,
           linkedProfileId: 'p2',
           displayName: 'Bob',
@@ -76,7 +76,7 @@ void main() {
         ),
       ];
     final controller = ContactsController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       contactService: service,
     );
     addTearDown(controller.dispose);

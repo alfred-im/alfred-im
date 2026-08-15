@@ -62,11 +62,11 @@ void main() {
     final allowlistService = FakeReceptionAllowlistService();
     final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       allowlistService: allowlistService,
     );
     final contacts = ContactsController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       contactService: contactService,
     );
 
@@ -102,11 +102,11 @@ void main() {
     final allowlistService = FakeReceptionAllowlistService();
     final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       allowlistService: allowlistService,
     );
     final contacts = ContactsController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       contactService: contactService,
     );
 
@@ -144,9 +144,9 @@ void main() {
     final client = createTestSupabaseClient();
     final session = await AccountSession.createForTest(
       profile: const ProfileSummary(
-        id: 'owner-id',
-        displayName: 'Owner',
-        username: 'owner',
+        id: 'focus-id',
+        displayName: 'ArchiveUser',
+        username: 'alice',
       ),
       client: client,
     );
@@ -157,11 +157,11 @@ void main() {
     final allowlistService = FakeReceptionAllowlistService();
     final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       allowlistService: allowlistService,
     );
     final contacts = ContactsController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       contactService: contactService,
     );
 
@@ -213,11 +213,11 @@ void main() {
     final allowlistService = FakeReceptionAllowlistService();
     final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       allowlistService: allowlistService,
     );
     final contacts = ContactsController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       contactService: contactService,
     );
 
@@ -271,27 +271,27 @@ void main() {
         displayName: 'Mario Rossi',
         username: 'mario',
       );
-    final ownerSession = await AccountSession.createForTest(
+    final focusSession = await AccountSession.createForTest(
       profile: const ProfileSummary(
-        id: 'owner-id',
-        displayName: 'Owner',
-        username: 'owner',
+        id: 'focus-id',
+        displayName: 'ArchiveUser',
+        username: 'alice',
       ),
       client: client,
       profileService: profileService,
     );
     final manager = AccountManager();
-    manager.focusTestSession(ownerSession);
+    manager.focusTestSession(focusSession);
     final auth = AuthController(accountManager: manager);
 
     final allowlistService = FakeReceptionAllowlistService();
     final contactService = FakeContactService();
     final allowlist = ReceptionAllowlistController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       allowlistService: allowlistService,
     );
     final contacts = ContactsController(
-      ownerId: 'owner-id',
+      focusUserId: 'focus-id',
       contactService: contactService,
     );
 

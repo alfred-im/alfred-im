@@ -101,4 +101,4 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
 | [SYS-DELIVERY](../system/SYS-DELIVERY.md) | Worker recapito e propagazione spunte |
 | [SYS-MAILBOX](../system/SYS-MAILBOX.md) | Date consegna/lettura, `mark_peer_read` |
 | [PROM-RECEPTION-FILTER](./PROM-RECEPTION-FILTER.md) | `delivered_at` null permanente |
-| [PROM-REALTIME-OWNER](./PROM-REALTIME-OWNER.md) | Aggiornamento `read_at` via Realtime |
+| [PROM-REALTIME-ARCHIVE](./PROM-REALTIME-ARCHIVE.md) | Aggiornamento `read_at` via Realtime |

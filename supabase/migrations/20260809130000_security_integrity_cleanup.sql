@@ -71,4 +71,4 @@ begin
   end if;
 end $do$;
 
-drop index if exists public.reception_allowlist_owner_id_idx;
+drop index if exists public.reception_allowlist_archive_user_id_idx;

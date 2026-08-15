@@ -22,7 +22,7 @@ void main() {
       expect(authority.identityGeneration, 0);
     });
 
-    test('acquireLease blocks switch to other owner', () async {
+    test('acquireLease blocks switch to other focus', () async {
       final lease = authority.acquireLease('account-a', IdentityLeaseReason.mediaUpload);
       expect(authority.hasActiveLease, isTrue);
       expect(
@@ -84,7 +84,7 @@ void main() {
         expect(PushMediaSyncGuard.isActive, isFalse);
         await PushMediaSyncGuard.run(() async {
           expect(PushMediaSyncGuard.isActive, isTrue);
-        }, ownerUserId: 'account-a');
+        }, recipientUserId: 'account-a');
         expect(PushMediaSyncGuard.isActive, isFalse);
       });
     });

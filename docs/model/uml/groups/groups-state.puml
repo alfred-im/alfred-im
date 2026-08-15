@@ -54,7 +54,7 @@ note right of GB_Sending
 end note
 
 note bottom of GroupRealtime
-  OwnerRealtimeReceived is handled
+  ArchiveRealtimeReceived is handled
   while Attached (no load-state change).
   Shell navigation (OpenGroupConversation /
   LeaveGroupConversation) is owned by

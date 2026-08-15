@@ -14,7 +14,7 @@ Promessa di prodotto: una chat è identificata da `(io, peer_profile_id)` — ne
 
 ## 1. Problema / obiettivo
 
-L'utente apre e naviga conversazioni per **indirizzo peer** (username interno / `profileId`), non per identificatori thread server. La chat esiste come vista sull'archivio owner aggregato per `peer_profile_id`, anche prima del primo messaggio.
+L'utente apre e naviga conversazioni per **indirizzo peer** (username interno / `profileId`), non per identificatori thread server. La chat esiste come vista sull'archivio titolare aggregato per `peer_profile_id`, anche prima del primo messaggio.
 
 ---
 
@@ -83,5 +83,5 @@ Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` 
 | Documento | Ruolo |
 |-----------|--------|
 | [registry.md](../../registry.md) | Indice promesse |
-| [SYS-MAILBOX](../system/SYS-MAILBOX.md) | Archivio per owner, aggregazione inbox |
+| [SYS-MAILBOX](../system/SYS-MAILBOX.md) | Archivio per titolare archivio, aggregazione inbox |
 | [PROM-PERSONAL-CONTACTS](./PROM-PERSONAL-CONTACTS.md) | Rubrica non prerequisito |

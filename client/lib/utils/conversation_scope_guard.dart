@@ -13,7 +13,7 @@ enum MessagesScopeInactiveReason {
   noCommittedScope,
   scopeMismatch,
   noLiveSession,
-  ownerMismatch,
+  focusMismatch,
   peerMismatch,
   conversationNotReady,
 }
@@ -24,7 +24,7 @@ extension MessagesScopeInactiveReasonDiag on MessagesScopeInactiveReason {
         MessagesScopeInactiveReason.noCommittedScope => 'no_committed_scope',
         MessagesScopeInactiveReason.scopeMismatch => 'scope_mismatch',
         MessagesScopeInactiveReason.noLiveSession => 'no_live_session',
-        MessagesScopeInactiveReason.ownerMismatch => 'owner_mismatch',
+        MessagesScopeInactiveReason.focusMismatch => 'focus_mismatch',
         MessagesScopeInactiveReason.peerMismatch => 'peer_mismatch',
         MessagesScopeInactiveReason.conversationNotReady =>
           'conversation_not_ready',
@@ -49,8 +49,8 @@ MessagesScopeInactiveReason? diagnoseMessagesScopeInactive({
     return MessagesScopeInactiveReason.scopeMismatch;
   }
   if (liveSession == null) return MessagesScopeInactiveReason.noLiveSession;
-  if (liveSession.userId != scope.ownerUserId) {
-    return MessagesScopeInactiveReason.ownerMismatch;
+  if (liveSession.userId != scope.focusUserId) {
+    return MessagesScopeInactiveReason.focusMismatch;
   }
   if (peer.profileId != scope.peerProfileId) {
     return MessagesScopeInactiveReason.peerMismatch;
@@ -89,7 +89,7 @@ bool isMessagesScopeActive({
       'inactive',
       reason.diagnosticCode,
       data: {
-        'ownerUserId': scope.ownerUserId,
+        'focusUserId': scope.focusUserId,
         'peerProfileId': scope.peerProfileId,
         'scopeEpoch': scope.sessionEpoch,
         'scopeLoadSeq': scope.loadSeq,

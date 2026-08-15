@@ -36,7 +36,7 @@ In una chat con gruppo come peer, l'utente distingue **chi ha scritto** il conte
 | ID | Promessa |
 |----|----------|
 | **PROM-GROUP-AUTHOR-DISPLAY-010** | Preview inbox per messaggio erogato: prefisso o formato che indica autore umano se `original_author_id` valorizzato |
-| **PROM-GROUP-AUTHOR-DISPLAY-011** | Realtime: subscribe `messages` `owner_id = io` — account user riceve INSERT erogati; account group riceve INSERT in entrata — vedi [PROM-REALTIME-OWNER](./PROM-REALTIME-OWNER.md) |
+| **PROM-GROUP-AUTHOR-DISPLAY-011** | Realtime: subscribe `messages` `archive_user_id = io` — account user riceve INSERT erogati; account group riceve INSERT in entrata — vedi [PROM-REALTIME-ARCHIVE](./PROM-REALTIME-ARCHIVE.md) |
 
 ### MUST NOT
 
@@ -75,7 +75,7 @@ In una chat con gruppo come peer, l'utente distingue **chi ha scritto** il conte
 |---------|----------|
 | PROM-GROUP-AUTHOR-DISPLAY-001–004 | `group_message_display_test.dart`, `message_bubble_test.dart` |
 | PROM-GROUP-AUTHOR-DISPLAY-010 | `inbox_controller.dart` — preview con autore |
-| PROM-GROUP-AUTHOR-DISPLAY-011 | `group_delivery_smoke.sql`; Realtime owner filter tests |
+| PROM-GROUP-AUTHOR-DISPLAY-011 | `group_delivery_smoke.sql`; Realtime archive filter tests |
 
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`

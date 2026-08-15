@@ -108,7 +108,7 @@ class MessagesController extends ChangeNotifier {
     required String peerProfileId,
   }) =>
       PushConversationKey.outboundQueueKey(
-        ownerUserId: userId,
+        recipientUserId: userId,
         peerProfileId: peerProfileId,
       );
 

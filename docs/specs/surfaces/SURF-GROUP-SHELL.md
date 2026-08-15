@@ -42,7 +42,7 @@ Binding UX shell dedicata quando focus su account `profile_kind = group`: home s
 | ID | Promessa |
 |----|----------|
 | **SURF-GROUP-SHELL-007** | Etichetta UI distinta per account `group` nel manifest (badge «Gruppo») — vedi anche [SURF-ACCOUNT-SIDEBAR](./SURF-ACCOUNT-SIDEBAR.md) |
-| **SURF-GROUP-SHELL-008** | Vista storico gruppo: messaggi ordinati per `created_at` su archivio `owner_id = gruppo` |
+| **SURF-GROUP-SHELL-008** | Vista storico gruppo: messaggi ordinati per `created_at` su archivio `archive_user_id = gruppo` |
 
 ### MUST NOT
 

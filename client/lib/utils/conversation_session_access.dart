@@ -17,12 +17,12 @@ bool clientHasGoTrueSession(SupabaseClient client) {
 /// Invariante account — vedi dominio § Account session.
 bool isAccountSessionReady({
   required SupabaseClient client,
-  required String ownerUserId,
+  required String focusUserId,
 }) {
   final token = client.auth.currentSession?.accessToken;
   if (token == null || token.isEmpty) return false;
   final authUserId = client.auth.currentUser?.id;
-  if (authUserId == null || authUserId != ownerUserId) return false;
+  if (authUserId == null || authUserId != focusUserId) return false;
   return true;
 }
 
@@ -31,12 +31,12 @@ bool isAccountSessionReady({
 /// [whenNoGoTrueSession]: harness unit senza `recoverSession` (nessun GoTrue in RAM).
 bool isMessagingSessionReady({
   required SupabaseClient client,
-  required String ownerUserId,
+  required String focusUserId,
   required String peerProfileId,
   bool Function()? whenNoGoTrueSession,
 }) {
   if (clientHasGoTrueSession(client)) {
-    if (!isAccountSessionReady(client: client, ownerUserId: ownerUserId)) {
+    if (!isAccountSessionReady(client: client, focusUserId: focusUserId)) {
       return false;
     }
     final authUserId = client.auth.currentUser?.id;
