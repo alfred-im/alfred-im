@@ -46,7 +46,7 @@ backend out of the box.
 
 ### Merge e CI
 
-Se l'utente chiede di fare merge («fai merge», «merge completa», «merge e pulisci», ecc.): **non attendere** GitHub Actions (`gh run watch`, `gh pr checks` in loop, polling finché verde). Merge e pulizia **subito** se la PR è mergeable — vedi `.cursor-rules.md` § Build → «Merge su main». Gate obbligatorio prima del push = locale `verify_ok`; CI post-merge è informativa.
+Se l'utente chiede di fare merge («fai merge», «merge completa», «merge e pulisci», ecc.): **non attendere** GitHub Actions (`gh run watch`, `gh pr checks` in loop, polling finché verde). Merge e pulizia **subito** se la PR è mergeable — vedi `.cursor-rules.md` § Build → «Merge su main». Gate obbligatorio prima del push = locale `verify_ok` + `bash scripts/test.sh e2e` (se il branch tocca `client/`); CI post-merge è informativa.
 
 ### Lint / test / build
 
@@ -54,6 +54,7 @@ Se l'utente chiede di fare merge («fai merge», «merge completa», «merge e p
 
 - Hub: `cd client && bash scripts/test.sh list`
 - Gate: `cd client && bash scripts/test.sh gate` (= `verify.sh`) — obbligatorio su PR; **non** valida il telefono
+- **E2e (fine lavoro):** `cd client && bash scripts/test.sh e2e` — **obbligatorio** a fine task su `client/` (avvia Supabase locale + Flutter release `:8080` + Playwright; genera `web/config.json` e sync in `build/web`)
 - Release: `cd client && bash scripts/test.sh release` (alias `manual`, `ci`) — stack locale completo
 - Riferimento test release: [`client/e2e/photo-resume-session-repro.spec.ts`](client/e2e/photo-resume-session-repro.spec.ts) — vedi strategy § Come si scrivono i test di release
 - Web build: `cd client && bash scripts/verify.sh --build`
