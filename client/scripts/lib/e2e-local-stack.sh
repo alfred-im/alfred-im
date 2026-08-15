@@ -70,6 +70,14 @@ e2e_write_web_config_json() {
 }
 EOF
   echo "==> web/config.json (${url})"
+  e2e_sync_web_config_to_build
+}
+
+# flutter run --release serve da build/web; config.json è gitignored e non entra nel build.
+e2e_sync_web_config_to_build() {
+  if [[ -f "$ROOT/web/config.json" && -d "$ROOT/build/web" ]]; then
+    cp "$ROOT/web/config.json" "$ROOT/build/web/config.json"
+  fi
 }
 
 e2e_warm_flutter_compile() {
@@ -79,6 +87,7 @@ e2e_warm_flutter_compile() {
   while (( elapsed < 180 )); do
     if curl -sf -m 30 -o /tmp/alfred-main.dart.js "${base}main.dart.js" &&
       [[ "$(wc -c < /tmp/alfred-main.dart.js)" -gt 500000 ]]; then
+      e2e_sync_web_config_to_build
       echo "    main.dart.js pronto (${elapsed}s, $(wc -c < /tmp/alfred-main.dart.js) bytes)"
       return 0
     fi
