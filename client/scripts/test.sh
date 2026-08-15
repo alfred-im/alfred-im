@@ -82,6 +82,16 @@ run_e2e() {
   source "$ROOT/scripts/lib/e2e-flutter-port.sh"
   # shellcheck source=lib/e2e-local-stack.sh
   source "$ROOT/scripts/lib/e2e-local-stack.sh"
+  e2e_write_web_config_json
+
+  # Riavvio pulito: config.json locale + build release (non debug DDC).
+  local stale_pids
+  stale_pids="$(_e2e_flutter_port_pids)"
+  if [[ -n "$stale_pids" ]]; then
+    echo "==> Termino Flutter su :${E2E_FLUTTER_PORT} (e2e richiede release + config.json)"
+    echo "$stale_pids" | xargs -r kill
+    sleep 2
+  fi
 
   if ! e2e_resolve_flutter_port; then
     SESSION_NAME="flutter-e2e-all"

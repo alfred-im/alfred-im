@@ -52,6 +52,26 @@ e2e_load_supabase_env() {
   export SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-${SERVICE_ROLE_KEY:-}}"
 }
 
+# Web client legge config.json all'avvio (DeployConfig); dart-define non basta su flutter web.
+e2e_write_web_config_json() {
+  local base="${ALFRED_BASE_URL:-http://127.0.0.1:${E2E_FLUTTER_PORT:-8080}/}"
+  local url="${SUPABASE_URL:-http://127.0.0.1:54321}"
+  local anon="${SUPABASE_ANON_KEY:-${ANON_KEY:-}}"
+  if [[ -z "$anon" ]]; then
+    echo "e2e: SUPABASE_ANON_KEY mancante — eseguire e2e_load_supabase_env" >&2
+    exit 1
+  fi
+  mkdir -p "$ROOT/web"
+  cat >"$ROOT/web/config.json" <<EOF
+{
+  "supabaseUrl": "${url}",
+  "supabaseAnonKey": "${anon}",
+  "publicBaseUrl": "${base}"
+}
+EOF
+  echo "==> web/config.json (${url})"
+}
+
 e2e_warm_flutter_compile() {
   local base="$(_e2e_flutter_base)"
   echo "==> Warmup compile Flutter (main.dart.js)"
