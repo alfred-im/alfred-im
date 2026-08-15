@@ -9,9 +9,9 @@
 ## Conversazione 1:1
 
 1. Chiave conversazione = `peer_profile_id` — mai `thread_id` separato dal peer.
-2. Fetch/send/upload solo con [scope navigation](../navigation/invariants.md) commesso e `SessionAuthority.ensureOwnerReady` riuscito.
+2. Fetch/send/upload solo con [scope navigation](../navigation/invariants.md) commesso e `SessionAuthority.ensureFocusReady` riuscito.
 3. `OutboundMessageQueue` keyed `userId|peerProfileId` — retry non mescola account o peer.
-4. Realtime subscribe filtrato su `owner_id` del focus ([PROM-REALTIME-OWNER](../../specs/promises/product/PROM-REALTIME-OWNER.md)).
+4. Realtime subscribe filtrato su `archive_user_id` del focus ([PROM-REALTIME-ARCHIVE](../../specs/promises/product/PROM-REALTIME-ARCHIVE.md)).
 
 ## Invio e archivio
 

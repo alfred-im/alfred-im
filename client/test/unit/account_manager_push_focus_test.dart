@@ -110,12 +110,12 @@ void main() {
       expect(restoreCallsForB, 1);
     });
 
-    test('reconnectActiveOwner restores session when manifest has focus but RAM empty',
+    test('reconnectActiveFocus restores session when manifest has focus but RAM empty',
         () async {
       await manager.initialize(focusUserId: 'account-a');
       manager.clearSessionsInRamForTest();
 
-      await manager.sessionAuthority.reconnectActiveOwner('account-a');
+      await manager.sessionAuthority.reconnectActiveFocus('account-a');
 
       expect(manager.focusUserId, 'account-a');
       expect(manager.focusedSession?.userId, 'account-a');

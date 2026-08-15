@@ -23,7 +23,7 @@ class PushPlatform {
       null;
 
   static void updateSuppression({
-    required String? focusUserId,
+    required String? recipientUserId,
     required String? activePeerProfileId,
     required bool appVisible,
   }) {}
@@ -65,7 +65,7 @@ class PushOpenChatIntent {
   }) {
     return PushOpenChatIntent(
       PushConversationKey(
-        ownerUserId: recipientUserId,
+        recipientUserId: recipientUserId,
         peerProfileId: peerProfileId,
       ),
     );
@@ -73,7 +73,7 @@ class PushOpenChatIntent {
 
   final PushConversationKey conversation;
 
-  String get recipientUserId => conversation.ownerUserId;
+  String get recipientUserId => conversation.recipientUserId;
 
   String get peerProfileId => conversation.peerProfileId;
 }

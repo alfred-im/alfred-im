@@ -111,7 +111,7 @@ void main() {
     test('self peer is not a valid conversation scope', () {
       expect(
         () => ConversationScope(
-          ownerUserId: _agent1,
+          focusUserId: _agent1,
           peerProfileId: _agent1,
           sessionEpoch: 1,
         ),

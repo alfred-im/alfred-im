@@ -44,14 +44,14 @@ export async function prepareLocalMessagingPair(
   const session2 = await loginSupabase(acct2.email, acct2.password);
 
   await addReceptionAllowlist({
-    ownerUserId: acct1.userId,
+    focusUserId: acct1.userId,
     allowedProfileId: acct2.userId,
-    ownerAccessToken: session1.accessToken,
+    focusAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
-    ownerUserId: acct2.userId,
+    focusUserId: acct2.userId,
     allowedProfileId: acct1.userId,
-    ownerAccessToken: session2.accessToken,
+    focusAccessToken: session2.accessToken,
   });
 
   return { acct1, acct2, session1, session2 };
@@ -80,27 +80,27 @@ export async function prepareLocalFiveAccountManifest(
   const session1 = await loginSupabase(users[0].email, users[0].password);
   for (const other of [users[1], users[2], users[3], group]) {
     await addReceptionAllowlist({
-      ownerUserId: users[0].userId,
+      focusUserId: users[0].userId,
       allowedProfileId: other.userId,
-      ownerAccessToken: session1.accessToken,
+      focusAccessToken: session1.accessToken,
     });
     const sessionOther = await loginSupabase(other.email, other.password);
     await addReceptionAllowlist({
-      ownerUserId: other.userId,
+      focusUserId: other.userId,
       allowedProfileId: users[0].userId,
-      ownerAccessToken: sessionOther.accessToken,
+      focusAccessToken: sessionOther.accessToken,
     });
   }
   const session2 = await loginSupabase(users[1].email, users[1].password);
   await addReceptionAllowlist({
-    ownerUserId: users[1].userId,
+    focusUserId: users[1].userId,
     allowedProfileId: users[0].userId,
-    ownerAccessToken: session2.accessToken,
+    focusAccessToken: session2.accessToken,
   });
   await addReceptionAllowlist({
-    ownerUserId: users[0].userId,
+    focusUserId: users[0].userId,
     allowedProfileId: users[1].userId,
-    ownerAccessToken: session1.accessToken,
+    focusAccessToken: session1.accessToken,
   });
 
   return { users: users as LocalFiveAccountManifest['users'], group };

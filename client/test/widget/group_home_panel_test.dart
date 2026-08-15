@@ -42,7 +42,7 @@ void main() {
         displayName: 'Mario',
         username: 'mario',
       );
-    messageService.ownerMessagesByUserId['group-1'] = [];
+    messageService.archiveMessagesByUserId['group-1'] = [];
 
     final session = await AccountSession.createForTest(
       profile: groupProfile,

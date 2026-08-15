@@ -15,7 +15,7 @@ class FakeReceptionAllowlistService extends ReceptionAllowlistService {
   final List<ProfileSummary> added = [];
 
   @override
-  Future<List<AllowedPerson>> fetchAllowedPeople(String ownerId) async {
+  Future<List<AllowedPerson>> fetchAllowedPeople(String archiveUserId) async {
     final copy = List<AllowedPerson>.of(people);
     copy.sort(
       (a, b) => a.displayName.toLowerCase().compareTo(
@@ -27,7 +27,7 @@ class FakeReceptionAllowlistService extends ReceptionAllowlistService {
 
   @override
   Future<AllowedPerson> addAllowedProfile({
-    required String ownerId,
+    required String archiveUserId,
     required ProfileSummary profile,
   }) async {
     added.add(profile);

@@ -17,7 +17,7 @@ Binding completo schermata Contatti: filtro lista, aggiunta Alfred/esterno, comp
 | Elemento | Valore |
 |----------|--------|
 | Schermata | `client/lib/screens/contacts_screen.dart` |
-| Controller | `ContactsController` — `filteredContacts`, `setSearchQuery`, `ownerId` = focus |
+| Controller | `ContactsController` — `filteredContacts`, `setSearchQuery`, `archiveUserId` = focus |
 | Servizi | `ContactService`, `ComposeService.peerFromContact` |
 | Sheet | `_AddContactSheet` — tab Alfred / Esterno |
 
@@ -38,7 +38,7 @@ Binding completo schermata Contatti: filtro lista, aggiunta Alfred/esterno, comp
 
 | ID | Promessa |
 |----|----------|
-| **SURF-CONTACTS-005** | `ContactsController` legato all'account in **focus** (`ChangeNotifierProxyProvider` + `ownerId`) |
+| **SURF-CONTACTS-005** | `ContactsController` legato all'account in **focus** (`ChangeNotifierProxyProvider` + `archiveUserId`) |
 | **SURF-CONTACTS-006** | Aggiunta internal: `search_profiles` (min 2 caratteri) → selezione → insert `protocol=internal` |
 | **SURF-CONTACTS-007** | Aggiunta esterna: form manuale (protocollo XMPP/Matrix, nome, JID/ID) → insert external |
 | **SURF-CONTACTS-008** | «Scrivi» da rubrica (icona chat): **Internal** → `ComposeService.peerFromContact` → `ChatPeer`; **Esterno** → errore «Indirizzo esterno non ancora supportato» (scope attuale) |

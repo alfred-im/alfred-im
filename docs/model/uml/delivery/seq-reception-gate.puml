@@ -14,7 +14,7 @@ database "MailboxArchive" as DM
 
 DW -> OB : claim outbox deliver
 DW -> SM : read sender copy
-DW -> GATE : EvaluateInboundDelivery\n(owner=dest, sender=mittente)
+DW -> GATE : EvaluateInboundDelivery\n(archive_user=dest, sender=mittente)
 
 alt DeliveryPermitted
   GATE --> DW : DeliveryPermitted

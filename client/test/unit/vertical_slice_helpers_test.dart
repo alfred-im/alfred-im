@@ -13,7 +13,7 @@ void main() {
     test('returns summary for internal contact with linked profile', () {
       final contact = Contact(
         id: 'c1',
-        ownerId: 'owner',
+        archiveUserId: 'alice',
         protocol: ContactProtocol.internal,
         linkedProfileId: 'p1',
         displayName: 'Alice',
@@ -30,7 +30,7 @@ void main() {
     test('returns null for external contact', () {
       final contact = Contact(
         id: 'c2',
-        ownerId: 'owner',
+        archiveUserId: 'alice',
         protocol: ContactProtocol.xmpp,
         externalAddress: 'a@b.c',
         displayName: 'Bob',

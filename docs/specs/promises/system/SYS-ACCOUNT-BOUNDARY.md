@@ -17,7 +17,7 @@ Promessa SYSTEM fondamentale: **nessun account** (sessione GoTrue / `auth.uid()`
 
 ## 1. Problema / obiettivo
 
-Con multi-account, ogni utente ha un archivio isolato (`owner_id`). RPC e query client devono rispettare il confine: un account non può materializzare messaggi nell'archivio altrui, aggiornare `delivered_at`/`read_at` altrui, né leggere allow list o inbox di un peer per decidere azioni cross-account.
+Con multi-account, ogni utente ha un archivio isolato (`archive_user_id`). RPC e query client devono rispettare il confine: un account non può materializzare messaggi nell'archivio altrui, aggiornare `delivered_at`/`read_at` altrui, né leggere allow list o inbox di un peer per decidere azioni cross-account.
 
 Violazioni note (debito risolto da SYS-DELIVERY): `send_message_to_profile` che INSERT nella mailbox destinatario; `mark_peer_read` che UPDATE sulla copia mittente; `erogate_group_message` invocata dal contesto mittente; gate reception letto dal lato mittente dentro RPC account.
 
@@ -29,10 +29,10 @@ Violazioni note (debito risolto da SYS-DELIVERY): `send_message_to_profile` che 
 
 | ID | Promessa |
 |----|----------|
-| **SYS-ACCOUNT-BOUNDARY-001** | Confine account = tutte le righe/tabelle dove `owner_id` identifica l'archivio dell'account (es. `messages`, `reception_allowlist`, `contacts`) |
-| **SYS-ACCOUNT-BOUNDARY-002** | RPC account (`GRANT` a `authenticated`): **solo** SELECT/INSERT/UPDATE/DELETE con `owner_id = auth.uid()` (o equivalente RLS) |
-| **SYS-ACCOUNT-BOUNDARY-003** | Nessuna RPC account scrive righe `messages` con `owner_id <> auth.uid()` |
-| **SYS-ACCOUNT-BOUNDARY-004** | Nessuna RPC account aggiorna `delivered_at` o `read_at` su righe con `owner_id <> auth.uid()` |
+| **SYS-ACCOUNT-BOUNDARY-001** | Confine account = tutte le righe/tabelle dove `archive_user_id` identifica l'archivio dell'account (es. `messages`, `reception_allowlist`, `contacts`) |
+| **SYS-ACCOUNT-BOUNDARY-002** | RPC account (`GRANT` a `authenticated`): **solo** SELECT/INSERT/UPDATE/DELETE con `archive_user_id = auth.uid()` (o equivalente RLS) |
+| **SYS-ACCOUNT-BOUNDARY-003** | Nessuna RPC account scrive righe `messages` con `archive_user_id <> auth.uid()` |
+| **SYS-ACCOUNT-BOUNDARY-004** | Nessuna RPC account aggiorna `delivered_at` o `read_at` su righe con `archive_user_id <> auth.uid()` |
 | **SYS-ACCOUNT-BOUNDARY-005** | Gate reception (allow list del destinatario) valutato **solo** nell'infrastruttura [SYS-DELIVERY](./SYS-DELIVERY.md), non in RPC account |
 | **SYS-ACCOUNT-BOUNDARY-006** | Erogazione gruppo verso partecipanti eseguita **solo** da [SYS-DELIVERY](./SYS-DELIVERY.md) |
 | **SYS-ACCOUNT-BOUNDARY-007** | Helper `SECURITY DEFINER` cross-boundary **MUST NOT** essere `GRANT EXECUTE` a `authenticated` |
@@ -76,5 +76,5 @@ Violazioni note (debito risolto da SYS-DELIVERY): `send_message_to_profile` che 
 | Documento | Ruolo |
 |-----------|--------|
 | [SYS-DELIVERY](./SYS-DELIVERY.md) | Piano recapito che attraversa i confini |
-| [SYS-MAILBOX](./SYS-MAILBOX.md) | Archivio per owner |
-| [SYS-RECEPTION](./SYS-RECEPTION.md) | Allow list (solo confine owner) |
+| [SYS-MAILBOX](./SYS-MAILBOX.md) | Archivio per titolare archivio |
+| [SYS-RECEPTION](./SYS-RECEPTION.md) | Allow list (solo confine titolare archivio) |

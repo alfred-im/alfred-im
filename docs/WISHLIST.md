@@ -14,7 +14,7 @@ Funzionalità **future** desiderate per Alfred (client Flutter + piattaforma + b
 | Chat testo, GIF, voice, location | ✅ | [media.md](./guides/media.md) |
 | Foto e video in chat | ✅ | [PROM-CHAT-MEDIA.md](./specs/promises/product/PROM-CHAT-MEDIA.md), [media.md](./guides/media.md) |
 | Web Push (VAPID) | ✅ | [SYS-PUSH.md](./specs/promises/system/SYS-PUSH.md), [PROM-PUSH-NOTIFY.md](./specs/promises/product/PROM-PUSH-NOTIFY.md) |
-| Inbox mailbox (archivio owner) | ✅ | [SYS-MAILBOX.md](./specs/promises/system/SYS-MAILBOX.md), [SURF-INBOX.md](./specs/surfaces/SURF-INBOX.md), [address-based-messaging.md](./decisions/address-based-messaging.md) |
+| Inbox mailbox (archivio titolare) | ✅ | [SYS-MAILBOX.md](./specs/promises/system/SYS-MAILBOX.md), [SURF-INBOX.md](./specs/surfaces/SURF-INBOX.md), [address-based-messaging.md](./decisions/address-based-messaging.md) |
 | Allow list ricezione | ✅ sempre attiva; rifiuto silenzioso | [SYS-RECEPTION.md](./specs/promises/system/SYS-RECEPTION.md), [SURF-ALLOWLIST.md](./specs/surfaces/SURF-ALLOWLIST.md) |
 | Account gruppo + erogazione | ✅ | [SYS-GROUP.md](./specs/promises/system/SYS-GROUP.md), [groups.md](./guides/groups.md) |
 | Link condivisibili `#indirizzo` | ✅ | [PROM-SHAREABLE-LINK.md](./specs/promises/product/PROM-SHAREABLE-LINK.md), [shareable-link.md](./guides/shareable-link.md) |

@@ -77,8 +77,8 @@ final class BroadcastFailed extends GroupMessagesEvent {
   const BroadcastFailed();
 }
 
-final class OwnerRealtimeReceived extends GroupMessagesEvent {
-  const OwnerRealtimeReceived(this.message);
+final class ArchiveRealtimeReceived extends GroupMessagesEvent {
+  const ArchiveRealtimeReceived(this.message);
   final ChatMessage message;
 }
 
@@ -140,7 +140,7 @@ class GroupMessagesMachine {
         broadcastState = GroupBroadcastState.idle;
       case BroadcastFailed():
         broadcastState = GroupBroadcastState.idle;
-      case OwnerRealtimeReceived(:final message):
+      case ArchiveRealtimeReceived(:final message):
         _effects.onRealtimeMessage(message);
       case DisposeGroupMessages():
         _effects.disposeRealtime();

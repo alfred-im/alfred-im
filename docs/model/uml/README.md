@@ -63,7 +63,7 @@ Esempi: [multi-account/session-authority-state.puml](./multi-account/session-aut
 
 | Consentito | Vietato |
 |------------|---------|
-| Stati **logici** osservabili dal servizio (`activeOwnerId`, lease, transitorio switch) | Presentare il diagramma come `*Machine` in `client/lib/machines/` |
+| Stati **logici** osservabili dal servizio (`activeFocusUserId`, lease, transitorio switch) | Presentare il diagramma come `*Machine` in `client/lib/machines/` |
 | Comandi da `commands-and-events.md` del contesto | Duplicare stati di `MultiAccountMachine` |
 | Nota esplicita `Profile: service` nel file `.puml` | Estrarre enum stato Dart obbligatorio dal solo diagramma |
 

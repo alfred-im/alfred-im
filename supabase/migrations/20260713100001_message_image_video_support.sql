@@ -72,7 +72,7 @@ begin
   if p_client_message_id is not null then
     select m.id into v_sender_id
     from public.messages m
-    where m.owner_id = v_me
+    where m.archive_user_id = v_me
       and m.client_message_id = p_client_message_id
     limit 1;
 
@@ -155,7 +155,7 @@ begin
   v_lambda := gen_random_uuid();
 
   insert into public.messages (
-    owner_id,
+    archive_user_id,
     author_id,
     original_author_id,
     peer_profile_id,
@@ -261,7 +261,7 @@ begin
   if p_client_message_id is not null then
     select m.id into v_existing_id
     from public.messages m
-    where m.owner_id = v_me
+    where m.archive_user_id = v_me
       and m.client_message_id = p_client_message_id
     limit 1;
 
@@ -328,7 +328,7 @@ begin
 
   select count(*) into v_participant_count
   from public.reception_allowlist r
-  where r.owner_id = v_me
+  where r.archive_user_id = v_me
     and r.allowed_profile_id is not null
     and r.allowed_profile_id <> v_me;
 
@@ -339,7 +339,7 @@ begin
   v_lambda := gen_random_uuid();
 
   insert into public.messages (
-    owner_id,
+    archive_user_id,
     author_id,
     original_author_id,
     peer_profile_id,

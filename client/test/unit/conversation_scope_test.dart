@@ -86,7 +86,7 @@ void main() {
 
       navigation.machine.commitScope(
         ConversationScope(
-          ownerUserId: 'user-a',
+          focusUserId: 'user-a',
           peerProfileId: 'peer-z',
           sessionEpoch: sessionA.epoch,
         ),
@@ -172,7 +172,7 @@ void main() {
       );
 
       expect(ok, isTrue);
-      expect(machine.committedScope?.ownerUserId, 'user-a');
+      expect(machine.committedScope?.focusUserId, 'user-a');
       expect(machine.committedScope?.peerProfileId, 'peer-z');
     });
   });

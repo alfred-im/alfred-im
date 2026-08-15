@@ -50,7 +50,7 @@ class InboxService {
           table: 'messages',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'owner_id',
+            column: 'archive_user_id',
             value: userId,
           ),
           callback: handle,

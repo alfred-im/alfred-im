@@ -121,7 +121,7 @@ BEGIN
     );
   END IF;
 
-  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
   VALUES (v_agent1, v_agent2), (v_agent2, v_agent1)
   ON CONFLICT DO NOTHING;
 END $$;

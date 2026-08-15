@@ -19,11 +19,11 @@ BEGIN
   END IF;
 
   DELETE FROM public.reception_allowlist
-  WHERE owner_id = v_agent1 AND allowed_profile_id = v_agent2;
+  WHERE archive_user_id = v_agent1 AND allowed_profile_id = v_agent2;
 
-  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
   VALUES (v_agent2, v_agent1)
-  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
+  ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
   PERFORM set_config(
     'request.jwt.claims',
@@ -48,16 +48,16 @@ BEGIN
 
   SELECT count(*) INTO v_count
   FROM public.messages m
-  WHERE m.owner_id = v_agent1
+  WHERE m.archive_user_id = v_agent1
     AND m.client_message_id = v_client_reject;
 
   IF v_count <> 0 THEN
     RAISE EXCEPTION 'outbound reject: must not persist sender copy';
   END IF;
 
-  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
   VALUES (v_agent1, v_agent2)
-  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
+  ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
   SELECT * INTO v_sender FROM public.send_message_to_profile(
     v_agent2,

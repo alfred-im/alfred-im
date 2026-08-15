@@ -14,7 +14,7 @@ class ContactService {
   final SupabaseClient _client;
   final ProfileSearchService _profileSearch;
 
-  String get _authOwnerId {
+  String get _authArchiveUserId {
     final id = _client.auth.currentUser?.id;
     if (id == null || id.isEmpty) {
       throw const AuthException('Sessione non disponibile.');
@@ -22,11 +22,11 @@ class ContactService {
     return id;
   }
 
-  Future<List<Contact>> fetchContacts(String ownerId) async {
+  Future<List<Contact>> fetchContacts(String archiveUserId) async {
     final rows = await _client
         .from('contacts')
         .select()
-        .eq('owner_id', ownerId)
+        .eq('archive_user_id', archiveUserId)
         .order('display_name');
 
     return rows.map((r) => Contact.fromJson(r)).toList();
@@ -37,13 +37,13 @@ class ContactService {
   }
 
   Future<Contact> addInternalContact({
-    required String ownerId,
+    required String archiveUserId,
     required ProfileSummary profile,
   }) async {
     final row = await _client
         .from('contacts')
         .insert({
-          'owner_id': _authOwnerId,
+          'archive_user_id': _authArchiveUserId,
           'protocol': 'internal',
           'linked_profile_id': profile.id,
           'display_name': profile.displayName,
@@ -56,7 +56,7 @@ class ContactService {
   }
 
   Future<Contact> addExternalContact({
-    required String ownerId,
+    required String archiveUserId,
     required ContactProtocol protocol,
     required String externalAddress,
     required String displayName,
@@ -64,7 +64,7 @@ class ContactService {
     final row = await _client
         .from('contacts')
         .insert({
-          'owner_id': _authOwnerId,
+          'archive_user_id': _authArchiveUserId,
           'protocol': protocol.name,
           'external_address': externalAddress,
           'display_name': displayName,

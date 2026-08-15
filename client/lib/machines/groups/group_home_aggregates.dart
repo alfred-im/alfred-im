@@ -10,7 +10,7 @@ import '../../services/profile_service.dart';
 import '../../utils/date_format.dart';
 import '../../utils/message_preview.dart';
 
-/// Aggregati home derivati dallo storico owner.
+/// Aggregati home derivati dallo storico archivio.
 class GroupHomeAggregates {
   const GroupHomeAggregates({
     required this.activeAuthors,
@@ -21,7 +21,7 @@ class GroupHomeAggregates {
   final ChatPeer conversationTile;
 }
 
-/// Calcola autori attivi e tile conversazione dallo storico owner.
+/// Calcola autori attivi e tile conversazione dallo storico archivio.
 Future<GroupHomeAggregates> buildGroupHomeAggregates({
   required List<ChatMessage> messages,
   required ProfileSummary profile,

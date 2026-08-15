@@ -18,14 +18,14 @@ Ogni notifica, soppressione, tap e tag browser identifica **sempre** la coppia a
 
 | Campo canonico | Alias snake_case (server / outbox) | Alias camelCase (SW / client) | Tipo | Obbligatorio |
 |----------------|-------------------------------------|-------------------------------|------|--------------|
-| `ownerUserId` | `recipient_user_id` | `recipientUserId` | `string` (uuid) | **sì** |
+| `recipientUserId` | `recipient_user_id` | `recipientUserId` | `string` (uuid) | **sì** |
 | `peerProfileId` | `peer_profile_id` | `peerProfileId` | `string` (uuid) | **sì** |
 
 **Invarianti**
 
-- `ownerUserId !== peerProfileId` — coppia non valida → payload ignorato (nessuna UI, nessun `open_chat`).
-- Chiave stringa: `ownerUserId + '|' + peerProfileId` (separatore `|`, allineato a `PushConversationKey.separator` e `PUSH_KEY_SEPARATOR` in `push_sw.js`).
-- Tag notifica browser: `owner|peer|logical_message_id` se `logical_message_id` presente; altrimenti `owner|peer`.
+- `recipientUserId !== peerProfileId` — coppia non valida → payload ignorato (nessuna UI, nessun `open_chat`).
+- Chiave stringa: `recipientUserId + '|' + peerProfileId` (separatore `|`, allineato a `PushConversationKey.separator` e `PUSH_KEY_SEPARATOR` in `push_sw.js`).
+- Tag notifica browser: `recipient|peer|logical_message_id` se `logical_message_id` presente; altrimenti `recipient|peer`.
 
 Implementazione: `client/lib/models/push_conversation_key.dart`, `tryParsePushConversation` in `client/web/push_sw.js`.
 
@@ -53,7 +53,7 @@ Il corpo della notifica Web Push è JSON. L'Edge Function `send-push` accetta **
     "recipient_user_id": {
       "type": "string",
       "format": "uuid",
-      "description": "Account Alfred destinatario (owner archivio che riceve il messaggio)."
+      "description": "Account Alfred destinatario (titolare archivio che riceve il messaggio)."
     },
     "recipient_display_name": {
       "type": "string",
@@ -144,7 +144,7 @@ Inviato da `PushPlatform.updateSuppression` (`push_web.dart`) quando cambiano fo
   "required": ["type", "appVisible"],
   "properties": {
     "type": { "const": "alfred_push_suppression" },
-    "focusUserId": {
+    "recipientUserId": {
       "type": ["string", "null"],
       "format": "uuid",
       "description": "Account in focus (`auth.uid()` corrente); null se nessuno."
@@ -165,7 +165,7 @@ Inviato da `PushPlatform.updateSuppression` (`push_web.dart`) quando cambiano fo
 **Effetto SW**: aggiorna `suppressionState` in RAM. `shouldSuppress(payload)` è true quando:
 
 - `appVisible === true`
-- `focusUserId === recipientUserId` del payload push
+- `recipientUserId === recipientUserId` del payload push
 - `activePeerProfileId === peerProfileId` del payload push
 
 In caso di soppressione: nessuna `showNotification`, nessun `alfred_push_received`.
@@ -198,7 +198,7 @@ Su `notificationclick`, se esiste una finestra app:
     "recipientUserId": {
       "type": "string",
       "format": "uuid",
-      "description": "Account destinatario (ownerUserId)."
+      "description": "Account destinatario (recipientUserId)."
     },
     "peerProfileId": {
       "type": "string",

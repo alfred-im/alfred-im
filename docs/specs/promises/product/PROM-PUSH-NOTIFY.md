@@ -16,7 +16,7 @@ Infrastruttura server: [SYS-PUSH](../system/SYS-PUSH.md). Superficie client/SW: 
 
 ## 1. Problema / obiettivo
 
-Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-OWNER](./PROM-REALTIME-OWNER.md), solo l'account in focus riceve aggiornamenti live. Le push colmano il gap: l'utente viene avvisato di messaggi su account in background e su altri browser/dispositivi.
+Con [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) e [PROM-REALTIME-ARCHIVE](./PROM-REALTIME-ARCHIVE.md), solo l'account in focus riceve aggiornamenti live. Le push colmano il gap: l'utente viene avvisato di messaggi su account in background e su altri browser/dispositivi.
 
 **Amend 2026-07-28:** la registrazione push non deve violare l'invariante «una GoTrue attiva in RAM» ([PROM-MULTI-ACCOUNT-006](./PROM-MULTI-ACCOUNT.md)). Sync al resume PWA con restore di tutti gli account (pre-#229) invalidava il JWT in focus durante upload media. Questo amend definisce **trigger, scope e confini** di `RegisterDeviceForPush` senza rifare l'infrastruttura VAPID/SW.
 
@@ -71,7 +71,7 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PUSH-NOTIFY-033** | Identità push = coppia **`(recipient_user_id, peer_profile_id)`** — stessa semantica di archivio `(owner_id, peer_profile_id)`; **mai** interpretare target, soppressione, tap o tag come «solo peer» |
+| **PROM-PUSH-NOTIFY-033** | Identità push = coppia **`(recipient_user_id, peer_profile_id)`** — stessa semantica di archivio `(archive_user_id, peer_profile_id)`; **mai** interpretare target, soppressione, tap o tag come «solo peer» |
 | **PROM-PUSH-NOTIFY-034** | Chiave canonica client/SW: `recipient_user_id|peer_profile_id`; payload incompleto → nessuna UI, nessuna apertura chat |
 | **PROM-PUSH-NOTIFY-035** | Tag notifica browser = `recipient_user_id|peer_profile_id|logical_message_id` — distinto per account anche con stesso peer o stesso messaggio logico su altro account |
 
@@ -190,6 +190,6 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 |-----------|--------|
 | [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) | Manifest, focus, una GoTrue in RAM |
 | [PROM-CHAT-MEDIA](./PROM-CHAT-MEDIA.md) | Upload media — percorso caldo protetto da sync push |
-| [PROM-REALTIME-OWNER](./PROM-REALTIME-OWNER.md) | Realtime solo focus |
+| [PROM-REALTIME-ARCHIVE](./PROM-REALTIME-ARCHIVE.md) | Realtime solo focus |
 | [SYS-PUSH](../system/SYS-PUSH.md) | Infrastruttura server |
 | [registry.md](../../registry.md) | Indice promesse |

@@ -15,15 +15,15 @@ import {
 } from './supabase-api';
 import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
 
-async function fetchImageRowsForOwner(
-  ownerUserId: string,
+async function fetchImageRowsForArchiveUser(
+  focusUserId: string,
   peerUserId: string,
 ): Promise<PeerMessage[]> {
   const sql =
     `SELECT coalesce(json_agg(row_to_json(t)), '[]'::json) FROM (` +
     `SELECT id, body, author_id, content_type, media_url, delivered_at, read_at ` +
     `FROM public.messages ` +
-    `WHERE owner_id = '${ownerUserId}' AND peer_profile_id = '${peerUserId}' AND content_type = 'image' ` +
+    `WHERE archive_user_id = '${focusUserId}' AND peer_profile_id = '${peerUserId}' AND content_type = 'image' ` +
     `ORDER BY created_at DESC LIMIT 20` +
     `) t;`;
   const raw = execSync(
@@ -120,7 +120,7 @@ export async function waitForImageMessageInDb(options: {
   const deadline = Date.now() + (options.timeoutMs ?? E2E_TIMEOUT.db * 6);
 
   while (Date.now() < deadline) {
-    const messages = await fetchImageRowsForOwner(
+    const messages = await fetchImageRowsForArchiveUser(
       options.viewer.userId,
       options.peerUserId,
     );

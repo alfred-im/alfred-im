@@ -27,11 +27,11 @@ BEGIN
   -- Fase 1: rifiuto allow list → solo ✓ (delivered_at null permanente)
   -- -------------------------------------------------------------------------
   DELETE FROM public.reception_allowlist
-  WHERE owner_id = v_agent2 AND allowed_profile_id = v_agent1;
+  WHERE archive_user_id = v_agent2 AND allowed_profile_id = v_agent1;
 
-  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
   VALUES (v_agent1, v_agent2)
-  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
+  ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
   PERFORM set_config(
     'request.jwt.claims',
@@ -52,7 +52,7 @@ BEGIN
 
   SELECT count(*) INTO v_recipient_count
   FROM public.messages m
-  WHERE m.owner_id = v_agent2
+  WHERE m.archive_user_id = v_agent2
     AND m.logical_message_id = v_sender.logical_message_id;
 
   IF v_recipient_count <> 0 THEN
@@ -80,7 +80,7 @@ BEGIN
   -- -------------------------------------------------------------------------
   -- Fase 2: allow list → worker deliver → ✓✓ grigie (delivered_at, read_at null)
   -- -------------------------------------------------------------------------
-  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
   VALUES (v_agent2, v_agent1);
 
   SELECT * INTO v_sender FROM public.send_message_to_profile(
@@ -100,7 +100,7 @@ BEGIN
 
   SELECT count(*) INTO v_recipient_count
   FROM public.messages m
-  WHERE m.owner_id = v_agent2
+  WHERE m.archive_user_id = v_agent2
     AND m.logical_message_id = v_sender.logical_message_id
     AND m.author_id = v_agent1;
 
@@ -143,7 +143,7 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1 FROM public.messages m
-    WHERE m.owner_id = v_agent2
+    WHERE m.archive_user_id = v_agent2
       AND m.logical_message_id = v_sender.logical_message_id
       AND m.author_id = v_agent1
       AND m.read_at IS NOT NULL
@@ -169,7 +169,7 @@ BEGIN
     SELECT 1 FROM public.outbox o
     JOIN public.messages inc ON inc.id = o.message_id
     WHERE inc.logical_message_id = v_sender.logical_message_id
-      AND inc.owner_id = v_agent2
+      AND inc.archive_user_id = v_agent2
       AND o.payload ->> 'event_kind' = 'read_receipt'
       AND o.status = 'completed'
   ) THEN

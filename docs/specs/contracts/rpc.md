@@ -45,7 +45,7 @@ Errori comuni: `not authenticated`, `cannot message yourself`, `recipient not fo
 Semantica mailbox ([SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md) — RPC account solo confine mittente):
 
 0. Gate **outbound** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): destinatario ∈ `reception_allowlist` del mittente? Se **no** → `raise exception 'recipient not in reception allowlist'` (nessuna copia mittente)
-1. INSERT copia mittente (`owner_id = author_id = auth.uid()`), λ nuovo, date null
+1. INSERT copia mittente (`archive_user_id = author_id = auth.uid()`), λ nuovo, date null
 2. INSERT `outbox` (`protocol = internal`, `event_kind = deliver`, `status = queued`)
 3. `alfred_delivery.process_outbox` (worker, stessa transazione):
    - **Gate allow list** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): mittente ∈ `reception_allowlist` del destinatario?
@@ -59,7 +59,7 @@ Idempotenza: stesso `p_client_message_id` → stessa riga mittente (no duplicati
 
 **MUST NOT**: promozione `delivered` senza copia destinatario materializzata; errore RPC verso mittente su rifiuto allow list **inbound**; INSERT copia mittente su violazione gate **outbound**; trigger `on_message_inserted` legacy.
 
-**Helper**: `is_sender_allowed_for_reception(owner_id, sender_profile_id) → boolean` — migrazione `20260704130000`; **helper interno** (non chiamabile da client).
+**Helper**: `is_sender_allowed_for_reception(archive_user_id, sender_profile_id) → boolean` — migrazione `20260704130000`; **helper interno** (non chiamabile da client).
 
 **Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate), `20260711190000` (delivery plane).
 
@@ -107,17 +107,17 @@ Idempotenza: stesso `p_client_message_id` → stessa riga archivio gruppo.
 
 ---
 
-## `list_owner_messages`
+## `list_archive_messages`
 
 Storico unico account gruppo (shell senza inbox peer).
 
 ```sql
-list_owner_messages(
+list_archive_messages(
   p_limit integer default 100
 ) → setof messages
 ```
 
-Righe WHERE `owner_id = auth.uid()` AND contenuto renderizzabile (`mailbox_has_renderable_content`) ORDER BY `created_at` ASC.
+Righe WHERE `archive_user_id = auth.uid()` AND contenuto renderizzabile (`mailbox_has_renderable_content`) ORDER BY `created_at` ASC.
 
 Usato da account `profile_kind = group` al posto di `list_peer_messages` — vedi [SYS-GROUP](../promises/system/SYS-GROUP.md) REQ-006/017.
 
@@ -147,10 +147,10 @@ list_inbox() → table (
 )
 ```
 
-Aggregazione su `messages` WHERE `owner_id = auth.uid()`:
+Aggregazione su `messages` WHERE `archive_user_id = auth.uid()`:
 
 - Solo `protocol = 'internal'`, `peer_profile_id IS NOT NULL`, `mailbox_has_renderable_content(body, content_type)`
-- `unread_count` = righe **in entrata** (`author_id <> owner_id`) con `read_at IS NULL`
+- `unread_count` = righe **in entrata** (`author_id <> archive_user_id`) con `read_at IS NULL`
 - Ordine: `last_message_at` DESC
 
 Preview per tipo: testo troncato, `[GIF]`, `format_voice_preview`, `format_location_preview`.
@@ -171,7 +171,7 @@ list_peer_messages(
 ) → setof messages
 ```
 
-Righe WHERE `owner_id = auth.uid()` AND `peer_profile_id = p_peer_profile_id` AND `mailbox_has_renderable_content(...)`.
+Righe WHERE `archive_user_id = auth.uid()` AND `peer_profile_id = p_peer_profile_id` AND `mailbox_has_renderable_content(...)`.
 
 - Senza cursore: **ultimi** `p_limit` messaggi (finestra recente), restituiti in ordine cronologico ASC.
 - Con `p_before_created_at`: fino a `p_limit` messaggi con `created_at < p_before_created_at` (pagina più vecchia), ordine ASC.
@@ -207,7 +207,7 @@ Effetti (solo confine lettore — [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-
 apply_message_reaction(p_logical_message_id uuid, p_emoji text) → message_reaction_facts
 ```
 
-Registra un fatto `applied` su λ. Richiede partecipazione (`messages.owner_id = auth.uid()` per quel λ).
+Registra un fatto `applied` su λ. Richiede partecipazione (`messages.archive_user_id = auth.uid()` per quel λ).
 
 - **Idempotenza**: stessa emoji già attiva → ritorna l'ultimo fatto `applied` senza nuovo INSERT.
 - **Cambio emoji**: nuovo fatto `applied`; i fatti precedenti restano nello storico.
@@ -240,7 +240,7 @@ list_message_reactions(p_logical_message_ids uuid[]) → table (
 
 Stato corrente **derivato**: ultimo fatto per `(λ, reactor_id)`; solo `applied` entra nell'aggregato.
 
-Solo λ presenti nel mio archivio (`owner_id = auth.uid()`).
+Solo λ presenti nel mio archivio (`archive_user_id = auth.uid()`).
 
 ---
 
@@ -348,7 +348,7 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 | File | Verifica |
 |------|----------|
 | `supabase/tests/schema_smoke.sql` | Assenza `inbox_threads`, `message_read_receipts`; schema mailbox |
-| `supabase/tests/mailbox_schema_smoke.sql` | `owner_id`, assenza `delivery_status` su `messages` |
+| `supabase/tests/mailbox_schema_smoke.sql` | `archive_user_id`, assenza `delivery_status` su `messages` |
 | `supabase/tests/delivery_ticks_smoke.sql` | Contratto ✓ / ✓✓ grigie / ✓✓ blu + allow list + outbox `event_kind` |
 | `supabase/tests/mailbox_send_smoke.sql` | Invio + `delivered_at` |
 | `supabase/tests/mailbox_idempotency_smoke.sql` | Idempotenza `client_message_id` |
@@ -361,7 +361,7 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 | `supabase/tests/reception_allowlist_gate_smoke.sql` | Rifiuto silenzioso inbound vs recapito allowed |
 | `supabase/tests/reception_outbound_gate_smoke.sql` | Errore outbound se destinatario ∉ allow list mittente |
 | `supabase/tests/rpc_helper_security_smoke.sql` | Helper interni non eseguibili da `authenticated` |
-| `supabase/tests/group_schema_smoke.sql` | `list_owner_messages`, `profile_kind`, `broadcast_message_to_allowlist` |
+| `supabase/tests/group_schema_smoke.sql` | `list_archive_messages`, `profile_kind`, `broadcast_message_to_allowlist` |
 | `supabase/tests/message_reaction_facts_smoke.sql` | Apply/withdraw/idempotenza/cambio emoji su λ |
 
 Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/test.sh e2e-multi`
@@ -376,7 +376,7 @@ Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/te
 | `broadcast_message_to_allowlist` | `GroupArchiveService.broadcastToAllowlist` / `broadcastGifToAllowlist` / … |
 | `list_inbox` | `InboxService.fetchInbox` |
 | `list_peer_messages` | `PeerMessageService.fetchPeerMessages` |
-| `list_owner_messages` | `GroupArchiveService.fetchOwnerMessages` |
+| `list_archive_messages` | `GroupArchiveService.fetchArchiveMessages` |
 | `mark_peer_read` | `InboxService.markPeerRead` |
 | `apply_message_reaction` | `PeerMessageService.applyReaction` |
 | `withdraw_message_reaction` | `PeerMessageService.withdrawReaction` |

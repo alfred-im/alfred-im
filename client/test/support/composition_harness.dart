@@ -155,7 +155,7 @@ class _SessionScopedMessagesBody extends StatelessWidget {
     if (live == null || live.userId != session.userId) return false;
     return isMessagingSessionReady(
       client: live.client,
-      ownerUserId: live.userId,
+      focusUserId: live.userId,
       peerProfileId: peer.profileId,
     );
   }

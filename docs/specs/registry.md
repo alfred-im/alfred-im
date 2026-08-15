@@ -15,7 +15,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 
 | Promessa ID | Titolo | Stato | File |
 |-------------|--------|-------|------|
-| **SYS-MAILBOX** | Archivio per owner, invio, inbox on-read, spunte | `implemented` | [SYS-MAILBOX.md](./promises/system/SYS-MAILBOX.md) |
+| **SYS-MAILBOX** | Archivio per titolare archivio, invio, inbox on-read, spunte | `implemented` | [SYS-MAILBOX.md](./promises/system/SYS-MAILBOX.md) |
 | **SYS-GROUP** | Account gruppo, partecipazione, erogazione | `implemented` | [SYS-GROUP.md](./promises/system/SYS-GROUP.md) |
 | **SYS-PROFILE** | Tabella `profiles`, avatar, RPC profilo | `implemented` | [SYS-PROFILE.md](./promises/system/SYS-PROFILE.md) |
 | **SYS-CONTACTS** | Rubrica `contacts`, `search_profiles` | `implemented` | [SYS-CONTACTS.md](./promises/system/SYS-CONTACTS.md) |
@@ -41,7 +41,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **PROM-CHAT-PEER-KEY** | Chat per `peer_profile_id`, no `thread_id` | `implemented` | [PROM-CHAT-PEER-KEY.md](./promises/product/PROM-CHAT-PEER-KEY.md) |
 | **PROM-OUTBOUND-SEND** | Coda invio + merge optimistic | `implemented` | [PROM-OUTBOUND-SEND.md](./promises/product/PROM-OUTBOUND-SEND.md) |
 | **PROM-MESSAGE-STATUS** | Spunte da `delivered_at`/`read_at` | `implemented` | [PROM-MESSAGE-STATUS.md](./promises/product/PROM-MESSAGE-STATUS.md) |
-| **PROM-REALTIME-OWNER** | Realtime filtrato su `owner_id` | `implemented` | [PROM-REALTIME-OWNER.md](./promises/product/PROM-REALTIME-OWNER.md) |
+| **PROM-REALTIME-ARCHIVE** | Realtime filtrato su `archive_user_id` | `implemented` | [PROM-REALTIME-ARCHIVE.md](./promises/product/PROM-REALTIME-ARCHIVE.md) |
 | **PROM-GROUP-AUTHOR-DISPLAY** | Autore contenuto in chat gruppo | `implemented` | [PROM-GROUP-AUTHOR-DISPLAY.md](./promises/product/PROM-GROUP-AUTHOR-DISPLAY.md) |
 | **PROM-GROUP-TICKS** | Spunte limitate al rapporto con il gruppo | `implemented` | [PROM-GROUP-TICKS.md](./promises/product/PROM-GROUP-TICKS.md) |
 | **PROM-SHAREABLE-LINK** | Link condivisibili stabili (`#indirizzo`, `#indirizzo/chat`) | `implemented` | [PROM-SHAREABLE-LINK.md](./promises/product/PROM-SHAREABLE-LINK.md) |
@@ -61,7 +61,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **SURF-AUTH** | Overlay login/registrazione | `implemented` | PROM-MULTI-ACCOUNT, PROM-SHAREABLE-LINK | [SURF-AUTH.md](./surfaces/SURF-AUTH.md) |
 | **SURF-APP-SHELL** | `HomeScreen` sempre visibile | `implemented` | PROM-MULTI-ACCOUNT | [SURF-AUTH.md](./surfaces/SURF-AUTH.md) § SURF-APP-SHELL (alias SURF-AUTH-001) |
 | **SURF-ACCOUNT-SIDEBAR** | Manifest account in sidebar | `implemented` | PROM-MULTI-ACCOUNT, PROM-PROFILE-IDENTITY, PROM-SHAREABLE-LINK | [SURF-ACCOUNT-SIDEBAR.md](./surfaces/SURF-ACCOUNT-SIDEBAR.md) |
-| **SURF-INBOX** | Lista conversazioni | `implemented` | PROM-LIST-FILTER, PROM-REALTIME-OWNER | [SURF-INBOX.md](./surfaces/SURF-INBOX.md) |
+| **SURF-INBOX** | Lista conversazioni | `implemented` | PROM-LIST-FILTER, PROM-REALTIME-ARCHIVE | [SURF-INBOX.md](./surfaces/SURF-INBOX.md) |
 | **SURF-CHAT** | Conversazione 1:1 | `implemented` | PROM-CHAT-PEER-KEY, PROM-MESSAGE-STATUS, PROM-OUTBOUND-SEND, PROM-CHAT-MEDIA, PROM-SHAREABLE-LINK, PROM-CONVERSATION-SCOPE, PROM-MESSAGE-MENTION, PROM-MESSAGE-REACTIONS, PROM-BOTTOM-ANCHOR | [SURF-CHAT.md](./surfaces/SURF-CHAT.md) |
 | **SURF-CONTACTS** | Rubrica | `implemented` | PROM-LIST-FILTER, PROM-PERSONAL-CONTACTS | [SURF-CONTACTS.md](./surfaces/SURF-CONTACTS.md) |
 | **SURF-ALLOWLIST** | Persone consentite | `implemented` | PROM-LIST-FILTER, PROM-RECEPTION-FILTER | [SURF-ALLOWLIST.md](./surfaces/SURF-ALLOWLIST.md) |

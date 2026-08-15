@@ -14,7 +14,7 @@ L’ADR [address-based-messaging.md](../decisions/address-based-messaging.md) re
 
 | Aspetto | Comportamento su `main` |
 |---------|-------------------------|
-| **Archivio** | Un archivio per owner: ogni utente ha le proprie righe `messages` (`owner_id`) |
+| **Archivio** | Un archivio per titolare archivio: ogni utente ha le proprie righe `messages` (`archive_user_id`) |
 | **Confine account** | RPC account toccano **solo** il proprio archivio — [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) |
 | **Consegna** | **Outbox sempre** → worker `alfred_delivery.process_outbox` materializza destinatario e date spunte mittente — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) |
 | **Inbox** | Lista derivata dal **mio** archivio via `list_inbox()` |
@@ -36,7 +36,7 @@ Con il modello caselle le **copie d’archivio** (mittente e destinatario) punta
 | Aspetto | Conseguenza |
 |---------|-------------|
 | **Riferimento** | Più righe `messages` possono condividere lo stesso `media_url` |
-| **Garbage collection** | Eliminare un messaggio o una casella **non** implica che il file sia orfano: va verificato se **altre** copie (o altri owner) referenziano ancora quell’URL prima di cancellare da `chat-media` |
+| **Garbage collection** | Eliminare un messaggio o una casella **non** implica che il file sia orfano: va verificato se **altre** copie (o altri titolari archivio) referenziano ancora quell’URL prima di cancellare da `chat-media` |
 | **Delete locale** (futuro) | Cancello la chat dal mio lato → la mia riga sparisce, ma il peer può ancora referenziare lo stesso file |
 | **Rimozione lato mittente** | Cancellare il file in storage mentre il destinatario ha ancora il messaggio → **link rotto** per il peer, salvo policy esplicita |
 | **Retry / invio fallito** | Upload riuscito ma consegna non materializzata → blob in storage senza (o con) riga archivio — edge case da contare nel GC |
@@ -64,7 +64,7 @@ Niente `thread_id` lato client. Niente entità «casella verso Paolo» esposta c
 1. **Nessuna conversazione condivisa** — due archivi indipendenti (analogia email).
 2. **Nessun allineamento obbligatorio** tra il mio archivio e quello del peer.
 3. **Solo `author_id`** — niente `direction` in schema.
-4. **Il mio archivio alimenta la mia interfaccia** — casella = dove vivono i messaggi dell’owner, non cache su tabella condivisa.
+4. **Il mio archivio alimenta la mia interfaccia** — casella = dove vivono i messaggi del titolare, non cache su tabella condivisa.
 5. **Outbox sempre** — anche internal passa da outbox; internal / xmpp / matrix differiscono solo nel driver di consegna in fondo.
 6. **Spunte = segnali puntuali** — aggiornano solo la copia del mittente tramite id di correlazione; **non** sincronizzano né modificano l’archivio del peer (modello federato).
 7. **Confine account** — nessuna RPC account attraversa l’archivio altrui; solo worker `alfred_delivery` (infrastruttura, non account).
@@ -75,7 +75,7 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e 
 
 | Id | Scope | Ruolo |
 |----|-------|-------|
-| **`id` (riga archivio)** | Per owner | Identità **locale** del messaggio nel mio archivio (`owner_id = io`). Mittente e destinatario hanno **sempre** `id` diversi. |
+| **`id` (riga archivio)** | Per archive_user | Identità **locale** del messaggio nel mio archivio (`archive_user_id = io`). Mittente e destinatario hanno **sempre** `id` diversi. |
 | **`client_message_id`** | Mittente (client + server) | Idempotenza **invio**: retry client, coda outbound, merge UI optimistic lato mittente. **Non** correla le due copie. |
 | **`logical_message_id`** | Piattaforma (λ) | **Correlazione** tra le due copie dello stesso invio + target dei segnali spunta (`delivered` / `read`). |
 | **`external_id`** | Federato | Id **percepito dall’altro sistema** (XMPP stanza `id`, Matrix `event_id`). Il bridge lo traduce in update sulla copia Alfred del mittente (via λ o mapping esplicito). |
@@ -91,10 +91,10 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e 
 
 | Operazione | Chiave |
 |------------|--------|
-| Retry invio client | `(owner_id mittente, client_message_id)` |
-| Materializzazione copia destinatario | `(owner_id destinatario, logical_message_id)` |
+| Retry invio client | `(archive_user_id mittente, client_message_id)` |
+| Materializzazione copia destinatario | `(archive_user_id destinatario, logical_message_id)` |
 | Job outbox | `outbox.id` + `event_kind` |
-| Segnale `delivered` / `read` | `(owner_id mittente, logical_message_id)` |
+| Segnale `delivered` / `read` | `(archive_user_id mittente, logical_message_id)` |
 | Bridge federato (inbound ack) | `external_id` + protocollo → risoluzione su λ |
 
 `client_message_id` e `logical_message_id` restano **sempre** distinti: il primo è solo invio, il secondo solo correlazione e recapito.
@@ -146,10 +146,10 @@ Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 
 ### Regole
 
-- Il segnale aggiorna **solo** `delivered_at` / `read_at` sulla **copia del mittente** identificata da `logical_message_id` (+ `owner_id` mittente), tramite **worker** — mai da RPC account cross-boundary.
+- Il segnale aggiorna **solo** `delivered_at` / `read_at` sulla **copia del mittente** identificata da `logical_message_id` (+ `archive_user_id` mittente), tramite **worker** — mai da RPC account cross-boundary.
 - **Mai** modificare l’archivio del peer per far vedere le spunte al mittente.
 - **Mai** allineare preview, ordine o contenuto tra le due copie come effetto delle spunte.
-- Realtime mittente: subscribe agli UPDATE sulla **propria** copia (`owner_id = io`); merge optimistic via `client_message_id`, spunte via `logical_message_id`.
+- Realtime mittente: subscribe agli UPDATE sulla **propria** copia (`archive_user_id = io`); merge optimistic via `client_message_id`, spunte via `logical_message_id`.
 - I marker non vanno «all’indietro» (segnale su id più vecchio dello stato locale → ignorare).
 
 ### Flusso internal (sintesi)
@@ -203,7 +203,7 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 
 ## Storico
 
-- 2026-06-26: idea da sessione design (cronologia per owner, omogeneità col federato).
+- 2026-06-26: idea da sessione design (cronologia per titolare archivio, omogeneità col federato).
 - 2026-06-27: su `main` implementato message-centric (PR #130) — percorso diverso, temporaneo.
 - 2026-06-28: direzione caselle confermata; Q&A identità, outbox sempre, media condivisi/GC, **spunte = segnali** (modello XMPP/Matrix) confermato.
 - 2026-06-29: identificatori a livelli distinti (`id` / `client_message_id` / λ / `external_id`), idempotenza per operazione, consegna parziale = stato normale pipeline.

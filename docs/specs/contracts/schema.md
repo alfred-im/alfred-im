@@ -12,9 +12,9 @@ Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./r
 
 ```
 auth.users 1──1 profiles
-profiles 1──* contacts (owner_id)
-profiles 1──* reception_allowlist (owner_id → allowed_profile_id)
-profiles 1──* messages (owner_id = archivio; author_id = autore contenuto)
+profiles 1──* contacts (archive_user_id)
+profiles 1──* reception_allowlist (archive_user_id → allowed_profile_id)
+profiles 1──* messages (archive_user_id = archivio; author_id = autore contenuto)
 messages *── peer profiles (peer_profile_id denormalizzato)
 logical_message_id (λ) 1──* message_reaction_facts (append-only; nessuna FK — λ non univoco su messages)
 messages 1──* outbox (ogni invio/lettura può accodare eventi)
@@ -65,7 +65,7 @@ storage: chat-media, avatars
 | Colonna | Tipo | Note |
 |---------|------|------|
 | `id` | uuid PK | |
-| `owner_id` | uuid FK → profiles | |
+| `archive_user_id` | uuid FK → profiles | |
 | `protocol` | contact_protocol | |
 | `linked_profile_id` | uuid FK nullable | Obbligatorio se `internal` |
 | `external_address` | text nullable | Obbligatorio se xmpp/matrix |
@@ -74,7 +74,7 @@ storage: chat-media, avatars
 
 **CHECK**: internal ↔ profile; federato ↔ external_address.
 
-**RLS**: SELECT, INSERT, UPDATE, DELETE `owner_id = auth.uid()`.
+**RLS**: SELECT, INSERT, UPDATE, DELETE `archive_user_id = auth.uid()`.
 
 **Spec**: [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md).
 
@@ -85,15 +85,15 @@ storage: chat-media, avatars
 | Colonna | Tipo | Note |
 |---------|------|------|
 | `id` | uuid PK | |
-| `owner_id` | uuid FK → profiles | Destinatario che filtra |
+| `archive_user_id` | uuid FK → profiles | Destinatario che filtra |
 | `allowed_profile_id` | uuid FK → profiles | Mittente consentito |
 | `created_at` | timestamptz | default `now()` |
 
-**UNIQUE**: `(owner_id, allowed_profile_id)`.
+**UNIQUE**: `(archive_user_id, allowed_profile_id)`.
 
-**CHECK**: `allowed_profile_id IS NOT NULL` AND `allowed_profile_id <> owner_id`.
+**CHECK**: `allowed_profile_id IS NOT NULL` AND `allowed_profile_id <> archive_user_id`.
 
-**RLS**: SELECT, INSERT, DELETE `owner_id = auth.uid()` (nessuna policy UPDATE).
+**RLS**: SELECT, INSERT, DELETE `archive_user_id = auth.uid()` (nessuna policy UPDATE).
 
 **Spec**: [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md).
 
@@ -103,8 +103,8 @@ storage: chat-media, avatars
 
 | Colonna | Tipo | Note |
 |---------|------|------|
-| `id` | uuid PK | Per owner |
-| `owner_id` | uuid FK → profiles | Archivio (`auth.uid()` in RLS) |
+| `id` | uuid PK | Per archive_user |
+| `archive_user_id` | uuid FK → profiles | Archivio (`auth.uid()` in RLS) |
 | `author_id` | uuid FK → profiles | Mittente tecnico di recapito (gruppo se erogazione) |
 | `original_author_id` | uuid FK nullable → profiles | Autore contenuto se `author_id` è gruppo — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
 | `peer_profile_id` | uuid FK nullable | Controparte internal |
@@ -117,15 +117,15 @@ storage: chat-media, avatars
 | `media_url` | text nullable | Condiviso tra copie |
 | `duration_seconds`, `media_mime`, `media_size_bytes` | | voice |
 | `latitude`, `longitude` | double nullable | location |
-| `delivered_at` | timestamptz nullable | Solo righe uscita (author = owner) |
+| `delivered_at` | timestamptz nullable | Solo righe uscita (author = archive_user) |
 | `read_at` | timestamptz nullable | Uscita: spunta lettura; entrata: lettura locale |
 | `failed_at` | timestamptz nullable | Invio/outbox fallito (mittente) |
 | `external_id` | text nullable | Bridge fase B |
 | `created_at` | timestamptz | |
 
-**UNIQUE**: `(owner_id, client_message_id)` WHERE `client_message_id IS NOT NULL`; `(owner_id, logical_message_id)`.
+**UNIQUE**: `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL`; `(archive_user_id, logical_message_id)`.
 
-**RLS**: SELECT `owner_id = auth.uid()` — **nessuna** policy INSERT/UPDATE/DELETE (mutazioni solo via RPC `SECURITY DEFINER`).
+**RLS**: SELECT `archive_user_id = auth.uid()` — **nessuna** policy INSERT/UPDATE/DELETE (mutazioni solo via RPC `SECURITY DEFINER`).
 
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md).
 
@@ -146,7 +146,7 @@ Fatti immutabili (append-only) sulle reaction — ancorati a `logical_message_id
 
 **CHECK**: `applied` ↔ `emoji` valorizzato; `withdrawn` ↔ `emoji` null.
 
-**RLS**: SELECT se esiste `messages` con stesso λ e `owner_id = auth.uid()` — **nessuna** policy INSERT/UPDATE/DELETE (solo RPC `SECURITY DEFINER`).
+**RLS**: SELECT se esiste `messages` con stesso λ e `archive_user_id = auth.uid()` — **nessuna** policy INSERT/UPDATE/DELETE (solo RPC `SECURITY DEFINER`).
 
 **Realtime**: publication `supabase_realtime`.
 
@@ -158,8 +158,8 @@ Fatti immutabili (append-only) sulle reaction — ancorati a `logical_message_id
 
 Nessuna tabella aggiuntiva. Partecipazione = allow list bidirezionale:
 
-- `reception_allowlist(owner_id = gruppo, allowed_profile_id = persona)`
-- `reception_allowlist(owner_id = persona, allowed_profile_id = gruppo)`
+- `reception_allowlist(archive_user_id = gruppo, allowed_profile_id = persona)`
+- `reception_allowlist(archive_user_id = persona, allowed_profile_id = gruppo)`
 
 ---
 
@@ -254,13 +254,13 @@ Pubblici (scope attuale) (URL diretti in Realtime).
 |---------|------------|
 | `inbox_threads` | `20260627230000_messages_only_inbox.sql` |
 | `conversations`, `conversation_participants` | message-centric refactor |
-| `message_read_receipts` | `20260704120000_mailbox_per_owner_archive.sql` |
+| `message_read_receipts` | `20260704120000_mailbox_per_archive_user.sql` |
 | `messages.delivery_status`, `sender_id`, `recipient_profile_id`, `marker_type`, `marker_for` | `20260704120000` (tabella ricreata) |
 | Trigger `on_message_inserted` | `20260704120000` |
 | `platform_agent_smoke` (tabella smoke) | `20260809130000_security_integrity_cleanup.sql` |
 | Enum `message_delivery_status` | `20260809130000` (legacy pre-mailbox, nessuna colonna su `main`) |
 | Policy `messages_update_own` (UPDATE diretto PostgREST) | `20260809130000` — mutazioni solo via RPC |
-| Indice `reception_allowlist_owner_id_idx` | `20260809130000` (ridondante con UNIQUE `(owner_id, allowed_profile_id)`) |
+| Indice `reception_allowlist_archive_user_id_idx` | `20260809130000` (ridondante con UNIQUE `(archive_user_id, allowed_profile_id)`) |
 
 Verifica: `supabase/tests/schema_smoke.sql`, `mailbox_schema_smoke.sql`.
 

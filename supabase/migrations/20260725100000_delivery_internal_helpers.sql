@@ -6,13 +6,13 @@
 -- Behavior 1:1 with 20260715230000 (deliver_internal ground truth).
 
 -- ---------------------------------------------------------------------------
--- is_bidirectional_allowed: cross-direction gate between two mailbox owners
+-- is_bidirectional_allowed: cross-direction gate between two mailbox archive users
 -- (p_sender retained for signature stability; unused)
 -- ---------------------------------------------------------------------------
 
 create or replace function public.is_bidirectional_allowed(
-  p_owner_a uuid,
-  p_owner_b uuid,
+  p_archive_user_a uuid,
+  p_archive_user_b uuid,
   p_sender uuid
 )
 returns boolean
@@ -21,8 +21,8 @@ stable
 security definer
 set search_path = public
 as $$
-  select public.is_sender_allowed_for_reception(p_owner_a, p_owner_b)
-     and public.is_sender_allowed_for_reception(p_owner_b, p_owner_a);
+  select public.is_sender_allowed_for_reception(p_archive_user_a, p_archive_user_b)
+     and public.is_sender_allowed_for_reception(p_archive_user_b, p_archive_user_a);
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -92,7 +92,7 @@ declare
   v_row_count integer;
 begin
   insert into public.messages (
-    owner_id,
+    archive_user_id,
     author_id,
     original_author_id,
     peer_profile_id,
@@ -123,7 +123,7 @@ begin
     coalesce((p_payload ->> 'latitude')::double precision, p_sender.latitude),
     coalesce((p_payload ->> 'longitude')::double precision, p_sender.longitude)
   )
-  on conflict (owner_id, logical_message_id) do nothing;
+  on conflict (archive_user_id, logical_message_id) do nothing;
 
   get diagnostics v_row_count = row_count;
   return v_row_count;
@@ -191,34 +191,34 @@ begin
   );
 
   v_recipient_kind := public.profile_kind_of(v_recipient_id);
-  v_sender_kind := public.profile_kind_of(v_sender.owner_id);
+  v_sender_kind := public.profile_kind_of(v_sender.archive_user_id);
   v_content_author := case
-    when v_recipient_kind = 'group' or v_sender_kind = 'group' then v_sender.owner_id
+    when v_recipient_kind = 'group' or v_sender_kind = 'group' then v_sender.archive_user_id
     else null
   end;
 
   v_is_group := v_recipient_kind = 'group';
   v_original_author_id := case
-    when v_is_group then v_sender.owner_id
+    when v_is_group then v_sender.archive_user_id
     else v_content_author
   end;
 
   if v_is_group then
     v_allowed := public.is_bidirectional_allowed(
       v_recipient_id,
-      v_sender.owner_id,
-      v_sender.owner_id
+      v_sender.archive_user_id,
+      v_sender.archive_user_id
     );
   else
-    v_allowed := public.is_sender_allowed_for_reception(v_recipient_id, v_sender.owner_id);
+    v_allowed := public.is_sender_allowed_for_reception(v_recipient_id, v_sender.archive_user_id);
   end if;
 
   if v_allowed then
     v_row_count := alfred_delivery._insert_recipient_copy(
       v_recipient_id,
-      v_sender.owner_id,
+      v_sender.archive_user_id,
       v_original_author_id,
-      v_sender.owner_id,
+      v_sender.archive_user_id,
       v_lambda,
       coalesce(v_sender.protocol, 'internal'::public.contact_protocol),
       v_body,
@@ -235,7 +235,7 @@ begin
     if v_is_group then
       perform alfred_delivery.erogate_group_message(
         v_recipient_id,
-        v_sender.owner_id,
+        v_sender.archive_user_id,
         v_lambda,
         coalesce(v_sender.protocol, 'internal'::public.contact_protocol),
         v_body,
@@ -250,16 +250,16 @@ begin
 
       perform alfred_delivery.queue_push_after_delivery(
         v_recipient_id,
-        v_sender.owner_id,
+        v_sender.archive_user_id,
         v_lambda,
         v_content_type,
         v_body,
-        v_sender.owner_id
+        v_sender.archive_user_id
       );
     elsif v_row_count > 0 then
       perform alfred_delivery.queue_push_after_delivery(
         v_recipient_id,
-        v_sender.owner_id,
+        v_sender.archive_user_id,
         v_lambda,
         v_content_type,
         v_body,
@@ -334,8 +334,8 @@ begin
   end if;
 
   perform alfred_delivery.erogate_group_message(
-    v_group_row.owner_id,
-    v_group_row.owner_id,
+    v_group_row.archive_user_id,
+    v_group_row.archive_user_id,
     v_group_row.logical_message_id,
     v_group_row.protocol,
     v_group_row.body,

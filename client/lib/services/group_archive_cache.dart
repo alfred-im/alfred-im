@@ -5,24 +5,24 @@
 import '../models/message.dart';
 import 'group_archive_service.dart';
 
-/// Cache sessione per `list_owner_messages` — condivisa tra home e conversazione
-/// gruppo per evitare fetch duplicati sullo stesso owner.
-class GroupOwnerArchiveCache {
-  GroupOwnerArchiveCache({
+/// Cache sessione per `list_archive_messages` — condivisa tra home e conversazione
+/// gruppo per evitare fetch duplicati sullo stesso focus.
+class GroupArchiveCache {
+  GroupArchiveCache({
     required this.groupArchiveService,
     required this.userId,
   });
 
-  static final Map<String, GroupOwnerArchiveCache> _byUserId = {};
+  static final Map<String, GroupArchiveCache> _byUserId = {};
 
   /// Istanza condivisa per [userId] nella sessione corrente.
-  static GroupOwnerArchiveCache forUserId({
+  static GroupArchiveCache forUserId({
     required String userId,
     required GroupArchiveService groupArchiveService,
   }) {
     final existing = _byUserId[userId];
     if (existing != null) return existing;
-    final cache = GroupOwnerArchiveCache(
+    final cache = GroupArchiveCache(
       groupArchiveService: groupArchiveService,
       userId: userId,
     );
@@ -31,7 +31,7 @@ class GroupOwnerArchiveCache {
   }
 
   /// Istanza condivisa per [userId] con [groupArchiveService] esplicito.
-  static GroupOwnerArchiveCache forGroupArchive({
+  static GroupArchiveCache forGroupArchive({
     required String userId,
     required GroupArchiveService groupArchiveService,
   }) =>
@@ -60,7 +60,7 @@ class GroupOwnerArchiveCache {
     }
 
     final future = groupArchiveService
-        .fetchOwnerMessages(currentUserId: userId)
+        .fetchArchiveMessages(currentUserId: userId)
         .then((messages) {
       _cached = List<ChatMessage>.from(messages);
       return messages;

@@ -13,7 +13,7 @@
 | `FocusAccount` | Utente / Policy | Intent focus UI → delega `RequestFocusSwitch` a [SessionAuthority](session-authority.md). Scope e shell: `NavigationMachine.SwitchToAccount`. |
 | `OpenAccount` | Utente | Aggiunge account al manifest (login o registrazione). |
 | `CloseAccount` | Utente | Rimuove account dal manifest. |
-| `ReconnectFocusedSession` | Utente / Policy | Ritenta restore sessione per l'account in focus → `SessionAuthority.reconnectActiveOwner`. |
+| `ReconnectFocusedSession` | Utente / Policy | Ritenta restore sessione per l'account in focus → `SessionAuthority.reconnectActiveFocus`. |
 
 Varianti statechart per `OpenAccount`: `OpenAccountWithPassword`, `OpenAccountWithSignUp`.
 
@@ -24,11 +24,11 @@ Servizio di dominio — vedi [session-authority.md](session-authority.md).
 | Comando | Emesso da | Codice Dart |
 |---------|-----------|-------------|
 | `RequestFocusSwitch` | `FocusAccount` / navigation | `requestFocusSwitch` |
-| `EnsureOwnerReady` | navigation (ingresso chat) | `ensureOwnerReady` |
-| `RunAsOwner` | *(previsto)* | `runAsOwner` |
+| `EnsureFocusReady` | navigation (ingresso chat) | `ensureFocusReady` |
+| `RunAsFocus` | *(previsto)* | `runAsFocus` |
 | `AcquireIdentityLease` / `ReleaseIdentityLease` | media | `runWithLease` / `acquireLease` |
 | `AuthorizePushSync` | notifications | `authorizePushSync` |
-| `ReconnectActiveOwner` | `ReconnectFocusedSession` | `reconnectActiveOwner` |
+| `ReconnectActiveArchiveUser` | `ReconnectFocusedSession` | `reconnectActiveFocus` |
 
 ---
 
@@ -40,7 +40,7 @@ Servizio di dominio — vedi [session-authority.md](session-authority.md).
 | `AccountOpened` | Nuovo account nel manifest (con o senza sessione pronta). |
 | `AccountClosed` | Account rimosso dal manifest (`wasLastAccount` se era l'ultimo). |
 | `SessionRestoreFailed` | Focus impostato ma restore sessione non riuscito → stato `FocusedAwaitingSession`. |
-| `IdentityActivated` | SessionAuthority: JWT valido per `ownerUserId`; `identityGeneration` incrementato. |
+| `IdentityActivated` | SessionAuthority: JWT valido per `focusUserId`; `identityGeneration` incrementato. |
 | `IdentitySwitchDeferred` | Switch richiesto ma bloccato da lease attivo. |
 | `IdentityLeaseAcquired` / `IdentityLeaseReleased` | Lease media/upload — vedi [session-authority.md](session-authority.md). |
 

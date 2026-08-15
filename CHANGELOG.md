@@ -144,7 +144,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Aggiunto (2026-07-06 — GROUP-CORE + GROUP-DELIVERY, PR #162)
 
-- **Migrazioni** `20260706120000`–`20260706140000`: `profile_kind` (`user`/`group`), `original_author_id`, RPC gruppo (`send_message_to_profile` destinatario gruppo, `broadcast_message_to_allowlist`, `list_owner_messages`, `erogate_group_message`), `peer_profile_kind` in `list_inbox`
+- **Migrazioni** `20260706120000`–`20260706140000`: `profile_kind` (`user`/`group`), `original_author_id`, RPC gruppo (`send_message_to_profile` destinatario gruppo, `broadcast_message_to_allowlist`, `list_archive_messages`, `erogate_group_message`), `peer_profile_kind` in `list_inbox`
 - **Semantica**: gruppo = account Alfred; partecipazione solo allow list bidirezionale; erogazione automatica verso allow list del gruppo; broadcast = una riga storico + fan-out proxy; `original_author_id` sempre valorizzato nei flussi gruppo
 - **Client**: registrazione tipo account; shell gruppo (`GroupConversationScreen`, no inbox); etichette autore con avatar + nome leggibile (`MessageAuthorHeader`, `author_display.dart`); badge «Gruppo» in manifest; broadcast multimediale (GIF, voice, location)
 - **Spec SDD**: `GROUP-CORE`, `GROUP-DELIVERY` → `implemented`
@@ -174,7 +174,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 ### Aggiunto (2026-07-04 — tracciabilità MAILBOX test)
 
 - **Smoke SQL**: `mailbox_idempotency`, `mailbox_delivery`, `mailbox_read`, `mailbox_inbox`, `mailbox_send_media`; `mailbox_send_smoke` e `send_message_to_profile_smoke` allineati al modello mailbox
-- **Client**: `mailbox_message_filter.dart`; test `mailbox_message_filter_test`, `inbox_realtime_owner_filter_test`; estensioni `message_bubble_test`
+- **Client**: `mailbox_message_filter.dart`; test `mailbox_message_filter_test`, `inbox_realtime_archive_filter_test`; estensioni `message_bubble_test`
 - **Gate**: `check-spec-sync.sh` esteso (contratti mailbox, smoke SQL tracciati)
 - **Doc**: tracciabilità MAILBOX-* senza «da creare»; `multi-account-client.md` test table
 
@@ -188,10 +188,10 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ### Aggiunto (2026-07-04 — modello caselle mailbox, PR #159)
 
-- **Migrazione** `20260704120000_mailbox_per_owner_archive.sql`: drop/recreate `messages` con archivio per `owner_id`, `author_id`, `peer_profile_id`, `logical_message_id`, `delivered_at`/`read_at`; rimozione `message_read_receipts` e enum `delivery_status`
+- **Migrazione** `20260704120000_mailbox_per_archive_user.sql`: drop/recreate `messages` con archivio per `archive_user_id`, `author_id`, `peer_profile_id`, `logical_message_id`, `delivered_at`/`read_at`; rimozione `message_read_receipts` e enum `delivery_status`
 - **RPC**: `send_message_to_profile` (outbox sempre + copie mittente/destinatario in transazione), `list_inbox`, `list_peer_messages`, `mark_peer_read` riscritti per mailbox
 - **Spec SDD**: `MAILBOX-CORE`, `MAILBOX-SEND`, `MAILBOX-INBOX`, `MAILBOX-READ` → `implemented`; `MSG-INBOX`/`MSG-SEND`/`MSG-READ` → `superseded`
-- **Client**: modelli e servizi allineati (`owner_id` realtime, spunte da date); integrazione multi-account estesa (delivered/read pipeline)
+- **Client**: modelli e servizi allineati (`archive_user_id` realtime, spunte da date); integrazione multi-account estesa (delivered/read pipeline)
 - **Test SQL**: `mailbox_schema_smoke.sql`, `mailbox_send_smoke.sql`; aggiornato `schema_smoke.sql`
 - **Doc**: `PROJECT_MAP`, `full-stack`, `pr-registry`, `mailbox-inbox-outbox-spec`, `contracts/schema.md` / `rpc.md`
 

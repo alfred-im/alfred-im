@@ -111,7 +111,7 @@ void main() {
 
       auth.notificationsAdapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
-          ownerUserId: 'account-b',
+          recipientUserId: 'account-b',
           peerProfileId: 'account-a',
         ),
         sessionReady: true,
@@ -140,7 +140,7 @@ void main() {
 
       auth.notificationsAdapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
-          ownerUserId: 'account-b',
+          recipientUserId: 'account-b',
           peerProfileId: 'account-a',
         ),
         sessionReady: false,

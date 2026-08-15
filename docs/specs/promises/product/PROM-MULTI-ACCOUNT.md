@@ -37,7 +37,7 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 | **PROM-MULTI-ACCOUNT-006** | **Una** `AccountSession` / connessione GoTrue attiva in RAM; al `setFocus`: dispose sessione corrente (`clearAuthStorage: false`), restore nuovo account da manifest |
 | **PROM-MULTI-ACCOUNT-007** | Bootstrap app: `bootstrapApp()` — nessun `Supabase.initialize` globale per utente |
 | **PROM-MULTI-ACCOUNT-008** | Servizi dati usano `session.client` della sessione in focus, non singleton globale |
-| **PROM-MULTI-ACCOUNT-009** | `InboxController` + realtime inbox solo sul focus — vedi [PROM-REALTIME-OWNER](./PROM-REALTIME-OWNER.md) |
+| **PROM-MULTI-ACCOUNT-009** | `InboxController` + realtime inbox solo sul focus — vedi [PROM-REALTIME-ARCHIVE](./PROM-REALTIME-ARCHIVE.md) |
 | **PROM-MULTI-ACCOUNT-010** | `AccountViewState` per `userId`: `activePeer` e stato mobile inbox/chat **persistono** al cambio focus |
 | **PROM-MULTI-ACCOUNT-011** | Token refresh: sessione attiva aggiorna propria entry manifest su `tokenRefreshed` |
 
@@ -130,5 +130,5 @@ Release: `bash scripts/test.sh flusso-reale` · `integration` · `e2e-multi` · 
 | [SURF-AUTH](../../surfaces/SURF-AUTH.md) | Overlay autenticazione |
 | [SURF-ACCOUNT-SIDEBAR](../../surfaces/SURF-ACCOUNT-SIDEBAR.md) | Sidebar multi-account |
 | [multi-account-parallel-sessions.md](../../../decisions/multi-account-parallel-sessions.md) | ADR |
-| [PROM-REALTIME-OWNER](./PROM-REALTIME-OWNER.md) | Realtime scoped al focus |
+| [PROM-REALTIME-ARCHIVE](./PROM-REALTIME-ARCHIVE.md) | Realtime scoped al focus |
 | [PROM-SHAREABLE-LINK](./PROM-SHAREABLE-LINK.md) | Link in ingresso con 0 account → auth poi risorsa |

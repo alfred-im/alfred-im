@@ -27,7 +27,7 @@ bool _focusedSessionValid(
   if (live == null || live.userId != expectedUserId) return false;
   return isMessagingSessionReady(
     client: live.client,
-    ownerUserId: expectedUserId,
+    focusUserId: expectedUserId,
     peerProfileId: peerProfileId,
   );
 }

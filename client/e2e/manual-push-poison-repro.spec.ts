@@ -103,9 +103,9 @@ test('riproduzione push tap — messaggi mailbox corretti', async ({
   const yId = yJson.id;
 
   await addReceptionAllowlist({
-    ownerUserId: acct2.userId,
+    recipientUserId: acct2.userId,
     allowedProfileId: yId,
-    ownerAccessToken: session2.accessToken,
+    recipientAccessToken: session2.accessToken,
   });
 
   await send(session1.accessToken, acct2.userId, MSG_A, `legit-a-${stamp}`);

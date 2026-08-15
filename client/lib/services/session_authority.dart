@@ -11,16 +11,16 @@ enum IdentityLeaseReason {
   other,
 }
 
-/// Lease che blocca switch verso altro owner durante operazioni lunghe.
+/// Lease che blocca switch verso altro focus durante operazioni lunghe.
 class IdentityLease {
   const IdentityLease({
     required this.id,
-    required this.ownerUserId,
+    required this.focusUserId,
     required this.reason,
   });
 
   final String id;
-  final String ownerUserId;
+  final String focusUserId;
   final IdentityLeaseReason reason;
 }
 
@@ -43,8 +43,8 @@ class SessionAuthority {
   final List<IdentityLease> _leases = [];
   int _leaseCounter = 0;
 
-  /// Owner con JWT attivo in RAM (null se nessuna sessione).
-  String? get activeOwnerId => _manager.focusUserId;
+  /// Focus account con JWT attivo in RAM (null se nessuna sessione).
+  String? get activeFocusUserId => _manager.focusUserId;
 
   AccountSession? get focusedSession => _manager.focusedSession;
 
@@ -53,8 +53,8 @@ class SessionAuthority {
 
   bool get hasActiveLease => _leases.isNotEmpty;
 
-  String? get leaseOwnerUserId =>
-      _leases.isEmpty ? null : _leases.first.ownerUserId;
+  String? get leaseFocusUserId =>
+      _leases.isEmpty ? null : _leases.first.focusUserId;
 
   /// Serializza dispose + restore per cambio focus UI.
   Future<void> requestFocusSwitch(
@@ -64,7 +64,7 @@ class SessionAuthority {
   }) async {
     if (_blocksSwitchTo(userId)) {
       throw StateError(
-        'Identity switch deferred: lease active for ${leaseOwnerUserId!}',
+        'Identity switch deferred: lease active for ${leaseFocusUserId!}',
       );
     }
     await _manager._executeFocus(
@@ -74,43 +74,43 @@ class SessionAuthority {
     );
   }
 
-  /// Garantisce JWT per [ownerUserId] prima di [operation].
-  Future<T> runAsOwner<T>(
-    String ownerUserId,
+  /// Garantisce JWT per [focusUserId] prima di [operation].
+  Future<T> runAsFocus<T>(
+    String focusUserId,
     Future<T> Function() operation, {
-    bool restorePreviousOwner = false,
+    bool restorePreviousFocus = false,
   }) async {
     final previous = _manager.focusUserId;
-    await _ensureOwnerActive(ownerUserId);
+    await _ensureFocusActive(focusUserId);
     try {
       return await operation();
     } finally {
-      if (restorePreviousOwner &&
+      if (restorePreviousFocus &&
           previous != null &&
-          previous != ownerUserId &&
+          previous != focusUserId &&
           !_blocksSwitchTo(previous)) {
         await _manager._executeFocus(previous);
       }
     }
   }
 
-  /// Prepara owner per RPC/upload senza eseguire operazione.
-  Future<bool> ensureOwnerReady(String ownerUserId) async {
+  /// Prepara archive_user per RPC/upload senza eseguire operazione.
+  Future<bool> ensureFocusReady(String focusUserId) async {
     try {
-      await _ensureOwnerActive(ownerUserId);
-      return _manager.isSessionReadyForAccount(ownerUserId);
+      await _ensureFocusActive(focusUserId);
+      return _manager.isSessionReadyForAccount(focusUserId);
     } catch (_) {
       return false;
     }
   }
 
   IdentityLease acquireLease(
-    String ownerUserId,
+    String focusUserId,
     IdentityLeaseReason reason,
   ) {
     final lease = IdentityLease(
       id: 'lease-${++_leaseCounter}',
-      ownerUserId: ownerUserId,
+      focusUserId: focusUserId,
       reason: reason,
     );
     _leases.add(lease);
@@ -123,11 +123,11 @@ class SessionAuthority {
 
   /// Esegue [action] sotto lease — sostituisce [PushMediaSyncGuard.run].
   Future<T> runWithLease<T>(
-    String ownerUserId,
+    String focusUserId,
     IdentityLeaseReason reason,
     Future<T> Function() action,
   ) async {
-    final lease = acquireLease(ownerUserId, reason);
+    final lease = acquireLease(focusUserId, reason);
     try {
       return await action();
     } finally {
@@ -170,29 +170,29 @@ class SessionAuthority {
     await sync();
   }
 
-  Future<void> reconnectActiveOwner(String focusUserId) {
+  Future<void> reconnectActiveFocus(String focusUserId) {
     return _manager._reconnectFocusedSession(focusUserId);
   }
 
   bool _blocksSwitchTo(String userId) {
     if (!hasActiveLease) return false;
-    final leaseOwner = leaseOwnerUserId;
-    return leaseOwner != null && leaseOwner != userId;
+    final leaseFocus = leaseFocusUserId;
+    return leaseFocus != null && leaseFocus != userId;
   }
 
-  Future<void> _ensureOwnerActive(String ownerUserId) async {
-    if (!_manager.hasOpenAccount(ownerUserId)) {
-      throw StateError('Account not open: $ownerUserId');
+  Future<void> _ensureFocusActive(String focusUserId) async {
+    if (!_manager.hasOpenAccount(focusUserId)) {
+      throw StateError('Account not open: $focusUserId');
     }
-    if (_blocksSwitchTo(ownerUserId)) {
+    if (_blocksSwitchTo(focusUserId)) {
       throw StateError(
-        'Identity switch deferred: lease active for ${leaseOwnerUserId!}',
+        'Identity switch deferred: lease active for ${leaseFocusUserId!}',
       );
     }
-    if (_manager.focusUserId != ownerUserId) {
-      await _manager._executeFocus(ownerUserId);
+    if (_manager.focusUserId != focusUserId) {
+      await _manager._executeFocus(focusUserId);
     } else {
-      await _manager._consolidateSessionForAccount(ownerUserId);
+      await _manager._consolidateSessionForAccount(focusUserId);
     }
   }
 }

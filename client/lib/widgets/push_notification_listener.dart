@@ -55,7 +55,7 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
         'push',
         'handler.open_chat',
         'unmounted',
-        data: {'recipientUserId': intent.conversation.ownerUserId},
+        data: {'recipientUserId': intent.conversation.recipientUserId},
       );
       return;
     }
@@ -65,14 +65,14 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
       'push',
       'handler.enqueue',
       data: {
-        'recipientUserId': conversation.ownerUserId,
+        'recipientUserId': conversation.recipientUserId,
         'peerProfileId': conversation.peerProfileId,
       },
     );
     auth.notificationsAdapters.onOpenChatFromNotification(
       conversation: conversation,
       sessionReady: auth.sessionReady,
-      hasOpenAccount: auth.accountManager.hasOpenAccount(conversation.ownerUserId),
+      hasOpenAccount: auth.accountManager.hasOpenAccount(conversation.recipientUserId),
     );
   }
 

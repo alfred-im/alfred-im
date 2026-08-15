@@ -3,7 +3,7 @@
 **Bounded context:** `multi-account` (servizio interno al contesto)  
 **Ultima revisione:** 2026-08-08  
 **Stato:** `wired` — `client/lib/services/session_authority.dart` (`part of account_manager.dart`)  
-**UML:** [session-authority-state.puml](../../model/uml/multi-account/session-authority-state.puml) (profilo **service** — stati logici, non enum Dart) · [seq-run-as-owner.puml](../../model/uml/multi-account/seq-run-as-owner.puml) · [seq-identity-lease-media.puml](../../model/uml/multi-account/seq-identity-lease-media.puml)
+**UML:** [session-authority-state.puml](../../model/uml/multi-account/session-authority-state.puml) (profilo **service** — stati logici, non enum Dart) · [seq-run-as-focus.puml](../../model/uml/multi-account/seq-run-as-focus.puml) · [seq-identity-lease-media.puml](../../model/uml/multi-account/seq-identity-lease-media.puml)
 
 ---
 
@@ -15,7 +15,7 @@ Gli invarianti multi-account (una GoTrue in RAM, niente restore parallelo, lease
 
 **SessionAuthority** è l’unico modulo runtime autorizzato a:
 
-1. possedere quale `ownerUserId` ha JWT valido in RAM;
+1. possedere quale `focusUserId` ha JWT valido in RAM;
 2. serializzare dispose + restore GoTrue;
 3. esporre `identityGeneration` (allineata a `AccountSession.epoch`);
 4. rilasciare **lease** che bloccano lo switch durante operazioni lunghe;
@@ -34,7 +34,7 @@ Tutti gli altri contesti (**navigation**, **messaging**, **notifications**) invo
 | **AccountManager** | Manifest, storage, view-state, `AccountSession` in RAM; switch GoTrue **privato** (`_executeFocus`, `_consolidateSessionForAccount`) — solo SessionAuthority |
 
 `FocusAccount` **delega** a `RequestFocusSwitch`.  
-Ingresso chat (fase B) **delega** a `EnsureOwnerReady` (oggi); `RunAsOwner` è API prevista per unificare il wrapper (vedi § Gap).
+Ingresso chat (fase B) **delega** a `EnsureFocusReady` (oggi); `RunAsFocus` è API prevista per unificare il wrapper (vedi § Gap).
 
 ---
 
@@ -43,12 +43,12 @@ Ingresso chat (fase B) **delega** a `EnsureOwnerReady` (oggi); `RunAsOwner` è A
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
 | `RequestFocusSwitch` | `MultiAccountMachine` / `NavigationMachine` | Cambio focus: dispose + restore serializzato. |
-| `EnsureOwnerReady` | navigation (ingresso chat) | JWT allineato a `ownerUserId` prima di fetch/send. |
-| `RunAsOwner` | *(previsto)* | Garantisce JWT + esegue `operation` in un wrapper. |
-| `AcquireIdentityLease` | media (picker/upload) via `PushMediaSyncGuard` | Blocca switch verso altro owner. |
+| `EnsureFocusReady` | navigation (ingresso chat) | JWT allineato a `focusUserId` prima di fetch/send. |
+| `RunAsFocus` | *(previsto)* | Garantisce JWT + esegue `operation` in un wrapper. |
+| `AcquireIdentityLease` | media (picker/upload) via `PushMediaSyncGuard` | Blocca switch verso altro focus. |
 | `ReleaseIdentityLease` | media | Fine lease. |
 | `AuthorizePushSync` | `PushCoordinator` | Gate scope/reason push. |
-| `ReconnectActiveOwner` | `MultiAccountMachine` / UI reconnect | Retry restore focus corrente. |
+| `ReconnectActiveArchiveUser` | `MultiAccountMachine` / UI reconnect | Retry restore focus corrente. |
 
 ### `AuthorizePushSync`
 
@@ -68,7 +68,7 @@ Per `AllOpenAccounts`: account ≠ focus usano **client auth effimero** — mai 
 
 | Evento | Descrizione |
 |--------|-------------|
-| `IdentityActivated` | JWT valido per `ownerUserId`; `identityGeneration` incrementato (`AccountSession.epoch`). |
+| `IdentityActivated` | JWT valido per `focusUserId`; `identityGeneration` incrementato (`AccountSession.epoch`). |
 | `IdentitySwitchDeferred` | Switch bloccato da lease attivo. |
 | `IdentityLeaseAcquired` / `IdentityLeaseReleased` | Lease media/upload. |
 
@@ -78,21 +78,21 @@ Eventi statechart multi-account (`AccountFocused`, `SessionRestoreFailed`) resta
 
 ## Stati (SessionAuthority)
 
-Diagramma UML = **specifica logica** osservabile (`activeOwnerId`, lease, transitorio switch). L'implementazione Dart è un **servizio imperativo** senza enum stato — non va confuso con `MultiAccountMachine` né con un file in `client/lib/machines/multi-account/`.
+Diagramma UML = **specifica logica** osservabile (`activeFocusUserId`, lease, transitorio switch). L'implementazione Dart è un **servizio imperativo** senza enum stato — non va confuso con `MultiAccountMachine` né con un file in `client/lib/machines/multi-account/`.
 
 | Stato logico | Osservabile in codice |
 |--------------|------------------------|
-| `NoActiveIdentity` | `activeOwnerId == null` |
-| `OwnerActive` | JWT attivo, `hasActiveLease == false` |
-| `OwnerActiveLeased` | JWT attivo, `hasActiveLease == true` |
-| `SwitchingOwner` | durante `_executeFocus` / `_consolidateSessionForAccount` |
+| `NoActiveIdentity` | `activeFocusUserId == null` |
+| `FocusActive` | JWT attivo, `hasActiveLease == false` |
+| `FocusActiveLeased` | JWT attivo, `hasActiveLease == true` |
+| `SwitchingFocus` | durante `_executeFocus` / `_consolidateSessionForAccount` |
 
 | Stato | Descrizione |
 |-------|-------------|
 | `NoActiveIdentity` | Nessun JWT in RAM (bootstrap, tra dispose e restore). |
-| `OwnerActive` | `activeOwnerId` con JWT; nessun lease. |
-| `OwnerActiveLeased` | JWT attivo + lease — switch verso altro owner vietato. |
-| `SwitchingOwner` | Transitorio: dispose + restore serializzato. |
+| `FocusActive` | `activeFocusUserId` con JWT; nessun lease. |
+| `FocusActiveLeased` | JWT attivo + lease — switch verso altro focus vietato. |
+| `SwitchingFocus` | Transitorio: dispose + restore serializzato. |
 
 Vedi [session-authority-state.puml](../../model/uml/multi-account/session-authority-state.puml).
 
@@ -111,11 +111,11 @@ Vedi [session-authority-state.puml](../../model/uml/multi-account/session-author
 | Comando dominio | Dart |
 |-----------------|------|
 | `RequestFocusSwitch` | `SessionAuthority.requestFocusSwitch` → `AccountManager._executeFocus` |
-| `EnsureOwnerReady` | `SessionAuthority.ensureOwnerReady` → `_executeFocus` / `_consolidateSessionForAccount` |
-| `RunAsOwner` | `SessionAuthority.runAsOwner` *(definito, non ancora usato in `lib/`)* |
+| `EnsureFocusReady` | `SessionAuthority.ensureFocusReady` → `_executeFocus` / `_consolidateSessionForAccount` |
+| `RunAsFocus` | `SessionAuthority.runAsFocus` *(definito, non ancora usato in `lib/`)* |
 | `AcquireIdentityLease` | `SessionAuthority.acquireLease` / `runWithLease` ← `PushMediaSyncGuard` |
 | `AuthorizePushSync` | `SessionAuthority.authorizePushSync` ← `PushCoordinator` |
-| `ReconnectActiveOwner` | `SessionAuthority.reconnectActiveOwner` |
+| `ReconnectActiveArchiveUser` | `SessionAuthority.reconnectActiveFocus` |
 
 File: `client/lib/services/session_authority.dart` · test: `client/test/unit/session_authority_test.dart`
 
@@ -125,7 +125,7 @@ File: `client/lib/services/session_authority.dart` · test: `client/test/unit/se
 
 | Item | Stato |
 |------|--------|
-| `runAsOwner` in tutti i percorsi navigation/messaging | API presente; oggi si usa `ensureOwnerReady` + RPC separate |
+| `runAsFocus` in tutti i percorsi navigation/messaging | API presente; oggi si usa `ensureFocusReady` + RPC separate |
 | Eventi dominio `IdentityActivated` come eventi macchina | Solo diagnostica/log; non ancora eventi statechart |
 | `authorizeAndSyncPush` helper | Definito; `PushCoordinator` chiama `authorizePushSync` direttamente |
 

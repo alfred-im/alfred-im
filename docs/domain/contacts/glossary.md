@@ -15,7 +15,7 @@
 | **Contact protocol** | `internal` (utente Alfred), `xmpp`, `matrix` — solo routing/salvataggio; non tipo chat in inbox. |
 | **Internal contact** | Contatto collegato a profilo Alfred; snapshot nome e avatar al momento dell'aggiunta. |
 | **External contact** | Indirizzo esterno + nome; federazione futura — compose da rubrica non supportato (scope attuale). |
-| **Owner** | Utente in focus; rubrica scoped all'account corrente. |
+| **ArchiveUser** | Utente in focus; rubrica scoped all'account corrente. |
 | **Profile search** | Ricerca profili Alfred per aggiunta internal (soglia minima caratteri, limite risultati). |
 | **Filtered contacts** | Sottoinsieme locale per nome via filtro lista ([PROM-LIST-FILTER](../../specs/promises/product/PROM-LIST-FILTER.md)). |
 | **Compose shortcut** | Avvio conversazione da contatto internal verso navigation. |

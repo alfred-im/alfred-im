@@ -15,7 +15,7 @@ Promesse di piattaforma per tabella `contacts`, RLS, unicità e RPC `search_prof
 
 ## 1. Problema / obiettivo
 
-L'utente può salvare contatti (utenti Alfred interni o indirizzi federati futuri) come rubrica personale scoped per owner. Il backend garantisce schema, CRUD PostgREST e ricerca profili per aggiunta — senza legare rubrica a invio o inbox.
+L'utente può salvare contatti (utenti Alfred interni o indirizzi federati futuri) come rubrica personale scoped per titolare archivio. Il backend garantisce schema, CRUD PostgREST e ricerca profili per aggiunta — senza legare rubrica a invio o inbox.
 
 ---
 
@@ -25,11 +25,11 @@ L'utente può salvare contatti (utenti Alfred interni o indirizzi federati futur
 
 | ID | Promessa |
 |----|----------|
-| **SYS-CONTACTS-001** | Tabella `contacts` scoped per owner: `owner_id = auth.uid()` (RLS) |
+| **SYS-CONTACTS-001** | Tabella `contacts` scoped per titolare archivio: `archive_user_id = auth.uid()` (RLS) |
 | **SYS-CONTACTS-002** | Tipi contatto (`contact_protocol`): `internal`, `xmpp`, `matrix` — solo routing backend |
 | **SYS-CONTACTS-003** | **Internal**: `linked_profile_id` obbligatorio, `external_address` null; `display_name` + `avatar_url` opzionale (snapshot al momento dell'aggiunta) |
 | **SYS-CONTACTS-004** | **Esterno** (xmpp/matrix): `external_address` obbligatorio, `linked_profile_id` null; `display_name` obbligatorio |
-| **SYS-CONTACTS-005** | Unicità: `(owner_id, linked_profile_id)` per internal; `(owner_id, lower(external_address))` per esterni |
+| **SYS-CONTACTS-005** | Unicità: `(archive_user_id, linked_profile_id)` per internal; `(archive_user_id, lower(external_address))` per esterni |
 | **SYS-CONTACTS-006** | CRUD via PostgREST diretto su `contacts` (nessuna RPC dedicata add/delete) |
 | **SYS-CONTACTS-007** | Lista contatti: ordinata per `display_name` (client `ContactService.fetchContacts`) |
 | **SYS-CONTACTS-008** | Ricerca utenti Alfred per aggiunta: RPC `search_profiles(p_query, p_limit)` — min **2** caratteri lato client; max 50 server-side |
@@ -49,8 +49,8 @@ L'utente può salvare contatti (utenti Alfred interni o indirizzi federati futur
 
 | Elemento | Comportamento |
 |----------|---------------|
-| `contacts` | Colonne: `id`, `owner_id`, `protocol`, `linked_profile_id`, `external_address`, `display_name`, `avatar_url`, timestamps |
-| RLS | SELECT/INSERT/UPDATE/DELETE solo `owner_id = auth.uid()` |
+| `contacts` | Colonne: `id`, `archive_user_id`, `protocol`, `linked_profile_id`, `external_address`, `display_name`, `avatar_url`, timestamps |
+| RLS | SELECT/INSERT/UPDATE/DELETE solo `archive_user_id = auth.uid()` |
 | `search_profiles(text, int)` | Cerca `username` o `display_name` ILIKE; esclude self; ritorna `id`, `username`, `display_name`, `avatar_url` |
 
 Migrazione base: `20260624200000_alfred_domain_schema.sql`.

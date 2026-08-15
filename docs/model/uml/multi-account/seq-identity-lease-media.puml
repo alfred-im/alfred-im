@@ -18,10 +18,10 @@ participant "Supabase" as SB
 Utente -> UI : allega foto
 UI -> Msg : SendPhoto
 Msg -> SA : AcquireIdentityLease(A, MediaUpload)
-SA -> SA : OwnerActive → OwnerActiveLeased
+SA -> SA : FocusActive → FocusActiveLeased
 SA --> Msg : IdentityLeaseAcquired(leaseId)
 
-Msg -> SA : RunAsOwner(A, upload)
+Msg -> SA : RunAsFocus(A, upload)
 SA -> SB : storage upload + send RPC
 note over SB : operazione lunga
 
@@ -47,10 +47,10 @@ end
 
 SB --> Msg : ok
 Msg -> SA : ReleaseIdentityLease(leaseId)
-SA -> SA : OwnerActiveLeased → OwnerActive
+SA -> SA : FocusActiveLeased → FocusActive
 SA --> Msg : IdentityLeaseReleased
 
-Msg -> SA : RunAsOwner(A, reconcile UI)
+Msg -> SA : RunAsFocus(A, reconcile UI)
 SA --> Msg : ok
 Msg -> UI : messaggio inviato
 

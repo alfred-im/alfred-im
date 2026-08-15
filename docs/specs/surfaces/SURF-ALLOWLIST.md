@@ -17,7 +17,7 @@ Binding completo schermata «Persone consentite»: filtro lista, aggiunta/rimozi
 | Elemento | Valore |
 |----------|--------|
 | Schermata | `client/lib/screens/allowed_people_screen.dart` — titolo **«Persone consentite»** |
-| Controller | `ReceptionAllowlistController` — `filteredAllowedPeople`, `setSearchQuery`, `ownerId` = focus |
+| Controller | `ReceptionAllowlistController` — `filteredAllowedPeople`, `setSearchQuery`, `archiveUserId` = focus |
 | Servizio | `ReceptionAllowlistService` — CRUD PostgREST + join profili |
 | Sheet | `_AddAllowedPersonSheet` — ricerca `search_profiles` |
 | Navigazione | `HomeScreen` → da icona inbox ([SURF-INBOX](./SURF-INBOX.md) SURF-INBOX-007) |

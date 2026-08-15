@@ -81,13 +81,13 @@ rest_delete() {
 }
 
 rest_insert_allow() {
-  local jwt="$1" owner="$2" allowed="$3"
+  local jwt="$1" archive_user="$2" allowed="$3"
   curl -sf -m 30 -X POST "${SUPABASE_URL}/rest/v1/reception_allowlist" \
     -H "apikey: ${ANON_KEY}" \
     -H "Authorization: Bearer ${jwt}" \
     -H "Content-Type: application/json" \
     -H "Prefer: resolution=ignore-duplicates" \
-    -d "{\"owner_id\":\"${owner}\",\"allowed_profile_id\":\"${allowed}\"}" > /dev/null
+    -d "{\"archive_user_id\":\"${archive_user}\",\"allowed_profile_id\":\"${allowed}\"}" > /dev/null
 }
 
 peer_body() {
@@ -114,12 +114,12 @@ assert_ticks_contract() {
   read_id="int-ticks-read-${stamp}-$$"
 
   echo "==> ticks contract: fase 1 — rifiuto allow list (solo ✓)"
-  rest_delete "$a2_jwt" "reception_allowlist?owner_id=eq.${AGENT2_ID}&allowed_profile_id=eq.${AGENT1_ID}" || true
+  rest_delete "$a2_jwt" "reception_allowlist?archive_user_id=eq.${AGENT2_ID}&allowed_profile_id=eq.${AGENT1_ID}" || true
 
   rpc "$a1_jwt" send_message_to_profile "$(send_body "$AGENT2_ID" "integration ticks reject" "$reject_id")" | python3 -c "
 import json,sys
 m=json.load(sys.stdin)
-assert m.get('owner_id') and m.get('logical_message_id'), 'missing sender row'
+assert m.get('archive_user_id') and m.get('logical_message_id'), 'missing sender row'
 assert m.get('delivered_at') is None, 'reject: delivered_at must be null (single tick)'
 assert m.get('read_at') is None, 'reject: read_at must be null'
 print('    reject: single tick ok (delivered_at=null)')

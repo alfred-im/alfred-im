@@ -23,7 +23,7 @@ as $$
     from public.messages m
     where auth.uid() is not null
       and p_peer_profile_id is not null
-      and m.owner_id = auth.uid()
+      and m.archive_user_id = auth.uid()
       and m.peer_profile_id = p_peer_profile_id
       and public.mailbox_has_renderable_content(m.body, m.content_type)
       and (

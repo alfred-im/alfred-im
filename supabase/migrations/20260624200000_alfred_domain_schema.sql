@@ -49,7 +49,7 @@ create unique index profiles_username_lower_idx on public.profiles (lower(userna
 
 create table public.contacts (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references public.profiles (id) on delete cascade,
+  archive_user_id uuid not null references public.profiles (id) on delete cascade,
   protocol public.contact_protocol not null default 'internal',
   linked_profile_id uuid references public.profiles (id) on delete set null,
   external_address text,
@@ -63,15 +63,15 @@ create table public.contacts (
   )
 );
 
-create unique index contacts_owner_linked_profile_idx
-  on public.contacts (owner_id, linked_profile_id)
+create unique index contacts_archive_user_linked_profile_idx
+  on public.contacts (archive_user_id, linked_profile_id)
   where linked_profile_id is not null;
 
-create unique index contacts_owner_external_address_idx
-  on public.contacts (owner_id, lower(external_address))
+create unique index contacts_archive_user_external_address_idx
+  on public.contacts (archive_user_id, lower(external_address))
   where external_address is not null;
 
-create index contacts_owner_id_idx on public.contacts (owner_id);
+create index contacts_archive_user_id_idx on public.contacts (archive_user_id);
 
 -- ---------------------------------------------------------------------------
 -- Conversazioni e partecipanti
@@ -405,7 +405,7 @@ begin
 
   select * into v_contact
   from public.contacts
-  where id = p_contact_id and owner_id = v_me;
+  where id = p_contact_id and archive_user_id = v_me;
 
   if not found then
     raise exception 'contact not found';
@@ -562,20 +562,20 @@ create policy profiles_update_own
 -- contacts
 create policy contacts_select_own
   on public.contacts for select to authenticated
-  using (owner_id = auth.uid());
+  using (archive_user_id = auth.uid());
 
 create policy contacts_insert_own
   on public.contacts for insert to authenticated
-  with check (owner_id = auth.uid());
+  with check (archive_user_id = auth.uid());
 
 create policy contacts_update_own
   on public.contacts for update to authenticated
-  using (owner_id = auth.uid())
-  with check (owner_id = auth.uid());
+  using (archive_user_id = auth.uid())
+  with check (archive_user_id = auth.uid());
 
 create policy contacts_delete_own
   on public.contacts for delete to authenticated
-  using (owner_id = auth.uid());
+  using (archive_user_id = auth.uid());
 
 -- conversations
 create policy conversations_select_participant
