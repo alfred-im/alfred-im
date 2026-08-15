@@ -194,6 +194,7 @@ Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §4 e [contrac
 ```bash
 cd client
 bash scripts/verify.sh           # gate CI — igiene codice (obbligatorio prima del push)
+bash scripts/test.sh e2e         # e2e locale — obbligatorio a fine lavoro su client/
 bash scripts/verify.sh --build   # + build web
 bash scripts/test.sh flusso-reale  # release — valida il prodotto (browser + DB)
 bash scripts/test.sh release       # stack locale completo (alias: manual, ci)
