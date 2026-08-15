@@ -44,14 +44,14 @@ export async function prepareLocalMessagingPair(
   const session2 = await loginSupabase(acct2.email, acct2.password);
 
   await addReceptionAllowlist({
-    focusUserId: acct1.userId,
+    recipientUserId: acct1.userId,
     allowedProfileId: acct2.userId,
-    focusAccessToken: session1.accessToken,
+    recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
-    focusUserId: acct2.userId,
+    recipientUserId: acct2.userId,
     allowedProfileId: acct1.userId,
-    focusAccessToken: session2.accessToken,
+    recipientAccessToken: session2.accessToken,
   });
 
   return { acct1, acct2, session1, session2 };
@@ -80,27 +80,27 @@ export async function prepareLocalFiveAccountManifest(
   const session1 = await loginSupabase(users[0].email, users[0].password);
   for (const other of [users[1], users[2], users[3], group]) {
     await addReceptionAllowlist({
-      focusUserId: users[0].userId,
+      recipientUserId: users[0].userId,
       allowedProfileId: other.userId,
-      focusAccessToken: session1.accessToken,
+      recipientAccessToken: session1.accessToken,
     });
     const sessionOther = await loginSupabase(other.email, other.password);
     await addReceptionAllowlist({
-      focusUserId: other.userId,
+      recipientUserId: other.userId,
       allowedProfileId: users[0].userId,
-      focusAccessToken: sessionOther.accessToken,
+      recipientAccessToken: sessionOther.accessToken,
     });
   }
   const session2 = await loginSupabase(users[1].email, users[1].password);
   await addReceptionAllowlist({
-    focusUserId: users[1].userId,
+    recipientUserId: users[1].userId,
     allowedProfileId: users[0].userId,
-    focusAccessToken: session2.accessToken,
+    recipientAccessToken: session2.accessToken,
   });
   await addReceptionAllowlist({
-    focusUserId: users[0].userId,
+    recipientUserId: users[0].userId,
     allowedProfileId: users[1].userId,
-    focusAccessToken: session1.accessToken,
+    recipientAccessToken: session1.accessToken,
   });
 
   return { users: users as LocalFiveAccountManifest['users'], group };
