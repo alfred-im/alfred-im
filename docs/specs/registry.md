@@ -24,6 +24,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **SYS-DELIVERY** | Piano recapito outbox + worker `alfred_delivery` | `implemented` | [SYS-DELIVERY.md](./promises/system/SYS-DELIVERY.md) |
 | **SYS-PUSH** | Web Push VAPID, subscription, Edge Function | `implemented` | [SYS-PUSH.md](./promises/system/SYS-PUSH.md) |
 | **SYS-PUSH-PAYLOAD** | Wire format push (SW ↔ client, Edge Function) | `implemented` | [push-payload.md](./contracts/push-payload.md) — infrastruttura: SYS-PUSH |
+| **SYS-OWNER** | Account owner, ban, config istanza, statistiche | `approved` | [SYS-OWNER.md](./promises/system/SYS-OWNER.md) |
 
 ---
 
