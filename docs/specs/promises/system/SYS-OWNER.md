@@ -20,7 +20,7 @@ Account `profile_kind = owner`: stesso comportamento messaging di `user`, con pa
 | **SYS-OWNER-003** | `profiles.disabled_at` — ban disattiva accesso e messaggistica |
 | **SYS-OWNER-004** | RPC `assert_session_active()` — rifiuta sessione se `disabled_at` valorizzato |
 | **SYS-OWNER-005** | RPC `ban_profile` / `unban_profile` — solo owner; non ban su self né su altri owner |
-| **SYS-OWNER-006** | RPC `list_instance_config` / `upsert_instance_config` — solo owner; chiavi `instance.*` |
+| **SYS-OWNER-006** | RPC `upsert_instance_config` — solo owner; **solo** le quattro chiavi `instance.display_name`, `instance.im_server_id`, `instance.branding`, `instance.legal` (schema = `InstanceSettings`) |
 | **SYS-OWNER-007** | RPC `get_instance_stats()` — solo owner |
 | **SYS-OWNER-008** | Profili disattivati nascosti da `search_profiles` / `find_profile_by_username` (eccetto viewer owner) |
 

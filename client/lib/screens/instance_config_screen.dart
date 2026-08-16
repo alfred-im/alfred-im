@@ -7,13 +7,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/instance_config_entry.dart';
+import '../models/instance_config_schema.dart';
+import '../models/instance_settings.dart';
 import '../providers/auth_controller.dart';
 import '../runtime/instance_runtime.dart';
 import '../services/instance_config_service.dart';
 import '../theme/alfred_colors.dart';
 
-/// Configurazione istanza (`instance_config`) — solo account owner.
+/// Configurazione istanza — form fisso su [InstanceConfigSchema] / [InstanceSettings].
 class InstanceConfigScreen extends StatefulWidget {
   const InstanceConfigScreen({super.key});
 
@@ -22,17 +23,28 @@ class InstanceConfigScreen extends StatefulWidget {
 }
 
 class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
-  final _controllers = <String, TextEditingController>{};
-  List<InstanceConfigEntry> _entries = [];
+  final _formKey = GlobalKey<FormState>();
+  final _displayName = TextEditingController();
+  final _imServerId = TextEditingController();
+  final _logoUrl = TextEditingController();
+  final _themeColor = TextEditingController();
+  final _privacyUrl = TextEditingController();
+  final _termsUrl = TextEditingController();
+  final _supportUrl = TextEditingController();
+
   bool _loading = true;
-  String? _error;
   bool _saving = false;
+  String? _error;
 
   @override
   void dispose() {
-    for (final controller in _controllers.values) {
-      controller.dispose();
-    }
+    _displayName.dispose();
+    _imServerId.dispose();
+    _logoUrl.dispose();
+    _themeColor.dispose();
+    _privacyUrl.dispose();
+    _termsUrl.dispose();
+    _supportUrl.dispose();
     super.dispose();
   }
 
@@ -59,19 +71,10 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
     }
 
     try {
-      final entries = await session.ownerService.listConfig();
+      final settings = await session.ownerService.loadInstanceSettings();
       if (!mounted) return;
-      for (final controller in _controllers.values) {
-        controller.dispose();
-      }
-      _controllers.clear();
-      for (final entry in entries) {
-        _controllers[entry.key] = TextEditingController(text: entry.value);
-      }
-      setState(() {
-        _entries = entries;
-        _loading = false;
-      });
+      _applySettings(settings);
+      setState(() => _loading = false);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -81,24 +84,51 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
     }
   }
 
-  Future<void> _save(InstanceConfigEntry entry) async {
+  void _applySettings(InstanceSettings settings) {
+    _displayName.text = settings.displayName;
+    _imServerId.text = settings.imServerId;
+    _logoUrl.text = settings.branding.logoUrl ?? '';
+    _themeColor.text = settings.branding.themeColor ?? '';
+    _privacyUrl.text = settings.legal.privacyUrl ?? '';
+    _termsUrl.text = settings.legal.termsUrl ?? '';
+    _supportUrl.text = settings.legal.supportUrl ?? '';
+  }
+
+  InstanceSettings _settingsFromForm() {
+    String? optional(String value) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+
+    return InstanceSettings(
+      displayName: _displayName.text.trim(),
+      imServerId: _imServerId.text.trim(),
+      branding: InstanceBrandingAssets(
+        logoUrl: optional(_logoUrl.text),
+        themeColor: optional(_themeColor.text),
+      ),
+      legal: InstanceLegalLinks(
+        privacyUrl: optional(_privacyUrl.text),
+        termsUrl: optional(_termsUrl.text),
+        supportUrl: optional(_supportUrl.text),
+      ),
+    );
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
     final session = context.read<AuthController>().focusedSession;
     if (session == null) return;
 
-    final controller = _controllers[entry.key];
-    if (controller == null) return;
-
     setState(() => _saving = true);
     try {
-      final parsed = InstanceConfigEntry(
-        key: entry.key,
-        value: controller.text,
-      ).parseValueForSave();
-      await session.ownerService.upsertConfig(key: entry.key, value: parsed);
+      final settings = _settingsFromForm();
+      await session.ownerService.saveInstanceSettings(settings);
       await InstanceConfigService(session.client).loadRuntime();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Salvato ${entry.key}')),
+        const SnackBar(content: Text('Configurazione salvata')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -110,80 +140,21 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
     }
   }
 
-  Future<void> _addKey() async {
-    final keyController = TextEditingController(text: 'instance.');
-    final valueController = TextEditingController();
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Nuova chiave'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: keyController,
-              decoration: const InputDecoration(
-                labelText: 'Chiave',
-                hintText: 'instance.display_name',
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: valueController,
-              decoration: const InputDecoration(
-                labelText: 'Valore (JSON)',
-                hintText: '"Il mio server"',
-              ),
-              minLines: 2,
-              maxLines: 4,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annulla'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Aggiungi'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !mounted) {
-      keyController.dispose();
-      valueController.dispose();
-      return;
-    }
-
-    final session = context.read<AuthController>().focusedSession;
-    if (session == null) return;
-
-    try {
-      final parsed = InstanceConfigEntry(
-        key: keyController.text.trim(),
-        value: valueController.text,
-      ).parseValueForSave();
-      await session.ownerService.upsertConfig(
-        key: keyController.text.trim(),
-        value: parsed,
-      );
-      await InstanceConfigService(session.client).loadRuntime();
-      if (!mounted) return;
-      await _load();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-      );
-    } finally {
-      keyController.dispose();
-      valueController.dispose();
-    }
+  TextEditingController _controllerFor(String fieldId) {
+    return switch (fieldId) {
+      'display_name' => _displayName,
+      'im_server_id' => _imServerId,
+      'logo_url' => _logoUrl,
+      'theme_color' => _themeColor,
+      'privacy_url' => _privacyUrl,
+      'terms_url' => _termsUrl,
+      'support_url' => _supportUrl,
+      _ => throw StateError('Unknown field $fieldId'),
+    };
   }
+
+  bool _isRequired(String fieldId) =>
+      fieldId == 'display_name' || fieldId == 'im_server_id';
 
   @override
   Widget build(BuildContext context) {
@@ -197,13 +168,6 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
         backgroundColor: AlfredColors.panel,
         foregroundColor: AlfredColors.textPrimary,
         elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: _loading ? null : _addKey,
-            icon: const Icon(Icons.add),
-            tooltip: 'Nuova chiave',
-          ),
-        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -224,56 +188,89 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
                     ),
                   ),
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _entries.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final entry = _entries[index];
-                    final controller = _controllers[entry.key]!;
-                    return Material(
-                      color: AlfredColors.panel,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: const BorderSide(color: AlfredColors.border),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              entry.key,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
+              : Form(
+                  key: _formKey,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                    children: [
+                      for (final section in InstanceConfigSchema.sections) ...[
+                        Text(
+                          section.title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AlfredColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          section.subtitle,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AlfredColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Material(
+                          color: AlfredColors.panel,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(color: AlfredColors.border),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                            child: Column(
+                              children: [
+                                for (final field in section.fields)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: TextFormField(
+                                      controller: _controllerFor(field.id),
+                                      decoration: InputDecoration(
+                                        labelText: field.label,
+                                        hintText: field.hint,
+                                        border: const OutlineInputBorder(),
+                                        isDense: true,
+                                      ),
+                                      keyboardType:
+                                          field.kind == InstanceConfigFieldKind.text
+                                              ? TextInputType.text
+                                              : TextInputType.url,
+                                      validator: _isRequired(field.id)
+                                          ? (value) {
+                                              if (value == null ||
+                                                  value.trim().isEmpty) {
+                                                return 'Obbligatorio';
+                                              }
+                                              return null;
+                                            }
+                                          : null,
+                                    ),
+                                  ),
+                              ],
                             ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller: controller,
-                              minLines: 1,
-                              maxLines: 6,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: FilledButton(
-                                onPressed: _saving
-                                    ? null
-                                    : () => unawaited(_save(entry)),
-                                child: const Text('Salva'),
-                              ),
-                            ),
-                          ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: _saving ? null : () => unawaited(_save()),
+                          child: _saving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Salva configurazione'),
                         ),
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
     );
   }
