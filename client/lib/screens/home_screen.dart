@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
 import '../providers/auth_controller.dart';
+import '../services/account_session.dart';
 import '../providers/inbox_controller.dart';
 import '../providers/group_home_controller.dart';
 import '../theme/alfred_colors.dart';
@@ -21,8 +22,10 @@ import '../widgets/split_shell_layout.dart';
 import '../utils/session_scope_keys.dart';
 import 'allowed_people_screen.dart';
 import 'contacts_screen.dart';
+import 'instance_config_screen.dart';
 import 'profile_screen.dart';
 import 'group_account_shell.dart';
+import '../widgets/owner_inbox_stats_loader.dart';
 
 /// Layout principale stile WhatsApp Web: sidebar (profilo + inbox) + chat.
 class HomeScreen extends StatefulWidget {
@@ -98,6 +101,14 @@ class _HomeScreenState extends State<HomeScreen> {
     await providerContext.read<GroupHomeController>().reload();
   }
 
+  Future<void> _openInstanceConfig() async {
+    _closeDrawer();
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => const InstanceConfigScreen()),
+    );
+  }
+
   Future<void> _openProfile() async {
     _closeDrawer();
     await Navigator.push<void>(
@@ -123,12 +134,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _inboxPanel({
     required BuildContext context,
     required AuthController auth,
+    required AccountSession? session,
     required InboxController inbox,
     required String accountUserId,
     required bool showDrawerButton,
     bool showBackButton = false,
     bool showTopBar = true,
     VoidCallback? onBack,
+    required bool isOwnerAccount,
   }) {
     return InboxPanel(
       key: ValueKey(accountUserId),
@@ -147,6 +160,10 @@ class _HomeScreenState extends State<HomeScreen> {
       showBackButton: showBackButton,
       onBack: onBack,
       showTopBar: showTopBar,
+      onInstanceConfigTap: isOwnerAccount ? _openInstanceConfig : null,
+      headerBelowBar: isOwnerAccount && session != null
+          ? OwnerInboxStatsLoader(session: session)
+          : null,
     );
   }
 
@@ -157,6 +174,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final accountUserId = session?.userId ?? auth.userId;
     final isGroupAccount =
         session?.profile.isGroup ?? auth.focusedProfileSummary?.isGroup ?? false;
+
+    final isOwnerAccount =
+        session?.profile.isOwner ?? auth.focusedProfileSummary?.isOwner ?? false;
 
     if (isGroupAccount && session != null) {
       return ChangeNotifierProvider(
@@ -198,10 +218,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (context, _) => _inboxPanel(
                   context: context,
                   auth: auth,
+                  session: session,
                   inbox: inbox,
                   accountUserId: accountUserId!,
                   showDrawerButton: !isWide,
                   showTopBar: !isWide,
+                  isOwnerAccount: isOwnerAccount,
                 ),
               );
 

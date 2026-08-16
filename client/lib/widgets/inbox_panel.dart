@@ -30,6 +30,8 @@ class InboxPanel extends StatefulWidget {
     this.showBackButton = false,
     this.onBack,
     this.showTopBar = true,
+    this.headerBelowBar,
+    this.onInstanceConfigTap,
   });
 
   final String? selectedPeerId;
@@ -47,6 +49,8 @@ class InboxPanel extends StatefulWidget {
   final bool showBackButton;
   final VoidCallback? onBack;
   final bool showTopBar;
+  final Widget? headerBelowBar;
+  final VoidCallback? onInstanceConfigTap;
 
   @override
   State<InboxPanel> createState() => _InboxPanelState();
@@ -83,6 +87,15 @@ class _InboxPanelState extends State<InboxPanel> {
                       onDrawerTap: widget.onDrawerTap,
                       actions: [
                         search.lensButton,
+                        if (widget.onInstanceConfigTap != null)
+                          IconButton(
+                            onPressed: widget.onInstanceConfigTap,
+                            icon: const Icon(
+                              Icons.dns_outlined,
+                              color: AlfredColors.textOnDark,
+                            ),
+                            tooltip: 'Configurazione server',
+                          ),
                         if (widget.onAllowedPeopleTap != null)
                           IconButton(
                             onPressed: widget.onAllowedPeopleTap,
@@ -132,6 +145,7 @@ class _InboxPanelState extends State<InboxPanel> {
                         ],
                       ),
                     ),
+                  if (widget.headerBelowBar != null) widget.headerBelowBar!,
                   search.field,
                   const Divider(height: 1),
                   Expanded(
