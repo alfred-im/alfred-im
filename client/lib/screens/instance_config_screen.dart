@@ -71,6 +71,18 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
     }
 
     try {
+      final isOwner = await session.ownerService.isInstanceOwner();
+      if (!isOwner) {
+        if (!mounted) return;
+        setState(() {
+          _loading = false;
+          _error =
+              'Questo account non ha permessi owner sul server. '
+              'Chiudi e riaccedi se il ruolo è stato aggiornato.';
+        });
+        return;
+      }
+
       final settings = await session.ownerService.loadInstanceSettings();
       if (!mounted) return;
       _applySettings(settings);

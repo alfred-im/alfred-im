@@ -95,6 +95,33 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     _hydrateStarted = true;
     unawaited(_hydrateProfileFromServer());
     unawaited(PeerRelationshipActions.prime(context));
+    unawaited(_resolveOwnerCapability());
+  }
+
+  Future<void> _resolveOwnerCapability() async {
+    AuthController? auth;
+    try {
+      auth = context.read<AuthController>();
+    } on ProviderNotFoundException {
+      return;
+    }
+    final session = auth.focusedSession;
+    if (session == null) return;
+
+    try {
+      final isOwner = await session.ownerService.isInstanceOwner();
+      if (!mounted) return;
+      setState(() {
+        _serverIsOwner = isOwner;
+        _ownerCheckDone = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _serverIsOwner = false;
+        _ownerCheckDone = true;
+      });
+    }
   }
 
   Future<void> _hydrateProfileFromServer() async {
@@ -141,14 +168,8 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     }
   }
 
-  bool _isOwnerViewer(BuildContext context) {
-    try {
-      return context.read<AuthController>().focusedSession?.profile.isOwner ??
-          false;
-    } on ProviderNotFoundException {
-      return false;
-    }
-  }
+  bool _serverIsOwner = false;
+  bool _ownerCheckDone = false;
 
   String? _focusedUserId(BuildContext context) {
     try {
@@ -227,7 +248,24 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
       return;
     }
     final session = auth.focusedSession;
-    if (session == null || !session.profile.isOwner) return;
+    if (session == null) return;
+
+    final isOwner = await session.ownerService.isInstanceOwner();
+    if (!isOwner) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Solo gli account owner possono moderare. '
+              'Riaccedi se il ruolo è stato aggiornato.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
 
     if (ban) {
       final confirmed = await showDialog<bool>(
@@ -287,9 +325,9 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     final isAllowed = relationship.isAllowed;
     final inRubrica = relationship.inContacts;
     final actionsEnabled = PeerRelationshipActions.controllersReady(context);
-    final isOwnerViewer = _isOwnerViewer(context);
     final focusedUserId = _focusedUserId(context);
-    final canModerate = isOwnerViewer &&
+    final canModerate = _ownerCheckDone &&
+        _serverIsOwner &&
         !_profile.isOwner &&
         !_profile.isGroup &&
         focusedUserId != null &&

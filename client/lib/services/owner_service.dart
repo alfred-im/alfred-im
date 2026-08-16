@@ -18,6 +18,11 @@ class OwnerService {
     await _client.rpc('assert_session_active');
   }
 
+  Future<bool> isInstanceOwner() async {
+    final result = await _client.rpc('is_instance_owner');
+    return result == true;
+  }
+
   Future<InstanceStats> fetchStats() async {
     final raw = await _client.rpc('get_instance_stats');
     if (raw is! Map<String, dynamic>) {
