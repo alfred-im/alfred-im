@@ -36,11 +36,11 @@ BEGIN
     END IF;
   END;
 
-  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
   VALUES
     (v_agent1, v_agent2),
     (v_agent2, v_agent1)
-  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
+  ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
   v_client_id := 'smoke-location-' || floor(random() * 1000000)::text;
   SELECT * INTO v_msg FROM public.send_message_to_profile(
@@ -66,7 +66,7 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1 FROM public.messages m
-    WHERE m.owner_id = v_agent2
+    WHERE m.archive_user_id = v_agent2
       AND m.logical_message_id = v_msg.logical_message_id
       AND m.content_type = 'location'
   ) THEN

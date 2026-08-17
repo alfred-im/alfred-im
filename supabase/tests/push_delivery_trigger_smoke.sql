@@ -38,11 +38,11 @@ BEGIN
     SET endpoint = excluded.endpoint,
         last_seen_at = now();
 
-  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
   VALUES
     (v_agent1, v_agent2),
     (v_agent2, v_agent1)
-  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
+  ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
   SELECT * INTO v_sender FROM public.send_message_to_profile(
     v_agent2,
@@ -62,7 +62,7 @@ BEGIN
   END IF;
 
   DELETE FROM public.reception_allowlist
-  WHERE owner_id = v_agent2 AND allowed_profile_id = v_agent1;
+  WHERE archive_user_id = v_agent2 AND allowed_profile_id = v_agent1;
 
   v_client_id := v_client_id || '-reject';
 

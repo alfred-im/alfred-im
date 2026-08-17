@@ -23,12 +23,12 @@ BEGIN
     AND o.payload ->> 'logical_message_id' = v_lambda::text;
 
   INSERT INTO public.messages (
-    owner_id, author_id, peer_profile_id, logical_message_id, body, content_type
+    archive_user_id, author_id, peer_profile_id, logical_message_id, body, content_type
   )
   VALUES (
     v_agent1, v_agent1, v_agent2, v_lambda, 'smoke idempotent push', 'text'
   )
-  ON CONFLICT (owner_id, logical_message_id) DO NOTHING;
+  ON CONFLICT (archive_user_id, logical_message_id) DO NOTHING;
 
   INSERT INTO public.outbox (message_id, protocol, payload, status)
   SELECT m.id, 'internal', jsonb_build_object(
@@ -39,7 +39,7 @@ BEGIN
     'content_type', 'text'
   ), 'queued'
   FROM public.messages m
-  WHERE m.owner_id = v_agent1 AND m.logical_message_id = v_lambda
+  WHERE m.archive_user_id = v_agent1 AND m.logical_message_id = v_lambda
   LIMIT 1;
 
   PERFORM alfred_delivery.process_outbox(
@@ -55,7 +55,7 @@ BEGIN
     'content_type', 'text'
   ), 'queued'
   FROM public.messages m
-  WHERE m.owner_id = v_agent1 AND m.logical_message_id = v_lambda
+  WHERE m.archive_user_id = v_agent1 AND m.logical_message_id = v_lambda
   LIMIT 1;
 
   PERFORM alfred_delivery.process_outbox(
