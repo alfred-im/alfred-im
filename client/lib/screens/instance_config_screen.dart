@@ -35,9 +35,12 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
   bool _loading = true;
   bool _saving = false;
   String? _error;
+  String? _loadedUserId;
+  AuthController? _authListenerTarget;
 
   @override
   void dispose() {
+    _authListenerTarget?.removeListener(_onFocusedAccountChanged);
     _displayName.dispose();
     _imServerId.dispose();
     _logoUrl.dispose();
@@ -54,6 +57,24 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
     unawaited(_load());
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final auth = context.read<AuthController>();
+    if (!identical(_authListenerTarget, auth)) {
+      _authListenerTarget?.removeListener(_onFocusedAccountChanged);
+      _authListenerTarget = auth;
+      auth.addListener(_onFocusedAccountChanged);
+    }
+  }
+
+  void _onFocusedAccountChanged() {
+    final userId = _authListenerTarget?.focusedSession?.userId;
+    if (_loadedUserId != null && userId != _loadedUserId && mounted && !_loading) {
+      unawaited(_load());
+    }
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -65,6 +86,7 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
+        _loadedUserId = null;
         _error = 'Nessun account attivo.';
       });
       return;
@@ -74,11 +96,13 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
       final isOwner = await session.ownerService.isInstanceOwner();
       if (!isOwner) {
         if (!mounted) return;
+        final handle = session.profile.username ?? session.userId;
         setState(() {
           _loading = false;
+          _loadedUserId = session.userId;
           _error =
-              'Questo account non ha permessi owner sul server. '
-              'Chiudi e riaccedi se il ruolo è stato aggiornato.';
+              'L\'account @$handle non ha permessi owner sul server. '
+              'Seleziona l\'account owner nel menu laterale e riprova.';
         });
         return;
       }
@@ -86,11 +110,16 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
       final settings = await session.ownerService.loadInstanceSettings();
       if (!mounted) return;
       _applySettings(settings);
-      setState(() => _loading = false);
+      setState(() {
+        _loading = false;
+        _loadedUserId = session.userId;
+        _error = null;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
+        _loadedUserId = session.userId;
         _error = e.toString().replaceFirst('Exception: ', '');
       });
     }
@@ -135,6 +164,20 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
 
     setState(() => _saving = true);
     try {
+      final isOwner = await session.ownerService.isInstanceOwner();
+      if (!isOwner) {
+        if (!mounted) return;
+        final handle = session.profile.username ?? session.userId;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Salvataggio non consentito: @$handle non è owner del server.',
+            ),
+          ),
+        );
+        return;
+      }
+
       final settings = _settingsFromForm();
       await session.ownerService.saveInstanceSettings(settings);
       await InstanceConfigService(session.client).loadRuntime();
