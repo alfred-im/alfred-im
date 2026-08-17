@@ -35,9 +35,9 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_proc p
     JOIN pg_namespace n ON n.oid = p.pronamespace
-    WHERE n.nspname = 'public' AND p.proname = 'list_archive_messages'
+    WHERE n.nspname = 'public' AND p.proname = 'list_owner_messages'
   ) THEN
-    RAISE EXCEPTION 'missing list_archive_messages';
+    RAISE EXCEPTION 'missing list_owner_messages';
   END IF;
 
   IF NOT EXISTS (

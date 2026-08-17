@@ -64,7 +64,7 @@ create policy message_reaction_facts_select_participant
       select 1
       from public.messages m
       where m.logical_message_id = message_reaction_facts.logical_message_id
-        and m.archive_user_id = auth.uid()
+        and m.owner_id = auth.uid()
     )
   );
 
@@ -94,7 +94,7 @@ as $$
     select 1
     from public.messages m
     where m.logical_message_id = p_logical_message_id
-      and m.archive_user_id = p_user_id
+      and m.owner_id = p_user_id
   );
 $$;
 
@@ -264,7 +264,7 @@ as $$
   with scoped as (
     select distinct m.logical_message_id
     from public.messages m
-    where m.archive_user_id = auth.uid()
+    where m.owner_id = auth.uid()
       and m.logical_message_id = any (p_logical_message_ids)
   ),
   latest as (

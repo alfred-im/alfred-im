@@ -23,7 +23,7 @@ BEGIN
   );
 
   INSERT INTO public.contacts (
-    archive_user_id,
+    owner_id,
     protocol,
     linked_profile_id,
     display_name
@@ -31,9 +31,9 @@ BEGIN
   VALUES (v_agent1, 'internal', v_agent2, 'Agent 2')
   ON CONFLICT DO NOTHING;
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
   VALUES (v_agent1, v_agent2)
-  ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
+  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
 
   SELECT i.peer_in_contacts, i.peer_is_allowed
   INTO v_in_contacts, v_is_allowed

@@ -21,9 +21,9 @@ BEGIN
   UPDATE public.profiles SET profile_kind = 'group' WHERE id = v_group;
 
   DELETE FROM public.reception_allowlist
-  WHERE (archive_user_id, allowed_profile_id) IN ((v_group, v_observer), (v_observer, v_group));
+  WHERE (owner_id, allowed_profile_id) IN ((v_group, v_observer), (v_observer, v_group));
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
   VALUES (v_group, v_observer), (v_observer, v_group);
 
   PERFORM set_config(
@@ -44,7 +44,7 @@ BEGIN
 
   SELECT count(*) INTO v_group_rows
   FROM public.messages m
-  WHERE m.archive_user_id = v_group
+  WHERE m.owner_id = v_group
     AND m.logical_message_id = v_broadcast.logical_message_id;
 
   IF v_group_rows <> 1 THEN
@@ -53,7 +53,7 @@ BEGIN
 
   SELECT * INTO v_member
   FROM public.messages m
-  WHERE m.archive_user_id = v_observer
+  WHERE m.owner_id = v_observer
     AND m.logical_message_id = v_broadcast.logical_message_id
   LIMIT 1;
 
@@ -68,7 +68,7 @@ BEGIN
   UPDATE public.profiles SET profile_kind = 'user' WHERE id = v_group;
 
   DELETE FROM public.reception_allowlist
-  WHERE (archive_user_id, allowed_profile_id) IN ((v_group, v_observer), (v_observer, v_group));
+  WHERE (owner_id, allowed_profile_id) IN ((v_group, v_observer), (v_observer, v_group));
 
   RAISE NOTICE 'group_broadcast_smoke_ok';
 END $$;

@@ -132,7 +132,7 @@ begin
   select m.id
   into v_recipient_message_id
   from public.messages m
-  where m.archive_user_id = p_recipient_user_id
+  where m.owner_id = p_recipient_user_id
     and m.logical_message_id = p_logical_message_id
   limit 1;
 
@@ -258,7 +258,7 @@ begin
   for v_participant in
     select r.allowed_profile_id
     from public.reception_allowlist r
-    where r.archive_user_id = p_group_id
+    where r.owner_id = p_group_id
       and r.allowed_profile_id is not null
       and r.allowed_profile_id <> p_group_id
       and r.allowed_profile_id <> p_original_author_id
@@ -268,7 +268,7 @@ begin
     end if;
 
     insert into public.messages (
-      archive_user_id,
+      owner_id,
       author_id,
       original_author_id,
       peer_profile_id,
@@ -299,7 +299,7 @@ begin
       p_latitude,
       p_longitude
     )
-    on conflict (archive_user_id, logical_message_id) do nothing;
+    on conflict (owner_id, logical_message_id) do nothing;
 
     get diagnostics v_row_count = row_count;
 
@@ -375,20 +375,20 @@ begin
   );
 
   v_recipient_kind := public.profile_kind_of(v_recipient_id);
-  v_sender_kind := public.profile_kind_of(v_sender.archive_user_id);
+  v_sender_kind := public.profile_kind_of(v_sender.owner_id);
   v_content_author := case
-    when v_recipient_kind = 'group' or v_sender_kind = 'group' then v_sender.archive_user_id
+    when v_recipient_kind = 'group' or v_sender_kind = 'group' then v_sender.owner_id
     else null
   end;
 
   if v_recipient_kind = 'group' then
     v_allowed :=
-      public.is_sender_allowed_for_reception(v_recipient_id, v_sender.archive_user_id)
-      and public.is_sender_allowed_for_reception(v_sender.archive_user_id, v_recipient_id);
+      public.is_sender_allowed_for_reception(v_recipient_id, v_sender.owner_id)
+      and public.is_sender_allowed_for_reception(v_sender.owner_id, v_recipient_id);
 
     if v_allowed then
       insert into public.messages (
-        archive_user_id,
+        owner_id,
         author_id,
         original_author_id,
         peer_profile_id,
@@ -405,9 +405,9 @@ begin
       )
       values (
         v_recipient_id,
-        v_sender.archive_user_id,
-        v_sender.archive_user_id,
-        v_sender.archive_user_id,
+        v_sender.owner_id,
+        v_sender.owner_id,
+        v_sender.owner_id,
         v_lambda,
         coalesce(v_sender.protocol, 'internal'::public.contact_protocol),
         v_body,
@@ -419,7 +419,7 @@ begin
         coalesce((v_payload ->> 'latitude')::double precision, v_sender.latitude),
         coalesce((v_payload ->> 'longitude')::double precision, v_sender.longitude)
       )
-      on conflict (archive_user_id, logical_message_id) do nothing;
+      on conflict (owner_id, logical_message_id) do nothing;
 
       update public.messages
       set delivered_at = now()
@@ -428,7 +428,7 @@ begin
 
       perform alfred_delivery.erogate_group_message(
         v_recipient_id,
-        v_sender.archive_user_id,
+        v_sender.owner_id,
         v_lambda,
         coalesce(v_sender.protocol, 'internal'::public.contact_protocol),
         v_body,
@@ -443,11 +443,11 @@ begin
 
       perform alfred_delivery.queue_push_after_delivery(
         v_recipient_id,
-        v_sender.archive_user_id,
+        v_sender.owner_id,
         v_lambda,
         v_content_type,
         v_body,
-        v_sender.archive_user_id
+        v_sender.owner_id
       );
 
       update public.outbox
@@ -462,11 +462,11 @@ begin
       where id = p_outbox_id;
     end if;
   else
-    v_allowed := public.is_sender_allowed_for_reception(v_recipient_id, v_sender.archive_user_id);
+    v_allowed := public.is_sender_allowed_for_reception(v_recipient_id, v_sender.owner_id);
 
     if v_allowed then
       insert into public.messages (
-        archive_user_id,
+        owner_id,
         author_id,
         original_author_id,
         peer_profile_id,
@@ -483,9 +483,9 @@ begin
       )
       values (
         v_recipient_id,
-        v_sender.archive_user_id,
+        v_sender.owner_id,
         v_content_author,
-        v_sender.archive_user_id,
+        v_sender.owner_id,
         v_lambda,
         coalesce(v_sender.protocol, 'internal'::public.contact_protocol),
         v_body,
@@ -497,7 +497,7 @@ begin
         coalesce((v_payload ->> 'latitude')::double precision, v_sender.latitude),
         coalesce((v_payload ->> 'longitude')::double precision, v_sender.longitude)
       )
-      on conflict (archive_user_id, logical_message_id) do nothing;
+      on conflict (owner_id, logical_message_id) do nothing;
 
       update public.messages
       set delivered_at = now()
@@ -506,7 +506,7 @@ begin
 
       perform alfred_delivery.queue_push_after_delivery(
         v_recipient_id,
-        v_sender.archive_user_id,
+        v_sender.owner_id,
         v_lambda,
         v_content_type,
         v_body,

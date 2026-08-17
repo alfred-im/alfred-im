@@ -9,7 +9,7 @@
 -- ---------------------------------------------------------------------------
 
 alter table public.sync_cursors
-  drop constraint if exists sync_cursors_archive_user_thread_protocol_key_unique;
+  drop constraint if exists sync_cursors_owner_thread_protocol_key_unique;
 
 alter table public.sync_cursors
   add column if not exists peer_profile_id uuid references public.profiles (id) on delete cascade;
@@ -24,7 +24,7 @@ alter table public.sync_cursors
   drop column if exists inbox_thread_id;
 
 alter table public.sync_cursors
-  add constraint sync_cursors_archive_user_peer_protocol_key_unique
+  add constraint sync_cursors_owner_peer_protocol_key_unique
   unique (profile_id, peer_profile_id, protocol, cursor_key);
 
 -- ---------------------------------------------------------------------------

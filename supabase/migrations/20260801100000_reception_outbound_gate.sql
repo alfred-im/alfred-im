@@ -55,7 +55,7 @@ begin
   if p_client_message_id is not null then
     select m.id into v_sender_id
     from public.messages m
-    where m.archive_user_id = v_me
+    where m.owner_id = v_me
       and m.client_message_id = p_client_message_id
     limit 1;
 
@@ -142,7 +142,7 @@ begin
   v_lambda := gen_random_uuid();
 
   insert into public.messages (
-    archive_user_id,
+    owner_id,
     author_id,
     original_author_id,
     peer_profile_id,

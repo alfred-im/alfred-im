@@ -66,8 +66,8 @@ $$;
 -- ---------------------------------------------------------------------------
 
 create or replace function public.is_bidirectional_allowed(
-  p_archive_user_a uuid,
-  p_archive_user_b uuid,
+  p_owner_a uuid,
+  p_owner_b uuid,
   p_sender uuid
 )
 returns boolean
@@ -76,8 +76,8 @@ stable
 security definer
 set search_path = public
 as $$
-  select public.is_sender_allowed_for_reception(p_archive_user_a, p_sender)
-     and public.is_sender_allowed_for_reception(p_archive_user_b, p_sender);
+  select public.is_sender_allowed_for_reception(p_owner_a, p_sender)
+     and public.is_sender_allowed_for_reception(p_owner_b, p_sender);
 $$;
 
 revoke all on function public.is_bidirectional_allowed(uuid, uuid, uuid) from public, anon;
@@ -128,7 +128,7 @@ begin
   for v_participant in
     select r.allowed_profile_id
     from public.reception_allowlist r
-    where r.archive_user_id = p_group_id
+    where r.owner_id = p_group_id
       and r.allowed_profile_id is not null
       and r.allowed_profile_id <> p_group_id
       and r.allowed_profile_id <> p_original_author_id
@@ -138,7 +138,7 @@ begin
     end if;
 
     insert into public.messages (
-      archive_user_id,
+      owner_id,
       author_id,
       original_author_id,
       peer_profile_id,
@@ -169,7 +169,7 @@ begin
       p_latitude,
       p_longitude
     )
-    on conflict (archive_user_id, logical_message_id) do nothing;
+    on conflict (owner_id, logical_message_id) do nothing;
   end loop;
 end;
 $$;
@@ -231,7 +231,7 @@ begin
   if p_client_message_id is not null then
     select m.id into v_sender_id
     from public.messages m
-    where m.archive_user_id = v_me
+    where m.owner_id = v_me
       and m.client_message_id = p_client_message_id
     limit 1;
 
@@ -280,7 +280,7 @@ begin
   v_lambda := gen_random_uuid();
 
   insert into public.messages (
-    archive_user_id,
+    owner_id,
     author_id,
     original_author_id,
     peer_profile_id,
@@ -337,7 +337,7 @@ begin
 
     if v_allowed then
       insert into public.messages (
-        archive_user_id,
+        owner_id,
         author_id,
         original_author_id,
         peer_profile_id,
@@ -405,7 +405,7 @@ begin
 
     if v_allowed then
       insert into public.messages (
-        archive_user_id,
+        owner_id,
         author_id,
         original_author_id,
         peer_profile_id,
@@ -505,7 +505,7 @@ begin
   for v_participant in
     select r.allowed_profile_id
     from public.reception_allowlist r
-    where r.archive_user_id = v_me
+    where r.owner_id = v_me
       and r.allowed_profile_id <> v_me
   loop
     select * into v_last from public.send_message_to_profile(
@@ -541,10 +541,10 @@ grant execute on function public.broadcast_message_to_allowlist(
 ) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- RPC: archive_user message list (group shell)
+-- RPC: owner message list (group shell)
 -- ---------------------------------------------------------------------------
 
-create or replace function public.list_archive_messages(
+create or replace function public.list_owner_messages(
   p_limit integer default 100
 )
 returns setof public.messages
@@ -555,14 +555,14 @@ set search_path = public
 as $$
   select m.*
   from public.messages m
-  where m.archive_user_id = auth.uid()
+  where m.owner_id = auth.uid()
     and public.mailbox_has_renderable_content(m.body, m.content_type)
   order by m.created_at asc
   limit greatest(coalesce(p_limit, 100), 1);
 $$;
 
-revoke all on function public.list_archive_messages(integer) from public, anon;
-grant execute on function public.list_archive_messages(integer) to authenticated;
+revoke all on function public.list_owner_messages(integer) from public, anon;
+grant execute on function public.list_owner_messages(integer) to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- RPC: find profile (+ profile_kind)

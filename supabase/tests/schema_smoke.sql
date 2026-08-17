@@ -29,9 +29,9 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'archive_user_id'
+    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'owner_id'
   ) THEN
-    RAISE EXCEPTION 'messages must use mailbox archive_user_id column';
+    RAISE EXCEPTION 'messages must use mailbox owner_id column';
   END IF;
 
   IF to_regclass('public.conversations') IS NOT NULL THEN

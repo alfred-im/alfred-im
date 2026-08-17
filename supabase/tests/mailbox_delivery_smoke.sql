@@ -24,11 +24,11 @@ BEGIN
     true
   );
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (owner_id, allowed_profile_id)
   VALUES
     (v_agent1, v_agent2),
     (v_agent2, v_agent1)
-  ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
+  ON CONFLICT ON CONSTRAINT reception_allowlist_owner_allowed_unique DO NOTHING;
 
   SELECT * INTO v_sender FROM public.send_message_to_profile(
     v_agent2,
@@ -37,8 +37,8 @@ BEGIN
     'text'::public.message_content_type
   );
 
-  IF v_sender.archive_user_id <> v_agent1 OR v_sender.author_id <> v_agent1 THEN
-    RAISE EXCEPTION 'sender copy archive_user/author mismatch';
+  IF v_sender.owner_id <> v_agent1 OR v_sender.author_id <> v_agent1 THEN
+    RAISE EXCEPTION 'sender copy owner/author mismatch';
   END IF;
 
   IF v_sender.delivered_at IS NULL THEN
@@ -47,7 +47,7 @@ BEGIN
 
   SELECT count(*) INTO v_recipient_count
   FROM public.messages m
-  WHERE m.archive_user_id = v_agent2
+  WHERE m.owner_id = v_agent2
     AND m.author_id = v_agent1
     AND m.logical_message_id = v_sender.logical_message_id;
 
