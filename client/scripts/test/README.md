@@ -117,6 +117,7 @@ Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/r
 | **`peer-relationship-actions.spec.ts`** | **`e2e-nav-local`** | **Menu ⋮ + profilo: rubrica e consenso dopo switch account (assert Postgres)** |
 | **`peer-relationship-consent-toggle.spec.ts`** | **`e2e-nav-local`** | **Rubrica + consenso già attivi: ciclo revoca/riconcessione da menu e profilo (assert Postgres)** |
 | **`peer-profile-rubrica.spec.ts`** | **`e2e-nav-local`** | **Overlay profilo: tap Aggiungi/Rimuovi rubrica aggiorna pulsante (chat, inbox, post-switch)** |
+| **`instance-config-panel.spec.ts`** | **`e2e-nav-local`** | **Owner: form configurazione server — tutti i campi salvano e persistono (assert Postgres)** |
 | `manual-push-poison-repro.spec.ts` | `e2e-nav-local` | Push tap multi-account + mailbox poison |
 | `push-tap-multi-account.spec.ts` | `e2e-nav-local`, `e2e-push-local` | Due account → tap notifica → focus destinatario + chat |
 | `push-full.spec.ts` | `e2e-push-local`, CI step 6 | Permesso → subscribe → messaggio → notifica in SW |

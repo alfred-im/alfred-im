@@ -9,20 +9,22 @@ import 'package:provider/provider.dart';
 
 import '../models/chat_peer.dart';
 import '../providers/auth_controller.dart';
+import '../services/account_session.dart';
 import '../providers/inbox_controller.dart';
 import '../providers/group_home_controller.dart';
 import '../theme/alfred_colors.dart';
 import '../widgets/account_sidebar.dart';
 import '../widgets/auth_overlay.dart';
 import '../widgets/no_account_placeholder.dart';
-import '../widgets/inbox_panel.dart';
 import '../widgets/conversation_scope_pane.dart';
 import '../widgets/split_shell_layout.dart';
 import '../utils/session_scope_keys.dart';
 import 'allowed_people_screen.dart';
 import 'contacts_screen.dart';
+import 'instance_config_screen.dart';
 import 'profile_screen.dart';
 import 'group_account_shell.dart';
+import '../widgets/owner_gated_inbox_panel.dart';
 
 /// Layout principale stile WhatsApp Web: sidebar (profilo + inbox) + chat.
 class HomeScreen extends StatefulWidget {
@@ -98,6 +100,14 @@ class _HomeScreenState extends State<HomeScreen> {
     await providerContext.read<GroupHomeController>().reload();
   }
 
+  Future<void> _openInstanceConfig() async {
+    _closeDrawer();
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => const InstanceConfigScreen()),
+    );
+  }
+
   Future<void> _openProfile() async {
     _closeDrawer();
     await Navigator.push<void>(
@@ -123,6 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _inboxPanel({
     required BuildContext context,
     required AuthController auth,
+    required AccountSession session,
     required InboxController inbox,
     required String accountUserId,
     required bool showDrawerButton,
@@ -130,8 +141,9 @@ class _HomeScreenState extends State<HomeScreen> {
     bool showTopBar = true,
     VoidCallback? onBack,
   }) {
-    return InboxPanel(
+    return OwnerGatedInboxPanel(
       key: ValueKey(accountUserId),
+      session: session,
       selectedPeerId: auth.activePeer?.profileId,
       peers: inbox.filteredPeers,
       isLoading: inbox.isLoading,
@@ -147,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
       showBackButton: showBackButton,
       onBack: onBack,
       showTopBar: showTopBar,
+      onInstanceConfigTap: _openInstanceConfig,
     );
   }
 
@@ -198,6 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 builder: (context, _) => _inboxPanel(
                   context: context,
                   auth: auth,
+                  session: session,
                   inbox: inbox,
                   accountUserId: accountUserId!,
                   showDrawerButton: !isWide,

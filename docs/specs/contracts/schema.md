@@ -35,7 +35,7 @@ storage: chat-media, avatars
 | `contact_protocol` | `internal`, `xmpp`, `matrix` | Routing backend; invisibile in UI inbox |
 | `message_content_type` | `text`, `gif`, `voice`, `location`, `image`, `video` | Tipo contenuto messaggio |
 | `queue_status` | `queued`, `processing`, `completed`, `failed` | `outbox`, `bridge_jobs` |
-| `profile_kind` | `user`, `group` | Tipo account — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
+| `profile_kind` | `user`, `group`, `owner` | Tipo account — [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-OWNER](../promises/system/SYS-OWNER.md) |
 | `message_reaction_kind` | `applied`, `withdrawn` | Fatto reaction su λ — [messaging](../../domain/messaging/commands-and-events.md) |
 
 ---
@@ -52,6 +52,7 @@ storage: chat-media, avatars
 | `avatar_url` | text | URL bucket `avatars` |
 | `cover_url` | text | URL copertina bucket `avatars` |
 | `pronouns` | text | Opzionale (#134) |
+| `disabled_at` | timestamptz | Ban account — [SYS-OWNER](../promises/system/SYS-OWNER.md) |
 | `created_at`, `updated_at` | timestamptz | |
 
 **RLS**: SELECT authenticated; UPDATE solo `id = auth.uid()`.

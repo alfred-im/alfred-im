@@ -42,6 +42,8 @@ class ChatPeer {
 
   bool get peerIsAllowed => relationship?.isAllowed ?? false;
 
+  bool get peerIsDisabled => relationship?.isDisabled ?? false;
+
   Color get resolvedAvatarColor =>
       avatarColor ?? avatarColorForId(profile.id);
 

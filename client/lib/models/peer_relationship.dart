@@ -7,15 +7,18 @@ class PeerRelationship {
   const PeerRelationship({
     required this.inContacts,
     required this.isAllowed,
+    this.isDisabled = false,
   });
 
   final bool inContacts;
   final bool isAllowed;
+  final bool isDisabled;
 
   factory PeerRelationship.fromRow(Map<String, dynamic> json) {
     return PeerRelationship(
       inContacts: json['peer_in_contacts'] as bool? ?? false,
       isAllowed: json['peer_is_allowed'] as bool? ?? false,
+      isDisabled: json['peer_is_disabled'] as bool? ?? false,
     );
   }
 
@@ -30,10 +33,12 @@ class PeerRelationship {
   PeerRelationship copyWith({
     bool? inContacts,
     bool? isAllowed,
+    bool? isDisabled,
   }) {
     return PeerRelationship(
       inContacts: inContacts ?? this.inContacts,
       isAllowed: isAllowed ?? this.isAllowed,
+      isDisabled: isDisabled ?? this.isDisabled,
     );
   }
 }

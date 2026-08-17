@@ -6,9 +6,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'conversation_session_access.dart';
 
+String _errorMessage(Object error) {
+  if (error is AuthException) return error.message;
+  if (error is PostgrestException) return error.message;
+  return error.toString();
+}
+
 bool isPermanentAuthFailure(Object error) {
+  final msg = _errorMessage(error).toLowerCase();
+  if (msg.contains('account disabled')) return true;
   if (error is AuthException) {
-    final msg = error.message.toLowerCase();
     return msg.contains('invalid refresh') ||
         msg.contains('refresh token not found') ||
         msg.contains('session expired') ||
@@ -18,11 +25,14 @@ bool isPermanentAuthFailure(Object error) {
 }
 
 String friendlyAuthError(Object e) {
+  final msg = _errorMessage(e).toLowerCase();
+  if (msg.contains('account disabled')) {
+    return 'Account disattivato. Contatta l\'amministratore del server.';
+  }
   if (e is AuthException) {
     if (isPermanentAuthFailure(e)) {
       return conversationSessionExpiredMessage;
     }
-    final msg = e.message.toLowerCase();
     if (msg.contains('invalid login credentials')) {
       return 'Email o password non corretti.';
     }
@@ -39,9 +49,9 @@ String friendlyAuthError(Object e) {
         msg.contains('over_email_send_rate_limit')) {
       return 'Troppi tentativi email. Riprova tra qualche minuto.';
     }
-    if (msg.contains('conferma l\'email')) {
-      return e.message;
-    }
+    return e.message;
+  }
+  if (e is PostgrestException) {
     return e.message;
   }
   return e.toString();

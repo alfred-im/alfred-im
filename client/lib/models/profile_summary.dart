@@ -5,11 +5,18 @@
 /// Tipo account Alfred (`profiles.profile_kind`).
 enum ProfileKind {
   user,
-  group;
+  group,
+  owner;
 
   static ProfileKind fromString(String? value) {
-    if (value == 'group') return ProfileKind.group;
-    return ProfileKind.user;
+    switch (value) {
+      case 'group':
+        return ProfileKind.group;
+      case 'owner':
+        return ProfileKind.owner;
+      default:
+        return ProfileKind.user;
+    }
   }
 
   String get wireValue => name;
@@ -39,6 +46,11 @@ class ProfileSummary {
   final ProfileKind profileKind;
 
   bool get isGroup => profileKind == ProfileKind.group;
+
+  bool get isOwner => profileKind == ProfileKind.owner;
+
+  /// Account con inbox personale (user e owner; non gruppo).
+  bool get hasPersonalInbox => !isGroup;
 
   bool get hasUsername => username != null && username!.isNotEmpty;
 

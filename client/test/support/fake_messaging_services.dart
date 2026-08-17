@@ -515,6 +515,16 @@ class FakeProfileService extends ProfileService {
         .whereType<ProfileSummary>()
         .toList();
   }
+
+  @override
+  Future<ChatPeer?> getPeerContext(String profileId) async {
+    final summary = profilesById[profileId];
+    if (summary == null) return null;
+    return ChatPeer.fromProfile(
+      profile: summary,
+      address: summary.username,
+    );
+  }
 }
 
 class FakeInboxService extends InboxService {

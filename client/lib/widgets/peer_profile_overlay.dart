@@ -77,7 +77,9 @@ class PeerProfileOverlay extends StatefulWidget {
 class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
   bool _allowBusy = false;
   bool _rubricaBusy = false;
+  bool _moderationBusy = false;
   late ProfileSummary _profile;
+  bool _peerIsDisabled = false;
   bool _hydrateStarted = false;
 
   @override
@@ -93,6 +95,33 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     _hydrateStarted = true;
     unawaited(_hydrateProfileFromServer());
     unawaited(PeerRelationshipActions.prime(context));
+    unawaited(_resolveOwnerCapability());
+  }
+
+  Future<void> _resolveOwnerCapability() async {
+    AuthController? auth;
+    try {
+      auth = context.read<AuthController>();
+    } on ProviderNotFoundException {
+      return;
+    }
+    final session = auth.focusedSession;
+    if (session == null) return;
+
+    try {
+      final isOwner = await session.ownerService.isInstanceOwner();
+      if (!mounted) return;
+      setState(() {
+        _serverIsOwner = isOwner;
+        _ownerCheckDone = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _serverIsOwner = false;
+        _ownerCheckDone = true;
+      });
+    }
   }
 
   Future<void> _hydrateProfileFromServer() async {
@@ -107,10 +136,12 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     if (session == null) return;
 
     try {
-      final fromServer =
-          await session.profileService.findById(widget.profile.id);
-      if (!mounted || fromServer == null) return;
-      setState(() => _profile = widget.profile.mergeDisplay(fromServer));
+      final peer = await session.profileService.getPeerContext(widget.profile.id);
+      if (!mounted || peer == null) return;
+      setState(() {
+        _profile = widget.profile.mergeDisplay(peer.profile);
+        _peerIsDisabled = peer.peerIsDisabled;
+      });
     } catch (_) {
       // Overlay resta utilizzabile con i dati parziali già noti.
     }
@@ -134,6 +165,17 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
       context.watch<AuthController>();
     } on ProviderNotFoundException {
       // Harness test senza AuthController.
+    }
+  }
+
+  bool _serverIsOwner = false;
+  bool _ownerCheckDone = false;
+
+  String? _focusedUserId(BuildContext context) {
+    try {
+      return context.read<AuthController>().focusedSession?.userId;
+    } on ProviderNotFoundException {
+      return null;
     }
   }
 
@@ -196,6 +238,82 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     );
   }
 
+  Future<void> _toggleBan({required bool ban}) async {
+    if (_moderationBusy) return;
+
+    AuthController? auth;
+    try {
+      auth = context.read<AuthController>();
+    } on ProviderNotFoundException {
+      return;
+    }
+    final session = auth.focusedSession;
+    if (session == null) return;
+
+    final isOwner = await session.ownerService.isInstanceOwner();
+    if (!isOwner) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Solo gli account owner possono moderare. '
+              'Riaccedi se il ruolo è stato aggiornato.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    if (ban) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Disattiva account'),
+          content: Text(
+            'Disattivare ${_profile.displayName}? '
+            'Non potrà più accedere né inviare messaggi.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annulla'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Disattiva'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+    }
+
+    setState(() => _moderationBusy = true);
+    try {
+      if (ban) {
+        await session.ownerService.banProfile(_profile.id);
+      } else {
+        await session.ownerService.unbanProfile(_profile.id);
+      }
+      if (!mounted) return;
+      setState(() => _peerIsDisabled = ban);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ban ? 'Account disattivato' : 'Account riattivato',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) PeerRelationshipActions.showError(context, e);
+    } finally {
+      if (mounted) setState(() => _moderationBusy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final profile = _profile;
@@ -207,6 +325,13 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     final isAllowed = relationship.isAllowed;
     final inRubrica = relationship.inContacts;
     final actionsEnabled = PeerRelationshipActions.controllersReady(context);
+    final focusedUserId = _focusedUserId(context);
+    final canModerate = _ownerCheckDone &&
+        _serverIsOwner &&
+        !_profile.isOwner &&
+        !_profile.isGroup &&
+        focusedUserId != null &&
+        _profile.id != focusedUserId;
 
     return Material(
       color: AlfredColors.surface,
@@ -293,6 +418,42 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
                             color: AlfredColors.textSecondary,
                           ),
                     ),
+                    if (canModerate) ...[
+                      const SizedBox(height: 28),
+                      Text(
+                        'Moderazione',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      _ActionCard(
+                        child: SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          secondary: Icon(
+                            Icons.block_outlined,
+                            color: _peerIsDisabled
+                                ? AlfredColors.unreadBadge
+                                : AlfredColors.textSecondary,
+                          ),
+                          title: const Text(
+                            'Account disattivato',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: const Text(
+                            'Blocca accesso e messaggistica',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                          value: _peerIsDisabled,
+                          onChanged: actionsEnabled && !_moderationBusy
+                              ? (value) => unawaited(_toggleBan(ban: value))
+                              : null,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

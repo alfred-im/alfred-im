@@ -21,6 +21,7 @@ import 'contact_service.dart';
 import 'inbox_service.dart';
 import 'group_archive_service.dart';
 import 'message_media_service.dart';
+import 'owner_service.dart';
 import 'peer_message_service.dart';
 import 'profile_avatar_service.dart';
 import 'profile_service.dart';
@@ -43,6 +44,7 @@ class AccountSession {
     required this.profileAvatarService,
     required this.messageMediaService,
     required this.composeService,
+    required this.ownerService,
     required this.inboxController,
     required this.profile,
   });
@@ -62,6 +64,7 @@ class AccountSession {
   final ProfileAvatarService profileAvatarService;
   final MessageMediaService messageMediaService;
   final ComposeService composeService;
+  final OwnerService ownerService;
   final InboxController inboxController;
 
   ProfileSummary profile;
@@ -333,15 +336,17 @@ class AccountSession {
       profileAvatarService: ProfileAvatarService(client),
       messageMediaService: MessageMediaService(client),
       composeService: ComposeService(profileService: profileService),
+      ownerService: OwnerService(client),
       inboxController: InboxController(
         userId: userId,
         inboxService: inboxService,
-        enableInboxLoads: !initialProfile.isGroup,
+        enableInboxLoads: initialProfile.hasPersonalInbox,
       ),
       profile: initialProfile,
     );
 
     await session._hydrateProfile(skipNetwork: skipHydrate);
+    await session.ownerService.assertSessionActive();
     return session;
   }
 
@@ -478,11 +483,12 @@ class AccountSession {
       messageMediaService:
           messageMediaService ?? MessageMediaService(resolvedClient),
       composeService: ComposeService(profileService: resolvedProfileService),
+      ownerService: OwnerService(resolvedClient),
       inboxController: InboxController(
         userId: profile.id,
         inboxService: resolvedInboxService,
         enableRealtime: false,
-        enableInboxLoads: !profile.isGroup,
+        enableInboxLoads: profile.hasPersonalInbox,
       ),
       profile: profile,
     ).._lastKnownRefreshToken = refreshToken;

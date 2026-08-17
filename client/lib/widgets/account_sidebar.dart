@@ -195,6 +195,18 @@ class _ActiveProfileCard extends StatelessWidget {
                 ),
               ),
             ),
+          if (profile.isOwner)
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Text(
+                'Owner',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AlfredColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
         ],
       ),
       trailing: Row(
@@ -279,6 +291,15 @@ class _AccountTile extends StatelessWidget {
                   color: AlfredColors.textSecondary,
                 ),
               ),
+            if (account.profile.isOwner)
+              const Text(
+                'Owner',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AlfredColors.textSecondary,
+                ),
+              ),
             if (account.profile.hasUsername) Text(account.profile.handle),
             if (account.profile.hasPronouns)
               Text(
@@ -289,6 +310,7 @@ class _AccountTile extends StatelessWidget {
         ),
         isThreeLine: account.isDisconnected ||
             account.profile.isGroup ||
+            account.profile.isOwner ||
             account.profile.hasPronouns,
         contentPadding: EdgeInsets.zero,
         onTap: account.isDisconnected ? onReconnect ?? onTap : onTap,

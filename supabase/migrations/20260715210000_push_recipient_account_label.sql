@@ -40,7 +40,7 @@ begin
   select m.id
   into v_recipient_message_id
   from public.messages m
-  where m.archive_user_id = p_recipient_user_id
+  where m.owner_id = p_recipient_user_id
     and m.logical_message_id = p_logical_message_id
   limit 1;
 
