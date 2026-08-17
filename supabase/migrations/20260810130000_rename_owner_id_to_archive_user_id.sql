@@ -4,123 +4,66 @@
 
 -- Forward rename: mailbox column owner_id -> archive_user_id.
 -- Replaces the in-place rewrite of historical migrations (commit a1f3a86).
--- Idempotent: safe on fresh DB (owner_id) and on DBs already renamed.
+-- Runs once after 20260810120000_peer_relationship_flags.sql on a schema that
+-- still uses owner_id. reception_allowlist_owner_id_idx was dropped in
+-- 20260809130000; sync_cursors_owner_thread_protocol_key_unique in 20260627230000.
 
 -- ---------------------------------------------------------------------------
 -- 1. Columns
 -- ---------------------------------------------------------------------------
 
-do $do$
-begin
-  if exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public' and table_name = 'contacts' and column_name = 'owner_id'
-  ) then
-    alter table public.contacts rename column owner_id to archive_user_id;
-  end if;
-
-  if exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public' and table_name = 'messages' and column_name = 'owner_id'
-  ) then
-    alter table public.messages rename column owner_id to archive_user_id;
-  end if;
-
-  if exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public' and table_name = 'reception_allowlist' and column_name = 'owner_id'
-  ) then
-    alter table public.reception_allowlist rename column owner_id to archive_user_id;
-  end if;
-end $do$;
+alter table public.contacts rename column owner_id to archive_user_id;
+alter table public.messages rename column owner_id to archive_user_id;
+alter table public.reception_allowlist rename column owner_id to archive_user_id;
 
 -- ---------------------------------------------------------------------------
 -- 2. Indexes (names only; definitions follow renamed columns)
 -- ---------------------------------------------------------------------------
 
-alter index if exists public.contacts_owner_linked_profile_idx
+alter index public.contacts_owner_linked_profile_idx
   rename to contacts_archive_user_linked_profile_idx;
 
-alter index if exists public.contacts_owner_external_address_idx
+alter index public.contacts_owner_external_address_idx
   rename to contacts_archive_user_external_address_idx;
 
-alter index if exists public.contacts_owner_id_idx
+alter index public.contacts_owner_id_idx
   rename to contacts_archive_user_id_idx;
 
-alter index if exists public.messages_owner_client_id_idx
+alter index public.messages_owner_client_id_idx
   rename to messages_archive_user_client_id_idx;
 
-alter index if exists public.messages_owner_logical_id_idx
+alter index public.messages_owner_logical_id_idx
   rename to messages_archive_user_logical_id_idx;
 
-alter index if exists public.messages_owner_peer_created_idx
+alter index public.messages_owner_peer_created_idx
   rename to messages_archive_user_peer_created_idx;
-
-alter index if exists public.reception_allowlist_owner_id_idx
-  rename to reception_allowlist_archive_user_id_idx;
 
 -- ---------------------------------------------------------------------------
 -- 3. Constraints (reception_allowlist)
 -- ---------------------------------------------------------------------------
 
-do $do$
-begin
-  if exists (
-    select 1 from pg_constraint
-    where conname = 'reception_allowlist_owner_id_fkey'
-  ) then
-    alter table public.reception_allowlist
-      rename constraint reception_allowlist_owner_id_fkey
-      to reception_allowlist_archive_user_id_fkey;
-  end if;
+alter table public.reception_allowlist
+  rename constraint reception_allowlist_owner_id_fkey
+  to reception_allowlist_archive_user_id_fkey;
 
-  if exists (
-    select 1 from pg_constraint
-    where conname = 'reception_allowlist_owner_allowed_unique'
-  ) then
-    alter table public.reception_allowlist
-      rename constraint reception_allowlist_owner_allowed_unique
-      to reception_allowlist_archive_user_allowed_unique;
-  end if;
-end $do$;
+alter table public.reception_allowlist
+  rename constraint reception_allowlist_owner_allowed_unique
+  to reception_allowlist_archive_user_allowed_unique;
 
 -- ---------------------------------------------------------------------------
--- 4. sync_cursors constraint names (column is profile_id; legacy naming only)
+-- 4. sync_cursors constraint (column is profile_id; legacy naming only)
 -- ---------------------------------------------------------------------------
 
-do $do$
-begin
-  if exists (
-    select 1 from pg_constraint
-    where conname = 'sync_cursors_owner_thread_protocol_key_unique'
-  ) then
-    alter table public.sync_cursors
-      rename constraint sync_cursors_owner_thread_protocol_key_unique
-      to sync_cursors_archive_user_thread_protocol_key_unique;
-  end if;
-
-  if exists (
-    select 1 from pg_constraint
-    where conname = 'sync_cursors_owner_peer_protocol_key_unique'
-  ) then
-    alter table public.sync_cursors
-      rename constraint sync_cursors_owner_peer_protocol_key_unique
-      to sync_cursors_archive_user_peer_protocol_key_unique;
-  end if;
-end $do$;
+alter table public.sync_cursors
+  rename constraint sync_cursors_owner_peer_protocol_key_unique
+  to sync_cursors_archive_user_peer_protocol_key_unique;
 
 -- ---------------------------------------------------------------------------
 -- 5. RPC rename: list_owner_messages -> list_archive_messages
 -- ---------------------------------------------------------------------------
 
-do $do$
-begin
-  if to_regprocedure('public.list_owner_messages(integer)') is not null
-     and to_regprocedure('public.list_archive_messages(integer)') is null then
-    alter function public.list_owner_messages(integer)
-      rename to list_archive_messages;
-  end if;
-end $do$;
+alter function public.list_owner_messages(integer)
+  rename to list_archive_messages;
 
 -- ---------------------------------------------------------------------------
 -- 6. Function bodies — only RPC that referenced owner_id in historical migrations
