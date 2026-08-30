@@ -11,6 +11,10 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **`org-site/`** — landing FOSS statica per https://alfred-im.github.io (sorgente in questo repo)
 - **Workflow `deploy-org-site.yml`** — pubblica `org-site/` su repo `alfred-im.github.io` via secret `ORG_SITE_PAT`
 
+### Modificato
+
+- **`org-site/`** — riscrittura completa: principi, prodotto allineato a README/registry, architettura, doc links
+
 ### Rimosso
 
 - **GitHub Pages** — workflow `deploy-client.yml` e cartella `client/deploy/github-pages/`; unico deploy client = Fly (`alfred-im-web`, https://alfred-im-web.fly.dev/); `verify.sh --build` usa `--base-href /`
