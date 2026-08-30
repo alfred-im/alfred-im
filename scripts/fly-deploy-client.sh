@@ -21,5 +21,5 @@ if [[ ! -f "$CONFIG" ]]; then
 fi
 
 cd "$ROOT"
-echo "==> fly deploy (client gateway)"
+echo "==> fly deploy (client gateway, context=repo root)"
 "$FLY" deploy . --remote-only --config "$CONFIG" --dockerfile "$DOCKERFILE"

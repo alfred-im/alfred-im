@@ -37,10 +37,16 @@ bash scripts/fly-deploy-client.sh
 1. Dashboard Fly → app client → **Deployments** → **Settings**
 2. Collega il repository GitHub
 3. Abilita **Auto Deploy** sul branch (es. `main`)
-4. Imposta **Dockerfile path**: `client/deploy/fly/Dockerfile`
-5. Build context / working directory: **root del repo**
+4. Imposta **Dockerfile path**: `Dockerfile` (relativo a `client/deploy/fly/`, dove sta `fly.toml`)
+5. **Working directory / monorepo root:** `.` (root del repo) — **non** `client/deploy/fly`
+
+Se la working directory è `client/deploy/fly`, Fly cerca `client/deploy/fly/client/deploy/fly/Dockerfile` e il build fallisce.
 
 Ogni push sul branch scelto ridistribuisce il client. In monorepo il client si ribuilda anche su push che non toccano `client/` — accettabile per fork operatore; altrimenti deploy manuale.
+
+### Errore `client/deploy/fly/client/deploy/fly/Dockerfile not found`
+
+La **working directory** in Fly Deployments → Settings è impostata sulla sottocartella invece che sulla root del repo. Imposta **`.`** (root) e lascia config path `client/deploy/fly/fly.toml`.
 
 ## Dopo il deploy
 

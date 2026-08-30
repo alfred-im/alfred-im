@@ -3,14 +3,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 # Alfred web client (PWA) — separate Fly app from bridge workers (root fly.toml).
-# Deploy from repo root:
-#   fly deploy . --config client/deploy/fly/fly.toml --dockerfile client/deploy/fly/Dockerfile
+# Deploy from repo root (build context = .):
+#   fly deploy . --config client/deploy/fly/fly.toml
+# Fly Launch / GitHub: config path = client/deploy/fly/fly.toml, working directory = . (root)
+#   — NON client/deploy/fly (duplica il path del Dockerfile).
 
 app = "alfred-im-web"
 primary_region = "fra"
 
 [build]
-  dockerfile = "client/deploy/fly/Dockerfile"
+  dockerfile = "Dockerfile"
 
 [http_service]
   internal_port = 8080
