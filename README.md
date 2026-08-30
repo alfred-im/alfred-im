@@ -11,7 +11,7 @@
 
 Flutter web (PWA) · Supabase · Python bridges (federation planned)
 
-**Try it:** https://alfred-im-web.fly.dev/
+**Project:** https://alfred-im.github.io/ · **Try it:** https://alfred-im-web.fly.dev/
 
 ---
 

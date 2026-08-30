@@ -1,0 +1,59 @@
+# Publish org-site/ → alfred-im/alfred-im.github.io (https://alfred-im.github.io)
+#
+# Requires repository secret ORG_SITE_PAT (fine-grained PAT, Contents: read/write
+# on alfred-im.github.io). Deploy keys are disabled by org policy.
+
+name: Deploy org site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'org-site/**'
+      - '.github/workflows/deploy-org-site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-org-site
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate secret
+        env:
+          ORG_SITE_PAT: ${{ secrets.ORG_SITE_PAT }}
+        run: |
+          if [ -z "${ORG_SITE_PAT}" ]; then
+            echo "::error::Missing repository secret ORG_SITE_PAT"
+            exit 1
+          fi
+
+      - name: Publish to alfred-im.github.io
+        env:
+          ORG_SITE_PAT: ${{ secrets.ORG_SITE_PAT }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 \
+            "https://x-access-token:${ORG_SITE_PAT}@github.com/alfred-im/alfred-im.github.io.git" \
+            /tmp/org-site-target
+          rsync -av --delete org-site/ /tmp/org-site-target/
+          cd /tmp/org-site-target
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to publish"
+            exit 0
+          fi
+          git commit -m "Deploy org site from alfred-im@${GITHUB_SHA::7}"
+          git push origin HEAD:main
