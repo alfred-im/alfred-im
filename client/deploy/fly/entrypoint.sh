@@ -1,8 +1,8 @@
+#!/bin/sh
 # Copyright (C) 2026 im.alfred
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-#!/bin/sh
 set -eu
 
 export GATEWAY_CONFIG_PATH="${GATEWAY_CONFIG_PATH:-/usr/share/nginx/html/config.json}"

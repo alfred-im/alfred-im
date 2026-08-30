@@ -38,5 +38,6 @@ COPY client/deploy/fly/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 COPY client/deploy/gateway/ /opt/gateway/
 COPY --from=build /app/client/build/web /usr/share/nginx/html
+RUN rm -f /usr/share/nginx/html/index.html /usr/share/nginx/html/manifest.json
 EXPOSE 8080
 ENTRYPOINT ["/entrypoint.sh"]

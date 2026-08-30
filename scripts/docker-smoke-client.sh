@@ -38,11 +38,10 @@ config="$(curl -sf -m 10 "http://127.0.0.1:${PORT}/config.json")"
 manifest="$(curl -sf -m 10 "http://127.0.0.1:${PORT}/manifest.json")"
 
 echo "$html" | grep -q 'flutter_bootstrap.js'
-echo "$html" | grep -q 'Messaging'
+echo "$html" | grep -q 'alfred-boot-splash'
 echo "$config" | grep -q 'supabaseUrl'
 echo "$manifest" | grep -q '"display": "standalone"'
-echo "$manifest" | grep -q '"short_name": "Messaging"'
 
-echo "OK client index (flutter_bootstrap.js + dynamic shell)"
+echo "OK client index (dynamic shell + flutter_bootstrap.js)"
 echo "OK config.json"
 echo "OK manifest.json (dynamic gateway)"
