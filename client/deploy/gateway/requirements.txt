@@ -1,0 +1,6 @@
+# Copyright (C) 2026 im.alfred
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+aiohttp==3.11.11
+Jinja2==3.1.5
