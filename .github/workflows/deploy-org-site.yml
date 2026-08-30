@@ -46,7 +46,7 @@ jobs:
           git clone --depth 1 \
             "https://x-access-token:${ORG_SITE_PAT}@github.com/alfred-im/alfred-im.github.io.git" \
             /tmp/org-site-target
-          rsync -av --delete org-site/ /tmp/org-site-target/
+          rsync -av --delete --exclude '.git' org-site/ /tmp/org-site-target/
           cd /tmp/org-site-target
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
