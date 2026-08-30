@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any
+from urllib import error, request
 
 from defaults import (
     DEFAULT_BACKGROUND_COLOR,
@@ -34,28 +35,31 @@ def load_gateway_config() -> dict[str, str]:
     return {"supabase_url": supabase_url, "anon_key": anon_key}
 
 
-async def fetch_instance_bootstrap(
+def fetch_instance_bootstrap(
     supabase_url: str,
     anon_key: str,
 ) -> dict[str, Any]:
-    import aiohttp
-
     url = f"{supabase_url.rstrip('/')}/rest/v1/rpc/get_instance_bootstrap"
-    headers = {
-        "apikey": anon_key,
-        "Authorization": f"Bearer {anon_key}",
-        "Content-Type": "application/json",
-    }
-    timeout = aiohttp.ClientTimeout(total=5)
+    payload = json.dumps({}).encode("utf-8")
+    req = request.Request(
+        url,
+        data=payload,
+        headers={
+            "apikey": anon_key,
+            "Authorization": f"Bearer {anon_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
     try:
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(url, headers=headers, json={}) as response:
-                if response.status != 200:
-                    return {}
-                payload = await response.json()
-                if isinstance(payload, dict):
-                    return payload
-    except (aiohttp.ClientError, TimeoutError, json.JSONDecodeError):
+        with request.urlopen(req, timeout=5) as response:
+            if response.status != 200:
+                return {}
+            body = response.read().decode("utf-8")
+            parsed = json.loads(body)
+            if isinstance(parsed, dict):
+                return parsed
+    except (error.URLError, error.HTTPError, TimeoutError, json.JSONDecodeError):
         return {}
     return {}
 

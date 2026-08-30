@@ -28,13 +28,11 @@ RUN rm -rf build/web/canvaskit
 RUN rm -f build/web/index.html build/web/manifest.json
 
 FROM nginx:alpine AS runtime
-RUN apk add --no-cache python3 py3-pip \
-    && pip3 install --no-cache-dir --break-system-packages -r /dev/stdin <<'EOF'
-aiohttp==3.11.11
-Jinja2==3.1.5
-EOF
+RUN apk add --no-cache python3 py3-pip
 
 RUN rm -f /etc/nginx/conf.d/default.conf
+COPY client/deploy/gateway/requirements.txt /opt/gateway/requirements.txt
+RUN pip3 install --no-cache-dir --break-system-packages -r /opt/gateway/requirements.txt
 COPY client/deploy/fly/nginx.conf /etc/nginx/conf.d/default.conf
 COPY client/deploy/fly/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
