@@ -119,19 +119,16 @@ Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (
 
 | Target | Meccanismo |
 |--------|------------|
-| Web client demo (GitHub Pages) | `/alfred-im/` — workflow `deploy-client` — https://alfred-im.github.io/alfred-im/ |
-| Web client istanza (Fly.io) | `client/deploy/fly/` — app `alfred-im-web` — https://alfred-im-web.fly.dev/ |
+| Web client (Fly.io) | `client/deploy/fly/` — app `alfred-im-web` — https://alfred-im-web.fly.dev/ |
 | Supabase | Migrazioni in repo → MCP/dashboard |
 
-**Try it:** https://alfred-im.github.io/alfred-im/ — panoramica pubblica in [`README.md`](../../README.md).
+**Try it:** https://alfred-im-web.fly.dev/ — panoramica pubblica in [`README.md`](../../README.md).
 
-**Verifica PWA prima del merge**: ogni PR su `main` con path `client/**` pubblica su GitHub Pages dopo build verde — **stessa URL** della PWA. L’utente può provare dal telefono **senza** attendere il merge; il merge non è prerequisito per la review.
-
-**Non deducibile**: URL live = ultimo `deploy-client` riuscito (PR o push su `main`), non sempre = tip di `main`.
+**Deploy:** auto-deploy Fly al push sul branch collegato (dashboard Fly → Deployments). Deploy manuale: `bash scripts/fly-deploy-client.sh`.
 
 **Web**: `passkeys` `bundle.js` obbligatorio in `client/web/index.html` (PR #110).
 
-Dettaglio deploy: `PROJECT_MAP.md` § Build, workflow `.github/workflows/deploy-client.yml`.
+Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/fly/README.md`.
 
 ---
 

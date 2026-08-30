@@ -4,6 +4,18 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
+## [Unreleased] - 2026-08-30
+
+### Rimosso
+
+- **GitHub Pages** — workflow `deploy-client.yml` e cartella `client/deploy/github-pages/`; unico deploy client = Fly (`alfred-im-web`, https://alfred-im-web.fly.dev/); `verify.sh --build` usa `--base-href /`
+
+### Documentazione
+
+- README, PROJECT_MAP, AGENTS, full-stack, SURF-AUTH, PROM-SHAREABLE-LINK: URL e riferimenti aggiornati a Fly
+
+---
+
 ## [Unreleased] - 2026-08-09
 
 ### Corretto

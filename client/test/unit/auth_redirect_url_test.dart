@@ -34,9 +34,9 @@ void main() {
     test('127.0.0.1 dev → current origin', () {
       expect(
         AuthRedirectUrl.resolveForOrigin(
-          Uri.parse('http://127.0.0.1:8080/alfred-im/'),
+          Uri.parse('http://127.0.0.1:8080/app/'),
         ),
-        'http://127.0.0.1:8080/alfred-im/',
+        'http://127.0.0.1:8080/app/',
       );
     });
 

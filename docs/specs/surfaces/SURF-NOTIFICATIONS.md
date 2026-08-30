@@ -69,7 +69,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | ID | Nota |
 |----|------|
 | **SURF-NOTIFICATIONS-040** | iOS: push web solo PWA installata (Add to Home Screen), iOS ≥ 16.4 — non garantito in Safari tab |
-| **SURF-NOTIFICATIONS-041** | GitHub Pages HTTPS: requisito Web Push soddisfatto |
+| **SURF-NOTIFICATIONS-041** | HTTPS pubblico (Fly): requisito Web Push soddisfatto |
 
 ---
 

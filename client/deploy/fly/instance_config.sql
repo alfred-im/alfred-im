@@ -1,4 +1,4 @@
--- Istanza demo GitHub Pages (tvwpoxxcqwphryvuyqzu).
+-- Istanza demo Fly (tvwpoxxcqwphryvuyqzu).
 -- Eseguire su Supabase live dopo migration instance_config.
 -- Idempotente: upsert su chiave.
 
