@@ -6,7 +6,7 @@ import 'package:alfred_client/models/instance_config_schema.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('InstanceConfigSchema exposes exactly seven editable fields', () {
+  test('InstanceConfigSchema exposes exactly ten editable fields', () {
     final fieldIds = InstanceConfigSchema.sections
         .expand((section) => section.fields)
         .map((field) => field.id)
@@ -15,8 +15,12 @@ void main() {
     expect(fieldIds, [
       'display_name',
       'im_server_id',
-      'logo_url',
+      'short_name',
+      'description',
       'theme_color',
+      'background_color',
+      'logo',
+      'favicon',
       'privacy_url',
       'terms_url',
       'support_url',

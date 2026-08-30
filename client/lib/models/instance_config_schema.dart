@@ -7,9 +7,9 @@
 /// Chiavi top-level in DB (solo queste quattro):
 /// - `instance.display_name` (stringa JSON)
 /// - `instance.im_server_id` (stringa JSON)
-/// - `instance.branding` (oggetto: logo_url, theme_color)
+/// - `instance.branding` (oggetto: logo_url, favicon_url, short_name, …)
 /// - `instance.legal` (oggetto: privacy_url, terms_url, support_url)
-enum InstanceConfigFieldKind { text, url, color }
+enum InstanceConfigFieldKind { text, url, color, asset }
 
 class InstanceConfigFieldDef {
   const InstanceConfigFieldDef({
@@ -68,20 +68,42 @@ abstract final class InstanceConfigSchema {
       ],
     ),
     InstanceConfigSectionDef(
-      title: 'Branding',
-      subtitle: 'Logo e colore tema (opzionali)',
+      title: 'Shell / PWA',
+      subtitle: 'Titolo browser, manifest e colori shell (opzionali)',
       fields: [
         InstanceConfigFieldDef(
-          id: 'logo_url',
-          label: 'URL logo',
-          hint: 'https://…/logo.png',
-          kind: InstanceConfigFieldKind.url,
+          id: 'short_name',
+          label: 'Nome breve',
+          hint: 'Es. Alfred.im',
+        ),
+        InstanceConfigFieldDef(
+          id: 'description',
+          label: 'Descrizione',
+          hint: 'Messaggistica consent-first',
         ),
         InstanceConfigFieldDef(
           id: 'theme_color',
           label: 'Colore tema',
           hint: '#2D2926',
           kind: InstanceConfigFieldKind.color,
+        ),
+        InstanceConfigFieldDef(
+          id: 'background_color',
+          label: 'Colore sfondo',
+          hint: '#2D2926',
+          kind: InstanceConfigFieldKind.color,
+        ),
+        InstanceConfigFieldDef(
+          id: 'logo',
+          label: 'Logo',
+          hint: 'PNG, JPEG o WebP (max 2 MB)',
+          kind: InstanceConfigFieldKind.asset,
+        ),
+        InstanceConfigFieldDef(
+          id: 'favicon',
+          label: 'Favicon',
+          hint: 'PNG, JPEG, WebP o ICO (max 2 MB)',
+          kind: InstanceConfigFieldKind.asset,
         ),
       ],
     ),

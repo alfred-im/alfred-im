@@ -6,19 +6,31 @@
 class InstanceBrandingAssets {
   const InstanceBrandingAssets({
     this.logoUrl,
+    this.faviconUrl,
+    this.shortName,
+    this.description,
     this.themeColor,
+    this.backgroundColor,
   });
 
   factory InstanceBrandingAssets.fromJson(Map<String, dynamic>? json) {
     if (json == null) return const InstanceBrandingAssets();
     return InstanceBrandingAssets(
       logoUrl: json['logo_url'] as String?,
+      faviconUrl: json['favicon_url'] as String?,
+      shortName: json['short_name'] as String?,
+      description: json['description'] as String?,
       themeColor: json['theme_color'] as String?,
+      backgroundColor: json['background_color'] as String?,
     );
   }
 
   final String? logoUrl;
+  final String? faviconUrl;
+  final String? shortName;
+  final String? description;
   final String? themeColor;
+  final String? backgroundColor;
 }
 
 /// Link legali opzionali (`instance.legal`).

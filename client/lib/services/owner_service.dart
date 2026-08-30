@@ -63,7 +63,11 @@ class OwnerService {
 
     final branding = _nonEmptyMap({
       'logo_url': settings.branding.logoUrl,
+      'favicon_url': settings.branding.faviconUrl,
+      'short_name': settings.branding.shortName,
+      'description': settings.branding.description,
       'theme_color': settings.branding.themeColor,
+      'background_color': settings.branding.backgroundColor,
     });
     await _client.rpc(
       'upsert_instance_config',

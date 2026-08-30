@@ -45,8 +45,12 @@ export function promoteProfileToOwner(userId: string): void {
 export type InstanceConfigExpectation = {
   displayName: string;
   imServerId: string;
-  logoUrl: string;
+  shortName: string;
+  description: string;
   themeColor: string;
+  backgroundColor: string;
+  logoUrl: string;
+  faviconUrl: string;
   privacyUrl: string;
   termsUrl: string;
   supportUrl: string;
@@ -59,7 +63,14 @@ export function readInstanceConfigFromDb(): InstanceConfigExpectation {
   const imServerId = runPsqlScalar(
     `SELECT coalesce(value #>> '{}', '') FROM public.instance_config WHERE key = 'instance.im_server_id';`,
   );
-  const branding = runPsqlJson<{ logo_url?: string; theme_color?: string }>(
+  const branding = runPsqlJson<{
+    logo_url?: string;
+    favicon_url?: string;
+    short_name?: string;
+    description?: string;
+    theme_color?: string;
+    background_color?: string;
+  }>(
     `SELECT coalesce(value, '{}'::jsonb)::text FROM public.instance_config WHERE key = 'instance.branding';`,
   );
   const legal = runPsqlJson<{
@@ -73,8 +84,12 @@ export function readInstanceConfigFromDb(): InstanceConfigExpectation {
   return {
     displayName,
     imServerId,
-    logoUrl: branding.logo_url ?? '',
+    shortName: branding.short_name ?? '',
+    description: branding.description ?? '',
     themeColor: branding.theme_color ?? '',
+    backgroundColor: branding.background_color ?? '',
+    logoUrl: branding.logo_url ?? '',
+    faviconUrl: branding.favicon_url ?? '',
     privacyUrl: legal.privacy_url ?? '',
     termsUrl: legal.terms_url ?? '',
     supportUrl: legal.support_url ?? '',
@@ -112,7 +127,14 @@ export async function readInstanceBootstrapViaRpc(
   }
   const raw = (await res.json()) as Record<string, unknown>;
   const branding =
-    raw['instance.branding'] as { logo_url?: string; theme_color?: string } | undefined;
+    raw['instance.branding'] as {
+      logo_url?: string;
+      favicon_url?: string;
+      short_name?: string;
+      description?: string;
+      theme_color?: string;
+      background_color?: string;
+    } | undefined;
   const legal = raw['instance.legal'] as {
     privacy_url?: string;
     terms_url?: string;
@@ -122,8 +144,12 @@ export async function readInstanceBootstrapViaRpc(
   return {
     displayName: String(raw['instance.display_name'] ?? ''),
     imServerId: String(raw['instance.im_server_id'] ?? ''),
-    logoUrl: branding?.logo_url ?? '',
+    shortName: branding?.short_name ?? '',
+    description: branding?.description ?? '',
     themeColor: branding?.theme_color ?? '',
+    backgroundColor: branding?.background_color ?? '',
+    logoUrl: branding?.logo_url ?? '',
+    faviconUrl: branding?.favicon_url ?? '',
     privacyUrl: legal?.privacy_url ?? '',
     termsUrl: legal?.terms_url ?? '',
     supportUrl: legal?.support_url ?? '',

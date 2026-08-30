@@ -3,7 +3,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,8 +13,11 @@ import '../models/instance_config_schema.dart';
 import '../models/instance_settings.dart';
 import '../providers/auth_controller.dart';
 import '../runtime/instance_runtime.dart';
+import '../services/instance_branding_service.dart';
 import '../services/instance_config_service.dart';
 import '../theme/alfred_colors.dart';
+import '../utils/image_bytes.dart';
+import '../utils/prepare_image_for_upload.dart';
 
 /// Configurazione istanza — form fisso su [InstanceConfigSchema] / [InstanceSettings].
 class InstanceConfigScreen extends StatefulWidget {
@@ -22,12 +27,26 @@ class InstanceConfigScreen extends StatefulWidget {
   State<InstanceConfigScreen> createState() => _InstanceConfigScreenState();
 }
 
+class _PendingAsset {
+  const _PendingAsset({
+    required this.bytes,
+    required this.extension,
+    required this.contentType,
+  });
+
+  final Uint8List bytes;
+  final String extension;
+  final String contentType;
+}
+
 class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
   final _formKey = GlobalKey<FormState>();
   final _displayName = TextEditingController();
   final _imServerId = TextEditingController();
-  final _logoUrl = TextEditingController();
+  final _shortName = TextEditingController();
+  final _description = TextEditingController();
   final _themeColor = TextEditingController();
+  final _backgroundColor = TextEditingController();
   final _privacyUrl = TextEditingController();
   final _termsUrl = TextEditingController();
   final _supportUrl = TextEditingController();
@@ -38,13 +57,22 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
   String? _loadedUserId;
   AuthController? _authListenerTarget;
 
+  String? _savedLogoUrl;
+  String? _savedFaviconUrl;
+  _PendingAsset? _pendingLogo;
+  _PendingAsset? _pendingFavicon;
+  bool _removeLogo = false;
+  bool _removeFavicon = false;
+
   @override
   void dispose() {
     _authListenerTarget?.removeListener(_onFocusedAccountChanged);
     _displayName.dispose();
     _imServerId.dispose();
-    _logoUrl.dispose();
+    _shortName.dispose();
+    _description.dispose();
     _themeColor.dispose();
+    _backgroundColor.dispose();
     _privacyUrl.dispose();
     _termsUrl.dispose();
     _supportUrl.dispose();
@@ -79,6 +107,10 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _pendingLogo = null;
+      _pendingFavicon = null;
+      _removeLogo = false;
+      _removeFavicon = false;
     });
 
     final session = context.read<AuthController>().focusedSession;
@@ -128,32 +160,112 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
   void _applySettings(InstanceSettings settings) {
     _displayName.text = settings.displayName;
     _imServerId.text = settings.imServerId;
-    _logoUrl.text = settings.branding.logoUrl ?? '';
+    _shortName.text = settings.branding.shortName ?? '';
+    _description.text = settings.branding.description ?? '';
     _themeColor.text = settings.branding.themeColor ?? '';
+    _backgroundColor.text = settings.branding.backgroundColor ?? '';
     _privacyUrl.text = settings.legal.privacyUrl ?? '';
     _termsUrl.text = settings.legal.termsUrl ?? '';
     _supportUrl.text = settings.legal.supportUrl ?? '';
+    _savedLogoUrl = settings.branding.logoUrl;
+    _savedFaviconUrl = settings.branding.faviconUrl;
   }
 
-  InstanceSettings _settingsFromForm() {
-    String? optional(String value) {
-      final trimmed = value.trim();
-      return trimmed.isEmpty ? null : trimmed;
-    }
+  String? _optionalText(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
 
+  InstanceSettings _settingsFromForm({
+    required String? logoUrl,
+    required String? faviconUrl,
+  }) {
     return InstanceSettings(
       displayName: _displayName.text.trim(),
       imServerId: _imServerId.text.trim(),
       branding: InstanceBrandingAssets(
-        logoUrl: optional(_logoUrl.text),
-        themeColor: optional(_themeColor.text),
+        logoUrl: logoUrl,
+        faviconUrl: faviconUrl,
+        shortName: _optionalText(_shortName.text),
+        description: _optionalText(_description.text),
+        themeColor: _optionalText(_themeColor.text),
+        backgroundColor: _optionalText(_backgroundColor.text),
       ),
       legal: InstanceLegalLinks(
-        privacyUrl: optional(_privacyUrl.text),
-        termsUrl: optional(_termsUrl.text),
-        supportUrl: optional(_supportUrl.text),
+        privacyUrl: _optionalText(_privacyUrl.text),
+        termsUrl: _optionalText(_termsUrl.text),
+        supportUrl: _optionalText(_supportUrl.text),
       ),
     );
+  }
+
+  Future<void> _pickAsset({required bool forFavicon}) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: forFavicon
+          ? const ['jpg', 'jpeg', 'png', 'webp', 'ico']
+          : const ['jpg', 'jpeg', 'png', 'webp'],
+      withData: true,
+      allowMultiple: false,
+    );
+
+    final file = result?.files.single;
+    final bytes = file?.bytes;
+    if (bytes == null || bytes.isEmpty) return;
+
+    try {
+      final extension = (file!.extension ?? '').toLowerCase();
+      final _PendingAsset pending;
+      if (forFavicon && extension == 'ico') {
+        if (bytes.length > InstanceBrandingService.maxBytes) {
+          throw StateError('Immagine troppo grande (max 2 MB)');
+        }
+        pending = _PendingAsset(
+          bytes: Uint8List.fromList(bytes),
+          extension: 'ico',
+          contentType: 'image/x-icon',
+        );
+      } else {
+        final normalized = await prepareImageForUpload(Uint8List.fromList(bytes));
+        pending = _PendingAsset(
+          bytes: normalized.bytes,
+          extension: normalized.extension,
+          contentType: normalized.mime,
+        );
+      }
+      if (!mounted) return;
+      setState(() {
+        if (forFavicon) {
+          _pendingFavicon = pending;
+          _removeFavicon = false;
+        } else {
+          _pendingLogo = pending;
+          _removeLogo = false;
+        }
+      });
+    } on UnsupportedImageFormatException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.userMessage)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    }
+  }
+
+  void _removeAsset({required bool forFavicon}) {
+    setState(() {
+      if (forFavicon) {
+        _pendingFavicon = null;
+        _removeFavicon = true;
+      } else {
+        _pendingLogo = null;
+        _removeLogo = true;
+      }
+    });
   }
 
   Future<void> _save() async {
@@ -178,10 +290,56 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
         return;
       }
 
-      final settings = _settingsFromForm();
+      final brandingService = InstanceBrandingService(session.client);
+      var logoUrl = _savedLogoUrl;
+      var faviconUrl = _savedFaviconUrl;
+
+      if (_removeLogo) {
+        await brandingService.deleteByPublicUrl(logoUrl);
+        logoUrl = null;
+      }
+      if (_removeFavicon) {
+        await brandingService.deleteByPublicUrl(faviconUrl);
+        faviconUrl = null;
+      }
+
+      if (_pendingLogo != null) {
+        if (logoUrl != null && logoUrl.isNotEmpty) {
+          await brandingService.deleteByPublicUrl(logoUrl);
+        }
+        logoUrl = await brandingService.uploadLogo(
+          bytes: _pendingLogo!.bytes,
+          extension: _pendingLogo!.extension,
+          contentType: _pendingLogo!.contentType,
+        );
+      }
+
+      if (_pendingFavicon != null) {
+        if (faviconUrl != null && faviconUrl.isNotEmpty) {
+          await brandingService.deleteByPublicUrl(faviconUrl);
+        }
+        faviconUrl = await brandingService.uploadFavicon(
+          bytes: _pendingFavicon!.bytes,
+          extension: _pendingFavicon!.extension,
+          contentType: _pendingFavicon!.contentType,
+        );
+      }
+
+      final settings = _settingsFromForm(
+        logoUrl: logoUrl,
+        faviconUrl: faviconUrl,
+      );
       await session.ownerService.saveInstanceSettings(settings);
       await InstanceConfigService(session.client).loadRuntime();
       if (!mounted) return;
+      setState(() {
+        _savedLogoUrl = logoUrl;
+        _savedFaviconUrl = faviconUrl;
+        _pendingLogo = null;
+        _pendingFavicon = null;
+        _removeLogo = false;
+        _removeFavicon = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Configurazione salvata')),
       );
@@ -199,8 +357,10 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
     return switch (fieldId) {
       'display_name' => _displayName,
       'im_server_id' => _imServerId,
-      'logo_url' => _logoUrl,
+      'short_name' => _shortName,
+      'description' => _description,
       'theme_color' => _themeColor,
+      'background_color' => _backgroundColor,
       'privacy_url' => _privacyUrl,
       'terms_url' => _termsUrl,
       'support_url' => _supportUrl,
@@ -210,6 +370,90 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
 
   bool _isRequired(String fieldId) =>
       fieldId == 'display_name' || fieldId == 'im_server_id';
+
+  Widget _buildAssetField(InstanceConfigFieldDef field) {
+    final forFavicon = field.id == 'favicon';
+    final pending = forFavicon ? _pendingFavicon : _pendingLogo;
+    final savedUrl = forFavicon ? _savedFaviconUrl : _savedLogoUrl;
+    final removed = forFavicon ? _removeFavicon : _removeLogo;
+    final hasAsset = pending != null || (!removed && (savedUrl?.isNotEmpty ?? false));
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            field.label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: AlfredColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            field.hint,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AlfredColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              if (pending != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(
+                    pending.bytes,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              else if (!removed && savedUrl != null && savedUrl.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    savedUrl,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      forFavicon ? Icons.web : Icons.image_outlined,
+                      size: 48,
+                      color: AlfredColors.textSecondary,
+                    ),
+                  ),
+                )
+              else
+                Icon(
+                  forFavicon ? Icons.web : Icons.image_outlined,
+                  size: 48,
+                  color: AlfredColors.textSecondary,
+                ),
+              const SizedBox(width: 12),
+              OutlinedButton(
+                onPressed: _saving
+                    ? null
+                    : () => unawaited(_pickAsset(forFavicon: forFavicon)),
+                child: Text(hasAsset ? 'Sostituisci' : 'Scegli file'),
+              ),
+              if (hasAsset) ...[
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: _saving
+                      ? null
+                      : () => _removeAsset(forFavicon: forFavicon),
+                  child: const Text('Rimuovi'),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,31 +521,36 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
                             child: Column(
                               children: [
                                 for (final field in section.fields)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: TextFormField(
-                                      controller: _controllerFor(field.id),
-                                      decoration: InputDecoration(
-                                        labelText: field.label,
-                                        hintText: field.hint,
-                                        border: const OutlineInputBorder(),
-                                        isDense: true,
-                                      ),
-                                      keyboardType:
-                                          field.kind == InstanceConfigFieldKind.text
-                                              ? TextInputType.text
-                                              : TextInputType.url,
-                                      validator: _isRequired(field.id)
-                                          ? (value) {
-                                              if (value == null ||
-                                                  value.trim().isEmpty) {
-                                                return 'Obbligatorio';
+                                  if (field.kind == InstanceConfigFieldKind.asset)
+                                    _buildAssetField(field)
+                                  else
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: TextFormField(
+                                        controller: _controllerFor(field.id),
+                                        decoration: InputDecoration(
+                                          labelText: field.label,
+                                          hintText: field.hint,
+                                          border: const OutlineInputBorder(),
+                                          isDense: true,
+                                        ),
+                                        keyboardType:
+                                            field.kind == InstanceConfigFieldKind.text ||
+                                                    field.kind ==
+                                                        InstanceConfigFieldKind.color
+                                                ? TextInputType.text
+                                                : TextInputType.url,
+                                        validator: _isRequired(field.id)
+                                            ? (value) {
+                                                if (value == null ||
+                                                    value.trim().isEmpty) {
+                                                  return 'Obbligatorio';
+                                                }
+                                                return null;
                                               }
-                                              return null;
-                                            }
-                                          : null,
+                                            : null,
+                                      ),
                                     ),
-                                  ),
                               ],
                             ),
                           ),

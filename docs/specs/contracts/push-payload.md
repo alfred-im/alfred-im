@@ -1,6 +1,6 @@
 # Contratto push payload — Web Push VAPID
 
-**Ultima revisione**: 2026-07-18  
+**Ultima revisione**: 2026-08-30  
 **Status**: `implemented` su `main`  
 **Fonte di verità**: `supabase/functions/send-push/index.ts`, `client/web/push_sw.js`, `client/lib/models/push_conversation_key.dart`
 
@@ -86,6 +86,10 @@ Il corpo della notifica Web Push è JSON. L'Edge Function `send-push` accetta **
       "enum": ["text", "gif", "voice", "location", "image", "video"],
       "default": "text",
       "description": "Tipo contenuto — metadato; non espone body completo."
+    },
+    "icon_url": {
+      "type": ["string", "null"],
+      "description": "URL icona notifica — da `instance.branding.logo_url` al momento del queue."
     }
   }
 }
@@ -112,7 +116,8 @@ L'Edge Function serializza in camelCase prima di `webpush.sendNotification`:
     "peerDisplayName": { "type": "string" },
     "previewText": { "type": "string" },
     "logicalMessageId": { "type": "string", "format": "uuid" },
-    "contentType": { "type": "string" }
+    "contentType": { "type": "string" },
+    "iconUrl": { "type": ["string", "null"] }
   }
 }
 ```
@@ -124,6 +129,7 @@ Il service worker accetta **entrambe** le convenzioni (camelCase e snake_case) s
 | Titolo | `peerDisplayName` / `peer_display_name`; opz. `recipientUsername` / `recipient_username` o `recipientDisplayName` / `recipient_display_name` | peer: `'Alfred'` |
 | Body | `previewText` / `preview_text` | `'Nuovo messaggio'` |
 | Tag | `logicalMessageId` / `logical_message_id` + `PushConversationKey` | vedi §1 |
+| Icon / badge | `iconUrl` / `icon_url` | `'icons/Icon-192.png'` |
 | `Notification.data` | intero payload parsato | — |
 
 ---
