@@ -40,8 +40,7 @@ backend out of the box.
   `.venv/bin/python bridge-xmpp/main.py` (`XMPP_PORT`, default 8080) and `.venv/bin/python bridge-matrix/main.py`
   (`MATRIX_PORT`, default 8081). Both return `{"status":"ok",...}`. **Port clash:** the XMPP bridge default 8080
   collides with the `flutter run` example port below — run the web app on a different port (e.g. 8090) if both run.
-- **Fly.io + GitHub Pages are the user's test/review environment**, fed automatically by pushing to git (Pages via
-  `.github/workflows/deploy-client.yml`; Fly via its own deploy-on-push). Do **not** `flyctl deploy` or write to the
+- **Fly.io è l'ambiente di review del client**, con auto-deploy al push (dashboard Fly). Do **not** `flyctl deploy` or write to the
   live Supabase from this dev VM without explicit user confirmation — that is their review surface, not a dev target.
 
 ### Merge e CI
@@ -67,7 +66,7 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 | | |
 |---|---|
 | **Attivazione** | `--dart-define=ALFRED_DIAGNOSTIC_LOG=true` su `flutter run` / build locale |
-| **Produzione (Pages)** | CI **non** passa il define → nessun log in console |
+| **Produzione (Fly)** | CI **non** passa il define → nessun log in console |
 | **Formato** | `[alfred][push] fase …` o `… FAIL motivo key=value` |
 | **Dove leggere** | DevTools **pagina** (Console), filtro `[alfred]` — non il pannello service worker |
 
@@ -80,13 +79,11 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 - Use the `web-server` device (above): `-d chrome` requires `CHROME_EXECUTABLE` + a display and is less reliable here.
 - **Non riavviare `flutter run` se la porta 8080 è già in uso** — crea istanze orfane e tmux in errore. Verificare con `cd client && bash scripts/diagnose-test-env.sh`; kill mirato del PID su 8080 solo se necessario.
 
-### Hosted web client
+### Hosted web client (Fly.io)
 
-- **Try it (Pages):** https://alfred-im.github.io/alfred-im/ — preview PR / demo workflow (`deploy-client`)
-- **Try it (Fly, istanza demo):** https://alfred-im-web.fly.dev/ — `client/deploy/fly/`, deploy `scripts/fly-deploy-client.sh`
-- Build web Pages: `cd client && bash scripts/verify.sh --build` (base-href `/alfred-im/`)
-- **Verifica PWA prima del merge**: non serve il merge su `main`. Ogni **PR su `main`** che tocca `client/**` esegue `deploy-client` sulla stessa URL Pages. L'utente prova dal telefono quando il deploy è pronto (badge Actions / URL Pages) — **l'agente non attende** il workflow (vedi `.cursor-rules.md`). Il merge non è prerequisito per la review utente.
-- **Non** assumere che l'URL rifletta il branch `main`: `deploy-client` pubblica da **PR su `main`** e da **push su `main`** (ultimo deploy riuscito vince). Vedi `docs/architecture/full-stack.md` §7.
+- **Try it:** https://alfred-im-web.fly.dev/ — `client/deploy/fly/`, deploy `scripts/fly-deploy-client.sh`
+- Build web: `cd client && bash scripts/verify.sh --build` (base-href `/`)
+- Auto-deploy: Fly Deployments → collega repo GitHub, branch `main` (vedi `client/deploy/fly/README.md`). L'agente **non** attende il deploy Fly.
 
 ### Fly.io
 
@@ -113,4 +110,4 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 
 ### Optional e2e (Playwright, in `client/`)
 - Hub: `cd client && bash scripts/test.sh e2e` o `cd client && bash scripts/test.sh e2e-multi`
-- `npm install` then `npx playwright install chromium`. Tests default to the deployed GitHub Pages URL; override with `ALFRED_BASE_URL` (e.g. `http://localhost:8080/`).
+- `npm install` then `npx playwright install chromium`. Tests default to `http://localhost:8080/`; override with `ALFRED_BASE_URL`.

@@ -14,7 +14,7 @@ Promessa di prodotto: **formato URL condivisibile e stabile** verso profilo pubb
 
 ## 1. Problema / obiettivo
 
-L'utente condivide un link che punta a una **risorsa** (profilo o chat con un indirizzo IM), indipendente dall'account Alfred di chi apre il link. Il formato resta valido nel tempo e funziona su qualsiasi host dell'app (hash obbligatorio — non dipende da rewrite server tipo GitHub Pages).
+L'utente condivide un link che punta a una **risorsa** (profilo o chat con un indirizzo IM), indipendente dall'account Alfred di chi apre il link. Il formato resta valido nel tempo e funziona su qualsiasi host dell'app (hash obbligatorio — non dipende da rewrite server).
 
 ---
 
@@ -27,7 +27,7 @@ L'utente condivide un link che punta a una **risorsa** (profilo o chat con un in
 
 | Segmento | Regola |
 |----------|--------|
-| `{origine}{base-path}` | Dove è deployata l'istanza (es. demo GitHub Pages, localhost). **Non** fa parte dell'identità stabile della risorsa. |
+| `{origine}{base-path}` | Dove è deployata l'istanza (es. demo Fly, localhost). **Non** fa parte dell'identità stabile della risorsa. |
 | `#` | **Obbligatorio** — navigazione tramite fragment. |
 | `{indirizzo}` | Identità IM del peer: `username` **oppure** `username@server` — **equivalenti**, entrambi sempre validi. |
 | `/chat` | Suffisso opzionale: apre la conversazione con quel peer sull'account Alfred in focus. |
@@ -36,8 +36,8 @@ L'utente condivide un link che punta a una **risorsa** (profilo o chat con un in
 
 | Link | Destinazione |
 |------|--------------|
-| `https://alfred-im.github.io/alfred-im/#test2` | Profilo di `test2` |
-| `https://alfred-im.github.io/alfred-im/#test2/chat` | Chat con `test2` |
+| `https://alfred-im-web.fly.dev/#test2` | Profilo di `test2` |
+| `https://alfred-im-web.fly.dev/#test2/chat` | Chat con `test2` |
 | `…/#mario@alfred.app` | Stesso peer in forma `username@server` (server locale `alfred.app`) |
 
 ### Gruppi

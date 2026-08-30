@@ -6,7 +6,7 @@
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-12 |
 | **Promesse** | [PROM-MULTI-ACCOUNT](../promises/product/PROM-MULTI-ACCOUNT.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
-| **PR** | #140, #147, #152, #139 (redirect email), #178, #184 (URL GitHub Pages `alfred-im`) |
+| **PR** | #140, #147, #152, #139 (redirect email), #178, #184 (URL web client), Fly client (#257+) |
 
 Binding UX overlay login/registrazione sulla shell `HomeScreen` — credenziali come card temporanea, mai schermata full-screen.
 
@@ -39,7 +39,7 @@ Alias registry (vedi [registry.md](../registry.md)): shell `HomeScreen` sempre v
 | **SURF-AUTH-004** | Login e registrazione sulla stessa card (`AuthScreen`); toggle Accedi/Registrati |
 | **SURF-AUTH-005** | «Chiudi account» (`removeAccount`): se ultimo account → overlay obbligatorio |
 | **SURF-AUTH-006** | Registrazione: opzione tipo account `user` / `group` sulla stessa card — [SYS-GROUP](../promises/system/SYS-GROUP.md) SYS-GROUP-011 |
-| **SURF-AUTH-008** | Conferma email e reset password: il client passa `emailRedirectTo` / `redirectTo` = web client GitHub Pages (`AuthRedirectUrl.githubPagesDefault`, `https://alfred-im.github.io/alfred-im/`) |
+| **SURF-AUTH-008** | Conferma email e reset password: il client passa `emailRedirectTo` / `redirectTo` = `publicBaseUrl` da `config.json` (`AuthRedirectUrl.resolve()`, es. demo `https://alfred-im-web.fly.dev/`) |
 | **SURF-AUTH-014** | Fragment `#` in ingresso con **0 account**: overlay auth obbligatorio ([SURF-AUTH-002](./SURF-AUTH.md)); dopo primo account nel manifest → aprire risorsa linkata — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
 
 ### SHOULD
@@ -55,7 +55,7 @@ Alias registry (vedi [registry.md](../registry.md)): shell `HomeScreen` sempre v
 | **SURF-AUTH-010** | `AuthScreen` a tutto schermo che sostituisce `HomeScreen` (eccetto card in overlay) |
 | **SURF-AUTH-011** | Overlay dismissibile con 0 account |
 | **SURF-AUTH-012** | Rotella globale che nasconde shell durante switch account |
-| **SURF-AUTH-013** | **Prodotto:** l'utente che si registra o resetta password dal web client pubblicato **non** deve essere reindirizzato su `localhost` dopo conferma email — destinazione attesa = `https://alfred-im.github.io/alfred-im/` |
+| **SURF-AUTH-013** | **Prodotto:** l'utente che si registra o resetta password dal web client pubblicato **non** deve essere reindirizzato su `localhost` dopo conferma email — destinazione attesa = `publicBaseUrl` dell'istanza (demo: `https://alfred-im-web.fly.dev/`) |
 
 ---
 
@@ -65,13 +65,13 @@ Distinzione **prodotto** vs **canarino tecnico**:
 
 | Livello | Regola |
 |---------|--------|
-| **Prodotto** | Flusso corretto → utente su `https://alfred-im.github.io/alfred-im/` (SURF-AUTH-008, SURF-AUTH-013) |
+| **Prodotto** | Flusso corretto → utente su `publicBaseUrl` dell'istanza (SURF-AUTH-008, SURF-AUTH-013; demo: `https://alfred-im-web.fly.dev/`) |
 | **Tecnico (canarino)** | Site URL Supabase = fallback quando `redirect_to` manca o non è in allow list — **non** è destinazione prodotto; se l'utente ci arriva, c'è un errore da investigare |
 
 | Elemento | Valore web client |
 |----------|-------------------|
 | **Site URL** (canarino) | `http://localhost:3000` — volutamente diverso dall'app; segnala config/deploy rotto |
-| **Redirect URLs** | `https://alfred-im.github.io/alfred-im/**` — autorizza il redirect quando il client lo passa correttamente |
+| **Redirect URLs** | `https://alfred-im-web.fly.dev/**` (demo) — autorizza il redirect quando il client lo passa correttamente |
 
 Il `supabase/config.toml` nel repo documenta anche `localhost:8080` per sviluppo agente; la dashboard live può ometterlo se non serve.
 
@@ -90,7 +90,7 @@ Il `supabase/config.toml` nel repo documenta anche `localhost:8080` per sviluppo
 | SURF-AUTH-008 | `auth_redirect_url.dart`; `account_session.dart` (`signUp`); `account_manager.dart` (`resetPasswordForEmail`); `auth_redirect_url_test.dart` |
 | SURF-AUTH-014 | `shareable_link_controller.dart`; scenario manuale — URL con `#peer` e 0 account → login → profilo |
 | SURF-AUTH-010 | `guides/multi-account.md` |
-| SURF-AUTH-013 | Verifica manuale: flusso corretto → GitHub Pages; localhost = canarino (errore config/deploy), non esito prodotto |
+| SURF-AUTH-013 | Verifica manuale: flusso corretto → `publicBaseUrl` istanza; localhost = canarino (errore config/deploy), non esito prodotto |
 
 Gate: `cd client && bash scripts/verify.sh`
 

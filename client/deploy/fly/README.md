@@ -10,7 +10,7 @@ Via canonica per **pubblicare il client** di un'istanza Alfred (static Flutter +
 |------|------|
 | `config.json` | `supabaseUrl`, `supabaseAnonKey`, `publicBaseUrl` (URL pubblico di questa app Fly) |
 | `manifest.json` | Nome PWA, colori, icone (statico finché non c'è gateway dinamico) |
-| `instance_config.sql` | Opzionale — stesso script di [`../github-pages/instance_config.sql`](../github-pages/instance_config.sql) sul Supabase dell'istanza |
+| `instance_config.sql` | Opzionale — upsert `instance.display_name` / `instance.im_server_id` sul Supabase dell'istanza |
 
 La anon key in `config.json` è pubblica per design (SPA); non è un secret runtime.
 
@@ -64,6 +64,5 @@ bash scripts/docker-smoke-client.sh
 
 ## Riferimenti
 
-- Demo GitHub Pages: [`../github-pages/`](../github-pages/)
 - Bridge Fly: root `fly.toml` + `scripts/fly-deploy-all.sh`
 - [Fly static sites](https://fly.io/docs/languages-and-frameworks/static/)

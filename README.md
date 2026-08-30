@@ -1,7 +1,7 @@
 # Alfred
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
-[![Deploy client](https://github.com/alfred-im/alfred-im/actions/workflows/deploy-client.yml/badge.svg)](https://github.com/alfred-im/alfred-im/actions/workflows/deploy-client.yml)
+[![Release suite](https://github.com/alfred-im/alfred-im/actions/workflows/release-suite.yml/badge.svg)](https://github.com/alfred-im/alfred-im/actions/workflows/release-suite.yml)
 [![Spec sync](https://github.com/alfred-im/alfred-im/actions/workflows/spec-sync.yml/badge.svg)](https://github.com/alfred-im/alfred-im/actions/workflows/spec-sync.yml)
 [![Flutter](https://img.shields.io/badge/Flutter-stable-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 
@@ -11,7 +11,7 @@
 
 Flutter web (PWA) · Supabase · Python bridges (federation planned)
 
-**Try it:** https://alfred-im.github.io/alfred-im/
+**Try it:** https://alfred-im-web.fly.dev/
 
 ---
 

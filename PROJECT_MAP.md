@@ -26,17 +26,17 @@
 |----------|-----------|
 | **Ingresso pubblico** | `README.md` · `SECURITY.md` · `CODE_OF_CONDUCT.md` |
 | **Client** | `client/` — Flutter **web (PWA)**, collegato a Supabase |
-| **Web client** | Demo Pages: https://alfred-im.github.io/alfred-im/ (`deploy-client`) · Demo istanza Fly: https://alfred-im-web.fly.dev/ (`client/deploy/fly/`) |
-| **Deploy** | `.github/workflows/deploy-client.yml` — demo Pages; `client/deploy/fly/` — client istanza su Fly (`scripts/fly-deploy-client.sh`); gate in `release-suite.yml` |
+| **Web client** | https://alfred-im-web.fly.dev/ (`client/deploy/fly/`, `scripts/fly-deploy-client.sh`) |
+| **Deploy** | `client/deploy/fly/` — client su Fly; gate in `release-suite.yml` + `docker-client-fly.yml` |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
 | **Cronologia merge** | `CHANGELOG.md` |
 | **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — confine prodotto · SSOT: [docs/SSOT.md](docs/SSOT.md) |
 | **Modello** | `docs/domain/` · `docs/model/uml/` · `client/lib/machines/` — 13 bounded context con stato **`verified`** o **`documented`**; torre DDD→UML→statechart con profili UML Client/Platform; gate `scripts/check-model-sync.sh`; indice: [bounded-contexts.md](docs/domain/bounded-contexts.md) |
 
-**Non deducibile — URL live ≠ branch `main`**: https://alfred-im.github.io/alfred-im/ pubblica l’**ultimo** `deploy-client` riuscito (PR o push). **Non** è vero che «il sito live builda sempre da `main`». Per sapere quale codice è live, controllare quale workflow/PR ha deployato per ultimo (`concurrency: pages-dev-demo` → ultimo vince). Panoramica pubblica: `README.md`.
+**Try it:** https://alfred-im-web.fly.dev/ — panoramica pubblica: `README.md`.
 
-**Verifica PWA prima del merge**: l’utente può provare le modifiche client sulla PWA **subito dopo** il deploy della PR — **non** serve il merge su `main`. Push sul branch PR → stessa URL https://alfred-im.github.io/alfred-im/ dal telefono. L'agente **non** attende il workflow GitHub (vedi `AGENTS.md` § GitHub Actions).
+**Deploy client:** push su branch collegato in Fly Deployments → auto-deploy su `alfred-im-web` (vedi `client/deploy/fly/README.md`). L'agente **non** attende il deploy Fly.
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -70,7 +70,7 @@
 | Client | Flutter web (PWA) · Dart 3.12 |
 | Piattaforma | Supabase (Postgres, Auth, Realtime, Storage) |
 | Bridge | Python 3.12 + aiohttp (Fly.io) |
-| CI | GitHub Actions — `deploy-client`, `release-suite`, `spec-sync` |
+| CI | GitHub Actions — `release-suite`, `spec-sync`, `docker-client-fly` |
 
 ---
 
@@ -106,7 +106,7 @@
 ├── README.md               # Ingresso pubblico GitHub (consent-first)
 ├── SECURITY.md             # Policy vulnerabilità
 ├── CODE_OF_CONDUCT.md      # Contributor Covenant
-├── client/                 # Client Flutter web (PWA) — GitHub Pages demo + Fly (`client/deploy/fly/`)
+├── client/                 # Client Flutter web (PWA) — deploy Fly (`client/deploy/fly/`)
 ├── supabase/               # Migrazioni e config piattaforma
 ├── bridge-xmpp/            # Demone bridge XMPP (stub)
 ├── bridge-matrix/          # Demone bridge Matrix (stub)
@@ -127,7 +127,7 @@
 | **Backend** | `SupabaseClient` della sessione in **focus** (una GoTrue attiva) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
 | **Gate CI** | `scripts/verify.sh` — igiene: sync spec/modello + analyze + test Dart isolati (**non** valida il prodotto) |
-| **Build web** | `flutter build web --base-href "/alfred-im/"` |
+| **Build web** | `flutter build web --base-href "/"` |
 
 **Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `inbox`, `messaging`, `navigation`, `group_home`, `group_messages`, `shareable_link` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — **unico ingresso** push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `coordinators/` (facade: `MessagesController`).
 
@@ -157,7 +157,7 @@
 
 - Config: `supabase/config.toml`, `supabase/migrations/`
 - MCP agente: `execute_sql`, `apply_migration`, `list_migrations`
-- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere `https://alfred-im.github.io/alfred-im/**` e `https://alfred-im-web.fly.dev/**` (rimuovere `XmppTest/**` se presente); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
+- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere `https://alfred-im-web.fly.dev/**` (rimuovere `XmppTest/**` e vecchi URL GitHub Pages se presenti); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
 
 ### Fly.io (`alfred-im`, `fra`)
 
@@ -202,8 +202,7 @@ bash scripts/test.sh release       # stack locale completo (alias: manual, ci)
 
 - **Test:** SSOT comandi → [client/scripts/test/README.md](client/scripts/test/README.md); filosofia gate vs release → [docs/testing/strategy.md](docs/testing/strategy.md)
 - **Gate CI** (`verify.sh`): lint + test Dart isolati — non sostituisce test sul telefono
-- CI deploy: `.github/workflows/deploy-client.yml` → GitHub Pages; gate: `release-suite.yml` → `verify.sh`
-- **Vincolo GitHub**: Environment `github-pages` → *Deployment branches: All branches* (deploy da PR)
+- CI gate: `release-suite.yml` → `verify.sh`; smoke client Fly: `docker-client-fly.yml`
 - E2E: `client/e2e/` (Playwright)
 - SQL smoke: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `reception_allowlist_*.sql`, `group_*.sql`, `rpc_helper_security_smoke.sql`, `send_message_to_profile_smoke.sql`
 - Integrazione spunte: `bash scripts/test.sh integration-ticks` (contratto ✓ / ✓✓ / allow list)

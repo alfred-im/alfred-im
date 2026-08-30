@@ -12,7 +12,7 @@ export 'diagnostic/diagnostic_sink.dart';
 /// Log diagnostici client (solo sviluppo / agenti).
 ///
 /// **Attivazione:** `--dart-define=ALFRED_DIAGNOSTIC_LOG=true` su `flutter run` o build
-/// locale. GitHub Pages / `verify.sh --build` **non** passano il define → nessun output
+/// locale. Build release / `verify.sh --build` **non** passano il define → nessun output
 /// (ramo eliminato a compile-time per la console; test usano [DiagnosticHub.installMemoryCapture]).
 ///
 /// **API legacy:** [diagLog] / [diagLogFail] — preferire [DiagnosticHub.emit] e

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 #!/usr/bin/env bash
-# Gate CI — stesso script in release-suite.yml (verify.sh non duplicato in deploy-client).
+# Gate CI — stesso script in release-suite.yml.
 # Exit code != 0 su qualsiasi issue di flutter analyze (inclusi livello info).
 #
 # Catalogo completo suite: bash scripts/test.sh list  (vedi scripts/test/README.md)
@@ -30,7 +30,7 @@ for arg in "$@"; do
     -h|--help)
       echo "Usage: scripts/verify.sh [--build]"
       echo "  Default: flutter pub get, flutter analyze, flutter test"
-      echo "  --build: aggiunge flutter build web (base-href GitHub Pages)"
+      echo "  --build: aggiunge flutter build web (base-href /)"
       exit 0
       ;;
     *)
@@ -56,7 +56,7 @@ flutter test \
 
 if [[ "$RUN_BUILD" == 1 ]]; then
   echo "==> flutter build web"
-  flutter build web --release --base-href "/alfred-im/"
+  flutter build web --release --base-href "/"
 fi
 
 echo "verify_ok"
