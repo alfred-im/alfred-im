@@ -119,7 +119,8 @@ Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (
 
 | Target | Meccanismo |
 |--------|------------|
-| Web client (GitHub Pages) | `/alfred-im/` — workflow `deploy-client` |
+| Web client demo (GitHub Pages) | `/alfred-im/` — workflow `deploy-client` — https://alfred-im.github.io/alfred-im/ |
+| Web client istanza (Fly.io) | `client/deploy/fly/` — app `alfred-im-web` — https://alfred-im-web.fly.dev/ |
 | Supabase | Migrazioni in repo → MCP/dashboard |
 
 **Try it:** https://alfred-im.github.io/alfred-im/ — panoramica pubblica in [`README.md`](../../README.md).

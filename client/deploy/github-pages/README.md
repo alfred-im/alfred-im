@@ -1,5 +1,7 @@
 # Deploy GitHub Pages (`alfred-im.github.io/alfred-im/`)
 
+Preview **PR** e demo su path `/alfred-im/`. Per il deploy **istanza** su Fly (root `/`), vedi [`../fly/README.md`](../fly/README.md) — demo live: https://alfred-im-web.fly.dev/
+
 Configurazione **istanza** (non software). Tre posti distinti:
 
 | Dove | Cosa | Quando |

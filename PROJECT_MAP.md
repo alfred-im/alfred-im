@@ -26,7 +26,7 @@
 |----------|-----------|
 | **Ingresso pubblico** | `README.md` · `SECURITY.md` · `CODE_OF_CONDUCT.md` |
 | **Client** | `client/` — Flutter **web (PWA)**, collegato a Supabase |
-| **Web client** | https://alfred-im.github.io/alfred-im/ — GitHub Pages (`deploy-client`) |
+| **Web client** | Demo Pages: https://alfred-im.github.io/alfred-im/ (`deploy-client`) · Demo istanza Fly: https://alfred-im-web.fly.dev/ (`client/deploy/fly/`) |
 | **Deploy** | `.github/workflows/deploy-client.yml` — demo Pages; `client/deploy/fly/` — client istanza su Fly (`scripts/fly-deploy-client.sh`); gate in `release-suite.yml` |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
@@ -157,7 +157,7 @@
 
 - Config: `supabase/config.toml`, `supabase/migrations/`
 - MCP agente: `execute_sql`, `apply_migration`, `list_migrations`
-- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web pubblico = sempre web client GitHub Pages (`githubPagesDefault`); solo `localhost`/`127.0.0.1` usano origine corrente (dev agente). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere `https://alfred-im.github.io/alfred-im/**` (rimuovere `XmppTest/**` se presente); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
+- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere `https://alfred-im.github.io/alfred-im/**` e `https://alfred-im-web.fly.dev/**` (rimuovere `XmppTest/**` se presente); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
 
 ### Fly.io (`alfred-im`, `fra`)
 

@@ -1,5 +1,7 @@
 # Deploy Fly.io — client web (PWA)
 
+**Live (demo istanza):** https://alfred-im-web.fly.dev/
+
 Via canonica per **pubblicare il client** di un'istanza Alfred (static Flutter + nginx). I bridge restano sull'app `alfred-im` (root `fly.toml`); il client usa un'**app Fly separata**.
 
 ## Cosa configurare (istanza)
@@ -50,7 +52,7 @@ La **working directory** in Fly Deployments → Settings è impostata sulla sott
 
 ## Dopo il deploy
 
-1. **Supabase Auth** → Redirect URLs: `https://<tua-app>.fly.dev/**`
+1. **Supabase Auth** → Redirect URLs: `https://<tua-app>.fly.dev/**` (demo: `https://alfred-im-web.fly.dev/**`)
 2. Esegui `instance_config.sql` sul progetto Supabase dell'istanza
 3. Verifica: `https://<tua-app>.fly.dev/` carica la PWA; `config.json` risponde 200
 

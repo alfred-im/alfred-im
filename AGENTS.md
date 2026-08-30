@@ -80,10 +80,11 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 - Use the `web-server` device (above): `-d chrome` requires `CHROME_EXECUTABLE` + a display and is less reliable here.
 - **Non riavviare `flutter run` se la porta 8080 è già in uso** — crea istanze orfane e tmux in errore. Verificare con `cd client && bash scripts/diagnose-test-env.sh`; kill mirato del PID su 8080 solo se necessario.
 
-### Hosted web client (GitHub Pages)
+### Hosted web client
 
-- **Try it:** https://alfred-im.github.io/alfred-im/ — vedi [README.md](README.md) per la panoramica pubblica.
-- Build web: `cd client && bash scripts/verify.sh --build` (base-href `/alfred-im/`).
+- **Try it (Pages):** https://alfred-im.github.io/alfred-im/ — preview PR / demo workflow (`deploy-client`)
+- **Try it (Fly, istanza demo):** https://alfred-im-web.fly.dev/ — `client/deploy/fly/`, deploy `scripts/fly-deploy-client.sh`
+- Build web Pages: `cd client && bash scripts/verify.sh --build` (base-href `/alfred-im/`)
 - **Verifica PWA prima del merge**: non serve il merge su `main`. Ogni **PR su `main`** che tocca `client/**` esegue `deploy-client` sulla stessa URL Pages. L'utente prova dal telefono quando il deploy è pronto (badge Actions / URL Pages) — **l'agente non attende** il workflow (vedi `.cursor-rules.md`). Il merge non è prerequisito per la review utente.
 - **Non** assumere che l'URL rifletta il branch `main`: `deploy-client` pubblica da **PR su `main`** e da **push su `main`** (ultimo deploy riuscito vince). Vedi `docs/architecture/full-stack.md` §7.
 
