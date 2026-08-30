@@ -126,14 +126,18 @@ self.addEventListener('push', (event) => {
   const title = formatNotificationTitle(payload);
   const body = payload.previewText || payload.preview_text || 'Nuovo messaggio';
   const tag = pushNotificationTag(payload);
+  const icon =
+    payload.iconUrl ||
+    payload.icon_url ||
+    'icons/Icon-192.png';
 
   event.waitUntil(
     (async () => {
       await self.registration.showNotification(title, {
         body,
         tag,
-        icon: 'icons/Icon-192.png',
-        badge: 'icons/Icon-192.png',
+        icon,
+        badge: icon,
         data: payload,
       });
 
