@@ -1,0 +1,33 @@
+# Docker build context (repo root) — bridge image + client gateway image.
+
+.git
+.github
+.cursor
+.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+
+# Docs / specs (not needed in images)
+docs
+*.md
+!client/deploy/fly/README.md
+
+# Local Supabase stack
+supabase/.branches
+supabase/.temp
+
+# Flutter / Node artifacts
+client/build
+client/.dart_tool
+client/node_modules
+client/test-results
+client/.flutter-plugins
+client/.flutter-plugins-dependencies
+
+# Playwright / e2e
+client/e2e/test-results
+
+# IDE
+.idea
+.vscode

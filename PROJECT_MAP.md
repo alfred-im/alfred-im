@@ -27,7 +27,7 @@
 | **Ingresso pubblico** | `README.md` · `SECURITY.md` · `CODE_OF_CONDUCT.md` |
 | **Client** | `client/` — Flutter **web (PWA)**, collegato a Supabase |
 | **Web client** | https://alfred-im.github.io/alfred-im/ — GitHub Pages (`deploy-client`) |
-| **Deploy** | `.github/workflows/deploy-client.yml` — build web + Pages (**PR su `main` e push su `main`**, path `client/**`); gate in `release-suite.yml` |
+| **Deploy** | `.github/workflows/deploy-client.yml` — demo Pages; `client/deploy/fly/` — client istanza su Fly (`scripts/fly-deploy-client.sh`); gate in `release-suite.yml` |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
 | **Cronologia merge** | `CHANGELOG.md` |
@@ -106,7 +106,7 @@
 ├── README.md               # Ingresso pubblico GitHub (consent-first)
 ├── SECURITY.md             # Policy vulnerabilità
 ├── CODE_OF_CONDUCT.md      # Contributor Covenant
-├── client/                 # Client Flutter web (PWA) — GitHub Pages
+├── client/                 # Client Flutter web (PWA) — GitHub Pages demo + Fly (`client/deploy/fly/`)
 ├── supabase/               # Migrazioni e config piattaforma
 ├── bridge-xmpp/            # Demone bridge XMPP (stub)
 ├── bridge-matrix/          # Demone bridge Matrix (stub)
@@ -166,7 +166,7 @@
 | XMPP | `https://alfred-im.fly.dev/health` |
 | Matrix | `https://alfred-im.fly.dev:8081/health` |
 
-Avvio container: `scripts/start-bridges.sh` (`CMD ["/bin/sh", "/start.sh"]`). Deploy: `scripts/fly-deploy-all.sh`. Gate CI: `bash scripts/docker-smoke.sh` (workflow `docker-bridges.yml`).
+Avvio container: `scripts/start-bridges.sh` (`CMD ["/bin/sh", "/start.sh"]`). Deploy: `scripts/fly-deploy-all.sh`. Client web Fly: `client/deploy/fly/` + `scripts/fly-deploy-client.sh`. Gate CI: `bash scripts/docker-smoke.sh` (workflow `docker-bridges.yml`), `bash scripts/docker-smoke-client.sh` (`docker-client-fly.yml`).
 
 **Migrazione nome app (una tantum da `xmpptest`)**: `bash scripts/fly-rename-app.sh` poi redeploy.
 
