@@ -87,10 +87,11 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 - **Verifica PWA prima del merge**: non serve il merge su `main`. Ogni **PR su `main`** che tocca `client/**` esegue `deploy-client` sulla stessa URL Pages. L'utente prova dal telefono quando il deploy è pronto (badge Actions / URL Pages) — **l'agente non attende** il workflow (vedi `.cursor-rules.md`). Il merge non è prerequisito per la review utente.
 - **Non** assumere che l'URL rifletta il branch `main`: `deploy-client` pubblica da **PR su `main`** e da **push su `main`** (ultimo deploy riuscito vince). Vedi `docs/architecture/full-stack.md` §7.
 
-### Fly.io bridges
+### Fly.io
 
-- App: `alfred-im` (`https://alfred-im.fly.dev`). Migrazione una tantum da `xmpptest`: `bash scripts/fly-rename-app.sh` (richiede `flyctl auth login`).
-- Deploy: `bash scripts/fly-deploy-all.sh`
+- **Bridge** app: `alfred-im` (`https://alfred-im.fly.dev`). Deploy: `bash scripts/fly-deploy-all.sh`
+- **Client** app (PWA): `client/deploy/fly/` — app separata (`alfred-im-web` default). Deploy: `bash scripts/fly-deploy-client.sh`. Vedi `client/deploy/fly/README.md`
+- Migrazione nome app bridge (una tantum da `xmpptest`): `bash scripts/fly-rename-app.sh` (richiede `flyctl auth login`).
 
 ### Auth / messaging gotchas (non-obvious, hit during setup)
 - Registration: GoTrue rejects unrealistic email domains (e.g. `@example.com` → "Email address is invalid"). Use a realistic domain like `gmail.com`.

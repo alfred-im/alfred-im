@@ -1,0 +1,34 @@
+name: Docker client Fly smoke
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/docker-client-fly.yml'
+      - '.dockerignore'
+      - 'client/deploy/fly/**'
+      - 'client/**'
+      - 'scripts/docker-smoke-client.sh'
+      - 'scripts/fly-deploy-client.sh'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/docker-client-fly.yml'
+      - '.dockerignore'
+      - 'client/deploy/fly/**'
+      - 'client/**'
+      - 'scripts/docker-smoke-client.sh'
+      - 'scripts/fly-deploy-client.sh'
+  workflow_dispatch:
+
+jobs:
+  docker-smoke-client:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build image and verify client gateway
+        run: bash scripts/docker-smoke-client.sh
