@@ -1,11 +1,11 @@
 {
-  "name": "Alfred",
-  "short_name": "Alfred",
+  "name": "Alfred.im Demo",
+  "short_name": "Alfred.im",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#2D2926",
   "theme_color": "#2D2926",
-  "description": "Messaggistica consent-first",
+  "description": "Alfred.im — istanza demo (messaggistica consent-first)",
   "orientation": "any",
   "prefer_related_applications": false,
   "icons": [
