@@ -81,6 +81,7 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 
 ### Hosted web client (Fly.io)
 
+- **Project page:** https://alfred-im.github.io/ — static landing in `org-site/` (deploy `deploy-org-site.yml`, secret `ORG_SITE_PAT`)
 - **Try it:** https://alfred-im-web.fly.dev/ — `client/deploy/fly/`, deploy `scripts/fly-deploy-client.sh`
 - Build web: `cd client && bash scripts/verify.sh --build` (base-href `/`)
 - Auto-deploy: Fly Deployments → collega repo GitHub, branch `main` (vedi `client/deploy/fly/README.md`). L'agente **non** attende il deploy Fly.

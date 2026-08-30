@@ -34,7 +34,8 @@ Navigazione per AI.
 
 ## Client e toolchain
 
-- **Web client (Try it)**: https://alfred-im-web.fly.dev/ (Fly, demo istanza)
+- **Web client (Try it)**: https://alfred-im-web.fly.dev/ (Fly)
+- **Project page**: https://alfred-im.github.io/ (`org-site/`)
 - **Codice**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 - [client/README.md](../client/README.md) · [.cursor-rules.md](../.cursor-rules.md) · [AGENTS.md](../AGENTS.md)
 - [AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md) — account agente; non toccare test1–4

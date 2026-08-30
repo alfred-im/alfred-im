@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Alfred — consent-first open-source messaging. Flutter web PWA, Supabase, federation planned.">
+  <title>Alfred — consent-first messaging</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="wrap">
+    <p class="badge">Open source · GPL-3.0</p>
+    <h1 class="brand">Alfred</h1>
+    <p class="tagline">Consent-first messaging</p>
+    <p class="lead">
+      No message is delivered until the recipient has explicitly allowed the sender.
+      Alfred is feminist-informed software: consent, agency, and clear boundaries are built into the architecture.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://alfred-im-web.fly.dev/">Try the app</a>
+      <a class="btn btn-secondary" href="https://github.com/alfred-im/alfred-im">Source on GitHub</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="about">
+      <h2>About</h2>
+      <p>
+        Alfred is open-source messaging delivered as a <strong>Flutter web app</strong> (installable as a PWA).
+        Users are identified by <strong>username</strong>; conversations are address-based.
+      </p>
+      <p>
+        Each account controls who may reach them through a personal <strong>allow list</strong>.
+        Senders who are not allowed are not delivered to — there is no silent inbox from unknown parties.
+      </p>
+    </section>
+
+    <section id="features">
+      <h2>Features</h2>
+      <div class="card">
+        <table>
+          <thead>
+            <tr><th>Area</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Email + password auth, public username</td><td>✓</td></tr>
+            <tr><td>Multi-account</td><td>✓</td></tr>
+            <tr><td>Inbox + realtime chat (text, media, voice, location)</td><td>✓</td></tr>
+            <tr><td>Web Push notifications</td><td>✓</td></tr>
+            <tr><td>Allow list — consent-based delivery</td><td>✓</td></tr>
+            <tr><td>Shareable <code>#username</code> links</td><td>✓</td></tr>
+            <tr><td>Group accounts</td><td>✓</td></tr>
+            <tr><td>XMPP / Matrix federation</td><td>Planned</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="stack">
+      <h2>Stack</h2>
+      <div class="diagram">┌─────────────────────────────┐
+│   Flutter web client (PWA)  │
+└──────────────┬──────────────┘
+               │ HTTPS
+┌──────────────▼──────────────┐
+│   Supabase platform         │
+└──────────────┬──────────────┘
+               │ (planned)
+┌──────────────▼──────────────┐
+│   bridge-xmpp / bridge-matrix│
+└─────────────────────────────┘</div>
+      <p>Client source lives in the <a href="https://github.com/alfred-im/alfred-im">alfred-im</a> monorepo. The live demo runs on Fly.io.</p>
+    </section>
+
+    <section id="start">
+      <h2>Get started</h2>
+      <pre><code>git clone https://github.com/alfred-im/alfred-im.git
+cd alfred-im/client
+flutter pub get
+flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0</code></pre>
+      <p>Open <a href="http://localhost:8080/">http://localhost:8080/</a> — see the repository README for local Supabase setup.</p>
+    </section>
+
+    <section id="contribute">
+      <h2>Contributing</h2>
+      <p>
+        Bug reports and feedback: <a href="https://github.com/alfred-im/alfred-im/issues">GitHub Issues</a>.
+        Pull requests welcome when they align with the project direction.
+      </p>
+      <p>
+        Security issues: please use
+        <a href="https://github.com/alfred-im/alfred-im/security/advisories/new">GitHub Security Advisories</a>, not public issues.
+      </p>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p>
+      Copyright © 2026 <a href="https://github.com/alfred-im">im.alfred</a> —
+      <a href="https://github.com/alfred-im/alfred-im/blob/main/LICENSE">GNU GPL v3.0 or later</a>
+    </p>
+  </footer>
+</body>
+</html>

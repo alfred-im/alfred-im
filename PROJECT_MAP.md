@@ -24,17 +24,19 @@
 
 | Elemento | Dettaglio |
 |----------|-----------|
-| **Ingresso pubblico** | `README.md` · `SECURITY.md` · `CODE_OF_CONDUCT.md` |
+| **Ingresso pubblico** | `README.md` · https://alfred-im.github.io/ (`org-site/`) · `SECURITY.md` · `CODE_OF_CONDUCT.md` |
 | **Client** | `client/` — Flutter **web (PWA)**, collegato a Supabase |
 | **Web client** | https://alfred-im-web.fly.dev/ (`client/deploy/fly/`, `scripts/fly-deploy-client.sh`) |
-| **Deploy** | `client/deploy/fly/` — client su Fly; gate in `release-suite.yml` + `docker-client-fly.yml` |
+| **Deploy** | `org-site/` → `alfred-im.github.io` (`deploy-org-site.yml`, secret `ORG_SITE_PAT`); client Fly; gate `release-suite.yml` |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
 | **Cronologia merge** | `CHANGELOG.md` |
 | **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — confine prodotto · SSOT: [docs/SSOT.md](docs/SSOT.md) |
 | **Modello** | `docs/domain/` · `docs/model/uml/` · `client/lib/machines/` — 13 bounded context con stato **`verified`** o **`documented`**; torre DDD→UML→statechart con profili UML Client/Platform; gate `scripts/check-model-sync.sh`; indice: [bounded-contexts.md](docs/domain/bounded-contexts.md) |
 
-**Try it:** https://alfred-im-web.fly.dev/ — panoramica pubblica: `README.md`.
+**Project page:** https://alfred-im.github.io/ — sorgente `org-site/`, workflow `deploy-org-site.yml`.
+
+**Try it (app):** https://alfred-im-web.fly.dev/ — panoramica: `README.md`.
 
 **Deploy client:** push su branch collegato in Fly Deployments → auto-deploy su `alfred-im-web` (vedi `client/deploy/fly/README.md`). L'agente **non** attende il deploy Fly.
 
