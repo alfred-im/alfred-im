@@ -36,8 +36,10 @@ test.setTimeout(120_000);
 const FIELD_LABELS = {
   displayName: 'Nome visualizzato',
   imServerId: 'ID server IM',
-  logoUrl: 'URL logo',
+  shortName: 'Nome breve',
+  description: 'Descrizione',
   themeColor: 'Colore tema',
+  backgroundColor: 'Colore sfondo',
   privacyUrl: 'Privacy',
   termsUrl: 'Termini',
   supportUrl: 'Supporto',
@@ -97,13 +99,26 @@ async function fillInstanceConfigForm(
   );
   await fillFlutterTextField(
     page,
-    page.getByRole('textbox', { name: FIELD_LABELS.logoUrl, exact: true }),
-    values.logoUrl,
+    page.getByRole('textbox', { name: FIELD_LABELS.shortName, exact: true }),
+    values.shortName,
+  );
+  await fillFlutterTextField(
+    page,
+    page.getByRole('textbox', { name: FIELD_LABELS.description, exact: true }),
+    values.description,
   );
   await fillFlutterTextField(
     page,
     page.getByRole('textbox', { name: FIELD_LABELS.themeColor, exact: true }),
     values.themeColor,
+  );
+  await fillFlutterTextField(
+    page,
+    page.getByRole('textbox', {
+      name: FIELD_LABELS.backgroundColor,
+      exact: true,
+    }),
+    values.backgroundColor,
   );
   await fillFlutterTextField(
     page,
@@ -143,8 +158,12 @@ test('owner: tutti i campi configurazione server salvano e persistono', async ({
   const values: InstanceConfigExpectation = {
     displayName: `E2E Owner ${stamp}`,
     imServerId: `e2e-${stamp}.alfred.im`,
-    logoUrl: `https://example.com/e2e/logo-${stamp}.png`,
+    shortName: `E2E ${stamp}`,
+    description: `Descrizione e2e ${stamp}`,
     themeColor: '#AABBCC',
+    backgroundColor: '#DDEEFF',
+    logoUrl: '',
+    faviconUrl: '',
     privacyUrl: `https://example.com/e2e/privacy-${stamp}`,
     termsUrl: `https://example.com/e2e/terms-${stamp}`,
     supportUrl: `https://example.com/e2e/support-${stamp}`,
@@ -211,8 +230,12 @@ test('multi-account: salvataggio solo con owner in focus (no owner required)', a
   const values: InstanceConfigExpectation = {
     displayName: `E2E Owner focus ${stamp}`,
     imServerId: `e2e-focus-${stamp}.alfred.im`,
-    logoUrl: `https://example.com/e2e/logo-focus-${stamp}.png`,
+    shortName: `Focus ${stamp}`,
+    description: `Focus desc ${stamp}`,
     themeColor: '#112233',
+    backgroundColor: '#334455',
+    logoUrl: '',
+    faviconUrl: '',
     privacyUrl: `https://example.com/e2e/privacy-focus-${stamp}`,
     termsUrl: `https://example.com/e2e/terms-focus-${stamp}`,
     supportUrl: `https://example.com/e2e/support-focus-${stamp}`,
@@ -275,8 +298,12 @@ test('promote dopo login: save senza logout', async ({ page }) => {
   const values: InstanceConfigExpectation = {
     displayName: `E2E Late owner ${stamp}`,
     imServerId: `e2e-late-${stamp}.alfred.im`,
-    logoUrl: `https://example.com/e2e/late-${stamp}.png`,
+    shortName: `Late ${stamp}`,
+    description: `Late desc ${stamp}`,
     themeColor: '#445566',
+    backgroundColor: '#667788',
+    logoUrl: '',
+    faviconUrl: '',
     privacyUrl: `https://example.com/e2e/privacy-late-${stamp}`,
     termsUrl: `https://example.com/e2e/terms-late-${stamp}`,
     supportUrl: `https://example.com/e2e/support-late-${stamp}`,

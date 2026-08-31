@@ -1,6 +1,6 @@
 # Registro promesse — Alfred
 
-**Ultima revisione**: 2026-08-08 (post-merge #246)  
+**Ultima revisione**: 2026-08-30  
 **Metodo**: [README.md](./README.md) (SDD) · **SSOT indice**: [SSOT.md](../SSOT.md)
 
 **Catalogo unico** di promesse SYSTEM, PRODUCT e SURFACE. Per navigazione generale: [INDICE.md](../INDICE.md). Per cronologia merge: [CHANGELOG.md](../../CHANGELOG.md).
@@ -72,6 +72,7 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **SURF-GROUP-HOME** | Home account gruppo | `implemented` | SYS-GROUP, SYS-PROFILE, PROM-PROFILE-IDENTITY, PROM-GROUP-AUTHOR-DISPLAY | [SURF-GROUP-HOME.md](./surfaces/SURF-GROUP-HOME.md) |
 | **SURF-GROUP-CONVERSATION** | Chat gruppo + erogazione UI | `implemented` | PROM-GROUP-AUTHOR-DISPLAY, PROM-GROUP-TICKS, PROM-CHAT-MEDIA, PROM-MESSAGE-MENTION, PROM-BOTTOM-ANCHOR, SURF-GROUP-HOME | [SURF-GROUP-CONVERSATION.md](./surfaces/SURF-GROUP-CONVERSATION.md) |
 | **SURF-NOTIFICATIONS** | Web Push, service worker, permesso browser, **sync scope** (amend) | `implemented` | PROM-PUSH-NOTIFY, SYS-PUSH | [SURF-NOTIFICATIONS.md](./surfaces/SURF-NOTIFICATIONS.md) |
+| **SURF-INSTANCE-CONFIG** | Pannello owner `instance_config` + upload branding | `approved` | SYS-OWNER | [SURF-INSTANCE-CONFIG.md](./surfaces/SURF-INSTANCE-CONFIG.md) |
 
 ---
 

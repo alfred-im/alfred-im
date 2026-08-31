@@ -14,6 +14,7 @@ type PushPayload = {
   preview_text: string;
   logical_message_id: string;
   content_type?: string;
+  icon_url?: string | null;
 };
 
 type PushRuntimeConfig = {
@@ -133,6 +134,7 @@ Deno.serve(async (req) => {
     previewText: payload.preview_text,
     logicalMessageId: payload.logical_message_id,
     contentType: payload.content_type ?? "text",
+    iconUrl: payload.icon_url ?? null,
   });
 
   let sent = 0;

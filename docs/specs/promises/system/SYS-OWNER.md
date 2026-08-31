@@ -5,7 +5,7 @@
 | **Promessa ID** | `SYS-OWNER` |
 | **Classe** | SYSTEM |
 | **Status** | `approved` |
-| **Ultima revisione** | 2026-08-16 |
+| **Ultima revisione** | 2026-08-30 |
 
 Account `profile_kind = owner`: stesso comportamento messaging di `user`, con pannelli amministrativi in client. Assegnazione **solo manuale** (SQL su `profiles`).
 
@@ -23,6 +23,22 @@ Account `profile_kind = owner`: stesso comportamento messaging di `user`, con pa
 | **SYS-OWNER-006** | RPC `upsert_instance_config` — solo owner; **solo** le quattro chiavi `instance.display_name`, `instance.im_server_id`, `instance.branding`, `instance.legal` (schema = `InstanceSettings`) |
 | **SYS-OWNER-007** | RPC `get_instance_stats()` — solo owner |
 | **SYS-OWNER-008** | Profili disattivati nascosti da `search_profiles` / `find_profile_by_username` (eccetto viewer owner) |
+| **SYS-OWNER-009** | Bucket Storage `instance-branding` — lettura pubblica; scrittura/cancellazione solo owner (`is_instance_owner()`) |
+
+---
+
+## `instance.branding` (oggetto JSON)
+
+Campi ammessi in `instance.branding` (tutti opzionali):
+
+| Campo | Tipo | Origine valore |
+|-------|------|----------------|
+| `logo_url` | string (URL) | Upload Storage su Salva owner |
+| `favicon_url` | string (URL) | Upload Storage su Salva owner |
+| `short_name` | string | Form owner |
+| `description` | string | Form owner |
+| `theme_color` | string | Form owner |
+| `background_color` | string | Form owner |
 
 ---
 
