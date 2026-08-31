@@ -1,7 +1,7 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-08-09  
-**Status**: `implemented` su `main` (migrazioni fino a `20260809130000`, 46 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-08-31  
+**Status**: `implemented` su `main` (migrazioni fino a `20260830100000`, 54 totali in `supabase/migrations/`)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
@@ -21,7 +21,7 @@ messages 1──* outbox (ogni invio/lettura può accodare eventi)
 profiles 1──* sync_cursors (profile_id, peer_profile_id, protocol, cursor_key)
 profiles 1──* push_subscriptions (user_id, device_id)
 bridge_jobs (coda bridge)
-storage: chat-media, avatars
+storage: chat-media, avatars, instance-branding
 ```
 
 **Inbox**: nessuna tabella dedicata — derivata dal mio archivio `messages` via `list_inbox()`.
@@ -244,6 +244,7 @@ Stato piattaforma bridge ([bridge-stateless.md](../../decisions/bridge-stateless
 |--------|-----|--------|--------------|
 | `chat-media` | GIF, voice, image, video | 50 MB max (video) | `{auth.uid()}/{uuid}.*` |
 | `avatars` | Foto profilo | 2 MB | `{auth.uid()}/avatar.{ext}` |
+| `instance-branding` | Logo/favicon istanza (owner) | 2 MB | `branding/{logo\|favicon}/{uuid}.ext` — scrittura solo `is_instance_owner()` |
 
 Pubblici (scope attuale) (URL diretti in Realtime).
 

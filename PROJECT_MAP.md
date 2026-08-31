@@ -26,7 +26,7 @@
 |----------|-----------|
 | **Ingresso pubblico** | `README.md` · https://alfred-im.github.io/ (`org-site/`) · `SECURITY.md` · `CODE_OF_CONDUCT.md` |
 | **Client** | `client/` — Flutter **web (PWA)**, collegato a Supabase |
-| **Web client** | https://alfred-im-web.fly.dev/ (`client/deploy/fly/`, `scripts/fly-deploy-client.sh`) |
+| **Web client** | https://alfred-im-web.fly.dev/ — nginx + gateway shell dinamica (`client/deploy/fly/`, `client/deploy/gateway/`, `scripts/fly-deploy-client.sh`) |
 | **Deploy** | `org-site/` → `alfred-im.github.io` (`deploy-org-site.yml`, secret `ORG_SITE_PAT`); client Fly; gate `release-suite.yml` |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
@@ -38,7 +38,7 @@
 
 **Try it (app):** https://alfred-im-web.fly.dev/ — panoramica: `README.md`.
 
-**Deploy client:** push su branch collegato in Fly Deployments → auto-deploy su `alfred-im-web` (vedi `client/deploy/fly/README.md`). L'agente **non** attende il deploy Fly.
+**Deploy client:** **`bash scripts/fly-deploy-client.sh`** (richiede `flyctl`). Auto-deploy Fly **solo** se abilitato in dashboard (Deployments → GitHub → branch `main`, working dir `.`) — vedi `client/deploy/fly/README.md`. Push su GitHub **non** deploya Fly; CI fa solo smoke Docker. L'agente **non** attende il deploy Fly.
 
 **Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 
@@ -182,7 +182,8 @@ Avvio container: `scripts/start-bridges.sh` (`CMD ["/bin/sh", "/start.sh"]`). De
 |---------|-----|
 | Postgres | `profiles`, `contacts`, `reception_allowlist`, `messages`, `outbox`, `sync_cursors`, `bridge_jobs`, `push_subscriptions`; schema worker `alfred_delivery` |
 | Storage `chat-media` | GIF, voice WebM, image, video (`{userId}/{uuid}.…`) |
-| Storage `avatars` | Foto profilo (`{userId}/avatar.{jpg|png|webp}`, max 2 MB) |
+| Storage `avatars` | Foto profilo (`{userId}/avatar.{jpg\|png\|webp}`, max 2 MB) |
+| Storage `instance-branding` | Logo/favicon istanza owner (`branding/{logo\|favicon}/{uuid}.ext`, max 2 MB; scrittura solo owner) |
 | Client `SharedPreferences` | Account aperti (`OpenAccount` + refresh token) e `focusUserId` |
 
 RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_profile`, `list_peer_messages`, `list_archive_messages`, `broadcast_message_to_allowlist`, `mark_peer_read`.

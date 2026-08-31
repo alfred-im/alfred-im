@@ -4,6 +4,26 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
+## [Unreleased] - 2026-08-31
+
+### Aggiunto
+
+- **Gateway shell dinamica** (`client/deploy/gateway/`) — sidecar Python genera `index.html` e `manifest.json` per richiesta da `get_instance_bootstrap`; nginx proxy; fallback neutro se RPC non risponde
+- **`SURF-INSTANCE-CONFIG`** — pannello owner: 10 campi (identità, shell/PWA, legale); upload logo/favicon su bucket `instance-branding` solo su Salva (path versionati)
+- **`SYS-OWNER-009`** — bucket Storage `instance-branding` (RLS owner)
+- **Push `icon_url`** — payload outbox + Edge Function `send-push` + `push_sw.js` (icona da `instance.branding.logo_url`)
+
+### Modificato
+
+- **Deploy Fly client** — Dockerfile: nginx + gateway; rimossi `index.html`/`manifest.json` statici branded dal build Flutter
+- **`InstanceBrandingService`**, schema/form owner estesi (`short_name`, `description`, colori, file picker logo/favicon)
+
+### Documentazione
+
+- `client/deploy/fly/README.md`, `PROJECT_MAP.md`, `AGENTS.md`, `full-stack.md`, `schema.md`: gateway, deploy Fly (push ≠ deploy), bucket branding
+
+---
+
 ## [Unreleased] - 2026-08-30
 
 ### Aggiunto

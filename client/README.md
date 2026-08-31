@@ -13,6 +13,8 @@ Client web collegato a Supabase (contatti, inbox, chat realtime, profilo, **mult
 | **Multi-account** | Manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore |
 | **Auth** | Overlay su shell (`AuthOverlay`), non schermata piena |
 | **Try it** | https://alfred-im-web.fly.dev/ |
+| **Owner / branding** | Pannello configurazione server — shell PWA + upload logo/favicon (`SURF-INSTANCE-CONFIG`) |
+| **Deploy** | Fly: `bash scripts/fly-deploy-client.sh` — vedi `deploy/fly/README.md` |
 | **Layout** | Lista inbox + chat (stile WhatsApp Web) |
 | **Inbox** | RPC `list_inbox()` — aggregazione on-read su `messages` |
 | **Chat** | Identificata da `peer_profile_id` (`ChatPeer`) |

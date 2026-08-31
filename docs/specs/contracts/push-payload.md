@@ -1,6 +1,6 @@
 # Contratto push payload — Web Push VAPID
 
-**Ultima revisione**: 2026-08-30  
+**Ultima revisione**: 2026-08-31  
 **Status**: `implemented` su `main`  
 **Fonte di verità**: `supabase/functions/send-push/index.ts`, `client/web/push_sw.js`, `client/lib/models/push_conversation_key.dart`
 

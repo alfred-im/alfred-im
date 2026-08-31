@@ -3,8 +3,8 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-INSTANCE-CONFIG` |
-| **Status** | `approved` |
-| **Ultima revisione** | 2026-08-30 |
+| **Status** | `implemented` |
+| **Ultima revisione** | 2026-08-31 |
 | **Promesse** | [SYS-OWNER](../promises/system/SYS-OWNER.md) |
 
 Schermata owner per editing `instance_config`: identità servizio, shell/PWA e link legali.

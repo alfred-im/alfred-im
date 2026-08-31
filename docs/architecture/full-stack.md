@@ -119,12 +119,14 @@ Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (
 
 | Target | Meccanismo |
 |--------|------------|
-| Web client (Fly.io) | `client/deploy/fly/` — app `alfred-im-web` — https://alfred-im-web.fly.dev/ |
-| Supabase | Migrazioni in repo → MCP/dashboard |
+| Web client (Fly.io) | `client/deploy/fly/` + gateway `client/deploy/gateway/` — app `alfred-im-web` — https://alfred-im-web.fly.dev/ |
+| Supabase | Migrazioni in repo → MCP / `supabase db push` / dashboard (non automatiche al merge Git) |
 
 **Try it:** https://alfred-im-web.fly.dev/ — panoramica pubblica in [`README.md`](../../README.md).
 
-**Deploy:** auto-deploy Fly al push sul branch collegato (dashboard Fly → Deployments). Deploy manuale: `bash scripts/fly-deploy-client.sh`.
+**Deploy client Fly:** `bash scripts/fly-deploy-client.sh`. Push su GitHub **non** deploya Fly; CI (`docker-client-fly.yml`) = smoke build. Auto-deploy Fly **solo** se abilitato in dashboard (Deployments → GitHub, working dir `.`). Vedi `client/deploy/fly/README.md`.
+
+**White label shell:** `index.html` + `manifest.json` generati dal gateway a ogni GET da `get_instance_bootstrap`; branding owner in `instance.branding` + bucket `instance-branding` (`SURF-INSTANCE-CONFIG`).
 
 **Web**: `passkeys` `bundle.js` obbligatorio in `client/web/index.html` (PR #110).
 
