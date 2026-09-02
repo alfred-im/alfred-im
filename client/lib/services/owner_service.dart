@@ -64,6 +64,7 @@ class OwnerService {
     final branding = _nonEmptyMap({
       'logo_url': settings.branding.logoUrl,
       'favicon_url': settings.branding.faviconUrl,
+      'wordmark_url': settings.branding.wordmarkUrl,
       'short_name': settings.branding.shortName,
       'description': settings.branding.description,
       'theme_color': settings.branding.themeColor,

@@ -13,6 +13,7 @@ class AccountShellHeader extends StatelessWidget {
     super.key,
     required this.title,
     required this.titleStyle,
+    this.titleWidget,
     this.backgroundColor,
     this.padding = const EdgeInsets.fromLTRB(12, 12, 4, 0),
     this.showBackButton = false,
@@ -25,6 +26,7 @@ class AccountShellHeader extends StatelessWidget {
 
   final String title;
   final TextStyle titleStyle;
+  final Widget? titleWidget;
   final Color? backgroundColor;
   final EdgeInsetsGeometry padding;
   final bool showBackButton;
@@ -57,12 +59,13 @@ class AccountShellHeader extends StatelessWidget {
               ),
             ?leading,
             Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: titleStyle,
-              ),
+              child: titleWidget ??
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: titleStyle,
+                  ),
             ),
             ...actions,
           ],

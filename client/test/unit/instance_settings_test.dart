@@ -14,6 +14,7 @@ void main() {
       'instance.branding': {
         'logo_url': 'https://cdn.example/logo.png',
         'favicon_url': 'https://cdn.example/favicon.png',
+        'wordmark_url': 'https://cdn.example/wordmark.png',
         'short_name': 'MyGarden',
         'description': 'Demo garden chat',
         'theme_color': '#336699',
@@ -28,6 +29,7 @@ void main() {
     expect(settings.imServerId, 'mygarden.example');
     expect(settings.branding.logoUrl, 'https://cdn.example/logo.png');
     expect(settings.branding.faviconUrl, 'https://cdn.example/favicon.png');
+    expect(settings.branding.wordmarkUrl, 'https://cdn.example/wordmark.png');
     expect(settings.branding.shortName, 'MyGarden');
     expect(settings.branding.description, 'Demo garden chat');
     expect(settings.branding.themeColor, '#336699');

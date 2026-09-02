@@ -100,6 +100,12 @@ abstract final class InstanceConfigSchema {
           kind: InstanceConfigFieldKind.asset,
         ),
         InstanceConfigFieldDef(
+          id: 'wordmark',
+          label: 'Nome grafico (header)',
+          hint: 'PNG, JPEG o WebP — nome stilizzato per l\'header (max 2 MB)',
+          kind: InstanceConfigFieldKind.asset,
+        ),
+        InstanceConfigFieldDef(
           id: 'favicon',
           label: 'Favicon',
           hint: 'PNG, JPEG, WebP o ICO (max 2 MB)',

@@ -42,6 +42,19 @@ class InstanceBrandingService {
     );
   }
 
+  Future<String> uploadWordmark({
+    required Uint8List bytes,
+    required String extension,
+    required String contentType,
+  }) {
+    return _uploadAsset(
+      kind: 'wordmark',
+      bytes: bytes,
+      extension: extension,
+      contentType: contentType,
+    );
+  }
+
   Future<String> _uploadAsset({
     required String kind,
     required Uint8List bytes,

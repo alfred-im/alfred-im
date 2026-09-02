@@ -39,6 +39,8 @@ class _PendingAsset {
   final String contentType;
 }
 
+enum _BrandingAssetKind { logo, favicon, wordmark }
+
 class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
   final _formKey = GlobalKey<FormState>();
   final _displayName = TextEditingController();
@@ -59,10 +61,13 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
 
   String? _savedLogoUrl;
   String? _savedFaviconUrl;
+  String? _savedWordmarkUrl;
   _PendingAsset? _pendingLogo;
   _PendingAsset? _pendingFavicon;
+  _PendingAsset? _pendingWordmark;
   bool _removeLogo = false;
   bool _removeFavicon = false;
+  bool _removeWordmark = false;
 
   @override
   void dispose() {
@@ -109,8 +114,10 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
       _error = null;
       _pendingLogo = null;
       _pendingFavicon = null;
+      _pendingWordmark = null;
       _removeLogo = false;
       _removeFavicon = false;
+      _removeWordmark = false;
     });
 
     final session = context.read<AuthController>().focusedSession;
@@ -169,6 +176,7 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
     _supportUrl.text = settings.legal.supportUrl ?? '';
     _savedLogoUrl = settings.branding.logoUrl;
     _savedFaviconUrl = settings.branding.faviconUrl;
+    _savedWordmarkUrl = settings.branding.wordmarkUrl;
   }
 
   String? _optionalText(String value) {
@@ -179,6 +187,7 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
   InstanceSettings _settingsFromForm({
     required String? logoUrl,
     required String? faviconUrl,
+    required String? wordmarkUrl,
   }) {
     return InstanceSettings(
       displayName: _displayName.text.trim(),
@@ -186,6 +195,7 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
       branding: InstanceBrandingAssets(
         logoUrl: logoUrl,
         faviconUrl: faviconUrl,
+        wordmarkUrl: wordmarkUrl,
         shortName: _optionalText(_shortName.text),
         description: _optionalText(_description.text),
         themeColor: _optionalText(_themeColor.text),
@@ -199,7 +209,8 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
     );
   }
 
-  Future<void> _pickAsset({required bool forFavicon}) async {
+  Future<void> _pickAsset({required _BrandingAssetKind kind}) async {
+    final forFavicon = kind == _BrandingAssetKind.favicon;
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: forFavicon
@@ -235,12 +246,16 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
       }
       if (!mounted) return;
       setState(() {
-        if (forFavicon) {
-          _pendingFavicon = pending;
-          _removeFavicon = false;
-        } else {
-          _pendingLogo = pending;
-          _removeLogo = false;
+        switch (kind) {
+          case _BrandingAssetKind.logo:
+            _pendingLogo = pending;
+            _removeLogo = false;
+          case _BrandingAssetKind.favicon:
+            _pendingFavicon = pending;
+            _removeFavicon = false;
+          case _BrandingAssetKind.wordmark:
+            _pendingWordmark = pending;
+            _removeWordmark = false;
         }
       });
     } on UnsupportedImageFormatException catch (e) {
@@ -256,14 +271,18 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
     }
   }
 
-  void _removeAsset({required bool forFavicon}) {
+  void _removeAsset({required _BrandingAssetKind kind}) {
     setState(() {
-      if (forFavicon) {
-        _pendingFavicon = null;
-        _removeFavicon = true;
-      } else {
-        _pendingLogo = null;
-        _removeLogo = true;
+      switch (kind) {
+        case _BrandingAssetKind.logo:
+          _pendingLogo = null;
+          _removeLogo = true;
+        case _BrandingAssetKind.favicon:
+          _pendingFavicon = null;
+          _removeFavicon = true;
+        case _BrandingAssetKind.wordmark:
+          _pendingWordmark = null;
+          _removeWordmark = true;
       }
     });
   }
@@ -293,6 +312,7 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
       final brandingService = InstanceBrandingService(session.client);
       var logoUrl = _savedLogoUrl;
       var faviconUrl = _savedFaviconUrl;
+      var wordmarkUrl = _savedWordmarkUrl;
 
       if (_removeLogo) {
         await brandingService.deleteByPublicUrl(logoUrl);
@@ -301,6 +321,10 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
       if (_removeFavicon) {
         await brandingService.deleteByPublicUrl(faviconUrl);
         faviconUrl = null;
+      }
+      if (_removeWordmark) {
+        await brandingService.deleteByPublicUrl(wordmarkUrl);
+        wordmarkUrl = null;
       }
 
       if (_pendingLogo != null) {
@@ -325,9 +349,21 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
         );
       }
 
+      if (_pendingWordmark != null) {
+        if (wordmarkUrl != null && wordmarkUrl.isNotEmpty) {
+          await brandingService.deleteByPublicUrl(wordmarkUrl);
+        }
+        wordmarkUrl = await brandingService.uploadWordmark(
+          bytes: _pendingWordmark!.bytes,
+          extension: _pendingWordmark!.extension,
+          contentType: _pendingWordmark!.contentType,
+        );
+      }
+
       final settings = _settingsFromForm(
         logoUrl: logoUrl,
         faviconUrl: faviconUrl,
+        wordmarkUrl: wordmarkUrl,
       );
       await session.ownerService.saveInstanceSettings(settings);
       await InstanceConfigService(session.client).loadRuntime();
@@ -335,10 +371,13 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
       setState(() {
         _savedLogoUrl = logoUrl;
         _savedFaviconUrl = faviconUrl;
+        _savedWordmarkUrl = wordmarkUrl;
         _pendingLogo = null;
         _pendingFavicon = null;
+        _pendingWordmark = null;
         _removeLogo = false;
         _removeFavicon = false;
+        _removeWordmark = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Configurazione salvata')),
@@ -371,12 +410,37 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
   bool _isRequired(String fieldId) =>
       fieldId == 'display_name' || fieldId == 'im_server_id';
 
+  _BrandingAssetKind _assetKindForField(String fieldId) {
+    return switch (fieldId) {
+      'logo' => _BrandingAssetKind.logo,
+      'favicon' => _BrandingAssetKind.favicon,
+      'wordmark' => _BrandingAssetKind.wordmark,
+      _ => throw StateError('Unknown asset field $fieldId'),
+    };
+  }
+
   Widget _buildAssetField(InstanceConfigFieldDef field) {
-    final forFavicon = field.id == 'favicon';
-    final pending = forFavicon ? _pendingFavicon : _pendingLogo;
-    final savedUrl = forFavicon ? _savedFaviconUrl : _savedLogoUrl;
-    final removed = forFavicon ? _removeFavicon : _removeLogo;
+    final kind = _assetKindForField(field.id);
+    final isWordmark = kind == _BrandingAssetKind.wordmark;
+    final pending = switch (kind) {
+      _BrandingAssetKind.logo => _pendingLogo,
+      _BrandingAssetKind.favicon => _pendingFavicon,
+      _BrandingAssetKind.wordmark => _pendingWordmark,
+    };
+    final savedUrl = switch (kind) {
+      _BrandingAssetKind.logo => _savedLogoUrl,
+      _BrandingAssetKind.favicon => _savedFaviconUrl,
+      _BrandingAssetKind.wordmark => _savedWordmarkUrl,
+    };
+    final removed = switch (kind) {
+      _BrandingAssetKind.logo => _removeLogo,
+      _BrandingAssetKind.favicon => _removeFavicon,
+      _BrandingAssetKind.wordmark => _removeWordmark,
+    };
     final hasAsset = pending != null || (!removed && (savedUrl?.isNotEmpty ?? false));
+    final previewWidth = isWordmark ? 160.0 : 48.0;
+    final previewHeight = 48.0;
+    final previewFit = isWordmark ? BoxFit.contain : BoxFit.cover;
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
@@ -406,9 +470,9 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
                   borderRadius: BorderRadius.circular(8),
                   child: Image.memory(
                     pending.bytes,
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.cover,
+                    width: previewWidth,
+                    height: previewHeight,
+                    fit: previewFit,
                   ),
                 )
               else if (!removed && savedUrl != null && savedUrl.isNotEmpty)
@@ -416,11 +480,15 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
                     savedUrl,
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.cover,
+                    width: previewWidth,
+                    height: previewHeight,
+                    fit: previewFit,
                     errorBuilder: (context, error, stackTrace) => Icon(
-                      forFavicon ? Icons.web : Icons.image_outlined,
+                      isWordmark
+                          ? Icons.title
+                          : kind == _BrandingAssetKind.favicon
+                              ? Icons.web
+                              : Icons.image_outlined,
                       size: 48,
                       color: AlfredColors.textSecondary,
                     ),
@@ -428,7 +496,11 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
                 )
               else
                 Icon(
-                  forFavicon ? Icons.web : Icons.image_outlined,
+                  isWordmark
+                      ? Icons.title
+                      : kind == _BrandingAssetKind.favicon
+                          ? Icons.web
+                          : Icons.image_outlined,
                   size: 48,
                   color: AlfredColors.textSecondary,
                 ),
@@ -436,7 +508,7 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
               OutlinedButton(
                 onPressed: _saving
                     ? null
-                    : () => unawaited(_pickAsset(forFavicon: forFavicon)),
+                    : () => unawaited(_pickAsset(kind: kind)),
                 child: Text(hasAsset ? 'Sostituisci' : 'Scegli file'),
               ),
               if (hasAsset) ...[
@@ -444,7 +516,7 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
                 TextButton(
                   onPressed: _saving
                       ? null
-                      : () => _removeAsset(forFavicon: forFavicon),
+                      : () => _removeAsset(kind: kind),
                   child: const Text('Rimuovi'),
                 ),
               ],

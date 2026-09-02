@@ -7,6 +7,7 @@ class InstanceBrandingAssets {
   const InstanceBrandingAssets({
     this.logoUrl,
     this.faviconUrl,
+    this.wordmarkUrl,
     this.shortName,
     this.description,
     this.themeColor,
@@ -18,6 +19,7 @@ class InstanceBrandingAssets {
     return InstanceBrandingAssets(
       logoUrl: json['logo_url'] as String?,
       faviconUrl: json['favicon_url'] as String?,
+      wordmarkUrl: json['wordmark_url'] as String?,
       shortName: json['short_name'] as String?,
       description: json['description'] as String?,
       themeColor: json['theme_color'] as String?,
@@ -27,6 +29,7 @@ class InstanceBrandingAssets {
 
   final String? logoUrl;
   final String? faviconUrl;
+  final String? wordmarkUrl;
   final String? shortName;
   final String? description;
   final String? themeColor;

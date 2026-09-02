@@ -51,6 +51,7 @@ export type InstanceConfigExpectation = {
   backgroundColor: string;
   logoUrl: string;
   faviconUrl: string;
+  wordmarkUrl: string;
   privacyUrl: string;
   termsUrl: string;
   supportUrl: string;
@@ -66,6 +67,7 @@ export function readInstanceConfigFromDb(): InstanceConfigExpectation {
   const branding = runPsqlJson<{
     logo_url?: string;
     favicon_url?: string;
+    wordmark_url?: string;
     short_name?: string;
     description?: string;
     theme_color?: string;
@@ -90,6 +92,7 @@ export function readInstanceConfigFromDb(): InstanceConfigExpectation {
     backgroundColor: branding.background_color ?? '',
     logoUrl: branding.logo_url ?? '',
     faviconUrl: branding.favicon_url ?? '',
+    wordmarkUrl: branding.wordmark_url ?? '',
     privacyUrl: legal.privacy_url ?? '',
     termsUrl: legal.terms_url ?? '',
     supportUrl: legal.support_url ?? '',
@@ -150,6 +153,7 @@ export async function readInstanceBootstrapViaRpc(
     backgroundColor: branding?.background_color ?? '',
     logoUrl: branding?.logo_url ?? '',
     faviconUrl: branding?.favicon_url ?? '',
+    wordmarkUrl: branding?.wordmark_url ?? '',
     privacyUrl: legal?.privacy_url ?? '',
     termsUrl: legal?.terms_url ?? '',
     supportUrl: legal?.support_url ?? '',

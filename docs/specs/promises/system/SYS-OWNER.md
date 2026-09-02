@@ -35,6 +35,7 @@ Campi ammessi in `instance.branding` (tutti opzionali):
 |-------|------|----------------|
 | `logo_url` | string (URL) | Upload Storage su Salva owner |
 | `favicon_url` | string (URL) | Upload Storage su Salva owner |
+| `wordmark_url` | string (URL) | Upload Storage su Salva owner — nome grafico header shell |
 | `short_name` | string | Form owner |
 | `description` | string | Form owner |
 | `theme_color` | string | Form owner |

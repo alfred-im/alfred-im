@@ -29,9 +29,9 @@ Schermata owner per editing `instance_config`: identità servizio, shell/PWA e l
 | ID | Promessa |
 |----|----------|
 | **SURF-INSTANCE-CONFIG-001** | Visibile solo se `is_instance_owner()` |
-| **SURF-INSTANCE-CONFIG-002** | Form fisso su 10 campi: `display_name`, `im_server_id`, `short_name`, `description`, `theme_color`, `background_color`, logo (file), favicon (file), `privacy_url`, `terms_url`, `support_url` |
+| **SURF-INSTANCE-CONFIG-002** | Form fisso su 11 campi: `display_name`, `im_server_id`, `short_name`, `description`, `theme_color`, `background_color`, logo (file), favicon (file), wordmark (file), `privacy_url`, `terms_url`, `support_url` |
 | **SURF-INSTANCE-CONFIG-003** | Logo e favicon: solo picker file + rimuovi — **nessun** campo URL manuale |
-| **SURF-INSTANCE-CONFIG-004** | Upload Storage bucket `instance-branding` **solo su Salva**; path versionato (`branding/{logo\|favicon}/{uuid}.ext`); sostituzione elimina blob precedente |
+| **SURF-INSTANCE-CONFIG-004** | Upload Storage bucket `instance-branding` **solo su Salva**; path versionato (`branding/{logo\|favicon\|wordmark}/{uuid}.ext`); sostituzione elimina blob precedente |
 | **SURF-INSTANCE-CONFIG-005** | Dopo save: `upsert_instance_config` sulle quattro chiavi top-level + reload `InstanceRuntime` |
 | **SURF-INSTANCE-CONFIG-006** | Multi-account: load/save sul account in focus; messaggio chiaro se non owner |
 
