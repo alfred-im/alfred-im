@@ -8,7 +8,7 @@ import '../models/profile_summary.dart';
 import '../runtime/instance_runtime.dart';
 import 'account_shell_header.dart';
 
-/// Header guscio con nome/logo dell'istanza (non del software Alfred).
+/// Header guscio con nome/wordmark dell'istanza (non del software Alfred).
 class InstanceShellHeader extends StatelessWidget {
   const InstanceShellHeader({
     super.key,
@@ -34,11 +34,36 @@ class InstanceShellHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final runtime = InstanceRuntime.require;
-    final logoUrl = runtime.branding.logoUrl;
+    final wordmarkUrl = runtime.branding.wordmarkUrl;
+    final displayName = runtime.displayName;
+
+    Widget? titleWidget;
+    if (wordmarkUrl != null && wordmarkUrl.isNotEmpty) {
+      final height = (titleStyle.fontSize ?? 20) * 1.2;
+      titleWidget = Semantics(
+        label: displayName,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Image.network(
+            wordmarkUrl,
+            height: height,
+            fit: BoxFit.contain,
+            alignment: Alignment.centerLeft,
+            errorBuilder: (context, error, stackTrace) => Text(
+              displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: titleStyle,
+            ),
+          ),
+        ),
+      );
+    }
 
     return AccountShellHeader(
-      title: runtime.displayName,
+      title: displayName,
       titleStyle: titleStyle,
+      titleWidget: titleWidget,
       backgroundColor: backgroundColor,
       padding: padding,
       showBackButton: showBackButton,
@@ -46,22 +71,6 @@ class InstanceShellHeader extends StatelessWidget {
       drawerProfile: drawerProfile,
       onDrawerTap: onDrawerTap,
       actions: actions,
-      leading: logoUrl != null && logoUrl.isNotEmpty
-          ? Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  logoUrl,
-                  width: 32,
-                  height: 32,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox.shrink(),
-                ),
-              ),
-            )
-          : null,
     );
   }
 }

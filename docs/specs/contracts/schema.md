@@ -244,7 +244,7 @@ Stato piattaforma bridge ([bridge-stateless.md](../../decisions/bridge-stateless
 |--------|-----|--------|--------------|
 | `chat-media` | GIF, voice, image, video | 50 MB max (video) | `{auth.uid()}/{uuid}.*` |
 | `avatars` | Foto profilo | 2 MB | `{auth.uid()}/avatar.{ext}` |
-| `instance-branding` | Logo/favicon istanza (owner) | 2 MB | `branding/{logo\|favicon}/{uuid}.ext` — scrittura solo `is_instance_owner()` |
+| `instance-branding` | Logo/favicon/wordmark istanza (owner) | 2 MB | `branding/{logo\|favicon\|wordmark}/{uuid}.ext` — scrittura solo `is_instance_owner()` |
 
 Pubblici (scope attuale) (URL diretti in Realtime).
 

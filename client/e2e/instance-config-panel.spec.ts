@@ -78,9 +78,21 @@ async function openInstanceConfigScreen(page: import('@playwright/test').Page) {
     name: 'Configurazione server',
     exact: true,
   }).click();
-  await expect(
-    page.getByRole('button', { name: 'Salva configurazione', exact: true }),
-  ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+  const saveButton = page.getByRole('button', {
+    name: 'Salva configurazione',
+    exact: true,
+  });
+  await saveButton.scrollIntoViewIfNeeded();
+  await expect(saveButton).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+}
+
+async function clickSaveInstanceConfig(page: import('@playwright/test').Page) {
+  const saveButton = page.getByRole('button', {
+    name: 'Salva configurazione',
+    exact: true,
+  });
+  await saveButton.scrollIntoViewIfNeeded();
+  await saveButton.click();
 }
 
 async function fillInstanceConfigForm(
@@ -164,6 +176,7 @@ test('owner: tutti i campi configurazione server salvano e persistono', async ({
     backgroundColor: '#DDEEFF',
     logoUrl: '',
     faviconUrl: '',
+    wordmarkUrl: '',
     privacyUrl: `https://example.com/e2e/privacy-${stamp}`,
     termsUrl: `https://example.com/e2e/terms-${stamp}`,
     supportUrl: `https://example.com/e2e/support-${stamp}`,
@@ -181,9 +194,7 @@ test('owner: tutti i campi configurazione server salvano e persistono', async ({
   await openInstanceConfigScreen(page);
   await fillInstanceConfigForm(page, values);
 
-  await page
-    .getByRole('button', { name: 'Salva configurazione', exact: true })
-    .click();
+  await clickSaveInstanceConfig(page);
   await expect(
     page.getByText('Configurazione salvata', { exact: true }).first(),
   ).toBeVisible({
@@ -236,6 +247,7 @@ test('multi-account: salvataggio solo con owner in focus (no owner required)', a
     backgroundColor: '#334455',
     logoUrl: '',
     faviconUrl: '',
+    wordmarkUrl: '',
     privacyUrl: `https://example.com/e2e/privacy-focus-${stamp}`,
     termsUrl: `https://example.com/e2e/terms-focus-${stamp}`,
     supportUrl: `https://example.com/e2e/support-focus-${stamp}`,
@@ -262,9 +274,7 @@ test('multi-account: salvataggio solo con owner in focus (no owner required)', a
 
   await openInstanceConfigScreen(page);
   await fillInstanceConfigForm(page, values);
-  await page
-    .getByRole('button', { name: 'Salva configurazione', exact: true })
-    .click();
+  await clickSaveInstanceConfig(page);
 
   await expect(
     page.getByText('Configurazione salvata', { exact: true }).first(),
@@ -304,6 +314,7 @@ test('promote dopo login: save senza logout', async ({ page }) => {
     backgroundColor: '#667788',
     logoUrl: '',
     faviconUrl: '',
+    wordmarkUrl: '',
     privacyUrl: `https://example.com/e2e/privacy-late-${stamp}`,
     termsUrl: `https://example.com/e2e/terms-late-${stamp}`,
     supportUrl: `https://example.com/e2e/support-late-${stamp}`,
@@ -311,9 +322,7 @@ test('promote dopo login: save senza logout', async ({ page }) => {
 
   await openInstanceConfigScreen(page);
   await fillInstanceConfigForm(page, values);
-  await page
-    .getByRole('button', { name: 'Salva configurazione', exact: true })
-    .click();
+  await clickSaveInstanceConfig(page);
 
   await expect(
     page.getByText('Configurazione salvata', { exact: true }).first(),

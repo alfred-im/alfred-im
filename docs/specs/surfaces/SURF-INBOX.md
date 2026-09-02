@@ -35,6 +35,7 @@ Binding promessa PRODUCT filtro lista sulla inbox (`InboxPanel`) + entry «Perso
 | **SURF-INBOX-005** | Layout **desktop** (`showTopBar: false`): lente nella riga «Conversazioni»; barra sotto titolo |
 | **SURF-INBOX-006** | Cambio account: `ValueKey(accountUserId)` su `InboxPanel` → stato ricerca reset |
 | **SURF-INBOX-007** | Icona «Persone consentite» in header inbox accanto a icona rubrica «Contatti» → naviga a `AllowedPeopleScreen` — [PROM-RECEPTION-FILTER](../promises/product/PROM-RECEPTION-FILTER.md) |
+| **SURF-INBOX-008** | Header shell (`InstanceShellHeader`): se `instance.branding.wordmark_url` valorizzato, mostra immagine wordmark (altezza fissa, `BoxFit.contain`); altrimenti testo `instance.display_name`; **nessun** `logo_url` nell'header |
 | **SURF-INBOX-012** | Layout **mobile** (`showTopBar: true`): trigger drawer = `ProfileAvatar` tondo dell'account in focus (non icona hamburger); tooltip «Account»; tap apre drawer sidebar |
 
 ### MUST NOT
