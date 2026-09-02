@@ -78,9 +78,21 @@ async function openInstanceConfigScreen(page: import('@playwright/test').Page) {
     name: 'Configurazione server',
     exact: true,
   }).click();
-  await expect(
-    page.getByRole('button', { name: 'Salva configurazione', exact: true }),
-  ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+  const saveButton = page.getByRole('button', {
+    name: 'Salva configurazione',
+    exact: true,
+  });
+  await saveButton.scrollIntoViewIfNeeded();
+  await expect(saveButton).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+}
+
+async function clickSaveInstanceConfig(page: import('@playwright/test').Page) {
+  const saveButton = page.getByRole('button', {
+    name: 'Salva configurazione',
+    exact: true,
+  });
+  await saveButton.scrollIntoViewIfNeeded();
+  await saveButton.click();
 }
 
 async function fillInstanceConfigForm(
@@ -182,9 +194,7 @@ test('owner: tutti i campi configurazione server salvano e persistono', async ({
   await openInstanceConfigScreen(page);
   await fillInstanceConfigForm(page, values);
 
-  await page
-    .getByRole('button', { name: 'Salva configurazione', exact: true })
-    .click();
+  await clickSaveInstanceConfig(page);
   await expect(
     page.getByText('Configurazione salvata', { exact: true }).first(),
   ).toBeVisible({
@@ -264,9 +274,7 @@ test('multi-account: salvataggio solo con owner in focus (no owner required)', a
 
   await openInstanceConfigScreen(page);
   await fillInstanceConfigForm(page, values);
-  await page
-    .getByRole('button', { name: 'Salva configurazione', exact: true })
-    .click();
+  await clickSaveInstanceConfig(page);
 
   await expect(
     page.getByText('Configurazione salvata', { exact: true }).first(),
@@ -314,9 +322,7 @@ test('promote dopo login: save senza logout', async ({ page }) => {
 
   await openInstanceConfigScreen(page);
   await fillInstanceConfigForm(page, values);
-  await page
-    .getByRole('button', { name: 'Salva configurazione', exact: true })
-    .click();
+  await clickSaveInstanceConfig(page);
 
   await expect(
     page.getByText('Configurazione salvata', { exact: true }).first(),

@@ -629,25 +629,32 @@ class _InstanceConfigScreenState extends State<InstanceConfigScreen> {
                         ),
                         const SizedBox(height: 20),
                       ],
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: _saving ? null : () => unawaited(_save()),
-                          child: _saving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Salva configurazione'),
-                        ),
-                      ),
                     ],
                   ),
                 ),
+      bottomNavigationBar: _loading || _error != null
+          ? null
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _saving ? null : () => unawaited(_save()),
+                    child: _saving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Salva configurazione'),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 }
