@@ -106,12 +106,15 @@ class NavigationCoordinator {
   Future<void> switchToAccount(
     String accountUserId, {
     bool deferProfileSync = false,
+    bool deferInboxLoad = false,
   }) async {
     await adapters.switchToAccount(
       accountUserId,
       deferProfileSync: deferProfileSync,
     );
-    await _manager.refreshFocusedInbox();
+    if (!deferInboxLoad) {
+      await _manager.refreshFocusedInbox();
+    }
     _notifyStateChanged();
   }
 

@@ -18,12 +18,13 @@ COPY client/ ./
 # Instance wiring (operators edit client/deploy/fly/config.json before deploy).
 COPY client/deploy/fly/config.json web/config.json
 
+# --pwa-strategy=none: non registrare il service worker Flutter deprecato (reload multipli).
+# Canvaskit resta in build/web: evita ~7MB da gstatic a ogni cold start.
 RUN flutter build web --release \
     --base-href / \
     --no-pub \
-    --no-wasm-dry-run
-
-RUN rm -rf build/web/canvaskit
+    --no-wasm-dry-run \
+    --pwa-strategy=none
 # Shell entry points are rendered dynamically by the gateway sidecar.
 RUN rm -f build/web/index.html build/web/manifest.json
 

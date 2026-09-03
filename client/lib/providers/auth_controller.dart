@@ -172,6 +172,7 @@ class AuthController extends ChangeNotifier {
         await _navigation.switchToAccount(
           focus,
           deferProfileSync: true,
+          deferInboxLoad: true,
         );
         error = null;
       } catch (e) {
@@ -179,6 +180,10 @@ class AuthController extends ChangeNotifier {
       }
     }
     await _sessionCoordinator.completeBootstrap();
+    final focused = _manager.focusedSession;
+    if (focused != null && !focused.profile.isGroup) {
+      unawaited(_manager.refreshFocusedInboxSilently());
+    }
     notifyListeners();
   }
 

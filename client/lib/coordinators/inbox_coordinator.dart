@@ -44,6 +44,7 @@ class InboxCoordinator {
   final InboxState state = InboxState();
   RealtimeChannel? _channel;
   bool _realtimeAttached = false;
+  bool _disposed = false;
 
   List<ChatPeer> get filteredPeers => filterByQueryFields(
         state.peers,
@@ -67,6 +68,7 @@ class InboxCoordinator {
       _machine.send(LoadInbox(showLoadingIndicator: showLoadingIndicator));
 
   void dispose() {
+    _disposed = true;
     _inboxService.disposeChannel(_channel);
   }
 
@@ -91,7 +93,10 @@ class InboxCoordinator {
     state.isLoading = _machine.loadState == InboxLoadState.loading;
   }
 
-  void _notify() => _onStateChanged();
+  void _notify() {
+    if (_disposed) return;
+    _onStateChanged();
+  }
 }
 
 class _LiveInboxEffects implements InboxEffects {

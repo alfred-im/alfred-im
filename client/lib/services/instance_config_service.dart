@@ -30,8 +30,9 @@ class InstanceConfigService {
   }
 
   Future<InstanceRuntime> loadRuntime() async {
-    final settings = await fetchSettings();
-    final vapid = await fetchVapidPublicKey();
+    final results = await Future.wait([fetchSettings(), fetchVapidPublicKey()]);
+    final settings = results[0] as InstanceSettings;
+    final vapid = results[1] as String;
     final runtime = InstanceRuntime(settings: settings, vapidPublicKey: vapid);
     InstanceRuntime.install(runtime);
     return runtime;

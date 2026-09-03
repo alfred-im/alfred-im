@@ -9,7 +9,7 @@ Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container:
 | Percorso | Servito da | Fonte dati |
 |----------|------------|------------|
 | `/`, `/index.html`, `/manifest.json` | Gateway Python `:8091` (proxy nginx) | RPC `get_instance_bootstrap` via `config.json` — **nessuna cache RAM** |
-| `/main.dart.js`, `/assets/*`, `/icons/*`, … | nginx statico | Build Flutter (`flutter build web`) |
+| `/main.dart.js`, `/assets/*`, `/icons/*`, … | nginx statico | Build Flutter (`flutter build web --pwa-strategy=none`) — CanvasKit incluso in immagine |
 | `/config.json` | nginx statico | `client/deploy/fly/config.json` (wiring Supabase + `publicBaseUrl`) |
 | `/push_sw.js` | nginx statico | `client/web/push_sw.js` (icona da payload push, fallback statico) |
 
