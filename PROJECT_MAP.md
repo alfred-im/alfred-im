@@ -129,7 +129,7 @@
 | **Backend** | `SupabaseClient` della sessione in **focus** (una GoTrue attiva) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
 | **Gate CI** | `scripts/verify.sh` — igiene: sync spec/modello + analyze + test Dart isolati (**non** valida il prodotto) |
-| **Build web** | `flutter build web --base-href "/"` |
+| **Build web** | Locale: `flutter build web --base-href "/"`. Release Fly: `--pwa-strategy=none` + CanvasKit in immagine — vedi `client/deploy/fly/README.md` § Build web e avvio |
 
 **Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `inbox`, `messaging`, `navigation`, `group_home`, `group_messages`, `shareable_link` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — **unico ingresso** push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `coordinators/` (facade: `MessagesController`).
 

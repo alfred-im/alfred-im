@@ -11,7 +11,7 @@
 | Termine | Definizione |
 |---------|-------------|
 | **Auth overlay** | Strato credenziali sopra la shell — mai sostituisce la shell. |
-| **Bootstrapping** | Fase avvio app: caricamento manifest e ripristino focus prima di `sessionReady`. |
+| **Bootstrapping** | Fase avvio app: caricamento manifest, ripristino focus, `sessionReady`; inbox carica in background dopo `sessionReady` (non blocca la shell). |
 | **Session restore** | Ripristino sessione GoTrue per account da persistenza locale o refresh token. |
 | **Ephemeral bootstrap** | Client auth effimero per login/sign-up/reset — nessuna persistenza sessione sul client bootstrap. |
 | **Session adoption** | Trasferimento sessione dal client bootstrap al client dedicato dell'account. |

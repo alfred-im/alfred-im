@@ -121,6 +121,7 @@ Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/r
 | `manual-push-poison-repro.spec.ts` | `e2e-nav-local` | Push tap multi-account + mailbox poison |
 | `push-tap-multi-account.spec.ts` | `e2e-nav-local`, `e2e-push-local` | Due account → tap notifica → focus destinatario + chat |
 | `push-full.spec.ts` | `e2e-push-local`, CI step 6 | Permesso → subscribe → messaggio → notifica in SW |
+| `demo-live-startup-timing.spec.ts` | manuale / post-deploy Fly | Cronometra splash e transfer su demo live (`ALFRED_BASE_URL`, default `alfred-im-web.fly.dev`) |
 | `chat-inbox-parity.spec.ts` | `e2e-nav-local`, CI step 6 | Parità inbox ↔ chat |
 
 Helper riusabili: `e2e/helpers/local-multi-account.ts`, `focus.ts`, `push.ts` (`simulateNotificationTap`, `installPushTestEnvironment`).

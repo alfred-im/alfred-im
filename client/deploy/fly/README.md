@@ -15,6 +15,37 @@ Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container:
 
 Template gateway: `client/deploy/gateway/templates/`. Il build Flutter **non** include `index.html` / `manifest.json` branded (rimossi post-build nel Dockerfile).
 
+## Build web e avvio (performance)
+
+Il Dockerfile Fly usa:
+
+```bash
+flutter build web --release --base-href / --pwa-strategy=none
+```
+
+| Scelta | Motivo |
+|--------|--------|
+| **`--pwa-strategy=none`** | Il service worker Flutter 3.44 è deprecato: la build default registrava uno stub che si disinstallava e **ricaricava la pagina** (reload multipli, splash lunga). Push Web usa **`push_sw.js`** registrato dal client Dart — non dipende dal SW Flutter. |
+| **CanvasKit in immagine** | Non rimuovere `build/web/canvaskit/`: evita ~7 MB da `gstatic.com` a ogni cold start. Gli asset statici (`main.dart.js`, `canvaskit/*`) hanno cache HTTP `immutable` (1 anno) via nginx. |
+
+### Cosa resta lento anche con cache HTTP
+
+La cache del browser **non salta** parse/compile JS (~3,4 MB `main.dart.js`), init CanvasKit WASM né le RPC Supabase a ogni avvio (`config.json`, `get_instance_bootstrap`, `get_push_vapid_public_key`, restore sessione). La shell HTML (`GET /`) passa dal gateway con `Cache-Control: no-cache` (branding dinamico).
+
+Boot client (dopo deploy): `sessionReady` viene impostato **prima** del caricamento inbox (inbox in background con `showLoadingIndicator: false`).
+
+### Benchmark avvio (Playwright)
+
+Dopo deploy, cronometra cold/warm sulla demo:
+
+```bash
+cd client && npx playwright test e2e/demo-live-startup-timing.spec.ts --reporter=line
+# override URL:
+ALFRED_BASE_URL=https://alfred-im-web.fly.dev/ npx playwright test e2e/demo-live-startup-timing.spec.ts
+```
+
+Vedi `client/e2e/demo-live-startup-timing.spec.ts` (metriche: splash hidden, navigazioni, transfer rete).
+
 ## Cosa configurare (istanza)
 
 | File | Cosa |

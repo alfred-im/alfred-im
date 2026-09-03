@@ -83,6 +83,8 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 
 - **Project page:** https://alfred-im.github.io/ — static landing in `org-site/` (deploy `deploy-org-site.yml`, secret `ORG_SITE_PAT`)
 - **Try it:** https://alfred-im-web.fly.dev/ — `client/deploy/fly/`, deploy `scripts/fly-deploy-client.sh`
+- Build Fly: `flutter build web --pwa-strategy=none` (no SW Flutter deprecato); CanvasKit servito dall'origine — vedi `client/deploy/fly/README.md` § Build web e avvio
+- Benchmark avvio demo: `cd client && ALFRED_BASE_URL=https://alfred-im-web.fly.dev/ npx playwright test e2e/demo-live-startup-timing.spec.ts`
 - Build web: `cd client && bash scripts/verify.sh --build` (base-href `/`)
 - Auto-deploy (opzionale): Fly Deployments → collega repo GitHub, branch `main`, working directory `.` (vedi `client/deploy/fly/README.md`). L'agente **non** attende il deploy Fly.
 

@@ -17,7 +17,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 
 | Elemento | Valore |
 |----------|--------|
-| Service worker | `client/web/push_sw.js` (o modulo registrato da `flutter_bootstrap.js`) |
+| Service worker | `client/web/push_sw.js` — registrato dal client Dart (`PushPlatform`); **non** dal service worker Flutter (build Fly: `--pwa-strategy=none`) |
 | Client Dart | `PushSubscriptionService`, `PushCoordinator`, `PushSuppressionBinder` |
 | Bootstrap | `AuthSessionCoordinator` — sync `AllOpenAccounts` post-`sessionReady` |
 | Lifecycle | `PushSuppressionBinder` — soppressione + resume (`FocusedAccount` only) |
