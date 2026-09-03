@@ -1,7 +1,7 @@
 # Glossario — contesto auth
 
 **Bounded context:** `auth`  
-**Ultima revisione:** 2026-07-27  
+**Ultima revisione:** 2026-09-03  
 **Promesse SDD:** [SURF-AUTH](../../specs/surfaces/SURF-AUTH.md), [PROM-MULTI-ACCOUNT](../../specs/promises/product/PROM-MULTI-ACCOUNT.md)
 
 ---

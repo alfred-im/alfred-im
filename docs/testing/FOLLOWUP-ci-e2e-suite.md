@@ -9,15 +9,16 @@
 
 | Layer | Stato |
 |-------|--------|
-| Gate Dart (`verify.sh`) | ✅ 481 test |
+| Gate Dart (`verify.sh`) | ✅ 487 test |
 | CI release-suite step 1–5 | ✅ stack, SQL smoke, integration, Dart `@stack`, build web |
 | CI Playwright step 6 | ✅ **9 spec** (`e2e/` intero, ~2.6 min headless) |
 
-### Spec in `client/e2e/` (9)
+### Spec in `client/e2e/` (10)
 
 | Spec | Tier |
 |------|------|
 | `photo-resume-session-repro` | flusso-reale ★ |
+| `demo-live-startup-timing` | manuale / post-deploy Fly |
 | `inbox-open-chat` | e2e-nav-local |
 | `chat-inbox-parity` | e2e-nav-local |
 | `manual-push-poison-repro` | e2e-nav-local |

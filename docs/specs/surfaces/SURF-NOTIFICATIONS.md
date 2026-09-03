@@ -4,7 +4,7 @@
 |-------|--------|
 | **Superficie ID** | `SURF-NOTIFICATIONS` |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-28 |
+| **Ultima revisione** | 2026-09-03 |
 | **Promesse** | [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) |
 
 Binding UX e service worker per notifiche Web Push VAPID: permesso browser, registrazione subscription, visualizzazione notifica, tap → chat.

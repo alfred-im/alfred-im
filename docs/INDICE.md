@@ -41,6 +41,7 @@ Navigazione per AI.
 - [AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md) — account agente; non toccare test1–4
 - [testing/strategy.md](./testing/strategy.md) — gate vs release; **riferimento test:** `client/e2e/photo-resume-session-repro.spec.ts`
 - [client/scripts/test/README.md](../client/scripts/test/README.md) — catalogo suite (`flusso-reale`)
+- [client/deploy/fly/README.md](../client/deploy/fly/README.md) — deploy Fly, build web (`--pwa-strategy=none`), benchmark avvio demo
 
 ---
 
@@ -96,4 +97,4 @@ Navigazione per AI.
 - [WISHLIST.md](./WISHLIST.md) — backlog funzionalità (XMPP, UI)
 - [specs/contracts/schema.md](./specs/contracts/schema.md) · [rpc.md](./specs/contracts/rpc.md)
 
-**Ultimo aggiornamento**: 2026-08-08
+**Ultimo aggiornamento**: 2026-09-03
