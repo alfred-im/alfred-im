@@ -84,7 +84,7 @@ Gate: `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutt
 
 **CI completa:** `.github/workflows/release-suite.yml` — un job sequenziale: gate → docker-smoke → `ci-release-tests.sh` (target wall clock ~10 min, timeout 15).
 
-**Nota:** `flutter test` senza `--exclude-tags` include i test `diagnostic` (falliscono by design senza define). Il gate usa `verify.sh` — **481** test al 2026-08-08 (tag `stack` e `diagnostic` esclusi).
+**Nota:** `flutter test` senza `--exclude-tags` include i test `diagnostic` (falliscono by design senza define). Il gate usa `verify.sh` — **487** test al 2026-09-03 (tag `stack` e `diagnostic` esclusi).
 
 ---
 

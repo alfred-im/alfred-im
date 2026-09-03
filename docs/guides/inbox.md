@@ -2,13 +2,20 @@
 
 **Regole prodotto:** [PROM-LIST-FILTER](../specs/promises/product/PROM-LIST-FILTER.md), [SURF-INBOX](../specs/surfaces/SURF-INBOX.md), [PROM-REALTIME-ARCHIVE](../specs/promises/product/PROM-REALTIME-ARCHIVE.md)
 
-**Ultima revisione:** 2026-08-08
+**Ultima revisione:** 2026-09-03
 
 ---
 
 ## Stabilità auth → inbox
 
-L'inbox carica solo dopo `sessionReady` e restore sessione del focus.  
+`sessionReady` abilita la shell (`AppShell` → `HomeScreen`) **prima** che l'inbox abbia finito di caricare.
+
+| Fase | Comportamento |
+|------|---------------|
+| **Boot** | `switchToAccount(deferInboxLoad: true)` → restore sessione focus; `completeBootstrap()` imposta `sessionReady`; poi `refreshFocusedInboxSilently()` in background |
+| **Cambio focus** | `switchToAccount` → `refreshFocusedInbox()` (await) |
+| **Ingresso chat** | `refreshFocusedInboxSilently()` — non blocca navigazione ([PROM-CONVERSATION-SCOPE-010](../specs/promises/product/PROM-CONVERSATION-SCOPE.md)) |
+
 `HomeScreen` usa `ListenableBuilder` su `focusedSession?.inboxController` con `ValueKey(userId)`.
 
 Provider contatti/profilo: `ChangeNotifierProxyProvider` legati ad `AuthController.focusedSession` — non provider globali scollegati dal focus.

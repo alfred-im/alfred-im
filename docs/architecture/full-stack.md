@@ -1,6 +1,6 @@
 # Alfred — Architettura (panoramica)
 
-**Data**: 2026-08-08  
+**Data**: 2026-09-03  
 **Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
 **Stato**: prodotto stabile su `main`
 
@@ -68,10 +68,17 @@ client/lib/
 
 ### 2.3 Bootstrap
 
-1. `bootstrapApp()` — nessuna sessione globale
-2. `AuthController.initialize()` → manifest + restore focus
+1. `bootstrapApp()` — solo `WidgetsFlutterBinding`; config istanza (RPC parallele)
+2. `AuthController.initialize()`:
+   - manifest + focus (`MultiAccountAdapters.bootstrapManifest`)
+   - restore sessione focus (`switchToAccount` con `deferInboxLoad: true`)
+   - `completeBootstrap()` → `sessionReady` (shell visibile)
+   - inbox in background (`refreshFocusedInboxSilently`)
 3. `AppShell` → sempre `HomeScreen`; overlay se 0 account
-4. `ShareableLinkListener` → fragment `#` in ingresso ([PROM-SHAREABLE-LINK](../specs/promises/product/PROM-SHAREABLE-LINK.md))
+4. Splash HTML (`#alfred-boot-splash` in `client/web/index.html`) si nasconde su evento `flutter-first-frame`
+5. `ShareableLinkListener` → fragment `#` in ingresso ([PROM-SHAREABLE-LINK](../specs/promises/product/PROM-SHAREABLE-LINK.md))
+
+**Build web / cold start (Fly):** `--pwa-strategy=none` (no service worker Flutter deprecato), CanvasKit servito dall'origine — dettaglio e benchmark in `client/deploy/fly/README.md` § Build web e avvio.
 
 ### 2.4 Link condivisibili (fragment `#`)
 

@@ -4,6 +4,25 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
+## [Unreleased] - 2026-09-03
+
+### Modificato
+
+- **perf(web):** build Fly `--pwa-strategy=none` — niente service worker Flutter 3.44 (stub che si disinstallava e ricaricava la pagina)
+- **perf(web):** CanvasKit incluso in immagine Fly (non più ~7 MB da `gstatic.com` a cold start)
+- **Boot client:** `sessionReady` prima del caricamento inbox; RPC bootstrap istanza in parallelo; inbox `refreshFocusedInboxSilently()` dopo bootstrap
+- **Fix:** guard `_disposed` su `InboxCoordinator._notify()` (race boot)
+
+### Aggiunto
+
+- **Benchmark Playwright:** `client/e2e/demo-live-startup-timing.spec.ts` — splash, navigazioni, transfer su demo live (`ALFRED_BASE_URL`)
+
+### Documentazione
+
+- `client/deploy/fly/README.md`, `AGENTS.md`, `PROJECT_MAP.md`, `SURF-NOTIFICATIONS`, `docs/domain/auth/glossary.md`, `docs/guides/inbox.md`, `docs/guides/multi-account.md`, `docs/architecture/full-stack.md`, `docs/decisions/multi-account-parallel-sessions.md`, `client/README.md`, `docs/testing/strategy.md`, `docs/INDICE.md`
+
+---
+
 ## [Unreleased] - 2026-08-31
 
 ### Aggiunto
@@ -447,4 +466,4 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 
 ---
 
-**Ultimo aggiornamento**: 2026-08-08
+**Ultimo aggiornamento**: 2026-09-03

@@ -44,18 +44,21 @@ Il focus determina quale `AccountSession` è in RAM. Gli altri account compaiono
 
 ### Avvio
 
-1. `AuthController.initialize()` → `AccountManager.initialize()` → `_rebuildFromManifest()`
-2. Carica `OpenAccount[]`; entry con `refreshToken` vuoto restano nel manifest come **disconnesso** (errore sessione)
-3. Focus da `alfred_focus_user_id` o primo account
-4. `_activateFocusedSession()` — `AccountSession.restore()` solo per il focus
-5. Zero account → overlay obbligatorio
+1. `bootstrapApp()` — solo binding; config istanza (RPC parallele in `InstanceConfigService`)
+2. `AuthController.initialize()`:
+   - `AuthSessionCoordinator.initialize()` → `MultiAccountAdapters.bootstrapManifest()` (`ManifestLoaded` → focus da manifest)
+   - Se c'è focus: `NavigationCoordinator.switchToAccount(..., deferProfileSync: true, deferInboxLoad: true)` — `AccountSession.restore()` solo per il focus
+   - `completeBootstrap()` → `sessionReady` (shell + gate push/notifiche)
+   - Inbox: `refreshFocusedInboxSilently()` in background (non blocca `sessionReady`)
+3. Entry manifest con `refreshToken` vuoto restano **disconnesse** (errore sessione)
+4. Zero account → overlay obbligatorio
 
 ### Login / registrazione
 
-1. Client bootstrap effimero (`createBootstrapClient`, `EphemeralPkceStorage`)
+1. Client bootstrap effimero (`AccountSession.createBootstrapClient`, `EphemeralPkceStorage`)
 2. **Non** chiamare `signOut` sul bootstrap dopo adozione sessione dedicata (revoca refresh condiviso)
-3. `_sessionFromAuthResponse` → `setSession` sul client dedicato
-4. `upsertAccount` nel manifest → `_rebuildFromManifest(focusUserId: nuovo)`
+3. `signInAndUpsertManifest` / `signUpAndUpsertManifest` → `openAccountFromAuthResponse` sul client dedicato + `upsertAccount` nel manifest
+4. `MultiAccountMachine`: focus sul nuovo account → `SessionAuthority.requestFocusSwitch` → `NavigationCoordinator.syncShellAfterFocusSettled`
 
 ### Cambio focus
 

@@ -14,7 +14,7 @@ Client web collegato a Supabase (contatti, inbox, chat realtime, profilo, **mult
 | **Auth** | Overlay su shell (`AuthOverlay`), non schermata piena |
 | **Try it** | https://alfred-im-web.fly.dev/ |
 | **Owner / branding** | Pannello configurazione server — shell PWA + upload logo/favicon (`SURF-INSTANCE-CONFIG`) |
-| **Deploy** | Fly: `bash scripts/fly-deploy-client.sh` — vedi `deploy/fly/README.md` |
+| **Deploy** | Fly: `bash scripts/fly-deploy-client.sh` — build `--pwa-strategy=none`, CanvasKit in immagine — vedi `deploy/fly/README.md` § Build web e avvio |
 | **Layout** | Lista inbox + chat (stile WhatsApp Web) |
 | **Inbox** | RPC `list_inbox()` — aggregazione on-read su `messages` |
 | **Chat** | Identificata da `peer_profile_id` (`ChatPeer`) |
@@ -28,7 +28,7 @@ Client web collegato a Supabase (contatti, inbox, chat realtime, profilo, **mult
 | **Reazioni** | Tap messaggio → overlay reazioni — `PROM-MESSAGE-REACTIONS` |
 | **@mentions** | Evidenziazione e navigazione @username in chat — `PROM-MESSAGE-MENTION` |
 | **Invio** | `send_message_to_profile` |
-| **Gate test** | `verify.sh` — **481** test unit/widget (zero issue analyze) |
+| **Gate test** | `verify.sh` — **487** test unit/widget (zero issue analyze) |
 
 Build native mobile/desktop non è focus del progetto oggi; la superficie supportata è il web client.
 

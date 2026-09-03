@@ -110,8 +110,8 @@ La sessione client in focus usa il JWT proprio → RLS e Realtime rispettano `au
 
 | Evento | Comportamento |
 |--------|---------------|
-| `initialize()` / F5 | Carica manifest; ripristina **solo** l’account in focus |
-| Cambio focus UI (`AuthController.setFocus` → `SessionAuthority.requestFocusSwitch`) | `disposeResources(clearAuthStorage: false)` sulla sessione corrente; `AccountSession.restore()` per il nuovo focus da manifest; `inboxController.load()` |
+| `initialize()` / F5 | `bootstrapManifest` → `switchToAccount(deferInboxLoad: true)` → `sessionReady` → inbox in background (`refreshFocusedInboxSilently`) |
+| Cambio focus UI (`AuthController.setFocus` → `SessionAuthority.requestFocusSwitch`) | `disposeResources(clearAuthStorage: false)` sulla sessione corrente; `AccountSession.restore()` per il nuovo focus da manifest; `refreshFocusedInbox()` |
 | `openAccounts` | Legge dal **manifest** (non solo da `_sessions`) |
 | Account non in focus | Nessun `SupabaseClient` in RAM; token e profilo restano su disco |
 
