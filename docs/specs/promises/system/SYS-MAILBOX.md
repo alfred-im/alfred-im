@@ -33,7 +33,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 |----|----------|
 | **SYS-MAILBOX-001** | Tabella `messages` con `archive_user_id` (archivio) e `author_id` (autore originale contenuto) — [schema.md](../../contracts/schema.md) § mailbox |
 | **SYS-MAILBOX-002** | Nessuna riga visibile a due titolari archivio: mittente e destinatario hanno **sempre** `id` riga distinti |
-| **SYS-MAILBOX-003** | `logical_message_id` (λ) UUID generato server alla accettazione invio; correlazione copie e segnali spunta |
+| **SYS-MAILBOX-003** | `logical_message_id` UUID assegnato dal **server mittente** all'accettazione invio; replicato identico sul destinatario; correlazione copie e segnali spunta |
 | **SYS-MAILBOX-004** | `client_message_id` solo sulla copia mittente (`archive_user_id = author_id = mittente`); dedup UNIQUE `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL` |
 | **SYS-MAILBOX-005** | Dedup materializzazione destinatario: UNIQUE `(archive_user_id, logical_message_id)` |
 | **SYS-MAILBOX-006** | RLS: SELECT/INSERT/UPDATE solo `archive_user_id = auth.uid()` — **nessuna eccezione** |
@@ -158,7 +158,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 |----|-------|-------|
 | `id` | Per archive_user | PK riga archivio locale |
 | `client_message_id` | Copia mittente | Idempotenza invio client |
-| `logical_message_id` | Piattaforma | Correlazione copie + spunte |
+| `logical_message_id` | Server mittente | Identificativo globale messaggio (assegnato dal server mittente, replicato sul destinatario) |
 | `external_id` | Federato futuro | Bridge (fase B) |
 
 | Copia | Campi | Semantica |

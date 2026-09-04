@@ -110,7 +110,7 @@ storage: chat-media, avatars, instance-branding
 | `original_author_id` | uuid FK nullable → profiles | Autore contenuto se `author_id` è gruppo — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
 | `peer_profile_id` | uuid FK nullable | Controparte internal |
 | `peer_external_address` | text nullable | Federato futuro |
-| `logical_message_id` | uuid NOT NULL | λ — correlazione copie |
+| `logical_message_id` | uuid NOT NULL | Identificativo globale messaggio — assegnato dal server mittente, replicato identico sul destinatario |
 | `client_message_id` | text nullable | Solo copia mittente |
 | `protocol` | contact_protocol | Routing recapito |
 | `body` | text | |

@@ -21,7 +21,7 @@
 | **ProcessPushNotification** | Handler evento `push_notify`: invoca pipeline Web Push (SYS-PUSH). |
 | **Synchronous internal** | Su protocollo internal, worker eseguito nella **stessa transazione** del confine account — esito immediato per l'utente. |
 | **DeliverySilentlyBlocked** | Esito gate allow list negato; spunta doppia mittente non valorizzata; nessun errore verso mittente (termine condiviso con reception). |
-| **Logical message id (λ)** | Correlazione tra copie mittente/destinatario e target segnali spunta. |
+| **Logical message id** | Identificativo globale del messaggio: assegnato dal server mittente all'accettazione, replicato identico sul destinatario; target segnali spunta e reaction. |
 | **Recipient idempotency** | Materializzazione copia destinatario idempotente per coppia archive_user + id logico. |
 | **Queue status** | `queued` → `completed` (o `failed` con ultimo errore registrato). |
 | **Delivery tick** | Aggiornamento spunte sulla copia mittente — osservabile via Realtime client. |
