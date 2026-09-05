@@ -95,7 +95,8 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e 
 | Materializzazione copia destinatario | `(archive_user_id destinatario, logical_message_id)` |
 | Job outbox | `outbox.id` + `event_kind` |
 | Segnale `delivered` / `read` | `(archive_user_id mittente, logical_message_id)` |
-| Bridge federato (inbound ack) | `external_id` + protocollo → risoluzione su λ |
+| Gotham inbound (native) | `logical_message_id` (MESSAGE); `read_receipt_id` (READ); `reaction_fact_id` (REACTION) |
+| Bridge legacy XMPP/Matrix (inbound ack) | `external_id` + protocollo → risoluzione su `logical_message_id` |
 
 `client_message_id` e `logical_message_id` restano **sempre** distinti: il primo è solo invio, il secondo solo correlazione e recapito.
 
@@ -128,19 +129,23 @@ Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istan
 
 Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 
-| Ruolo | Internal Alfred | Federato (riferimento protocollo) |
-|-------|-----------------|-----------------------------------|
-| Correlazione copie + spunte | `logical_message_id` (λ) | λ + `external_id` (XMPP `id` · Matrix `event_id`) |
-| Copia mittente | Riga nel **mio** archivio (`author_id = io`), `id` locale | Archivio uscita lato Alfred |
-| Copia destinatario | Riga nel **suo** archivio (`author_id = mittente`), `id` locale | Archivio ingresso / server esterno |
+| Ruolo | Internal Alfred | Gotham (nativo) | Legacy XMPP/Matrix |
+|-------|-----------------|-----------------|-------------------|
+| Correlazione copie + spunte messaggio | `logical_message_id` | `logical_message_id` | `logical_message_id` + `external_id` |
+| Evento lettura | `read_receipt_id` (mint lettore → replica mittente) | stesso modello via wire READ | bridge → stessi campi DB |
+| Evento reaction | `reaction_fact_id` | stesso modello via wire REACTION | N/A (stub) |
+| Copia mittente | Riga nel **mio** archivio (`author_id = io`), `id` locale | Archivio uscita lato Alfred | Archivio uscita lato Alfred |
+| Copia destinatario | Riga nel **suo** archivio (`author_id = mittente`), `id` locale | `materialize_inbound_sender_message` (id remoto invariato) | Archivio ingresso / server esterno |
+
+Wire Gotham: [gotham-protocol.md](./gotham-protocol.md). Gotham **non** usa `external_id` sul messaggio.
 
 ### Tre livelli (semantica [server-as-reception](../decisions/server-as-reception.md))
 
 | Livello | UI | Significato | Internal | Federato |
 |---------|-----|-------------|----------|----------|
 | Inviato | ✓ | Accettato da piattaforma / in outbox | Copia mittente creata | Outbox `queued` |
-| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | XEP-0184 / ack bridge → stesso aggiornamento |
-| Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` locale → mint `read_receipt_id` → outbox `read_receipt` → worker → `read_at` + `read_receipt_id` mittente | XEP-0333 / m.receipt → bridge |
+| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | HTTP 2xx Gotham / ack bridge legacy |
+| Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` → `read_receipt_id` → outbox → mittente | Evento READ Gotham / XEP-0333 / m.receipt |
 
 **Non** significa «arrivato sul device» in senso P2P: significa «nella fonte di verità rilevante» (server / piattaforma).
 
@@ -174,14 +179,36 @@ Paolo apre chat (account Paolo)
 
 Gate allow list: [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md).
 
-### Flusso federato (sintesi)
+### Flusso federato Gotham (target)
+
+Vedi [gotham-protocol.md](./gotham-protocol.md). Sintesi:
+
+```
+Invio (account mittente)
+  → INSERT copia mittente (logical_message_id mintato)
+  → INSERT outbox (event_kind=deliver, protocol=gotham, status=queued)
+  → bridge claim → POST /gotham/v1/events (GothamEnvelope MESSAGE)
+  → peer HTTP 2xx → delivered_at mittente — ✓✓ grigie
+
+Peer segna letto
+  → POST /gotham/v1/events (READ: read_receipt_id + object_logical_message_id)
+  → bridge inbound → propagate_read_receipt sul mittente locale
+
+Peer reagisce
+  → POST /gotham/v1/events (REACTION: reaction_fact_id + object_logical_message_id)
+  → bridge inbound → INSERT message_reaction_facts
+```
+
+Inbound messaggio: `materialize_inbound_sender_message` con `logical_message_id` **dal server mittente remoto** — mai rigenerato.
+
+### Flusso federato legacy XMPP/Matrix (riferimento)
 
 ```
 Alfred → outbox → bridge → server esterno del peer
               → copia mittente su Alfred
 
 Peer legge su client esterno → XEP-0333 / m.receipt
-                            → bridge → UPDATE copia mittente Alfred (via external_id / λ)
+                            → bridge → UPDATE copia mittente Alfred (via external_id / logical_message_id)
 ```
 
 Il bridge è **stateless** ([bridge-stateless.md](../decisions/bridge-stateless.md)): traduce il segnale protocollo in update piattaforma, non tiene stato spunte in RAM.
@@ -225,4 +252,5 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 | [SYS-DELIVERY.md](../specs/promises/system/SYS-DELIVERY.md) | Worker outbox + contratto spunte |
 | [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md) | Gate recapito nel worker |
 | [bridge-stateless.md](../decisions/bridge-stateless.md) | Outbox / bridge (se/un quando) |
+| [gotham-protocol.md](./gotham-protocol.md) | Federazione nativa Gotham (HTTP/3, Protobuf, id, mapping outbox) |
 | [contracts/schema.md](../specs/contracts/schema.md) · [contracts/rpc.md](../specs/contracts/rpc.md) | Dettaglio DDL/RPC |

@@ -54,6 +54,8 @@ Il **client non minta** id federativi: chiede l’azione; il server genera l’U
 
 `object_logical_message_id` sull’envelope root compare **solo** per READ e REACTION.
 
+**MESSAGE e LOCATION non hanno un id «evento» separato.** `logical_message_id` **è** l’identificativo federativo del messaggio: non esiste un secondo campo accanto (niente `event_id` generico). Solo READ e REACTION mintano un id evento aggiuntivo (`read_receipt_id`, `reaction_fact_id`) perché agiscono su un messaggio già esistente.
+
 ### 2.3 Retry e deduplicazione
 
 Il bridge, in caso di retry, rimanda lo **stesso POST** con gli **stessi identificativi di dominio**:
@@ -103,9 +105,9 @@ kind = MESSAGE
 object_logical_message_id: assente
 
 MessagePayload:
-  logical_message_id    // id globale messaggio (server mittente)
+  logical_message_id    // id globale messaggio (server mittente) — unico id federativo
   body
-  content_type          // text | gif | voice | image | video
+  content_type          // text | gif | voice | image | video (non "location" — vedi sotto)
   media_url?            // URL condiviso tra copie (stesso blob storage)
   duration_seconds?
   media_mime?
@@ -142,11 +144,13 @@ kind = LOCATION
 object_logical_message_id: assente
 
 LocationPayload:
-  logical_message_id    // come MESSAGE
+  logical_message_id    // come MESSAGE — unico id federativo
   body?
   latitude
   longitude
 ```
+
+**Perché `LOCATION` è un `EventKind` separato:** sul wire la posizione ha payload dedicato (lat/lng). In DB Alfred `message_content_type` include ancora `location` per storage interno; il bridge mappa `EventKind.LOCATION` → `content_type = location` in ingest. Non usare `MessagePayload` con `content_type = location`.
 
 ---
 
@@ -185,6 +189,8 @@ Content-Type: application/x-protobuf
 
 **Non** esiste body di ack strutturato: read e reaction sono **eventi separati**, non embedded nell’ack del MESSAGE.
 
+**Enum proto3:** `EVENT_KIND_UNSPECIFIED` e `REACTION_KIND_UNSPECIFIED` esistono solo per compatibilità protobuf. Sul wire **non** vanno usati; il peer rifiuta envelope con kind non riconosciuto.
+
 ### 4.3 Indirizzi
 
 Formato: `username@server` dove `server` identifica l’istanza Alfred peer (es. dominio Fly dell’istanza).
@@ -220,6 +226,13 @@ Stesso bus **outbox** per internal e federato; differisce solo il consumer in fo
 ```
 
 Su **internal** oggi il worker gira sincrono nella stessa transazione RPC (`protocol = internal`). Per federato il passo 2 è **async** (outbox resta `queued` fino al bridge).
+
+| `outbox.protocol` | Consumer | Quando |
+|-------------------|----------|--------|
+| `internal` | `alfred_delivery.process_outbox` (sincrono in transazione RPC) | Oggi |
+| `gotham` | Bridge worker (claim async) | Da implementare |
+
+**Debito implementativo — `outbox.message_id`:** colonna FK con significato diverso per `event_kind` (ancora mittente, lettore, destinatario push, …). Vedi [schema.md](../specs/contracts/schema.md) § outbox. Il bridge Gotham deve leggere gli id dal **payload**, non inferirli da `message_id`.
 
 ### 5.2 Inbound (peer → istanza destinatario)
 
@@ -265,6 +278,10 @@ Prerequisiti piattaforma per Gotham (implementati):
 
 Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `group_erogate`, `push_notify`.
 
+`push_notify` è **solo internal**: accodato dal worker dopo recapito locale riuscito ([SYS-PUSH](../specs/promises/system/SYS-PUSH.md)). **Non** compare mai sul wire Gotham.
+
+**Enum `contact_protocol`:** i flussi federati assumono `outbox.protocol = gotham`. Su `main` l’enum Postgres ha ancora solo `internal`, `xmpp`, `matrix` — serve migrazione che aggiunga `gotham` prima di abilitare send federato.
+
 ---
 
 ## 7. Componenti runtime (da implementare)
@@ -306,9 +323,17 @@ I bridge Python esistenti (`bridge-xmpp`, `bridge-matrix`) espongono solo `GET /
 
 ---
 
-## 9. Gruppi e federazione
+## 9. Scope MVP e fuori scope
 
-MVP Gotham: **1:1** tra indirizzi utente. I gruppi restano internal sulla stessa istanza (`group_erogate`, `broadcast_message_to_allowlist`). Estensione federata gruppi: fuori scope documento iniziale.
+| In scope MVP Gotham | Fuori scope |
+|---------------------|-------------|
+| Messaggistica 1:1 (`MESSAGE`, `LOCATION`) | Gruppi federati |
+| READ, REACTION come eventi separati | Multi-account sul wire |
+| HTTP/3 + Protobuf + discovery | E2E encryption |
+| Ack MESSAGE = solo HTTP status | `push_notify` sul wire |
+| | Body di ack strutturato |
+
+I gruppi restano **internal** sulla stessa istanza (`group_erogate`, `broadcast_message_to_allowlist`).
 
 ---
 
@@ -340,3 +365,4 @@ MVP Gotham: **1:1** tra indirizzi utente. I gruppi restano internal sulla stessa
 | Data | Modifica |
 |------|----------|
 | 2026-09-05 | Prima stesura — envelope senza `event_id` / `external_id`; id federativi nominati; mapping outbox |
+| 2026-09-05 | Chiarimenti: MESSAGE = solo `logical_message_id`; LOCATION separato; `push_notify` internal-only; debito `contact_protocol` / `outbox.message_id` |

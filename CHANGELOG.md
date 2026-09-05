@@ -11,7 +11,7 @@ Modifiche rilevanti al progetto per tracciare evoluzione tecnica e decisioni imp
 - **#264** — Id logico messaggio mintato solo dal server mittente; replicato identico sul destinatario; `materialize_inbound_sender_message` per inbound federato
 - **#265** — Reaction via outbox (`event_kind = reaction_fact`); worker `process_reaction_fact`; payload outbox completato con `reaction_fact_id`
 - **#266** — Colonna `messages.read_receipt_id`; mint sulla copia lettore; propagazione al mittente via worker
-- **Doc Gotham** — `docs/architecture/gotham-protocol.md` + `docs/specs/contracts/gotham.proto` (federazione wire: HTTP/3, Protobuf, identificatori, mapping outbox)
+- **Doc Gotham** — `docs/architecture/gotham-protocol.md` + `docs/specs/contracts/gotham.proto`; allineamento `mailbox-inbox-outbox-spec` (Gotham vs legacy)
 
 ### Documentazione
 
