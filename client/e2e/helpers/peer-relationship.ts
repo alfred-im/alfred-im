@@ -301,7 +301,7 @@ function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Inbox: Flutter espone un solo pulsante con label «Apri profilo <peer> …». */
+/** Inbox: pulsante «Apri profilo <peer> …»; se apre la chat, fallback su header. */
 export async function openPeerProfileFromInboxRow(
   page: Page,
   peerLabel: string,
@@ -314,6 +314,21 @@ export async function openPeerProfileFromInboxRow(
     .first();
   await expect(profileBtn).toBeVisible({ timeout: E2E_TIMEOUT.ui });
   await profileBtn.click({ timeout: E2E_TIMEOUT.ui });
+  await page.waitForTimeout(400);
+  const rubricaBtn = page.getByRole('button', {
+    name: 'Aggiungi alla rubrica',
+    exact: true,
+  });
+  const removeBtn = page.getByRole('button', {
+    name: 'Rimuovi dalla rubrica',
+    exact: true,
+  });
+  const overlayOpen =
+    (await rubricaBtn.isVisible({ timeout: 1_500 }).catch(() => false)) ||
+    (await removeBtn.isVisible({ timeout: 500 }).catch(() => false));
+  if (!overlayOpen) {
+    await openPeerProfileFromChatHeader(page);
+  }
 }
 
 export async function openPeerProfileFromChatHeader(page: Page): Promise<void> {
