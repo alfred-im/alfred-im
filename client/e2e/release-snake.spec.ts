@@ -168,6 +168,7 @@ test.describe('@release-snake gate release unico', () => {
     await expectNoRelationshipError(page);
     await expectContactInDb(cast.e1.userId, cast.e2.userId);
     await closePeerProfileOverlay(page);
+    await backToInboxFromChat(page);
 
     snakeStep('core.peer.profile_chat_add');
     await transitionPeerCanAdd(cast.e1, cast.e2, peerSeed, `peer2-${stamp}`);
