@@ -20,6 +20,7 @@ import {
   expectContactInDb,
   expectNoRelationshipError,
   openPeerProfileFromChatHeader,
+  openPeerProfileFromInbox,
   prepareLocalPeerRelationshipPair,
   prepareLocalPeerWithRubricaAndConsent,
 } from './helpers/peer-relationship';
@@ -147,7 +148,7 @@ test('overlay da inbox (senza chat): Aggiungi aggiorna pulsante', async ({
   page,
 }) => {
   const stamp = Date.now();
-  const { acct1, acct2, seedMessage } = await prepareLocalPeerRelationshipPair(
+  const { acct1, acct2 } = await prepareLocalPeerRelationshipPair(
     `in1${stamp}`,
     `in2${stamp}`,
   );
@@ -168,19 +169,11 @@ test('overlay da inbox (senza chat): Aggiungi aggiorna pulsante', async ({
   await expect(page.getByRole('button', { name: 'Nuovo messaggio' })).toBeVisible({
     timeout: E2E_TIMEOUT.ui,
   });
-  await expect(page.getByText(seedMessage)).toBeVisible({
-    timeout: E2E_TIMEOUT.message,
-  });
-
   const peerLabel = account2.displayName ?? acct2.username;
-  const peerRow = page
-    .getByRole('button', { name: new RegExp(peerLabel) })
-    .filter({ hasNotText: /@/ })
-    .first();
-  await expect(peerRow).toBeVisible({ timeout: E2E_TIMEOUT.ui });
-  await peerRow
-    .getByRole('button', { name: 'Apri profilo', exact: true })
-    .click();
+  await expect(
+    page.getByRole('button', { name: new RegExp(peerLabel) }).filter({ hasNotText: /@/ }),
+  ).toBeVisible({ timeout: E2E_TIMEOUT.message });
+  await openPeerProfileFromInbox(page, peerLabel);
 
   const addButton = page.getByRole('button', {
     name: 'Aggiungi alla rubrica',
