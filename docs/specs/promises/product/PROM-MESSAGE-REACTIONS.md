@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-MESSAGE-REACTIONS` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-08-08 |
+| **Ultima revisione** | 2026-09-05 |
 
 Promessa di prodotto: tap su un messaggio apre un menu con picker emoji; la reaction scelta è visibile sulla bolla e sincronizzata tra i partecipanti. Dati append-only (`MessageReactionFact`).
 
@@ -71,7 +71,7 @@ L'utente esprime una reaction emoji su un messaggio in conversazione, la vede su
 | PROM-ID | Verifica |
 |---------|----------|
 | `PROM-MESSAGE-REACTIONS-001`–`008` | `client/test/unit/message_reactions_test.dart`, `messaging_machine_test.dart` |
-| Persistenza | `supabase/tests/message_reaction_facts_smoke.sql` |
+| Persistenza | `supabase/tests/message_reaction_facts_smoke.sql` (outbox `reaction_fact` + worker INSERT) |
 
 ---
 

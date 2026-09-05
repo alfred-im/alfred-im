@@ -21,7 +21,7 @@ I bridge Python (**XMPP** e **Matrix**) sono **sempre stateless** rispetto allo 
 
 - Token di sync (MAM/RSM, Matrix sync token)
 - Watermark / cursori per conversazione
-- Outbox messaggi in uscita (`event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_deliver`, …)
+- Outbox messaggi in uscita (`event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`, `reaction_fact`, …)
 - Worker **`alfred_delivery.process_outbox`** — **già in produzione**: consuma outbox `internal` nella stessa transazione RPC (#179); non è solo un consumer futuro del bridge federato
 - Mapping identità Alfred ↔ JID/Matrix ID
 - Metadati federazione e routing per contatto

@@ -3,7 +3,7 @@
 ' Profile: platform
 ' Command: ProcessDeliveryQueue
 ' SDD: SYS-DELIVERY-011
-' Revision: 2026-07-27
+' Revision: 2026-09-05
 
 title seq-process-outbox — dispatcher worker
 
@@ -13,7 +13,7 @@ participant "DeliveryWorker" as DW
 participant "ReceptionGate" as GATE
 participant "MailboxArchive" as MSG
 
-AB -> OB : QueueDelivery / QueueReadReceipt / QueueGroupFanOut
+AB -> OB : QueueDelivery / QueueReadReceipt / QueueGroupFanOut / QueueReactionFact
 AB -> DW : ProcessDeliveryQueue
 
 DW -> OB : read event_kind
@@ -30,6 +30,9 @@ else event_kind = group_erogate
 else event_kind = push_notify
   DW -> DW : ProcessPushNotification
   DW -> OB : DeliveryCompleted
+else event_kind = reaction_fact
+  DW -> DW : ProcessReactionFact
+  DW -> OB : DeliveryCompleted (+ reaction_fact_id)
 else event_kind = deliver (default)
   DW -> DW : DeliverInternal
   DW -> GATE : EvaluateInboundDelivery

@@ -21,11 +21,11 @@
 | `RecipientNotified` | INSERT copia destinatario + `delivered_at` mittente |
 | `DeliverySilentlyBlocked` | outbox `completed` + flag reception; nessuna copia destinatario |
 
-Schema: `alfred_delivery` · Migrazioni: `20260711190000_account_boundary_delivery.sql`, `20260714100000_push_subscriptions.sql`, `20260725100000_delivery_internal_helpers.sql`
+Schema: `alfred_delivery` · Migrazioni: `20260711190000_account_boundary_delivery.sql`, `20260714100000_push_subscriptions.sql`, `20260725100000_delivery_internal_helpers.sql`, `20260905000000_sender_global_message_id.sql`, `20260905120000_reaction_fact_outbox.sql`, `20260905140000_read_receipt_id.sql`
 
 ## Dettaglio platform (non modellato in dominio)
 
-Helper SQL interni (`_claim_outbox`, `_complete_outbox`, `_insert_recipient_copy`) e wrapper `process_read_receipt` (dispatcher verso `propagate_read_receipt`) sono **implementazione** — il dominio espone solo `ProcessDeliveryQueue`, `PropagateReadReceipt`, `QueueReadReceipt`.
+Helper SQL interni (`_claim_outbox`, `_complete_outbox`, `_insert_recipient_copy`) e wrapper `process_read_receipt` (dispatcher verso `propagate_read_receipt`) sono **implementazione** — il dominio espone `ProcessDeliveryQueue`, `PropagateReadReceipt`, `QueueReadReceipt`, `QueueReactionFact`, `ProcessReactionFact`.
 
 Sequence platform usano termini tecnici (`RecipientCopyMaterialized`, `SenderDeliveredAtSet`) dove non esiste evento reception — vedi note nei `.puml`.
 
