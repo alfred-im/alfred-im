@@ -2,6 +2,9 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import type { Page } from '@playwright/test';
+
+import { enableFlutterAccessibility } from './flutter-a11y';
 import type { LocalE2eUser } from './local-auth';
 import { addReceptionAllowlist, sendMessageToProfile } from './local-push-setup';
 import {
@@ -9,7 +12,20 @@ import {
   insertContactInDb,
 } from './peer-relationship';
 import { loginSupabase } from './supabase-api';
+import { waitForAppBoot, waitForLoggedInShell } from './multi-account';
 import { snakeStep } from './snake-log';
+import { E2E_TIMEOUT } from './timeouts';
+
+/** Dopo mutazioni SQL la UI Flutter può restare stale — F5 sul manifest. */
+export async function resyncSnakeShell(page: Page): Promise<void> {
+  await page.reload({
+    waitUntil: 'domcontentloaded',
+    timeout: E2E_TIMEOUT.boot,
+  });
+  await waitForAppBoot(page);
+  await waitForLoggedInShell(page);
+  await enableFlutterAccessibility(page);
+}
 
 /** Allowlist bidirezionale — messaggistica possibile. */
 export async function transitionMessagingReady(

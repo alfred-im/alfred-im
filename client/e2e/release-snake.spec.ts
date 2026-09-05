@@ -89,6 +89,7 @@ import {
 } from './helpers/snake-manifest';
 import { snakeStep } from './helpers/snake-log';
 import {
+  resyncSnakeShell,
   transitionMessagingReady,
   transitionPeerCanAdd,
   transitionPeerEstablished,
@@ -172,6 +173,7 @@ test.describe('@release-snake gate release unico', () => {
 
     snakeStep('core.peer.profile_chat_add');
     await transitionPeerCanAdd(cast.e1, cast.e2, peerSeed, `peer2-${stamp}`);
+    await resyncSnakeShell(page);
     await switchToAccountByDisplayName(
       page,
       entry1.displayName!,
@@ -195,6 +197,7 @@ test.describe('@release-snake gate release unico', () => {
 
     snakeStep('core.peer.actions_menu_profile');
     await transitionPeerCanAdd(cast.e1, cast.e2, peerSeed, `peer3-${stamp}`);
+    await resyncSnakeShell(page);
     await switchToAccountByDisplayName(
       page,
       entry1.displayName!,
@@ -235,6 +238,7 @@ test.describe('@release-snake gate release unico', () => {
       peerSeed,
       `est-${stamp}`,
     );
+    await resyncSnakeShell(page);
 
     snakeStep('core.peer.consent_toggle');
     await switchToAccountByDisplayName(
