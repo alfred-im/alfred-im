@@ -25,6 +25,7 @@ Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri fi
 | **Firme RPC, semantica SQL** | [`specs/contracts/rpc.md`](./specs/contracts/rpc.md) | ADR; `SYS-*.md` §3 |
 | **Payload push** (campi SW) | [`specs/contracts/push-payload.md`](./specs/contracts/push-payload.md) | `SYS-PUSH` · `SYS-PUSH-PAYLOAD` in [registry.md](./specs/registry.md) |
 | **Modello mailbox** (archivio, outbox, worker, λ) | [`architecture/mailbox-inbox-outbox-spec.md`](./architecture/mailbox-inbox-outbox-spec.md) | `full-stack.md`; ADR (principi) |
+| **Protocollo Gotham** (federazione wire, Protobuf, id) | [`architecture/gotham-protocol.md`](./architecture/gotham-protocol.md) · [`specs/contracts/gotham.proto`](./specs/contracts/gotham.proto) | `domain/federation/`; `full-stack.md` (teaser) |
 | **Semantica spunte UI** (✓ / ✓✓ / blu = cloud) | [`decisions/server-as-reception.md`](./decisions/server-as-reception.md) | Mailbox (meccanica, non significato UI) |
 | **Indirizzo + rubrica isolata** | [`decisions/address-based-messaging.md`](./decisions/address-based-messaging.md) | Guide compose |
 | **Altri ADR** (bridge, multi-account, …) | [`decisions/`](./decisions/) | `full-stack.md` |

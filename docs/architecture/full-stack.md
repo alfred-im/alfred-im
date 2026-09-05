@@ -152,8 +152,8 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/fly/README.md`.
 | Reazioni emoji | ✅ tap messaggio → picker; `apply_message_reaction` + realtime fatti — [PROM-MESSAGE-REACTIONS](../specs/promises/product/PROM-MESSAGE-REACTIONS.md) |
 | @mentions | ✅ `@username` cliccabile in body — [PROM-MESSAGE-MENTION](../specs/promises/product/PROM-MESSAGE-MENTION.md) |
 | Rubrica XMPP/Matrix | ✅ salvataggio |
-| Invio federato | ⏸ outbox `queued` |
-| Ricezione federata | ❌ bridge |
+| Invio federato (Gotham) | ⏸ outbox `queued` — spec [gotham-protocol.md](./gotham-protocol.md) |
+| Ricezione federata (Gotham) | ❌ gateway + bridge — vedi [gotham-protocol.md](./gotham-protocol.md) |
 | Push Web (VAPID) | ✅ `implemented` — migrazione + client + Edge Function `send-push` |
 | E2EE | ❌ fuori scope |
 
