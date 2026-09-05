@@ -62,6 +62,15 @@ export async function clickSaveInstanceConfig(page: Page): Promise<void> {
   await saveButton.click();
 }
 
+export async function closeInstanceConfigScreen(page: Page): Promise<void> {
+  await enableFlutterAccessibility(page);
+  const back = page.getByRole('button', { name: 'Back', exact: true });
+  if (await back.isVisible({ timeout: 1_500 }).catch(() => false)) {
+    await back.click({ timeout: E2E_TIMEOUT.ui });
+    await page.waitForTimeout(300);
+  }
+}
+
 export async function fillInstanceConfigForm(
   page: Page,
   values: InstanceConfigExpectation,

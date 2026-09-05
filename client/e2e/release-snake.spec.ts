@@ -27,6 +27,7 @@ import {
 } from './helpers/instance-config';
 import {
   clickSaveInstanceConfig,
+  closeInstanceConfigScreen,
   expectConfigButtonVisible,
   fillInstanceConfigForm,
   openInstanceConfigScreen,
@@ -740,6 +741,7 @@ async function runInstanceConfig(
   await fillInstanceConfigForm(page, focusValues);
   await clickSaveInstanceConfig(page);
   await expectInstanceConfigInDb(focusValues);
+  await closeInstanceConfigScreen(page);
   await switchToAccountByDisplayName(
     page,
     userEntry.displayName!,
@@ -748,6 +750,7 @@ async function runInstanceConfig(
   await expectConfigButtonVisible(page, false);
 
   snakeStep('core.instance.owner_full_save');
+  await closeInstanceConfigScreen(page);
   await switchToAccountByDisplayName(
     page,
     ownerEntry.displayName!,
