@@ -148,7 +148,7 @@ bash scripts/check-composition-sync.sh
 | Suite | Command | Ruolo |
 |-------|---------|--------|
 | CI gate (igiene) | `cd client && bash scripts/test.sh gate` | Lint + compile + test isolati — **non** valida il prodotto |
-| **Flusso reale** | `cd client && bash scripts/test.sh flusso-reale` | **Release:** stesso percorso del telefono (browser + DB) |
+| **Release snake** | `cd client && bash scripts/test.sh e2e` | **Release:** percorso telefono completo (browser + DB) |
 | Catalogo completo | [`client/scripts/test/README.md`](client/scripts/test/README.md) | Tutte le suite manuali |
 
 **Verde al gate ≠ Alfred funziona.** SSOT: [docs/testing/strategy.md](docs/testing/strategy.md) · comandi: [client/scripts/test/README.md](client/scripts/test/README.md)

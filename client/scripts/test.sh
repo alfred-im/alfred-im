@@ -30,14 +30,11 @@ GATE (CI) — igiene codice (mock/fake, niente browser):
 
 STACK LOCALE (CI + release) — supabase start + Flutter :8080:
   sql-smoke         tutti gli smoke SQL (supabase/tests/*.sql)
-  flusso-reale      ★ TELEFONO: 4 user + gruppo → galleria → resume → foto → DB
+  e2e               ★ RELEASE: serpente Playwright unico (19 scenari, retries=0)
+  flusso-reale      alias di e2e (compatibilità)
   integration       API multi-account + contratto spunte (stack locale)
   integration-ticks Solo contratto spunte (✓ / ✓✓ grigie / ✓✓ blu)
   integration-push  Smoke SQL push (stack locale)
-  e2e               release snake Playwright (unico serpente, retries=0)
-  e2e-multi         Playwright multi-account (persist + messaggi)
-  e2e-push-local    Playwright push — ricezione + tap multi-account
-  e2e-nav-local     Playwright navigation — inbox tap + push poison
   stack             flutter test --tags stack (GoTrue locale)
   release           suite completa stack (alias: manual, ci)
   manual            alias di release
@@ -115,10 +112,6 @@ run_e2e() {
   npx playwright test e2e/release-snake.spec.ts --workers=1 --retries=0 "$@"
 }
 
-run_e2e_multi() {
-  bash scripts/run-e2e-multi-account.sh "$@"
-}
-
 run_stack() {
   ensure_local_stack_env
   echo "==> flutter test --tags stack"
@@ -135,8 +128,8 @@ run_diagnose() {
 }
 
 run_real_flow() {
-  echo "==> ★ Flusso utente reale — valida il prodotto (browser + DB + tap veri)"
-  bash scripts/integration-photo-session-repro.sh "$@"
+  echo "==> ★ Flusso utente reale — alias release snake (browser + DB + tap veri)"
+  run_e2e "$@"
 }
 
 run_release() {
@@ -169,17 +162,8 @@ case "$CMD" in
   flusso-reale|real-flow|integration-photo-repro|photo-repro)
     run_real_flow "$@"
     ;;
-  e2e-push-local|push-local)
-    bash scripts/run-push-e2e-local.sh "$@"
-    ;;
-  e2e-nav-local|nav-local)
-    bash scripts/run-e2e-nav-local.sh "$@"
-    ;;
   e2e|playwright)
     run_e2e "$@"
-    ;;
-  e2e-multi|multi-account|multi)
-    run_e2e_multi "$@"
     ;;
   stack|live)
     run_stack "$@"

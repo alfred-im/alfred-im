@@ -15,12 +15,12 @@ Usare **sempre** questa distinzione in README, promesse, guide e `AGENTS.md`:
 | Termine | Significato | Comando tipico |
 |---------|-------------|----------------|
 | **Gate CI / igiene** | Lint, compile, test Dart isolati (mock/fake). **Non** dimostra che l’app funziona per l’utente. | `cd client && bash scripts/verify.sh` |
-| **Validazione release** | Browser e/o DB reali, percorso utente o contratto end-to-end. **È** il criterio di release. | `cd client && bash scripts/test.sh release` (alias `manual`) o suite singole sotto |
+| **Validazione release** | Browser e/o DB reali, percorso utente end-to-end. **È** il criterio di release. | `cd client && bash scripts/test.sh e2e` o `release` |
 
-**Tier di riferimento** per «funziona sul telefono»: `bash scripts/test.sh flusso-reale` (`@real-flow`).  
-**Riferimento per scrivere nuovi test:** [`client/e2e/photo-resume-session-repro.spec.ts`](../../client/e2e/photo-resume-session-repro.spec.ts) — vedi sezione [Come si scrivono i test di release](#come-si-scrivono-i-test-di-release) sotto.
+**Tier di riferimento** per «funziona sul telefono»: `bash scripts/test.sh e2e` (release snake, tag `@release-snake`).  
+**Riferimento per estendere i test:** [`client/e2e/release-snake.spec.ts`](../../client/e2e/release-snake.spec.ts) — vedi sezione [Come si scrivono i test di release](#come-si-scrivono-i-test-di-release) sotto.
 
-Altre suite manuali (`integration`, `e2e-multi`, …) coprono **parti** del prodotto; i test legacy vanno riallineati a questo modello quando si toccano.
+Altre suite manuali (`integration`, …) coprono **parti** del prodotto senza UI completa.
 
 **Frase vietata nelle spec:** implicare che `verify.sh` o il conteggio gate validino il comportamento utente.
 
@@ -28,63 +28,63 @@ Altre suite manuali (`integration`, `e2e-multi`, …) coprono **parti** del prod
 
 ```
 Igiene (CI): check-spec-sync + verify.sh
-Release: vedi docs/testing/strategy.md — almeno flusso-reale se multi-account / media / auth / push
+Release: vedi docs/testing/strategy.md — bash scripts/test.sh e2e (release snake)
 ```
 
 ---
 
 ## Come si scrivono i test di release
 
-**Modello obbligatorio** (da copiare, non reinventare):  
-[`client/e2e/photo-resume-session-repro.spec.ts`](../../client/e2e/photo-resume-session-repro.spec.ts) · comando `bash scripts/test.sh flusso-reale` · tag Playwright `@real-flow`.
+**Modello obbligatorio** (da estendere, non reinventare):  
+[`client/e2e/release-snake.spec.ts`](../../client/e2e/release-snake.spec.ts) · comando `bash scripts/test.sh e2e` · tag `@release-snake`.
 
-Ogni nuovo comportamento che l’utente vede sul telefono si valida **così** — non con altri unit test Dart nel gate.
+Ogni nuovo comportamento che l’utente vede sul telefono si valida **aggiungendo un segmento al serpente** (o un helper invocato da lì) — non con altri unit test Dart nel gate.
 
 ### Cosa fa il modello (checklist)
 
-| # | Regola | Esempio nel file modello |
-|---|--------|---------------------------|
-| 1 | **Stesso percorso utente** — tap, drawer, chat, allegati, lifecycle PWA | `setupFiveLocalAccounts` → switch account → `composeNewMessage` → `sendPhotoFromGalleryAfterPickerResume` |
-| 2 | **Stack reale** — `supabase start`, Flutter web release su `:8080`, Playwright | runner `scripts/run-photo-repro-e2e-local.sh` |
-| 3 | **Auth reale** — utenti creati su stack locale (admin API), login **dal form** nell’app | `prepareLocalFiveAccountManifest`, `loginInAuthForm` |
-| 4 | **Niente scorciatoie** — no curl con JWT forzato, no `setSession` nel test, no “simula mismatch” | tutto via UI + storage GoTrue dell’app |
-| 5 | **Assert su effetti** — non solo “il bottone c’è”: errore assente in UI **e** stato in Postgres | `expectImagePersistedBothSides` (mittente + destinatario) |
+| # | Regola | Esempio nel serpente |
+|---|--------|----------------------|
+| 1 | **Stesso percorso utente** — tap, drawer, chat, allegati, lifecycle PWA | cast e1–e4 + gruppo → switch → galleria → resume |
+| 2 | **Stack reale** — `supabase start`, Flutter web release su `:8080`, Playwright | `bash scripts/test.sh e2e` |
+| 3 | **Auth reale** — utenti creati su stack locale (admin API), login **dal form** nell’app | `ensureManifestAccounts`, `loginInAuthForm` |
+| 4 | **Niente scorciatoie** — no curl con JWT forzato, no `setSession` nel test | tutto via UI + storage GoTrue dell’app |
+| 5 | **Assert su effetti** — non solo “il bottone c’è”: errore assente in UI **e** stato in Postgres | `expectImagePersistedBothSides`, `expectContactInDb` |
 | 6 | **Viewport telefono** + permessi PWA se servono (notifiche, push al resume) | `390×844`, `installPushTestEnvironment` |
-| 7 | **Lifecycle OS** quando il bug dipende da background/resume (picker galleria, ecc.) | `simulateAppBackground` / `simulateAppResume` in `helpers/chat-media.ts` |
-| 8 | **Un file, un viaggio** — uno spec = un flusso completo, non frammenti sparsi | un `test.describe('@real-flow …')` |
-| 9 | **Helper condivisi** — `e2e/helpers/local-multi-account.ts`, `backend-assertions.ts`, `multi-account.ts` | non duplicare login/setup |
-| 10 | **Registrato in hub** — `scripts/test.sh` + riga in `scripts/test/README.md` | comando `flusso-reale` |
+| 7 | **Lifecycle OS** quando il bug dipende da background/resume (picker galleria, ecc.) | `simulateAppBackground` / `simulateAppResume` |
+| 8 | **Serpente ordinato** — cast comune, transizioni SQL, `snakeStep()` per copertura | `snake-transitions.ts`, `snake-log.ts` |
+| 9 | **Helper condivisi** — `e2e/helpers/*`, non duplicare login/setup | `snake-cast.ts`, `peer-relationship.ts` |
+| 10 | **Registrato in hub** — `scripts/test.sh` + riga in `scripts/test/README.md` | comando `e2e` |
 
 ### Cosa non è il modello
 
 - Aggiungere test in `client/test/unit/` o `wiring/` e chiamarli “release”.
 - Playwright che invia RPC/fetch al posto dei tap utente.
 - Assert solo su `img` in canvas Flutter senza verifica DB.
-- Più PR con “un pezzetto” di test senza flusso end-to-end.
+- Nuovi file `.spec.ts` paralleli al serpente (salvo benchmark Fly o debug ad hoc).
 
 ### Aggiungere un nuovo scenario
 
-1. Copiare la struttura di `photo-resume-session-repro.spec.ts`.
-2. Tag `@real-flow` nel `test.describe`.
-3. Runner dedicato `scripts/run-*-e2e-local.sh` (pattern `run-photo-repro-e2e-local.sh`) o estendere quello esistente se stesso stack.
-4. Voce in `scripts/test.sh` (alias sotto `flusso-reale` o nuovo comando documentato in README).
-5. Riga in tabella tracciabilità promessa → colonna **Release**.
+1. Estendere `release-snake.spec.ts` con nuovo `snakeStep('core.…')` e assert.
+2. Se serve setup SQL/DB, aggiungere transizione in `snake-transitions.ts`.
+3. Helper riusabile in `e2e/helpers/` se la logica è ripetibile.
+4. Riga in tabella tracciabilità promessa → colonna **Release**.
 
 ---
 
 | Tier | Dove | Quando gira | Cosa dimostra |
 |------|------|-------------|---------------|
 | **1a–1d Gate** | `client/test/unit/`, `wiring/`, `composition/`, `widget/` | Ogni PR (CI) | Lint, compile, pezzi isolati con mock/fake — **non** il prodotto |
-| **★ Flusso reale** | `scripts/test.sh flusso-reale` | **Ogni release** (media, multi-account, auth, push-on-resume) | Percorso telefono completo + verifica Postgres — **riferimento** per «l’app funziona» |
-| **2 Integration** | `scripts/integration-multi-account.sh` | Release (non in CI) | RPC Supabase multi-account — **senza** UI completa |
-| **3 E2E** | `client/e2e/` (10 spec) | CI step 6 (`ci-release-tests.sh`) | Browser + DB locale — `e2e/` = suite completa |
+| **★ Release snake** | `scripts/test.sh e2e` | **Ogni release** (multi-account, media, auth, push, peer, instance) | Percorso telefono completo + verifica Postgres — **riferimento** per «l’app funziona» |
+| **2 Integration** | `scripts/integration-multi-account.sh` | Release (CI step 3) | RPC Supabase multi-account — **senza** UI completa |
+| **3 E2E** | `client/e2e/release-snake.spec.ts` | CI step 6 (`ci-release-tests.sh`) | Browser + DB locale — unico gate Playwright |
+| **Fly benchmark** | `demo-live-startup-timing.spec.ts` | Manuale post-deploy | Timing splash/rete su Fly — **fuori** gate locale |
 | **Diagnostic** | `client/test/diagnostic/` (tag `diagnostic`) | Su richiesta agente | Log `[alfred]` con `ALFRED_DIAGNOSTIC_LOG=true` |
 
 Gate: `check-spec-sync` + `check-model-sync` + `check-composition-sync` + `flutter analyze` + `flutter test` (esclusi tag `stack`, `diagnostic`).
 
-**CI completa:** `.github/workflows/release-suite.yml` — un job sequenziale: gate → docker-smoke → `ci-release-tests.sh` (target wall clock ~10 min, timeout 15).
+**CI completa:** `.github/workflows/release-suite.yml` — un job sequenziale: gate → docker-smoke → `ci-release-tests.sh`.
 
-**Nota:** `flutter test` senza `--exclude-tags` include i test `diagnostic` (falliscono by design senza define). Il gate usa `verify.sh` — **487** test al 2026-09-03 (tag `stack` e `diagnostic` esclusi).
+**Nota:** `flutter test` senza `--exclude-tags` include i test `diagnostic` (falliscono by design senza define). Il gate usa `verify.sh`.
 
 ---
 
@@ -111,18 +111,20 @@ Estensioni future: **COMP-005** groups (`groupSessionKey` + `GroupMessagesContro
 
 ---
 
-## Scenari E2E (tier 3 — catalogo)
+## Scenari nel release snake (tier 3 — catalogo)
 
-| Scenario | File | Stato |
-|----------|------|-------|
-| **★ Foto dopo galleria + resume (4 user + gruppo)** | `e2e/photo-resume-session-repro.spec.ts` | **`flusso-reale`** — implementato |
-| Persistenza manifest + F5 | `e2e/multi-account-persist.spec.ts` | Implementato |
-| Invio + DB + ricezione UI (live) | `e2e/multi-account-messages.spec.ts` | Implementato (override Pages) |
-| Testo, foto, switch e spunte (locale) | `e2e/multi-account-messages.spec.ts` | Implementato (`e2e-multi` default) |
-| **Invio dopo round-trip focus con chat aperta** | `e2e/multi-account-send-after-focus-roundtrip.spec.ts` | Da implementare (tier 2) |
-| Tap push multi-account | `e2e/push-tap-multi-account.spec.ts` | Locale (`e2e-push-local`) |
+Tutti in `client/e2e/release-snake.spec.ts` (`snakeStep`):
 
-Il bug foto PWA (2026-07) era in produzione con il gate tutto verde: nessun tier 1 esegue l’app come l’utente. **`bash scripts/test.sh flusso-reale`** è il test che avrebbe dovuto bloccare il rilascio.
+| Area | Step core | Ex-spec originale (rimosso) |
+|------|-----------|----------------------------|
+| Manifest | `core.manifest.*` | `multi-account-persist` |
+| Peer | `core.peer.*` | `peer-relationship-*`, `peer-profile-rubrica` |
+| Chat | `core.chat.*` | `inbox-open-chat`, `chat-inbox-parity`, `account-switch-restore`, `multi-account-messages` |
+| Push | `core.push.*` | `push-full`, `push-tap-multi-account`, `manual-push-poison-repro` |
+| Media | `core.photo.*` | `photo-resume-session-repro` |
+| Instance | `core.instance.*` | `instance-config-panel` |
+
+Il bug foto PWA (2026-07) era in produzione con il gate tutto verde: nessun tier 1 esegue l’app come l’utente. **`bash scripts/test.sh e2e`** è il test che avrebbe dovuto bloccare il rilascio.
 
 ---
 
@@ -130,11 +132,13 @@ Il bug foto PWA (2026-07) era in produzione con il gate tutto verde: nessun tier
 
 | Promessa | Igiene CI (mock) | Release (prodotto) |
 |----------|------------------|-------------------------|
-| PROM-MULTI-ACCOUNT-006 | `account_manager_persistence_test.dart` | `flusso-reale`, `e2e-multi`, `integration` |
-| PROM-MULTI-ACCOUNT-009 | `inbox_provider_lifecycle_test.dart` (COMP-003) | `e2e-multi` |
-| PROM-MULTI-ACCOUNT-010, 020 | `multi_account_chat_scenario_test.dart` | `integration`, `e2e-multi` |
-| **PROM-MULTI-ACCOUNT-022** | `composition/messaging_session_scope_test.dart` (COMP-001, COMP-002) | **`flusso-reale`** |
-| PROM-CHAT-MEDIA | `messages_controller_media_test.dart`, smoke SQL | **`flusso-reale`** |
+| PROM-MULTI-ACCOUNT-006 | `account_manager_persistence_test.dart` | **`e2e`** (snake), `integration` |
+| PROM-MULTI-ACCOUNT-009 | `inbox_provider_lifecycle_test.dart` (COMP-003) | **`e2e`** |
+| PROM-MULTI-ACCOUNT-010, 020 | `multi_account_chat_scenario_test.dart` | `integration`, **`e2e`** |
+| **PROM-MULTI-ACCOUNT-022** | `composition/messaging_session_scope_test.dart` (COMP-001, COMP-002) | **`e2e`** |
+| PROM-CHAT-MEDIA | `messages_controller_media_test.dart`, smoke SQL | **`e2e`** |
+| PROM-PUSH-NOTIFY | unit/widget push | **`e2e`** |
+| SURF-INSTANCE-CONFIG | — | **`e2e`** |
 
 ---
 
@@ -142,7 +146,7 @@ Il bug foto PWA (2026-07) era in produzione con il gate tutto verde: nessun tier
 
 Il gate non testa il prodotto: non c’è browser, non c’è PWA, non c’è multi-account reale, non c’è upload verso storage con auth vera. Machine, wiring e composition girano in harness sintetici con mock e bypass documentati. **Possono essere tutti verdi mentre l’app è rotta sul telefono.**
 
-Ogni release richiede **`flusso-reale`** (e, dove applicabile, le altre suite manuali con DB/browser).
+Ogni release richiede **`bash scripts/test.sh e2e`**.
 
 ---
 

@@ -49,8 +49,8 @@ Schermata owner per editing `instance_config`: identità servizio, shell/PWA e l
 | SURF-ID | Verifica |
 |---------|----------|
 | `SURF-INSTANCE-CONFIG-002` | `client/test/unit/instance_config_schema_test.dart` |
-| `SURF-INSTANCE-CONFIG-005` | `client/e2e/instance-config-panel.spec.ts` |
-| `SURF-INSTANCE-CONFIG-001` | `client/e2e/instance-config-panel.spec.ts` (non-owner) |
+| `SURF-INSTANCE-CONFIG-005` | `client/e2e/release-snake.spec.ts` (`core.instance.*`) |
+| `SURF-INSTANCE-CONFIG-001` | `client/e2e/release-snake.spec.ts` (`core.instance.*`, non-owner) |
 
 ---
 

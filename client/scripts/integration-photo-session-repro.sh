@@ -3,4 +3,5 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-exec bash "$(dirname "$0")/run-photo-repro-e2e-local.sh" "$@"
+# Compatibilità: flusso-reale → release snake (unico e2e gate).
+exec bash "$(dirname "$0")/test.sh" e2e "$@"

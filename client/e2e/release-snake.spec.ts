@@ -5,8 +5,9 @@
 /**
  * Release gate — unico serpente e2e (cast comune, transizioni, ordine core).
  *
- * I spec in `e2e/*.spec.ts` restano per debug mirato (`e2e-nav-local`, `flusso-reale`, …).
+ * Copre i 19 scenari release funzionali in un solo test Playwright.
  * CI e `bash scripts/test.sh e2e` eseguono solo questo file (`--retries=0`).
+ * Benchmark Fly: `demo-live-startup-timing.spec.ts` (manuale, fuori gate).
  */
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 

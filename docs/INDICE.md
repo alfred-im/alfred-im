@@ -39,8 +39,8 @@ Navigazione per AI.
 - **Codice**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
 - [client/README.md](../client/README.md) · [.cursor-rules.md](../.cursor-rules.md) · [AGENTS.md](../AGENTS.md)
 - [AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md) — account agente; non toccare test1–4
-- [testing/strategy.md](./testing/strategy.md) — gate vs release; **riferimento test:** `client/e2e/photo-resume-session-repro.spec.ts`
-- [client/scripts/test/README.md](../client/scripts/test/README.md) — catalogo suite (`flusso-reale`)
+- [testing/strategy.md](./testing/strategy.md) — gate vs release; **riferimento test:** `client/e2e/release-snake.spec.ts`
+- [client/scripts/test/README.md](../client/scripts/test/README.md) — catalogo suite (`e2e`)
 - [client/deploy/fly/README.md](../client/deploy/fly/README.md) — deploy Fly, build web (`--pwa-strategy=none`), benchmark avvio demo
 
 ---

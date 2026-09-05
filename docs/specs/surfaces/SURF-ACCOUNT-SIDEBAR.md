@@ -75,7 +75,7 @@ Binding UX sidebar account aperti: manifest, focus, switch istantaneo, stato vis
 | SURF-ACCOUNT-SIDEBAR-014 | `account_sidebar_test.dart` — Condividi account attivo |
 | SURF-ACCOUNT-SIDEBAR-015 | `profile_cover_header_test.dart`; `account_sidebar_test.dart` |
 
-Gate: `verify.sh` + `integration` + `e2e-multi`
+Gate: `verify.sh` + `integration` + `e2e`
 
 ---
 

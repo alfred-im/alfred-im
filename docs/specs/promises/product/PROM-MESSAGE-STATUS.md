@@ -86,7 +86,7 @@ Il mittente interpreta lo stato del proprio messaggio da date nullable sulla **p
 | PROM-MESSAGE-STATUS-005 | `messages_controller_multi_account_test.dart` |
 | PROM-MESSAGE-STATUS-010 | `message_bubble_test.dart` |
 | PROM-MESSAGE-STATUS-020 | `models_and_utils_test.dart` — read_at prevale su delivered_at tardivo |
-| PROM-MESSAGE-STATUS-001–008 | `bash scripts/test.sh integration` + `integration-ticks` + `e2e-multi` |
+| PROM-MESSAGE-STATUS-001–008 | `bash scripts/test.sh integration` + `integration-ticks` + `e2e` |
 
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`

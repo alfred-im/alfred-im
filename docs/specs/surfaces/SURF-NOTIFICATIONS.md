@@ -77,16 +77,16 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 
 | SURF-ID / PROM-ID | Verifica |
 |-------------------|----------|
-| SURF-NOTIFICATIONS-001–002 | `client/test/unit/notification_permission_test.dart`; `client/e2e/push-full.spec.ts` |
+| SURF-NOTIFICATIONS-001–002 | `client/test/unit/notification_permission_test.dart`; `client/e2e/release-snake.spec.ts` (`core.push.*`) |
 | SURF-NOTIFICATIONS-003–004 | `client/test/unit/push_subscription_service_test.dart` |
-| SURF-NOTIFICATIONS-005–008 | `client/test/unit/push_suppression_test.dart`; `client/test/unit/push_conversation_key_test.dart`; `client/e2e/push-full.spec.ts` |
-| SURF-NOTIFICATIONS-006–007 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/push-full.spec.ts` |
+| SURF-NOTIFICATIONS-005–008 | `client/test/unit/push_suppression_test.dart`; `client/test/unit/push_conversation_key_test.dart`; `client/e2e/release-snake.spec.ts` |
+| SURF-NOTIFICATIONS-006–007 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/release-snake.spec.ts` |
 | SURF-NOTIFICATIONS-008 | `client/test/unit/push_suppression_test.dart` |
-| SURF-NOTIFICATIONS-011 | `client/e2e/photo-resume-session-repro.spec.ts` (`flusso-reale`) |
-| SURF-NOTIFICATIONS-012–013 | `client/test/unit/push_sync_policy_test.dart` (scope `FocusedAccount` / `AllOpenAccounts`, grant transition); `e2e-push-local` parziale (`push-tap-multi-account.spec.ts`); backlog e2e: `push-permission-grant-multi-account` (nome proposto — grant OS → tutti gli account) |
+| SURF-NOTIFICATIONS-011 | `client/e2e/release-snake.spec.ts` (`core.push.*`, `core.photo.*`) |
+| SURF-NOTIFICATIONS-012–013 | `client/test/unit/push_sync_policy_test.dart` (scope `FocusedAccount` / `AllOpenAccounts`, grant transition); `client/e2e/release-snake.spec.ts` (`core.push.tap_multi_account`); backlog e2e: `push-permission-grant-multi-account` (nome proposto — grant OS → tutti gli account) |
 | PROM-PUSH-NOTIFY-022 | Scenario manuale in [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) §6 |
 
-**Gate**: `bash scripts/check-spec-sync.sh` + `verify.sh` + `bash scripts/test.sh e2e-push-local` (stack locale)
+**Gate**: `bash scripts/check-spec-sync.sh` + `verify.sh` + `bash scripts/test.sh e2e` (stack locale)
 
 ---
 
