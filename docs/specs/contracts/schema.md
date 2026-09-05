@@ -173,7 +173,14 @@ Coda eventi — popolata per **ogni** invio (internal + federato) e per ogni `re
 | `deliver`, `group_erogate` | Copia **mittente** (o archivio gruppo per broadcast) |
 | `read_receipt` | Copia **lettore** (riga in entrata con `read_at` aggiornato) |
 
-Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`. Stato colonna `status`: tipo `queue_status`.
+Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`, `reaction_fact`. Stato colonna `status`: tipo `queue_status`.
+
+| `event_kind` | `message_id` punta a (implementazione attuale) |
+|--------------|------------------------------------------------|
+| `deliver`, `group_erogate` | Copia mittente (o archivio gruppo per broadcast) |
+| `read_receipt` | Copia lettore (riga in entrata con `read_at` aggiornato) |
+| `push_notify` | Copia destinatario materializzata |
+| `reaction_fact` | Riga `messages` del reagente nel proprio archivio (ancora λ) |
 
 **FK**: `message_id` → `messages(id)` ON DELETE CASCADE (`outbox_message_id_fkey`).
 

@@ -10,12 +10,14 @@
 | `QueueReadReceipt` | outbox `event_kind = read_receipt` |
 | `QueueGroupFanOut` | outbox `event_kind = group_erogate` |
 | `QueuePushNotification` | outbox `event_kind = push_notify` |
+| `QueueReactionFact` | outbox `event_kind = reaction_fact` |
 | `ProcessDeliveryQueue` | `alfred_delivery.process_outbox` |
 | `DeliverInternal` | `alfred_delivery.deliver_internal` |
 | `PropagateReadReceipt` | `alfred_delivery.propagate_read_receipt` |
 | `GroupErogate` | `alfred_delivery.group_erogate` |
 | `ErogateGroupMessage` | `alfred_delivery.erogate_group_message` |
 | `ProcessPushNotification` | `alfred_delivery.process_push_notify` |
+| `ProcessReactionFact` | `alfred_delivery.process_reaction_fact` |
 | `RecipientNotified` | INSERT copia destinatario + `delivered_at` mittente |
 | `DeliverySilentlyBlocked` | outbox `completed` + flag reception; nessuna copia destinatario |
 

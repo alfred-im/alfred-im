@@ -1,12 +1,14 @@
 @startuml seq-reaction-fact
 ' Context: messaging
 ' Profile: platform
-' Revision: 2026-08-07
+' Revision: 2026-09-05
 
-title seq-reaction-fact — persistenza append-only
+title seq-reaction-fact — persistenza append-only via outbox
 
 participant "AccountBoundary" as AB
 participant "MailboxArchive" as MSG
+participant "Outbox" as OB
+participant "DeliveryWorker" as DW
 database "ReactionFactStore" as RFS
 
 AB -> MSG : assertParticipant(logical_message_id)
@@ -14,20 +16,29 @@ alt non partecipante
   MSG --> AB : ReactionRejected
 else partecipante
   MSG --> AB : ok
-  AB -> RFS : InsertReactionFact
+  AB -> OB : QueueReactionFact
+  note right of OB
+    event_kind = reaction_fact
+    payload: λ, reactor_id, kind, emoji?
+    message_id = riga messages del reagente
+  end note
+  OB -> DW : ProcessOutbox
+  DW -> RFS : InsertReactionFact
   note right of RFS
     kind = applied | withdrawn
     emoji se applied
-    occurred_at = now()
+    occurred_at = clock_timestamp()
     solo INSERT — mai UPDATE/DELETE
   end note
-  RFS --> AB : ReactionFactRecorded
-  AB --> AB : ReactionApplied | ReactionWithdrawn
+  RFS --> DW : ReactionFactRecorded
+  DW -> OB : complete (+ reaction_fact_id)
+  DW --> AB : ReactionApplied | ReactionWithdrawn
 end
 
 note over MSG, RFS
   Stato corrente e ReactionSummary
   derivati dai fatti — non persistiti.
+  Bus outbox abilita federazione (bridge fase B).
 end note
 
 @enduml
