@@ -1,7 +1,7 @@
 # Glossario — contesto delivery
 
 **Bounded context:** `delivery`  
-**Ultima revisione:** 2026-07-27  
+**Ultima revisione:** 2026-09-05  
 **Promesse SDD:** [SYS-DELIVERY](../../specs/promises/system/SYS-DELIVERY.md), [SYS-ACCOUNT-BOUNDARY](../../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md)
 
 ---
@@ -12,12 +12,13 @@
 |---------|-------------|
 | **Delivery plane** | Infrastruttura worker che attraversa il confine tra archivi mailbox — unico punto autorizzato oltre il confine account. |
 | **Outbox** | Bus eventi di recapito; ogni invio account e ogni read receipt accoda un evento `queued`. |
-| **Event kind** | Discriminatore payload: `deliver`, `read_receipt`, `group_erogate`, `push_notify` (SYS-PUSH). |
+| **Event kind** | Discriminatore payload: `deliver`, `read_receipt`, `group_erogate`, `push_notify` (SYS-PUSH), `reaction_fact`. |
 | **Delivery worker** | Dispatcher che instrada per `event_kind` verso handler dedicato (`ProcessDeliveryQueue`). |
 | **DeliverInternal** | Recapito 1:1 o verso archivio gruppo; gate reception; materializza copia destinatario; aggiorna spunta mittente. |
 | **GroupErogate** | Handler broadcast: legge riga archivio gruppo e avvia erogazione fan-out. |
 | **ErogateGroupMessage** | Fan-out verso partecipanti allow list del gruppo con gate per-partecipante. |
-| **PropagateReadReceipt** | Propaga spunta lettura sulla copia mittente identificata da id logico messaggio (λ). |
+| **PropagateReadReceipt** | Propaga spunta lettura e `read_receipt_id` sulla copia mittente identificata da id logico messaggio (λ). |
+| **ProcessReactionFact** | Handler evento `reaction_fact`: INSERT append-only su `message_reaction_facts`; completa outbox con `reaction_fact_id`. |
 | **ProcessPushNotification** | Handler evento `push_notify`: invoca pipeline Web Push (SYS-PUSH). |
 | **Synchronous internal** | Su protocollo internal, worker eseguito nella **stessa transazione** del confine account — esito immediato per l'utente. |
 | **DeliverySilentlyBlocked** | Esito gate allow list negato; spunta doppia mittente non valorizzata; nessun errore verso mittente (termine condiviso con reception). |

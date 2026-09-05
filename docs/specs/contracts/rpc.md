@@ -1,7 +1,7 @@
 # Contratto RPC — messaggistica
 
-**Ultima revisione**: 2026-08-31  
-**Status**: `implemented` su `main` (migrazioni fino a `20260830100000`, 54 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-09-05  
+**Status**: `implemented` su `main` (migrazioni fino a `20260905140000`, 58 totali in `supabase/migrations/`)  
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) (`implemented`)
 
 Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
@@ -45,7 +45,7 @@ Errori comuni: `not authenticated`, `cannot message yourself`, `recipient not fo
 Semantica mailbox ([SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md) — RPC account solo confine mittente):
 
 0. Gate **outbound** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): destinatario ∈ `reception_allowlist` del mittente? Se **no** → `raise exception 'recipient not in reception allowlist'` (nessuna copia mittente)
-1. INSERT copia mittente (`archive_user_id = author_id = auth.uid()`), λ nuovo, date null
+1. INSERT copia mittente (`archive_user_id = author_id = auth.uid()`), id logico messaggio (λ) mintato dal **server mittente**, date null
 2. INSERT `outbox` (`protocol = internal`, `event_kind = deliver`, `status = queued`)
 3. `alfred_delivery.process_outbox` (worker, stessa transazione):
    - **Gate allow list** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): mittente ∈ `reception_allowlist` del destinatario?
@@ -61,7 +61,7 @@ Idempotenza: stesso `p_client_message_id` → stessa riga mittente (no duplicati
 
 **Helper**: `is_sender_allowed_for_reception(archive_user_id, sender_profile_id) → boolean` — migrazione `20260704130000`; **helper interno** (non chiamabile da client).
 
-**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate), `20260711190000` (delivery plane).
+**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate), `20260711190000` (delivery plane), `20260905000000` (id logico messaggio solo server mittente).
 
 ### Destinatario gruppo (SYS-GROUP)
 
@@ -194,10 +194,10 @@ Chiamata dal **destinatario** all’apertura chat con un peer.
 
 Effetti (solo confine lettore — [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md)):
 
-1. UPDATE righe in entrata nel mio archivio (`author_id = peer`, `read_at IS NULL`, contenuto renderizzabile) SET `read_at = now()`
-2. Per ogni λ: INSERT outbox `event_kind = read_receipt` con **`message_id` = id riga lettore** (copia in entrata) → worker `process_read_receipt` → `read_at` sulla copia mittente
+1. UPDATE righe in entrata nel mio archivio (`author_id = peer`, `read_at IS NULL`, contenuto renderizzabile) SET `read_at = now()`, mint `read_receipt_id = gen_random_uuid()` per ogni riga
+2. Per ogni λ: INSERT outbox `event_kind = read_receipt` con payload `read_receipt_id`, `reader_id`, `sender_profile_id`, id logico messaggio; **`message_id` = id riga lettore** (copia in entrata) → worker `process_read_receipt` → `read_at` + `read_receipt_id` sulla copia mittente
 
-**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md).
+**Migrazioni**: `20260704120000`, `20260905140000_read_receipt_id.sql`.
 
 ---
 
@@ -209,10 +209,13 @@ apply_message_reaction(p_logical_message_id uuid, p_emoji text) → message_reac
 
 Registra un fatto `applied` su λ. Richiede partecipazione (`messages.archive_user_id = auth.uid()` per quel λ).
 
-- **Idempotenza**: stessa emoji già attiva → ritorna l'ultimo fatto `applied` senza nuovo INSERT.
+- **Percorso**: accoda outbox `event_kind = reaction_fact` (`message_id` = riga messages del reagente) → worker `process_reaction_fact` esegue INSERT append-only; outbox completata con `reaction_fact_id`.
+- **Idempotenza**: stessa emoji già attiva → ritorna l'ultimo fatto `applied` senza nuovo accodamento.
 - **Cambio emoji**: nuovo fatto `applied`; i fatti precedenti restano nello storico.
 
-**Migrazione**: `20260807200000_message_reaction_facts.sql`.
+**Migrazioni**: `20260807200000_message_reaction_facts.sql`, `20260905120000_reaction_fact_outbox.sql`.
+
+**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md).
 
 ---
 
@@ -223,6 +226,10 @@ withdraw_message_reaction(p_logical_message_id uuid) → message_reaction_facts 
 ```
 
 Registra un fatto `withdrawn` su λ. **No-op** (ritorna `null`) se nessuna reaction attiva.
+
+Accoda outbox `event_kind = reaction_fact` (payload `kind = withdrawn`, senza emoji) → worker INSERT append-only.
+
+**Migrazioni**: `20260807200000_message_reaction_facts.sql`, `20260905120000_reaction_fact_outbox.sql`.
 
 ---
 
@@ -324,10 +331,13 @@ Funzioni `SECURITY DEFINER` invocate **solo** da worker `alfred_delivery` o altr
 | `profile_kind_of(uuid)` | Routing `profile_kind` in RPC account | `20260706120000` |
 | `alfred_delivery.process_outbox(uuid)` | Dispatcher outbox | `20260711190000` |
 | `alfred_delivery.deliver_internal(uuid)` | Recapito 1:1 / verso gruppo | `20260711190000` |
-| `alfred_delivery.process_read_receipt(uuid)` | Propaga `read_at` mittente | `20260711190000` |
-| `alfred_delivery.propagate_read_receipt(uuid, uuid)` | UPDATE `read_at` copia mittente per λ | `20260711190000` |
+| `alfred_delivery.process_read_receipt(uuid)` | Legge payload outbox → propaga lettura | `20260711190000` |
+| `alfred_delivery.propagate_read_receipt(uuid, uuid, uuid)` | UPDATE `read_at` + `read_receipt_id` copia mittente per λ | `20260905140000` |
+| `alfred_delivery.process_reaction_fact(uuid)` | INSERT fatto reaction da payload outbox | `20260905120000` |
+| `alfred_delivery.process_push_notify(uuid)` | Pipeline Web Push post-recapito | `20260714100000` |
 | `alfred_delivery.group_erogate(uuid)` | Broadcast gruppo → allow list | `20260711190000` |
 | `alfred_delivery.erogate_group_message(...)` | Fan-out proxy gruppo | `20260711190000` |
+| `alfred_delivery.materialize_inbound_sender_message(...)` | Inbound federato: copia destinatario con λ remoto | `20260905000000` |
 
 Revoca `authenticated`: migrazione `20260707190000`. Smoke: `supabase/tests/rpc_helper_security_smoke.sql`.
 

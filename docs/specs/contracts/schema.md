@@ -1,7 +1,7 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-08-31  
-**Status**: `implemented` su `main` (migrazioni fino a `20260830100000`, 54 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-09-05  
+**Status**: `implemented` su `main` (migrazioni fino a `20260905140000`, 58 totali in `supabase/migrations/`)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
@@ -167,21 +167,16 @@ Nessuna tabella aggiuntiva. Partecipazione = allow list bidirezionale:
 
 ## `outbox`
 
-Coda eventi — popolata per **ogni** invio (internal + federato) e per ogni `read_receipt`. Colonna `message_id`:
+Coda eventi — popolata per **ogni** invio (internal + federato), ogni `read_receipt`, ogni reaction account. Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`, `reaction_fact`. Stato colonna `status`: tipo `queue_status`.
+
+Colonna `message_id` — **ancora operativa** (polisemia per `event_kind`; vedi debito #264):
 
 | `event_kind` | `message_id` punta a |
 |--------------|----------------------|
 | `deliver`, `group_erogate` | Copia **mittente** (o archivio gruppo per broadcast) |
 | `read_receipt` | Copia **lettore** (riga in entrata con `read_at` aggiornato) |
-
-Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`, `reaction_fact`. Stato colonna `status`: tipo `queue_status`.
-
-| `event_kind` | `message_id` punta a (implementazione attuale) |
-|--------------|------------------------------------------------|
-| `deliver`, `group_erogate` | Copia mittente (o archivio gruppo per broadcast) |
-| `read_receipt` | Copia lettore (riga in entrata con `read_at` aggiornato) |
-| `push_notify` | Copia destinatario materializzata |
-| `reaction_fact` | Riga `messages` del reagente nel proprio archivio (ancora λ) |
+| `push_notify` | Copia **destinatario** materializzata |
+| `reaction_fact` | Riga `messages` del **reagente** nel proprio archivio (stesso λ) |
 
 **FK**: `message_id` → `messages(id)` ON DELETE CASCADE (`outbox_message_id_fkey`).
 
@@ -201,10 +196,13 @@ Worker infrastruttura **non-account** — unico attore autorizzato a attraversar
 |----------|--------|
 | `process_outbox(uuid)` | Dispatcher per `event_kind` |
 | `deliver_internal(uuid)` | Recapito 1:1 / verso gruppo |
-| `process_read_receipt(uuid)` | Propaga `read_at` al mittente |
-| `propagate_read_receipt(uuid, uuid)` | UPDATE `read_at` su copia mittente per `logical_message_id` |
+| `process_read_receipt(uuid)` | Legge payload outbox → `propagate_read_receipt` |
+| `propagate_read_receipt(uuid, uuid, uuid)` | UPDATE `read_at` + `read_receipt_id` su copia mittente per `logical_message_id` |
+| `process_reaction_fact(uuid)` | INSERT append-only su `message_reaction_facts`; completa outbox con `reaction_fact_id` |
+| `process_push_notify(uuid)` | Pipeline Web Push post-recapito ([SYS-PUSH](../promises/system/SYS-PUSH.md)) |
 | `group_erogate(uuid)` | Broadcast gruppo → allow list |
 | `erogate_group_message(...)` | Fan-out proxy partecipanti |
+| `materialize_inbound_sender_message(...)` | Inbound federato: copia destinatario con id logico messaggio dal server mittente remoto (bridge/service_role) |
 
 **Tabelle infrastruttura** (non API client):
 

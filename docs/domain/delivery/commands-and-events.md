@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto delivery
 
-**Ultima revisione:** 2026-07-27  
+**Ultima revisione:** 2026-09-05  
 **UML:** [docs/model/uml/delivery/](../../model/uml/delivery/)
 
 Worker server — nessuno statechart client.
@@ -12,8 +12,9 @@ Worker server — nessuno statechart client.
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
 | `QueueDelivery` | Policy (invio account) | Accoda recapito messaggio al destinatario. |
-| `QueueReadReceipt` | Policy (lettura) | Accoda propagazione spunta lettura al mittente. |
+| `QueueReadReceipt` | Policy (lettura) | Accoda propagazione spunta lettura (con `read_receipt_id`) al mittente. |
 | `QueueGroupFanOut` | Policy (broadcast gruppo) | Accoda erogazione verso partecipanti. |
+| `QueueReactionFact` | Policy (reaction account) | Accoda persistenza append-only reaction (`event_kind = reaction_fact`). |
 
 ---
 
@@ -23,11 +24,12 @@ Worker server — nessuno statechart client.
 |---------|-----------|-------------|
 | `ProcessDeliveryQueue` | Policy (worker) | Elabora prossimo evento in coda (dispatcher per `event_kind`). |
 | `DeliverInternal` | `ProcessDeliveryQueue` | Recapito 1:1 o verso archivio gruppo; gate reception prima della materializzazione. |
-| `PropagateReadReceipt` | `ProcessDeliveryQueue` | Propaga spunta lettura sulla copia mittente (λ). |
+| `PropagateReadReceipt` | `ProcessDeliveryQueue` | Propaga spunta lettura e `read_receipt_id` sulla copia mittente (λ). |
 | `GroupErogate` | `ProcessDeliveryQueue` | Legge archivio gruppo e avvia fan-out. |
 | `ErogateGroupMessage` | `DeliverInternal` / `GroupErogate` | Erogazione verso partecipanti allow list con gate per-partecipante. |
 | `QueuePushNotification` | Policy post-recapito | Accoda notifica Web Push post-recapito riuscito (SYS-PUSH). |
 | `ProcessPushNotification` | `ProcessDeliveryQueue` | Invoca pipeline Web Push per evento `push_notify`. |
+| `ProcessReactionFact` | `ProcessDeliveryQueue` | INSERT append-only su `message_reaction_facts` per evento `reaction_fact`. |
 
 ---
 

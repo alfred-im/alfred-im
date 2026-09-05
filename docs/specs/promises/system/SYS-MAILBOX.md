@@ -135,8 +135,8 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | ID | Promessa |
 |----|----------|
 | **SYS-MAILBOX-046** | `delivered_at` valorizzato solo dopo materializzazione copia destinatario ([SYS-MAILBOX](./SYS-MAILBOX.md) invio) — non da Realtime client destinatario |
-| **SYS-MAILBOX-047** | `mark_peer_read(peer)`: UPDATE righe in entrata nel mio archivio (`archive_user_id = io`, `author_id = peer`, `read_at IS NULL`) SET `read_at = now()` |
-| **SYS-MAILBOX-048** | Per ogni λ letto: accoda `outbox` `event_kind = read_receipt`; worker [SYS-DELIVERY](./SYS-DELIVERY.md) aggiorna `read_at` sulla copia mittente — **nessuna** UPDATE account cross-boundary |
+| **SYS-MAILBOX-047** | `mark_peer_read(peer)`: UPDATE righe in entrata nel mio archivio (`archive_user_id = io`, `author_id = peer`, `read_at IS NULL`) SET `read_at = now()` e mint `read_receipt_id` per ogni riga |
+| **SYS-MAILBOX-048** | Per ogni λ letto: accoda `outbox` `event_kind = read_receipt` (payload include `read_receipt_id`); worker [SYS-DELIVERY](./SYS-DELIVERY.md) propaga `read_at` + `read_receipt_id` sulla copia mittente — **nessuna** UPDATE account cross-boundary |
 | **SYS-MAILBOX-049** | Lettura include body non vuoto OPPURE `content_type` ∈ gif, voice, location, image, video |
 | **SYS-MAILBOX-050** | `list_inbox` unread: righe in entrata con `read_at IS NULL` |
 
@@ -159,6 +159,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | `id` | Per archive_user | PK riga archivio locale |
 | `client_message_id` | Copia mittente | Idempotenza invio client |
 | `logical_message_id` | Server mittente | Identificativo globale messaggio (assegnato dal server mittente, replicato sul destinatario) |
+| `read_receipt_id` | Server lettore | Id federativo evento lettura — mint sulla copia lettore, replicato sul mittente |
 | `external_id` | Federato futuro | Bridge (fase B) |
 
 | Copia | Campi | Semantica |
@@ -204,8 +205,8 @@ send_message_to_profile (solo confine mittente)
 mark_peer_read(p_peer_profile_id uuid) → void
 ```
 
-1. UPDATE `messages` SET `read_at = now()` WHERE `archive_user_id = auth.uid()` AND `peer_profile_id = p_peer` AND `author_id = p_peer` AND `read_at IS NULL` AND contenuto leggibile
-2. Per ogni λ: outbox `read_receipt` → worker aggiorna copia mittente (vedi [SYS-DELIVERY](./SYS-DELIVERY.md))
+1. UPDATE `messages` SET `read_at = now()`, `read_receipt_id = gen_random_uuid()` WHERE `archive_user_id = auth.uid()` AND `peer_profile_id = p_peer` AND `author_id = p_peer` AND `read_at IS NULL` AND contenuto leggibile
+2. Per ogni λ: outbox `read_receipt` (payload `read_receipt_id`, `reader_id`, `sender_profile_id`) → worker propaga `read_at` + `read_receipt_id` sulla copia mittente (vedi [SYS-DELIVERY](./SYS-DELIVERY.md))
 
 ### RPC `list_peer_messages`
 

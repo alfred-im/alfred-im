@@ -140,7 +140,7 @@ Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 |---------|-----|-------------|----------|----------|
 | Inviato | ✓ | Accettato da piattaforma / in outbox | Copia mittente creata | Outbox `queued` |
 | Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | XEP-0184 / ack bridge → stesso aggiornamento |
-| Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` locale → outbox `read_receipt` → worker → `read_at` mittente | XEP-0333 / m.receipt → bridge |
+| Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` locale → mint `read_receipt_id` → outbox `read_receipt` → worker → `read_at` + `read_receipt_id` mittente | XEP-0333 / m.receipt → bridge |
 
 **Non** significa «arrivato sul device» in senso P2P: significa «nella fonte di verità rilevante» (server / piattaforma).
 
@@ -167,9 +167,9 @@ Invio (account mittente) — send_message_to_profile
        ALTRIMENTI: reception_rejected, delivered_at null — ✓ permanente
 
 Paolo apre chat (account Paolo)
-  → mark_peer_read: UPDATE read_at solo archivio Paolo
-  → outbox read_receipt per ogni λ
-  → worker: UPDATE read_at copia Mario — ✓✓ blu
+  → mark_peer_read: UPDATE read_at + mint read_receipt_id solo archivio Paolo
+  → outbox read_receipt per ogni λ (payload include read_receipt_id)
+  → worker: UPDATE read_at + read_receipt_id copia Mario — ✓✓ blu
 ```
 
 Gate allow list: [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md).
