@@ -343,6 +343,7 @@ test.describe('@release-snake gate release unico', () => {
     });
 
     snakeStep('core.chat.multi_account_messages');
+    await backToInboxFromChat(page);
     await switchToAccountByDisplayName(
       page,
       entry1.displayName!,
