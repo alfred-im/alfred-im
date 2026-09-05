@@ -154,7 +154,7 @@ test.describe('@release-snake gate release unico', () => {
       entry1.userId,
     );
     await ensureInboxShell(page);
-    await expect(page.getByText(peerSeed)).toBeVisible({
+    await expect(page.getByText(peerSeed).first()).toBeVisible({
       timeout: E2E_TIMEOUT.message,
     });
     const peerLabel = entry2.displayName ?? cast.e2.username;
@@ -178,7 +178,7 @@ test.describe('@release-snake gate release unico', () => {
       entry1.userId,
     );
     await openPeerInInboxView(page, peerLabel);
-    await expect(page.getByText(peerSeed)).toBeVisible({
+    await expect(page.getByText(peerSeed).first()).toBeVisible({
       timeout: E2E_TIMEOUT.message,
     });
     await openPeerProfileFromChatHeader(page);
@@ -211,7 +211,7 @@ test.describe('@release-snake gate release unico', () => {
       entry1.userId,
     );
     await openPeerInInboxView(page, peerLabel);
-    await expect(page.getByText(peerSeed)).toBeVisible({
+    await expect(page.getByText(peerSeed).first()).toBeVisible({
       timeout: E2E_TIMEOUT.message,
     });
     await openChatHeaderMenu(page);
