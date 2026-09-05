@@ -435,6 +435,12 @@ async function runPushFull(
   await installPushSubscribeMock(page);
   await installNotificationPermissionMock(page);
   await installPushReceivedListener(page);
+  await page.reload({
+    waitUntil: 'domcontentloaded',
+    timeout: E2E_TIMEOUT.boot,
+  });
+  await waitForLoggedInShell(page);
+  await enableFlutterAccessibility(page);
   await forceNotificationPermission(page, new URL(BASE_URL).origin);
   await context.grantPermissions(['notifications'], {
     origin: new URL(BASE_URL).origin,
