@@ -583,6 +583,7 @@ async function runPushPoison(
     clientMessageId: `py-${stamp}`,
   });
   await installPushTestEnvironment(page, context, BASE_URL);
+  await backToInboxFromChat(page);
   const saved = (await readSavedAccountsManifest(page))!;
   const account1 = manifestEntryForUsername(saved, cast.e1.username);
   const account2 = manifestEntryForUsername(saved, cast.e2.username);

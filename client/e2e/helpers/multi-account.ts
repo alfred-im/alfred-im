@@ -443,6 +443,12 @@ export async function switchToAccountByDisplayName(
   displayName: string,
   userId?: string,
 ) {
+  if (userId && (await readFocusedUserId(page)) === userId) {
+    await tryCloseDrawerIfOpen(page);
+    await waitForAccountShell(page);
+    return;
+  }
+
   const namePattern = new RegExp(escapeRegExp(displayName));
   const byButton = () =>
     page.getByRole('button', { name: namePattern });
