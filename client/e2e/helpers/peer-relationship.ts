@@ -305,6 +305,21 @@ export async function openPeerProfileFromChatHeader(page: Page): Promise<void> {
     .click({ timeout: E2E_TIMEOUT.ui });
 }
 
+/** Tap avatar profilo peer dalla lista inbox (senza aprire la chat). */
+export async function openPeerProfileFromInbox(
+  page: Page,
+  peerLabel: string,
+): Promise<void> {
+  await enableFlutterAccessibility(page);
+  await expect(page.getByText(peerLabel)).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+  const profileButton = page.getByRole('button', {
+    name: 'Apri profilo',
+    exact: true,
+  });
+  await expect(profileButton).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+  await profileButton.click({ timeout: E2E_TIMEOUT.ui });
+}
+
 export async function expectNoRelationshipError(page: Page): Promise<void> {
   await expect(
     page.getByText(
