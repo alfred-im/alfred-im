@@ -77,7 +77,7 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e 
 |----|-------|-------|
 | **`id` (riga archivio)** | Per archive_user | Identità **locale** del messaggio nel mio archivio (`archive_user_id = io`). Mittente e destinatario hanno **sempre** `id` diversi. |
 | **`client_message_id`** | Mittente (client + server) | Idempotenza **invio**: retry client, coda outbound, merge UI optimistic lato mittente. **Non** correla le due copie. |
-| **`logical_message_id`** | Piattaforma (λ) | **Correlazione** tra le due copie dello stesso invio + target dei segnali spunta (`delivered` / `read`). |
+| **`logical_message_id`** | Server mittente | Identificativo **globale** del messaggio: assegnato dal **server mittente** all'accettazione dell'invio, **replicato identico** sulla copia destinatario (mai rigenerato dal recapito). Correlazione copie + segnali spunta/reaction. |
 | **`external_id`** | Federato | Id **percepito dall’altro sistema** (XMPP stanza `id`, Matrix `event_id`). Il bridge lo traduce in update sulla copia Alfred del mittente (via λ o mapping esplicito). |
 
 ### Regole
