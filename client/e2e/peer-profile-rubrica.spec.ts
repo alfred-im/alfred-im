@@ -20,6 +20,7 @@ import {
   expectContactInDb,
   expectNoRelationshipError,
   openPeerProfileFromChatHeader,
+  openPeerProfileFromInboxRow,
   prepareLocalPeerRelationshipPair,
   prepareLocalPeerWithRubricaAndConsent,
 } from './helpers/peer-relationship';
@@ -173,14 +174,7 @@ test('overlay da inbox (senza chat): Aggiungi aggiorna pulsante', async ({
   });
 
   const peerLabel = account2.displayName ?? acct2.username;
-  const peerRow = page
-    .getByRole('button', { name: new RegExp(peerLabel) })
-    .filter({ hasNotText: /@/ })
-    .first();
-  await expect(peerRow).toBeVisible({ timeout: E2E_TIMEOUT.ui });
-  await peerRow
-    .getByRole('button', { name: 'Apri profilo', exact: true })
-    .click();
+  await openPeerProfileFromInboxRow(page, peerLabel);
 
   const addButton = page.getByRole('button', {
     name: 'Aggiungi alla rubrica',

@@ -67,6 +67,7 @@ import {
   expectNoRelationshipError,
   openChatHeaderMenu,
   openPeerProfileFromChatHeader,
+  openPeerProfileFromInboxRow,
   selectChatHeaderMenuItem,
 } from './helpers/peer-relationship';
 import {
@@ -156,14 +157,7 @@ test.describe('@release-snake gate release unico', () => {
       timeout: E2E_TIMEOUT.message,
     });
     const peerLabel = entry2.displayName ?? cast.e2.username;
-    const peerRow = page
-      .getByRole('button', { name: new RegExp(peerLabel) })
-      .filter({ hasNotText: /@/ })
-      .first();
-    await expect(peerRow).toBeVisible({ timeout: E2E_TIMEOUT.ui });
-    await peerRow
-      .getByRole('button', { name: 'Apri profilo', exact: true })
-      .click();
+    await openPeerProfileFromInboxRow(page, peerLabel);
     const addBtn = page.getByRole('button', {
       name: 'Aggiungi alla rubrica',
       exact: true,
