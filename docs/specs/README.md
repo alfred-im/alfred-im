@@ -223,7 +223,7 @@ Verifica: registry, promesse PRODUCT/SURFACE/SYSTEM, contratti `contracts/`, coe
 
 | | Gate CI | Validazione release |
 |---|---------|----------------------|
-| **Cosa** | `verify.sh` — lint + test Dart isolati | `flusso-reale`, `integration`, `e2e-*`, … |
+| **Cosa** | `verify.sh` — lint + test Dart isolati | `e2e`, `integration`, `release`, … |
 | **Quando** | Ogni PR (`client/**`) | Ogni release / dopo cambi che l’utente vede |
 | **Cosa dimostra** | Il codice compila e i pezzi isolati non regrediscono | L’app funziona sul percorso reale |
 

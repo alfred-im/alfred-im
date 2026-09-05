@@ -5,7 +5,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
 import { enableFlutterAccessibility, readSavedAccountsManifest, type ManifestEntry } from './flutter-a11y';
-import { expectFocusedUserId } from './focus';
+import { expectFocusedUserId, readFocusedUserId } from './focus';
 import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
 
 export const BASE_URL =
@@ -443,6 +443,12 @@ export async function switchToAccountByDisplayName(
   displayName: string,
   userId?: string,
 ) {
+  if (userId && (await readFocusedUserId(page)) === userId) {
+    await tryCloseDrawerIfOpen(page);
+    await waitForAccountShell(page);
+    return;
+  }
+
   const namePattern = new RegExp(escapeRegExp(displayName));
   const byButton = () =>
     page.getByRole('button', { name: namePattern });

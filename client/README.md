@@ -40,7 +40,7 @@ Build native mobile/desktop non è focus del progetto oggi; la superficie suppor
 cd client
 bash scripts/test.sh list        # catalogo
 bash scripts/test.sh gate        # gate CI — obbligatorio prima di push
-bash scripts/test.sh flusso-reale  # release — percorso telefono
+bash scripts/test.sh e2e  # release — percorso telefono (alias: flusso-reale)
 bash scripts/test.sh release       # stack locale (alias manual)
 ```
 

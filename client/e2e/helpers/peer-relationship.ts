@@ -297,12 +297,55 @@ export async function closeChatHeaderMenu(page: Page): Promise<void> {
   }
 }
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Inbox: pulsante «Apri profilo <peer> …»; se apre la chat, fallback su header. */
+export async function openPeerProfileFromInboxRow(
+  page: Page,
+  peerLabel: string,
+): Promise<void> {
+  await enableFlutterAccessibility(page);
+  const profileBtn = page
+    .getByRole('button', {
+      name: new RegExp(`Apri profilo.*${escapeRegExp(peerLabel)}`),
+    })
+    .first();
+  await expect(profileBtn).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+  await profileBtn.click({ timeout: E2E_TIMEOUT.ui });
+  await page.waitForTimeout(400);
+  const rubricaBtn = page.getByRole('button', {
+    name: 'Aggiungi alla rubrica',
+    exact: true,
+  });
+  const removeBtn = page.getByRole('button', {
+    name: 'Rimuovi dalla rubrica',
+    exact: true,
+  });
+  const overlayOpen =
+    (await rubricaBtn.isVisible({ timeout: 1_500 }).catch(() => false)) ||
+    (await removeBtn.isVisible({ timeout: 500 }).catch(() => false));
+  if (!overlayOpen) {
+    await openPeerProfileFromChatHeader(page);
+  }
+}
+
 export async function openPeerProfileFromChatHeader(page: Page): Promise<void> {
   await closeChatHeaderMenu(page);
   await enableFlutterAccessibility(page);
   await page
     .getByRole('button', { name: 'Apri profilo', exact: true })
     .click({ timeout: E2E_TIMEOUT.ui });
+}
+
+export async function closePeerProfileOverlay(page: Page): Promise<void> {
+  await enableFlutterAccessibility(page);
+  const closeBtn = page.getByRole('button', { name: 'Chiudi', exact: true });
+  if (await closeBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+    await closeBtn.click({ timeout: E2E_TIMEOUT.ui });
+    await page.waitForTimeout(300);
+  }
 }
 
 /** Tap avatar profilo peer dalla lista inbox (senza aprire la chat). */

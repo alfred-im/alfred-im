@@ -1,7 +1,6 @@
 # Follow-up: suite CI e Playwright (post-merge PR #231)
 
-**Data:** 2026-08-08 (snapshot stato suite)  
-**Contesto:** tier Playwright in CI ripristinati a spec documentati (PR #232+).
+**Aggiornato:** 2026-09-05 — release snake unico (PR #270).
 
 ---
 
@@ -9,33 +8,33 @@
 
 | Layer | Stato |
 |-------|--------|
-| Gate Dart (`verify.sh`) | ✅ 487 test |
+| Gate Dart (`verify.sh`) | ✅ unit/wiring/composition |
 | CI release-suite step 1–5 | ✅ stack, SQL smoke, integration, Dart `@stack`, build web |
-| CI Playwright step 6 | ✅ **9 spec** (`e2e/` intero, ~2.6 min headless) |
+| CI Playwright step 6 | ✅ **1 spec** (`release-snake.spec.ts`, ~2 min headless, `--retries=0`) |
 
-### Spec in `client/e2e/` (10)
+### Spec in `client/e2e/` (2)
 
 | Spec | Tier |
 |------|------|
-| `photo-resume-session-repro` | flusso-reale ★ |
+| `release-snake` | **`e2e`** ★ — gate release unico (19 scenari) |
 | `demo-live-startup-timing` | manuale / post-deploy Fly |
-| `inbox-open-chat` | e2e-nav-local |
-| `chat-inbox-parity` | e2e-nav-local |
-| `manual-push-poison-repro` | e2e-nav-local |
-| `multi-account-persist` | e2e-multi |
-| `multi-account-messages` | e2e-multi |
-| `account-switch-restore` | e2e-nav-local |
-| `push-full` | e2e-push-local |
-| `push-tap-multi-account` | e2e-push-local |
 
-### Rimossi
+### Rimossi (2026-09 — assorbiti dal serpente)
 
 | Spec | Motivo |
 |------|--------|
-| `pages-smoke.spec.ts` | Fragile su canvas Flutter |
-| `inbox-load.spec.ts` | Duplicato/fragile |
-| `push-registration.spec.ts` | Subset di `push-full` (registrazione + assert `device_id`) |
-| `push-bug-repro.spec.ts` | Headed/debug; coperto da `push-tap-multi-account` in CI |
+| `photo-resume-session-repro` | Segmento `core.photo.*` nel serpente |
+| `multi-account-persist`, `multi-account-messages` | `core.manifest.*`, `core.chat.*` |
+| `inbox-open-chat`, `chat-inbox-parity`, `account-switch-restore` | `core.chat.*` |
+| `peer-relationship-*`, `peer-profile-rubrica` | `core.peer.*` |
+| `push-full`, `push-tap-multi-account`, `manual-push-poison-repro` | `core.push.*` |
+| `instance-config-panel` | `core.instance.*` |
+| `pages-smoke`, `inbox-load`, `push-registration`, `push-bug-repro` | Rimossi in precedenza (fragili/duplicati) |
+
+### Comandi rimossi da `test.sh`
+
+`e2e-multi`, `e2e-nav-local`, `e2e-push-local` — usare `bash scripts/test.sh e2e`.  
+`flusso-reale` resta come **alias** di `e2e`.
 
 ---
 
@@ -43,6 +42,6 @@
 
 ```bash
 cd client && bash scripts/verify.sh
-bash scripts/test.sh flusso-reale
-cd client && npx playwright test e2e/ --workers=1
+bash scripts/test.sh e2e
+cd client && npx playwright test e2e/release-snake.spec.ts --workers=1 --retries=0
 ```

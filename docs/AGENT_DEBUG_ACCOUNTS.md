@@ -22,7 +22,7 @@ Progetto live: `tvwpoxxcqwphryvuyqzu` (demo Pages). **Non** usare il live per sc
 
 1. `supabase start` (Docker) — vedi [AGENTS.md](../AGENTS.md) § Whole-stack local dev.
 2. Account integrazione: `scripts/ci-agents.env.sh` — `ciagent1` / `ciagent2` (`ci-agent1@e2e.local.test`, …).
-3. Comandi: `cd client && bash scripts/test.sh integration` · `e2e-multi` · `e2e-push-local` · `release`.
+3. Comandi: `cd client && bash scripts/test.sh integration` · `e2e` · `release`.
 
 Dettaglio suite: [`client/scripts/test/README.md`](../client/scripts/test/README.md).
 

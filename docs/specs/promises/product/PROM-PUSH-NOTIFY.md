@@ -155,15 +155,15 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 | PROM-PUSH-NOTIFY-033–035 | `client/test/unit/push_conversation_key_test.dart`; `client/test/unit/push_suppression_test.dart` |
 | PROM-PUSH-NOTIFY-020–021 | `client/test/unit/notification_permission_test.dart` |
 | PROM-PUSH-NOTIFY-022–024 | `client/test/unit/push_suppression_test.dart` |
-| PROM-PUSH-NOTIFY-005–006 | `client/e2e/push-full.spec.ts` (stack locale) |
-| PROM-PUSH-NOTIFY-002–003 | `client/e2e/push-full.spec.ts` |
-| PROM-PUSH-NOTIFY-030 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/push-full.spec.ts` |
+| PROM-PUSH-NOTIFY-005–006 | `client/e2e/release-snake.spec.ts` (`core.push.full`, stack locale) |
+| PROM-PUSH-NOTIFY-002–003 | `client/e2e/release-snake.spec.ts` |
+| PROM-PUSH-NOTIFY-030 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/release-snake.spec.ts` |
 | PROM-PUSH-NOTIFY-022 | Scenario manuale §6 |
-| **PROM-PUSH-NOTIFY-045–047** | `client/e2e/photo-resume-session-repro.spec.ts` (`flusso-reale`); `client/test/unit/push_sync_policy_test.dart`; `client/test/unit/session_authority_test.dart` |
-| **PROM-PUSH-NOTIFY-048–049, 053** | `client/test/unit/push_sync_policy_test.dart` (scope + `notificationPermissionJustGranted`); `e2e-push-local` (`push-tap-multi-account.spec.ts` — tap/focus parziale); backlog e2e: `push-permission-grant-multi-account` (nome proposto) |
-| **PROM-PUSH-NOTIFY-047** | `flusso-reale`; `push_sync_policy_test.dart` (`PushMediaSyncGuard`) |
+| **PROM-PUSH-NOTIFY-045–047** | `client/e2e/release-snake.spec.ts` (`core.push.*`, `core.photo.*`); `client/test/unit/push_sync_policy_test.dart`; `client/test/unit/session_authority_test.dart` |
+| **PROM-PUSH-NOTIFY-048–049, 053** | `client/test/unit/push_sync_policy_test.dart` (scope + `notificationPermissionJustGranted`); `client/e2e/release-snake.spec.ts` (`core.push.tap_multi_account`); backlog e2e: `push-permission-grant-multi-account` (nome proposto) |
+| **PROM-PUSH-NOTIFY-047** | `bash scripts/test.sh e2e`; `push_sync_policy_test.dart` (`PushMediaSyncGuard`) |
 
-**Gate**: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` + smoke SQL + `bash scripts/test.sh e2e-push-local`
+**Gate**: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` + smoke SQL + `bash scripts/test.sh e2e`
 
 ---
 

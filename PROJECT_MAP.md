@@ -199,7 +199,7 @@ cd client
 bash scripts/verify.sh           # gate CI — igiene codice (obbligatorio prima del push)
 bash scripts/test.sh e2e         # e2e locale — obbligatorio a fine lavoro su client/
 bash scripts/verify.sh --build   # + build web
-bash scripts/test.sh flusso-reale  # release — valida il prodotto (browser + DB)
+bash scripts/test.sh e2e  # release — valida il prodotto (browser + DB)
 bash scripts/test.sh release       # stack locale completo (alias: manual, ci)
 ```
 
@@ -255,7 +255,7 @@ Test: `bash scripts/test.sh integration-ticks`
 
 `verify.sh` — sync spec/modello + analyze + test Dart isolati (**481**). **Non** valida il prodotto. Smoke SQL server: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, …
 
-Validazione release: `bash scripts/test.sh flusso-reale` · catalogo in [client/scripts/test/README.md](client/scripts/test/README.md)
+Validazione release: `bash scripts/test.sh e2e` · catalogo in [client/scripts/test/README.md](client/scripts/test/README.md)
 
 ### File chiave client
 

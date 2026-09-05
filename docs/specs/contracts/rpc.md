@@ -374,7 +374,7 @@ Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
 | `supabase/tests/group_schema_smoke.sql` | `list_archive_messages`, `profile_kind`, `broadcast_message_to_allowlist` |
 | `supabase/tests/message_reaction_facts_smoke.sql` | Apply/withdraw/idempotenza/cambio emoji su λ |
 
-Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/test.sh e2e-multi`
+Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/test.sh e2e`
 
 ---
 

@@ -74,7 +74,7 @@ L'utente apre e naviga conversazioni per **indirizzo peer** (username interno / 
 | PROM-CHAT-PEER-KEY-012 | `mailbox_schema_smoke.sql` — nessuna cache inbox |
 
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` · `integration` + `e2e-multi`
+Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` · `integration` + `e2e`
 
 ---
 

@@ -248,9 +248,9 @@ Dettaglio: [contracts/rpc.md](../../contracts/rpc.md) § `list_peer_messages`.
 | PROM-LIST-FILTER, SURF-INBOX | `inbox_controller.dart` `filteredPeers` |
 | PROM-MESSAGE-STATUS | `message_bubble_test.dart`, `models_and_utils_test.dart` |
 | PROM-REALTIME-ARCHIVE-005 | `messages_controller_multi_account_test.dart` |
-| SYS-MAILBOX-017–050 | `bash scripts/test.sh e2e-multi` |
+| SYS-MAILBOX-017–050 | `bash scripts/test.sh e2e` |
 
-**Gate**: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` + `integration` + `e2e-multi`
+**Gate**: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` + `integration` + `e2e`
 
 ---
 

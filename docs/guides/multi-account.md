@@ -120,9 +120,8 @@ Nessun provider inbox globale — `ChangeNotifierProxyProvider` per contatti/pro
 **Release:**
 
 ```bash
-bash scripts/test.sh flusso-reale   # riferimento — percorso telefono completo
+bash scripts/test.sh e2e   # riferimento — percorso telefono completo (alias: flusso-reale)
 bash scripts/test.sh integration
-bash scripts/test.sh e2e-multi
 ```
 
-`e2e/multi-account-messages.spec.ts` copre scenari parziali; non sostituisce `flusso-reale`.
+Il release snake (`client/e2e/release-snake.spec.ts`) copre manifest, messaggi multi-account, switch e spunte.

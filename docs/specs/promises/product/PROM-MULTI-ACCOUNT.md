@@ -118,7 +118,7 @@ L'utente opera Alfred con più account senza re-login al cambio focus. Le creden
 
 
 Igiene (CI): `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` (include `check-composition-sync`)  
-Release: `bash scripts/test.sh flusso-reale` · `integration` · `e2e-multi` · [docs/testing/strategy.md](../../../testing/strategy.md)
+Release: `bash scripts/test.sh e2e` · `integration` · [docs/testing/strategy.md](../../../testing/strategy.md)
 
 ---
 

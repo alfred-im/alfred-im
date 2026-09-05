@@ -89,7 +89,7 @@ Multi-account: realtime solo sull'account in focus — [PROM-MULTI-ACCOUNT](./PR
 | PROM-REALTIME-ARCHIVE-003, 004 | `inbox_realtime_archive_filter_test.dart` |
 | PROM-REALTIME-ARCHIVE-005 | `messages_controller_multi_account_test.dart` |
 | PROM-REALTIME-ARCHIVE-007 | `inbox_provider_lifecycle_test.dart`; `multi_account_chat_scenario_test.dart` |
-| PROM-REALTIME-ARCHIVE-001–007 | `bash scripts/test.sh integration` + `e2e-multi` |
+| PROM-REALTIME-ARCHIVE-001–007 | `bash scripts/test.sh integration` + `e2e` |
 
 
 Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`

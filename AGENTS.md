@@ -55,7 +55,7 @@ Se l'utente chiede di fare merge («fai merge», «merge completa», «merge e p
 - Gate: `cd client && bash scripts/test.sh gate` (= `verify.sh`) — obbligatorio su PR; **non** valida il telefono
 - **E2e (fine lavoro):** `cd client && bash scripts/test.sh e2e` — **obbligatorio** a fine task su `client/` (avvia Supabase locale + Flutter release `:8080` + Playwright; genera `web/config.json` e sync in `build/web`)
 - Release: `cd client && bash scripts/test.sh release` (alias `manual`, `ci`) — stack locale completo
-- Riferimento test release: [`client/e2e/photo-resume-session-repro.spec.ts`](client/e2e/photo-resume-session-repro.spec.ts) — vedi strategy § Come si scrivono i test di release
+- Riferimento test release: [`client/e2e/release-snake.spec.ts`](client/e2e/release-snake.spec.ts) — vedi strategy § Come si scrivono i test di release
 - Web build: `cd client && bash scripts/verify.sh --build`
 - Prima di test GUI: `cd client && bash scripts/test.sh diagnose` — CDP morto → `cd client && bash scripts/reset-chrome-cdp.sh`
 
@@ -70,7 +70,7 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 | **Formato** | `[alfred][push] fase …` o `… FAIL motivo key=value` |
 | **Dove leggere** | DevTools **pagina** (Console), filtro `[alfred]` — non il pannello service worker |
 
-`e2e-push-local` abilita il define sul dev server Flutter locale.
+Il dev server e2e (`bash scripts/test.sh e2e`) abilita il define sul dev server Flutter locale.
 
 **Tap push:** se dopo il tap non compare `sw.message` / `open_chat.emit`, l'intento **non è entrato** in Flutter. Il canale corretto è `navigator.serviceWorker` `message` (non `window.message` per `Client.postMessage` dal SW). Se compare la catena fino a `handler.chat_opened`, il Dart ha fatto focus + chat.
 
@@ -105,12 +105,12 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 
 ### Browser (computerUse) testing of Flutter web
 - **Eseguire sempre `cd client && bash scripts/diagnose-test-env.sh` prima.** Se Chrome CDP `:9222` non risponde: `cd client && bash scripts/reset-chrome-cdp.sh` poi ritestare. Non usare computerUse con CDP morto.
-- **Per validare il prodotto** usare `cd client && bash scripts/test.sh flusso-reale` (o `manual`), non il gate da solo.
+- **Per validare il prodotto** usare `cd client && bash scripts/test.sh e2e` (o `release`), non il gate da solo.
 - **Gate CI** (`cd client && bash scripts/test.sh gate`) solo per igiene Dart dopo modifiche al client.
 - **Non** riavviare flutter in loop per "sbloccare" i test GUI — peggiora lo stato (port conflict, CDP morto).
 - Inputs are typeable: **click directly into a field to focus it, then type** (don't assume canvas blocks input).
 - A brief (~1s) white flash can appear during navigation transitions in the debug web build; it self-resolves and is not a crash.
 
 ### Optional e2e (Playwright, in `client/`)
-- Hub: `cd client && bash scripts/test.sh e2e` o `cd client && bash scripts/test.sh e2e-multi`
+- Hub: `cd client && bash scripts/test.sh e2e` (release snake unico)
 - `npm install` then `npx playwright install chromium`. Tests default to `http://localhost:8080/`; override with `ALFRED_BASE_URL`.
