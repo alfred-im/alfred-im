@@ -273,6 +273,8 @@ test.describe('@release-snake gate release unico', () => {
       .getByRole('button', { name: 'Aggiungi alla rubrica', exact: true })
       .click();
     await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await closePeerProfileOverlay(page);
+    await backToInboxFromChat(page);
 
     // ── Chat / navigazione ──────────────────────────────────────────────
     await transitionMessagingReady(cast.e1, cast.e2);
