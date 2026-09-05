@@ -1,0 +1,78 @@
+// Gotham — protocollo federazione Alfred (wire contract)
+// SSOT testo: docs/architecture/gotham-protocol.md
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+syntax = "proto3";
+
+package alfred.gotham.v1;
+
+// ---------------------------------------------------------------------------
+// Discovery — GET /.well-known/gotham
+// ---------------------------------------------------------------------------
+
+message GothamDiscovery {
+  string version = 1;
+  repeated string public_keys = 2; // PEM o JWK per firma/verifica (futuro)
+}
+
+// ---------------------------------------------------------------------------
+// Event envelope — POST /gotham/v1/events
+// ---------------------------------------------------------------------------
+
+enum EventKind {
+  EVENT_KIND_UNSPECIFIED = 0; // non usare sul wire
+  MESSAGE = 1;
+  READ = 2;
+  REACTION = 3;
+  LOCATION = 4;
+}
+
+enum ReactionKind {
+  REACTION_KIND_UNSPECIFIED = 0; // non usare sul wire
+  APPLIED = 1;
+  WITHDRAWN = 2;
+}
+
+message GothamEnvelope {
+  EventKind kind = 1;
+  string from_address = 2; // es. mario@alfred.example
+  string to_address = 3;
+
+  // Solo READ e REACTION: messaggio su cui agisce l'evento.
+  optional string object_logical_message_id = 4;
+
+  oneof payload {
+    MessagePayload message = 10;
+    ReadPayload read = 11;
+    ReactionPayload reaction = 12;
+    LocationPayload location = 13;
+  }
+}
+
+message MessagePayload {
+  string logical_message_id = 1; // mintato dal server mittente all'accettazione invio
+  string body = 2;
+  string content_type = 3; // text | gif | voice | image | video
+  optional string media_url = 4;
+  optional int32 duration_seconds = 5;
+  optional string media_mime = 6;
+  optional int64 media_size_bytes = 7;
+}
+
+message ReadPayload {
+  string read_receipt_id = 1; // mintato dal server lettore al mark read
+  int64 read_at_unix_ms = 2;
+}
+
+message ReactionPayload {
+  string reaction_fact_id = 1; // mintato dal server che accetta la reaction
+  ReactionKind kind = 2;
+  optional string emoji = 3; // obbligatorio se APPLIED; assente se WITHDRAWN (max 32 char)
+}
+
+message LocationPayload {
+  string logical_message_id = 1; // come MESSAGE — mintato dal server mittente
+  optional string body = 2;
+  double latitude = 3;
+  double longitude = 4;
+}

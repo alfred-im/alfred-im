@@ -32,7 +32,7 @@ storage: chat-media, avatars, instance-branding
 
 | Tipo | Valori | Uso |
 |------|--------|-----|
-| `contact_protocol` | `internal`, `xmpp`, `matrix` | Routing backend; invisibile in UI inbox |
+| `contact_protocol` | `internal`, `xmpp`, `matrix` | Routing backend; invisibile in UI inbox. **Gotham:** valore `gotham` previsto — vedi [gotham-protocol.md](../../architecture/gotham-protocol.md) (migrazione non ancora su `main`) |
 | `message_content_type` | `text`, `gif`, `voice`, `location`, `image`, `video` | Tipo contenuto messaggio |
 | `queue_status` | `queued`, `processing`, `completed`, `failed` | `outbox`, `bridge_jobs` |
 | `profile_kind` | `user`, `group`, `owner` | Tipo account — [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-OWNER](../promises/system/SYS-OWNER.md) |
