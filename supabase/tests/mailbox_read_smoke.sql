@@ -62,5 +62,19 @@ BEGIN
     RAISE EXCEPTION 'sender copy read_at not propagated';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.messages reader
+    INNER JOIN public.messages sender ON sender.logical_message_id = reader.logical_message_id
+    WHERE reader.archive_user_id = v_agent2
+      AND reader.logical_message_id = v_sender.logical_message_id
+      AND reader.author_id = v_agent1
+      AND reader.read_receipt_id IS NOT NULL
+      AND sender.id = v_sender.id
+      AND sender.read_receipt_id = reader.read_receipt_id
+  ) THEN
+    RAISE EXCEPTION 'read_receipt_id must match on reader and sender copies';
+  END IF;
+
   RAISE NOTICE 'mailbox_read_smoke_ok';
 END $$;
