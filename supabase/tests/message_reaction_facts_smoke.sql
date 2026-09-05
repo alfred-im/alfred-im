@@ -53,6 +53,19 @@ BEGIN
     RAISE EXCEPTION 'apply_message_reaction failed';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.outbox o
+    WHERE o.payload ->> 'event_kind' = 'reaction_fact'
+      AND (o.payload ->> 'logical_message_id')::uuid = v_sender.logical_message_id
+      AND (o.payload ->> 'reactor_id')::uuid = v_agent2
+      AND o.payload ->> 'kind' = 'applied'
+      AND o.status = 'completed'
+      AND (o.payload ->> 'reaction_fact_id')::uuid = v_fact.id
+  ) THEN
+    RAISE EXCEPTION 'apply must enqueue completed reaction_fact outbox with fact id';
+  END IF;
+
   SELECT * INTO v_fact2 FROM public.apply_message_reaction(
     v_sender.logical_message_id,
     E'\U0001F600'

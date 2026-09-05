@@ -33,6 +33,7 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 | **SYS-DELIVERY-002** | `event_kind = deliver` — recapito messaggio (1:1 o verso gruppo) |
 | **SYS-DELIVERY-003** | `event_kind = read_receipt` — propagazione `read_at` verso copia mittente |
 | **SYS-DELIVERY-004** | `event_kind = group_erogate` — distribuzione proxy da archivio gruppo |
+| **SYS-DELIVERY-004b** | `event_kind = reaction_fact` — persistenza append-only su `message_reaction_facts` (worker; RPC account solo accoda) |
 | **SYS-DELIVERY-005** | Payload `deliver` include λ, `sender_id`, `recipient_profile_id`, snapshot contenuto |
 | **SYS-DELIVERY-006** | Payload `read_receipt` include λ, `reader_id`, `sender_profile_id` |
 | **SYS-DELIVERY-007** | RLS `outbox`: deny `authenticated` (solo worker/service) |
@@ -50,6 +51,7 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 | **SYS-DELIVERY-012** | `deliver_internal`: valuta [SYS-RECEPTION](./SYS-RECEPTION.md); se consentito → INSERT copia destinatario (o archivio gruppo) + UPDATE `delivered_at` mittente; altrimenti skip silenzioso |
 | **SYS-DELIVERY-013** | Destinatario gruppo: gate bidirezionale; INSERT archivio gruppo; `erogate_group_message` verso allow list |
 | **SYS-DELIVERY-014** | `propagate_read_receipt`: UPDATE copia mittente `read_at` WHERE `archive_user_id = sender_profile_id` AND `logical_message_id = λ` |
+| **SYS-DELIVERY-014b** | `process_reaction_fact`: INSERT su `message_reaction_facts`; payload include λ, `reactor_id`, `kind`, `emoji` (se `applied`); outbox completata con `reaction_fact_id` |
 | **SYS-DELIVERY-015** | `group_erogate`: per ogni partecipante allow list con gate → INSERT riga erogata (stesso λ) |
 | **SYS-DELIVERY-016** | Al termine: `outbox.status = completed` (o `failed` con `last_error` su errore transazione) |
 | **SYS-DELIVERY-017** | Idempotenza destinatario: `ON CONFLICT (archive_user_id, logical_message_id) DO NOTHING` |
@@ -92,6 +94,7 @@ Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/m
 |--------|----------|
 | SYS-DELIVERY-001–012 | `mailbox_delivery_smoke.sql`, `delivery_ticks_smoke.sql` |
 | SYS-DELIVERY-003–014 | `mailbox_read_smoke.sql`, `delivery_ticks_smoke.sql` |
+| SYS-DELIVERY-004b, 014b | `message_reaction_facts_smoke.sql` |
 | SYS-DELIVERY-012 | `reception_allowlist_gate_smoke.sql`, `delivery_ticks_smoke.sql` |
 | SYS-DELIVERY-018–020 | `delivery_ticks_smoke.sql`, `bash scripts/test.sh integration-ticks` |
 | SYS-DELIVERY-013–015 | `group_delivery_smoke.sql`, `group_broadcast_smoke.sql` |
