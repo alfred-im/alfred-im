@@ -17,6 +17,7 @@ import {
 } from './helpers/backend-assertions';
 import { sendPhotoFromGallery, sendPhotoFromGalleryAfterPickerResume } from './helpers/chat-media';
 import { enableFlutterAccessibility, readSavedAccountsManifest } from './helpers/flutter-a11y';
+import { attachDiagnosticLogCollector } from './helpers/diagnostic-logs';
 import { expectFocusedUserId } from './helpers/focus';
 import { isLocalSupabaseStack } from './helpers/local-auth';
 import {
@@ -29,6 +30,9 @@ import {
   clickSaveInstanceConfig,
   closeInstanceConfigScreen,
   expectConfigButtonVisible,
+  expectInstanceConfigSavedToast,
+  expectInstanceConfigScreenLoaded,
+  expectNoOwnerRequiredError,
   fillInstanceConfigForm,
   openInstanceConfigScreen,
 } from './helpers/instance-config-ui';
@@ -72,6 +76,7 @@ import {
   openPeerProfileFromInboxRow,
   selectChatHeaderMenuItem,
 } from './helpers/peer-relationship';
+import { attachPageErrorCollector } from './helpers/page-errors';
 import {
   deliverPushInServiceWorker,
   ensurePushSubscriptionInDb,
@@ -89,6 +94,13 @@ import {
   manifestEntriesFor,
 } from './helpers/snake-manifest';
 import { snakeStep } from './helpers/snake-log';
+import {
+  expectChatHeaderShowsPeer,
+  expectGroupAccountShell,
+  expectNoChatSpinnerStuck,
+  expectPushNavigationDiagnostics,
+  expectRubricaShowsRemoveNotAdd,
+} from './helpers/snake-assertions';
 import {
   resyncSnakeShell,
   transitionMessagingReady,
@@ -115,6 +127,9 @@ test.describe('@release-snake gate release unico', () => {
   test('serpente release — tutti i check core', async ({ page, context }) => {
     test.setTimeout(process.env.CI ? 720_000 : 480_000);
 
+    const pageErrors = attachPageErrorCollector(page);
+    const diagLogs = attachDiagnosticLogCollector(page);
+
     const stamp = `${Date.now()}`;
     snakeStep('setup.cast', stamp);
     cast = await createSnakeCast(stamp);
@@ -134,6 +149,7 @@ test.describe('@release-snake gate release unico', () => {
     let [entry1, entry2] = manifestEntriesFor(saved, [cast.e1, cast.e2]);
 
     snakeStep('core.manifest.persist_f5');
+    pageErrors.length = 0;
     await page.reload({
       waitUntil: 'domcontentloaded',
       timeout: E2E_TIMEOUT.boot,
@@ -144,6 +160,9 @@ test.describe('@release-snake gate release unico', () => {
     saved = (await readSavedAccountsManifest(page))!;
     expectManifestCount(saved, 2);
     await expectMultiAccountList(page, true);
+    expect(pageErrors, `errori JS dopo F5: ${pageErrors.join('; ')}`).toEqual(
+      [],
+    );
     [entry1, entry2] = manifestEntriesFor(saved, [cast.e1, cast.e2]);
 
     // ── Peer (PEER_CAN_ADD) ─────────────────────────────────────────────
@@ -169,6 +188,7 @@ test.describe('@release-snake gate release unico', () => {
     await addBtn.click();
     await expectNoRelationshipError(page);
     await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await expectRubricaShowsRemoveNotAdd(page);
     await closePeerProfileOverlay(page);
     await backToInboxFromChat(page);
 
@@ -193,6 +213,7 @@ test.describe('@release-snake gate release unico', () => {
     await addFromChat.click();
     await expectNoRelationshipError(page);
     await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await expectRubricaShowsRemoveNotAdd(page);
     await closePeerProfileOverlay(page);
     await backToInboxFromChat(page);
 
@@ -214,6 +235,10 @@ test.describe('@release-snake gate release unico', () => {
       entry1.displayName!,
       entry1.userId,
     );
+    await ensureInboxShell(page);
+    await expect(page.getByText(peerSeed).first()).toBeVisible({
+      timeout: E2E_TIMEOUT.message,
+    });
     await openPeerInInboxView(page, peerLabel);
     await expect(page.getByText(peerSeed).first()).toBeVisible({
       timeout: E2E_TIMEOUT.message,
@@ -226,11 +251,24 @@ test.describe('@release-snake gate release unico', () => {
     await selectChatHeaderMenuItem(page, 'Consenti');
     await expectNoRelationshipError(page);
     await expectAllowlistInDb(cast.e1.userId, cast.e2.userId);
+    await openChatHeaderMenu(page);
+    await expect(
+      page.getByRole('menuitem', { name: 'Rimuovi dalla rubrica', exact: true }),
+    ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+    await expect(
+      page.getByRole('menuitem', { name: 'Revoca', exact: true }),
+    ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
     await page.keyboard.press('Escape');
     await closeChatHeaderMenu(page);
     await openPeerProfileFromChatHeader(page);
+    await expect(
+      page.getByRole('button', { name: 'Rimuovi dalla rubrica', exact: true }),
+    ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
     const allowSwitch = page.getByRole('switch', { name: /Consenti messaggi/ });
+    await expect(allowSwitch).toBeVisible({ timeout: E2E_TIMEOUT.ui });
     await expect(allowSwitch).toBeChecked({ timeout: E2E_TIMEOUT.ui });
+    await closePeerProfileOverlay(page);
+    await backToInboxFromChat(page);
 
     // ── Peer (PEER_ESTABLISHED) ─────────────────────────────────────────
     await transitionPeerEstablished(
@@ -247,8 +285,24 @@ test.describe('@release-snake gate release unico', () => {
       entry1.displayName!,
       entry1.userId,
     );
+    await ensureInboxShell(page);
+    await expect(page.getByText(peerSeed).first()).toBeVisible({
+      timeout: E2E_TIMEOUT.message,
+    });
     await openPeerInInboxView(page, peerLabel);
     await openChatHeaderMenu(page);
+    await expect(
+      page.getByRole('menuitem', { name: 'Rimuovi dalla rubrica', exact: true }),
+    ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+    await expect(
+      page.getByRole('menuitem', { name: 'Revoca', exact: true }),
+    ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+    await expect(
+      page.getByRole('menuitem', { name: 'Aggiungi alla rubrica', exact: true }),
+    ).not.toBeVisible({ timeout: 2_000 });
+    await expect(
+      page.getByRole('menuitem', { name: 'Consenti', exact: true }),
+    ).not.toBeVisible({ timeout: 2_000 });
     await selectChatHeaderMenuItem(page, 'Rimuovi dalla rubrica');
     await expectContactAbsentInDb(cast.e1.userId, cast.e2.userId);
     await openChatHeaderMenu(page);
@@ -262,18 +316,57 @@ test.describe('@release-snake gate release unico', () => {
     await expectAllowlistInDb(cast.e1.userId, cast.e2.userId);
     await closeChatHeaderMenu(page);
 
+    await openPeerProfileFromChatHeader(page);
+    const consentAllowSwitch = page.getByRole('switch', {
+      name: /Consenti messaggi/,
+    });
+    const consentRubricaBtn = page.getByRole('button', {
+      name: 'Rimuovi dalla rubrica',
+      exact: true,
+    });
+    await expect(consentAllowSwitch).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+    await expect(consentRubricaBtn).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+    await expect(consentAllowSwitch).toBeChecked({ timeout: E2E_TIMEOUT.ui });
+    await consentRubricaBtn.click();
+    await page.waitForTimeout(600);
+    await expectNoRelationshipError(page);
+    await expectContactAbsentInDb(cast.e1.userId, cast.e2.userId);
+    await expect(
+      page.getByRole('button', { name: 'Aggiungi alla rubrica', exact: true }),
+    ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+    await page
+      .getByRole('button', { name: 'Aggiungi alla rubrica', exact: true })
+      .click();
+    await page.waitForTimeout(600);
+    await expectNoRelationshipError(page);
+    await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await consentAllowSwitch.click();
+    await page.waitForTimeout(600);
+    await expectNoRelationshipError(page);
+    await expectAllowlistAbsentInDb(cast.e1.userId, cast.e2.userId);
+    await expect(consentAllowSwitch).not.toBeChecked({ timeout: E2E_TIMEOUT.ui });
+    await consentAllowSwitch.click();
+    await page.waitForTimeout(600);
+    await expectNoRelationshipError(page);
+    await expectAllowlistInDb(cast.e1.userId, cast.e2.userId);
+    await expect(consentAllowSwitch).toBeChecked({ timeout: E2E_TIMEOUT.ui });
+    await closePeerProfileOverlay(page);
+    await expect(consentAllowSwitch).not.toBeVisible({ timeout: E2E_TIMEOUT.ui });
+
     snakeStep('core.peer.profile_switch_cycle');
     await openPeerProfileFromChatHeader(page);
     const removeBtn = page.getByRole('button', {
       name: 'Rimuovi dalla rubrica',
       exact: true,
     });
+    await expect(removeBtn).toBeVisible({ timeout: E2E_TIMEOUT.ui });
     await removeBtn.click();
     await expectContactAbsentInDb(cast.e1.userId, cast.e2.userId);
     await page
       .getByRole('button', { name: 'Aggiungi alla rubrica', exact: true })
       .click();
     await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await expect(removeBtn).toBeVisible({ timeout: E2E_TIMEOUT.ui });
     await closePeerProfileOverlay(page);
     await backToInboxFromChat(page);
 
@@ -297,6 +390,7 @@ test.describe('@release-snake gate release unico', () => {
     await expect(page.getByText(msgIoc)).toBeVisible({
       timeout: E2E_TIMEOUT.message,
     });
+    await expectNoChatSpinnerStuck(page, 'inbox_open');
 
     snakeStep('core.chat.inbox_parity');
     await backToInboxFromChat(page);
@@ -342,6 +436,7 @@ test.describe('@release-snake gate release unico', () => {
     await expect(page.getByText(msgAsr)).toBeVisible({
       timeout: E2E_TIMEOUT.message,
     });
+    await expectNoChatSpinnerStuck(page, 'switch_restore');
 
     snakeStep('core.chat.multi_account_messages');
     await backToInboxFromChat(page);
@@ -401,9 +496,26 @@ test.describe('@release-snake gate release unico', () => {
     });
     await backToInboxFromChat(page);
 
+    await switchToAccountByDisplayName(
+      page,
+      entry1.displayName!,
+      entry1.userId,
+    );
+    await openPeerInInbox(page, entry2.displayName!);
+    await expectChatContains(page, [textBody]);
+    await waitForSenderReadAt({
+      sender: {
+        email: cast.e2.email,
+        password: cast.e2.password,
+        userId: cast.e2.userId,
+      },
+      peerUserId: cast.e1.userId,
+      contentType: 'image',
+    });
+
     // ── Push ────────────────────────────────────────────────────────────
     await runPushFull(page, context, cast, stamp);
-    await runPushTap(page, context, cast, stamp);
+    await runPushTap(page, context, cast, stamp, diagLogs);
     await runPushPoison(page, context, cast, stamp);
 
     // ── Photo (manifest 5) ────────────────────────────────────────────
@@ -413,6 +525,7 @@ test.describe('@release-snake gate release unico', () => {
     await runInstanceConfig(page, cast, stamp);
 
     snakeStep('done.ok');
+    expect(pageErrors, `errori JS: ${pageErrors.join('; ')}`).toEqual([]);
   });
 });
 
@@ -459,11 +572,13 @@ async function runPushFull(
     await navigator.serviceWorker.ready;
     await reg.pushManager.subscribe({ userVisibleOnly: true });
   });
-  await ensurePushSubscriptionInDb({
+  const subscription = await ensurePushSubscriptionInDb({
     page,
     accessToken: cast.session1.accessToken,
     userId: cast.e1.userId,
   });
+  expect(subscription.endpoint.length).toBeGreaterThan(10);
+  expect(subscription.device_id).toBeTruthy();
   const messageBody = `snake-push-full-${stamp}`;
   const sent = await sendMessageToProfile({
     senderAccessToken: cast.session3.accessToken,
@@ -479,6 +594,7 @@ async function runPushFull(
     logicalMessageId: sent.logical_message_id,
     content_type: 'text',
   };
+  let received: Record<string, unknown>;
   try {
     await invokeSendPush({
       recipient_user_id: cast.e1.userId,
@@ -488,14 +604,17 @@ async function runPushFull(
       logical_message_id: sent.logical_message_id,
       content_type: 'text',
     });
-    await waitForPushReceived(page, {
+    received = await waitForPushReceived(page, {
       previewText: messageBody,
       timeoutMs: 6_000,
     });
   } catch {
     await deliverPushInServiceWorker(page, swPayload);
-    await waitForPushReceived(page, { previewText: messageBody });
+    received = await waitForPushReceived(page, { previewText: messageBody });
   }
+  expect(received.peerProfileId).toBe(cast.e3.userId);
+  expect(received.recipientUserId).toBe(cast.e1.userId);
+  expect(received.logicalMessageId).toBe(sent.logical_message_id);
 }
 
 async function runPushTap(
@@ -503,6 +622,7 @@ async function runPushTap(
   context: BrowserContext,
   cast: SnakeCast,
   stamp: string,
+  diagLogs: string[],
 ): Promise<void> {
   snakeStep('core.push.tap_multi_account');
   await installPushTestEnvironment(page, context, BASE_URL);
@@ -548,6 +668,7 @@ async function runPushTap(
   await expect(page.getByText(messageBody)).toBeVisible({
     timeout: E2E_TIMEOUT.message,
   });
+  expectPushNavigationDiagnostics(diagLogs);
 }
 
 async function runPushPoison(
@@ -608,6 +729,20 @@ async function runPushPoison(
   await expect(page.getByText(msgA)).toBeVisible({
     timeout: E2E_TIMEOUT.message,
   });
+  const peerBeforePush = account2.displayName ?? cast.e2.username;
+  const peerAfterPush = account1.displayName ?? cast.e1.username;
+  await expectChatHeaderShowsPeer(page, peerAfterPush, peerBeforePush);
+  await expect
+    .poll(
+      async () => {
+        await enableFlutterAccessibility(page);
+        const hasLegit = await page.getByText(msgA).isVisible().catch(() => false);
+        const hasB = await page.getByText(msgB).isVisible().catch(() => false);
+        return hasLegit && hasB;
+      },
+      { timeout: E2E_TIMEOUT.message },
+    )
+    .toBe(true);
   const poisonVisible = await page
     .getByText(poisonBy)
     .isVisible()
@@ -630,6 +765,7 @@ async function runPhotoResume(
     process.env.ALFRED_BASE_URL ?? BASE_URL,
   );
   await closeDrawerIfOpen(page);
+  await expectGroupAccountShell(page);
   const saved = (await readSavedAccountsManifest(page))!;
   const u2entry = manifestEntryForUsername(saved, cast.e2.username);
   await switchToAccountByDisplayName(
@@ -646,6 +782,9 @@ async function runPhotoResume(
       /StorageException|row-level security|Sessione scaduta|violates row-level security policy/i,
     ),
   ).not.toBeVisible({ timeout: 10_000 });
+  await expect(
+    page.getByRole('button', { name: /Riprova invio/i }),
+  ).not.toBeVisible({ timeout: 5_000 });
   await expectImagePersistedBothSides({
     sender: {
       email: cast.e2.email,
@@ -704,6 +843,8 @@ async function runInstanceConfig(
   await openInstanceConfigScreen(page);
   await fillInstanceConfigForm(page, lateValues);
   await clickSaveInstanceConfig(page);
+  await expectInstanceConfigSavedToast(page);
+  await expectNoOwnerRequiredError(page);
   await expectInstanceConfigInDb(lateValues);
 
   snakeStep('core.instance.multi_account_focus');
@@ -740,6 +881,8 @@ async function runInstanceConfig(
   await openInstanceConfigScreen(page);
   await fillInstanceConfigForm(page, focusValues);
   await clickSaveInstanceConfig(page);
+  await expectInstanceConfigSavedToast(page);
+  await expectNoOwnerRequiredError(page);
   await expectInstanceConfigInDb(focusValues);
   await closeInstanceConfigScreen(page);
   await switchToAccountByDisplayName(
@@ -773,7 +916,19 @@ async function runInstanceConfig(
   await openInstanceConfigScreen(page);
   await fillInstanceConfigForm(page, ownerValues);
   await clickSaveInstanceConfig(page);
+  await expectInstanceConfigSavedToast(page);
   await expectInstanceConfigInDb(ownerValues);
+  await expectInstanceBootstrapViaRpc(
+    cast.e4.email,
+    cast.e4.password,
+    ownerValues,
+  );
+  await closeInstanceConfigScreen(page);
+  await expect(
+    page.getByRole('button', { name: 'Nuovo messaggio' }),
+  ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+  await openInstanceConfigScreen(page);
+  await expectInstanceConfigScreenLoaded(page, ownerValues.displayName);
   await expectInstanceBootstrapViaRpc(
     cast.e4.email,
     cast.e4.password,

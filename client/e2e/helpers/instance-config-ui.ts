@@ -137,3 +137,15 @@ export async function expectInstanceConfigScreenLoaded(
     }),
   ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
 }
+
+export async function expectInstanceConfigSavedToast(page: Page): Promise<void> {
+  await expect(
+    page.getByText('Configurazione salvata', { exact: true }).first(),
+  ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+}
+
+export async function expectNoOwnerRequiredError(page: Page): Promise<void> {
+  await expect(page.getByText('owner required')).not.toBeVisible({
+    timeout: 1_000,
+  });
+}

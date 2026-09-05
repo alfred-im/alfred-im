@@ -100,7 +100,8 @@ run_e2e() {
     tmux -f /exec-daemon/tmux.portal.conf send-keys -t "$SESSION_NAME:0.0" \
       "cd $ROOT && /opt/flutter/bin/flutter run -d web-server --release --web-port=${E2E_FLUTTER_PORT:-8080} --web-hostname=0.0.0.0 \
       --dart-define=SUPABASE_URL=${SUPABASE_URL} \
-      --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" C-m
+      --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
+      --dart-define=ALFRED_DIAGNOSTIC_LOG=true" C-m
     e2e_wait_flutter_ready
     e2e_warm_flutter_compile
   fi
