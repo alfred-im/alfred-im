@@ -120,6 +120,7 @@ storage: chat-media, avatars, instance-branding
 | `latitude`, `longitude` | double nullable | location |
 | `delivered_at` | timestamptz nullable | Solo righe uscita (author = archive_user) |
 | `read_at` | timestamptz nullable | Uscita: spunta lettura; entrata: lettura locale |
+| `read_receipt_id` | uuid nullable | Id federativo evento lettura — mint sulla copia lettore, replicato sul mittente |
 | `failed_at` | timestamptz nullable | Invio/outbox fallito (mittente) |
 | `external_id` | text nullable | Bridge fase B |
 | `created_at` | timestamptz | |

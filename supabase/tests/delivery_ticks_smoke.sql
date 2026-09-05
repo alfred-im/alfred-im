@@ -171,9 +171,22 @@ BEGIN
     WHERE inc.logical_message_id = v_sender.logical_message_id
       AND inc.archive_user_id = v_agent2
       AND o.payload ->> 'event_kind' = 'read_receipt'
+      AND (o.payload ->> 'read_receipt_id')::uuid IS NOT NULL
       AND o.status = 'completed'
   ) THEN
-    RAISE EXCEPTION 'read phase: missing completed read_receipt outbox event';
+    RAISE EXCEPTION 'read phase: missing completed read_receipt outbox event with read_receipt_id';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.messages reader
+    INNER JOIN public.messages sender ON sender.logical_message_id = reader.logical_message_id
+    WHERE reader.archive_user_id = v_agent2
+      AND sender.id = v_sender.id
+      AND reader.read_receipt_id IS NOT NULL
+      AND sender.read_receipt_id = reader.read_receipt_id
+  ) THEN
+    RAISE EXCEPTION 'read phase: read_receipt_id not replicated to sender copy';
   END IF;
 
   RAISE NOTICE 'delivery_ticks_smoke_ok lambda=%', v_sender.logical_message_id;
