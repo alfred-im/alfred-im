@@ -34,7 +34,7 @@ STACK LOCALE (CI + release) — supabase start + Flutter :8080:
   integration       API multi-account + contratto spunte (stack locale)
   integration-ticks Solo contratto spunte (✓ / ✓✓ grigie / ✓✓ blu)
   integration-push  Smoke SQL push (stack locale)
-  e2e               tutti i Playwright su localhost:8080
+  e2e               release snake Playwright (unico serpente, retries=0)
   e2e-multi         Playwright multi-account (persist + messaggi)
   e2e-push-local    Playwright push — ricezione + tap multi-account
   e2e-nav-local     Playwright navigation — inbox tap + push poison
@@ -110,8 +110,8 @@ run_e2e() {
     npm install
     npx playwright install chromium
   fi
-  echo "==> Playwright e2e/ (ALFRED_BASE_URL=${ALFRED_BASE_URL})"
-  npx playwright test e2e/ --workers=1 "$@"
+  echo "==> Playwright release snake (ALFRED_BASE_URL=${ALFRED_BASE_URL})"
+  npx playwright test e2e/release-snake.spec.ts --workers=1 --retries=0 "$@"
 }
 
 run_e2e_multi() {
