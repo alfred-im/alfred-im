@@ -60,6 +60,7 @@ import {
 } from './helpers/multi-account';
 import {
   closeChatHeaderMenu,
+  closePeerProfileOverlay,
   expectAllowlistAbsentInDb,
   expectAllowlistInDb,
   expectContactAbsentInDb,
@@ -166,6 +167,7 @@ test.describe('@release-snake gate release unico', () => {
     await addBtn.click();
     await expectNoRelationshipError(page);
     await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await closePeerProfileOverlay(page);
 
     snakeStep('core.peer.profile_chat_add');
     await transitionPeerCanAdd(cast.e1, cast.e2, peerSeed, `peer2-${stamp}`);
@@ -187,6 +189,7 @@ test.describe('@release-snake gate release unico', () => {
     await addFromChat.click();
     await expectNoRelationshipError(page);
     await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await closePeerProfileOverlay(page);
 
     snakeStep('core.peer.actions_menu_profile');
     await transitionPeerCanAdd(cast.e1, cast.e2, peerSeed, `peer3-${stamp}`);

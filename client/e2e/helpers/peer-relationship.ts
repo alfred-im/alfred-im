@@ -339,6 +339,15 @@ export async function openPeerProfileFromChatHeader(page: Page): Promise<void> {
     .click({ timeout: E2E_TIMEOUT.ui });
 }
 
+export async function closePeerProfileOverlay(page: Page): Promise<void> {
+  await enableFlutterAccessibility(page);
+  const closeBtn = page.getByRole('button', { name: 'Chiudi', exact: true });
+  if (await closeBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+    await closeBtn.click({ timeout: E2E_TIMEOUT.ui });
+    await page.waitForTimeout(300);
+  }
+}
+
 export async function expectNoRelationshipError(page: Page): Promise<void> {
   await expect(
     page.getByText(
