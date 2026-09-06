@@ -1,0 +1,47 @@
+---
+description: 'Regole Alfred: Metodo Analitico - Approfondire e comprendere il problema'
+alwaysApply: true
+---
+
+## Metodo Analitico - Approfondire e comprendere il problema
+
+**FONDAMENTALE: Usare sempre il metodo più analitico possibile per capire DAVVERO il problema prima di agire.**
+
+Questa è la regola più importante: ogni azione deve essere preceduta da un'analisi approfondita. Il metodo analitico si applica a tutte le altre regole e deve essere seguito SEMPRE.
+
+### Regole fondamentali:
+- ✅ **Analizzare il problema in profondità, non fermarsi alla superficie**
+- ✅ **Tracciare il flusso completo dei dati e della logica**
+- ✅ **Identificare la causa radice, non solo i sintomi**
+- ✅ **Considerare tutti i casi edge e scenari possibili**
+- ✅ **Verificare le ipotesi con analisi del codice, non con supposizioni**
+- ✅ **Mappare tutte le dipendenze e interazioni**
+- ✅ **Capire il "perché" dietro ogni comportamento, non solo il "cosa"**
+- ❌ **NON saltare alle conclusioni senza analisi approfondita**
+- ❌ **NON fare modifiche basate su ipotesi non verificate**
+
+### Processo analitico da seguire:
+1. **Definire chiaramente il problema**: Cosa non funziona? Qual è il comportamento atteso vs quello osservato?
+2. **Raccogliere informazioni**: Leggere tutto il codice rilevante, tracciare i flussi, identificare i punti di interazione
+3. **Formulare ipotesi**: Basate sui dati raccolti, non su supposizioni
+4. **Verificare le ipotesi**: Analizzare il codice per confermare o smentire ogni ipotesi
+5. **Identificare la causa radice**: Andare oltre i sintomi per trovare la vera causa
+6. **Progettare la soluzione**: Solo dopo aver compreso completamente il problema
+7. **Verificare la soluzione**: Assicurarsi che risolva la causa radice, non solo i sintomi
+
+### Tecniche analitiche da usare:
+- Tracciamento completo del flusso di esecuzione
+- Analisi delle dipendenze (chi dipende da cosa)
+- Analisi dei dati (da dove vengono, dove vanno, come cambiano)
+- Analisi degli stati (quali stati esistono, quando cambiano, perché)
+- Analisi degli effetti collaterali (cosa viene influenzato dalle modifiche)
+- Confronto con pattern simili nel codebase
+- Verifica della coerenza architetturale
+
+### Integrazione con altre regole:
+- **Con Principio di Certezza**: Il debug autonomo termina alla causa; la fix richiede consapevolezza e accordo dell'utente
+- **Con Revisione completa**: Il metodo analitico include e va oltre la revisione completa del codice
+- **Con Debug e Testing**: L'analisi statica e i test sostituiscono il debug manuale dell'utente — **non** sostituiscono il consenso sulla soluzione
+- **Con Analisi Architetturale**: Il metodo analitico deve sempre includere la verifica degli errori di design architetturale
+
+---

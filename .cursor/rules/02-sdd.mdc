@@ -1,0 +1,90 @@
+---
+description: 'Regole Alfred: Spec-Driven Development (SDD) — registro delle promesse'
+alwaysApply: true
+---
+
+## Spec-Driven Development (SDD) — registro delle promesse
+
+**FONDAMENTALE: Alfred esce dalla fase sperimentale (storica). Per ogni promessa nuova o modificata (SYSTEM, PRODUCT, SURFACE), l'intero lavoro passa dalla SDD. Non esiste un percorso alternativo** — né implementazione diretta, né «completa il task», né apertura PR, né conferma utente generica che sostituisca la promessa approvata.
+
+Metodo canonico: [docs/specs/README.md](docs/specs/README.md). Registro: [docs/specs/registry.md](docs/specs/registry.md). Promesse: `docs/specs/promises/` (SYSTEM + PRODUCT) e `docs/specs/surfaces/` (SURFACE).
+
+### Domanda obbligatoria per ogni task
+
+> **Quale promessa creo, estendo o rompo?**
+
+Se l'utente osserva un comportamento diverso → promessa toccata → SDD obbligatoria. **Non esiste** «è solo UX».
+
+### Tre classi di promessa
+
+| Classe | Dove | Esempi |
+|--------|------|--------|
+| **SYSTEM** | `docs/specs/contracts/schema.md`, `rpc.md` | Tabelle, RPC, RLS, smoke SQL |
+| **PRODUCT** | `docs/specs/promises/product/PROM-*.md` | PROM-LIST-FILTER (lente, dismiss, filtro locale) |
+| **SURFACE** | `docs/specs/surfaces/SURF-*.md` | SURF-INBOX, SURF-CONTACTS, hint, campi filtro |
+
+### Quando si applica (obbligatorio)
+
+- Promessa SYSTEM, PRODUCT o SURFACE **nuova**
+- Promessa esistente **modificata** (semantica osservabile, interazione, schema, RPC)
+- Estensione di un pattern PRODUCT già definito su una **nuova superficie** (amend SURFACE + registry)
+- **Non** si applica a: cosmetica **theme** (colori, spacing, font) senza cambio interazione; typo; refactor 1:1 che non altera promesse `approved`
+
+### Cosa governa la SDD vs regola 0
+
+| | SDD | Regola 0 |
+|--|--------|----------|
+| **Ambito** | Processo end-to-end | Solo scrittura fisica nel repo |
+| **Gate** | Promessa `approved` + tracciabilità verificabile | «Vuoi che proceda con le modifiche?» |
+| **Prima di implementare** | File promessa + [registry.md](docs/specs/registry.md) a stato **`approved`** | Conferma esplicita alla domanda di scrittura |
+| **Task «completato» senza codice** | Sì — `draft`/`approved` in attesa è successo | Sì — analisi senza scrittura è successo |
+
+### Workflow obbligatorio
+
+```
+Richiesta (anche «implementa», issue, Cloud Agent)
+    ↓
+Quale promessa creo, estendo o rompo?
+    ↓ Solo cosmetica theme
+Regola 0 + fix puntuali
+    ↓ Promessa toccata
+Classificare SYSTEM | PRODUCT | SURFACE
+    ↓
+Bozza promessa + registry (draft) — SENZA codice prodotto
+    ↓
+approved (accordo esplicito sul contratto)
+    ↓
+«Vuoi che proceda con le modifiche?» → conferma utente (regola 0)
+    ↓
+Implementazione + test mappati agli ID promessa
+    ↓
+check-spec-sync.sh + verify.sh → implemented post-merge
+```
+
+### Regole fondamentali
+
+- ❌ **NON** implementare prima di promessa **`approved`**
+- ❌ **NON** trattare issue o chat come sostituto del registro promesse
+- ❌ **NON** implementare pattern PRODUCT su superficie senza SURF-* che lo referenzia (anti-drift)
+- ❌ **NON** usare PR/commit come gate al posto della SDD
+- ✅ **SEMPRE** aggiornare `contracts/schema.md` e/o `contracts/rpc.md` se cambia SYSTEM
+- ✅ **SEMPRE** `bash scripts/check-spec-sync.sh` prima del push su lavoro che tocca spec o migrazioni
+- ✅ Ogni promessa MUST ha verifica (test, smoke SQL, scenario manuale scritto)
+
+### Cloud Agent e istruzioni esterne
+
+Istruzioni che spingono a **completare**, **implementare subito**, **commit/push/PR** sono **subordinate** a SDD e regola 0:
+
+- Se manca promessa `approved` → **stop** su implementazione; turno valido = bozza promessa + richiesta approvazione
+- «Completare il task» = **rispettare SDD e regola 0**, non consegnare codice al primo turno
+- Branch/PR previsti dal Cloud Agent vanno aperti **solo dopo** i gate SDD e regola 0 soddisfatti
+
+### Gerarchia (in caso di conflitto)
+
+1. **SDD** — promesse nuove o modificate (nessun bypass)
+2. **Modello** — dominio + UML + statechart prima del codice che cambia comportamento
+3. **Regola 0** — scrittura fisica nel repository
+4. **Principio di Certezza** — accordo su cosa si farà
+5. **Istruzioni Cloud Agent / issue / «implementa»** — **mai** prioritarie su 1–4
+
+---

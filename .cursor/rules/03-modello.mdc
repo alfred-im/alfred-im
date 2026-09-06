@@ -1,0 +1,75 @@
+---
+description: "Regole Alfred: Modello (DDD + UML + Statechart) — rappresentazione dell'applicazione"
+alwaysApply: true
+---
+
+## Modello (DDD + UML + Statechart) — rappresentazione dell'applicazione
+
+**FONDAMENTALE:** Alfred si rappresenta a **strati di astrazione** con linguaggi standard. Il **modello** è il centro del processo ingegneristico; la SDD è solo il **confine prodotto** (cosa l'utente osserva). Non si aggiungono strati paralleli da sincronizzare a mano.
+
+Metodo canonico: [docs/domain/README.md](docs/domain/README.md). UML: [docs/model/uml/README.md](docs/model/uml/README.md). Statechart client: [client/lib/machines/README.md](client/lib/machines/README.md).
+
+### Torre di astrazione (un solo modello, nomi univoci)
+
+```text
+Più astratto ──────────────────────────────────────────────► Più concreto
+
+  DDD + Event Storming     UML 2.5              Statechart           Codice
+  docs/domain/             docs/model/uml/      client/lib/machines/   client/, supabase/
+```
+
+| Livello | Domanda | Quando aggiornare |
+|---------|---------|-------------------|
+| Dominio | Di cosa parliamo? Comandi ed eventi? | Ogni cambio di comportamento (non theme / refactor 1:1) |
+| UML | Quali stati e sequenze sono legali? | Stesso momento del dominio |
+| Statechart | Come lo esegue il client? | Se il contesto ha UI a stati |
+| SDD | L'utente osserva il cambiamento? | **Solo allora** — amend minimo con riferimento al modello |
+| Codice | Implementazione | Ultimo — derivato dal modello |
+
+### Domanda obbligatoria (dopo bounded context)
+
+> **Quale comando, evento, stato o transizione creo, estendo o rompo?**
+
+Un nome dal post-it Event Storming al PlantUML allo statechart al Dart (`FocusAccount` — mai sinonimi sparsi).
+
+### Bounded context
+
+Mappa: [docs/domain/bounded-contexts.md](docs/domain/bounded-contexts.md). Ogni area ha `docs/domain/<context>/` e `docs/model/uml/<context>/`. Non mescolare contesti in un unico diagramma stati.
+
+### Relazione con SDD (non duplicare)
+
+- ❌ **NON** riscrivere in `PROM-*` flussi già nel modello UML
+- ❌ **NON** inventare DSL markdown per navigazione o comportamento
+- ❌ **NON** implementare transizioni non presenti nel `.puml` del contesto
+- ❌ **NON** aggiungere ingressi UI/esterni che bypassano la macchina del contesto (quando esiste)
+- ✅ **SEMPRE** aggiornare dominio + UML prima del codice che cambia stati o flussi
+- ✅ **SEMPRE** dichiarare il bounded context all'inizio del task
+- ✅ Amend SDD **solo** se cambia comportamento osservabile — con riferimento a comando/stato UML, non prosa duplicata
+
+### Workflow obbligatorio (comportamento)
+
+```
+Richiesta
+    ↓
+Bounded context? (auth | navigation | messaging | …)
+    ↓
+Solo theme / refactor 1:1?
+    ↓ No
+Aggiornare docs/domain/<context>/ (glossario, comandi, eventi)
+    ↓
+Aggiornare docs/model/uml/<context>/ (state + sequence se serve)
+    ↓
+UI client con stati? → client/lib/machines/<context>/
+    ↓
+Utente osserva il cambiamento? → SDD (approved se promessa toccata)
+    ↓
+«Vuoi che proceda con le modifiche?» (regola 0)
+    ↓
+Implementazione + test (transizioni + ID promessa se applicabile)
+```
+
+### Ingresso sessione (modello)
+
+Dopo `PROJECT_MAP.md`: [bounded-contexts.md](docs/domain/bounded-contexts.md) + dominio e UML del **contesto** del task.
+
+---

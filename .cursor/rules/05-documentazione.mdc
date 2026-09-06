@@ -1,0 +1,34 @@
+---
+description: "Regole Alfred: Documentazione - Scrivere SOLO per me stesso, MAI per l'utente"
+alwaysApply: true
+---
+
+## Documentazione - Scrivere SOLO per me stesso, MAI per l'utente
+
+**FONDAMENTALE: NON scrivere MAI documentazione per l'utente. La documentazione va scritta SOLO per me stesso.**
+
+### Regole fondamentali:
+- ❌ **NON creare MAI file README per l'utente**
+- ❌ **NON creare MAI file di documentazione (*.md) per l'utente**
+- ❌ **NON aggiungere MAI commenti nel codice per "spiegare" all'utente**
+- ❌ **NON scrivere MAI guide, manuali o istruzioni per l'utente**
+- ✅ **Scrivere documentazione SOLO per me stesso quando serve a tracciare:**
+  - Analisi del problema
+  - Decisioni architetturali prese
+  - Pattern e convenzioni del codebase
+  - Note per continuare il lavoro in futuro
+- ✅ **La documentazione per me stesso è utile per mantenere continuità nel lavoro**
+- ✅ **La documentazione per me stesso aiuta a seguire il Metodo Analitico**
+
+### Quando posso scrivere documentazione:
+- Solo se ESPLICITAMENTE richiesto dall'utente
+- Solo per me stesso, per tracciare analisi e decisioni
+- Mai in modo proattivo "per aiutare l'utente"
+
+### Cosa fare invece:
+- Implementare codice chiaro e auto-esplicativo
+- Usare nomi di variabili e funzioni descrittivi
+- Strutturare il codice in modo leggibile
+- Seguire i pattern già esistenti nel codebase
+
+---
