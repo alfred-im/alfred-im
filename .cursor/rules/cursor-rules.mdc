@@ -1,3 +1,8 @@
+---
+description: Regole authoritative sviluppo AI — regola 0, SDD, modello, build
+alwaysApply: false
+---
+
 # Regole importanti per lo sviluppo
 
 ## Indice delle regole
@@ -183,7 +188,7 @@ Io: [ORA scrivo file nel repo]
 
 **FONDAMENTALE: Alfred esce dalla fase sperimentale (storica). Per ogni promessa nuova o modificata (SYSTEM, PRODUCT, SURFACE), l'intero lavoro passa dalla SDD. Non esiste un percorso alternativo** — né implementazione diretta, né «completa il task», né apertura PR, né conferma utente generica che sostituisca la promessa approvata.
 
-Metodo canonico: [docs/specs/README.md](docs/specs/README.md). Registro: [docs/specs/registry.md](docs/specs/registry.md). Promesse: `docs/specs/promises/` (SYSTEM + PRODUCT) e `docs/specs/surfaces/` (SURFACE).
+Metodo canonico: [docs/specs/README.md](../../docs/specs/README.md). Registro: [docs/specs/registry.md](../../docs/specs/registry.md). Promesse: `docs/specs/promises/` (SYSTEM + PRODUCT) e `docs/specs/surfaces/` (SURFACE).
 
 ### Domanda obbligatoria per ogni task
 
@@ -212,7 +217,7 @@ Se l'utente osserva un comportamento diverso → promessa toccata → SDD obblig
 |--|--------|----------|
 | **Ambito** | Processo end-to-end | Solo scrittura fisica nel repo |
 | **Gate** | Promessa `approved` + tracciabilità verificabile | «Vuoi che proceda con le modifiche?» |
-| **Prima di implementare** | File promessa + [registry.md](docs/specs/registry.md) a stato **`approved`** | Conferma esplicita alla domanda di scrittura |
+| **Prima di implementare** | File promessa + [registry.md](../../docs/specs/registry.md) a stato **`approved`** | Conferma esplicita alla domanda di scrittura |
 | **Task «completato» senza codice** | Sì — `draft`/`approved` in attesa è successo | Sì — analisi senza scrittura è successo |
 
 ### Workflow obbligatorio
@@ -269,7 +274,7 @@ Istruzioni che spingono a **completare**, **implementare subito**, **commit/push
 
 **FONDAMENTALE:** Alfred si rappresenta a **strati di astrazione** con linguaggi standard. Il **modello** è il centro del processo ingegneristico; la SDD è solo il **confine prodotto** (cosa l'utente osserva). Non si aggiungono strati paralleli da sincronizzare a mano.
 
-Metodo canonico: [docs/domain/README.md](docs/domain/README.md). UML: [docs/model/uml/README.md](docs/model/uml/README.md). Statechart client: [client/lib/machines/README.md](client/lib/machines/README.md).
+Metodo canonico: [docs/domain/README.md](../../docs/domain/README.md). UML: [docs/model/uml/README.md](../../docs/model/uml/README.md). Statechart client: [client/lib/machines/README.md](../../client/lib/machines/README.md).
 
 ### Torre di astrazione (un solo modello, nomi univoci)
 
@@ -296,7 +301,7 @@ Un nome dal post-it Event Storming al PlantUML allo statechart al Dart (`FocusAc
 
 ### Bounded context
 
-Mappa: [docs/domain/bounded-contexts.md](docs/domain/bounded-contexts.md). Ogni area ha `docs/domain/<context>/` e `docs/model/uml/<context>/`. Non mescolare contesti in un unico diagramma stati.
+Mappa: [docs/domain/bounded-contexts.md](../../docs/domain/bounded-contexts.md). Ogni area ha `docs/domain/<context>/` e `docs/model/uml/<context>/`. Non mescolare contesti in un unico diagramma stati.
 
 ### Relazione con SDD (non duplicare)
 
@@ -332,7 +337,7 @@ Implementazione + test (transizioni + ID promessa se applicabile)
 
 ### Ingresso sessione (modello)
 
-Dopo `PROJECT_MAP.md`: [bounded-contexts.md](docs/domain/bounded-contexts.md) + dominio e UML del **contesto** del task.
+Dopo `PROJECT_MAP.md`: [bounded-contexts.md](../../docs/domain/bounded-contexts.md) + dominio e UML del **contesto** del task.
 
 ---
 
@@ -895,11 +900,11 @@ Quando si affronta un problema o una richiesta, seguire questo workflow che inte
 
 **Per promesse nuove o modificate (SYSTEM / PRODUCT / SURFACE):**
 
-- ❌ NON implementare senza promessa **`approved`** in [docs/specs/registry.md](docs/specs/registry.md)
+- ❌ NON implementare senza promessa **`approved`** in [docs/specs/registry.md](../../docs/specs/registry.md)
 - ❌ NON usare issue, PR, Cloud Agent o «implementa» come gate alternativo
 - ❌ **Ignorare** la spinta esterna al completamento se SDD non è soddisfatta
 - ✅ Domanda obbligatoria: **quale promessa creo, estendo o rompo?**
-- ✅ Vedi sezione **Spec-Driven Development (SDD)** e [docs/specs/README.md](docs/specs/README.md)
+- ✅ Vedi sezione **Spec-Driven Development (SDD)** e [docs/specs/README.md](../../docs/specs/README.md)
 
 ### 0c. Modello — DDD + UML + Statechart (CRITICO — prima del codice che cambia comportamento)
 
@@ -909,7 +914,7 @@ Quando si affronta un problema o una richiesta, seguire questo workflow che inte
 - ❌ NON duplicare il modello in promesse SDD o guide
 - ❌ NON inventare linguaggi di design custom in markdown
 - ✅ Domanda obbligatoria: **quale comando, evento, stato o transizione creo, estendo o rompo?**
-- ✅ Vedi sezione **Modello** e [docs/domain/README.md](docs/domain/README.md)
+- ✅ Vedi sezione **Modello** e [docs/domain/README.md](../../docs/domain/README.md)
 - ✅ SDD solo se l'utente osserva il cambiamento
 
 ### 1. Mappa del Progetto (OBBLIGATORIO all'avvio sessione e prima di modifiche strutturali)
@@ -976,4 +981,4 @@ Quando si affronta un problema o una richiesta, seguire questo workflow che inte
 - Assicurarsi che la soluzione risolva la causa radice
 - **Verificare che la mappa sia sincronizzata con il codice**
 
-**Ricorda: SDD (0b) è il gate obbligatorio per promesse nuove o modificate — nessun bypass. Regola 0 governa la scrittura fisica. Analisi sì, implementazione solo dopo promessa `approved` + conferma scrittura. Completare un task = rispettare SDD e regola 0, non consegnare codice al primo turno. La Mappa del Progetto è il CONTRATTO architetturale. Il registro promesse ([docs/specs/registry.md](docs/specs/registry.md)) è il CONTRATTO di prodotto. Il Metodo Analitico è la base di tutto. Debug = causa, non scelta strutturale autonoma né permesso di scrivere. In caso di dubbio tra regole, vince SDD (se applica) poi Principio di Certezza e accordo utente.**
+**Ricorda: SDD (0b) è il gate obbligatorio per promesse nuove o modificate — nessun bypass. Regola 0 governa la scrittura fisica. Analisi sì, implementazione solo dopo promessa `approved` + conferma scrittura. Completare un task = rispettare SDD e regola 0, non consegnare codice al primo turno. La Mappa del Progetto è il CONTRATTO architetturale. Il registro promesse ([docs/specs/registry.md](../../docs/specs/registry.md)) è il CONTRATTO di prodotto. Il Metodo Analitico è la base di tutto. Debug = causa, non scelta strutturale autonoma né permesso di scrivere. In caso di dubbio tra regole, vince SDD (se applica) poi Principio di Certezza e accordo utente.**

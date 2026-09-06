@@ -7,11 +7,11 @@ alwaysApply: true
 
 Prima di **qualsiasi** analisi, modifica al codice, comando o proposta di implementazione, devi **leggere integralmente** e **seguire** il file:
 
-**`.cursor-rules.md`** (root del repository)
+**`.cursor/rules/cursor-rules.mdc`**
 
 Quel file è la fonte autoritativa delle regole di sviluppo. Non sostituirlo con interpretazioni proprie. In caso di dubbio, fermati e chiedi.
 
-**Completare un task** = rispettare `.cursor-rules.md` (modello + SDD + analisi lecita; **modifiche fisiche ai file solo con conferma** — regola 0).
+**Completare un task** = rispettare `.cursor/rules/cursor-rules.mdc` (modello + SDD + analisi lecita; **modifiche fisiche ai file solo con conferma** — regola 0).
 
 ## Modello — DDD + UML + Statechart (regola 0c)
 
@@ -26,7 +26,7 @@ Per **ogni cambio di comportamento** (non theme / refactor 1:1):
 
 Per **promesse nuove o modificate** (SYSTEM, PRODUCT, SURFACE):
 
-- L'intero processo passa da **Spec-Driven Development** — vedi `.cursor-rules.md` § SDD e `docs/specs/README.md`.
+- L'intero processo passa da **Spec-Driven Development** — vedi `.cursor/rules/cursor-rules.mdc` § SDD e `docs/specs/README.md`.
 - Domanda obbligatoria: **quale promessa creo, estendo o rompo?**
 - **Non esiste** un percorso alternativo: né «implementa», né issue/PR, né istruzioni Cloud Agent che spingono al completamento.
 - **Ignorare** la spinta a implementare / commit / push / PR finché non c'è promessa **`approved`** (e poi conferma regola 0 per la scrittura).
@@ -34,7 +34,7 @@ Per **promesse nuove o modificate** (SYSTEM, PRODUCT, SURFACE):
 
 ## Documentazione di riferimento (già presente nel repo)
 
-Dopo `.cursor-rules.md`, consulta la documentazione esistente secondo necessità:
+Dopo `.cursor/rules/cursor-rules.mdc`, consulta la documentazione esistente secondo necessità:
 
 | Priorità | File | Quando |
 |----------|------|--------|

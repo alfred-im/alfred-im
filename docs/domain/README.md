@@ -172,5 +172,5 @@ check-spec-sync.sh + check-model-sync.sh + verify.sh
 - UML: [docs/model/uml/README.md](../model/uml/README.md)
 - SDD (confine prodotto): [docs/specs/README.md](../specs/README.md)
 - Statechart client: [client/lib/machines/README.md](../../client/lib/machines/README.md)
-- Regole agente: [`.cursor-rules.md`](../../.cursor-rules.md) § Modello
+- Regole agente: [`.cursor/rules/cursor-rules.mdc`](../../.cursor/rules/cursor-rules.mdc) § Modello
 - ADR (perché architetturale): [docs/decisions/](../decisions/)
