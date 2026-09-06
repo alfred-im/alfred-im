@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify .cursor/rules/*.mdc contain all content from pre-migration backup."""
+"""Verify .cursor/rules/cursor-rules.mdc matches pre-migration backup."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BACKUP = ROOT / ".cursor/rules/_source.cursor-rules.md"
-RULES_DIR = ROOT / ".cursor/rules"
+TARGET = ROOT / ".cursor/rules/cursor-rules.mdc"
 
 
 def strip_frontmatter(text: str) -> str:
@@ -21,10 +21,8 @@ def strip_frontmatter(text: str) -> str:
 
 
 def normalize(text: str) -> str:
-    # Drop YAML frontmatter from mdc bodies; normalize whitespace for compare
     text = strip_frontmatter(text)
     text = text.replace("\r\n", "\n")
-    # Collapse multiple blank lines
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
@@ -33,43 +31,31 @@ def main() -> int:
     if not BACKUP.exists():
         print("ERROR: backup missing at", BACKUP)
         return 1
-
-    source = normalize(BACKUP.read_text(encoding="utf-8"))
-
-    mdc_files = sorted(RULES_DIR.glob("*.mdc"))
-    if not mdc_files:
-        print("ERROR: no .mdc files found")
+    if not TARGET.exists():
+        print("ERROR: target missing at", TARGET)
         return 1
 
-    combined_parts: list[str] = []
-    for path in mdc_files:
-        combined_parts.append(normalize(path.read_text(encoding="utf-8")))
+    source = normalize(BACKUP.read_text(encoding="utf-8"))
+    target = normalize(TARGET.read_text(encoding="utf-8"))
 
-    combined = "\n\n".join(combined_parts)
-
-    if source == combined:
-        print("OK: combined .mdc content matches backup byte-for-byte (normalized)")
-        print(f"  sections: {len(mdc_files)} files")
-        print(f"  chars: source={len(source)} combined={len(combined)}")
+    if source == target:
+        print("OK: cursor-rules.mdc body matches backup (normalized)")
+        print(f"  chars: {len(source)}")
         return 0
 
-    # Detailed diff hints
-    print("FAIL: content mismatch between backup and combined .mdc files")
+    print("FAIL: content mismatch between backup and cursor-rules.mdc")
     print(f"  source length: {len(source)}")
-    print(f"  combined length: {len(combined)}")
-
-    # Find first differing position
-    min_len = min(len(source), len(combined))
+    print(f"  target length: {len(target)}")
+    min_len = min(len(source), len(target))
     for i in range(min_len):
-        if source[i] != combined[i]:
+        if source[i] != target[i]:
             print(f"  first diff at char {i}")
             print("  source:", repr(source[max(0, i - 40) : i + 40]))
-            print("  combined:", repr(combined[max(0, i - 40) : i + 40]))
+            print("  target:", repr(target[max(0, i - 40) : i + 40]))
             break
     else:
-        if len(source) != len(combined):
-            print(f"  prefix equal; length diff {len(source) - len(combined)}")
-
+        if len(source) != len(target):
+            print(f"  prefix equal; length diff {len(source) - len(target)}")
     return 1
 
 
