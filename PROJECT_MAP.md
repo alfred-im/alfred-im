@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-09-03  
+**Ultimo aggiornamento**: 2026-09-06  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 **SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — per ogni tipo di informazione, un solo file canonico; questo documento è **mappa sessione**, non duplica promesse/RPC/test.
@@ -161,7 +161,8 @@
 
 - Config: `supabase/config.toml`, `supabase/migrations/`
 - MCP agente: `execute_sql`, `apply_migration`, `list_migrations`
-- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere `https://alfred-im-web.fly.dev/**` (rimuovere `XmppTest/**` e vecchi URL GitHub Pages se presenti); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
+- **Non deducibile — configurazione istanza (due passaggi):** (1) `config.json` al deploy — obbligatorio per connettersi a Supabase (`supabaseUrl`, `supabaseAnonKey`, `publicBaseUrl`); non modificabile dall'owner perché senza file l'app non parte. (2) `instance_config` in Supabase — nome, branding, `im_server_id`; owner da app dopo login. **Due indirizzi web:** pubblico (`publicBaseUrl`) e federativo IM (`im_server_id`), stesso dominio o due domini. SSOT: `client/deploy/fly/README.md` § Come si configura un'istanza.
+- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere l'host di `publicBaseUrl` (demo: `https://alfred-im-web.fly.dev/**`; rimuovere `XmppTest/**` e vecchi URL GitHub Pages se presenti); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
 
 ### Fly.io (`alfred-im`, `fra`)
 

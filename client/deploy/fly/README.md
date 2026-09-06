@@ -4,6 +4,83 @@
 
 Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container: **nginx** (asset Flutter statici) + **gateway Python** (shell PWA dinamica). I bridge restano sull'app `alfred-im` (root `fly.toml`); il client usa un'**app Fly separata**.
 
+## Come si configura un'istanza
+
+Ci sono **due passaggi**, in ordine. Il secondo funziona solo se il primo è a posto.
+
+```text
+1. Al deploy: config.json          → il client sa dove sta Supabase
+2. Dopo la connessione: Supabase   → nome, logo, dominio IM, ecc. (anche da pannello owner)
+```
+
+### Passo 1 — File al deploy (`config.json`)
+
+È un file JSON servito dall'app (`/config.json`). Il browser lo scarica **prima** di parlare con Supabase.
+
+| Campo | Serve? | A cosa serve |
+|-------|--------|--------------|
+| `supabaseUrl` | obbligatorio | Indirizzo del progetto Supabase di questa istanza |
+| `supabaseAnonKey` | obbligatorio | Chiave per connettersi (è pubblica, va bene così per una web app) |
+| `publicBaseUrl` | sì in produzione | Indirizzo pubblico dell'app — vedi [Due indirizzi web](#due-indirizzi-web-per-istanza) |
+
+**Perché l'owner non lo cambia dall'app:** per aprire il pannello impostazioni devi già essere connesso a Supabase. Ma per connetterti serve `config.json`. Chiudere questo cerchio dall'interno dell'app non è possibile: qualcosa va scritto **una volta** al deploy.
+
+Se il file manca o è sbagliato, l'app si ferma con «Configurazione mancante».
+
+**Chi lo scrive:** chi fa il deploy (modifica `client/deploy/fly/config.json`, poi `fly deploy`). Modello: `client/web/config.json.example`.
+
+### Passo 2 — Dati in Supabase (`instance_config`)
+
+Dopo la connessione, il client legge e (se sei owner) modifica questi dati tramite RPC.
+
+| Chiave | Esempio | A cosa serve |
+|--------|---------|--------------|
+| `instance.display_name` | `Alfred.im Demo` | Nome del servizio in app |
+| `instance.im_server_id` | `arkham.example` | **Dominio federativo** — parte dopo la `@` negli indirizzi (`mario@arkham.example`); in futuro anche federazione Gotham |
+| `instance.branding` | oggetto JSON | Logo, colori, titolo browser |
+| `instance.legal` | oggetto JSON | Link privacy, termini, supporto |
+
+Valori iniziali opzionali: `client/deploy/fly/instance_config.sql`.
+
+**Chi li scrive:** l'owner dall'app, dopo il login. Il deploy può solo impostare un primo valore con lo script SQL.
+
+---
+
+## Due indirizzi web per istanza
+
+Ogni istanza ha due **ruoli** diversi su internet. Possono stare sul **stesso dominio** o su **due domini**.
+
+| Ruolo | Dove si configura | Formato | A cosa serve |
+|-------|-------------------|---------|--------------|
+| **Indirizzo pubblico** (app) | `publicBaseUrl` in `config.json` | URL completo (`https://app.example/`) | Dove l'utente apre l'app; dove Supabase rimanda dopo email di conferma o reset password |
+| **Indirizzo federativo** (IM) | `im_server_id` in Supabase | Solo dominio (`im.example`) | Identità dell'istanza negli indirizzi messaggi (`mario@im.example`); in futuro anche il server di federazione |
+
+### Stesso dominio (caso più semplice)
+
+```text
+publicBaseUrl   = https://arkham.example/
+im_server_id    = arkham.example
+```
+
+App e federazione (quando ci sarà) usano lo stesso nome.
+
+### Due domini diversi
+
+```text
+publicBaseUrl   = https://app.arkham.example/   ← l'utente apre l'app qui
+im_server_id    = im.arkham.example             ← gli indirizzi IM finiscono qui
+```
+
+Va bene, ma DNS, deploy e redirect Supabase Auth devono essere allineati su entrambi.
+
+### Attenzione
+
+- L'app in uso guarda l'indirizzo del browser; i link condivisi usano quello. Se tutti entrano dall'indirizzo pubblico, coincide con `publicBaseUrl`.
+- `im_server_id` non è un soprannome: se è diverso dall'indirizzo dell'app, deve essere un dominio **reale** (con DNS), non solo un nome scelto a caso.
+- Evita combinazioni incoerenti (es. app su Fly e `im_server_id` su un dominio che non esiste): deploy e owner vanno d'accordo.
+
+---
+
 ## Architettura runtime
 
 | Percorso | Servito da | Fonte dati |
@@ -46,16 +123,19 @@ ALFRED_BASE_URL=https://alfred-im-web.fly.dev/ npx playwright test e2e/demo-live
 
 Vedi `client/e2e/demo-live-startup-timing.spec.ts` (metriche: splash hidden, navigazioni, transfer rete).
 
-## Cosa configurare (istanza)
+## Checklist configurazione
 
-| File | Cosa |
-|------|------|
-| `config.json` | `supabaseUrl`, `supabaseAnonKey`, `publicBaseUrl` (URL pubblico di questa app Fly) |
-| `instance_config.sql` | Opzionale — seed SQL `instance.display_name` / `instance.im_server_id` sul Supabase dell'istanza |
+| Cosa | Dove | Chi la imposta |
+|------|------|----------------|
+| Connessione a Supabase + indirizzo pubblico app | `config.json` | Chi fa il deploy |
+| Nome e dominio IM iniziali (opzionale) | `instance_config.sql` | Chi fa il deploy |
+| Logo, colori, legali, dominio IM | Pannello owner in app | Owner |
 
-Branding shell/PWA (logo, favicon, colori, manifest) si modifica dal **pannello owner** in app (`SURF-INSTANCE-CONFIG`) → bucket Storage `instance-branding` + chiave `instance.branding`. **Non** editare file statici nel deploy Fly.
+Dettaglio: [Come si configura un'istanza](#come-si-configura-unistanza).
 
-La anon key in `config.json` è pubblica per design (SPA); non è un secret runtime.
+Logo e colori della shell **non** vanno editati nei file del deploy: si cambiano dal pannello owner → bucket `instance-branding` in Supabase.
+
+La chiave anon in `config.json` è pubblica per design; non è un segreto.
 
 ## Primo deploy
 
@@ -100,7 +180,7 @@ Imposta working directory **`.`** (root repo) in Fly Deployments → Settings.
 
 1. **Supabase** — migrazioni in `supabase/migrations/` sul progetto dell'istanza (MCP, `supabase db push`, dashboard). Per branding owner: `20260830100000_instance_branding_storage.sql` (bucket `instance-branding`).
 2. **Edge Function** — redeploy `send-push` se cambia il payload push (`supabase/functions/send-push/`).
-3. **Supabase Auth** → Redirect URLs: `https://<tua-app>.fly.dev/**` (demo: `https://alfred-im-web.fly.dev/**`)
+3. **Supabase Auth** → Redirect URLs: host di `publicBaseUrl` (es. `https://<tua-app>.fly.dev/**`; demo: `https://alfred-im-web.fly.dev/**`)
 4. Verifica: `GET /` contiene shell dinamica (`alfred-boot-splash`, no commento `$FLUTTER_BASE_HREF`); `GET /manifest.json` risponde JSON da bootstrap (non file statico pre-merge).
 
 ## Smoke test locale
@@ -112,6 +192,7 @@ bash scripts/docker-smoke-client.sh
 ## Riferimenti
 
 - Gateway: `client/deploy/gateway/`
-- SDD: `docs/specs/surfaces/SURF-INSTANCE-CONFIG.md`, `docs/specs/promises/system/SYS-OWNER.md`
+- Federazione (host `im_server_id`): `docs/architecture/gotham-protocol.md`
+- SDD: `docs/specs/surfaces/SURF-INSTANCE-CONFIG.md`, `docs/specs/surfaces/SURF-AUTH.md`, `docs/specs/promises/system/SYS-OWNER.md`
 - Bridge Fly: root `fly.toml` + `scripts/fly-deploy-all.sh`
 - [Fly static sites](https://fly.io/docs/languages-and-frameworks/static/)
