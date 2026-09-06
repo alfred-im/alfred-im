@@ -1,21 +1,21 @@
 ---
 name: code-review
-description: "DEPRECATED — non usare. Vedi .cursor-rules.md (Modello, SDD, Revisione completa, Analisi architetturale)."
+description: "DEPRECATED — non usare. Vedi .cursor/rules/main.mdc (Modello, SDD, Revisione completa, Analisi architetturale)."
 metadata:
   version: "1.0.0"
   status: deprecated
   deprecated: "2026-07-19"
   superseded_by:
-    - ".cursor-rules.md § Modello (DDD + UML + Statechart)"
-    - ".cursor-rules.md § Spec-Driven Development (SDD)"
-    - ".cursor-rules.md § Revisione completa del codice"
-    - ".cursor-rules.md § Analisi Architetturale"
+    - ".cursor/rules/main.mdc § Modello (DDD + UML + Statechart)"
+    - ".cursor/rules/main.mdc § Spec-Driven Development (SDD)"
+    - ".cursor/rules/main.mdc § Revisione completa del codice"
+    - ".cursor/rules/main.mdc § Analisi Architetturale"
   reason: "Assi design-first/spec-first obsoleti rispetto al metodo modello-centrico (dominio → UML → statechart → codice) adottato 2026-07-18."
 ---
 
 # Revisione codice — DEPRECATA
 
-> **Non attivare questa skill.** Sostituita dalle regole in [`.cursor-rules.md`](../../../.cursor-rules.md).
+> **Non attivare questa skill.** Sostituita dalle regole in [`.cursor/rules/main.mdc`](../../rules/main.mdc).
 
 ## Perché è deprecata
 
@@ -31,10 +31,10 @@ Un audit guidato da questa skill può trovare problemi nel codice ma **non** dri
 
 | Esigenza | Dove |
 |----------|------|
-| Revisione prima di modificare un file | `.cursor-rules.md` § Revisione completa del codice |
-| Architettura, accoppiamento, efficienza | `.cursor-rules.md` § Analisi Architetturale + `PROJECT_MAP.md` |
-| Allineamento dominio / UML / macchine | `.cursor-rules.md` § Modello + `docs/domain/README.md` |
-| Promesse prodotto vs implementazione | `.cursor-rules.md` § SDD + `docs/specs/README.md` |
+| Revisione prima di modificare un file | `.cursor/rules/main.mdc` § Revisione completa del codice |
+| Architettura, accoppiamento, efficienza | `.cursor/rules/main.mdc` § Analisi Architetturale + `PROJECT_MAP.md` |
+| Allineamento dominio / UML / macchine | `.cursor/rules/main.mdc` § Modello + `docs/domain/README.md` |
+| Promesse prodotto vs implementazione | `.cursor/rules/main.mdc` § SDD + `docs/specs/README.md` |
 
 ## Contenuto storico (v1.0.0 — non seguire)
 

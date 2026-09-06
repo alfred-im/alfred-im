@@ -15,7 +15,7 @@ Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri fi
 
 | Informazione | SSOT (solo qui) | Rimanda qui — non duplicare |
 |--------------|----------------|-----------------------------|
-| **Processo agente** (regola 0, SDD, modello) | [`.cursor-rules.md`](../.cursor-rules.md) | `AGENTS.md` (solo VM/toolchain) |
+| **Processo agente** (regola 0, SDD, modello) | [`.cursor/rules/main.mdc`](../.cursor/rules/main.mdc) | `AGENTS.md` (solo VM/toolchain) |
 | **Mappa sessione** (stack, URL, dove sta il codice) | [`PROJECT_MAP.md`](../PROJECT_MAP.md) | `README.md` (solo teaser); `full-stack.md` |
 | **Ingresso pubblico OSS** | [`README.md`](../README.md) | — |
 | **Catalogo promesse** (ID, stato, binding) | [`specs/registry.md`](./specs/registry.md) | `full-stack.md` § aree; `WISHLIST.md` «Già» |
@@ -47,7 +47,7 @@ Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri fi
 ## Torre (chi governa cosa)
 
 ```text
-.cursor-rules.md          processo (regola 0, SDD, modello)
+.cursor/rules/main.mdc          processo (regola 0, SDD, modello)
         │
         ├─ domain/ + model/uml/ + machines/     significato + forma + transizioni
         │

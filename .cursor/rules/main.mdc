@@ -1,50 +1,984 @@
 ---
-description: Vincolo operativo — leggere regole e documentazione prima di qualsiasi azione
+description: Vincolo operativo e regole authoritative sviluppo AI — regola 0, SDD, modello, build
 alwaysApply: true
 ---
 
-# Vincolo obbligatorio (leggere per primo)
+# Regole importanti per lo sviluppo
 
-Prima di **qualsiasi** analisi, modifica al codice, comando o proposta di implementazione, devi **leggere integralmente** e **seguire** il file:
+## Indice delle regole
 
-**`.cursor-rules.md`** (root del repository)
+0. **NON Modificare Senza Conferma** - Analisi sì, scrittura fisica di file solo con ok esplicito (CRITICO - RISPARMIO TOKEN)
+0b. **Spec-Driven Development (SDD)** - Registro promesse; unico processo per promesse nuove o modificate; **nessun gate alternativo** (FONDAMENTALE)
+0c. **Modello (DDD + UML + Statechart)** - Rappresentazione astratta dell'app; centro del processo ingegneristico (FONDAMENTALE)
+1. **Mappa del Progetto** - Genera/aggiorna mappa completa PRIMA di ogni task (FONDAMENTALE)
+2. **Documentazione** - Scrivere SOLO per me stesso, MAI per l'utente (FONDAMENTALE)
+3. **Metodo Analitico** - Approfondire e comprendere il problema (FONDAMENTALE)
+4. **Analisi Architetturale** - Cercare errori di design prima di tutto (FONDAMENTALE)
+5. **Principio di Certezza** - Agire solo con comprensione chiara (FONDAMENTALE)
+6. **Revisione completa del codice** - PRIMA di modificare
+7. **Debug e Testing** - NON chiedere all'utente
+8. **Build** - SEMPRE dopo modifiche
+9. **DRY, KISS e Unificazioni** - Semplificare quando c'è occasione
 
-Quel file è la fonte autoritativa delle regole di sviluppo. Non sostituirlo con interpretazioni proprie. In caso di dubbio, fermati e chiedi.
+---
 
-**Completare un task** = rispettare `.cursor-rules.md` (modello + SDD + analisi lecita; **modifiche fisiche ai file solo con conferma** — regola 0).
+## NON Modificare Senza Conferma - Analisi sì, scrittura solo con ok esplicito
 
-## Modello — DDD + UML + Statechart (regola 0c)
+**CRITICO: NON modificare MAI file (repository, documentazione, migrazioni) né eseguire azioni irreversibili sul backend live senza conferma esplicita dell'utente.**
 
-Per **ogni cambio di comportamento** (non theme / refactor 1:1):
+**Regola procedurale (prioritaria):** la conferma esiste **solo** come risposta affermativa **esplicita e verbale** a una domanda di conferma **posta dall'agente** (es. «Vuoi che proceda con le modifiche?»). **Se non hai chiesto, non c'è conferma** — nessun messaggio precedente dell'utente può sostituire quello scambio. Tutto il resto non autorizza la scrittura.
 
-- Il **modello** (`docs/domain/` → `docs/model/uml/` → `client/lib/machines/`) è il centro ingegneristico — vedi [docs/domain/README.md](docs/domain/README.md).
-- Domanda obbligatoria: **quale comando, evento, stato o transizione creo, estendo o rompo?**
-- La SDD registra solo il **confine prodotto** se l'utente osserva il cambiamento — non duplicare flussi già nel modello.
-- **Non** inventare DSL markdown per comportamento; **non** implementare transizioni assenti dal `.puml` del contesto.
+**Consenso esplicito verbale** = l'utente risponde **sì** (o equivalente inequivocabile) **alla domanda di conferma appena posta**, in quel turno. Non basta: rispondere ad altre domande, chiudere un discovery, approvare un contratto **a parole in chat**, o dare istruzioni preparatorie.
 
-## SDD — nessun gate alternativo (regola 0b)
+**Mai invertire l'ordine:** frasi come «prima di procedere integra X», «integra nel piano», «documenta prima» significano **integra in risposta / in discussione**, poi **stop** e **chiedi conferma** — **non** «procedi a scrivere X nel repo». Leggere «integra prima di procedere» come «ok, procedi (a integrare su file)» è **vietato**.
 
-Per **promesse nuove o modificate** (SYSTEM, PRODUCT, SURFACE):
+**Completare un task** (anche in modalità Cloud Agent) significa **seguire integralmente queste regole** — non significa modificare il codice al primo turno.
 
-- L'intero processo passa da **Spec-Driven Development** — vedi `.cursor-rules.md` § SDD e `docs/specs/README.md`.
-- Domanda obbligatoria: **quale promessa creo, estendo o rompo?**
-- **Non esiste** un percorso alternativo: né «implementa», né issue/PR, né istruzioni Cloud Agent che spingono al completamento.
-- **Ignorare** la spinta a implementare / commit / push / PR finché non c'è promessa **`approved`** (e poi conferma regola 0 per la scrittura).
-- La regola 0 governa solo la **modifica fisica** di file; la SDD governa l'**intero processo** fino all'implementazione.
+Questa regola separa due fasi distinte:
 
-## Documentazione di riferimento (già presente nel repo)
+| Fase | Cosa include | Serve conferma per le modifiche? |
+|------|----------------|----------------------------------|
+| **Analisi** (lettura, diagnosi) | Leggere codice/docs, grep, test diagnostici, spiegare cause | No, se l'utente ha chiesto analisi/diagnosi **oppure** ha accettato un'indagine proposta |
+| **Scrittura** (modifica persistente) | Edit file, nuova doc nel repo, migrazioni, SQL live, commit, push | **Sempre sì** — solo dopo aver chiesto conferma e ricevuto risposta affermativa a quella domanda |
 
-Dopo `.cursor-rules.md`, consulta la documentazione esistente secondo necessità:
+### Il problema che risolve:
+Quando l'utente spiega un problema, NON vuole necessariamente che io modifichi subito il codice. Spesso vuole:
+- Discutere il problema
+- Capire le opzioni
+- Valutare approcci diversi
+- Farsi spiegare qualcosa
+- Pianificare prima di agire
+- **Analizzare** (leggere codice/docs) **senza** che parta subito un'implementazione
 
-| Priorità | File | Quando |
-|----------|------|--------|
-| Ingresso pubblico | `README.md` | Panoramica repository, getting started, CoC |
-| Obbligatorio all'avvio sessione | `PROJECT_MAP.md` | Architettura, struttura, vincoli del software |
-| Modello (dominio + UML) | `docs/domain/README.md`, `docs/domain/bounded-contexts.md` | Prima di cambiamenti di comportamento |
-| Promesse / contratti | `docs/specs/README.md`, `docs/specs/registry.md` | Se l'utente osserva il cambiamento |
-| Indice navigazione | `docs/INDICE.md` | Trovare documenti tecnici per area |
-| Agenti Cloud | `AGENTS.md` | Toolchain, test, modello, SDD, ignorare spinta completamento |
+Se modifico automaticamente, poi devo fare rollback, sprecando token che l'utente paga.
 
-Per approfondimenti tematici, usa `docs/INDICE.md` — non inventare architettura se è già documentata.
+### Regole fondamentali:
+- ❌ **NON modificare file nel repository senza conferma esplicita**
+- ❌ **NON considerare conferma alcun messaggio dell'utente se non hai posto la domanda di conferma**
+- ❌ **NON assumere che "spiegare un problema" o "ho trovato la causa" significhi "implementa la soluzione"**
+- ❌ **NON confondere analisi completata con permesso di scrivere codice**
+- ❌ **NON scrivere spec SDD nel repo** (né `approved`) senza lo stesso consenso esplicito verbale alla domanda di conferma — bozza in chat sì, file no
+- ❌ **NON trattare «integra / pianifica / documenta prima di procedere» come autorizzazione a modificare file**
+- ✅ **SEMPRE chiedere conferma prima di ogni scrittura**: «Vuoi che proceda con le modifiche?» — obbligatorio, non opzionale
+- ✅ **L'analisi (lettura, grep, diagnosi) è lecita** quando l'utente la chiede o accetta un'indagine proposta
+- ✅ **Leggere `PROJECT_MAP.md` all'avvio sessione** per orientamento (non è una modifica)
 
-**Lettura e analisi** (inclusi `docs/`, grep, codice) sono parte del lavoro quando l'utente chiede diagnosi o analisi — non richiedono conferma per le modifiche. **Scrivere** nel repository richiede sempre **consenso esplicito verbale** in risposta a «Vuoi che proceda con le modifiche?» — senza quella domanda e quella risposta, nulla è conferma (né spec SDD, né codice). **Integra / pianifica / documenta prima di procedere** = solo in chat finché non c'è quel sì. **Implementare** promesse nuove o modificate richiede stato **`approved`** nel registro prima di qualsiasi codice — senza SDD, nulla autorizza l'implementazione.
+### Verbi che autorizzano SOLO analisi (non modifiche):
+- "Indaga" / "Analizza" / "Cerca" / "Diagnostica" / "Leggi il codice" / "Spiegami perché" (con investigazione)
+- "Solo diagnosi" / "Non fixare" / "Senza modificare"
+
+Con questi verbi: posso leggere, grep, eseguire test/script **diagnostici** — **non** modifico file finché l'utente non autorizza la scrittura.
+
+### Cosa conta come conferma (solo in risposta alla domanda dell'agente):
+Dopo aver chiesto «Vuoi che proceda con le modifiche?», contano come conferma risposte affermative brevi, ad esempio:
+- "Sì" / "Procedi" / "Implementa" / "Ok, fallo" / "Vai avanti"
+
+Queste risposte autorizzano la scrittura **solo** se sono risposta diretta alla domanda di conferma appena posta. Un messaggio precedente con lo stesso testo **non** autorizza se non c'è stato lo scambio domanda → risposta.
+
+### Cosa posso fare senza conferma per le modifiche:
+- Rispondere a domande e spiegare concetti
+- Analizzare teoricamente (senza leggere codice, se non richiesto)
+- Suggerire approcci e discutere pro/contro
+- Leggere `PROJECT_MAP.md`, documentazione e codice **se l'utente chiede analisi/diagnosi**
+- Grep, search, comandi e test **solo diagnostici** nell'ambito di un'analisi richiesta o accettata
+- Chiedere chiarimenti
+
+### Cosa NON posso fare senza conferma per le modifiche:
+- Modificare qualsiasi file nel repository (codice, config, doc)
+- Applicare migrazioni o SQL sul backend live (salvo esplicita richiesta operativa)
+- `git commit` / `git push`
+- Creare o modificare documentazione nel repo (salvo richiesta esplicita dell'utente)
+
+### Workflow corretto:
+
+```
+UTENTE: qualsiasi messaggio (problema, analisi, "implementa", "va organizzato", ecc.)
+    ↓
+Analisi/discussione se pertinente (SENZA modifiche)
+    ↓
+SEMPRE chiedo: "Vuoi che proceda con le modifiche?"
+    ↓
+UTENTE risponde affermativamente a QUELLA domanda
+    ↓
+SOLO ORA modifico file, commit, push, ecc.
+```
+
+Senza il passaggio «chiedo → utente risponde», **nessuna scrittura**.
+
+### Distinzione da SDD (regola 0b)
+
+| Regola | Ambito | Cosa governa |
+|--------|--------|--------------|
+| **0 — NON Modificare Senza Conferma** | Scrittura nel repository | **Modifica fisica** di file (codice, doc, migrazioni, commit, push) |
+| **0b — SDD** | Promesse nuove o **modificate** (SYSTEM, PRODUCT, SURFACE) | **Intero processo**: analisi → promessa con ID → stato `approved` → solo allora implementazione → `implemented` post-merge |
+
+- La regola 0 **non** sostituisce la SDD: anche con conferma utente alla scrittura, **non** si implementa una promessa nuova o modificata senza stato `approved`.
+- La SDD **non** sostituisce la regola 0: anche con promessa `approved`, **non** si scrive nel repo senza conferma esplicita alla domanda «Vuoi che proceda con le modifiche?» (salvo richiesta operativa esplicita dell'utente su file specifici).
+- **Non esiste un gate alternativo alla SDD** per promesse nuove o modificate: né «implementa», né issue/PR, né istruzioni Cloud Agent che spingono al completamento.
+
+### Esempi:
+
+**SBAGLIATO (modifica senza ok):**
+```
+Utente: "Indaga perché il login a volte fallisce"
+Io: [leggo codice, trovo bug, modifico file e faccio commit]
+```
+
+**CORRETTO (analisi poi stop):**
+```
+Utente: "Indaga perché il login a volte fallisce"
+Io: [leggo codice, trovo causa] → "La causa è X. Vuoi che proceda con le modifiche?"
+Utente: "Sì, procedi"
+Io: [ORA modifico]
+```
+
+**CORRETTO (solo discussione iniziale):**
+```
+Utente: "Ho un problema con il login, a volte non funziona"
+Io: "Potrebbe essere legato a [teoria]. Vuoi che analizzi il codice per confermare?"
+Utente: "Sì, analizza"
+Io: [leggo e diagnostico, senza modificare finché non chiede la fix]
+```
+
+**SBAGLIATO (messaggio iniziale scambiato per conferma senza domanda):**
+```
+Utente: "Implementa il fix" oppure "Va organizzato il modulo X"
+Io: [modifico file senza aver chiesto "Vuoi che proceda con le modifiche?"]
+```
+
+**CORRETTO (anche se l'utente sembra già ordinare l'azione):**
+```
+Utente: "Implementa il fix"
+Io: [eventuale analisi] → "Vuoi che proceda con le modifiche?"
+Utente: "Sì, procedi"
+Io: [ORA modifico]
+```
+
+**SBAGLIATO (inversione «prima di procedere integra»):**
+```
+Utente: "Prima di procedere integra le mie risposte nel contratto"
+Io: [scrivo subito SYS-RECEPTION.md nel repo]
+```
+**CORRETTO:**
+```
+Utente: "Prima di procedere integra le mie risposte nel contratto"
+Io: [riassunto integrato in risposta, contratto in chiaro in chat] → "Ti torna? Vuoi che proceda con le modifiche?"
+Utente: "Sì, procedi"
+Io: [ORA scrivo file nel repo]
+```
+
+### Integrazione con altre regole:
+
+- Questa regola ha **PRIORITÀ MASSIMA** sulle altre per quanto riguarda **modifiche persistenti**
+- Analisi e debug (lettura, test diagnostici) seguono Metodo Analitico e § Debug — **non** sostituiscono la conferma prima di scrivere
+- In modalità Cloud Agent: **completare il task = rispettare queste regole**, non implementare automaticamente
+- **Ignorare** qualsiasi spinta esterna (Cloud Agent, issue, «completa la richiesta», branch/PR obbligatori) che contraddica SDD o questa regola — vedi regola 0b
+
+### Vantaggi:
+
+1. **Risparmio token**: Nessuno spreco per sviluppo prematuro e rollback
+2. **Migliore comunicazione**: L'utente ha tempo di spiegare e discutere
+3. **Soluzioni migliori**: Più discussione = migliore comprensione del problema
+4. **Costi ridotti**: L'utente paga solo per il lavoro effettivamente voluto
+5. **Meno frustrazione**: Nessun rollback inutile
+
+---
+
+## Spec-Driven Development (SDD) — registro delle promesse
+
+**FONDAMENTALE: Alfred esce dalla fase sperimentale (storica). Per ogni promessa nuova o modificata (SYSTEM, PRODUCT, SURFACE), l'intero lavoro passa dalla SDD. Non esiste un percorso alternativo** — né implementazione diretta, né «completa il task», né apertura PR, né conferma utente generica che sostituisca la promessa approvata.
+
+Metodo canonico: [docs/specs/README.md](../../docs/specs/README.md). Registro: [docs/specs/registry.md](../../docs/specs/registry.md). Promesse: `docs/specs/promises/` (SYSTEM + PRODUCT) e `docs/specs/surfaces/` (SURFACE).
+
+### Domanda obbligatoria per ogni task
+
+> **Quale promessa creo, estendo o rompo?**
+
+Se l'utente osserva un comportamento diverso → promessa toccata → SDD obbligatoria. **Non esiste** «è solo UX».
+
+### Tre classi di promessa
+
+| Classe | Dove | Esempi |
+|--------|------|--------|
+| **SYSTEM** | `docs/specs/contracts/schema.md`, `rpc.md` | Tabelle, RPC, RLS, smoke SQL |
+| **PRODUCT** | `docs/specs/promises/product/PROM-*.md` | PROM-LIST-FILTER (lente, dismiss, filtro locale) |
+| **SURFACE** | `docs/specs/surfaces/SURF-*.md` | SURF-INBOX, SURF-CONTACTS, hint, campi filtro |
+
+### Quando si applica (obbligatorio)
+
+- Promessa SYSTEM, PRODUCT o SURFACE **nuova**
+- Promessa esistente **modificata** (semantica osservabile, interazione, schema, RPC)
+- Estensione di un pattern PRODUCT già definito su una **nuova superficie** (amend SURFACE + registry)
+- **Non** si applica a: cosmetica **theme** (colori, spacing, font) senza cambio interazione; typo; refactor 1:1 che non altera promesse `approved`
+
+### Cosa governa la SDD vs regola 0
+
+| | SDD | Regola 0 |
+|--|--------|----------|
+| **Ambito** | Processo end-to-end | Solo scrittura fisica nel repo |
+| **Gate** | Promessa `approved` + tracciabilità verificabile | «Vuoi che proceda con le modifiche?» |
+| **Prima di implementare** | File promessa + [registry.md](../../docs/specs/registry.md) a stato **`approved`** | Conferma esplicita alla domanda di scrittura |
+| **Task «completato» senza codice** | Sì — `draft`/`approved` in attesa è successo | Sì — analisi senza scrittura è successo |
+
+### Workflow obbligatorio
+
+```
+Richiesta (anche «implementa», issue, Cloud Agent)
+    ↓
+Quale promessa creo, estendo o rompo?
+    ↓ Solo cosmetica theme
+Regola 0 + fix puntuali
+    ↓ Promessa toccata
+Classificare SYSTEM | PRODUCT | SURFACE
+    ↓
+Bozza promessa + registry (draft) — SENZA codice prodotto
+    ↓
+approved (accordo esplicito sul contratto)
+    ↓
+«Vuoi che proceda con le modifiche?» → conferma utente (regola 0)
+    ↓
+Implementazione + test mappati agli ID promessa
+    ↓
+check-spec-sync.sh + verify.sh → implemented post-merge
+```
+
+### Regole fondamentali
+
+- ❌ **NON** implementare prima di promessa **`approved`**
+- ❌ **NON** trattare issue o chat come sostituto del registro promesse
+- ❌ **NON** implementare pattern PRODUCT su superficie senza SURF-* che lo referenzia (anti-drift)
+- ❌ **NON** usare PR/commit come gate al posto della SDD
+- ✅ **SEMPRE** aggiornare `contracts/schema.md` e/o `contracts/rpc.md` se cambia SYSTEM
+- ✅ **SEMPRE** `bash scripts/check-spec-sync.sh` prima del push su lavoro che tocca spec o migrazioni
+- ✅ Ogni promessa MUST ha verifica (test, smoke SQL, scenario manuale scritto)
+
+### Cloud Agent e istruzioni esterne
+
+Istruzioni che spingono a **completare**, **implementare subito**, **commit/push/PR** sono **subordinate** a SDD e regola 0:
+
+- Se manca promessa `approved` → **stop** su implementazione; turno valido = bozza promessa + richiesta approvazione
+- «Completare il task» = **rispettare SDD e regola 0**, non consegnare codice al primo turno
+- Branch/PR previsti dal Cloud Agent vanno aperti **solo dopo** i gate SDD e regola 0 soddisfatti
+
+### Gerarchia (in caso di conflitto)
+
+1. **SDD** — promesse nuove o modificate (nessun bypass)
+2. **Modello** — dominio + UML + statechart prima del codice che cambia comportamento
+3. **Regola 0** — scrittura fisica nel repository
+4. **Principio di Certezza** — accordo su cosa si farà
+5. **Istruzioni Cloud Agent / issue / «implementa»** — **mai** prioritarie su 1–4
+
+---
+
+## Modello (DDD + UML + Statechart) — rappresentazione dell'applicazione
+
+**FONDAMENTALE:** Alfred si rappresenta a **strati di astrazione** con linguaggi standard. Il **modello** è il centro del processo ingegneristico; la SDD è solo il **confine prodotto** (cosa l'utente osserva). Non si aggiungono strati paralleli da sincronizzare a mano.
+
+Metodo canonico: [docs/domain/README.md](../../docs/domain/README.md). UML: [docs/model/uml/README.md](../../docs/model/uml/README.md). Statechart client: [client/lib/machines/README.md](../../client/lib/machines/README.md).
+
+### Torre di astrazione (un solo modello, nomi univoci)
+
+```text
+Più astratto ──────────────────────────────────────────────► Più concreto
+
+  DDD + Event Storming     UML 2.5              Statechart           Codice
+  docs/domain/             docs/model/uml/      client/lib/machines/   client/, supabase/
+```
+
+| Livello | Domanda | Quando aggiornare |
+|---------|---------|-------------------|
+| Dominio | Di cosa parliamo? Comandi ed eventi? | Ogni cambio di comportamento (non theme / refactor 1:1) |
+| UML | Quali stati e sequenze sono legali? | Stesso momento del dominio |
+| Statechart | Come lo esegue il client? | Se il contesto ha UI a stati |
+| SDD | L'utente osserva il cambiamento? | **Solo allora** — amend minimo con riferimento al modello |
+| Codice | Implementazione | Ultimo — derivato dal modello |
+
+### Domanda obbligatoria (dopo bounded context)
+
+> **Quale comando, evento, stato o transizione creo, estendo o rompo?**
+
+Un nome dal post-it Event Storming al PlantUML allo statechart al Dart (`FocusAccount` — mai sinonimi sparsi).
+
+### Bounded context
+
+Mappa: [docs/domain/bounded-contexts.md](../../docs/domain/bounded-contexts.md). Ogni area ha `docs/domain/<context>/` e `docs/model/uml/<context>/`. Non mescolare contesti in un unico diagramma stati.
+
+### Relazione con SDD (non duplicare)
+
+- ❌ **NON** riscrivere in `PROM-*` flussi già nel modello UML
+- ❌ **NON** inventare DSL markdown per navigazione o comportamento
+- ❌ **NON** implementare transizioni non presenti nel `.puml` del contesto
+- ❌ **NON** aggiungere ingressi UI/esterni che bypassano la macchina del contesto (quando esiste)
+- ✅ **SEMPRE** aggiornare dominio + UML prima del codice che cambia stati o flussi
+- ✅ **SEMPRE** dichiarare il bounded context all'inizio del task
+- ✅ Amend SDD **solo** se cambia comportamento osservabile — con riferimento a comando/stato UML, non prosa duplicata
+
+### Workflow obbligatorio (comportamento)
+
+```
+Richiesta
+    ↓
+Bounded context? (auth | navigation | messaging | …)
+    ↓
+Solo theme / refactor 1:1?
+    ↓ No
+Aggiornare docs/domain/<context>/ (glossario, comandi, eventi)
+    ↓
+Aggiornare docs/model/uml/<context>/ (state + sequence se serve)
+    ↓
+UI client con stati? → client/lib/machines/<context>/
+    ↓
+Utente osserva il cambiamento? → SDD (approved se promessa toccata)
+    ↓
+«Vuoi che proceda con le modifiche?» (regola 0)
+    ↓
+Implementazione + test (transizioni + ID promessa se applicabile)
+```
+
+### Ingresso sessione (modello)
+
+Dopo `PROJECT_MAP.md`: [bounded-contexts.md](../../docs/domain/bounded-contexts.md) + dominio e UML del **contesto** del task.
+
+---
+
+## Mappa del Progetto - Genera/aggiorna mappa completa PRIMA di ogni task
+
+**FONDAMENTALE: La mappa del progetto è il CONTRATTO dello stato del software. Il codice è VINCOLATO alla mappa.**
+
+Questa è la regola più importante per stabilizzare la memoria e creare un "punto di verità" che garantisce coerenza architetturale.
+
+### Regole fondamentali:
+- ✅ **SEMPRE leggere `/workspace/PROJECT_MAP.md` all'inizio di OGNI sessione**
+- ✅ **Il codice è VINCOLATO alla mappa - non fare modifiche non coerenti con l'architettura documentata**
+- ✅ **SEMPRE aggiornare la mappa PRIMA di considerare completato qualsiasi lavoro che modifica architettura/struttura**
+- ✅ **La mappa deve essere SEMPRE fedele allo stato attuale del software**
+- ✅ **La mappa serve a COMPRENDERE L'ARCHITETTURA in modo dettagliato per fare implementazioni armoniche**
+- ✅ **Se il codice ti SORPRENDE, la mappa è INCOMPLETA e va ARRICCHITA immediatamente con le informazioni NON DEDUCIBILI**
+- ✅ **La mappa contiene SOLO informazioni NON DEDUCIBILI - se è deducibile, NON va nella mappa**
+- ❌ **NON iniziare MAI una sessione senza aver letto la mappa del progetto**
+- ❌ **NON fare modifiche architetturali senza verificare coerenza con la mappa**
+- ❌ **NON lasciare MAI la mappa non sincronizzata con il codice**
+- ❌ **NON sprecare token analizzando codice che sorprende - aggiorna la mappa per evitare sorprese future**
+
+### Cosa deve contenere la mappa:
+
+**REGOLA**: Include SOLO informazioni NON DEDUCIBILI. Se qualcosa è ovvio o deducibile dal resto, NON includerla.
+
+1. **Struttura File** (solo elementi NON ovvi):
+   - File principali e responsabilità NON DEDUCIBILI dal nome
+   - Organizzazione directory se NON standard
+   - File di configurazione con scopi NON ovvi
+
+2. **Architettura** (solo decisioni NON ovvie):
+   - Layer architetturali e loro interazioni NON standard
+   - Pattern utilizzati se NON convenzionali
+   - Flussi di dati COMPLESSI o INASPETTATI
+   - Separazione responsabilità se DIVERSA dallo standard
+
+3. **Dipendenze** (solo informazioni CRITICHE):
+   - Dipendenze con versioni VINCOLATE (perché?)
+   - Dipendenze critiche che NON vanno aggiornate (motivo)
+   - Dipendenze con configurazioni PARTICOLARI
+
+4. **Entrypoint** (solo se NON standard):
+   - Flow di inizializzazione se COMPLESSO o INASPETTATO
+   - Setup globale con logica NON ovvia
+
+5. **Servizi Esterni** (dettagli NON ovvi):
+   - Configurazioni PARTICOLARI o INASPETTATE
+   - Protocolli con implementazioni CUSTOM
+   - Limitazioni o quirk NON documentati altrove
+
+6. **Database e Storage** (solo decisioni architetturali):
+   - Schema se COMPLESSO o CON LOGICHE PARTICOLARI
+   - Pattern utilizzati se NON standard (es. "database locale è SOLO cache dal server")
+   - Regole di sincronizzazione se NON ovvie
+
+7. **Stato Build** (solo configurazioni NON standard):
+   - Ottimizzazioni CUSTOM o INASPETTATE
+   - Script `client/scripts/` con logiche PARTICOLARI
+
+8. **Stato Corrente** (solo informazioni CRITICHE):
+   - Known issues che IMPATTANO sviluppo
+   - Limitazioni architetturali NON ovvie
+   - Performance metrics solo se VINCOLANTI
+
+**Test**: Se leggendo la mappa puoi prevedere correttamente come funziona il codice senza sorprese, la mappa è buona. Se il codice ti sorprende, la mappa va arricchita.
+
+### Processo da seguire:
+
+#### 1. All'inizio di OGNI sessione (OBBLIGATORIO):
+
+```bash
+# SEMPRE come PRIMO step di ogni sessione
+Read /workspace/PROJECT_MAP.md
+```
+
+**Scopo**: Comprendere l'architettura completa del progetto prima di fare qualsiasi modifica.
+
+#### 2. Durante il lavoro:
+
+- **Usa la mappa come riferimento**: Ogni decisione architetturale deve essere coerente con la mappa
+- **Verifica vincoli**: Il codice è VINCOLATO all'architettura documentata nella mappa
+- **Non deviare**: Se serve deviare dall'architettura, PRIMA aggiorna la mappa per riflettere la nuova architettura
+
+#### 3. Durante l'analisi del codice (CRITICO):
+
+**Se il codice ti SORPRENDE:**
+- La mappa dice X ma il codice fa Y
+- Hai "pensato" che funzionasse in un modo ma analizzando vedi che è diverso
+- Trovi implementazioni NON DEDUCIBILI dalla mappa
+- Trovi pattern o convenzioni NON DEDUCIBILI dalla mappa
+- Qualcosa richiede analisi extra perché la mappa non lo aveva fatto capire
+
+**AZIONE OBBLIGATORIA**: Fermarsi e aggiornare la mappa IMMEDIATAMENTE con le informazioni NON DEDUCIBILI che hanno causato la sorpresa.
+
+**Regola fondamentale**: La mappa contiene SOLO informazioni NON DEDUCIBILI. Se qualcosa è deducibile dal resto, NON va nella mappa.
+
+**Motivo**: 
+- Se il codice SORPRENDE = spreco di token per analisi extra
+- Se il codice NON sorprende = lavoro veloce ed efficace
+- La mappa serve a eliminare SORPRESE, non a documentare tutto
+- Se la mappa ti ha fatto fare assunzioni sbagliate, porterà anche sessioni future a sprecare token
+
+#### 4. Prima di completare il lavoro (OBBLIGATORIO):
+
+Se hai fatto modifiche che cambiano:
+- Struttura file o responsabilità
+- Architettura o layer
+- Dipendenze (aggiunte/rimosse/aggiornate)
+- Database schema
+- Servizi esterni
+- Configurazione build
+- Entrypoint o flow di inizializzazione
+
+**DEVI aggiornare `/workspace/PROJECT_MAP.md` PRIMA di considerare il lavoro completato.**
+
+#### 5. Workflow completo:
+
+```
+INIZIO SESSIONE
+    ↓
+[1] Leggi PROJECT_MAP.md (OBBLIGATORIO)
+    ↓
+[2] Comprendi architettura completa
+    ↓
+[3] Analizza codice per il task
+    ↓
+[3a] Codice diverso da mappa? → FERMA e aggiorna PROJECT_MAP.md
+    ↓
+[4] Lavora sul task mantenendo coerenza con mappa
+    ↓
+[5] Se fai modifiche architetturali → Aggiorna PROJECT_MAP.md
+    ↓
+[6] Build e verifica
+    ↓
+FINE SESSIONE (mappa sempre sincronizzata con codice)
+```
+
+### Quando aggiornare la mappa (OBBLIGATORIO):
+
+La mappa DEVE essere aggiornata SEMPRE quando fai modifiche che cambiano:
+
+**Struttura e Organizzazione**:
+- ✅ Crei/elimini file o directory
+- ✅ Riorganizzi struttura progetto
+- ✅ Modifichi responsabilità di file/moduli
+
+**Architettura**:
+- ✅ Modifichi layer architetturali
+- ✅ Cambi pattern utilizzati
+- ✅ Modifichi flussi di dati
+- ✅ Aggiungi/modifichi Context, Services, Repositories
+
+**Dipendenze**:
+- ✅ Aggiungi dipendenze `pubspec.yaml` (production o dev)
+- ✅ Rimuovi dipendenze `pubspec.yaml`
+- ✅ Aggiorni versioni dipendenze critiche
+
+**Database e Storage**:
+- ✅ Modifichi chiavi `SharedPreferences` / storage locale client
+- ✅ Aggiungi/rimuovi object stores
+- ✅ Modifichi chiavi localStorage
+
+**Servizi e Integrazioni**:
+- ✅ Aggiungi servizi esterni
+- ✅ Modifichi configurazione servizi
+- ✅ Implementi nuovi protocolli (es. XEP XMPP)
+
+**Build e Configurazione**:
+- ✅ Modifichi `pubspec.yaml` o configurazione build web Flutter
+- ✅ Aggiungi script in `client/scripts/`
+- ✅ Modifichi configurazione TypeScript/ESLint
+
+**Feature e Stato**:
+- ✅ Implementi nuove feature significative
+- ✅ Risolvi known issues
+- ✅ Cambi stato di feature (da "roadmap" a "implementata")
+
+**Regola d'oro**: Se non sei sicuro se aggiornare la mappa → AGGIORNALA. Meglio una mappa dettagliata e aggiornata che una obsoleta.
+
+### Integrazione con altre regole:
+
+- **Con Metodo Analitico**: La mappa è la base per l'analisi approfondita
+- **Con Analisi Architetturale**: La mappa documenta l'architettura corrente da verificare
+- **Con Revisione completa**: La mappa aiuta a identificare tutti i file da revisionare
+- **Con Principio di Certezza**: La mappa riduce l'ambiguità e aumenta la certezza
+
+### Vantaggi:
+
+1. **Riduce ricostruzioni errate**: Documento di riferimento completo evita assunzioni sbagliate
+2. **Stabilizza la memoria**: Punto di verità riletto all'inizio di ogni sessione
+3. **Accelera l'analisi**: Non serve ricostruire la struttura ogni volta
+4. **Migliora la coerenza**: Tutte le decisioni partono dalla stessa base architetturale
+5. **Facilita onboarding**: Nuova sessione parte sempre da documento completo
+6. **Garantisce armonia**: Il codice VINCOLATO alla mappa garantisce implementazioni armoniche con lo stato attuale
+7. **Previene regressioni**: Impossibile fare modifiche non coerenti senza aggiornare la mappa
+8. **Documentazione sempre aggiornata**: La mappa è SEMPRE fedele allo stato del software
+9. **Elimina sorprese**: Solo informazioni NON DEDUCIBILI = nessuna sorpresa nel codice
+10. **Riduce consumo token**: Codice che NON sorprende = lavoro veloce = meno token sprecati in analisi extra
+
+### La mappa come contratto:
+
+**IMPORTANTE**: La mappa è un CONTRATTO tra sessioni di lavoro.
+
+- **Contratto per il codice**: Il codice deve rispettare l'architettura documentata
+- **Contratto per le modifiche**: Ogni modifica deve mantenere o evolvere coerentemente l'architettura
+- **Contratto per la documentazione**: La mappa deve SEMPRE riflettere lo stato reale del codice
+
+Se la mappa e il codice non sono sincronizzati, il contratto è rotto e il lavoro NON è completo.
+
+---
+
+## Documentazione - Scrivere SOLO per me stesso, MAI per l'utente
+
+**FONDAMENTALE: NON scrivere MAI documentazione per l'utente. La documentazione va scritta SOLO per me stesso.**
+
+### Regole fondamentali:
+- ❌ **NON creare MAI file README per l'utente**
+- ❌ **NON creare MAI file di documentazione (*.md) per l'utente**
+- ❌ **NON aggiungere MAI commenti nel codice per "spiegare" all'utente**
+- ❌ **NON scrivere MAI guide, manuali o istruzioni per l'utente**
+- ✅ **Scrivere documentazione SOLO per me stesso quando serve a tracciare:**
+  - Analisi del problema
+  - Decisioni architetturali prese
+  - Pattern e convenzioni del codebase
+  - Note per continuare il lavoro in futuro
+- ✅ **La documentazione per me stesso è utile per mantenere continuità nel lavoro**
+- ✅ **La documentazione per me stesso aiuta a seguire il Metodo Analitico**
+
+### Quando posso scrivere documentazione:
+- Solo se ESPLICITAMENTE richiesto dall'utente
+- Solo per me stesso, per tracciare analisi e decisioni
+- Mai in modo proattivo "per aiutare l'utente"
+
+### Cosa fare invece:
+- Implementare codice chiaro e auto-esplicativo
+- Usare nomi di variabili e funzioni descrittivi
+- Strutturare il codice in modo leggibile
+- Seguire i pattern già esistenti nel codebase
+
+---
+
+## Metodo Analitico - Approfondire e comprendere il problema
+
+**FONDAMENTALE: Usare sempre il metodo più analitico possibile per capire DAVVERO il problema prima di agire.**
+
+Questa è la regola più importante: ogni azione deve essere preceduta da un'analisi approfondita. Il metodo analitico si applica a tutte le altre regole e deve essere seguito SEMPRE.
+
+### Regole fondamentali:
+- ✅ **Analizzare il problema in profondità, non fermarsi alla superficie**
+- ✅ **Tracciare il flusso completo dei dati e della logica**
+- ✅ **Identificare la causa radice, non solo i sintomi**
+- ✅ **Considerare tutti i casi edge e scenari possibili**
+- ✅ **Verificare le ipotesi con analisi del codice, non con supposizioni**
+- ✅ **Mappare tutte le dipendenze e interazioni**
+- ✅ **Capire il "perché" dietro ogni comportamento, non solo il "cosa"**
+- ❌ **NON saltare alle conclusioni senza analisi approfondita**
+- ❌ **NON fare modifiche basate su ipotesi non verificate**
+
+### Processo analitico da seguire:
+1. **Definire chiaramente il problema**: Cosa non funziona? Qual è il comportamento atteso vs quello osservato?
+2. **Raccogliere informazioni**: Leggere tutto il codice rilevante, tracciare i flussi, identificare i punti di interazione
+3. **Formulare ipotesi**: Basate sui dati raccolti, non su supposizioni
+4. **Verificare le ipotesi**: Analizzare il codice per confermare o smentire ogni ipotesi
+5. **Identificare la causa radice**: Andare oltre i sintomi per trovare la vera causa
+6. **Progettare la soluzione**: Solo dopo aver compreso completamente il problema
+7. **Verificare la soluzione**: Assicurarsi che risolva la causa radice, non solo i sintomi
+
+### Tecniche analitiche da usare:
+- Tracciamento completo del flusso di esecuzione
+- Analisi delle dipendenze (chi dipende da cosa)
+- Analisi dei dati (da dove vengono, dove vanno, come cambiano)
+- Analisi degli stati (quali stati esistono, quando cambiano, perché)
+- Analisi degli effetti collaterali (cosa viene influenzato dalle modifiche)
+- Confronto con pattern simili nel codebase
+- Verifica della coerenza architetturale
+
+### Integrazione con altre regole:
+- **Con Principio di Certezza**: Il debug autonomo termina alla causa; la fix richiede consapevolezza e accordo dell'utente
+- **Con Revisione completa**: Il metodo analitico include e va oltre la revisione completa del codice
+- **Con Debug e Testing**: L'analisi statica e i test sostituiscono il debug manuale dell'utente — **non** sostituiscono il consenso sulla soluzione
+- **Con Analisi Architetturale**: Il metodo analitico deve sempre includere la verifica degli errori di design architetturale
+
+---
+
+## Analisi Architetturale - Cercare errori di design prima di tutto
+
+**FONDAMENTALE: Quando si affronta un problema, cercare PRIMA gli errori di design dell'architettura software prima di cercare bug nel codice.**
+
+Molti problemi apparentemente complessi hanno origine da errori di design architetturale. Identificare e correggere questi errori è spesso più efficace che cercare di risolvere sintomi nel codice.
+
+### Regole fondamentali:
+- ✅ **Sempre verificare prima se il problema deriva da un errore di design architetturale**
+- ✅ **Analizzare la struttura complessiva del sistema prima di cercare bug specifici**
+- ✅ **Verificare separazione delle responsabilità, coesione, accoppiamento**
+- ✅ **Controllare se il problema è causato da violazioni di principi SOLID o pattern architetturali**
+- ✅ **Valutare se la soluzione richiede un refactoring architetturale piuttosto che una patch**
+- ✅ **Considerare se il problema è sintomo di un design inadeguato**
+- ❌ **NON cercare solo bug nel codice senza verificare il design**
+- ❌ **NON applicare patch temporanee se il problema è architetturale**
+
+### Processo di analisi architetturale:
+1. **Identificare il problema**: Cosa non funziona? Qual è il comportamento atteso?
+2. **Analizzare l'architettura**: Come è strutturato il sistema? Quali sono i componenti principali?
+3. **Verificare il design**: Ci sono violazioni di principi architetturali? Separazione delle responsabilità corretta?
+4. **Identificare errori di design**: Il problema deriva da un design inadeguato o da un bug specifico?
+5. **Valutare la soluzione**: Serve un refactoring architetturale o una correzione puntuale?
+6. **Progettare la correzione**: Se è un problema architetturale, progettare la soluzione corretta
+
+### Cosa verificare nell'analisi architetturale:
+- Separazione delle responsabilità (Single Responsibility Principle)
+- Coesione dei moduli e componenti
+- Accoppiamento tra componenti
+- Violazioni di principi SOLID
+- Pattern architetturali utilizzati correttamente
+- Flussi di dati e dipendenze
+- Gestione degli stati e side effects
+- Scalabilità e manutenibilità del design
+- Duplicazioni evitabili (DRY), complessità superflua (KISS), concetti unificabili (Unificazioni) — vedi sezione dedicata
+
+### Integrazione con Metodo Analitico:
+L'analisi architetturale è parte integrante del Metodo Analitico: quando si analizza un problema, la prima domanda deve essere "Questo problema deriva da un errore di design architetturale?"
+
+---
+
+## DRY, KISS e Unificazioni - Semplificare quando c'è occasione
+
+**Quando si ha occasione** — cioè dopo aver letto la documentazione e il codice rilevante con sufficiente profondità — applicare attivamente **DRY**, **KISS** e **Unificazioni**. Non è un refactoring obbligatorio a ogni task; è un principio da usare quando il contesto lo consente e il beneficio è chiaro.
+
+### Quando applicare
+
+- ✅ Dopo aver letto **tutta** la documentazione e il codice coinvolto nel task (mappa, ADR, file target e usages)
+- ✅ Quando si progetta una soluzione o si tocca codice già duplicato / eccessivamente complesso
+- ✅ Quando due o più concetti, tipi, flussi o implementazioni fanno **la stessa cosa** con varianti inutili
+- ❌ **NON** forzare unificazioni o refactor ampi senza conferma esplicita dell'utente (vale anche qui NON Modificare Senza Conferma)
+- ❌ **NON** unificare per estetica se aumenta l'accoppiamento o riduce la chiarezza
+
+### I tre principi
+
+| Principio | Significato operativo |
+|-----------|------------------------|
+| **DRY** (Don't Repeat Yourself) | Una sola fonte di verità per logica, regole e trasformazioni; niente copy-paste di comportamento |
+| **KISS** (Keep It Simple, Stupid) | Preferire la soluzione più semplice che risolve il problema; evitare astrazioni premature e rami speciali |
+| **Unificazioni** | Unificare concetti, API, tipi o flussi duplicati in un'astrazione comune invece di moltiplicare casi speciali |
+
+### Processo
+
+1. **Leggere** documentazione e codice rilevante per intero (Revisione completa + mappa/ADR)
+2. **Cercare** duplicazioni, complessità evitabile, concetti paralleli unificabili
+3. **Valutare** se DRY/KISS/Unificazione migliora manutenibilità senza peggiorare il design
+4. **Proporre** all'utente refactor o unificazioni non banali prima di implementare
+5. **Applicare** nel diff del task corrente solo se il beneficio è locale e il scope resta contenuto
+
+### Integrazione con altre regole
+
+- **Con Analisi Architetturale**: unificare solo se coerente con separazione responsabilità e mappa
+- **Con Metodo Analitico**: semplificare dopo aver compreso il flusso, non prima
+- **Con NON Modificare Senza Conferma**: refactor strutturali richiedono ok esplicito
+- **Con Mappa del Progetto**: unificazioni che cambiano architettura → aggiornare la mappa
+
+---
+
+## Principio di Certezza - Agire solo con comprensione chiara
+
+**FONDAMENTALE: Agire SOLO quando ho buona certezza che l'utente abbia buona consapevolezza di quello che farò.**
+
+### Regole fondamentali:
+- ✅ **Verificare sempre che l'utente abbia compreso le implicazioni delle modifiche**
+- ✅ **Spiegare chiaramente COSA farò PRIMA di procedere**
+- ✅ **SEMPRE chiedere conferma prima di modificare file**: «Vuoi che proceda con le modifiche?» — senza questa domanda, nulla è conferma
+- ✅ **Chiedere conferma anche quando le modifiche potrebbero avere effetti non ovvi**
+- ✅ **Essere esplicito su file, funzioni e logiche che verranno modificati**
+- ❌ **NON procedere se c'è ambiguità sulla richiesta dell'utente**
+- ❌ **NON assumere che l'utente capisca tutti i dettagli tecnici**
+- ❌ **NON fare modifiche significative senza spiegare prima il piano**
+
+### Quando fermarsi e chiedere:
+1. La richiesta è vaga o ambigua
+2. Ci sono multiple interpretazioni possibili
+3. Le modifiche potrebbero avere effetti collaterali non ovvi
+4. Il contesto fornito dall'utente è insufficiente
+5. C'è incertezza su quale approccio sia preferito dall'utente
+
+### Cosa comunicare prima di agire:
+1. Quali file verranno modificati
+2. Quale logica/funzionalità verrà cambiata
+3. Eventuali effetti collaterali prevedibili
+4. Perché questa è la soluzione scelta
+5. Eventuali alternative considerate
+
+## Revisione completa del codice - PRIMA di modificare
+
+**IMPORTANTE: Revisionare COMPLETAMENTE il codice prima di fare qualsiasi modifica.**
+
+Questa sezione implementa concretamente il Metodo Analitico per la revisione del codice.
+
+### Regole fondamentali:
+- ✅ **Leggere l'INTERO file che si sta per modificare, non solo le parti rilevanti**
+- ✅ **Verificare TUTTE le dipendenze e i punti di utilizzo della funzione/classe/componente**
+- ✅ **Capire il flusso completo e gli effetti collaterali delle modifiche**
+- ✅ **Cercare pattern simili nel codebase per mantenere coerenza**
+- ✅ **Verificare che le modifiche siano coerenti con il resto del codice**
+- ✅ **Usare grep/search per trovare tutti i riferimenti prima di modificare**
+- ✅ **Non fare modifiche senza avere certezza del contesto completo**
+
+### Processo da seguire (applicazione del Metodo Analitico):
+1. **Definire**: Quale codice devo modificare e perché?
+2. **Raccogliere**: Leggere completamente il file target e tutti i file correlati
+3. **Mappare**: Cercare tutti i riferimenti/usages della funzione/classe/componente
+4. **Analizzare**: Capire il flusso completo (chi chiama cosa, quando, perché)
+5. **Verificare**: Controllare effetti collaterali e dipendenze
+6. **Progettare**: Solo DOPO aver compreso tutto, progettare le modifiche
+7. **Implementare**: Fare le modifiche con piena consapevolezza del contesto
+
+---
+
+## Debug e Testing - NON chiedere all'utente
+
+**IMPORTANTE: L'utente non ha accesso a PC/desktop e usa Alfred da cellulare (PWA). Non ha console DevTools, log browser né ambiente di sviluppo locale.**
+
+**Divieto assoluto — MAI chiedere all'utente:**
+- PC, laptop, desktop o «apri il browser sul computer»
+- Console DevTools, filtri log, `[alfred]` in console, screenshot di debug tecnici
+- Log applicativi, export log, copia-incolla di errori da terminale
+- Riproduzione manuale con passi da sviluppatore (tap + controlla X in console)
+- «Hai i log?», «Puoi verificare in DevTools?», «Riproduci e dimmi cosa compare»
+
+**L'agente** (Cloud Agent, VM, CI) esegue test, e2e e diagnosi in autonomia. Se servono log, li ottiene dall'ambiente agente — non dall'utente.
+
+**Ambito di questa regola — SOLO individuazione della causa.** Il debug serve a capire *perché* succede, non a decidere *come* correggere né a implementare la correzione. La fase di fix (progettazione, scelta dell'approccio, modifica del codice) segue le altre regole: Principio di Certezza, Analisi Architetturale, NON Modificare Senza Conferma.
+
+### Gerarchia (questa regola non può mai contrastare le altre)
+
+| Priorità | Regola | Cosa governa |
+|----------|--------|--------------|
+| 1 | NON Modificare Senza Conferma | Quando è lecito **modificare** file o backend |
+| 2 | Principio di Certezza | L'utente deve capire e concordare prima di modifiche significative |
+| 3 | Analisi Architetturale / Mappa | Decisioni strutturali vincolate a mappa e ADR |
+| 4 | **Debug e Testing** (questa sezione) | *Come* trovare la causa (lettura, test diagnostici) senza coinvolgere l'utente nel debug manuale |
+
+- ❌ **MAI** usare «devo debuggare da solo» per aggirare il consenso su una soluzione
+- ❌ **MAI** usare «ho trovato la causa» come autorizzazione implicita a implementare un approccio strutturale non concordato
+- ✅ Il debug autonomo copre: lettura codice, test, riproduzione, tracciamento flussi — fino alla **causa radice documentata**
+- ✅ Dopo la causa: **fermarsi**, presentare opzioni se ce ne sono più di una, attendere scelta/conferma — poi il workflow di implementazione
+
+Questa sezione applica il Metodo Analitico al debugging: usare analisi statica e test al posto di chiedere all'utente console/log dal browser.
+
+### Regole fondamentali:
+- ❌ **NON chiedere mai all'utente di aprire la console del browser** (né su PC né su telefono)
+- ❌ **NON chiedere mai all'utente di controllare i log** — non li ha a disposizione
+- ❌ **NON chiedere mai PC, DevTools, terminale o passi di debug tecnico**
+- ❌ **NON aggiungere console.log per debug e chiedere all'utente di testarli**
+- ✅ **Analizzare il codice completamente per capire il problema** (Metodo Analitico)
+- ✅ **Usare l'analisi statica del codice per trovare bug**
+- ✅ **Eseguire test e riproduzioni in autonomia** per confermare la causa (senza delegare all'utente)
+- ❌ **NON confondere «ho riprodotto il bug» con «posso implementare la soluzione che preferisco»**
+
+### Processo di debug analitico (SOLO individuazione causa — non include la fix):
+
+1. **Definire il problema**: Cosa non funziona? Qual è il comportamento atteso vs osservato?
+2. **Raccogliere informazioni**: Leggere e analizzare tutto il codice coinvolto
+3. **Tracciare il flusso**: Seguire il flusso dei dati dall'inizio alla fine
+4. **Identificare i punti critici**: Trovare tutti i punti dove potrebbero esserci problemi
+5. **Formulare ipotesi**: Basate sull'analisi, non su supposizioni
+6. **Verificare le ipotesi**: Test, riproduzione, analisi — confermare o smentire la causa radice
+7. **Comunicare la causa**: Spiegare all'utente cosa succede e perché (senza assumere che la fix sia già decisa)
+8. **Stop del debug**: Se servono modifiche al codice → passare al workflow implementazione (Principio di Certezza, scelta approccio, eventuale ADR/mappa) — **non** continuare in autonomia solo perché la causa è nota
+
+**La fix non fa parte di questa sezione.** Modificare file, scegliere tra alternative architetturali e dichiarare una soluzione «corretta» richiedono conferma esplicita e, per decisioni strutturali, accordo dell'utente.
+
+---
+
+## Build - SEMPRE dopo modifiche
+
+**IMPORTANTE: Fare SEMPRE la verifica Flutter dopo aver fatto modifiche al codice in `client/`.**
+
+La verifica è parte integrante del Metodo Analitico: serve a confermare che le modifiche siano corrette prima di considerare il lavoro completato.
+
+### Regole fondamentali (client Flutter — `client/`)
+
+- ✅ **SEMPRE eseguire `bash scripts/verify.sh` dentro `client/`** dopo ogni modifica al client
+- ✅ **SEMPRE eseguire `bash scripts/test.sh e2e` dentro `client/`** a fine lavoro su `client/` (stack locale: Supabase + Flutter release `:8080` + Playwright — lo script avvia/bootstrap se serve)
+- ✅ **NON fare `git commit` / `git push` senza `verify_ok`** — il gate locale deve passare prima del push (la CI blocca `release-suite` altrimenti)
+- ✅ **NON considerare completato un task su `client/`** senza aver lanciato `e2e` (regressioni del branch da risolvere prima del push)
+- ✅ Lo script esegue in ordine: `flutter pub get` → **`flutter analyze`** → `flutter test`
+- ✅ **`flutter analyze` deve uscire con zero issue** (anche livello `info` — es. import inutili — blocca come in CI)
+- ✅ Per release web locale o prima di merge critici: `bash scripts/verify.sh --build` (include `flutter build web`)
+- ✅ La CI (`.github/workflows/release-suite.yml`) usa lo stesso script nel gate; deploy client su Fly (`client/deploy/fly/`)
+- ❌ **MAI attendere i job GitHub Actions** (`gh run watch`, `gh pr checks` in loop, polling, bloccare merge/risposta finché la CI è verde). Gate obbligatorio = **locale** `verify_ok` prima del push; lo stato Actions è informativo per review umana, non gate dell'agente
+
+### Merge su `main` (richiesta esplicita dell'utente)
+
+Se l'utente chiede di fare merge (es. «fai merge», «merge completa», «mergia la PR», «merge e pulisci»):
+
+- ✅ **Procedere subito**: merge PR (`gh pr merge` o equivalente), `git checkout main`, pull, pulizia branch/stash — senza attendere che `build-client`, `release-suite` o altri job Actions siano verdi
+- ❌ **VIETATO** usare lo stato CI come prerequisito o motivo di attesa quando l'utente ha chiesto il merge
+- ✅ Verificare solo che la PR sia **mergeable** (nessun conflitto git); eventuali check `pending`/`in_progress` **non** bloccano
+- Il gate qualità resta **locale** (`verify_ok` prima del push sul branch); la CI post-merge è informativa
+
+### Comandi (riferimento)
+
+```bash
+cd client
+bash scripts/verify.sh           # gate standard (analyze + test)
+bash scripts/verify.sh --build   # + build web (base-href /)
+bash scripts/test.sh e2e         # obbligatorio a fine lavoro client (stack locale)
+```
+
+### Quando eseguire la verifica
+
+- Dopo ogni modifica al codice in `client/`
+- **Obbligatorio prima di `git push`** (e prima di considerare completato un task)
+- Come parte del processo di verifica del Metodo Analitico
+
+---
+
+## Dettaglio del Codice - L'utente si fida completamente
+
+**IMPORTANTE: L'utente non guarda praticamente mai il codice che scrivo. Non serve mostrare dettagli implementativi.**
+
+### Regole fondamentali:
+- ❌ **NON mostrare snippet di codice nelle spiegazioni**
+- ❌ **NON descrivere implementazioni dettagliate**
+- ✅ **Spiegare solo l'approccio ad alto livello**
+- ✅ **L'utente si fida completamente delle implementazioni**
+- ✅ **L'utente interviene SOLO se io non riesco in autonomia**
+
+### Comunicazione corretta:
+**SBAGLIATO (troppo dettaglio):**
+```
+Modifico la funzione X aggiungendo:
+- Campo Y per tracciare Z
+- Logica if/else per gestire caso W
+- Return di oggetto { a, b, c }
+```
+
+**CORRETTO (alto livello):**
+```
+Approccio: riconosco il tipo di messaggio e lo gestisco di conseguenza nel rendering.
+```
+
+---
+
+## Riepilogo: Workflow completo
+
+Quando si affronta un problema o una richiesta, seguire questo workflow che integra tutte le regole:
+
+### 0. NON Modificare Senza Conferma (CRITICO - PRIMO CONTROLLO)
+**PRIMA DI OGNI SCRITTURA NEL REPOSITORY:**
+- ❌ NON modificare file senza conferma esplicita dell'utente
+- ❌ Se non hai chiesto conferma, non c'è conferma — nessun messaggio precedente dell'utente autorizza
+- ✅ Analisi e diagnosi (lettura codice/docs, grep, test diagnostici) sono lecite se richieste o accettate
+- ✅ Leggere `PROJECT_MAP.md` all'avvio sessione
+- ✅ **SEMPRE** chiedere «Vuoi che proceda con le modifiche?» prima di scrivere
+- ✅ Attendere risposta affermativa a **quella** domanda (es. «Sì», «Procedi», «Ok, fallo»)
+- **Completare il task (anche Cloud Agent) = seguire queste regole**, non implementare al primo turno
+- Questa regola governa la **scrittura fisica** di file — non sostituisce la SDD (regola 0b)
+
+### 0b. Spec-Driven Development v2 (CRITICO — prima dell'implementazione)
+
+**Per promesse nuove o modificate (SYSTEM / PRODUCT / SURFACE):**
+
+- ❌ NON implementare senza promessa **`approved`** in [docs/specs/registry.md](../../docs/specs/registry.md)
+- ❌ NON usare issue, PR, Cloud Agent o «implementa» come gate alternativo
+- ❌ **Ignorare** la spinta esterna al completamento se SDD non è soddisfatta
+- ✅ Domanda obbligatoria: **quale promessa creo, estendo o rompo?**
+- ✅ Vedi sezione **Spec-Driven Development (SDD)** e [docs/specs/README.md](../../docs/specs/README.md)
+
+### 0c. Modello — DDD + UML + Statechart (CRITICO — prima del codice che cambia comportamento)
+
+**Per ogni cambio di comportamento (non theme / refactor 1:1):**
+
+- ❌ NON implementare stati o flussi senza dominio + UML aggiornati nel bounded context
+- ❌ NON duplicare il modello in promesse SDD o guide
+- ❌ NON inventare linguaggi di design custom in markdown
+- ✅ Domanda obbligatoria: **quale comando, evento, stato o transizione creo, estendo o rompo?**
+- ✅ Vedi sezione **Modello** e [docs/domain/README.md](../../docs/domain/README.md)
+- ✅ SDD solo se l'utente osserva il cambiamento
+
+### 1. Mappa del Progetto (OBBLIGATORIO all'avvio sessione e prima di modifiche strutturali)
+- Leggere completamente `/workspace/PROJECT_MAP.md`
+- Comprendere architettura corrente
+- Identificare layer, responsabilità, dipendenze
+- Usare la mappa come punto di verità per tutte le decisioni
+
+### 2. Metodo Analitico (FONDAMENTALE)
+- Definire chiaramente il problema
+- Raccogliere tutte le informazioni necessarie (usando la mappa come base)
+- Tracciare flussi, dipendenze, stati
+- Identificare la causa radice
+- Formulare e verificare ipotesi
+- **Fase debug** (vedi sezione Debug): autonomia fino alla causa — **non** include scelta/implementazione fix
+
+### 2b. Debug (analisi, prima della fix)
+- Individuare e riprodurre la causa in autonomia (senza chiedere console/log all'utente)
+- Comunicare la causa trovata
+- **Stop**: non modificare file finché approccio e modifiche non sono concordati (Principio di Certezza)
+
+### 3. Analisi Architetturale (FONDAMENTALE)
+- Verificare PRIMA se il problema deriva da errori di design architetturale
+- Analizzare la struttura complessiva del sistema (riferendosi alla mappa)
+- Valutare se serve un refactoring architetturale o una correzione puntuale
+- **Se serve refactoring architetturale, pianificare aggiornamento mappa**
+
+### 4. Principio di Certezza
+- Assicurarsi di aver compreso completamente il problema
+- Spiegare all'utente cosa si farà e perché
+- Chiedere sempre conferma prima di scrivere (vedi regola 0)
+- Verificare che la soluzione sia coerente con l'architettura nella mappa
+
+### 5. Revisione completa del codice
+- Leggere completamente tutti i file coinvolti
+- Mappare tutte le dipendenze e usages
+- Capire il flusso completo
+- Verificare coerenza con architettura documentata nella mappa
+
+### 6. Progettare la soluzione
+- Solo dopo aver compreso tutto
+- **Verificare che la soluzione sia coerente con la mappa (VINCOLO)**
+- Considerare effetti collaterali
+- **Quando c'è occasione**: applicare DRY, KISS e Unificazioni (senza espandere scope non concordato)
+- Se serve deviare dall'architettura, riprogettare architettura e aggiornare mappa
+
+### 7. Implementare
+- Fare le modifiche con piena consapevolezza
+- Seguire i pattern del codebase
+- Mantenere coerenza con architettura documentata
+
+### 8. Aggiornare la mappa (OBBLIGATORIO se necessario)
+- **Se le modifiche hanno cambiato architettura/struttura, aggiornare `/workspace/PROJECT_MAP.md`**
+- Aggiornare data ultima revisione
+- Documentare cambiamenti significativi
+- Verificare che la mappa sia fedele al codice
+
+### 9. Verificare
+- Eseguire `cd client && bash scripts/verify.sh` (include **`flutter analyze`** + test)
+- Eseguire `cd client && bash scripts/test.sh e2e` (Playwright su stack locale — obbligatorio a fine lavoro su `client/`)
+- **Solo dopo `verify_ok`**: commit e push
+- Se serve validare anche il bundle web: `bash scripts/verify.sh --build`
+- Verificare lint
+- Assicurarsi che la soluzione risolva la causa radice
+- **Verificare che la mappa sia sincronizzata con il codice**
+
+**Ricorda: SDD (0b) è il gate obbligatorio per promesse nuove o modificate — nessun bypass. Regola 0 governa la scrittura fisica. Analisi sì, implementazione solo dopo promessa `approved` + conferma scrittura. Completare un task = rispettare SDD e regola 0, non consegnare codice al primo turno. La Mappa del Progetto è il CONTRATTO architetturale. Il registro promesse ([docs/specs/registry.md](../../docs/specs/registry.md)) è il CONTRATTO di prodotto. Il Metodo Analitico è la base di tutto. Debug = causa, non scelta strutturale autonoma né permesso di scrivere. In caso di dubbio tra regole, vince SDD (se applica) poi Principio di Certezza e accordo utente.**

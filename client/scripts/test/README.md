@@ -33,7 +33,7 @@ Eseguito da `verify.sh` e da GitHub Actions (`release-suite.yml`) su ogni PR/pus
 Equivalente diretto: `bash scripts/verify.sh`  
 Opzione build web: `bash scripts/verify.sh --build`
 
-**Fine lavoro agente / sviluppatore su `client/`:** dopo `verify_ok`, eseguire sempre `bash scripts/test.sh e2e` (vedi `.cursor-rules.md` § Build, `AGENTS.md`).
+**Fine lavoro agente / sviluppatore su `client/`:** dopo `verify_ok`, eseguire sempre `bash scripts/test.sh e2e` (vedi `.cursor/rules/main.mdc` § Build, `AGENTS.md`).
 
 **Dart gate:** `client/test/unit/`, `client/test/widget/`, `client/test/wiring/`, `client/test/composition/`
 

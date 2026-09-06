@@ -2,7 +2,7 @@
 
 **SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — questo file copre **solo** toolchain Cloud Agent e gotchas VM; non duplica promesse, RPC, test completi né account debug.
 
-Processo agente (regola 0, SDD, modello): [.cursor-rules.md](.cursor-rules.md)
+Processo agente (regola 0, SDD, modello): [.cursor/rules/main.mdc](.cursor/rules/main.mdc)
 
 ---
 
@@ -45,7 +45,7 @@ backend out of the box.
 
 ### Merge e CI
 
-Se l'utente chiede di fare merge («fai merge», «merge completa», «merge e pulisci», ecc.): **non attendere** GitHub Actions (`gh run watch`, `gh pr checks` in loop, polling finché verde). Merge e pulizia **subito** se la PR è mergeable — vedi `.cursor-rules.md` § Build → «Merge su main». Gate obbligatorio prima del push = locale `verify_ok` + `bash scripts/test.sh e2e` (se il branch tocca `client/`); CI post-merge è informativa.
+Se l'utente chiede di fare merge («fai merge», «merge completa», «merge e pulisci», ecc.): **non attendere** GitHub Actions (`gh run watch`, `gh pr checks` in loop, polling finché verde). Merge e pulizia **subito** se la PR è mergeable — vedi `.cursor/rules/main.mdc` § Build → «Merge su main». Gate obbligatorio prima del push = locale `verify_ok` + `bash scripts/test.sh e2e` (se il branch tocca `client/`); CI post-merge è informativa.
 
 ### Lint / test / build
 
