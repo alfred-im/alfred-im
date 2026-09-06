@@ -117,10 +117,9 @@
 │   └── model/uml/          # UML 2.5 PlantUML (forma)
 ├── fly.toml, Dockerfile    # Deploy bridge Fly.io
 ├── PROJECT_MAP.md          # Questo file
-└── .cursor/                # Regole e skill agente Cursor
+└── .cursor/                # Regole agente Cursor
     └── rules/
-        ├── main.mdc            # Vincolo operativo (alwaysApply)
-        └── cursor-rules.mdc    # Regole sviluppo AI (SSOT processo)
+        └── main.mdc            # Regole sviluppo AI (SSOT processo, alwaysApply)
 ```
 
 ### Client Flutter (`client/`)

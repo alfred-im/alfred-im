@@ -236,5 +236,5 @@ Verifica: registry, promesse PRODUCT/SURFACE/SYSTEM, contratti `contracts/`, coe
 - **Modello**: [docs/domain/README.md](../domain/README.md) · [docs/model/uml/README.md](../model/uml/README.md)
 - **Registro**: [registry.md](./registry.md)
 - **Navigazione**: [INDICE.md](../INDICE.md)
-- **Regole agente**: [`.cursor/rules/cursor-rules.mdc`](../../.cursor/rules/cursor-rules.mdc) § SDD · § Modello
+- **Regole agente**: [`.cursor/rules/main.mdc`](../../.cursor/rules/main.mdc) § SDD · § Modello
 - **PR**: [`.github/PULL_REQUEST_TEMPLATE.md`](../../.github/PULL_REQUEST_TEMPLATE.md)
