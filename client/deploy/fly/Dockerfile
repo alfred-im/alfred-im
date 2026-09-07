@@ -17,8 +17,10 @@ RUN flutter pub get
 
 COPY client/ ./
 
-# Instance wiring (operators edit client/deploy/fly/config.json before deploy).
-COPY client/deploy/fly/config.json web/config.json
+# Instance wiring (operators edit per-instance config before deploy).
+# Default: Arkham — override with build-arg INSTANCE_CONFIG_JSON (Blackgate: client/deploy/blackgate/config.json).
+ARG INSTANCE_CONFIG_JSON=client/deploy/fly/config.json
+COPY ${INSTANCE_CONFIG_JSON} web/config.json
 
 # --pwa-strategy=none: non registrare il service worker Flutter deprecato (reload multipli).
 # Canvaskit resta in build/web: evita ~7MB da gstatic a ogni cold start.

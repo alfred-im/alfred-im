@@ -1,0 +1,5 @@
+{
+  "supabaseUrl": "https://jgxkimvjmlfjdtzsuijh.supabase.co",
+  "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpneGtpbXZqbWxmamR0enN1aWpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MTI4OTUsImV4cCI6MjEwNDM4ODg5NX0.VXeuim4IIVKFPkP6VWWtOt-4aC2vIKJNhCwGPvzdfMw",
+  "publicBaseUrl": "https://blackgate-im.fly.dev/"
+}

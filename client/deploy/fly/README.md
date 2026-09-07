@@ -1,6 +1,7 @@
 # Deploy Fly.io — client web (PWA)
 
-**Live (demo istanza):** https://arkham-im.fly.dev/
+**Live (demo istanza Arkham):** https://arkham-im.fly.dev/  
+**Seconda demo (Blackgate):** https://blackgate-im.fly.dev/ — vedi `client/deploy/blackgate/README.md`
 
 Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container: **nginx** (asset Flutter statici) + **gateway Python** (shell PWA dinamica). I bridge restano sull'app `alfred-im` (root `fly.toml`); il client usa un'**app Fly separata**.
 
