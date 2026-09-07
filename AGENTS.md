@@ -40,7 +40,7 @@ backend out of the box.
   `.venv/bin/python bridge-xmpp/main.py` (`XMPP_PORT`, default 8080) and `.venv/bin/python bridge-matrix/main.py`
   (`MATRIX_PORT`, default 8081). Both return `{"status":"ok",...}`. **Port clash:** the XMPP bridge default 8080
   collides with the `flutter run` example port below — run the web app on a different port (e.g. 8090) if both run.
-- **Fly.io è l'ambiente di review del client** (https://alfred-im-web.fly.dev/). Deploy: **`bash scripts/fly-deploy-client.sh`** (`flyctl` auth richiesto). Auto-deploy al push **solo** se abilitato in Fly Dashboard → Deployments (working dir `.`); push GitHub da solo **non** deploya — CI fa smoke Docker (`docker-client-fly.yml`). Do **not** `flyctl deploy` or write to the
+- **Fly.io è l'ambiente di review del client** (https://arkham-im.fly.dev/). Deploy: **`bash scripts/fly-deploy-client.sh`** (`flyctl` auth richiesto). Auto-deploy al push **solo** se abilitato in Fly Dashboard → Deployments (working dir `.`); push GitHub da solo **non** deploya — CI fa smoke Docker (`docker-client-fly.yml`). Do **not** `flyctl deploy` or write to the
   live Supabase from this dev VM without explicit user confirmation — that is their review surface, not a dev target.
 
 ### Merge e CI
@@ -82,16 +82,16 @@ Il dev server e2e (`bash scripts/test.sh e2e`) abilita il define sul dev server 
 ### Hosted web client (Fly.io)
 
 - **Project page:** https://alfred-im.github.io/ — static landing in `org-site/` (deploy `deploy-org-site.yml`, secret `ORG_SITE_PAT`)
-- **Try it:** https://alfred-im-web.fly.dev/ — `client/deploy/fly/`, deploy `scripts/fly-deploy-client.sh`
+- **Try it:** https://arkham-im.fly.dev/ — `client/deploy/fly/`, deploy `scripts/fly-deploy-client.sh`
 - Build Fly: `flutter build web --pwa-strategy=none` (no SW Flutter deprecato); CanvasKit servito dall'origine — vedi `client/deploy/fly/README.md` § Build web e avvio
-- Benchmark avvio demo: `cd client && ALFRED_BASE_URL=https://alfred-im-web.fly.dev/ npx playwright test e2e/demo-live-startup-timing.spec.ts`
+- Benchmark avvio demo: `cd client && ALFRED_BASE_URL=https://arkham-im.fly.dev/ npx playwright test e2e/demo-live-startup-timing.spec.ts`
 - Build web: `cd client && bash scripts/verify.sh --build` (base-href `/`)
 - Auto-deploy (opzionale): Fly Deployments → collega repo GitHub, branch `main`, working directory `.` (vedi `client/deploy/fly/README.md`). L'agente **non** attende il deploy Fly.
 
 ### Fly.io
 
 - **Bridge** app: `alfred-im` (`https://alfred-im.fly.dev`). Deploy: `bash scripts/fly-deploy-all.sh`
-- **Client** app (PWA): `client/deploy/fly/` — app separata (`alfred-im-web` default). Deploy: `bash scripts/fly-deploy-client.sh`. Vedi `client/deploy/fly/README.md`
+- **Client** app (PWA): `client/deploy/fly/` — app separata (`arkham-im` default). Deploy: `bash scripts/fly-deploy-client.sh`. Vedi `client/deploy/fly/README.md`
 - Migrazione nome app bridge (una tantum da `xmpptest`): `bash scripts/fly-rename-app.sh` (richiede `flyctl auth login`).
 
 ### Auth / messaging gotchas (non-obvious, hit during setup)

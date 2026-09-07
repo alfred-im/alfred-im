@@ -8,7 +8,7 @@
 # Fly Launch / GitHub: config path = client/deploy/fly/fly.toml, working directory = . (root)
 #   — NON client/deploy/fly (duplica il path del Dockerfile).
 
-app = "alfred-im-web"
+app = "arkham-im"
 primary_region = "fra"
 
 [build]

@@ -1,6 +1,6 @@
 # Deploy Fly.io — client web (PWA)
 
-**Live (demo istanza):** https://alfred-im-web.fly.dev/
+**Live (demo istanza):** https://arkham-im.fly.dev/
 
 Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container: **nginx** (asset Flutter statici) + **gateway Python** (shell PWA dinamica). I bridge restano sull'app `alfred-im` (root `fly.toml`); il client usa un'**app Fly separata**.
 
@@ -35,8 +35,8 @@ Dopo la connessione, il client legge e (se sei owner) modifica questi dati trami
 
 | Chiave | Esempio | A cosa serve |
 |--------|---------|--------------|
-| `instance.display_name` | `Alfred.im Demo` | Nome del servizio in app |
-| `instance.im_server_id` | `arkham.example` | **Dominio federativo** — parte dopo la `@` negli indirizzi (`mario@arkham.example`); in futuro anche federazione Gotham |
+| `instance.display_name` | `Arkham.im` | Nome del servizio in app — **solo DB** (owner panel o SQL); non è nel build Docker |
+| `instance.im_server_id` | `arkham-im.fly.dev` | **Dominio federativo** — parte dopo la `@` negli indirizzi (`mario@arkham-im.fly.dev`); in futuro anche federazione Gotham |
 | `instance.branding` | oggetto JSON | Logo, colori, titolo browser |
 | `instance.legal` | oggetto JSON | Link privacy, termini, supporto |
 
@@ -58,8 +58,8 @@ Ogni istanza ha due **ruoli** diversi su internet. Possono stare sul **stesso do
 ### Stesso dominio (caso più semplice)
 
 ```text
-publicBaseUrl   = https://arkham.example/
-im_server_id    = arkham.example
+publicBaseUrl   = https://arkham-im.fly.dev/
+im_server_id    = arkham-im.fly.dev
 ```
 
 App e federazione (quando ci sarà) usano lo stesso nome.
@@ -118,7 +118,7 @@ Dopo deploy, cronometra cold/warm sulla demo:
 ```bash
 cd client && npx playwright test e2e/demo-live-startup-timing.spec.ts --reporter=line
 # override URL:
-ALFRED_BASE_URL=https://alfred-im-web.fly.dev/ npx playwright test e2e/demo-live-startup-timing.spec.ts
+ALFRED_BASE_URL=https://arkham-im.fly.dev/ npx playwright test e2e/demo-live-startup-timing.spec.ts
 ```
 
 Vedi `client/e2e/demo-live-startup-timing.spec.ts` (metriche: splash hidden, navigazioni, transfer rete).
@@ -145,7 +145,10 @@ Da **root del repository**:
 # 1. Personalizza client/deploy/fly/config.json
 
 # 2. Crea l'app (una tantum) — cambia il nome in fly.toml se necessario
-fly apps create alfred-im-web   # oppure fly launch --config client/deploy/fly/fly.toml --no-deploy
+fly apps create arkham-im   # oppure fly launch --config client/deploy/fly/fly.toml --no-deploy
+
+# Migrazione da alfred-im-web (una tantum):
+# bash scripts/fly-rename-client-app.sh
 
 # 3. Deploy (build remoto Fly)
 bash scripts/fly-deploy-client.sh
@@ -163,7 +166,7 @@ bash scripts/fly-deploy-client.sh
 
 Integrazione **Fly Deployments ↔ GitHub** — non è nel repo; va abilitata una tantum:
 
-1. Dashboard Fly → app `alfred-im-web` → **Deployments** → **Settings**
+1. Dashboard Fly → app `arkham-im` → **Deployments** → **Settings**
 2. Collega il repository GitHub
 3. Abilita **Auto Deploy** sul branch (es. `main`)
 4. **Config path:** `client/deploy/fly/fly.toml`
@@ -180,7 +183,7 @@ Imposta working directory **`.`** (root repo) in Fly Deployments → Settings.
 
 1. **Supabase** — migrazioni in `supabase/migrations/` sul progetto dell'istanza (MCP, `supabase db push`, dashboard). Per branding owner: `20260830100000_instance_branding_storage.sql` (bucket `instance-branding`).
 2. **Edge Function** — redeploy `send-push` se cambia il payload push (`supabase/functions/send-push/`).
-3. **Supabase Auth** → Redirect URLs: host di `publicBaseUrl` (es. `https://<tua-app>.fly.dev/**`; demo: `https://alfred-im-web.fly.dev/**`)
+3. **Supabase Auth** → Redirect URLs: host di `publicBaseUrl` (es. `https://<tua-app>.fly.dev/**`; demo: `https://arkham-im.fly.dev/**`)
 4. Verifica: `GET /` contiene shell dinamica (`alfred-boot-splash`, no commento `$FLUTTER_BASE_HREF`); `GET /manifest.json` risponde JSON da bootstrap (non file statico pre-merge).
 
 ## Smoke test locale

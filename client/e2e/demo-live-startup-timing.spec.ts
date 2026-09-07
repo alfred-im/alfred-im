@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /**
- * Cronometra avvio demo live (alfred-im-web.fly.dev).
+ * Cronometra avvio demo live (arkham-im.fly.dev).
  * Diagnostica: non richiede auth locale.
  *
  * Run:
@@ -11,7 +11,7 @@
  */
 import { test, expect, chromium, type Page } from '@playwright/test';
 
-const DEMO_URL = process.env.ALFRED_BASE_URL ?? 'https://alfred-im-web.fly.dev/';
+const DEMO_URL = process.env.ALFRED_BASE_URL ?? 'https://arkham-im.fly.dev/';
 
 type ResourceSummary = {
   name: string;
