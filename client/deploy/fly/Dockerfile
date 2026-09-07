@@ -8,6 +8,8 @@
 
 # Flutter 3.44.6 / Dart 3.12.2 — matches VM snapshot (see AGENTS.md).
 FROM ghcr.io/adrianjagielak/flutter:3.44.6 AS build
+ENV CI=true
+ENV FLUTTER_SUPPRESS_ANALYTICS=true
 WORKDIR /app/client
 
 COPY client/pubspec.yaml client/pubspec.lock ./

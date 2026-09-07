@@ -22,4 +22,5 @@ fi
 
 cd "$ROOT"
 echo "==> fly deploy (client gateway, context=repo root)"
-"$FLY" deploy . --remote-only --config "$CONFIG" --dockerfile "$DOCKERFILE"
+# --depot=false: Flutter build fails on Fly Depot (~3s, trap context); legacy builder works.
+"$FLY" deploy . --remote-only --depot=false --config "$CONFIG" --dockerfile "$DOCKERFILE"

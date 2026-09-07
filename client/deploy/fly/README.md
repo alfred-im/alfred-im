@@ -160,7 +160,7 @@ bash scripts/fly-deploy-client.sh
 bash scripts/fly-deploy-client.sh
 ```
 
-**Push su GitHub da solo non deploya Fly.** La CI (`docker-client-fly.yml`) esegue solo smoke build locale. Per pubblicare su Fly serve **`fly deploy`** (manuale) oppure **Auto Deploy** configurato in dashboard (vedi sotto).
+**Push su GitHub da solo non deploya Fly.** La CI (`docker-client-fly.yml`) esegue solo smoke build locale. Per pubblicare su Fly serve **`fly deploy`** (manuale) oppure **Auto Deploy** configurato in dashboard (vedi sotto). **Non** usare GitHub Actions con `FLY_API_TOKEN` — il deploy passa da Fly Deployments.
 
 ## Auto-deploy al push (opzionale, dashboard Fly)
 
@@ -174,6 +174,20 @@ Integrazione **Fly Deployments ↔ GitHub** — non è nel repo; va abilitata un
 6. **Working directory / monorepo root:** `.` (root del repo) — **non** `client/deploy/fly`
 
 Se la working directory è `client/deploy/fly`, Fly cerca `client/deploy/fly/client/deploy/fly/Dockerfile` e il build fallisce.
+
+### Build Flutter fallisce su Depot (`can't be called from trap context`)
+
+Il builder **Depot** (default Fly) può interrompere `flutter build web` dopo pochi secondi. Il Dockerfile è valido (smoke CI locale + `scripts/docker-smoke-client.sh`).
+
+**Workaround dashboard (senza CLI):**
+
+1. Fly → **Organization** → **Settings** → **App Builders** → **Configure**
+2. Imposta regione builder vicina a `fra` (es. `ams`, `lhr`) o **Reset** se bloccato su «Waiting for depot builder…»
+3. Riprova il deploy da **Deployments** → **Deploy latest commit**
+
+**Deploy manuale (CLI):** `bash scripts/fly-deploy-client.sh` usa `--depot=false` (builder legacy Fly).
+
+La dashboard GitHub **non** espone `--depot=false`; se il workaround regione non basta, contatta Fly support o usa deploy CLI una tantum.
 
 ### Errore `client/deploy/fly/client/deploy/fly/Dockerfile not found`
 
