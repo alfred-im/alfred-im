@@ -126,10 +126,10 @@ Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (
 
 | Target | Meccanismo |
 |--------|------------|
-| Web client (Fly.io) | `client/deploy/fly/` + gateway `client/deploy/gateway/` — app `alfred-im-web` — https://alfred-im-web.fly.dev/ |
+| Web client (Fly.io) | `client/deploy/fly/` + gateway `client/deploy/gateway/` — app `arkham-im` — https://arkham-im.fly.dev/ |
 | Supabase | Migrazioni in repo → MCP / `supabase db push` / dashboard (non automatiche al merge Git) |
 
-**Try it:** https://alfred-im-web.fly.dev/ — panoramica pubblica in [`README.md`](../../README.md).
+**Try it:** https://arkham-im.fly.dev/ — panoramica pubblica in [`README.md`](../../README.md).
 
 **Deploy client Fly:** `bash scripts/fly-deploy-client.sh`. Push su GitHub **non** deploya Fly; CI (`docker-client-fly.yml`) = smoke build. Auto-deploy Fly **solo** se abilitato in dashboard (Deployments → GitHub, working dir `.`). Vedi `client/deploy/fly/README.md`.
 

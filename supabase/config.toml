@@ -161,7 +161,7 @@ site_url = "http://localhost:3000"
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
-  "https://alfred-im-web.fly.dev/**",
+  "https://arkham-im.fly.dev/**",
   "http://localhost:8080/**",
   "http://127.0.0.1:8080/**",
 ]

@@ -30,7 +30,7 @@ void main() {
       try {
         await client.auth.resetPasswordForEmail(
           'agadriel.sexpositive+alfredagent1@gmail.com',
-          redirectTo: 'https://alfred-im-web.fly.dev/',
+          redirectTo: 'https://arkham-im.fly.dev/',
         );
       } catch (e) {
         caught = e;
