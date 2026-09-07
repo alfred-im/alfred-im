@@ -1,0 +1,40 @@
+# Deploy Alfred web client to Fly.io (app arkham-im).
+# Requires repository secret FLY_API_TOKEN (fly.io → Account → Access Tokens).
+
+name: Deploy client Fly
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/deploy-client-fly.yml'
+      - 'client/deploy/fly/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-client-fly
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy client (arkham-im)
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ -z "${FLY_API_TOKEN}" ]; then
+            echo "::error::Missing repository secret FLY_API_TOKEN"
+            exit 1
+          fi
+          flyctl deploy . --remote-only \
+            --config client/deploy/fly/fly.toml \
+            --dockerfile client/deploy/fly/Dockerfile
