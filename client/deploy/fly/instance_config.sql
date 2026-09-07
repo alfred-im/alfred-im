@@ -4,7 +4,7 @@
 -- Idempotente: upsert su chiave.
 
 insert into public.instance_config (key, value) values
-  ('instance.display_name', '"Arkham"'::jsonb),
+  ('instance.display_name', '"Arkham.im"'::jsonb),
   ('instance.im_server_id', '"arkham-im.fly.dev"'::jsonb)
 on conflict (key) do update
   set value = excluded.value,

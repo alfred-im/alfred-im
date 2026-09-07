@@ -35,7 +35,7 @@ Dopo la connessione, il client legge e (se sei owner) modifica questi dati trami
 
 | Chiave | Esempio | A cosa serve |
 |--------|---------|--------------|
-| `instance.display_name` | `Arkham` | Nome del servizio in app — **solo DB** (owner panel o SQL); non è nel build Docker |
+| `instance.display_name` | `Arkham.im` | Nome del servizio in app — **solo DB** (owner panel o SQL); non è nel build Docker |
 | `instance.im_server_id` | `arkham-im.fly.dev` | **Dominio federativo** — parte dopo la `@` negli indirizzi (`mario@arkham-im.fly.dev`); in futuro anche federazione Gotham |
 | `instance.branding` | oggetto JSON | Logo, colori, titolo browser |
 | `instance.legal` | oggetto JSON | Link privacy, termini, supporto |
