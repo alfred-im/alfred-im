@@ -34,7 +34,7 @@
       <p class="subtitle">No message is delivered until the recipient has explicitly allowed the sender.</p>
       <p class="lede">
         Alfred is <strong>feminist-informed</strong> software: consent, agency, and clear boundaries are architectural choices, not optional privacy modes.
-        It ships as a <strong>Flutter web app</strong> (installable PWA) backed by <strong>Supabase</strong>, with Python bridges planned for federation.
+        It ships as a <strong>Flutter web app</strong> (installable PWA) backed by <strong>Supabase</strong>, with <strong>federated messaging</strong> between Alfred instances planned.
         The supported client surface today is the web — not native mobile or desktop apps.
       </p>
       <div class="cta-row">
@@ -70,7 +70,7 @@
 
     <section id="product">
       <h2>Product today</h2>
-      <p>Stable on <code>main</code>. Federation bridges exist as health-check stubs only.</p>
+      <p>Stable on <code>main</code>. Federated delivery between instances is specified but not yet live.</p>
 
       <div class="feature-grid">
         <div class="feature-group card">
@@ -109,7 +109,7 @@
             <li><span class="status status-live">Live</span> Group accounts with broadcast; participation via mutual allow list</li>
             <li><span class="status status-live">Live</span> Author attribution in group chats</li>
             <li><span class="status status-live">Live</span> Web Push (VAPID) with multi-account scope</li>
-            <li><span class="status status-planned">Planned</span> XMPP and Matrix federation via stateless bridges</li>
+            <li><span class="status status-planned">Planned</span> Federation between Alfred instances</li>
           </ul>
         </div>
       </div>
@@ -117,7 +117,7 @@
 
     <section id="architecture">
       <h2>Architecture</h2>
-      <p>Flutter talks only to Supabase (Postgres, Auth, Realtime, Storage). Bridge daemons are stateless; platform state lives in the database.</p>
+      <p>Flutter talks only to Supabase (Postgres, Auth, Realtime, Storage). Federated instances will exchange events via a gateway/worker; platform state lives in the database.</p>
 
       <div class="diagram" role="img" aria-label="Architecture diagram">┌──────────────────────────────────────┐
 │  Flutter web client (PWA)            │
@@ -128,17 +128,17 @@
 │  Supabase — Alfred platform          │
 │  Postgres · RLS · RPC · worker       │
 └──────────────────┬───────────────────┘
-                   │ future: service_role
-        ┌──────────┴──────────┐
-        ▼                     ▼
-  bridge-xmpp            bridge-matrix
-  (stub today)           (stub today)</div>
+                   │ future: federation worker
+┌──────────────────▼───────────────────┐
+│  Gateway (peer instances)            │
+│  (planned)                           │
+└──────────────────────────────────────┘</div>
 
       <table class="stack-table">
         <tbody>
           <tr><th>Client</th><td>Flutter web (PWA), Dart 3.12 — <code>client/</code></td></tr>
           <tr><th>Platform</th><td>Supabase — migrations and RPC in <code>supabase/</code></td></tr>
-          <tr><th>Bridges</th><td>Python 3.12 + aiohttp on Fly.io — <code>bridge-xmpp/</code>, <code>bridge-matrix/</code></td></tr>
+          <tr><th>Federation</th><td>Wire spec — <code>docs/architecture/gotham-protocol.md</code></td></tr>
           <tr><th>Live demo</th><td><a href="https://arkham-im.fly.dev/">arkham-im.fly.dev</a></td></tr>
           <tr><th>Repository</th><td><a href="https://github.com/alfred-im/alfred-im">github.com/alfred-im/alfred-im</a> (monorepo)</td></tr>
         </tbody>
@@ -147,8 +147,6 @@
       <h3>Repository layout</h3>
       <pre><code>client/           Flutter application
 supabase/         Migrations, platform config
-bridge-xmpp/      XMPP bridge (stub)
-bridge-matrix/    Matrix bridge (stub)
 docs/             Specs, domain model, guides
 org-site/         This project page (you are here)</code></pre>
     </section>

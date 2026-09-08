@@ -24,11 +24,10 @@ BEGIN
 
   INSERT INTO public.contacts (
     archive_user_id,
-    protocol,
     linked_profile_id,
     display_name
   )
-  VALUES (v_agent1, 'internal', v_agent2, 'Agent 2')
+  VALUES (v_agent1, v_agent2, 'Agent 2')
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)

@@ -44,7 +44,6 @@ class ContactService {
         .from('contacts')
         .insert({
           'archive_user_id': _authArchiveUserId,
-          'protocol': 'internal',
           'linked_profile_id': profile.id,
           'display_name': profile.displayName,
           'avatar_url': ?profile.avatarUrl,
@@ -57,7 +56,6 @@ class ContactService {
 
   Future<Contact> addExternalContact({
     required String archiveUserId,
-    required ContactProtocol protocol,
     required String externalAddress,
     required String displayName,
   }) async {
@@ -65,7 +63,6 @@ class ContactService {
         .from('contacts')
         .insert({
           'archive_user_id': _authArchiveUserId,
-          'protocol': protocol.name,
           'external_address': externalAddress,
           'display_name': displayName,
         })

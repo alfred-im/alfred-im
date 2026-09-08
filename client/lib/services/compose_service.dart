@@ -31,7 +31,7 @@ class ComposeService {
   }
 
   ChatPeer peerFromContact(Contact contact) {
-    if (contact.protocol == ContactProtocol.internal) {
+    if (contact.isLocal) {
       final profileId = contact.linkedProfileId;
       if (profileId == null) {
         throw StateError('Contatto interno non valido');

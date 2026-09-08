@@ -1,9 +1,9 @@
 # Comandi ed eventi — contesto federation
 
-**Ultima revisione:** 2026-07-27  
+**Ultima revisione:** 2026-09-08  
 **UML:** [docs/model/uml/federation/](../../model/uml/federation/)
 
-Target — bridge attualmente stub.
+Target — worker federativo non ancora implementato.
 
 ---
 
@@ -11,14 +11,14 @@ Target — bridge attualmente stub.
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `QueueFederatedSend` | Policy (invio verso esterno) | Accoda messaggio per bridge. |
-| `DeliverToFederatedPeer` | Bridge | Invia verso server esterno del peer. |
-| `ReceiveFromFederatedPeer` | Bridge | Riceve messaggio da server esterno. |
-| `ApplyFederatedAck` | Bridge | Propaga conferme recapito/lettura esterne. |
+| `QueueFederatedSend` | Policy (invio verso `peer_external_address`) | Accoda messaggio in outbox per worker federativo. |
+| `DeliverToFederatedPeer` | Worker federativo | POST verso istanza peer (`/gotham/v1/events`). |
+| `ReceiveFromFederatedPeer` | Gateway federativo | Riceve envelope inbound da peer remoto. |
+| `ApplyFederatedAck` | Worker federativo | Propaga conferme recapito/lettura/reazione. |
 
-UML platform outbound (target): [seq-federation-stub.puml](../../model/uml/federation/seq-federation-stub.puml) — `AccountBoundary` → `Outbox` : `QueueFederatedSend`; `BridgeWorker` → `FederatedServer` : `DeliverToFederatedPeer`.
+UML platform outbound (target): [seq-federation-stub.puml](../../model/uml/federation/seq-federation-stub.puml).
 
-Inbound federato: `BridgeWorker` → `ReceptionGate` : `EvaluateInboundDelivery` — vedi [seq-federation-inbound.puml](../../model/uml/federation/seq-federation-inbound.puml) e [seq-reception-delivery-gate.puml](../../model/uml/reception/seq-reception-delivery-gate.puml).
+Inbound federato: `FederationWorker` → `ReceptionGate` : `EvaluateInboundDelivery` — vedi [seq-federation-inbound.puml](../../model/uml/federation/seq-federation-inbound.puml).
 
 ---
 
@@ -26,10 +26,10 @@ Inbound federato: `BridgeWorker` → `ReceptionGate` : `EvaluateInboundDelivery`
 
 | Evento | Descrizione |
 |--------|-------------|
-| `FederatedSendQueued` | In attesa di bridge. |
-| `FederatedMessageDelivered` | Server esterno ha accettato. |
-| `InboundFederatedMessageReceived` | Messaggio esterno materializzato in archivio Alfred. |
-| `FederatedAckApplied` | Spunte aggiornate da protocollo esterno. |
+| `FederatedSendQueued` | In attesa di worker federativo. |
+| `FederatedMessageDelivered` | Peer ha accettato (HTTP 2xx). |
+| `InboundFederatedMessageReceived` | Messaggio federato materializzato in archivio Alfred. |
+| `FederatedAckApplied` | Spunte aggiornate da evento READ/deliver federato. |
 
 ---
 
@@ -37,6 +37,6 @@ Inbound federato: `BridgeWorker` → `ReceptionGate` : `EvaluateInboundDelivery`
 
 | Policy | Descrizione |
 |--------|-------------|
-| **Bridge stateless** | Stato autorevole solo su piattaforma. |
-| **Stesso modello caselle** | Copie archivio indipendenti con correlazione logica. |
+| **Worker stateless** | Stato autorevole solo su piattaforma (Postgres). |
+| **Stesso modello caselle** | Copie archivio indipendenti con correlazione `logical_message_id`. |
 | **Gate reception su inbound** | Allow list anche per messaggi federati in ingresso. |

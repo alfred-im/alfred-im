@@ -31,4 +31,4 @@ Sequence platform usano termini tecnici (`RecipientCopyMaterialized`, `SenderDel
 
 Gate reception: dominio `EvaluateInboundDelivery` / `DeliverySilentlyBlocked`; SQL `is_sender_allowed_for_reception` è helper, non nome canonico.
 
-`QueueFederatedSend` (federation) e `QueueDelivery` (internal) restano **nomi distinti** per driver outbox — non unificare senza refactor schema.
+`QueueFederatedSend` (federation) e `QueueDelivery` (locale) restano **nomi distinti** per driver outbox — non unificare senza refactor schema.

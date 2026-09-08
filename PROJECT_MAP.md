@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-09-06  
+**Ultimo aggiornamento**: 2026-09-08  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 **SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — per ogni tipo di informazione, un solo file canonico; questo documento è **mappa sessione**, non duplica promesse/RPC/test.
@@ -26,10 +26,10 @@
 |----------|-----------|
 | **Ingresso pubblico** | `README.md` · https://alfred-im.github.io/ (`org-site/`) · `SECURITY.md` · `CODE_OF_CONDUCT.md` |
 | **Client** | `client/` — Flutter **web (PWA)**, collegato a Supabase |
-| **Web client** | https://arkham-im.fly.dev/ — nginx + gateway shell dinamica (`client/deploy/fly/`, `client/deploy/gateway/`, `scripts/fly-deploy-client.sh`) |
+| **Web client** | https://arkham-im.fly.dev/ · https://blackgate-im.fly.dev/ — nginx + gateway shell dinamica (`client/deploy/arkham/`, `client/deploy/blackgate/`, `client/deploy/shared/`, `client/deploy/gateway/`) |
 | **Deploy** | `org-site/` → `alfred-im.github.io` (`deploy-org-site.yml`, secret `ORG_SITE_PAT`); client Fly; gate `release-suite.yml` |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
-| **Bridge** | `bridge-xmpp/` · `bridge-matrix/` — stub health Fly.io (federazione non implementata) |
+| **Federazione** | Gateway/worker pianificati — wire in `docs/architecture/gotham-protocol.md` |
 | **Cronologia merge** | `CHANGELOG.md` |
 | **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — confine prodotto · SSOT: [docs/SSOT.md](docs/SSOT.md) |
 | **Modello** | `docs/domain/` · `docs/model/uml/` · `client/lib/machines/` — 13 bounded context con stato **`verified`** o **`documented`**; torre DDD→UML→statechart con profili UML Client/Platform; gate `scripts/check-model-sync.sh`; indice: [bounded-contexts.md](docs/domain/bounded-contexts.md) |
@@ -38,15 +38,15 @@
 
 **Try it (app):** https://arkham-im.fly.dev/ — panoramica: `README.md`.
 
-**Deploy client:** **`bash scripts/fly-deploy-client.sh`** (richiede `flyctl`). Auto-deploy Fly **solo** se abilitato in dashboard (Deployments → GitHub → branch `main`, working dir `.`) — vedi `client/deploy/fly/README.md`. Push su GitHub **non** deploya Fly; CI fa solo smoke Docker. L'agente **non** attende il deploy Fly.
+**Deploy client:** **`bash scripts/fly-deploy-client.sh`** (Arkham) / **`bash scripts/fly-deploy-blackgate.sh`** (Blackgate) — richiede `flyctl`. Auto-deploy Fly **solo** se abilitato in dashboard (Deployments → GitHub → branch `main`, working dir `.`) — vedi `client/deploy/README.md`. Push su GitHub **non** deploya Fly; CI fa solo smoke Docker. L'agente **non** attende il deploy Fly.
 
-**Stack su `main`**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
+**Stack su `main`**: `client/` · `supabase/`
 
 ---
 
 ## 📌 Panoramica Progetto
 
-**Alfred** è software di messaggistica **consent-first** e **feminist-informed**: **Supabase + client Flutter web (PWA) + bridge Python** (federazione futura). Non è un «progetto Flutter»: Flutter è solo il client in `client/`.
+**Alfred** è software di messaggistica **consent-first** e **feminist-informed**: **Supabase + client Flutter web (PWA)**; **federato** tra istanze (recapito cross-server pianificato). Non è un «progetto Flutter»: Flutter è solo il client in `client/`.
 
 ### Caratteristiche attuali
 
@@ -59,7 +59,7 @@
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` senza federazione); archivio **per titolare archivio** in `messages` (`archive_user_id`, `author_id`, `peer_profile_id`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca liste on-demand — inbox, rubrica, persone consentite (`PROM-LIST-FILTER`, PR #132, #171)
 - **GIF / voice / location / foto / video**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client — [PROM-CHAT-MEDIA](docs/specs/promises/product/PROM-CHAT-MEDIA.md)
-- **Federazione**: outbox `queued` — attende bridge
+- **Federazione**: outbox `queued` verso `peer_external_address` — attende gateway/worker (wire: `docs/architecture/gotham-protocol.md`)
 - **Spunte**: `delivered_at` / `read_at` sulla copia mittente — ✓ = accettato server; ✓✓/blu via worker [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md) (`deliver` + `read_receipt` outbox); lettura locale `mark_peer_read` sul destinatario — promesse `SYS-MAILBOX`, `PROM-MESSAGE-STATUS`
 - **Reazioni messaggio**: overlay reazioni su tap messaggio — `PROM-MESSAGE-REACTIONS` (PR #246)
 - **@mentions**: evidenziazione e navigazione @username in chat — `PROM-MESSAGE-MENTION`
@@ -71,7 +71,7 @@
 |-----------|------------|
 | Client | Flutter web (PWA) · Dart 3.12 |
 | Piattaforma | Supabase (Postgres, Auth, Realtime, Storage) |
-| Bridge | Python 3.12 + aiohttp (Fly.io) |
+| Federazione | Gateway/worker — pianificato |
 | CI | GitHub Actions — `release-suite`, `spec-sync`, `docker-client-fly` |
 
 ---
@@ -85,15 +85,15 @@
                │
 ┌──────────────▼──────────────┐
 │   Supabase (piattaforma)    │
-└──────┬──────────────┬───────┘
-       │              │
-┌──────▼──────┐ ┌─────▼──────┐
-│ bridge XMPP │ │bridge Matrix│  ← stateless; stato in Supabase
-└─────────────┘ └────────────┘
+└──────────────┬──────────────┘
+               │ (pianificato)
+┌──────────────▼──────────────┐
+│   Gateway / worker federativo │
+└─────────────────────────────┘
 ```
 
-- **Bridge stateless**: `docs/decisions/bridge-stateless.md`
-- **Chat unificate** (nessuna distinzione interna/esterna): `docs/decisions/no-internal-external-chat-distinction.md`
+- **Wire (SSOT):** `docs/architecture/gotham-protocol.md`
+- **Chat unificate** (nessuna distinzione locale/federata come tipologia): `docs/decisions/no-internal-external-chat-distinction.md`
 - **Dettaglio completo**: `docs/architecture/full-stack.md`
 - **Modello caselle (mailbox)**: `docs/architecture/mailbox-inbox-outbox-spec.md` — archivio per titolare archivio + outbox; promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` (PR #159, #179)
 
@@ -108,14 +108,11 @@
 ├── README.md               # Ingresso pubblico GitHub (consent-first)
 ├── SECURITY.md             # Policy vulnerabilità
 ├── CODE_OF_CONDUCT.md      # Contributor Covenant
-├── client/                 # Client Flutter web (PWA) — deploy Fly (`client/deploy/fly/`)
+├── client/                 # Client Flutter web (PWA) — deploy Fly (`client/deploy/arkham/`, `client/deploy/blackgate/`)
 ├── supabase/               # Migrazioni e config piattaforma
-├── bridge-xmpp/            # Demone bridge XMPP (stub)
-├── bridge-matrix/          # Demone bridge Matrix (stub)
 ├── docs/                   # Documentazione tecnica AI
 │   ├── domain/             # DDD + Event Storming (significato)
 │   └── model/uml/          # UML 2.5 PlantUML (forma)
-├── fly.toml, Dockerfile    # Deploy bridge Fly.io
 ├── PROJECT_MAP.md          # Questo file
 └── .cursor/                # Regole agente Cursor
     └── rules/
@@ -131,7 +128,7 @@
 | **Backend** | `SupabaseClient` della sessione in **focus** (una GoTrue attiva) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
 | **Gate CI** | `scripts/verify.sh` — igiene: sync spec/modello + analyze + test Dart isolati (**non** valida il prodotto) |
-| **Build web** | Locale: `flutter build web --base-href "/"`. Release Fly: `--pwa-strategy=none` + CanvasKit in immagine — vedi `client/deploy/fly/README.md` § Build web e avvio |
+| **Build web** | Locale: `flutter build web --base-href "/"`. Release Fly: `--pwa-strategy=none` + CanvasKit in immagine — vedi `client/deploy/README.md` § Build web e avvio |
 
 **Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `inbox`, `messaging`, `navigation`, `group_home`, `group_messages`, `shareable_link` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — **unico ingresso** push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `coordinators/` (facade: `MessagesController`).
 
@@ -161,19 +158,14 @@
 
 - Config: `supabase/config.toml`, `supabase/migrations/`
 - MCP agente: `execute_sql`, `apply_migration`, `list_migrations`
-- **Non deducibile — configurazione istanza (due passaggi):** (1) `config.json` al deploy — obbligatorio per connettersi a Supabase (`supabaseUrl`, `supabaseAnonKey`, `publicBaseUrl`); non modificabile dall'owner perché senza file l'app non parte. (2) `instance_config` in Supabase — nome, branding, `im_server_id`; owner da app dopo login. **Due indirizzi web:** pubblico (`publicBaseUrl`) e federativo IM (`im_server_id`), stesso dominio o due domini. SSOT: `client/deploy/fly/README.md` § Come si configura un'istanza.
-- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere l'host di `publicBaseUrl` (demo: `https://arkham-im.fly.dev/**`; rimuovere `XmppTest/**` e vecchi URL GitHub Pages se presenti); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
+- **Non deducibile — configurazione istanza (due passaggi):** (1) `config.json` al deploy — obbligatorio per connettersi a Supabase (`supabaseUrl`, `supabaseAnonKey`, `publicBaseUrl`); non modificabile dall'owner perché senza file l'app non parte. (2) `instance_config` in Supabase — nome, branding, `im_server_id`; owner da app dopo login. **Due indirizzi web:** pubblico (`publicBaseUrl`) e federativo IM (`im_server_id`), stesso dominio o due domini. SSOT: `client/deploy/README.md` § Come si configura un'istanza.
+- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere l'host di `publicBaseUrl` (demo: `https://arkham-im.fly.dev/**`; rimuovere URL legacy non più usati se presenti); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
 
-### Fly.io (`alfred-im`, `fra`)
+### Fly.io (`arkham-im`, `blackgate-im`, `fra`)
 
-| Bridge | Health |
-|--------|--------|
-| XMPP | `https://alfred-im.fly.dev/health` |
-| Matrix | `https://alfred-im.fly.dev:8081/health` |
+Client web Fly: `client/deploy/arkham/` + `client/deploy/blackgate/` + `client/deploy/shared/` + `scripts/fly-deploy-client.sh` / `scripts/fly-deploy-blackgate.sh`. Gate CI client: `bash scripts/docker-smoke-client.sh` (`docker-client-fly.yml`).
 
-Avvio container: `scripts/start-bridges.sh` (`CMD ["/bin/sh", "/start.sh"]`). Deploy: `scripts/fly-deploy-all.sh`. Client web Fly: `client/deploy/fly/` + `scripts/fly-deploy-client.sh`. Gate CI: `bash scripts/docker-smoke.sh` (workflow `docker-bridges.yml`), `bash scripts/docker-smoke-client.sh` (`docker-client-fly.yml`).
-
-**Migrazione nome app (una tantum da `xmpptest`)**: `bash scripts/fly-rename-app.sh` poi redeploy.
+**Migrazione nome app Fly (una tantum)**: `bash scripts/fly-rename-app.sh` poi redeploy.
 
 ---
 
@@ -183,7 +175,7 @@ Avvio container: `scripts/start-bridges.sh` (`CMD ["/bin/sh", "/start.sh"]`). De
 
 | Storage | Uso |
 |---------|-----|
-| Postgres | `profiles`, `contacts`, `reception_allowlist`, `messages`, `outbox`, `sync_cursors`, `bridge_jobs`, `push_subscriptions`; schema worker `alfred_delivery` |
+| Postgres | `profiles`, `contacts`, `reception_allowlist`, `messages`, `outbox`, `push_subscriptions`; schema worker `alfred_delivery` |
 | Storage `chat-media` | GIF, voice WebM, image, video (`{userId}/{uuid}.…`) |
 | Storage `avatars` | Foto profilo (`{userId}/avatar.{jpg\|png\|webp}`, max 2 MB) |
 | Storage `instance-branding` | Logo/favicon istanza owner (`branding/{logo\|favicon}/{uuid}.ext`, max 2 MB; scrittura solo owner) |
@@ -228,12 +220,11 @@ bash scripts/test.sh release       # stack locale completo (alias: manual, ci)
 | Ricerca inbox on-demand, aggancio al fondo | ✅ |
 | Schema Supabase + RLS + RPC | ✅ |
 | Deploy Pages + gate CI `verify.sh` (igiene) | ✅ |
-| Bridge federazione | 🟡 Stub health only |
+| Federazione cross-istanza | 🟡 Gateway/worker da implementare — vedi `docs/architecture/gotham-protocol.md` |
 
 ### Prossimi passi
 
-- Bridge XMPP/Matrix (consume `outbox`, `sync_cursors`) — `docs/architecture/full-stack.md`
-- Spunte federate via bridge
+- Gateway/worker federativo (recapito verso altre istanze)
 
 ### Design system
 
@@ -256,7 +247,7 @@ Test: `bash scripts/test.sh integration-ticks`
 
 ### Gate CI (igiene)
 
-`verify.sh` — sync spec/modello + analyze + test Dart isolati (**481**). **Non** valida il prodotto. Smoke SQL server: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, …
+`verify.sh` — sync spec/modello + analyze + test Dart isolati (**487**). **Non** valida il prodotto. Smoke SQL server: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, …
 
 Validazione release: `bash scripts/test.sh e2e` · catalogo in [client/scripts/test/README.md](client/scripts/test/README.md)
 

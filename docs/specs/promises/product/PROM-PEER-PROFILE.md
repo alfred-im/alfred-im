@@ -29,14 +29,14 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 | **PROM-PEER-PROFILE-001** | Tap avatar peer Alfred → overlay fullscreen profilo peer |
 | **PROM-PEER-PROFILE-002** | Overlay mostra: avatar grande, `display_name`, `@username` se presente, pronomi se presenti — vedi [PROM-PROFILE-IDENTITY](./PROM-PROFILE-IDENTITY.md) |
 | **PROM-PEER-PROFILE-003** | Profilo proprio (`profile.id == auth.userId`): **non** aprire overlay peer |
-| **PROM-PEER-PROFILE-004** | Punti attivazione: tile inbox (solo avatar), header chat, autore messaggio gruppo, lista «Persone consentite», rubrica (solo internal) |
+| **PROM-PEER-PROFILE-004** | Punti attivazione: tile inbox (solo avatar), header chat, autore messaggio gruppo, lista «Persone consentite», rubrica (solo contatti locale, `linked_profile_id`) |
 
 ### MUST — azioni
 
 | ID | Promessa |
 |----|----------|
 | **PROM-PEER-PROFILE-005** | Switch **Allow** («Consenti messaggi») ↔ `reception_allowlist` del focus — semantica [PROM-RECEPTION-FILTER](./PROM-RECEPTION-FILTER.md) |
-| **PROM-PEER-PROFILE-006** | Pulsante rubrica «Aggiungi alla rubrica» / «Rimuovi dalla rubrica» ↔ `contacts` internal — semantica [PROM-PERSONAL-CONTACTS](./PROM-PERSONAL-CONTACTS.md) |
+| **PROM-PEER-PROFILE-006** | Pulsante rubrica «Aggiungi alla rubrica» / «Rimuovi dalla rubrica» ↔ `contacts` locale (stessa istanza) — semantica [PROM-PERSONAL-CONTACTS](./PROM-PERSONAL-CONTACTS.md) |
 | **PROM-PEER-PROFILE-007** | Allow e rubrica **indipendenti** — stato UI separato |
 | **PROM-PEER-PROFILE-008** | Allow e rubrica: azione **immediata**, **senza** dialog di conferma |
 | **PROM-PEER-PROFILE-009** | Controller legati all'account in **focus** — [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) |
@@ -82,7 +82,7 @@ Nessun nuovo schema/RPC — composizione di promesse [SYS-RECEPTION](../system/S
 | Superficie | Stato | File |
 |------------|-------|------|
 | SURF-INBOX | `implemented` | [SURF-INBOX.md](../../surfaces/SURF-INBOX.md) — tap avatar tile |
-| SURF-CONTACTS | `implemented` | [SURF-CONTACTS.md](../../surfaces/SURF-CONTACTS.md) — internal only |
+| SURF-CONTACTS | `implemented` | [SURF-CONTACTS.md](../../surfaces/SURF-CONTACTS.md) — solo contatti locale |
 | SURF-ALLOWLIST | `implemented` | [SURF-ALLOWLIST.md](../../surfaces/SURF-ALLOWLIST.md) |
 | Chat header / gruppo | `implemented` | `chat_panel.dart`, `message_author_header.dart` |
 

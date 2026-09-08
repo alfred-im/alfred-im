@@ -1,7 +1,7 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-09-05  
-**Status**: `implemented` su `main` (migrazioni fino a `20260905140000`, 58 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-09-08  
+**Status**: `implemented` su `main` (migrazioni fino a `20260908100000`, 59 totali in `supabase/migrations/`)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
@@ -18,9 +18,7 @@ profiles 1──* messages (archive_user_id = archivio; author_id = autore conte
 messages *── peer profiles (peer_profile_id denormalizzato)
 logical_message_id (λ) 1──* message_reaction_facts (append-only; nessuna FK — λ non univoco su messages)
 messages 1──* outbox (ogni invio/lettura può accodare eventi)
-profiles 1──* sync_cursors (profile_id, peer_profile_id, protocol, cursor_key)
 profiles 1──* push_subscriptions (user_id, device_id)
-bridge_jobs (coda bridge)
 storage: chat-media, avatars, instance-branding
 ```
 
@@ -32,9 +30,8 @@ storage: chat-media, avatars, instance-branding
 
 | Tipo | Valori | Uso |
 |------|--------|-----|
-| `contact_protocol` | `internal`, `xmpp`, `matrix` | Routing backend; invisibile in UI inbox. **Gotham:** valore `gotham` previsto — vedi [gotham-protocol.md](../../architecture/gotham-protocol.md) (migrazione non ancora su `main`) |
 | `message_content_type` | `text`, `gif`, `voice`, `location`, `image`, `video` | Tipo contenuto messaggio |
-| `queue_status` | `queued`, `processing`, `completed`, `failed` | `outbox`, `bridge_jobs` |
+| `queue_status` | `queued`, `processing`, `completed`, `failed` | `outbox` |
 | `profile_kind` | `user`, `group`, `owner` | Tipo account — [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-OWNER](../promises/system/SYS-OWNER.md) |
 | `message_reaction_kind` | `applied`, `withdrawn` | Fatto reaction su λ — [messaging](../../domain/messaging/commands-and-events.md) |
 
@@ -67,13 +64,12 @@ storage: chat-media, avatars, instance-branding
 |---------|------|------|
 | `id` | uuid PK | |
 | `archive_user_id` | uuid FK → profiles | |
-| `protocol` | contact_protocol | |
-| `linked_profile_id` | uuid FK nullable | Obbligatorio se `internal` |
-| `external_address` | text nullable | Obbligatorio se xmpp/matrix |
+| `linked_profile_id` | uuid FK nullable | Profilo Alfred locale (stessa istanza) |
+| `external_address` | text nullable | Indirizzo federato `user@server` |
 | `display_name` | text | |
 | `avatar_url` | text nullable | Snapshot opzionale |
 
-**CHECK**: internal ↔ profile; federato ↔ external_address.
+**CHECK**: esattamente uno tra `linked_profile_id` e `external_address` valorizzato.
 
 **RLS**: SELECT, INSERT, UPDATE, DELETE `archive_user_id = auth.uid()`.
 
@@ -108,11 +104,10 @@ storage: chat-media, avatars, instance-branding
 | `archive_user_id` | uuid FK → profiles | Archivio (`auth.uid()` in RLS) |
 | `author_id` | uuid FK → profiles | Mittente tecnico di recapito (gruppo se erogazione) |
 | `original_author_id` | uuid FK nullable → profiles | Autore contenuto se `author_id` è gruppo — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
-| `peer_profile_id` | uuid FK nullable | Controparte internal |
-| `peer_external_address` | text nullable | Federato futuro |
+| `peer_profile_id` | uuid FK nullable | Controparte sulla stessa istanza |
+| `peer_external_address` | text nullable | Controparte federata `user@server` |
 | `logical_message_id` | uuid NOT NULL | Identificativo globale messaggio — assegnato dal server mittente, replicato identico sul destinatario |
 | `client_message_id` | text nullable | Solo copia mittente |
-| `protocol` | contact_protocol | Routing recapito |
 | `body` | text | |
 | `content_type` | message_content_type | |
 | `media_url` | text nullable | Condiviso tra copie |
@@ -122,7 +117,7 @@ storage: chat-media, avatars, instance-branding
 | `read_at` | timestamptz nullable | Uscita: spunta lettura; entrata: lettura locale |
 | `read_receipt_id` | uuid nullable | Id federativo evento lettura — mint sulla copia lettore, replicato sul mittente |
 | `failed_at` | timestamptz nullable | Invio/outbox fallito (mittente) |
-| `external_id` | text nullable | Bridge fase B |
+| `external_id` | text nullable | Opzionale — correlazione esterna; il wire usa `logical_message_id` |
 | `created_at` | timestamptz | |
 
 **UNIQUE**: `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL`; `(archive_user_id, logical_message_id)`.
@@ -167,7 +162,7 @@ Nessuna tabella aggiuntiva. Partecipazione = allow list bidirezionale:
 
 ## `outbox`
 
-Coda eventi — popolata per **ogni** invio (internal + federato), ogni `read_receipt`, ogni reaction account. Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`, `reaction_fact`. Stato colonna `status`: tipo `queue_status`.
+Coda eventi — popolata per **ogni** invio (locale + federato), ogni `read_receipt`, ogni reaction account. Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`, `reaction_fact`. Stato colonna `status`: tipo `queue_status`.
 
 Colonna `message_id` — **ancora operativa** (polisemia per `event_kind`; vedi debito #264):
 
@@ -180,7 +175,7 @@ Colonna `message_id` — **ancora operativa** (polisemia per `event_kind`; vedi 
 
 **FK**: `message_id` → `messages(id)` ON DELETE CASCADE (`outbox_message_id_fkey`).
 
-Consumer internal: worker `alfred_delivery.process_outbox` (sincrono in transazione RPC account); federato: fase B bridge (stub).
+Consumer locale: worker `alfred_delivery.process_outbox` (sincrono in transazione RPC account); federato: gateway/worker async (da implementare) — vedi [gotham-protocol.md](../../architecture/gotham-protocol.md).
 
 **RLS**: DENY per `authenticated`.
 
@@ -202,7 +197,7 @@ Worker infrastruttura **non-account** — unico attore autorizzato a attraversar
 | `process_push_notify(uuid)` | Pipeline Web Push post-recapito ([SYS-PUSH](../promises/system/SYS-PUSH.md)) |
 | `group_erogate(uuid)` | Broadcast gruppo → allow list |
 | `erogate_group_message(...)` | Fan-out proxy partecipanti |
-| `materialize_inbound_sender_message(...)` | Inbound federato: copia destinatario con id logico messaggio dal server mittente remoto (bridge/service_role) |
+| `materialize_inbound_sender_message(...)` | Inbound federato: copia destinatario con id logico messaggio dal server mittente remoto (worker/service_role) |
 
 **Tabelle infrastruttura** (non API client):
 
@@ -236,12 +231,6 @@ Worker infrastruttura **non-account** — unico attore autorizzato a attraversar
 
 ---
 
-## `sync_cursors`, `bridge_jobs`
-
-Stato piattaforma bridge ([bridge-stateless.md](../../decisions/bridge-stateless.md)). Chiave unica `sync_cursors`: `(profile_id, peer_profile_id, protocol, cursor_key)` — `peer_profile_id` sostituisce `inbox_thread_id` storico.
-
-**RLS**: DENY per `authenticated`.
-
 ---
 
 ## Storage buckets
@@ -260,6 +249,8 @@ Pubblici (scope attuale) (URL diretti in Realtime).
 
 | Oggetto | Rimosso in |
 |---------|------------|
+| `contact_protocol` enum; colonne `protocol` su `contacts`, `messages`, `outbox` | `20260908100000_gotham_native_drop_protocol.sql` |
+| `bridge_jobs`, `sync_cursors` | `20260908100000_gotham_native_drop_protocol.sql` |
 | `inbox_threads` | `20260627230000_messages_only_inbox.sql` |
 | `conversations`, `conversation_participants` | message-centric refactor |
 | `message_read_receipts` | `20260704120000_mailbox_per_archive_user.sql` |

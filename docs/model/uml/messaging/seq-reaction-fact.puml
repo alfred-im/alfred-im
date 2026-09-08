@@ -38,7 +38,7 @@ end
 note over MSG, RFS
   Stato corrente e ReactionSummary
   derivati dai fatti — non persistiti.
-  Bus outbox abilita federazione (bridge fase B).
+  Bus outbox abilita federazione (worker federativo — da implementare).
 end note
 
 @enduml

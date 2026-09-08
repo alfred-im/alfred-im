@@ -6,7 +6,7 @@
 title Federation — inbound federato (target)
 
 participant "FederatedServer" as EXT
-participant "BridgeWorker" as B
+participant "FederationWorker" as B
 participant "ReceptionGate" as GATE
 participant "AccountBoundary" as AB
 

@@ -7,7 +7,8 @@ on:
     paths:
       - '.github/workflows/docker-client-fly.yml'
       - '.dockerignore'
-      - 'client/deploy/fly/**'
+      - 'client/deploy/shared/**'
+      - 'client/deploy/arkham/**'
       - 'client/deploy/blackgate/**'
       - 'client/**'
       - 'scripts/docker-smoke-client.sh'
@@ -19,7 +20,8 @@ on:
     paths:
       - '.github/workflows/docker-client-fly.yml'
       - '.dockerignore'
-      - 'client/deploy/fly/**'
+      - 'client/deploy/shared/**'
+      - 'client/deploy/arkham/**'
       - 'client/deploy/blackgate/**'
       - 'client/**'
       - 'scripts/docker-smoke-client.sh'

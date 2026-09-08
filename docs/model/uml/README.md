@@ -45,14 +45,14 @@ Contesti: auth, multi-account, navigation, notifications, shareable-link, messag
 
 **Esempio:** [notifications/seq-notification-click.puml](./notifications/seq-notification-click.puml).
 
-### Profilo **Platform** (worker, bridge, gate server)
+### Profilo **Platform** (worker, gateway federativo, gate server)
 
 Contesti: delivery, federation, gate recapito in reception (sequence cross-boundary).
 
 | Consentito | Vietato |
 |------------|---------|
 | Attori dominio platform: `AccountBoundary`, `DeliveryWorker`, `ReceptionGate`, `Outbox`, `MailboxArchive` | Nomi funzione SQL grezzi come unico partecipante (`alfred_delivery.process_outbox`) |
-| `BridgeWorker`, `FederatedServer` | Dettaglio schema (`ON CONFLICT DO NOTHING`) sulle frecce |
+| `FederationWorker`, `FederatedServer` | Dettaglio schema (`ON CONFLICT DO NOTHING`) sulle frecce |
 | Comandi worker da dominio: `ProcessDeliveryQueue`, `DeliverInternal` | |
 
 **Esempio target:** partecipante `DeliveryWorker`, freccia `DeliverInternal` — non `DI -> MSG : INSERT …`.
@@ -78,7 +78,7 @@ L'implementazione resta in `client/lib/services/` (es. `session_authority.dart`)
 - **Stati:** `PascalCase` — es. `InboxVisible`, `ReconnectingFocus`
 - **Eventi / comandi sulle transizioni:** stesso nome del dominio — es. `FocusAccount`, `OpenChatFromNotification`
 - **Attori Client:** `Utente`, `UI`, `<Context>Machine`, `AccountManager`, `Supabase`, `ServiceWorker`
-- **Attori Platform:** `AccountBoundary`, `DeliveryWorker`, `ReceptionGate`, `Outbox`, `BridgeWorker`
+- **Attori Platform:** `AccountBoundary`, `DeliveryWorker`, `ReceptionGate`, `Outbox`, `FederationWorker`
 
 ### Intestazione file (commento PlantUML)
 

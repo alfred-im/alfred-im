@@ -2,7 +2,7 @@
 
 **Ultima revisione**: 2026-08-08
 
-Le promesse **SYSTEM** sono il contratto tra client, piattaforma Supabase e bridge. Panoramica repository: [`README.md`](../../../../README.md). Il dettaglio backend resta nei documenti canonici sotto.
+Le promesse **SYSTEM** sono il contratto tra client e piattaforma Supabase (incluso worker delivery locale; federazione via gateway/worker pianificato). Panoramica repository: [`README.md`](../../../../README.md). Il dettaglio backend resta nei documenti canonici sotto.
 
 ---
 

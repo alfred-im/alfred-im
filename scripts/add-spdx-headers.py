@@ -80,8 +80,6 @@ def main() -> None:
     patterns: list[tuple[str, str]] = [
         ("client/lib/**/*.dart", DART_HEADER),
         ("client/test/**/*.dart", DART_HEADER),
-        ("bridge-xmpp/**/*.py", PYTHON_HEADER),
-        ("bridge-matrix/**/*.py", PYTHON_HEADER),
         ("client/e2e/**/*.ts", TS_HEADER),
         ("client/scripts/**/*.sh", SH_HEADER),
         ("scripts/**/*.sh", SH_HEADER),

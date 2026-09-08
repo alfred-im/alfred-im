@@ -100,11 +100,27 @@ void main() {
     });
   });
 
-  // spec: SYS-CONTACTS-002
-  group('ContactProtocol', () {
-    test('parses protocol names', () {
-      expect(contactProtocolFromString('xmpp'), ContactProtocol.xmpp);
-      expect(contactProtocolFromString('internal'), ContactProtocol.internal);
+  group('Contact', () {
+    test('local vs federated flags', () {
+      final local = Contact(
+        id: '1',
+        archiveUserId: 'me',
+        linkedProfileId: 'peer',
+        displayName: 'Alice',
+        createdAt: DateTime.utc(2026),
+      );
+      final federated = Contact(
+        id: '2',
+        archiveUserId: 'me',
+        externalAddress: 'alice@arkham-im.fly.dev',
+        displayName: 'Alice remota',
+        createdAt: DateTime.utc(2026),
+      );
+
+      expect(local.isLocal, isTrue);
+      expect(local.isFederated, isFalse);
+      expect(federated.isFederated, isTrue);
+      expect(federated.isLocal, isFalse);
     });
   });
 
@@ -175,7 +191,6 @@ void main() {
     test('maps inbox RPC payload', () {
       final at = DateTime.utc(2026, 6, 24, 14, 30);
       final peer = ChatPeer.fromInboxRow({
-        'protocol': 'internal',
         'display_name': 'Alice',
         'last_message_preview': 'Ciao!',
         'last_message_at': at.toIso8601String(),
@@ -205,7 +220,6 @@ void main() {
 
     test('without relationship flags relationship is null', () {
       final peer = ChatPeer.fromInboxRow({
-        'protocol': 'internal',
         'display_name': 'Alice',
         'peer_profile_id': 'peer-1',
         'last_message_preview': 'Ciao!',

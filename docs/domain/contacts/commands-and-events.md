@@ -9,10 +9,10 @@
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `AddContact` | Utente | Aggiunge persona alla rubrica (interna o esterna). |
+| `AddContact` | Utente | Aggiunge persona alla rubrica (locale o federata). |
 | `RemoveContact` | Utente | Rimuove contatto dalla rubrica. |
 | `SearchPeople` | Utente | Cerca profili o contatti da aggiungere. |
-| `StartChatFromContact` | Utente | Apre conversazione da un contatto interno. |
+| `StartChatFromContact` | Utente | Apre conversazione da un contatto locale (stessa istanza). |
 
 ---
 
@@ -33,7 +33,7 @@
 | Policy | Descrizione |
 |--------|-------------|
 | **Rubrica isolata dall'inbox** | Contatti non implicano messaggi ricevuti. |
-| **Chat solo da contatto interno** | Contatti esterni non avviano conversazione Alfred. |
+| **Chat solo da contatto locale** | Contatti federati non avviano conversazione Alfred (scope attuale). |
 | **Scope per account** | Rubrica dell'account in focus. |
 | **Reload dopo CRUD** | `ContactAdded` / `ContactRemoved` non sono eventi espliciti dello statechart — `Add*` / `Remove*` innescano `LoadContacts` → `ContactsLoaded`. |
 | **Compose fuori ContactsMachine** | `StartChatFromContact` e gli esiti `ChatFromContactStarted` / `ChatFromContactRejected` sono gestiti in UI + navigation, non in [ContactsMachine]. |

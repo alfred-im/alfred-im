@@ -10,7 +10,7 @@ Include:
 
 - A description of the issue and its impact
 - Steps to reproduce, if possible
-- Affected components (client, Supabase migrations, bridges, etc.)
+- Affected components (client, Supabase migrations, federation gateway/worker, etc.)
 
 We will acknowledge receipt and work on a fix as soon as practicable.
 

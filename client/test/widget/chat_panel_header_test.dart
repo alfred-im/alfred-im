@@ -181,7 +181,6 @@ void main() {
 
   test('fromInboxRow mappa flag relazione peer', () {
     final parsed = ChatPeer.fromInboxRow({
-      'protocol': 'internal',
       'display_name': 'Mario Rossi',
       'peer_profile_id': 'peer-id',
       'peer_in_contacts': true,

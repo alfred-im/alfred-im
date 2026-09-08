@@ -48,7 +48,7 @@ groups --> reception : allow list bidirezionale
 groups ..> navigation : OpenGroupConversation\n/ LeaveGroupConversation
 
 ' Federazione futura
-federation --> delivery : outbox queued\n(consumer bridge stub)
+federation --> delivery : outbox queued\n(worker federativo — da implementare)
 
 note right of notifications
   OpenChatFromNotification

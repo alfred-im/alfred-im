@@ -28,7 +28,7 @@ Più astratto ──────────────────────
 | Forma | UML 2.5 (State Machine, Sequence) | Quali stati e messaggi sono legali? | `docs/model/uml/<context>/` |
 | Esecuzione client | Statechart (Stately / XState come design) | Come lo esegue Flutter? | `client/lib/machines/<context>/` |
 | Confine prodotto | SDD | Cosa promettiamo all'utente? | `docs/specs/` — **solo se osservabile** |
-| Implementazione | Dart, SQL, Python | Codice | `client/`, `supabase/`, `bridge-*/` |
+| Implementazione | Dart, SQL | Codice | `client/`, `supabase/` |
 
 **Regola madre:** il modello guida il codice. Il modello **non** si adatta al codice sporco.
 
@@ -90,7 +90,7 @@ Non mescolare comandi di contesti diversi in un unico diagramma stati.
 
 **Contesti platform-only** (`delivery`, `federation`, gate server in `reception`): glossario e comandi possono usare termini infrastrutturali **rinominati in dominio** (es. «confine account», «worker recapito») — non nomi SQL grezzi.
 
-**UML sequence:** due profili documentati in [docs/model/uml/README.md](../model/uml/README.md) — Client (macchine) vs Platform (worker/bridge).
+**UML sequence:** due profili documentati in [docs/model/uml/README.md](../model/uml/README.md) — Client (macchine) vs Platform (worker federativo).
 
 ### Stato modellazione per contesto
 

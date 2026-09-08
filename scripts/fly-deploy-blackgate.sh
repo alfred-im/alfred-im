@@ -8,7 +8,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FLY="${FLY:-flyctl}"
 CONFIG="${ROOT}/client/deploy/blackgate/fly.toml"
-DOCKERFILE="${ROOT}/client/deploy/fly/Dockerfile"
+DOCKERFILE="${ROOT}/client/deploy/shared/Dockerfile"
 
 command -v "$FLY" >/dev/null 2>&1 || {
   echo "flyctl richiesto: https://fly.io/docs/hands-on/install-flyctl/" >&2

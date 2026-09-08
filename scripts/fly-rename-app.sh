@@ -11,4 +11,4 @@ NEW_APP="${NEW_APP:-alfred-im}"
 command -v "$FLY" >/dev/null 2>&1 || { echo "flyctl richiesto: https://fly.io/docs/hands-on/install-flyctl/"; exit 1; }
 echo "==> Rename Fly app $OLD_APP → $NEW_APP"
 "$FLY" apps rename "$OLD_APP" "$NEW_APP"
-echo "OK. Poi: bash scripts/fly-deploy-all.sh"
+echo "OK. Poi: bash scripts/fly-deploy-client.sh"

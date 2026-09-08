@@ -34,12 +34,12 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 | **SYS-RECEPTION-007** | Lista vuota → **nessun** mittente soddisfa il gate → tutti i messaggi nuovi rifiutati |
 | **SYS-RECEPTION-008** | Su rifiuto: INSERT copia mittente + outbox come oggi; **nessuna** INSERT copia destinatario; `delivered_at` resta null sulla copia mittente |
 | **SYS-RECEPTION-009** | Su rifiuto **inbound**: RPC ritorna la copia mittente senza errore (rifiuto silenzioso) |
-| **SYS-RECEPTION-010** | Su rifiuto **inbound**: outbox internal → `status = completed`; payload può includere `reception_rejected: true` solo per audit server — **mai** esposto al client mittente |
+| **SYS-RECEPTION-010** | Su rifiuto **inbound**: outbox locale → `status = completed`; payload può includere `reception_rejected: true` solo per audit server — **mai** esposto al client mittente |
 | **SYS-RECEPTION-011** | Rimozione da lista: messaggi già presenti nell'archivio destinatario **restano**; solo i messaggi **nuovi** dopo la rimozione sono rifiutati |
 | **SYS-RECEPTION-012** | Aggiunta a lista: **nessuna** retro-consegna di messaggi precedentemente rifiutati |
 | **SYS-RECEPTION-013** | Nuovo account: lista vuota di default (nessuno può scrivere finché non si aggiunge qualcuno) |
 | **SYS-RECEPTION-014** | Filtro sempre attivo — **nessun** flag globale enable/disable a livello utente o piattaforma |
-| **SYS-RECEPTION-018** | Stesso gate documentato per recapito **federato** (bridge XMPP/Matrix fase B): prima di materializzare copia ingresso su Alfred, verificare allow list del destinatario; stesso silenzio verso mittente esterno |
+| **SYS-RECEPTION-018** | Stesso gate per recapito **federato**: prima di materializzare copia ingresso, verificare allow list del destinatario; stesso silenzio verso mittente esterno |
 | **SYS-RECEPTION-029** | Gate **outbound** in `send_message_to_profile` **prima** di INSERT copia mittente |
 | **SYS-RECEPTION-030** | Condizione outbound: `is_sender_allowed_for_reception(auth.uid(), recipient_profile_id)` |
 | **SYS-RECEPTION-031** | Su violazione outbound: `raise exception 'recipient not in reception allowlist'` — nessuna riga messaggio mittente |
@@ -67,9 +67,9 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 
 ## 3. Contratto
 
-### Gate recapito (internal)
+### Gate recapito (locale)
 
-Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md) § Consegna / Flusso internal
+Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md) § Consegna / Flusso locale
 
 Helper interno: `is_sender_allowed_for_reception(p_archive_user_id, p_sender_profile_id) boolean` — `SECURITY DEFINER`, usata da RPC invio (outbound + idempotenza) e worker delivery (inbound).
 

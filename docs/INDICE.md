@@ -36,12 +36,12 @@ Navigazione per AI.
 
 - **Web client (Try it)**: https://arkham-im.fly.dev/ (Fly)
 - **Project page**: https://alfred-im.github.io/ (`org-site/`)
-- **Codice**: `client/` · `supabase/` · `bridge-xmpp/` · `bridge-matrix/`
+- **Codice**: `client/` · `supabase/`
 - [client/README.md](../client/README.md) · [`.cursor/rules/main.mdc`](../.cursor/rules/main.mdc) · [AGENTS.md](../AGENTS.md)
 - [AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md) — account agente; non toccare test1–4
 - [testing/strategy.md](./testing/strategy.md) — gate vs release; **riferimento test:** `client/e2e/release-snake.spec.ts`
 - [client/scripts/test/README.md](../client/scripts/test/README.md) — catalogo suite (`e2e`)
-- [client/deploy/fly/README.md](../client/deploy/fly/README.md) — deploy Fly, build web (`--pwa-strategy=none`), benchmark avvio demo
+- [client/deploy/README.md](../client/deploy/README.md) — deploy Fly, build web (`--pwa-strategy=none`), benchmark avvio demo
 
 ---
 
@@ -60,8 +60,8 @@ Navigazione per AI.
 
 - [architecture/full-stack.md](./architecture/full-stack.md) — client + Supabase
 - [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) — modello caselle
-- [architecture/gotham-protocol.md](./architecture/gotham-protocol.md) — federazione Gotham (HTTP/3, Protobuf, id, mapping outbox)
-- [specs/contracts/gotham.proto](./specs/contracts/gotham.proto) — contratto wire Gotham
+- [architecture/gotham-protocol.md](./architecture/gotham-protocol.md) — contratto wire federazione (HTTP/3, Protobuf, id, mapping outbox)
+- [specs/contracts/gotham.proto](./specs/contracts/gotham.proto) — protobuf wire
 - [architecture/README.md](./architecture/README.md)
 
 ---
@@ -71,7 +71,6 @@ Navigazione per AI.
 - [decisions/address-based-messaging.md](./decisions/address-based-messaging.md)
 - [decisions/no-internal-external-chat-distinction.md](./decisions/no-internal-external-chat-distinction.md)
 - [decisions/server-as-reception.md](./decisions/server-as-reception.md)
-- [decisions/bridge-stateless.md](./decisions/bridge-stateless.md)
 - [decisions/multi-account-parallel-sessions.md](./decisions/multi-account-parallel-sessions.md)
 - [decisions/single-device-logout-open.md](./decisions/single-device-logout-open.md)
 - [decisions/README.md](./decisions/README.md)
@@ -96,7 +95,7 @@ Navigazione per AI.
 
 - [wishes/README.md](./wishes/README.md) — esplorazioni e wish non vincolanti
 - [wishes/protected-evidence-vault.md](./wishes/protected-evidence-vault.md) — custodia asimmetrica / vault prove protette
-- [WISHLIST.md](./WISHLIST.md) — backlog funzionalità (XMPP, UI)
+- [WISHLIST.md](./WISHLIST.md) — backlog non vincolante
 - [specs/contracts/schema.md](./specs/contracts/schema.md) · [rpc.md](./specs/contracts/rpc.md)
 
-**Ultimo aggiornamento**: 2026-09-03
+**Ultimo aggiornamento**: 2026-09-08

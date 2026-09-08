@@ -24,7 +24,7 @@ Skip profilo proprio: `profile.id == auth.userId`.
 | `InboxPeerTile` | Tap avatar → overlay; tap riga → chat |
 | `ChatPanel` header | Tap avatar |
 | `MessageAuthorHeader` | Tap autore (gruppo) |
-| `AllowedPeopleScreen` / `ContactsScreen` | Tap avatar (solo internal per rubrica) |
+| `AllowedPeopleScreen` / `ContactsScreen` | Tap avatar (solo contatti locale per rubrica) |
 
 ---
 

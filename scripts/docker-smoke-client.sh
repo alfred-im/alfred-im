@@ -10,9 +10,9 @@ cd "$ROOT"
 
 IMAGE="${IMAGE:-alfred-client-smoke}"
 PORT="${CLIENT_SMOKE_PORT:-18090}"
-DOCKERFILE="${ROOT}/client/deploy/fly/Dockerfile"
+DOCKERFILE="${ROOT}/client/deploy/shared/Dockerfile"
 
-echo "==> docker build (client/deploy/fly/Dockerfile, context=repo root)"
+echo "==> docker build (client/deploy/shared/Dockerfile, context=repo root)"
 docker build -f "$DOCKERFILE" -t "$IMAGE" .
 
 cid=""

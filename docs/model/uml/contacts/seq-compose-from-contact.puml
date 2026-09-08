@@ -12,13 +12,13 @@ participant "NavigationMachine" as Nav
 
 Utente -> UI : StartChatFromContact
 
-alt contatto internal
+alt contatto locale
   UI -> UI : risolvi ChatPeer da contatto
   UI -> Nav : OpenPeerOnFocusedAccount(peer)
   Nav --> UI : ConversationVisible
   UI --> Utente : ChatFromContactStarted
-else contatto esterno
-  UI --> Utente : ChatFromContactRejected\n(esterno non supportato)
+else contatto federato
+  UI --> Utente : ChatFromContactRejected\n(federato non supportato)
 end
 
 @enduml

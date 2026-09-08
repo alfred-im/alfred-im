@@ -4,7 +4,7 @@
 ' SDD: SYS-RECEPTION-005–010
 ' Revision: 2026-07-27
 
-title Reception gate — deliver internal con allow list
+title Reception gate — deliver locale (stessa istanza) con allow list
 
 participant "DeliveryWorker" as DW
 participant "ReceptionGate" as GATE

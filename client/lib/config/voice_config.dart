@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-/// Canonical voice note format (WebM + Opus) — contract for client, storage, bridges.
+/// Canonical voice note format (WebM + Opus) — contract for client and storage.
 abstract final class VoiceConfig {
   static const canonicalMime = 'audio/webm';
   static const fileExtension = 'webm';

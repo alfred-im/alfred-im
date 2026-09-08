@@ -40,7 +40,6 @@ Con il modello caselle le **copie d’archivio** (mittente e destinatario) punta
 | **Delete locale** (futuro) | Cancello la chat dal mio lato → la mia riga sparisce, ma il peer può ancora referenziare lo stesso file |
 | **Rimozione lato mittente** | Cancellare il file in storage mentre il destinatario ha ancora il messaggio → **link rotto** per il peer, salvo policy esplicita |
 | **Retry / invio fallito** | Upload riuscito ma consegna non materializzata → blob in storage senza (o con) riga archivio — edge case da contare nel GC |
-| **Bridge** (futuro) | Il bridge può aver scaricato/cachato dal URL; delete storage non equivale a «revocato» fuori da Alfred |
 
 **Regola:** trattare i media come **risorsa condivisa con refcount logico** (o audit delle referenze), non come proprietà della singola riga archivio. La strategia GC (quando contare le referenze, job async, soft-delete) va definita **prima** di implementare delete messaggi/casella o purge storage — fuori scope attuale ma **non** ignorabile nel design.
 
@@ -65,27 +64,27 @@ Niente `thread_id` lato client. Niente entità «casella verso Paolo» esposta c
 2. **Nessun allineamento obbligatorio** tra il mio archivio e quello del peer.
 3. **Solo `author_id`** — niente `direction` in schema.
 4. **Il mio archivio alimenta la mia interfaccia** — casella = dove vivono i messaggi del titolare, non cache su tabella condivisa.
-5. **Outbox sempre** — anche internal passa da outbox; internal / xmpp / matrix differiscono solo nel driver di consegna in fondo.
+5. **Outbox sempre** — anche il recapito locale passa da outbox; locale vs federato differisce solo nel driver di consegna (worker locale sincrono vs worker federativo).
 6. **Spunte = segnali puntuali** — aggiornano solo la copia del mittente tramite id di correlazione; **non** sincronizzano né modificano l’archivio del peer (modello federato).
 7. **Confine account** — nessuna RPC account attraversa l’archivio altrui; solo worker `alfred_delivery` (infrastruttura, non account).
 
 ## Identificatori — livelli distinti (vincolante)
 
-Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e federazione.
+Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per recapito locale e federazione.
 
 | Id | Scope | Ruolo |
 |----|-------|-------|
 | **`id` (riga archivio)** | Per archive_user | Identità **locale** del messaggio nel mio archivio (`archive_user_id = io`). Mittente e destinatario hanno **sempre** `id` diversi. |
 | **`client_message_id`** | Mittente (client + server) | Idempotenza **invio**: retry client, coda outbound, merge UI optimistic lato mittente. **Non** correla le due copie. |
 | **`logical_message_id`** | Server mittente | Identificativo **globale** del messaggio: assegnato dal **server mittente** all'accettazione dell'invio, **replicato identico** sulla copia destinatario (mai rigenerato dal recapito). Correlazione copie + segnali spunta/reaction. |
-| **`external_id`** | Federato | Id **percepito dall’altro sistema** (XMPP stanza `id`, Matrix `event_id`). Il bridge lo traduce in update sulla copia Alfred del mittente (via λ o mapping esplicito). |
+| **`external_id`** | Opzionale | Correlazione esterna; il wire usa `logical_message_id` |
 
 ### Regole
 
 - Il client mittente: optimistic su `client_message_id` → poi aggancia alla riga server (`id` della **propria** copia).
-- Spunte e bridge: operano su `logical_message_id` (e in federato su `external_id` per interpretare ack del protocollo esterno).
+- Spunte e worker: operano su `logical_message_id`.
 - Il destinatario vede solo il **suo** `id` riga; il mittente non assume mai che coincida col proprio.
-- A volte serve l’id **come lo vede l’altro account** (es. XEP-0333 `displayed@id`) — è compito del bridge mapparlo sulla copia corretta lato Alfred, non del client.
+- A volte serve l’id **come lo vede l’altro account** — il worker federativo lo mappa sulla copia corretta lato Alfred, non il client.
 
 ### Idempotenza (chiavi di dedup)
 
@@ -95,14 +94,13 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e 
 | Materializzazione copia destinatario | `(archive_user_id destinatario, logical_message_id)` |
 | Job outbox | `outbox.id` + `event_kind` |
 | Segnale `delivered` / `read` | `(archive_user_id mittente, logical_message_id)` |
-| Gotham inbound (native) | `logical_message_id` (MESSAGE); `read_receipt_id` (READ); `reaction_fact_id` (REACTION) |
-| Bridge legacy XMPP/Matrix (inbound ack) | `external_id` + protocollo → risoluzione su `logical_message_id` |
+| Inbound federato | `logical_message_id` (MESSAGE); `read_receipt_id` (READ); `reaction_fact_id` (REACTION) |
 
 `client_message_id` e `logical_message_id` restano **sempre** distinti: il primo è solo invio, il secondo solo correlazione e recapito.
 
 ## Consegna — stessa pipeline ovunque (vincolante)
 
-Internal e federato condividono **un solo tipo** di recapito; differisce solo il driver in fondo (worker internal sincrono vs bridge async).
+Locale e federato condividono **un solo tipo** di recapito; differisce solo il driver in fondo (worker locale sincrono vs worker federativo async).
 
 | Fase | Attore | Effetto |
 |------|--------|---------|
@@ -111,11 +109,11 @@ Internal e federato condividono **un solo tipo** di recapito; differisce solo il
 | **Recapito** | Worker `alfred_delivery` | Gate allow list destinatario → INSERT copia destinatario |
 | **Ack consegnato** | Worker `alfred_delivery` | UPDATE `delivered_at` su copia mittente (✓✓ grigie) |
 
-Su internal il worker gira **nella stessa transazione** della RPC mittente (sincrono per l’utente). Non è uno shortcut da eliminare: è il contratto [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md).
+Sulla stessa istanza (locale) il worker gira **nella stessa transazione** della RPC mittente (sincrono per l’utente). Non è uno shortcut da eliminare: è il contratto [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md).
 
 ### Stati operativi
 
-- **Retry** outbox — stesso meccanismo internal e federato
+- **Retry** outbox — stesso meccanismo locale e federato
 - **`failed` / dead-letter** se esauriti i tentativi
 - **UI mittente**: resta su ✓ finché non arriva il segnale `delivered`; assenza di ✓✓ = consegna in corso, rifiuto allow list o fallita — non «messaggio perso»
 
@@ -123,29 +121,29 @@ Su internal il worker gira **nella stessa transazione** della RPC mittente (sinc
 
 Nel federato **non esiste** una riga condivisa tra mittente e destinatario. Ogni lato ha il proprio archivio; le spunte si risolvono con **segnali separati** che **referenziano** il messaggio originale per id — non aggiornando la copia altrui dall’RPC account.
 
-Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istanza (internal), con worker `alfred_delivery` come unico attraversamento confine.
+Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istanza (locale), con worker `alfred_delivery` come unico attraversamento confine.
 
 ### Correlazione
 
 Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 
-| Ruolo | Internal Alfred | Gotham (nativo) | Legacy XMPP/Matrix |
-|-------|-----------------|-----------------|-------------------|
-| Correlazione copie + spunte messaggio | `logical_message_id` | `logical_message_id` | `logical_message_id` + `external_id` |
-| Evento lettura | `read_receipt_id` (mint lettore → replica mittente) | stesso modello via wire READ | bridge → stessi campi DB |
-| Evento reaction | `reaction_fact_id` | stesso modello via wire REACTION | N/A (stub) |
-| Copia mittente | Riga nel **mio** archivio (`author_id = io`), `id` locale | Archivio uscita lato Alfred | Archivio uscita lato Alfred |
-| Copia destinatario | Riga nel **suo** archivio (`author_id = mittente`), `id` locale | `materialize_inbound_sender_message` (id remoto invariato) | Archivio ingresso / server esterno |
+| Ruolo | Locale (stessa istanza) | Federato (altra istanza) |
+|-------|-------------------------|-------------------|
+| Correlazione copie + spunte | `logical_message_id` | `logical_message_id` |
+| Evento lettura | `read_receipt_id` | `read_receipt_id` (wire READ) |
+| Evento reaction | `reaction_fact_id` | `reaction_fact_id` (wire REACTION) |
+| Copia mittente | Archivio uscita (`author_id = io`) | Archivio uscita lato Alfred |
+| Copia destinatario | Worker `deliver` | `materialize_inbound_sender_message` |
 
-Wire Gotham: [gotham-protocol.md](./gotham-protocol.md). Gotham **non** usa `external_id` sul messaggio.
+Contratto wire: [gotham-protocol.md](./gotham-protocol.md). Il messaggio federato **non** usa `external_id`.
 
 ### Tre livelli (semantica [server-as-reception](../decisions/server-as-reception.md))
 
-| Livello | UI | Significato | Internal | Federato |
+| Livello | UI | Significato | Locale | Federato |
 |---------|-----|-------------|----------|----------|
 | Inviato | ✓ | Accettato da piattaforma / in outbox | Copia mittente creata | Outbox `queued` |
-| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | HTTP 2xx Gotham / ack bridge legacy |
-| Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` → `read_receipt_id` → outbox → mittente | Evento READ Gotham / XEP-0333 / m.receipt |
+| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | HTTP 2xx peer |
+| Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` → outbox `read_receipt` | Evento READ sul wire |
 
 **Non** significa «arrivato sul device» in senso P2P: significa «nella fonte di verità rilevante» (server / piattaforma).
 
@@ -157,7 +155,7 @@ Wire Gotham: [gotham-protocol.md](./gotham-protocol.md). Gotham **non** usa `ext
 - Realtime mittente: subscribe agli UPDATE sulla **propria** copia (`archive_user_id = io`); merge optimistic via `client_message_id`, spunte via `logical_message_id`.
 - I marker non vanno «all’indietro» (segnale su id più vecchio dello stato locale → ignorare).
 
-### Flusso internal (sintesi)
+### Flusso locale (sintesi)
 
 ```
 Invio (account mittente) — send_message_to_profile
@@ -179,39 +177,27 @@ Paolo apre chat (account Paolo)
 
 Gate allow list: [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md).
 
-### Flusso federato Gotham (target)
+### Flusso federato (target)
 
 Vedi [gotham-protocol.md](./gotham-protocol.md). Sintesi:
 
 ```
 Invio (account mittente)
   → INSERT copia mittente (logical_message_id mintato)
-  → INSERT outbox (event_kind=deliver, protocol=gotham, status=queued)
-  → bridge claim → POST /gotham/v1/events (GothamEnvelope MESSAGE)
+  → INSERT outbox (event_kind=deliver, status=queued)
+  → worker federativo claim → POST /gotham/v1/events (envelope MESSAGE)
   → peer HTTP 2xx → delivered_at mittente — ✓✓ grigie
 
 Peer segna letto
   → POST /gotham/v1/events (READ: read_receipt_id + object_logical_message_id)
-  → bridge inbound → propagate_read_receipt sul mittente locale
+  → worker inbound → propagate_read_receipt sul mittente locale
 
 Peer reagisce
   → POST /gotham/v1/events (REACTION: reaction_fact_id + object_logical_message_id)
-  → bridge inbound → INSERT message_reaction_facts
+  → worker inbound → INSERT message_reaction_facts
 ```
 
 Inbound messaggio: `materialize_inbound_sender_message` con `logical_message_id` **dal server mittente remoto** — mai rigenerato.
-
-### Flusso federato legacy XMPP/Matrix (riferimento)
-
-```
-Alfred → outbox → bridge → server esterno del peer
-              → copia mittente su Alfred
-
-Peer legge su client esterno → XEP-0333 / m.receipt
-                            → bridge → UPDATE copia mittente Alfred (via external_id / logical_message_id)
-```
-
-Il bridge è **stateless** ([bridge-stateless.md](../decisions/bridge-stateless.md)): traduce il segnale protocollo in update piattaforma, non tiene stato spunte in RAM.
 
 ## Fuori scope (per ora)
 
@@ -228,19 +214,6 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 
 ---
 
-## Storico
-
-- 2026-06-26: idea da sessione design (cronologia per titolare archivio, omogeneità col federato).
-- 2026-06-27: su `main` implementato message-centric (PR #130) — percorso diverso, temporaneo.
-- 2026-06-28: direzione caselle confermata; Q&A identità, outbox sempre, media condivisi/GC, **spunte = segnali** (modello XMPP/Matrix) confermato.
-- 2026-06-29: identificatori a livelli distinti (`id` / `client_message_id` / λ / `external_id`), idempotenza per operazione, consegna parziale = stato normale pipeline.
-- 2026-07-04: discovery chiuso; promessa `SYS-MAILBOX` approved; spunte = `delivered_at`/`read_at` (no enum status).
-- 2026-07-04: gate `SYS-RECEPTION` (#161) nel driver internal — recapito condizionato.
-- 2026-07-11: **#179** — `SYS-ACCOUNT-BOUNDARY` + `SYS-DELIVERY`; worker `alfred_delivery`; RPC account solo confine proprio.
-- 2026-07-19: **#210** — `list_peer_messages` finestra recente + cursore paginazione; SYS-MAILBOX-036/057; SURF-CHAT-015.
-
----
-
 ## Riferimenti
 
 | Documento | Ruolo |
@@ -251,6 +224,5 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 | [SYS-ACCOUNT-BOUNDARY.md](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) | Legge madre confine account |
 | [SYS-DELIVERY.md](../specs/promises/system/SYS-DELIVERY.md) | Worker outbox + contratto spunte |
 | [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md) | Gate recapito nel worker |
-| [bridge-stateless.md](../decisions/bridge-stateless.md) | Outbox / bridge (se/un quando) |
-| [gotham-protocol.md](./gotham-protocol.md) | Federazione nativa Gotham (HTTP/3, Protobuf, id, mapping outbox) |
+| [gotham-protocol.md](./gotham-protocol.md) | Contratto wire federazione (HTTP/3, Protobuf, id, mapping outbox) |
 | [contracts/schema.md](../specs/contracts/schema.md) · [contracts/rpc.md](../specs/contracts/rpc.md) | Dettaglio DDL/RPC |

@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import '../../models/contact.dart';
 import '../../models/profile_summary.dart';
 import 'contacts_effects.dart';
 
@@ -41,11 +40,9 @@ final class AddInternalContact extends ContactsEvent {
 
 final class AddExternalContact extends ContactsEvent {
   const AddExternalContact({
-    required this.protocol,
     required this.address,
     required this.displayName,
   });
-  final ContactProtocol protocol;
   final String address;
   final String displayName;
 }
@@ -80,9 +77,8 @@ class ContactsMachine {
       case AddInternalContact(:final profile):
         await _effects.addInternal(profile);
         await send(const LoadContacts());
-      case AddExternalContact(:final protocol, :final address, :final displayName):
+      case AddExternalContact(:final address, :final displayName):
         await _effects.addExternal(
-          protocol: protocol,
           address: address,
           displayName: displayName,
         );

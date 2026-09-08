@@ -9,7 +9,7 @@ title Federation — stub outbound (target)
 participant "UI" as C
 participant "AccountBoundary" as AB
 database "Outbox" as OB
-participant "BridgeWorker" as B
+participant "FederationWorker" as B
 participant "FederatedServer" as EXT
 
 C -> AB : SendContent (futuro branch federato)
@@ -18,7 +18,7 @@ AB --> C : ContentSent (sender copy ✓)
 
 note over OB, B
   Stato attuale: outbox queued,
-  nessun consumer bridge in produzione.
+  nessun consumer federativo in produzione.
 end note
 
 OB --> B : FederatedSendQueued <<future>>

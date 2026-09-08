@@ -5,6 +5,6 @@ Documenti **non vincolanti** su idee future, threat model e architetture da valu
 | File | Summary |
 |------|---------|
 | [protected-evidence-vault.md](./protected-evidence-vault.md) | Custodia asimmetrica / vault di prove protette (abuso, coercizione fisica sul device) |
-| [../WISHLIST.md](../WISHLIST.md) | Backlog funzionalità (XMPP, UI, federazione) |
+| [../WISHLIST.md](../WISHLIST.md) | Backlog funzionalità future |
 
-**Ultimo aggiornamento**: 2026-08-03
+**Ultimo aggiornamento**: 2026-09-08

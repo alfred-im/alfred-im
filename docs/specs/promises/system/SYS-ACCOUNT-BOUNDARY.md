@@ -41,7 +41,7 @@ Violazioni note (debito risolto da SYS-DELIVERY): `send_message_to_profile` che 
 
 | ID | Promessa |
 |----|----------|
-| **SYS-ACCOUNT-BOUNDARY-008** | Eccezioni «solo per internal» o «solo per gruppi» al confine |
+| **SYS-ACCOUNT-BOUNDARY-008** | Eccezioni «solo per recapito locale» o «solo per gruppi» al confine |
 | **SYS-ACCOUNT-BOUNDARY-009** | Client che aggira il confine con query dirette su archivi altrui |
 | **SYS-ACCOUNT-BOUNDARY-010** | Trattare l'infrastruttura delivery come «super-account» con sessione GoTrue |
 
@@ -53,7 +53,7 @@ Violazioni note (debito risolto da SYS-DELIVERY): `send_message_to_profile` che 
 |----------|-------------------|
 | Schema `alfred_delivery` | `supabase/migrations/*account_boundary*` |
 | RPC account refactored | `send_message_to_profile`, `mark_peer_read`, `broadcast_message_to_allowlist` |
-| Worker sincrono internal | `alfred_delivery.process_outbox` |
+| Worker sincrono locale (stessa istanza) | `alfred_delivery.process_outbox` |
 | Revoke helper da client | `20260707190000_revoke_helper_rpc_from_authenticated.sql` |
 
 ---

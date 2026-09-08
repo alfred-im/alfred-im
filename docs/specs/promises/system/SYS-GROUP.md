@@ -215,7 +215,7 @@ Scenario: Gruppo broadcast
 ## 9. Fuori scope
 
 - Ruoli granulari (admin, moderatore)
-- Federazione MUC / stanze XMPP
+- Federazione gruppi tra istanze (non pianificato)
 - Spunte «letto da tutti i membri» aggregate per mittente originale
 - Media GC specifico gruppo
 

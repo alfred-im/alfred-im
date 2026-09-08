@@ -33,7 +33,6 @@ void main() {
         Contact(
           id: 'c1',
           archiveUserId: 'alice',
-          protocol: ContactProtocol.internal,
           linkedProfileId: 'peer-1',
           displayName: 'Alice',
           avatarUrl: 'https://example.com/a.jpg',
@@ -51,9 +50,8 @@ void main() {
           Contact(
             id: 'c2',
             archiveUserId: 'alice',
-            protocol: ContactProtocol.xmpp,
-            externalAddress: 'alice@xmpp.example',
-            displayName: 'Alice XMPP',
+            externalAddress: 'alice@arkham-im.fly.dev',
+            displayName: 'Alice federata',
             createdAt: DateTime.utc(2026, 6, 28),
           ),
         ),
