@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Build context: repository root (fly deploy . --dockerfile client/deploy/fly/Dockerfile)
+# Build context: repository root (fly deploy . --dockerfile client/deploy/shared/Dockerfile)
 
 # syntax=docker/dockerfile:1
 
@@ -18,8 +18,7 @@ RUN flutter pub get
 COPY client/ ./
 
 # Instance wiring (operators edit per-instance config before deploy).
-# Default: Arkham — override with build-arg INSTANCE_CONFIG_JSON (Blackgate: client/deploy/blackgate/config.json).
-ARG INSTANCE_CONFIG_JSON=client/deploy/fly/config.json
+ARG INSTANCE_CONFIG_JSON=client/deploy/arkham/config.json
 COPY ${INSTANCE_CONFIG_JSON} web/config.json
 
 # --pwa-strategy=none: non registrare il service worker Flutter deprecato (reload multipli).
@@ -38,8 +37,8 @@ RUN apk add --no-cache python3 py3-pip
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY client/deploy/gateway/requirements.txt /opt/gateway/requirements.txt
 RUN pip3 install --no-cache-dir --break-system-packages -r /opt/gateway/requirements.txt
-COPY client/deploy/fly/nginx.conf /etc/nginx/conf.d/default.conf
-COPY client/deploy/fly/entrypoint.sh /entrypoint.sh
+COPY client/deploy/shared/nginx.conf /etc/nginx/conf.d/default.conf
+COPY client/deploy/shared/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 COPY client/deploy/gateway/ /opt/gateway/
 COPY --from=build /app/client/build/web /usr/share/nginx/html

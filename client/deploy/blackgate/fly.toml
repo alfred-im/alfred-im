@@ -11,7 +11,7 @@ app = "blackgate-im"
 primary_region = "fra"
 
 [build]
-  dockerfile = "../fly/Dockerfile"
+  dockerfile = "../shared/Dockerfile"
 
   [build.args]
     INSTANCE_CONFIG_JSON = "client/deploy/blackgate/config.json"

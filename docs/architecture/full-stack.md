@@ -77,7 +77,7 @@ client/lib/
 4. Splash HTML (`#alfred-boot-splash` in `client/web/index.html`) si nasconde su evento `flutter-first-frame`
 5. `ShareableLinkListener` → fragment `#` in ingresso ([PROM-SHAREABLE-LINK](../specs/promises/product/PROM-SHAREABLE-LINK.md))
 
-**Build web / cold start (Fly):** `--pwa-strategy=none` (no service worker Flutter deprecato), CanvasKit servito dall'origine — dettaglio e benchmark in `client/deploy/fly/README.md` § Build web e avvio.
+**Build web / cold start (Fly):** `--pwa-strategy=none` (no service worker Flutter deprecato), CanvasKit servito dall'origine — dettaglio e benchmark in `client/deploy/README.md` § Build web e avvio.
 
 ### 2.4 Link condivisibili (fragment `#`)
 
@@ -125,18 +125,18 @@ Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (
 
 | Target | Meccanismo |
 |--------|------------|
-| Web client (Fly.io) | `client/deploy/fly/` + gateway `client/deploy/gateway/` — app `arkham-im` — https://arkham-im.fly.dev/ |
+| Web client (Fly.io) | `client/deploy/arkham/` + `client/deploy/blackgate/` + `client/deploy/shared/` + gateway `client/deploy/gateway/` — https://arkham-im.fly.dev/ · https://blackgate-im.fly.dev/ |
 | Supabase | Migrazioni in repo → MCP / `supabase db push` / dashboard (non automatiche al merge Git) |
 
 **Try it:** https://arkham-im.fly.dev/ — panoramica pubblica in [`README.md`](../../README.md).
 
-**Deploy client Fly:** `bash scripts/fly-deploy-client.sh`. Push su GitHub **non** deploya Fly; CI (`docker-client-fly.yml`) = smoke build. Auto-deploy Fly **solo** se abilitato in dashboard (Deployments → GitHub, working dir `.`). Vedi `client/deploy/fly/README.md`.
+**Deploy client Fly:** `bash scripts/fly-deploy-client.sh` (Arkham) / `bash scripts/fly-deploy-blackgate.sh` (Blackgate). Push su GitHub **non** deploya Fly; CI (`docker-client-fly.yml`) = smoke build. Auto-deploy Fly **solo** se abilitato in dashboard (Deployments → GitHub, working dir `.`). Vedi `client/deploy/README.md`.
 
 **White label shell:** `index.html` + `manifest.json` generati dal gateway a ogni GET da `get_instance_bootstrap`; branding owner in `instance.branding` + bucket `instance-branding` (`SURF-INSTANCE-CONFIG`).
 
 **Web**: `passkeys` `bundle.js` obbligatorio in `client/web/index.html` (PR #110).
 
-Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/fly/README.md`.
+Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/README.md`.
 
 ---
 

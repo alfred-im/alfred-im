@@ -26,7 +26,7 @@
 |----------|-----------|
 | **Ingresso pubblico** | `README.md` · https://alfred-im.github.io/ (`org-site/`) · `SECURITY.md` · `CODE_OF_CONDUCT.md` |
 | **Client** | `client/` — Flutter **web (PWA)**, collegato a Supabase |
-| **Web client** | https://arkham-im.fly.dev/ — nginx + gateway shell dinamica (`client/deploy/fly/`, `client/deploy/gateway/`, `scripts/fly-deploy-client.sh`) |
+| **Web client** | https://arkham-im.fly.dev/ · https://blackgate-im.fly.dev/ — nginx + gateway shell dinamica (`client/deploy/arkham/`, `client/deploy/blackgate/`, `client/deploy/shared/`, `client/deploy/gateway/`) |
 | **Deploy** | `org-site/` → `alfred-im.github.io` (`deploy-org-site.yml`, secret `ORG_SITE_PAT`); client Fly; gate `release-suite.yml` |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
 | **Federazione** | Gateway/worker pianificati — wire in `docs/architecture/gotham-protocol.md` |
@@ -38,7 +38,7 @@
 
 **Try it (app):** https://arkham-im.fly.dev/ — panoramica: `README.md`.
 
-**Deploy client:** **`bash scripts/fly-deploy-client.sh`** (richiede `flyctl`). Auto-deploy Fly **solo** se abilitato in dashboard (Deployments → GitHub → branch `main`, working dir `.`) — vedi `client/deploy/fly/README.md`. Push su GitHub **non** deploya Fly; CI fa solo smoke Docker. L'agente **non** attende il deploy Fly.
+**Deploy client:** **`bash scripts/fly-deploy-client.sh`** (Arkham) / **`bash scripts/fly-deploy-blackgate.sh`** (Blackgate) — richiede `flyctl`. Auto-deploy Fly **solo** se abilitato in dashboard (Deployments → GitHub → branch `main`, working dir `.`) — vedi `client/deploy/README.md`. Push su GitHub **non** deploya Fly; CI fa solo smoke Docker. L'agente **non** attende il deploy Fly.
 
 **Stack su `main`**: `client/` · `supabase/`
 
@@ -108,7 +108,7 @@
 ├── README.md               # Ingresso pubblico GitHub (consent-first)
 ├── SECURITY.md             # Policy vulnerabilità
 ├── CODE_OF_CONDUCT.md      # Contributor Covenant
-├── client/                 # Client Flutter web (PWA) — deploy Fly (`client/deploy/fly/`)
+├── client/                 # Client Flutter web (PWA) — deploy Fly (`client/deploy/arkham/`, `client/deploy/blackgate/`)
 ├── supabase/               # Migrazioni e config piattaforma
 ├── docs/                   # Documentazione tecnica AI
 │   ├── domain/             # DDD + Event Storming (significato)
@@ -128,7 +128,7 @@
 | **Backend** | `SupabaseClient` della sessione in **focus** (una GoTrue attiva) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
 | **Gate CI** | `scripts/verify.sh` — igiene: sync spec/modello + analyze + test Dart isolati (**non** valida il prodotto) |
-| **Build web** | Locale: `flutter build web --base-href "/"`. Release Fly: `--pwa-strategy=none` + CanvasKit in immagine — vedi `client/deploy/fly/README.md` § Build web e avvio |
+| **Build web** | Locale: `flutter build web --base-href "/"`. Release Fly: `--pwa-strategy=none` + CanvasKit in immagine — vedi `client/deploy/README.md` § Build web e avvio |
 
 **Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `inbox`, `messaging`, `navigation`, `group_home`, `group_messages`, `shareable_link` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — **unico ingresso** push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `coordinators/` (facade: `MessagesController`).
 
@@ -158,12 +158,12 @@
 
 - Config: `supabase/config.toml`, `supabase/migrations/`
 - MCP agente: `execute_sql`, `apply_migration`, `list_migrations`
-- **Non deducibile — configurazione istanza (due passaggi):** (1) `config.json` al deploy — obbligatorio per connettersi a Supabase (`supabaseUrl`, `supabaseAnonKey`, `publicBaseUrl`); non modificabile dall'owner perché senza file l'app non parte. (2) `instance_config` in Supabase — nome, branding, `im_server_id`; owner da app dopo login. **Due indirizzi web:** pubblico (`publicBaseUrl`) e federativo IM (`im_server_id`), stesso dominio o due domini. SSOT: `client/deploy/fly/README.md` § Come si configura un'istanza.
+- **Non deducibile — configurazione istanza (due passaggi):** (1) `config.json` al deploy — obbligatorio per connettersi a Supabase (`supabaseUrl`, `supabaseAnonKey`, `publicBaseUrl`); non modificabile dall'owner perché senza file l'app non parte. (2) `instance_config` in Supabase — nome, branding, `im_server_id`; owner da app dopo login. **Due indirizzi web:** pubblico (`publicBaseUrl`) e federativo IM (`im_server_id`), stesso dominio o due domini. SSOT: `client/deploy/README.md` § Come si configura un'istanza.
 - **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere l'host di `publicBaseUrl` (demo: `https://arkham-im.fly.dev/**`; rimuovere URL legacy non più usati se presenti); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
 
 ### Fly.io (`arkham-im`, `blackgate-im`, `fra`)
 
-Client web Fly: `client/deploy/fly/` + `client/deploy/blackgate/` + `scripts/fly-deploy-client.sh` / `scripts/fly-deploy-blackgate.sh`. Gate CI client: `bash scripts/docker-smoke-client.sh` (`docker-client-fly.yml`).
+Client web Fly: `client/deploy/arkham/` + `client/deploy/blackgate/` + `client/deploy/shared/` + `scripts/fly-deploy-client.sh` / `scripts/fly-deploy-blackgate.sh`. Gate CI client: `bash scripts/docker-smoke-client.sh` (`docker-client-fly.yml`).
 
 **Migrazione nome app Fly (una tantum)**: `bash scripts/fly-rename-app.sh` poi redeploy.
 

@@ -77,11 +77,11 @@ Il dev server e2e (`bash scripts/test.sh e2e`) abilita il define sul dev server 
 ### Hosted web client (Fly.io)
 
 - **Project page:** https://alfred-im.github.io/ — static landing in `org-site/` (deploy `deploy-org-site.yml`, secret `ORG_SITE_PAT`)
-- **Try it:** https://arkham-im.fly.dev/ — `client/deploy/fly/`, deploy `scripts/fly-deploy-client.sh`
-- Build Fly: `flutter build web --pwa-strategy=none` (no SW Flutter deprecato); CanvasKit servito dall'origine — vedi `client/deploy/fly/README.md` § Build web e avvio
+- **Try it:** https://arkham-im.fly.dev/ — `client/deploy/arkham/`, deploy `scripts/fly-deploy-client.sh`
+- Build Fly: `flutter build web --pwa-strategy=none` (no SW Flutter deprecato); CanvasKit servito dall'origine — vedi `client/deploy/README.md` § Build web e avvio
 - Benchmark avvio demo: `cd client && ALFRED_BASE_URL=https://arkham-im.fly.dev/ npx playwright test e2e/demo-live-startup-timing.spec.ts`
 - Build web: `cd client && bash scripts/verify.sh --build` (base-href `/`)
-- Auto-deploy (opzionale): Fly Deployments → collega repo GitHub, branch `main`, working directory `.` (vedi `client/deploy/fly/README.md`). L'agente **non** attende il deploy Fly.
+- Auto-deploy (opzionale): Fly Deployments → collega repo GitHub, branch `main`, working directory `.` (vedi `client/deploy/README.md`). L'agente **non** attende il deploy Fly.
 
 ### Auth / messaging gotchas (non-obvious, hit during setup)
 - Registration: GoTrue rejects unrealistic email domains (e.g. `@example.com` → "Email address is invalid"). Use a realistic domain like `gmail.com`.

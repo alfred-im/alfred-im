@@ -1,9 +1,17 @@
 # Deploy Fly.io — client web (PWA)
 
-**Live (demo istanza Arkham):** https://arkham-im.fly.dev/  
-**Seconda demo (Blackgate):** https://blackgate-im.fly.dev/ — vedi `client/deploy/blackgate/README.md`
+Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container: **nginx** (asset Flutter statici) + **gateway Python** (shell PWA dinamica). Ogni istanza ha un'**app Fly separata** dal progetto Supabase.
 
-Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container: **nginx** (asset Flutter statici) + **gateway Python** (shell PWA dinamica). Il client usa un'**app Fly separata** dall'istanza Supabase.
+## Istanze demo
+
+| Istanza | URL | Supabase | Directory | Deploy |
+|---------|-----|----------|-----------|--------|
+| **Arkham** | https://arkham-im.fly.dev/ | `tvwpoxxcqwphryvuyqzu` | `client/deploy/arkham/` | `bash scripts/fly-deploy-client.sh` |
+| **Blackgate** | https://blackgate-im.fly.dev/ | `jgxkimvjmlfjdtzsuijh` | `client/deploy/blackgate/` | `bash scripts/fly-deploy-blackgate.sh` |
+
+Asset condivisi (Dockerfile, nginx, entrypoint): `client/deploy/shared/`. Gateway Python: `client/deploy/gateway/`.
+
+Ogni istanza ha gli stessi file: `fly.toml`, `config.json`, `instance_config.sql`.
 
 ## Come si configura un'istanza
 
@@ -28,7 +36,7 @@ Ci sono **due passaggi**, in ordine. Il secondo funziona solo se il primo è a p
 
 Se il file manca o è sbagliato, l'app si ferma con «Configurazione mancante».
 
-**Chi lo scrive:** chi fa il deploy (modifica `client/deploy/fly/config.json`, poi `fly deploy`). Modello: `client/web/config.json.example`.
+**Chi lo scrive:** chi fa il deploy (modifica `client/deploy/<istanza>/config.json`, poi deploy). Modello: `client/web/config.json.example`.
 
 ### Passo 2 — Dati in Supabase (`instance_config`)
 
@@ -41,7 +49,7 @@ Dopo la connessione, il client legge e (se sei owner) modifica questi dati trami
 | `instance.branding` | oggetto JSON | Logo, colori, titolo browser |
 | `instance.legal` | oggetto JSON | Link privacy, termini, supporto |
 
-Valori iniziali opzionali: `client/deploy/fly/instance_config.sql`.
+Valori iniziali opzionali: `client/deploy/<istanza>/instance_config.sql`.
 
 **Chi li scrive:** l'owner dall'app, dopo il login. Il deploy può solo impostare un primo valore con lo script SQL.
 
@@ -88,14 +96,14 @@ Va bene, ma DNS, deploy e redirect Supabase Auth devono essere allineati su entr
 |----------|------------|------------|
 | `/`, `/index.html`, `/manifest.json` | Gateway Python `:8091` (proxy nginx) | RPC `get_instance_bootstrap` via `config.json` — **nessuna cache RAM** |
 | `/main.dart.js`, `/assets/*`, `/icons/*`, … | nginx statico | Build Flutter (`flutter build web --pwa-strategy=none`) — CanvasKit incluso in immagine |
-| `/config.json` | nginx statico | `client/deploy/fly/config.json` (wiring Supabase + `publicBaseUrl`) |
+| `/config.json` | nginx statico | `client/deploy/<istanza>/config.json` (wiring Supabase + `publicBaseUrl`) |
 | `/push_sw.js` | nginx statico | `client/web/push_sw.js` (icona da payload push, fallback statico) |
 
 Template gateway: `client/deploy/gateway/templates/`. Il build Flutter **non** include `index.html` / `manifest.json` branded (rimossi post-build nel Dockerfile).
 
 ## Build web e avvio (performance)
 
-Il Dockerfile Fly usa:
+Il Dockerfile in `client/deploy/shared/` usa:
 
 ```bash
 flutter build web --release --base-href / --pwa-strategy=none
@@ -140,41 +148,44 @@ La chiave anon in `config.json` è pubblica per design; non è un segreto.
 
 ## Primo deploy
 
-Da **root del repository**:
+Da **root del repository**, per ogni istanza:
 
 ```bash
-# 1. Personalizza client/deploy/fly/config.json
+# 1. Personalizza client/deploy/<istanza>/config.json
 
-# 2. Crea l'app (una tantum) — cambia il nome in fly.toml se necessario
-fly apps create arkham-im   # oppure fly launch --config client/deploy/fly/fly.toml --no-deploy
+# 2. Crea l'app Fly (una tantum) — nome in fly.toml
+fly apps create arkham-im      # Arkham
+fly apps create blackgate-im   # Blackgate
 
-# Migrazione da alfred-im-web (una tantum):
+# Migrazione da alfred-im-web (una tantum, solo Arkham):
 # bash scripts/fly-rename-client-app.sh
 
 # 3. Deploy (build remoto Fly)
-bash scripts/fly-deploy-client.sh
+bash scripts/fly-deploy-client.sh       # Arkham
+bash scripts/fly-deploy-blackgate.sh    # Blackgate
 ```
 
 ## Deploy successivi
 
 ```bash
-bash scripts/fly-deploy-client.sh
+bash scripts/fly-deploy-client.sh       # Arkham
+bash scripts/fly-deploy-blackgate.sh    # Blackgate
 ```
 
 **Push su GitHub da solo non deploya Fly.** La CI (`docker-client-fly.yml`) esegue solo smoke build locale. Per pubblicare su Fly serve **`fly deploy`** (manuale) oppure **Auto Deploy** configurato in dashboard (vedi sotto). **Non** usare GitHub Actions con `FLY_API_TOKEN` — il deploy passa da Fly Deployments.
 
 ## Auto-deploy al push (opzionale, dashboard Fly)
 
-Integrazione **Fly Deployments ↔ GitHub** — non è nel repo; va abilitata una tantum:
+Integrazione **Fly Deployments ↔ GitHub** — non è nel repo; va abilitata **per app** (una tantum per istanza):
 
-1. Dashboard Fly → app `arkham-im` → **Deployments** → **Settings**
+1. Dashboard Fly → app (`arkham-im` o `blackgate-im`) → **Deployments** → **Settings**
 2. Collega il repository GitHub
 3. Abilita **Auto Deploy** sul branch (es. `main`)
-4. **Config path:** `client/deploy/fly/fly.toml`
-5. **Dockerfile path:** `Dockerfile` (relativo a `client/deploy/fly/`)
-6. **Working directory / monorepo root:** `.` (root del repo) — **non** `client/deploy/fly`
+4. **Config path:** `client/deploy/arkham/fly.toml` o `client/deploy/blackgate/fly.toml`
+5. **Dockerfile path:** `client/deploy/shared/Dockerfile`
+6. **Working directory / monorepo root:** `.` (root del repo)
 
-Se la working directory è `client/deploy/fly`, Fly cerca `client/deploy/fly/client/deploy/fly/Dockerfile` e il build fallisce.
+Se la working directory è la cartella istanza, Fly duplica i path del Dockerfile e il build fallisce.
 
 ### Build Flutter fallisce su Depot (`can't be called from trap context`)
 
@@ -186,19 +197,15 @@ Il builder **Depot** (default Fly) può interrompere `flutter build web` dopo po
 2. Imposta regione builder vicina a `fra` (es. `ams`, `lhr`) o **Reset** se bloccato su «Waiting for depot builder…»
 3. Riprova il deploy da **Deployments** → **Deploy latest commit**
 
-**Deploy manuale (CLI):** `bash scripts/fly-deploy-client.sh` usa `--depot=false` (builder legacy Fly).
+**Deploy manuale (CLI):** gli script `fly-deploy-*.sh` usano `--depot=false` (builder legacy Fly).
 
 La dashboard GitHub **non** espone `--depot=false`; se il workaround regione non basta, contatta Fly support o usa deploy CLI una tantum.
-
-### Errore `client/deploy/fly/client/deploy/fly/Dockerfile not found`
-
-Imposta working directory **`.`** (root repo) in Fly Deployments → Settings.
 
 ## Dopo il deploy client
 
 1. **Supabase** — migrazioni in `supabase/migrations/` sul progetto dell'istanza (MCP, `supabase db push`, dashboard). Per branding owner: `20260830100000_instance_branding_storage.sql` (bucket `instance-branding`).
 2. **Edge Function** — redeploy `send-push` se cambia il payload push (`supabase/functions/send-push/`).
-3. **Supabase Auth** → Redirect URLs: host di `publicBaseUrl` (es. `https://<tua-app>.fly.dev/**`; demo: `https://arkham-im.fly.dev/**`)
+3. **Supabase Auth** → Redirect URLs: host di `publicBaseUrl` (es. `https://<tua-app>.fly.dev/**`)
 4. Verifica: `GET /` contiene shell dinamica (`alfred-boot-splash`, no commento `$FLUTTER_BASE_HREF`); `GET /manifest.json` risponde JSON da bootstrap (non file statico pre-merge).
 
 ## Smoke test locale

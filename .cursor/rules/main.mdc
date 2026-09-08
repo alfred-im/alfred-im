@@ -825,7 +825,7 @@ La verifica è parte integrante del Metodo Analitico: serve a confermare che le 
 - ✅ Lo script esegue in ordine: `flutter pub get` → **`flutter analyze`** → `flutter test`
 - ✅ **`flutter analyze` deve uscire con zero issue** (anche livello `info` — es. import inutili — blocca come in CI)
 - ✅ Per release web locale o prima di merge critici: `bash scripts/verify.sh --build` (include `flutter build web`)
-- ✅ La CI (`.github/workflows/release-suite.yml`) usa lo stesso script nel gate; deploy client su Fly (`client/deploy/fly/`)
+- ✅ La CI (`.github/workflows/release-suite.yml`) usa lo stesso script nel gate; deploy client su Fly (`client/deploy/arkham/`, `client/deploy/blackgate/`)
 - ❌ **MAI attendere i job GitHub Actions** (`gh run watch`, `gh pr checks` in loop, polling, bloccare merge/risposta finché la CI è verde). Gate obbligatorio = **locale** `verify_ok` prima del push; lo stato Actions è informativo per review umana, non gate dell'agente
 
 ### Merge su `main` (richiesta esplicita dell'utente)

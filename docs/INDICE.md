@@ -41,7 +41,7 @@ Navigazione per AI.
 - [AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md) — account agente; non toccare test1–4
 - [testing/strategy.md](./testing/strategy.md) — gate vs release; **riferimento test:** `client/e2e/release-snake.spec.ts`
 - [client/scripts/test/README.md](../client/scripts/test/README.md) — catalogo suite (`e2e`)
-- [client/deploy/fly/README.md](../client/deploy/fly/README.md) — deploy Fly, build web (`--pwa-strategy=none`), benchmark avvio demo
+- [client/deploy/README.md](../client/deploy/README.md) — deploy Fly, build web (`--pwa-strategy=none`), benchmark avvio demo
 
 ---
 

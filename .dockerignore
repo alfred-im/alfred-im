@@ -11,7 +11,7 @@
 # Docs / specs (not needed in images)
 docs
 *.md
-!client/deploy/fly/README.md
+!client/deploy/README.md
 
 # Local Supabase stack
 supabase/.branches
