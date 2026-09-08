@@ -1,6 +1,6 @@
 # Registro promesse — Alfred
 
-**Ultima revisione**: 2026-08-31  
+**Ultima revisione**: 2026-09-08  
 **Metodo**: [README.md](./README.md) (SDD) · **SSOT indice**: [SSOT.md](../SSOT.md)
 
 **Catalogo unico** di promesse SYSTEM, PRODUCT e SURFACE. Per navigazione generale: [INDICE.md](../INDICE.md). Per cronologia merge: [CHANGELOG.md](../../CHANGELOG.md).
@@ -80,4 +80,4 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 
 | ID proposto | Classe | Contenuto |
 |-------------|--------|-----------|
-| BRIDGE-* | SYSTEM | Consumer outbox federato (post-federazione) |
+| SYS-FEDERATION-* | SYSTEM | Gateway/worker federativo — consumer outbox verso altre istanze (post-federazione) |

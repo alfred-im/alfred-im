@@ -1,7 +1,7 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-09-05  
-**Status**: `implemented` su `main` (migrazioni fino a `20260905140000`, 58 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-09-08  
+**Status**: `implemented` su `main` (migrazioni fino a `20260908100000`, 59 totali in `supabase/migrations/`)  
 **Fonte di verità**: `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
@@ -162,7 +162,7 @@ Nessuna tabella aggiuntiva. Partecipazione = allow list bidirezionale:
 
 ## `outbox`
 
-Coda eventi — popolata per **ogni** invio (internal + federato), ogni `read_receipt`, ogni reaction account. Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`, `reaction_fact`. Stato colonna `status`: tipo `queue_status`.
+Coda eventi — popolata per **ogni** invio (locale + federato), ogni `read_receipt`, ogni reaction account. Payload include `event_kind`: `deliver`, `read_receipt`, `group_erogate`, `push_notify`, `reaction_fact`. Stato colonna `status`: tipo `queue_status`.
 
 Colonna `message_id` — **ancora operativa** (polisemia per `event_kind`; vedi debito #264):
 

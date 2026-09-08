@@ -231,7 +231,7 @@ Routing **senza colonna protocol**: `peer_profile_id` valorizzato = recapito loc
 ```text
 1. Gateway Fly riceve POST /gotham/v1/events
 
-2. Bridge valida envelope, risolve indirizzi → profile_id
+2. Worker federativo valida envelope, risolve indirizzi → profile_id
 
 3. Gate reception (allow list destinatario)
      SE consentito:
@@ -270,7 +270,7 @@ Prerequisiti piattaforma per Gotham (implementati):
 
 Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `group_erogate`, `push_notify`.
 
-`push_notify` è **solo internal**: accodato dal worker dopo recapito locale riuscito ([SYS-PUSH](../specs/promises/system/SYS-PUSH.md)). **Non** compare mai sul wire Gotham.
+`push_notify` è **solo locale** (piattaforma): accodato dal worker dopo recapito locale riuscito ([SYS-PUSH](../specs/promises/system/SYS-PUSH.md)). **Non** compare mai sul wire federato.
 
 **Nessun campo `protocol`:** il routing è implicito — `linked_profile_id` / `peer_profile_id` per contatti locali, `external_address` / `peer_external_address` per indirizzi federati.
 
@@ -295,7 +295,7 @@ Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `gro
                              └────────┬─────────┘
                                       │ claim (federato)
                              ┌────────▼─────────┐
-                             │ Bridge (Fly)      │
+                             │ Worker federativo │
                              └────────┬─────────┘
                                       │ HTTP/3 + Protobuf
                              ┌────────▼─────────┐

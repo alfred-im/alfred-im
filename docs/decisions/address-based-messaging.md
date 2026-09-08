@@ -31,7 +31,7 @@ Vedi [SSOT.md](../SSOT.md) — non duplicare RPC/tabelle qui. Riferimenti rapidi
 | Tipo | Formato | Esempio | Stato attuale |
 |------|---------|---------|---------------|
 | Alfred interno | `username` | `mario_rossi` | ✅ Supportato |
-| Esterno federato | `username@server` | `mario@dominio.it` | ⏸ `unsupported` fino ai bridge |
+| Esterno federato | `username@server` | `mario@dominio.it` | ⏸ `unsupported` fino a gateway/worker federativo |
 
 ---
 
@@ -81,7 +81,7 @@ Questo ADR **non** definisce RPC né worker. Regola di confine:
 | RPC account (`send_message_to_profile`, `mark_peer_read`, …) | **Solo** archivio `archive_user_id = auth.uid()` + INSERT `outbox` |
 | Worker `alfred_delivery` | Materializza copia destinatario, `delivered_at` / `read_at` mittente (via λ), gate allow list |
 
-Flusso internal (un solo posto con diagramma completo): [mailbox-inbox-outbox-spec.md § Consegna](../architecture/mailbox-inbox-outbox-spec.md#consegna--stessa-pipeline-ovunque-vincolante).  
+Flusso locale (un solo posto con diagramma completo): [mailbox-inbox-outbox-spec.md § Consegna](../architecture/mailbox-inbox-outbox-spec.md#consegna--stessa-pipeline-ovunque-vincolante).  
 Semantica ✓ / ✓✓ / blu: [server-as-reception.md](./server-as-reception.md).
 
 `delivered_at` / `read_at` / `failed_at` su righe archivio — non enum `delivery_status`.

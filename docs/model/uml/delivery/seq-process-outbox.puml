@@ -57,8 +57,8 @@ end
 DW --> AB : (stessa transazione)
 
 note over AB, DW
-  Internal: sincrono nel confine account.
-  Federato: consumer = bridge (stub) — vedi federation.
+  Locale: sincrono nel confine account.
+  Federato: consumer = worker federativo (da implementare) — vedi federation.
 end note
 
 @enduml

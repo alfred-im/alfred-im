@@ -103,7 +103,7 @@ Spesso non commercializzati come «custodia asimmetrica», ma applicano lo stess
 | E2EE | ❌ fuori scope ([full-stack.md](../architecture/full-stack.md)) | Non E2EE su tutta la inbox; solo flusso «vault» |
 | Allow list | ✅ blocca recapito non consentito | **Complementare**: chi può *arrivare* vs chi può *custodire prove* |
 | Posizionamento | Consent-first, feminist-informed | Allineato: delega custodia a terzo fidato, non al device in casa |
-| Federazione | Bridge pianificati | Vault potrebbe restare su istanza + custode Alfred o partner |
+| Federazione | Gateway/worker pianificati | Vault potrebbe restare su istanza + custode Alfred o partner |
 
 **Tensione architetturale**, non contraddizione: la chat quotidiana può restare cloud-first; un **bounded context** opzionale (`evidence` / `protected-report`) gestisce capture, cifratura, upload e threshold senza trasformare tutta la messaggistica in Signal.
 

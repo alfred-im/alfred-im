@@ -17,7 +17,7 @@ Promessa SYSTEM — modello **mailbox** (archivio per titolare archivio), pipeli
 
 ## 1. Problema / obiettivo
 
-Ogni utente ha un **archivio messaggi indipendente** (`archive_user_id`). Mittente e destinatario hanno sempre righe distinte correlate da `logical_message_id` (λ). L'inbox non è entità DB: è aggregazione on-read sull'archivio del titolare. Invio unificato via `send_message_to_profile` (solo confine mittente); recapito internal sincrono in transazione RPC tramite worker [SYS-DELIVERY](./SYS-DELIVERY.md) con gate [SYS-RECEPTION](./SYS-RECEPTION.md). Spunte da date nullable su copia mittente; lettura locale su copia destinatario con propagazione `read_at` via worker `read_receipt`.
+Ogni utente ha un **archivio messaggi indipendente** (`archive_user_id`). Mittente e destinatario hanno sempre righe distinte correlate da `logical_message_id` (λ). L'inbox non è entità DB: è aggregazione on-read sull'archivio del titolare. Invio unificato via `send_message_to_profile` (solo confine mittente); recapito locale sincrono in transazione RPC tramite worker [SYS-DELIVERY](./SYS-DELIVERY.md) con gate [SYS-RECEPTION](./SYS-RECEPTION.md). Spunte da date nullable su copia mittente; lettura locale su copia destinatario con propagazione `read_at` via worker `read_receipt`.
 
 Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering, multi-account focus, filtro lista) sono delegati a promesse **PRODUCT** / **SURFACE** — vedi §6.
 
@@ -37,7 +37,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | **SYS-MAILBOX-004** | `client_message_id` solo sulla copia mittente (`archive_user_id = author_id = mittente`); dedup UNIQUE `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL` |
 | **SYS-MAILBOX-005** | Dedup materializzazione destinatario: UNIQUE `(archive_user_id, logical_message_id)` |
 | **SYS-MAILBOX-006** | RLS: SELECT/INSERT/UPDATE solo `archive_user_id = auth.uid()` — **nessuna eccezione** |
-| **SYS-MAILBOX-007** | Colonna `peer_profile_id` denormalizzata per raggruppamento inbox/storico (internal) |
+| **SYS-MAILBOX-007** | Colonna `peer_profile_id` denormalizzata per raggruppamento inbox/storico (locale) |
 | **SYS-MAILBOX-008** | Migrazione prototipo: drop modello message-centric + wipe dati test; ricrea schema mailbox; pulizia blob `chat-media` **non referenziati** post-migrazione |
 | **SYS-MAILBOX-009** | Media: stesso `media_url` su copia mittente e destinatario; un upload, nessuna duplicazione blob |
 
@@ -68,12 +68,12 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 |----|----------|
 | **SYS-MAILBOX-017** | Unico RPC invio: `send_message_to_profile` — firma invariata PostgREST — [rpc.md](../../contracts/rpc.md) § mailbox |
 | **SYS-MAILBOX-018** | Accettazione: INSERT copia mittente (`archive_user_id = author_id = auth.uid()`), `delivered_at`/`read_at` null, λ assegnato |
-| **SYS-MAILBOX-019** | **Outbox sempre**: INSERT `outbox` (`event_kind = deliver`) per ogni invio, incluso `protocol = internal` |
-| **SYS-MAILBOX-020** | Driver internal: worker [SYS-DELIVERY](./SYS-DELIVERY.md) nella stessa transazione RPC — **se** gate reception → materializza copia destinatario + `delivered_at` mittente; **altrimenti** rifiuto silenzioso |
+| **SYS-MAILBOX-019** | **Outbox sempre**: INSERT `outbox` (`event_kind = deliver`, `status = queued`) per ogni invio sulla stessa istanza |
+| **SYS-MAILBOX-020** | Driver locale: worker [SYS-DELIVERY](./SYS-DELIVERY.md) nella stessa transazione RPC — **se** gate reception → materializza copia destinatario + `delivered_at` mittente; **altrimenti** rifiuto silenzioso |
 | **SYS-MAILBOX-021** | Idempotenza: retry stesso `(archive_user_id, client_message_id)` → stessa riga mittente, no duplicati |
 | **SYS-MAILBOX-022** | Tipi `content_type`: `text`, `gif`, `voice`, `location`, `image`, `video` — validazione `text`/`gif`/`voice`/`location` in [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md); `image`/`video` anche [PROM-CHAT-MEDIA](../product/PROM-CHAT-MEDIA.md) |
 | **SYS-MAILBOX-023** | Bucket storage `chat-media`: path `{auth.uid()}/{uuid}.*` (upload prima RPC) |
-| **SYS-MAILBOX-024** | Outbox retry: `attempts`, `last_error`, `status` → `failed` dopo soglia (default 5 tentativi worker/cron futuro; internal sincrono non fallisce salvo errore transazione) |
+| **SYS-MAILBOX-024** | Outbox retry: `attempts`, `last_error`, `status` → `failed` dopo soglia (default 5 tentativi worker/cron futuro; recapito locale sincrono non fallisce salvo errore transazione) |
 | **SYS-MAILBOX-025** | Invio fallito server: `failed_at` timestamptz sulla copia mittente (opzionale null se non applicabile) |
 
 #### SHOULD
@@ -91,7 +91,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | **SYS-MAILBOX-029** | Invio a sé stessi |
 | **SYS-MAILBOX-030** | Indirizzo esterno `user@server` senza errore utente (v1: **unsupported** in compose) |
 | **SYS-MAILBOX-031** | Overload ambigui `send_message_to_profile` PostgREST |
-| **SYS-MAILBOX-032** | Pipeline invio distinta per internal vs federato (solo driver recapito differisce in fase B) |
+| **SYS-MAILBOX-032** | Pipeline invio distinta per locale vs federato (solo driver recapito differisce) |
 
 ---
 
@@ -160,7 +160,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | `client_message_id` | Copia mittente | Idempotenza invio client |
 | `logical_message_id` | Server mittente | Identificativo globale messaggio (assegnato dal server mittente, replicato sul destinatario) |
 | `read_receipt_id` | Server lettore | Id federativo evento lettura — mint sulla copia lettore, replicato sul mittente |
-| `external_id` | Federato futuro | Bridge (fase B) |
+| `external_id` | Federato futuro | Worker federativo (non ancora implementato) |
 
 | Copia | Campi | Semantica |
 |-------|-------|-----------|
@@ -182,7 +182,7 @@ Regola: se `read_at` valorizzata su copia mittente, `delivered_at` tardivo non l
 | Smoke SQL | `supabase/tests/mailbox_*.sql`, `reception_allowlist_gate_smoke.sql`, `delivery_ticks_smoke.sql` |
 | Client RPC / servizi | `message_service.dart`, `inbox_service.dart` |
 
-### Flusso internal (transazione RPC + worker)
+### Flusso locale (transazione RPC + worker)
 
 ```
 send_message_to_profile (solo confine mittente)
@@ -233,7 +233,7 @@ Dettaglio: [contracts/rpc.md](../../contracts/rpc.md) § `list_peer_messages`.
 | SYS-MAILBOX-017 | `schema_smoke.sql` + `mailbox_send_smoke.sql` |
 | SYS-MAILBOX-019, 020 | `mailbox_delivery_smoke.sql`, `reception_allowlist_gate_smoke.sql`, `delivery_ticks_smoke.sql` |
 | SYS-MAILBOX-018–020 | `delivery_ticks_smoke.sql`, `bash scripts/test.sh integration-ticks` |
-| SYS-MAILBOX-028 | assenza trigger `on_message_inserted` legacy internal delivered |
+| SYS-MAILBOX-028 | assenza trigger `on_message_inserted` legacy recapito locale |
 | SYS-MAILBOX-030 | `ComposeService` → errore esterno |
 | SYS-MAILBOX-033, 034, 036, 037, 050, 057 | `supabase/tests/mailbox_inbox_smoke.sql`, `mailbox_peer_messages_window_smoke.sql` |
 | SYS-MAILBOX-038 | smoke unread dopo messaggio in entrata non letto |
@@ -260,7 +260,7 @@ Dettaglio: [contracts/rpc.md](../../contracts/rpc.md) § `list_peer_messages`.
 - Gruppi (MUC) — vedi [SYS-GROUP](./SYS-GROUP.md)
 - GC refcount continuo (solo purge orfani a migrazione + policy futura)
 - Preservazione dati produzione (prototipo dev only)
-- Bridge consumer (fase B post-mailbox)
+- Worker federativo consumer (post-mailbox; non ancora implementato)
 
 ---
 

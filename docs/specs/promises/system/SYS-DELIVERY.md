@@ -9,7 +9,7 @@
 | **ADR** | [server-as-reception.md](../../../decisions/server-as-reception.md), [gotham-protocol.md](../../../architecture/gotham-protocol.md) |
 | **PR origine** | #179 |
 
-Promessa SYSTEM — infrastruttura **non-account** che attraversa i confini [SYS-ACCOUNT-BOUNDARY](./SYS-ACCOUNT-BOUNDARY.md): bus `outbox`, worker `alfred_delivery.*`, stesso contratto per internal oggi e federazione domani.
+Promessa SYSTEM — infrastruttura **non-account** che attraversa i confini [SYS-ACCOUNT-BOUNDARY](./SYS-ACCOUNT-BOUNDARY.md): bus `outbox`, worker `alfred_delivery.*`, stesso contratto per recapito locale oggi e federazione domani.
 
 **Dettaglio canonico**: [contracts/schema.md](../../contracts/schema.md) § outbox · [contracts/rpc.md](../../contracts/rpc.md)
 
@@ -29,7 +29,7 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 
 | ID | Promessa |
 |----|----------|
-| **SYS-DELIVERY-001** | Ogni invio account accoda `outbox` con `protocol = internal`, `status = queued`, payload con `event_kind` |
+| **SYS-DELIVERY-001** | Ogni invio account accoda `outbox` con `status = queued`, payload con `event_kind` |
 | **SYS-DELIVERY-002** | `event_kind = deliver` — recapito messaggio (1:1 o verso gruppo) |
 | **SYS-DELIVERY-003** | `event_kind = read_receipt` — propagazione `read_at` verso copia mittente |
 | **SYS-DELIVERY-004** | `event_kind = group_erogate` — distribuzione proxy da archivio gruppo |
@@ -47,7 +47,7 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 | ID | Promessa |
 |----|----------|
 | **SYS-DELIVERY-010** | Schema `alfred_delivery`; funzioni `SECURITY DEFINER`, **nessun** `GRANT` a `authenticated` |
-| **SYS-DELIVERY-011** | `process_outbox(outbox_id)` — dispatcher per `event_kind`; internal sincrono nella stessa transazione RPC account |
+| **SYS-DELIVERY-011** | `process_outbox(outbox_id)` — dispatcher per `event_kind`; recapito locale sincrono nella stessa transazione RPC account |
 | **SYS-DELIVERY-012** | `deliver_internal`: valuta [SYS-RECEPTION](./SYS-RECEPTION.md); se consentito → INSERT copia destinatario (o archivio gruppo) + UPDATE `delivered_at` mittente; altrimenti skip silenzioso |
 | **SYS-DELIVERY-013** | Destinatario gruppo: gate bidirezionale; INSERT archivio gruppo; `erogate_group_message` verso allow list |
 | **SYS-DELIVERY-014** | `propagate_read_receipt`: UPDATE copia mittente `read_at` + `read_receipt_id` (stesso id della copia lettore) WHERE `archive_user_id = sender_profile_id` AND id logico messaggio |
@@ -71,9 +71,9 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 | **SYS-DELIVERY-028** | Worker con `auth.uid()` come identità operativa |
 | **SYS-DELIVERY-029** | `push_notify` su recapito rifiutato da allow list |
 
-### Flussi (internal sincrono)
+### Flussi (locale sincrono)
 
-Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md) § Consegna / Flusso internal
+Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md) § Consegna / Flusso locale
 
 ---
 

@@ -42,13 +42,13 @@ Binding completo schermata Contatti: filtro lista, aggiunta Alfred/esterno, comp
 | **SURF-CONTACTS-006** | Aggiunta locale: `search_profiles` (min 2 caratteri) → selezione → insert con `linked_profile_id` |
 | **SURF-CONTACTS-007** | Aggiunta federata: form `user@server` + nome visualizzato → insert con `external_address` |
 | **SURF-CONTACTS-008** | «Scrivi» da rubrica: **locale** → `ComposeService.peerFromContact` → `ChatPeer`; **federato** → errore «Indirizzo esterno non ancora supportato» (fino a federazione live) |
-| **SURF-CONTACTS-009** | Tap avatar contatto **internal** → [SURF-PEER-PROFILE](./SURF-PEER-PROFILE.md) |
+| **SURF-CONTACTS-009** | Tap avatar contatto **locale** → [SURF-PEER-PROFILE](./SURF-PEER-PROFILE.md) |
 
 ### SHOULD
 
 | ID | Promessa |
 |----|----------|
-| **SURF-CONTACTS-010** | UI rubrica: sottotitolo «Utente Alfred» per internal; indirizzo esterno per federati |
+| **SURF-CONTACTS-010** | UI rubrica: sottotitolo «Utente Alfred» per locale; indirizzo federato per `external_address` |
 | **SURF-CONTACTS-011** | Dopo aggiunta contatto: reload lista (`load()`) |
 
 ### MUST NOT

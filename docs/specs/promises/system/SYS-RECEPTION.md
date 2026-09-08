@@ -34,7 +34,7 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 | **SYS-RECEPTION-007** | Lista vuota → **nessun** mittente soddisfa il gate → tutti i messaggi nuovi rifiutati |
 | **SYS-RECEPTION-008** | Su rifiuto: INSERT copia mittente + outbox come oggi; **nessuna** INSERT copia destinatario; `delivered_at` resta null sulla copia mittente |
 | **SYS-RECEPTION-009** | Su rifiuto **inbound**: RPC ritorna la copia mittente senza errore (rifiuto silenzioso) |
-| **SYS-RECEPTION-010** | Su rifiuto **inbound**: outbox internal → `status = completed`; payload può includere `reception_rejected: true` solo per audit server — **mai** esposto al client mittente |
+| **SYS-RECEPTION-010** | Su rifiuto **inbound**: outbox locale → `status = completed`; payload può includere `reception_rejected: true` solo per audit server — **mai** esposto al client mittente |
 | **SYS-RECEPTION-011** | Rimozione da lista: messaggi già presenti nell'archivio destinatario **restano**; solo i messaggi **nuovi** dopo la rimozione sono rifiutati |
 | **SYS-RECEPTION-012** | Aggiunta a lista: **nessuna** retro-consegna di messaggi precedentemente rifiutati |
 | **SYS-RECEPTION-013** | Nuovo account: lista vuota di default (nessuno può scrivere finché non si aggiunge qualcuno) |
@@ -67,9 +67,9 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 
 ## 3. Contratto
 
-### Gate recapito (internal)
+### Gate recapito (locale)
 
-Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md) § Consegna / Flusso internal
+Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md) § Consegna / Flusso locale
 
 Helper interno: `is_sender_allowed_for_reception(p_archive_user_id, p_sender_profile_id) boolean` — `SECURITY DEFINER`, usata da RPC invio (outbound + idempotenza) e worker delivery (inbound).
 

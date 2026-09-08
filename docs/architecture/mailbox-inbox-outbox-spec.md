@@ -64,13 +64,13 @@ Niente `thread_id` lato client. Niente entità «casella verso Paolo» esposta c
 2. **Nessun allineamento obbligatorio** tra il mio archivio e quello del peer.
 3. **Solo `author_id`** — niente `direction` in schema.
 4. **Il mio archivio alimenta la mia interfaccia** — casella = dove vivono i messaggi del titolare, non cache su tabella condivisa.
-5. **Outbox sempre** — anche internal passa da outbox; locale vs federato differisce solo nel driver di consegna (worker locale sincrono vs worker federativo).
+5. **Outbox sempre** — anche il recapito locale passa da outbox; locale vs federato differisce solo nel driver di consegna (worker locale sincrono vs worker federativo).
 6. **Spunte = segnali puntuali** — aggiornano solo la copia del mittente tramite id di correlazione; **non** sincronizzano né modificano l’archivio del peer (modello federato).
 7. **Confine account** — nessuna RPC account attraversa l’archivio altrui; solo worker `alfred_delivery` (infrastruttura, non account).
 
 ## Identificatori — livelli distinti (vincolante)
 
-Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e federazione.
+Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per recapito locale e federazione.
 
 | Id | Scope | Ruolo |
 |----|-------|-------|
@@ -100,7 +100,7 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e 
 
 ## Consegna — stessa pipeline ovunque (vincolante)
 
-Internal e federato condividono **un solo tipo** di recapito; differisce solo il driver in fondo (worker locale sincrono vs worker federativo async).
+Locale e federato condividono **un solo tipo** di recapito; differisce solo il driver in fondo (worker locale sincrono vs worker federativo async).
 
 | Fase | Attore | Effetto |
 |------|--------|---------|
@@ -109,11 +109,11 @@ Internal e federato condividono **un solo tipo** di recapito; differisce solo il
 | **Recapito** | Worker `alfred_delivery` | Gate allow list destinatario → INSERT copia destinatario |
 | **Ack consegnato** | Worker `alfred_delivery` | UPDATE `delivered_at` su copia mittente (✓✓ grigie) |
 
-Su internal il worker gira **nella stessa transazione** della RPC mittente (sincrono per l’utente). Non è uno shortcut da eliminare: è il contratto [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md).
+Sulla stessa istanza (locale) il worker gira **nella stessa transazione** della RPC mittente (sincrono per l’utente). Non è uno shortcut da eliminare: è il contratto [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md).
 
 ### Stati operativi
 
-- **Retry** outbox — stesso meccanismo internal e federato
+- **Retry** outbox — stesso meccanismo locale e federato
 - **`failed` / dead-letter** se esauriti i tentativi
 - **UI mittente**: resta su ✓ finché non arriva il segnale `delivered`; assenza di ✓✓ = consegna in corso, rifiuto allow list o fallita — non «messaggio perso»
 
@@ -121,7 +121,7 @@ Su internal il worker gira **nella stessa transazione** della RPC mittente (sinc
 
 Nel federato **non esiste** una riga condivisa tra mittente e destinatario. Ogni lato ha il proprio archivio; le spunte si risolvono con **segnali separati** che **referenziano** il messaggio originale per id — non aggiornando la copia altrui dall’RPC account.
 
-Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istanza (internal), con worker `alfred_delivery` come unico attraversamento confine.
+Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istanza (locale), con worker `alfred_delivery` come unico attraversamento confine.
 
 ### Correlazione
 
@@ -139,7 +139,7 @@ Contratto wire: [gotham-protocol.md](./gotham-protocol.md). Il messaggio federat
 
 ### Tre livelli (semantica [server-as-reception](../decisions/server-as-reception.md))
 
-| Livello | UI | Significato | Internal | Federato |
+| Livello | UI | Significato | Locale | Federato |
 |---------|-----|-------------|----------|----------|
 | Inviato | ✓ | Accettato da piattaforma / in outbox | Copia mittente creata | Outbox `queued` |
 | Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | HTTP 2xx peer |
@@ -155,7 +155,7 @@ Contratto wire: [gotham-protocol.md](./gotham-protocol.md). Il messaggio federat
 - Realtime mittente: subscribe agli UPDATE sulla **propria** copia (`archive_user_id = io`); merge optimistic via `client_message_id`, spunte via `logical_message_id`.
 - I marker non vanno «all’indietro» (segnale su id più vecchio dello stato locale → ignorare).
 
-### Flusso internal (sintesi)
+### Flusso locale (sintesi)
 
 ```
 Invio (account mittente) — send_message_to_profile

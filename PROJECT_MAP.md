@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-09-06  
+**Ultimo aggiornamento**: 2026-09-08  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 **SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — per ogni tipo di informazione, un solo file canonico; questo documento è **mappa sessione**, non duplica promesse/RPC/test.
@@ -29,7 +29,7 @@
 | **Web client** | https://arkham-im.fly.dev/ — nginx + gateway shell dinamica (`client/deploy/fly/`, `client/deploy/gateway/`, `scripts/fly-deploy-client.sh`) |
 | **Deploy** | `org-site/` → `alfred-im.github.io` (`deploy-org-site.yml`, secret `ORG_SITE_PAT`); client Fly; gate `release-suite.yml` |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
-| **Bridge** | Rimosso — federazione via gateway/worker (da implementare) |
+| **Federazione** | Gateway/worker pianificati — wire in `docs/architecture/gotham-protocol.md` |
 | **Cronologia merge** | `CHANGELOG.md` |
 | **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — confine prodotto · SSOT: [docs/SSOT.md](docs/SSOT.md) |
 | **Modello** | `docs/domain/` · `docs/model/uml/` · `client/lib/machines/` — 13 bounded context con stato **`verified`** o **`documented`**; torre DDD→UML→statechart con profili UML Client/Platform; gate `scripts/check-model-sync.sh`; indice: [bounded-contexts.md](docs/domain/bounded-contexts.md) |

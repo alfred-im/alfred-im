@@ -1,7 +1,7 @@
 # Contratto RPC — messaggistica
 
-**Ultima revisione**: 2026-09-05  
-**Status**: `implemented` su `main` (migrazioni fino a `20260905140000`, 58 totali in `supabase/migrations/`)  
+**Ultima revisione**: 2026-09-08  
+**Status**: `implemented` su `main` (migrazioni fino a `20260908100000`, 59 totali in `supabase/migrations/`)  
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) (`implemented`)
 
 Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
@@ -46,7 +46,7 @@ Semantica mailbox ([SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDAR
 
 0. Gate **outbound** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): destinatario ∈ `reception_allowlist` del mittente? Se **no** → `raise exception 'recipient not in reception allowlist'` (nessuna copia mittente)
 1. INSERT copia mittente (`archive_user_id = author_id = auth.uid()`), id logico messaggio (λ) mintato dal **server mittente**, date null
-2. INSERT `outbox` (`protocol = internal`, `event_kind = deliver`, `status = queued`)
+2. INSERT `outbox` (`event_kind = deliver`, `status = queued`)
 3. `alfred_delivery.process_outbox` (worker, stessa transazione):
    - **Gate allow list** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): mittente ∈ `reception_allowlist` del destinatario?
    - Se **sì**: INSERT copia destinatario; UPDATE mittente `delivered_at = now()`
@@ -61,7 +61,7 @@ Idempotenza: stesso `p_client_message_id` → stessa riga mittente (no duplicati
 
 **Helper**: `is_sender_allowed_for_reception(archive_user_id, sender_profile_id) → boolean` — migrazione `20260704130000`; **helper interno** (non chiamabile da client).
 
-**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate), `20260711190000` (delivery plane), `20260905000000` (id logico messaggio solo server mittente).
+**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate), `20260711190000` (delivery plane), `20260905000000` (id logico messaggio solo server mittente), `20260908100000` (drop `contact_protocol` / colonne `protocol`).
 
 ### Destinatario gruppo (SYS-GROUP)
 
@@ -154,7 +154,7 @@ Aggregazione su `messages` WHERE `archive_user_id = auth.uid()`:
 
 Preview per tipo: testo troncato, `[GIF]`, `format_voice_preview`, `format_location_preview`.
 
-`peer_in_contacts` / `peer_is_allowed`: relazione viewer↔peer (rubrica internal + `reception_allowlist`).
+`peer_in_contacts` / `peer_is_allowed`: relazione viewer↔peer (rubrica locale + `reception_allowlist`).
 
 **Migrazioni**: `20260627230000`, `20260628100000`, aggiornamenti voice/location, `20260704120000`, `20260706130000`, `20260806190000_profile_cover_url.sql`, `20260810120000_peer_relationship_flags.sql`.
 
@@ -310,7 +310,7 @@ search_profiles(p_query text, p_limit integer default 20) → table (
 )
 ```
 
-Ricerca utenti Alfred per aggiunta contatto internal (min 2 caratteri client). Esclude `auth.uid()`. `p_limit` default 20, **cap 50** in SQL (`least(p_limit, 50)`).
+Ricerca utenti Alfred per aggiunta contatto locale (min 2 caratteri client). Esclude `auth.uid()`. `p_limit` default 20, **cap 50** in SQL (`least(p_limit, 50)`).
 
 **Spec**: [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md).
 
