@@ -27,7 +27,6 @@ class FakeContactService extends ContactService {
     final contact = Contact(
       id: 'contact-${profile.id}',
       archiveUserId: archiveUserId,
-      protocol: ContactProtocol.internal,
       linkedProfileId: profile.id,
       displayName: profile.displayName,
       avatarUrl: profile.avatarUrl,

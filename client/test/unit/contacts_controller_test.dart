@@ -33,7 +33,6 @@ void main() {
       Contact(
         id: 'c1',
         archiveUserId: focusUserId,
-        protocol: ContactProtocol.internal,
         linkedProfileId: alice.id,
         displayName: alice.displayName,
         createdAt: DateTime.utc(2026, 1, 1),
@@ -50,7 +49,6 @@ void main() {
       Contact(
         id: 'c1',
         archiveUserId: focusUserId,
-        protocol: ContactProtocol.internal,
         linkedProfileId: alice.id,
         displayName: alice.displayName,
         createdAt: DateTime.utc(2026, 1, 1),
@@ -69,7 +67,6 @@ void main() {
       Contact(
         id: 'c1',
         archiveUserId: focusUserId,
-        protocol: ContactProtocol.internal,
         linkedProfileId: alice.id,
         displayName: alice.displayName,
         createdAt: DateTime.utc(2026, 1, 1),

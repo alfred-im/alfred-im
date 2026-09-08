@@ -48,8 +48,7 @@ class ContactsCoordinator {
 
   Contact? contactForProfileId(String profileId) {
     for (final contact in state.contacts) {
-      if (contact.protocol == ContactProtocol.internal &&
-          contact.linkedProfileId == profileId) {
+      if (contact.isLocal && contact.linkedProfileId == profileId) {
         return contact;
       }
     }
@@ -74,7 +73,6 @@ class ContactsCoordinator {
         Contact(
           id: '',
           archiveUserId: focusUserId,
-          protocol: ContactProtocol.internal,
           linkedProfileId: profile.id,
           displayName: profile.displayName,
           createdAt: DateTime.now(),
@@ -86,21 +84,19 @@ class ContactsCoordinator {
   }
 
   Future<Contact> addExternal({
-    required ContactProtocol protocol,
     required String address,
     required String displayName,
   }) async {
     await _machine.send(
       AddExternalContact(
-        protocol: protocol,
         address: address,
         displayName: displayName,
       ),
     );
-    final trimmedAddress = address.trim();
+    final trimmedAddress = address.trim().toLowerCase();
     for (final contact in state.contacts) {
-      if (contact.protocol == protocol &&
-          contact.externalAddress == trimmedAddress) {
+      if (contact.isFederated &&
+          contact.externalAddress?.toLowerCase() == trimmedAddress) {
         return contact;
       }
     }
@@ -147,13 +143,11 @@ class _LiveContactsEffects implements ContactsEffects {
 
   @override
   Future<void> addExternal({
-    required ContactProtocol protocol,
     required String address,
     required String displayName,
   }) async {
     await _c.contactService.addExternalContact(
       archiveUserId: _c.focusUserId,
-      protocol: protocol,
       externalAddress: address,
       displayName: displayName,
     );

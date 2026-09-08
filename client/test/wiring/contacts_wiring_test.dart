@@ -26,7 +26,6 @@ void main() {
           Contact(
             id: 'c1',
             archiveUserId: focusUserId,
-            protocol: ContactProtocol.internal,
             linkedProfileId: alice.id,
             displayName: alice.displayName,
             createdAt: DateTime.utc(2026, 1, 1),
@@ -57,10 +56,7 @@ void main() {
 
       expect(contact.linkedProfileId, alice.id);
       expect(service.contacts, hasLength(1));
-      expect(
-        controller.contacts.first.protocol,
-        ContactProtocol.internal,
-      );
+      expect(controller.contacts.first.isLocal, isTrue);
     });
   });
 }

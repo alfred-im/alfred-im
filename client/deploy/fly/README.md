@@ -3,7 +3,7 @@
 **Live (demo istanza Arkham):** https://arkham-im.fly.dev/  
 **Seconda demo (Blackgate):** https://blackgate-im.fly.dev/ — vedi `client/deploy/blackgate/README.md`
 
-Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container: **nginx** (asset Flutter statici) + **gateway Python** (shell PWA dinamica). I bridge restano sull'app `alfred-im` (root `fly.toml`); il client usa un'**app Fly separata**.
+Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container: **nginx** (asset Flutter statici) + **gateway Python** (shell PWA dinamica). Il client usa un'**app Fly separata** dall'istanza Supabase.
 
 ## Come si configura un'istanza
 
@@ -212,5 +212,4 @@ bash scripts/docker-smoke-client.sh
 - Gateway: `client/deploy/gateway/`
 - Federazione (host `im_server_id`): `docs/architecture/gotham-protocol.md`
 - SDD: `docs/specs/surfaces/SURF-INSTANCE-CONFIG.md`, `docs/specs/surfaces/SURF-AUTH.md`, `docs/specs/promises/system/SYS-OWNER.md`
-- Bridge Fly: root `fly.toml` + `scripts/fly-deploy-all.sh`
 - [Fly static sites](https://fly.io/docs/languages-and-frameworks/static/)

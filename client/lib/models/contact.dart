@@ -4,20 +4,10 @@
 
 import 'profile_summary.dart';
 
-enum ContactProtocol { internal, xmpp, matrix }
-
-ContactProtocol contactProtocolFromString(String value) {
-  return ContactProtocol.values.firstWhere(
-    (p) => p.name == value,
-    orElse: () => ContactProtocol.internal,
-  );
-}
-
 class Contact {
   const Contact({
     required this.id,
     required this.archiveUserId,
-    required this.protocol,
     this.linkedProfileId,
     this.externalAddress,
     required this.displayName,
@@ -27,18 +17,22 @@ class Contact {
 
   final String id;
   final String archiveUserId;
-  final ContactProtocol protocol;
   final String? linkedProfileId;
   final String? externalAddress;
   final String displayName;
   final String? avatarUrl;
   final DateTime createdAt;
 
+  /// Contatto su profilo Alfred locale (stessa istanza).
+  bool get isLocal => linkedProfileId != null;
+
+  /// Contatto salvato come indirizzo federato `user@server`.
+  bool get isFederated => externalAddress != null;
+
   factory Contact.fromJson(Map<String, dynamic> json) {
     return Contact(
       id: json['id'] as String,
       archiveUserId: json['archive_user_id'] as String,
-      protocol: contactProtocolFromString(json['protocol'] as String),
       linkedProfileId: json['linked_profile_id'] as String?,
       externalAddress: json['external_address'] as String?,
       displayName: json['display_name'] as String,
@@ -47,9 +41,8 @@ class Contact {
     );
   }
 
-  /// Profilo Alfred collegato, se contatto interno con `linkedProfileId`.
   ProfileSummary? get internalProfileSummary {
-    if (protocol != ContactProtocol.internal) return null;
+    if (!isLocal) return null;
     final profileId = linkedProfileId;
     if (profileId == null) return null;
     return ProfileSummary(

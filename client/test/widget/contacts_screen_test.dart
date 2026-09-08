@@ -61,7 +61,6 @@ void main() {
         Contact(
           id: 'c1',
           archiveUserId: 'focus-id',
-          protocol: ContactProtocol.internal,
           linkedProfileId: 'p1',
           displayName: 'Alice',
           createdAt: DateTime.utc(2026, 1, 1),
@@ -69,7 +68,6 @@ void main() {
         Contact(
           id: 'c2',
           archiveUserId: 'focus-id',
-          protocol: ContactProtocol.internal,
           linkedProfileId: 'p2',
           displayName: 'Bob',
           createdAt: DateTime.utc(2026, 1, 1),

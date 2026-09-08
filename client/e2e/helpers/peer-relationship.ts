@@ -53,8 +53,7 @@ export function countContactsInDb(
 ): number {
   const sql =
     `SELECT count(*)::int FROM public.contacts ` +
-    `WHERE archive_user_id = '${focusUserId}' AND linked_profile_id = '${peerProfileId}' ` +
-    `AND protocol = 'internal';`;
+    `WHERE archive_user_id = '${focusUserId}' AND linked_profile_id = '${peerProfileId}';`;
   return Number.parseInt(runPsqlScalar(sql), 10);
 }
 
@@ -109,8 +108,8 @@ export function insertContactInDb(
 ): void {
   const safeName = displayName.replace(/'/g, "''");
   const sql =
-    `INSERT INTO public.contacts (archive_user_id, protocol, linked_profile_id, display_name) ` +
-    `VALUES ('${focusUserId}', 'internal', '${peerProfileId}', '${safeName}') ` +
+    `INSERT INTO public.contacts (archive_user_id, linked_profile_id, display_name) ` +
+    `VALUES ('${focusUserId}', '${peerProfileId}', '${safeName}') ` +
     `ON CONFLICT DO NOTHING;`;
   execSync(
     `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,

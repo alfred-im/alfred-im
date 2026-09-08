@@ -59,12 +59,10 @@ class ContactsController extends ChangeNotifier {
       _coordinator.removeInternalByProfileId(profileId);
 
   Future<Contact> addExternal({
-    required ContactProtocol protocol,
     required String address,
     required String displayName,
   }) =>
       _coordinator.addExternal(
-        protocol: protocol,
         address: address,
         displayName: displayName,
       );

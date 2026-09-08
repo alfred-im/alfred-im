@@ -4,7 +4,6 @@
 
 import 'package:alfred_client/machines/contacts/contacts_effects.dart';
 import 'package:alfred_client/machines/contacts/contacts_machine.dart';
-import 'package:alfred_client/models/contact.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -14,7 +13,6 @@ class _RecordingContactsEffects implements ContactsEffects {
   int addExternalCount = 0;
   int removeInternalCount = 0;
   ProfileSummary? lastInternalProfile;
-  ContactProtocol? lastExternalProtocol;
   String? lastExternalAddress;
   String? lastExternalDisplayName;
   String? lastRemovedProfileId;
@@ -32,12 +30,10 @@ class _RecordingContactsEffects implements ContactsEffects {
 
   @override
   Future<void> addExternal({
-    required ContactProtocol protocol,
     required String address,
     required String displayName,
   }) async {
     addExternalCount++;
-    lastExternalProtocol = protocol;
     lastExternalAddress = address;
     lastExternalDisplayName = displayName;
   }
@@ -131,16 +127,14 @@ void main() {
 
       await machine.send(
         const AddExternalContact(
-          protocol: ContactProtocol.xmpp,
-          address: 'alice@example.com',
-          displayName: 'Alice XMPP',
+          address: 'alice@arkham-im.fly.dev',
+          displayName: 'Alice federata',
         ),
       );
 
       expect(effects.addExternalCount, 1);
-      expect(effects.lastExternalProtocol, ContactProtocol.xmpp);
-      expect(effects.lastExternalAddress, 'alice@example.com');
-      expect(effects.lastExternalDisplayName, 'Alice XMPP');
+      expect(effects.lastExternalAddress, 'alice@arkham-im.fly.dev');
+      expect(effects.lastExternalDisplayName, 'Alice federata');
       expect(effects.loadCount, 1);
       expect(machine.loadState, ContactsLoadState.loading);
     });

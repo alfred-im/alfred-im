@@ -14,7 +14,6 @@ void main() {
       final contact = Contact(
         id: 'c1',
         archiveUserId: 'alice',
-        protocol: ContactProtocol.internal,
         linkedProfileId: 'p1',
         displayName: 'Alice',
         avatarUrl: 'https://cdn.example/a.png',
@@ -31,7 +30,6 @@ void main() {
       final contact = Contact(
         id: 'c2',
         archiveUserId: 'alice',
-        protocol: ContactProtocol.xmpp,
         externalAddress: 'a@b.c',
         displayName: 'Bob',
         createdAt: createdAt,

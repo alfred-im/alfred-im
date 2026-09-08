@@ -115,8 +115,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
                                   ),
                             title: Text(contact.displayName),
                             subtitle: Text(
-                              contact.protocol == ContactProtocol.internal
-                                  ? 'Utente interno'
+                              contact.isLocal
+                                  ? 'Utente Alfred'
                                   : contact.externalAddress ?? '',
                               style: const TextStyle(fontSize: 12),
                             ),
@@ -154,7 +154,6 @@ class _AddContactSheetState extends State<_AddContactSheet>
   late final TabController _tabs;
   final _addressController = TextEditingController();
   final _nameController = TextEditingController();
-  ContactProtocol _externalProtocol = ContactProtocol.xmpp;
 
   @override
   void initState() {
@@ -200,24 +199,6 @@ class _AddContactSheetState extends State<_AddContactSheet>
                 ),
                 Column(
                   children: [
-                    DropdownButtonFormField<ContactProtocol>(
-                      initialValue: _externalProtocol,
-                      decoration: const InputDecoration(labelText: 'Tipo'),
-                      items: const [
-                        DropdownMenuItem(
-                          value: ContactProtocol.xmpp,
-                          child: Text('XMPP (JID)'),
-                        ),
-                        DropdownMenuItem(
-                          value: ContactProtocol.matrix,
-                          child: Text('Matrix'),
-                        ),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) setState(() => _externalProtocol = v);
-                      },
-                    ),
-                    const SizedBox(height: 8),
                     TextField(
                       controller: _nameController,
                       decoration: const InputDecoration(
@@ -227,17 +208,14 @@ class _AddContactSheetState extends State<_AddContactSheet>
                     const SizedBox(height: 8),
                     TextField(
                       controller: _addressController,
-                      decoration: InputDecoration(
-                        labelText: _externalProtocol == ContactProtocol.xmpp
-                            ? 'JID (es. mario@dominio.it)'
-                            : 'ID Matrix',
+                      decoration: const InputDecoration(
+                        labelText: 'Indirizzo Alfred (es. mario@arkham-im.fly.dev)',
                       ),
                     ),
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: () async {
                         await contacts.addExternal(
-                          protocol: _externalProtocol,
                           address: _addressController.text.trim(),
                           displayName: _nameController.text.trim(),
                         );
