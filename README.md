@@ -9,7 +9,7 @@
 
 *No message is delivered until the recipient has explicitly allowed the sender.*
 
-Flutter web (PWA) · Supabase · Python bridges (federation planned)
+Flutter web (PWA) · Supabase · Gotham federation (planned)
 
 **Project:** https://alfred-im.github.io/ · **Try it:** https://arkham-im.fly.dev/
 
@@ -59,7 +59,7 @@ The client talks to a Supabase platform layer (Postgres, Auth, Realtime, Storage
 | Message delivery status (✓ / ✓✓) | ✅ |
 | Message reactions | ✅ |
 | @mentions in chat (approved, shipping) | ✅ |
-| XMPP / Matrix federation | Planned (bridge stubs today) |
+| Gotham federation (native protocol) | Planned |
 
 ---
 
@@ -75,11 +75,11 @@ The client talks to a Supabase platform layer (Postgres, Auth, Realtime, Storage
 └──────────────┬──────────────┘
                │ (planned)
 ┌──────────────▼──────────────┐
-│   bridge-xmpp / bridge-matrix│
+│   Gotham gateway / worker   │
 └─────────────────────────────┘
 ```
 
-Bridges are **stateless**; platform state lives in Supabase.
+Federated delivery uses the native **Gotham** protocol; platform state lives in Supabase.
 
 ---
 
@@ -89,8 +89,6 @@ Bridges are **stateless**; platform state lives in Supabase.
 .
 ├── client/           # Flutter application
 ├── supabase/         # Migrations and platform config
-├── bridge-xmpp/      # XMPP bridge (stub)
-├── bridge-matrix/    # Matrix bridge (stub)
 ├── docs/             # Technical documentation
 ├── PROJECT_MAP.md    # Detailed project map
 └── CHANGELOG.md
@@ -188,7 +186,7 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Roadmap
 
-- Federation via XMPP and Matrix bridges — **planned**
+- Gotham federation (native protocol between Alfred instances) — **planned**
 
 ---
 

@@ -1,166 +1,60 @@
-# Wishlist Funzionalità
+# Wishlist funzionalità
 
-**Ultimo aggiornamento**: 2026-08-08
+**Ultimo aggiornamento**: 2026-09-08
 
-Funzionalità **future** desiderate per Alfred (client Flutter + piattaforma + bridge).
+Backlog **non vincolante** — idee future oltre le promesse `implemented` in [specs/registry.md](./specs/registry.md).
 
 ---
 
-## ✅ Già (scope attuale) (riferimento)
+## Già in prodotto (riferimento)
 
 | Area | Stato | Documentazione |
 |------|-------|----------------|
-| Spunte cloud (inviato / consegnato server / lettura) | ✅ interni via worker `alfred_delivery` | [server-as-reception.md](./decisions/server-as-reception.md), [PROM-MESSAGE-STATUS](./specs/promises/product/PROM-MESSAGE-STATUS.md), [SYS-DELIVERY](./specs/promises/system/SYS-DELIVERY.md) |
-| Chat testo, GIF, voice, location | ✅ | [media.md](./guides/media.md) |
-| Foto e video in chat | ✅ | [PROM-CHAT-MEDIA.md](./specs/promises/product/PROM-CHAT-MEDIA.md), [media.md](./guides/media.md) |
-| Web Push (VAPID) | ✅ | [SYS-PUSH.md](./specs/promises/system/SYS-PUSH.md), [PROM-PUSH-NOTIFY.md](./specs/promises/product/PROM-PUSH-NOTIFY.md) |
-| Inbox mailbox (archivio titolare) | ✅ | [SYS-MAILBOX.md](./specs/promises/system/SYS-MAILBOX.md), [SURF-INBOX.md](./specs/surfaces/SURF-INBOX.md), [address-based-messaging.md](./decisions/address-based-messaging.md) |
-| Allow list ricezione | ✅ sempre attiva; rifiuto silenzioso | [SYS-RECEPTION.md](./specs/promises/system/SYS-RECEPTION.md), [SURF-ALLOWLIST.md](./specs/surfaces/SURF-ALLOWLIST.md) |
-| Account gruppo + erogazione | ✅ | [SYS-GROUP.md](./specs/promises/system/SYS-GROUP.md), [groups.md](./guides/groups.md) |
-| Link condivisibili `#indirizzo` | ✅ | [PROM-SHAREABLE-LINK.md](./specs/promises/product/PROM-SHAREABLE-LINK.md), [shareable-link.md](./guides/shareable-link.md) |
-| Multi-account (manifest + focus) | ✅ | [PROM-MULTI-ACCOUNT.md](./specs/promises/product/PROM-MULTI-ACCOUNT.md), [multi-account.md](./guides/multi-account.md) |
-| Reazioni messaggio | ✅ | [PROM-MESSAGE-REACTIONS.md](./specs/promises/product/PROM-MESSAGE-REACTIONS.md) |
-| Federazione XMPP/Matrix | ⏸ Outbox only | [bridge-stateless.md](./decisions/bridge-stateless.md) |
-
-Spunte federate (XEP-0184 / XEP-0333 via bridge): da implementare con i bridge Python.
+| Spunte cloud (inviato / consegnato / lettura) | ✅ | [server-as-reception.md](./decisions/server-as-reception.md), [PROM-MESSAGE-STATUS](./specs/promises/product/PROM-MESSAGE-STATUS.md) |
+| Chat testo, GIF, voice, location, media | ✅ | [media.md](./guides/media.md), [PROM-CHAT-MEDIA](./specs/promises/product/PROM-CHAT-MEDIA.md) |
+| Web Push (VAPID) | ✅ | [SYS-PUSH](./specs/promises/system/SYS-PUSH.md) |
+| Inbox mailbox | ✅ | [SYS-MAILBOX](./specs/promises/system/SYS-MAILBOX.md) |
+| Allow list ricezione | ✅ | [SYS-RECEPTION](./specs/promises/system/SYS-RECEPTION.md) |
+| Account gruppo | ✅ | [SYS-GROUP](./specs/promises/system/SYS-GROUP.md) |
+| Link condivisibili `#indirizzo` | ✅ | [PROM-SHAREABLE-LINK](./specs/promises/product/PROM-SHAREABLE-LINK.md) |
+| Multi-account | ✅ | [PROM-MULTI-ACCOUNT](./specs/promises/product/PROM-MULTI-ACCOUNT.md) |
+| Reazioni messaggio | ✅ | [PROM-MESSAGE-REACTIONS](./specs/promises/product/PROM-MESSAGE-REACTIONS.md) |
+| Rubrica locale + federata (`user@server`) | ✅ | [SYS-CONTACTS](./specs/promises/system/SYS-CONTACTS.md) |
 
 ---
 
-## 🎯 Priorità Alta
+## Priorità alta
 
-### XEP-0280: Message Carbons
-**Riferimento**: [XEP-0280](https://xmpp.org/extensions/xep-0280.html)
+### Federazione Gotham (nativa)
 
-**Descrizione**: Sincronizzazione messaggi tra dispositivi multipli dello stesso account. Quando un utente invia un messaggio da un dispositivo, tutti gli altri dispositivi connessi ricevono una copia (carbon copy).
+Messaggistica tra istanze Alfred via [gotham-protocol.md](./architecture/gotham-protocol.md): gateway HTTP/3, worker outbox, materialize inbound.
 
-**Benefici**:
-- Conversazioni sincronizzate su tutti i device
-- Esperienza multi-device fluida
-- Storia messaggi consistente
+| Pezzo | Stato |
+|-------|-------|
+| Spec wire + Protobuf | ✅ in repo |
+| Gateway Fly | ❌ |
+| Worker claim outbox | ❌ |
+| Invio verso `peer_external_address` | ⏸ outbox `queued` |
+| Ricezione inbound | ❌ |
 
-**Note implementazione**:
-- Via bridge XMPP quando federazione attiva
-- Stato su piattaforma Supabase (non cache locale)
+### Delete chat locale
 
----
+Rimozione righe dal proprio archivio senza toccare il peer; GC media con refcount logico — vedi [mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md).
 
-## 🚀 Funzionalità in Roadmap
+### E2EE
 
-### XEP-0045: Multi-User Chat (MUC)
-**Riferimento**: [XEP-0045](https://xmpp.org/extensions/xep-0045.html)
-
-> **Non è Alfred SYS-GROUP:** i gruppi Alfred sono account `profile_kind = group` con allow list bidirezionale — vedi [groups.md](./guides/groups.md) e [SYS-GROUP.md](./specs/promises/system/SYS-GROUP.md). XEP-0045 è federazione XMPP futura.
-
-**Descrizione**: Chat di gruppo con più partecipanti, ruoli e moderazione.
-
-**Benefici**:
-- Supporto gruppi completi
-- Gestione ruoli (admin, moderator, member)
-- Stanze permanenti e temporanee
+Fuori scope attuale; eventuale layer sopra Gotham o solo internal.
 
 ---
 
-### XEP-0363: HTTP File Upload
-**Riferimento**: [XEP-0363](https://xmpp.org/extensions/xep-0363.html)
+## Priorità media
 
-**Descrizione**: Upload file tramite HTTP al server XMPP per condivisione in chat.
-
-**Benefici**:
-- Condivisione immagini, documenti, video
-- Upload tramite HTTP (più semplice di in-band)
-- Link permanenti ai file
-
-**Note implementazione**:
-- Richiede supporto server con storage
-- Gestione thumbnail immagini
-- Limite dimensioni file (configurabile server)
-- **Alfred interno**: foto/video in chat già coperti da [PROM-CHAT-MEDIA](./specs/promises/product/PROM-CHAT-MEDIA.md) (bucket `chat-media`, client Flutter). XEP-0363 resta rilevante per **upload HTTP federato** via bridge XMPP verso homeserver esterni — percorso distinto dall'upload Supabase in-app.
+- Chiamate vocali / video (WebRTC o integrazione dedicata)
+- Messaggi programmati
+- Bozze multi-dispositivo esplicite (oltre al modello mailbox attuale)
 
 ---
 
-### XEP-0308: Last Message Correction
-**Riferimento**: [XEP-0308](https://xmpp.org/extensions/xep-0308.html)
+## Esplorazioni
 
-**Descrizione**: Modifica dell'ultimo messaggio inviato (come "Edit" su Telegram).
-
-**Benefici**:
-- Correzione typo senza eliminare
-- UX migliorata
-- Storia modifiche
-
----
-
-### XEP-0092: Software Version
-**Riferimento**: [XEP-0092](https://xmpp.org/extensions/xep-0092.html)
-
-**Descrizione**: Query informazioni su versione software client/server.
-
-**Benefici**:
-- Debugging interoperabilità
-- Statistiche utilizzo
-- Feature detection
-
----
-
-## 🎨 Feature UI/UX
-
-### Emoji Picker
-**Descrizione**: Selettore emoji nativo nell'input messaggi.
-
-**Benefici**:
-- UX messaggistica moderna
-- Supporto completo Unicode emoji
-- Categorie e ricerca
-
----
-
-### Voice/Video Calls
-**Riferimenti**: [XEP-0166 (Jingle)](https://xmpp.org/extensions/xep-0166.html), [XEP-0167 (Jingle RTP)](https://xmpp.org/extensions/xep-0167.html)
-
-**Descrizione**: Chiamate vocali e videochiamate peer-to-peer.
-
-**Benefici**:
-- Comunicazione real-time completa
-- Alternative a chat testuale
-- WebRTC integration
-
-**Note implementazione**:
-- Complessità alta
-- Richiede WebRTC
-- Gestione NAT/STUN/TURN
-- Segnalazione tramite Jingle
-
----
-
-## 📊 Metriche e Priorità (solo future)
-
-| Funzionalità | Priorità | Complessità | Impatto UX | Supporto Server |
-|--------------|----------|-------------|------------|-----------------|
-| XEP-0280 Carbons | ⭐⭐⭐ Alta | Media | Alto | ✅ Ampio |
-| XEP-0308 Message Correction | ⭐⭐ Media | Bassa | Medio | ✅ Buono |
-| XEP-0363 File Upload | ⭐⭐⭐ Alta | Media | Alto | ✅ Buono |
-| XEP-0045 MUC | ⭐⭐ Media | Alta | Alto | ✅ Ampio |
-| Emoji Picker | ⭐ Bassa | Bassa | Basso | N/A |
-| Voice/Video | ⭐⭐ Media | Molto Alta | Alto | ⚠️ Limitato |
-
----
-
-## 📝 Note Generali
-
-### Compatibilità Server
-La maggior parte delle XEP richiede supporto server. Prima di implementare una feature, verificare supporto lato bridge e homeserver federati.
-
-### Testing
-Ogni nuova XEP deve includere test bridge, integrazione piattaforma e documentazione in `docs/guides/`.
-
-### Riferimenti Utili
-- **XEP Index**: https://xmpp.org/extensions/
-- **Compliance Suites**: https://xmpp.org/extensions/xep-0459.html (2024)
-
----
-
-## Prossimi passi (roadmap)
-
-1. Implementare XEP-0280 (Carbons) per sync multi-device
-2. Aggiungere XEP-0308 (Message Correction) per edit messaggi
-3. Valutare XEP-0363 (File Upload) dopo testing server
+Vedi [wishes/](./wishes/) per documenti non vincolanti (es. vault prove protette).

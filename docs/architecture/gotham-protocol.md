@@ -1,14 +1,14 @@
 # Gotham — protocollo federazione Alfred
 
 **Ultima revisione:** 2026-09-05  
-**Stato:** `documented` — wire contract definito; runtime non implementato (bridge stub)  
-**Audience:** AI / implementazione bridge e gateway
+**Stato:** `documented` — wire contract definito; runtime non implementato  
+**Audience:** AI / implementazione gateway e worker Gotham
 
 **SSOT wire:** [gotham.proto](../specs/contracts/gotham.proto)  
 **SSOT piattaforma (mailbox, outbox, id):** [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md)  
 **SSOT indice:** [SSOT.md](../SSOT.md)
 
-Gotham è il protocollo di federazione **nativo** tra istanze Alfred. Sostituisce XMPP/Matrix come target di progetto per il recapito server-to-server su Alfred.
+Gotham è il protocollo di federazione **nativo** tra istanze Alfred.
 
 ---
 
@@ -22,10 +22,10 @@ Gotham è il protocollo di federazione **nativo** tra istanze Alfred. Sostituisc
 | **Discovery** | `GET /.well-known/gotham` → `GothamDiscovery` |
 | **Invio eventi** | `POST /gotham/v1/events` — body = `GothamEnvelope` serializzato |
 | **Ack consegna** | Solo **codice HTTP** (2xx = accettato dal peer) |
-| **Backend istanza** | Supabase (outbox, worker `alfred_delivery`) — **no Python** nel path produzione |
-| **Bridge** | Stateless — traduce Gotham ↔ outbox Alfred; vedi [bridge-stateless.md](../decisions/bridge-stateless.md) |
+| **Backend istanza** | Supabase (outbox, worker `alfred_delivery`) |
+| **Federazione** | Gateway Fly HTTP/3 + worker Gotham (da implementare) |
 
-Il client Flutter **non** parla Gotham direttamente: parla sempre con la propria piattaforma (RPC Supabase). Il bridge è l’unico emittente/ricevitore Gotham.
+Il client Flutter **non** parla Gotham direttamente: parla sempre con la propria piattaforma (RPC Supabase). Solo il worker Gotham emette/riceve sul wire.
 
 ---
 
@@ -58,7 +58,7 @@ Il **client non minta** id federativi: chiede l’azione; il server genera l’U
 
 ### 2.3 Retry e deduplicazione
 
-Il bridge, in caso di retry, rimanda lo **stesso POST** con gli **stessi identificativi di dominio**:
+Il worker Gotham, in caso di retry, rimanda lo **stesso POST** con gli **stessi identificativi di dominio**:
 
 | `kind` | Id usato per dedup lato ricevente |
 |--------|-----------------------------------|
@@ -75,9 +75,9 @@ Non esiste un id «pacchetto HTTP» separato: la deduplicazione è sugli id fede
 | `client_message_id` | Solo idempotenza invio lato client mittente; non correla le copie archivio |
 | `messages.id` (riga archivio) | Locale per `archive_user_id`; diverso tra mittente e destinatario |
 
-### 2.5 `messages.external_id` (DB Alfred)
+### 2.5 `messages.external_id` (DB Alfred, opzionale)
 
-Colonna DB per id percepiti da **protocolli esterni legacy** (XMPP `id`, Matrix `event_id`). **Non** fa parte del contratto Gotham nativo. Il bridge legacy può usarla; Gotham usa direttamente `logical_message_id`, `read_receipt_id`, `reaction_fact_id`.
+Colonna DB riservata per correlazione con sistemi esterni. **Gotham nativo** usa `logical_message_id`, `read_receipt_id`, `reaction_fact_id` — non `external_id`.
 
 ---
 
@@ -150,7 +150,7 @@ LocationPayload:
   longitude
 ```
 
-**Perché `LOCATION` è un `EventKind` separato:** sul wire la posizione ha payload dedicato (lat/lng). In DB Alfred `message_content_type` include ancora `location` per storage interno; il bridge mappa `EventKind.LOCATION` → `content_type = location` in ingest. Non usare `MessagePayload` con `content_type = location`.
+**Perché `LOCATION` è un `EventKind` separato:** sul wire la posizione ha payload dedicato (lat/lng). In DB Alfred `message_content_type` include `location`; il worker mappa `EventKind.LOCATION` → `content_type = location` in ingest.
 
 ---
 
@@ -185,7 +185,7 @@ Content-Type: application/x-protobuf
 |--------|-------------|
 | `2xx` | Evento accettato e processato (o già visto — dedup idempotente) |
 | `4xx` | Rifiuto permanente (malformato, indirizzo sconosciuto, …) |
-| `5xx` | Errore temporaneo — il bridge può ritentare con **gli stessi id** |
+| `5xx` | Errore temporaneo — il worker può ritentare con **gli stessi id** |
 
 **Non** esiste body di ack strutturato: read e reaction sono **eventi separati**, non embedded nell’ack del MESSAGE.
 
@@ -214,25 +214,17 @@ Stesso bus **outbox** per internal e federato; differisce solo il consumer in fo
 ```text
 1. RPC account (es. send_message_to_profile)
      → INSERT copia mittente (logical_message_id mintato)
-     → INSERT outbox (event_kind=deliver, protocol=gotham, status=queued)
+     → INSERT outbox (event_kind=deliver, status=queued)
 
-2. Bridge claim outbox (protocol != internal)
-     → costruisce GothamEnvelope
-     → POST /gotham/v1/events verso to_address
+2. Stessa istanza: worker `alfred_delivery.process_outbox` sincrono
+   Altra istanza (futuro): outbox resta `queued` → worker Gotham → POST /gotham/v1/events
 
-3. HTTP 2xx dal peer
-     → bridge aggiorna delivered_at sulla copia mittente
+3. HTTP 2xx dal peer (federato)
+     → delivered_at sulla copia mittente
      → outbox completed
 ```
 
-Su **internal** oggi il worker gira sincrono nella stessa transazione RPC (`protocol = internal`). Per federato il passo 2 è **async** (outbox resta `queued` fino al bridge).
-
-| `outbox.protocol` | Consumer | Quando |
-|-------------------|----------|--------|
-| `internal` | `alfred_delivery.process_outbox` (sincrono in transazione RPC) | Oggi |
-| `gotham` | Bridge worker (claim async) | Da implementare |
-
-**Debito implementativo — `outbox.message_id`:** colonna FK con significato diverso per `event_kind` (ancora mittente, lettore, destinatario push, …). Vedi [schema.md](../specs/contracts/schema.md) § outbox. Il bridge Gotham deve leggere gli id dal **payload**, non inferirli da `message_id`.
+Routing **senza colonna protocol**: `peer_profile_id` valorizzato = recapito locale; `peer_external_address` = federato Gotham.
 
 ### 5.2 Inbound (peer → istanza destinatario)
 
@@ -280,7 +272,7 @@ Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `gro
 
 `push_notify` è **solo internal**: accodato dal worker dopo recapito locale riuscito ([SYS-PUSH](../specs/promises/system/SYS-PUSH.md)). **Non** compare mai sul wire Gotham.
 
-**Enum `contact_protocol`:** i flussi federati assumono `outbox.protocol = gotham`. Su `main` l’enum Postgres ha ancora solo `internal`, `xmpp`, `matrix` — serve migrazione che aggiunga `gotham` prima di abilitare send federato.
+**Nessun campo `protocol`:** il routing è implicito — `linked_profile_id` / `peer_profile_id` per contatti locali, `external_address` / `peer_external_address` per federato Gotham.
 
 ---
 
@@ -289,11 +281,8 @@ Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `gro
 | Componente | Stato | Ruolo |
 |------------|-------|-------|
 | **Gateway Fly HTTP/3** | ❌ | Termina QUIC; espone `/.well-known/gotham` e `/gotham/v1/events` |
-| **Bridge worker** | ❌ stub | Claim outbox `protocol = gotham`; traduce ↔ Protobuf; chiama Supabase |
-| **Send path async** | ❌ | `protocol != internal` → outbox `queued` **senza** `process_outbox` sincrono |
+| **Gotham worker** | ❌ | Claim outbox federato; traduce ↔ Protobuf; materialize inbound |
 | **Spec in repo** | ✅ | Questo file + `gotham.proto` |
-
-I bridge Python esistenti (`bridge-xmpp`, `bridge-matrix`) espongono solo `GET /health` — non sono il consumer Gotham.
 
 ---
 
@@ -319,7 +308,7 @@ I bridge Python esistenti (`bridge-xmpp`, `bridge-matrix`) espongono solo `GET /
 ```
 
 - **Supabase Edge Functions** non terminano HTTP/3 — il gateway è su Fly.
-- Il bridge è **stateless**: stato autorevole solo su Postgres (outbox, messages, reaction facts).
+- Il worker Gotham è **stateless**: stato autorevole solo su Postgres (outbox, messages, reaction facts).
 
 ---
 
@@ -353,7 +342,6 @@ I gruppi restano **internal** sulla stessa istanza (`group_erogate`, `broadcast_
 |-----------|-------|
 | [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) | Modello caselle, outbox, identificatori DB |
 | [gotham.proto](../specs/contracts/gotham.proto) | Contratto Protobuf wire |
-| [bridge-stateless.md](../decisions/bridge-stateless.md) | Bridge senza stato business |
 | [domain/federation/](../domain/federation/) | Contesto DDD federation |
 | [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) | Promesse worker outbox |
 | [full-stack.md](./full-stack.md) | Limitazioni attuali stack |
@@ -365,4 +353,4 @@ I gruppi restano **internal** sulla stessa istanza (`group_erogate`, `broadcast_
 | Data | Modifica |
 |------|----------|
 | 2026-09-05 | Prima stesura — envelope senza `event_id` / `external_id`; id federativi nominati; mapping outbox |
-| 2026-09-05 | Chiarimenti: MESSAGE = solo `logical_message_id`; LOCATION separato; `push_notify` internal-only; debito `contact_protocol` / `outbox.message_id` |
+| 2026-09-08 | Rimosso `contact_protocol`; routing implicito; solo Gotham come federazione |

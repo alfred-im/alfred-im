@@ -6,7 +6,7 @@
 | **Classe** | SYSTEM |
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-08 |
-| **ADR** | [bridge-stateless.md](../../../decisions/bridge-stateless.md), [server-as-reception.md](../../../decisions/server-as-reception.md) |
+| **ADR** | [server-as-reception.md](../../../decisions/server-as-reception.md), [gotham-protocol.md](../../../architecture/gotham-protocol.md) |
 | **PR origine** | #179 |
 
 Promessa SYSTEM — infrastruttura **non-account** che attraversa i confini [SYS-ACCOUNT-BOUNDARY](./SYS-ACCOUNT-BOUNDARY.md): bus `outbox`, worker `alfred_delivery.*`, stesso contratto per internal oggi e federazione domani.

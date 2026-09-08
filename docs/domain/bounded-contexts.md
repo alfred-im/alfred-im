@@ -18,7 +18,7 @@ Ogni riga è un **contesto delimitato** (DDD): propri glossario, comandi/eventi 
 | **groups** | `verified` | [groups/](./groups/) | `docs/model/uml/groups/` | `client/lib/machines/groups/` | SYS-GROUP |
 | **media** | `documented` | [media/](./media/) | `docs/model/uml/media/` | no (UI allegati chat) | PROM-CHAT-MEDIA |
 | **delivery** | `documented` | [delivery/](./delivery/) | `docs/model/uml/delivery/` | no | SYS-DELIVERY |
-| **federation** | `documented` | [federation/](./federation/) | `docs/model/uml/federation/` | no | bridge futuri |
+| **federation** | `documented` | [federation/](./federation/) | `docs/model/uml/federation/` | no | Gotham (pianificato) |
 
 Mappa relazioni: [context-map.puml](../model/context-map.puml).
 
@@ -37,7 +37,7 @@ navigation ──FocusAccount──► multi-account
 multi-account ──sessione──► auth
 messaging ──outbox──► reception, delivery
 groups ──broadcast/archive──► delivery, reception
-federation ──outbox queued──► delivery (consumer bridge stub)
+federation ──outbox queued──► delivery (worker Gotham pianificato)
 ```
 
 ## Stato modellazione

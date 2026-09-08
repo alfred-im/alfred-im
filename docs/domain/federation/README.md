@@ -1,28 +1,26 @@
-# Contesto: federation
+# Federation — contesto dominio
 
-**Stato modellazione:** `documented` (runtime stub)  
-**Protocollo wire target:** [Gotham](../../architecture/gotham-protocol.md) · [gotham.proto](../../specs/contracts/gotham.proto)
+**Bounded context:** `federation`  
+**Ultima revisione:** 2026-09-08
 
-## Protocollo
+Federazione **nativa Gotham** tra istanze Alfred. Non esistono altri protocolli federativi nel prodotto.
 
-| Protocollo | Ruolo |
+---
+
+## Stato
+
+| Componente | Stato |
 |------------|-------|
-| **Gotham** | Federazione nativa Alfred (HTTP/3 + Protobuf) — **target** |
-| XMPP / Matrix | Legacy / bridge esterni opzionali — stub `GET /health` |
+| Spec wire + Protobuf | ✅ |
+| Schema DB (outbox, `peer_external_address`, rubrica federata) | ✅ |
+| Gateway + worker runtime | ❌ pianificato |
 
-## Mapping dominio → implementazione (Gotham)
+---
 
-| Dominio | Implementazione |
-|---------|-----------------|
-| `QueueFederatedSend` | outbox `protocol = gotham` (o estensione `contact_protocol`) |
-| `FederatedSendQueued` | outbox `status = queued` (no worker sync) |
-| `DeliverToFederatedPeer` | bridge claim outbox → `POST /gotham/v1/events` |
-| `FederatedMessageDelivered` | HTTP 2xx → `delivered_at` copia mittente |
-| `ReceiveFromFederatedPeer` | gateway inbound → bridge → gate reception → materialize |
-| `InboundFederatedMessageReceived` | `materialize_inbound_sender_message` (id remoto invariato) |
-| `ApplyFederatedAck` | Eventi READ separati (`read_receipt_id`); ack MESSAGE = HTTP status |
-| `FederatedAckApplied` | `delivered_at` / `read_at` + `read_receipt_id` su copia mittente |
+## Documenti
 
-Attuale runtime: `bridge-xmpp` / `bridge-matrix` — solo `GET /health`; gateway Gotham e consumer outbox **non** implementati.
-
-Vedi [gotham-protocol.md](../../architecture/gotham-protocol.md) per envelope, identificatori e flussi.
+| File | Contenuto |
+|------|-----------|
+| [glossary.md](./glossary.md) | Termini |
+| [commands-and-events.md](./commands-and-events.md) | Comandi/eventi dominio |
+| [../../architecture/gotham-protocol.md](../../architecture/gotham-protocol.md) | Contratto wire |

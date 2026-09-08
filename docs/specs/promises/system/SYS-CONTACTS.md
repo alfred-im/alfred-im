@@ -26,9 +26,9 @@ L'utente può salvare contatti (utenti Alfred interni o indirizzi federati futur
 | ID | Promessa |
 |----|----------|
 | **SYS-CONTACTS-001** | Tabella `contacts` scoped per titolare archivio: `archive_user_id = auth.uid()` (RLS) |
-| **SYS-CONTACTS-002** | Tipi contatto (`contact_protocol`): `internal`, `xmpp`, `matrix` — solo routing backend |
-| **SYS-CONTACTS-003** | **Internal**: `linked_profile_id` obbligatorio, `external_address` null; `display_name` + `avatar_url` opzionale (snapshot al momento dell'aggiunta) |
-| **SYS-CONTACTS-004** | **Esterno** (xmpp/matrix): `external_address` obbligatorio, `linked_profile_id` null; `display_name` obbligatorio |
+| **SYS-CONTACTS-002** | Contatto **locale**: `linked_profile_id` obbligatorio, `external_address` null — stessa istanza Alfred |
+| **SYS-CONTACTS-003** | **Local**: `linked_profile_id` obbligatorio, `external_address` null; `display_name` + `avatar_url` opzionale (snapshot al momento dell'aggiunta) |
+| **SYS-CONTACTS-004** | **Federato** (Gotham): `external_address` obbligatorio (`user@server`), `linked_profile_id` null; `display_name` obbligatorio |
 | **SYS-CONTACTS-005** | Unicità: `(archive_user_id, linked_profile_id)` per internal; `(archive_user_id, lower(external_address))` per esterni |
 | **SYS-CONTACTS-006** | CRUD via PostgREST diretto su `contacts` (nessuna RPC dedicata add/delete) |
 | **SYS-CONTACTS-007** | Lista contatti: ordinata per `display_name` (client `ContactService.fetchContacts`) |
@@ -62,7 +62,7 @@ Migrazione base: `20260624200000_alfred_domain_schema.sql`.
 | SYS-ID | Verifica |
 |-----------------------|----------|
 | SYS-CONTACTS-001 | `schema_smoke.sql` — tabella `contacts`; `20260624200000_alfred_domain_schema.sql` |
-| SYS-CONTACTS-002 | `models_and_utils_test.dart` — `ContactProtocol` parsing |
+| SYS-CONTACTS-002 | `models_and_utils_test.dart` — flag `isLocal` / `isFederated` |
 | SYS-CONTACTS-006 | `contact_service.dart` — PostgREST fetch/insert/delete |
 | SYS-CONTACTS-008 | `contact_service.dart` — `search_profiles`; `contacts_screen.dart` — min 2 caratteri |
 | SYS-CONTACTS-016 | `send_message_to_profile_smoke.sql` — invio senza contatto in rubrica |

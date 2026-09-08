@@ -7,7 +7,7 @@
 **Data**: 2026-08-08  
 **Status**: ✅ Accettata — **concept vincolante** dell'applicazione  
 **Categoria**: Messaggistica, spunte, modello cloud  
-**Correlata**: [bridge-stateless.md](./bridge-stateless.md), [SSOT.md](../SSOT.md)
+**Correlata**: [gotham-protocol.md](../architecture/gotham-protocol.md), [SSOT.md](../SSOT.md)
 
 ---
 
@@ -24,7 +24,7 @@ Questo è il modello semantico dell'applicazione: il server è il punto in cui u
 | Fase | Comportamento |
 |------|----------------|
 | **Oggi (scope attuale)** | RPC account scrive copia mittente + outbox; worker `alfred_delivery.process_outbox` (stessa transazione su internal, #179) materializza destinatario e `delivered_at`/`read_at` mittente. Il destinatario vede messaggi via Realtime sulla propria copia. Gate allow list nel worker — rifiuto silenzioso se mittente non in lista. |
-| **Domani (federazione / bridge)** | Invio e ricezione saranno **disaccoppiati**, come già accade tra server diversi in XMPP/Matrix: il messaggio resta in outbox `queued` finché il bridge non lo consegna all'altro dominio; solo allora diventa «ricevuto» (sul server di destinazione o nella piattaforma come ack federato). |
+| **Domani (federazione Gotham)** | Invio e ricezione restano **disaccoppiati** tra istanze: il messaggio verso `user@server` resta in outbox `queued` finché il worker Gotham non lo recapita sul peer; solo allora il mittente raggiunge il livello 2 (consegnato). |
 
 Il disaccoppiamento non è un'eccezione futura: è la **stessa logica** del caso federato, applicata progressivamente anche ai flussi che oggi appaiono sincroni.
 
@@ -35,8 +35,8 @@ Il disaccoppiamento non è un'eccezione futura: è la **stessa logica** del caso
 | Livello | UI | Significato nel modello cloud Alfred |
 |---------|-----|--------------------------------------|
 | **1 — Inviato** | ✓ grigia | Il messaggio è stato accettato dalla piattaforma (RPC `send_message_to_profile` / outbox `queued` per federato). |
-| **2 — Consegnato** | ✓✓ grigie | Il messaggio è **ricevuto sul server del destinatario** — cioè disponibile nella fonte di verità per il destinatario (inserimento copia nel suo archivio Alfred, oppure ack bridge/XEP-0184 per federato). **Non** significa «aperto sul telefono del destinatario». Se il gate [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) / [PROM-RECEPTION-FILTER](../specs/promises/product/PROM-RECEPTION-FILTER.md) rifiuta il recapito, il mittente **non** raggiunge mai il livello 2 (resta su livello 1 in modo permanente e silenzioso). |
-| **3 — Lettura** | ✓✓ blu | Il destinatario ha **visualizzato** la conversazione (`mark_peer_read` / XEP-0333 `displayed` via bridge). |
+| **2 — Consegnato** | ✓✓ grigie | Il messaggio è **ricevuto sul server del destinatario** — disponibile nella fonte di verità per il destinatario (copia nel suo archivio Alfred, oppure ack HTTP Gotham). **Non** significa «aperto sul telefono del destinatario». Se il gate allow list rifiuta il recapito, il mittente resta al livello 1 in modo permanente e silenzioso. |
+| **3 — Lettura** | ✓✓ blu | Il destinatario ha **visualizzato** la conversazione (`mark_peer_read` / evento READ Gotham). |
 
 Nel client cloud Alfred il livello 2 segue il **server come fonte di verità**: consegnato = ricevuto **nella piattaforma** (o nel server federato di destinazione tramite bridge). Il multidispositivo è coerente: tutti i device del destinatario leggono lo stesso stato dal server.
 
@@ -44,9 +44,9 @@ Nel client cloud Alfred il livello 2 segue il **server come fonte di verità**: 
 
 ## Conseguenze implementative
 
-1. **`delivered_at`** va valorizzato quando il messaggio è persistito/recapitato nella fonte di verità rilevante — **non** quando il client del destinatario riceve un evento Realtime. Il meccanismo concreto (internal: worker `alfred_delivery.process_outbox` nella stessa transazione RPC; federato: ack bridge) è **pipeline di recapito** [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md), non due tipi di chat — vedi [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md).
-2. **`read_at`** resta legato all'azione esplicita di lettura (`mark_peer_read`), indipendente dal disaccoppiamento invio/ricezione.
-3. **Outbox e bridge**: messaggi il cui recapito passa da bridge possono restare `queued` fino a conferma — il disaccoppiamento è previsto nello schema (`outbox`, `bridge_jobs`); non definisce una «chat federata» separata.
+1. **`delivered_at`** quando il messaggio è persistito nella fonte di verità rilevante — **non** quando il client del destinatario riceve Realtime. Meccanismo: worker `alfred_delivery` (internal) o worker Gotham (federato) — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md).
+2. **`read_at`** legato a `mark_peer_read` / evento READ federato.
+3. **Outbox**: recapito federato può restare `queued` fino ad ack HTTP peer — non definisce una chat separata ([no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md)).
 4. **Non confondere** con WhatsApp mobile P2P: Alfred è cloud-first; la semantica delle spunte riflette il server, non la singola sessione WebSocket del peer.
 5. **Allow list ricezione** ([SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md)): livello 1 (✓) si ottiene sempre con RPC accettata e copia mittente; livello 2 richiede recapito nel archivio destinatario — il blocco silenzioso lascia il mittente al solo livello 1.
 

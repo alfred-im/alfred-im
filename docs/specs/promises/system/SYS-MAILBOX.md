@@ -6,7 +6,7 @@
 | **Classe** | SYSTEM |
 | **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-19 |
-| **ADR** | [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../../decisions/server-as-reception.md), [no-internal-external-chat-distinction.md](../../../decisions/no-internal-external-chat-distinction.md), [bridge-stateless.md](../../../decisions/bridge-stateless.md) |
+| **ADR** | [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../../decisions/server-as-reception.md), [no-internal-external-chat-distinction.md](../../../decisions/no-internal-external-chat-distinction.md) |
 | **PR origine** | #159, #179, #210 |
 
 Promessa SYSTEM — modello **mailbox** (archivio per titolare archivio), pipeline invio/outbox, aggregazione inbox on-read, date consegna/lettura. Il dettaglio canonico di schema e RPC resta nei contratti; questo file è indice promessa + tracciabilità v2.

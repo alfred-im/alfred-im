@@ -131,7 +131,6 @@ Non usato quando `auth.uid()` è account `group` — vedi [SYS-GROUP](../promise
 
 ```sql
 list_inbox() → table (
-  protocol contact_protocol,
   display_name text,
   peer_profile_id uuid,
   peer_external_address text,
@@ -149,7 +148,7 @@ list_inbox() → table (
 
 Aggregazione su `messages` WHERE `archive_user_id = auth.uid()`:
 
-- Solo `protocol = 'internal'`, `peer_profile_id IS NOT NULL`, `mailbox_has_renderable_content(body, content_type)`
+- Solo righe con `peer_profile_id IS NOT NULL` **oppure** `peer_external_address IS NOT NULL`, `mailbox_has_renderable_content(body, content_type)`
 - `unread_count` = righe **in entrata** (`author_id <> archive_user_id`) con `read_at IS NULL`
 - Ordine: `last_message_at` DESC
 

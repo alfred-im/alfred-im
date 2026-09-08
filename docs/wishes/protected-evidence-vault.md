@@ -150,5 +150,5 @@ Spesso non commercializzati come «custodia asimmetrica», ma applicano lo stess
 - [server-as-reception.md](../decisions/server-as-reception.md) — modello cloud
 - [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) · [SURF-ALLOWLIST](../specs/surfaces/SURF-ALLOWLIST.md) — allow list
 - [full-stack.md](../architecture/full-stack.md) — E2EE fuori scope
-- [WISHLIST.md](../WISHLIST.md) — altre idee future (XMPP, UI)
+- [WISHLIST.md](../WISHLIST.md) — altre idee future
 - Shamir's Secret Sharing — [Wikipedia](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing)

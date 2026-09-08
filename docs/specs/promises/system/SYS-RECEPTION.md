@@ -39,7 +39,7 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 | **SYS-RECEPTION-012** | Aggiunta a lista: **nessuna** retro-consegna di messaggi precedentemente rifiutati |
 | **SYS-RECEPTION-013** | Nuovo account: lista vuota di default (nessuno può scrivere finché non si aggiunge qualcuno) |
 | **SYS-RECEPTION-014** | Filtro sempre attivo — **nessun** flag globale enable/disable a livello utente o piattaforma |
-| **SYS-RECEPTION-018** | Stesso gate documentato per recapito **federato** (bridge XMPP/Matrix fase B): prima di materializzare copia ingresso su Alfred, verificare allow list del destinatario; stesso silenzio verso mittente esterno |
+| **SYS-RECEPTION-018** | Stesso gate per recapito **federato Gotham**: prima di materializzare copia ingresso, verificare allow list del destinatario; stesso silenzio verso mittente esterno |
 | **SYS-RECEPTION-029** | Gate **outbound** in `send_message_to_profile` **prima** di INSERT copia mittente |
 | **SYS-RECEPTION-030** | Condizione outbound: `is_sender_allowed_for_reception(auth.uid(), recipient_profile_id)` |
 | **SYS-RECEPTION-031** | Su violazione outbound: `raise exception 'recipient not in reception allowlist'` — nessuna riga messaggio mittente |

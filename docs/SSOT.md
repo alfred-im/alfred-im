@@ -28,7 +28,7 @@ Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri fi
 | **Protocollo Gotham** (federazione wire, Protobuf, id) | [`architecture/gotham-protocol.md`](./architecture/gotham-protocol.md) · [`specs/contracts/gotham.proto`](./specs/contracts/gotham.proto) | `domain/federation/`; `full-stack.md` (teaser) |
 | **Semantica spunte UI** (✓ / ✓✓ / blu = cloud) | [`decisions/server-as-reception.md`](./decisions/server-as-reception.md) | Mailbox (meccanica, non significato UI) |
 | **Indirizzo + rubrica isolata** | [`decisions/address-based-messaging.md`](./decisions/address-based-messaging.md) | Guide compose |
-| **Altri ADR** (bridge, multi-account, …) | [`decisions/`](./decisions/) | `full-stack.md` |
+| **Altri ADR** (multi-account, …) | [`decisions/`](./decisions/) | `full-stack.md` |
 | **Metodo modello** (DDD → UML → statechart) | [`domain/README.md`](./domain/README.md) | `specs/README.md` (solo confine) |
 | **Comandi/eventi per contesto** | `domain/<context>/` | Guide; promesse (link) |
 | **Diagrammi UML** | `model/uml/<context>/` | Guide |

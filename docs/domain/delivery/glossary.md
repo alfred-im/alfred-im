@@ -20,7 +20,7 @@
 | **PropagateReadReceipt** | Propaga spunta lettura e `read_receipt_id` sulla copia mittente identificata da id logico messaggio (λ). |
 | **ProcessReactionFact** | Handler evento `reaction_fact`: INSERT append-only su `message_reaction_facts`; completa outbox con `reaction_fact_id`. |
 | **ProcessPushNotification** | Handler evento `push_notify`: invoca pipeline Web Push (SYS-PUSH). |
-| **Synchronous internal** | Su protocollo internal, worker eseguito nella **stessa transazione** del confine account — esito immediato per l'utente. |
+| **Synchronous local** | Recapito stessa istanza: worker eseguito nella **stessa transazione** del confine account — esito immediato per l'utente. |
 | **DeliverySilentlyBlocked** | Esito gate allow list negato; spunta doppia mittente non valorizzata; nessun errore verso mittente (termine condiviso con reception). |
 | **Logical message id** | Identificativo globale del messaggio: assegnato dal server mittente all'accettazione, replicato identico sul destinatario; target segnali spunta e reaction. |
 | **Recipient idempotency** | Materializzazione copia destinatario idempotente per coppia archive_user + id logico. |
@@ -38,7 +38,7 @@
 | **messaging** | Confine account crea solo copia mittente + accoda outbox; nessuna scrittura cross-boundary. |
 | **reception** | Gate allow list valutato **solo** nel worker (`EvaluateInboundDelivery`) prima di materializzare destinatario. |
 | **groups** | Branch gruppo in `DeliverInternal`; `GroupErogate` + `ErogateGroupMessage` per broadcast/erogazione. |
-| **federation** | Stesso outbox; protocollo esterno → consumer bridge (stub) invece di sync internal. |
+| **federation** | Stesso outbox; destinazione `peer_external_address` → worker Gotham (pianificato) invece di recapito locale sincrono. |
 | **notifications** | Post-recapito: `QueuePushNotification` dal worker (SYS-PUSH). |
 
 ---

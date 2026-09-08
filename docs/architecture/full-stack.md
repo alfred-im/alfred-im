@@ -1,7 +1,7 @@
 # Alfred — Architettura (panoramica)
 
 **Data**: 2026-09-03  
-**Scope**: App completa **senza bridge** (XMPP/Matrix restano stub Fly.io)  
+**Scope**: App completa — federazione **Gotham** (nativa) pianificata, non ancora live  
 **Stato**: prodotto stabile su `main`
 
 > **SSOT:** [SSOT.md](../SSOT.md) — panoramica stack; non duplica catalogo promesse, RPC né flussi delivery.
@@ -26,7 +26,7 @@
                             │ (futuro: service_role)
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Bridge XMPP / Matrix — **FUORI SCOPE** (stub health only)   │
+│  Gotham gateway / worker — **PIANIFICATO** (non in prod)     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -35,8 +35,7 @@
 | ADR | Scelta |
 |-----|--------|
 | [address-based-messaging](../decisions/address-based-messaging.md) | Messaggistica per indirizzo; rubrica isolata |
-| [bridge-stateless](../decisions/bridge-stateless.md) | Stato bridge in piattaforma (`outbox`, `sync_cursors`, `bridge_jobs`) |
-| [no-internal-external-chat-distinction](../decisions/no-internal-external-chat-distinction.md) | Protocollo **mai** visibile in UI contatti/inbox |
+| [no-internal-external-chat-distinction](../decisions/no-internal-external-chat-distinction.md) | Nessun campo protocollo in UI — locale vs federato implicito dall'indirizzo |
 | [multi-account-parallel-sessions](../decisions/multi-account-parallel-sessions.md) | Multi-account — manifest + focus; una GoTrue attiva |
 | [server-as-reception](../decisions/server-as-reception.md) | Ricezione filtrata (allow list) |
 | [single-device-logout-open](../decisions/single-device-logout-open.md) | Logout = chiusura locale account (no `signOut` globale) |
@@ -100,9 +99,9 @@ Schema, enum, RLS, storage: **[contracts/schema.md](../specs/contracts/schema.md
 RPC business logic: **[contracts/rpc.md](../specs/contracts/rpc.md)**  
 Migrazioni: [`supabase/migrations/`](../../supabase/migrations/)
 
-### Integrazione bridge (non implementata)
+### Federazione Gotham (non implementata)
 
-Flusso delivery e gate allow list: **SSOT** [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Consegna. Bridge stateless: [bridge-stateless.md](../decisions/bridge-stateless.md).
+Flusso delivery e gate allow list: **SSOT** [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Consegna. Protocollo wire: [gotham-protocol.md](./gotham-protocol.md).
 
 ---
 
@@ -110,7 +109,7 @@ Flusso delivery e gate allow list: **SSOT** [mailbox-inbox-outbox-spec.md](./mai
 
 - Password solo GoTrue; RLS su tabelle dominio
 - Publishable key nel client (SPA standard)
-- `outbox`, `bridge_jobs`, `sync_cursors`: inaccessibili a `authenticated`
+- `outbox`: inaccessibile a `authenticated` (worker Gotham futuro)
 
 ---
 
@@ -141,7 +140,7 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/fly/README.md`.
 
 ---
 
-## 8. Limitazioni attuali (senza bridge)
+## 8. Limitazioni attuali (federazione Gotham)
 
 | Funzionalità | Stato |
 |--------------|-------|
@@ -151,19 +150,19 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/fly/README.md`.
 | Link condivisibili | ✅ `#username` / `#username/chat`; share da profilo peer e sidebar (#178) |
 | Reazioni emoji | ✅ tap messaggio → picker; `apply_message_reaction` + realtime fatti — [PROM-MESSAGE-REACTIONS](../specs/promises/product/PROM-MESSAGE-REACTIONS.md) |
 | @mentions | ✅ `@username` cliccabile in body — [PROM-MESSAGE-MENTION](../specs/promises/product/PROM-MESSAGE-MENTION.md) |
-| Rubrica XMPP/Matrix | ✅ salvataggio |
+| Rubrica federata (`user@server`) | ✅ salvataggio contatto |
 | Invio federato (Gotham) | ⏸ outbox `queued` — spec [gotham-protocol.md](./gotham-protocol.md) |
-| Ricezione federata (Gotham) | ❌ gateway + bridge — vedi [gotham-protocol.md](./gotham-protocol.md) |
+| Ricezione federata (Gotham) | ❌ gateway + worker — vedi [gotham-protocol.md](./gotham-protocol.md) |
 | Push Web (VAPID) | ✅ `implemented` — migrazione + client + Edge Function `send-push` |
 | E2EE | ❌ fuori scope |
 
 ---
 
-## 9. Prossimi passi (post-bridge)
+## 9. Prossimi passi (Gotham)
 
-1. Worker bridge: claim `outbox`
-2. Ingestione inbound → copie archivio destinatario + Realtime
-3. Spunte XEP-0184/0333 via bridge
+1. Worker Gotham: claim `outbox` verso `peer_external_address`
+2. Ingestione inbound → `materialize_inbound_sender_message` + Realtime
+3. Spunte e reazioni federate sul wire Gotham
 
 ---
 

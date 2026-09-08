@@ -8,7 +8,7 @@
 | **Ultima revisione** | 2026-08-01 |
 | **PR origine** | #161, #179 |
 
-Promessa di prodotto: il destinatario controlla chi può **consegnargli** messaggi; filtro **sempre attivo**; rifiuto **silenzioso** verso il mittente (stile blocco XMPP).
+Promessa di prodotto: il destinatario controlla chi può **consegnargli** messaggi; filtro **sempre attivo**; rifiuto **silenzioso** verso il mittente.
 
 Gate server e schema `reception_allowlist` restano in [SYS-RECEPTION](../system/SYS-RECEPTION.md) e [contracts/schema.md](../../contracts/schema.md).
 
@@ -23,7 +23,7 @@ L'utente Alfred decide chi può materializzare messaggi nel proprio archivio e c
 1. **✓** — server ha **accettato** il messaggio (copia mittente persistita; RPC ok).
 2. **✓✓ grigie** — messaggio **consegnato** al destinatario (copia nel suo archivio; `delivered_at` valorizzato).
 
-Su rifiuto allow list **inbound**: il mittente resta al livello **1** per sempre — come blocco XMPP, senza feedback esplicito.
+Su rifiuto allow list **inbound**: il mittente resta al livello **1** per sempre — senza feedback esplicito.
 
 Su tentativo invio **outbound** senza consenso proprio: errore server strutturale; nessuna copia mittente.
 
