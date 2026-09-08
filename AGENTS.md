@@ -8,7 +8,7 @@ Processo agente (regola 0, SDD, modello): [.cursor/rules/main.mdc](.cursor/rules
 
 ## Cursor Cloud specific instructions
 
-Alfred is a **messaging platform** (Supabase + Flutter client + Python bridges). The web UI lives in
+Alfred is a **messaging platform** (Supabase + Flutter client). The web UI lives in
 `client/` (Flutter). There is no local backend to start by default: the Supabase URL + anon key are
 baked into `client/lib/config/app_config.dart` defaults, so `flutter run` talks to the hosted cloud
 backend out of the box.
@@ -16,8 +16,7 @@ backend out of the box.
 ### Toolchain (provisioned in the VM snapshot; refreshed by the startup update script)
 - Flutter SDK lives at `/opt/flutter` and is on `PATH` via `~/.bashrc` (Flutter 3.44.x / Dart 3.12.x).
   If `flutter` is not found in a non-interactive shell, call it by absolute path `/opt/flutter/bin/flutter`.
-- The startup update script only refreshes dependencies: `flutter pub get` + `npm install` in `client/`,
-  plus the Python bridge venv (`.venv` at repo root, deps from `bridge-*/requirements.txt`).
+- The startup update script only refreshes dependencies: `flutter pub get` + `npm install` in `client/`.
 - Also present in the snapshot: Docker CE, `supabase` CLI, `flyctl` is **not** installed (Fly deploy happens
   via git push, not from this VM — see below).
 
@@ -36,10 +35,6 @@ backend out of the box.
   sender's copy is still written, which is enough to exercise the send path.
 - **Docker daemon is not managed by systemd here.** Start it manually if needed:
   `sudo dockerd > /tmp/dockerd.log 2>&1 &` then `sudo chmod 666 /var/run/docker.sock` so non-root can use it.
-- **Python bridges (`bridge-xmpp`, `bridge-matrix`) are stubs** exposing only `GET /health`. Run locally:
-  `.venv/bin/python bridge-xmpp/main.py` (`XMPP_PORT`, default 8080) and `.venv/bin/python bridge-matrix/main.py`
-  (`MATRIX_PORT`, default 8081). Both return `{"status":"ok",...}`. **Port clash:** the XMPP bridge default 8080
-  collides with the `flutter run` example port below — run the web app on a different port (e.g. 8090) if both run.
 - **Fly.io è l'ambiente di review del client** (https://arkham-im.fly.dev/). Deploy: **`bash scripts/fly-deploy-client.sh`** (`flyctl` auth richiesto). Auto-deploy al push **solo** se abilitato in Fly Dashboard → Deployments (working dir `.`); push GitHub da solo **non** deploya — CI fa smoke Docker (`docker-client-fly.yml`). Do **not** `flyctl deploy` or write to the
   live Supabase from this dev VM without explicit user confirmation — that is their review surface, not a dev target.
 
@@ -87,12 +82,6 @@ Il dev server e2e (`bash scripts/test.sh e2e`) abilita il define sul dev server 
 - Benchmark avvio demo: `cd client && ALFRED_BASE_URL=https://arkham-im.fly.dev/ npx playwright test e2e/demo-live-startup-timing.spec.ts`
 - Build web: `cd client && bash scripts/verify.sh --build` (base-href `/`)
 - Auto-deploy (opzionale): Fly Deployments → collega repo GitHub, branch `main`, working directory `.` (vedi `client/deploy/fly/README.md`). L'agente **non** attende il deploy Fly.
-
-### Fly.io
-
-- **Bridge** app: `alfred-im` (`https://alfred-im.fly.dev`). Deploy: `bash scripts/fly-deploy-all.sh`
-- **Client** app (PWA): `client/deploy/fly/` — app separata (`arkham-im` default). Deploy: `bash scripts/fly-deploy-client.sh`. Vedi `client/deploy/fly/README.md`
-- Migrazione nome app bridge (una tantum da `xmpptest`): `bash scripts/fly-rename-app.sh` (richiede `flyctl auth login`).
 
 ### Auth / messaging gotchas (non-obvious, hit during setup)
 - Registration: GoTrue rejects unrealistic email domains (e.g. `@example.com` → "Email address is invalid"). Use a realistic domain like `gmail.com`.

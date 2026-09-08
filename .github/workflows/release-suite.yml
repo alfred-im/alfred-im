@@ -57,8 +57,5 @@ jobs:
         run: bash scripts/verify.sh
         working-directory: client
 
-      - name: Docker bridges smoke
-        run: bash scripts/docker-smoke.sh
-
       - name: Release suite (stack locale, sequenziale)
         run: bash scripts/ci-release-tests.sh
