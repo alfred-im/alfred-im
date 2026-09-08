@@ -102,7 +102,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | ID | Promessa |
 |----|----------|
 | **SYS-MAILBOX-033** | `list_inbox()` aggrega **solo** `messages` WHERE `archive_user_id = auth.uid()` |
-| **SYS-MAILBOX-034** | GROUP BY `peer_profile_id` (interni (stessa istanza)) |
+| **SYS-MAILBOX-034** | GROUP BY `peer_profile_id` (locale (stessa istanza)) |
 | **SYS-MAILBOX-035** | Payload riga: `peer_profile_id`, `display_name`, `last_message_preview`, `last_message_at`, `unread_count`, campi profilo peer |
 | **SYS-MAILBOX-036** | `list_peer_messages(peer, limit, before?)` = ultimi `limit` messaggi (default 100, max 500) nel mio archivio con quel peer, in ordine cronologico ASC; `before` opzionale = cursore `created_at` per pagina più vecchia |
 | **SYS-MAILBOX-057** | L'ultimo messaggio usato da `list_inbox` per l'anteprima di un peer è sempre incluso nella prima finestra di `list_peer_messages(peer)` senza cursore |

@@ -27,7 +27,7 @@ backend out of the box.
   `--dart-define=SUPABASE_URL=http://localhost:54321 --dart-define=SUPABASE_ANON_KEY=<local anon>`
   (get the anon key from `supabase status`). Prefer local for anything that writes, so you never touch the
   user's live/test data.
-- **`supabase start` works on a fresh apply** (all 46 migrations + `seed.sql`). It needs the Docker daemon
+- **`supabase start` works on a fresh apply** (all 59 migrations + `seed.sql`). It needs the Docker daemon
   running (see below). Local users can be created confirmed via the GoTrue admin API with the `service_role`
   key (`POST /auth/v1/admin/users`, `email_confirm:true`, `user_metadata.username`); the `handle_new_user`
   trigger then creates the `profiles` row. Note: the async delivery worker (`alfred_delivery.process_outbox`)
@@ -35,7 +35,7 @@ backend out of the box.
   sender's copy is still written, which is enough to exercise the send path.
 - **Docker daemon is not managed by systemd here.** Start it manually if needed:
   `sudo dockerd > /tmp/dockerd.log 2>&1 &` then `sudo chmod 666 /var/run/docker.sock` so non-root can use it.
-- **Fly.io è l'ambiente di review del client** (https://arkham-im.fly.dev/). Deploy: **`bash scripts/fly-deploy-client.sh`** (`flyctl` auth richiesto). Auto-deploy al push **solo** se abilitato in Fly Dashboard → Deployments (working dir `.`); push GitHub da solo **non** deploya — CI fa smoke Docker (`docker-client-fly.yml`). Do **not** `flyctl deploy` or write to the
+- **Fly.io è l'ambiente di review del client** — demo Arkham https://arkham-im.fly.dev/ (`bash scripts/fly-deploy-client.sh`), demo Blackgate https://blackgate-im.fly.dev/ (`bash scripts/fly-deploy-blackgate.sh`); vedi `client/deploy/README.md`. Auto-deploy al push **solo** se abilitato in Fly Dashboard → Deployments (working dir `.`); push GitHub da solo **non** deploya — CI fa smoke Docker (`docker-client-fly.yml`). Do **not** `flyctl deploy` or write to the
   live Supabase from this dev VM without explicit user confirmation — that is their review surface, not a dev target.
 
 ### Merge e CI
@@ -77,7 +77,7 @@ Il dev server e2e (`bash scripts/test.sh e2e`) abilita il define sul dev server 
 ### Hosted web client (Fly.io)
 
 - **Project page:** https://alfred-im.github.io/ — static landing in `org-site/` (deploy `deploy-org-site.yml`, secret `ORG_SITE_PAT`)
-- **Try it:** https://arkham-im.fly.dev/ — `client/deploy/arkham/`, deploy `scripts/fly-deploy-client.sh`
+- **Try it:** https://arkham-im.fly.dev/ · https://blackgate-im.fly.dev/ — `client/deploy/arkham/` / `client/deploy/blackgate/`, deploy `scripts/fly-deploy-client.sh` / `scripts/fly-deploy-blackgate.sh`
 - Build Fly: `flutter build web --pwa-strategy=none` (no SW Flutter deprecato); CanvasKit servito dall'origine — vedi `client/deploy/README.md` § Build web e avvio
 - Benchmark avvio demo: `cd client && ALFRED_BASE_URL=https://arkham-im.fly.dev/ npx playwright test e2e/demo-live-startup-timing.spec.ts`
 - Build web: `cd client && bash scripts/verify.sh --build` (base-href `/`)

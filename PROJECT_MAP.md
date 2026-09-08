@@ -52,7 +52,7 @@
 
 - **Auth**: email + password (GoTrue); **username** obbligatorio in registrazione — identità IM pubblica; email non in rubrica/ricerca
 - **Multi-account**: manifest con tutti gli account aperti; **una** sessione GoTrue in RAM (focus); switch = focus UI + restore connessione — ADR `docs/decisions/multi-account-parallel-sessions.md` · fix web PR #152
-- **Contatti**: rubrica opzionale (interni + federati), **isolata** dalla messaggistica — promesse `SYS-CONTACTS`, `PROM-PERSONAL-CONTACTS`, `SURF-CONTACTS` · ADR `docs/decisions/address-based-messaging.md`
+- **Contatti**: rubrica opzionale (locale + federati), **isolata** dalla messaggistica — promesse `SYS-CONTACTS`, `PROM-PERSONAL-CONTACTS`, `SURF-CONTACTS` · ADR `docs/decisions/address-based-messaging.md`
 - **Ricezione filtrata**: allow list personale `reception_allowlist` — sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ singola) — promesse `SYS-RECEPTION`, `PROM-RECEPTION-FILTER`, `SURF-ALLOWLIST`; toggle rapido anche da scheda profilo peer (tap avatar) — promesse `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE`
 - **Link condivisibili**: fragment `#indirizzo` / `#indirizzo/chat`; share di sistema da profilo peer e sidebar account — `PROM-SHAREABLE-LINK` (PR #178)
 - **Gruppi**: account `profile_kind = group` con identità propria; partecipazione **solo** allow list bidirezionale (no membership); shell senza inbox; erogazione automatica verso allow list del gruppo; UI autore (avatar + nome) in chat — promessa `SYS-GROUP` (PR #162)
@@ -165,7 +165,7 @@
 
 Client web Fly: `client/deploy/arkham/` + `client/deploy/blackgate/` + `client/deploy/shared/` + `scripts/fly-deploy-client.sh` / `scripts/fly-deploy-blackgate.sh`. Gate CI client: `bash scripts/docker-smoke-client.sh` (`docker-client-fly.yml`).
 
-**Migrazione nome app Fly (una tantum)**: `bash scripts/fly-rename-app.sh` poi redeploy.
+**Migrazione nome app Fly client (una tantum)**: `bash scripts/fly-rename-client-app.sh` (`alfred-im-web` → `arkham-im`).
 
 ---
 

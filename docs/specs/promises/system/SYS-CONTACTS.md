@@ -15,7 +15,7 @@ Promesse di piattaforma per tabella `contacts`, RLS, unicità e RPC `search_prof
 
 ## 1. Problema / obiettivo
 
-L'utente può salvare contatti (utenti Alfred interni o indirizzi federati futuri) come rubrica personale scoped per titolare archivio. Il backend garantisce schema, CRUD PostgREST e ricerca profili per aggiunta — senza legare rubrica a invio o inbox.
+L'utente può salvare contatti (utenti Alfred locale (stessa istanza) o indirizzi federati) come rubrica personale scoped per titolare archivio. Il backend garantisce schema, CRUD PostgREST e ricerca profili per aggiunta — senza legare rubrica a invio o inbox.
 
 ---
 

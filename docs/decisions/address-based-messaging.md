@@ -52,7 +52,7 @@ Vedi [SSOT.md](../SSOT.md) — non duplicare RPC/tabelle qui. Riferimenti rapidi
 - Vista materializzata inbox come fonte di verità
 - `thread_id` esposto al client — la chat è `(io, peer_profile_id)`
 - Concetti «bozza», «promozione thread», `get_or_create_*`
-- `contact_id` come prerequisito per scrivere (account interni)
+- `contact_id` come prerequisito per scrivere (account locale (stessa istanza))
 - Record inbox/conversazione **prima** del primo messaggio
 
 ---

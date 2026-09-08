@@ -34,7 +34,7 @@ Navigazione per AI.
 
 ## Client e toolchain
 
-- **Web client (Try it)**: https://arkham-im.fly.dev/ (Fly)
+- **Web client (Try it)**: https://arkham-im.fly.dev/ · https://blackgate-im.fly.dev/ (Fly)
 - **Project page**: https://alfred-im.github.io/ (`org-site/`)
 - **Codice**: `client/` · `supabase/`
 - [client/README.md](../client/README.md) · [`.cursor/rules/main.mdc`](../.cursor/rules/main.mdc) · [AGENTS.md](../AGENTS.md)
