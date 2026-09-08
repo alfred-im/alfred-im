@@ -30,8 +30,8 @@ BEGIN
   )
   ON CONFLICT (archive_user_id, logical_message_id) DO NOTHING;
 
-  INSERT INTO public.outbox (message_id, protocol, payload, status)
-  SELECT m.id, 'internal', jsonb_build_object(
+  INSERT INTO public.outbox (message_id, payload, status)
+  SELECT m.id, jsonb_build_object(
     'event_kind', 'deliver',
     'recipient_profile_id', v_agent2,
     'logical_message_id', v_lambda,
@@ -46,8 +46,8 @@ BEGIN
     (SELECT id FROM public.outbox WHERE status = 'queued' ORDER BY created_at DESC LIMIT 1)
   );
 
-  INSERT INTO public.outbox (message_id, protocol, payload, status)
-  SELECT m.id, 'internal', jsonb_build_object(
+  INSERT INTO public.outbox (message_id, payload, status)
+  SELECT m.id, jsonb_build_object(
     'event_kind', 'deliver',
     'recipient_profile_id', v_agent2,
     'logical_message_id', v_lambda,
