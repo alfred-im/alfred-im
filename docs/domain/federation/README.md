@@ -1,6 +1,7 @@
 # Federation — contesto dominio
 
 **Bounded context:** `federation`  
+**Stato modellazione:** `documented`  
 **Ultima revisione:** 2026-09-08
 
 Messaggistica **tra istanze Alfred** (`user@server`). Il prodotto è federato per definizione; il nome del protocollo wire compare solo nel contratto tecnico.
