@@ -23,7 +23,7 @@ Questo è il modello semantico dell'applicazione: il server è il punto in cui u
 
 | Fase | Comportamento |
 |------|----------------|
-| **Oggi (scope attuale)** | RPC account scrive copia mittente + outbox; worker `alfred_delivery.process_outbox` (stessa transazione su internal, #179) materializza destinatario e `delivered_at`/`read_at` mittente. Il destinatario vede messaggi via Realtime sulla propria copia. Gate allow list nel worker — rifiuto silenzioso se mittente non in lista. |
+| **Oggi (scope attuale)** | RPC account scrive copia mittente + outbox; worker `alfred_delivery.process_outbox` (stessa transazione su recapito locale, #179) materializza destinatario e `delivered_at`/`read_at` mittente. Il destinatario vede messaggi via Realtime sulla propria copia. Gate allow list nel worker — rifiuto silenzioso se mittente non in lista. |
 | **Domani (federazione)** | Invio e ricezione restano **disaccoppiati** tra istanze: il messaggio verso `user@server` resta in outbox `queued` finché il worker federativo non lo recapita sul peer; solo allora il mittente raggiunge il livello 2 (consegnato). |
 
 Il disaccoppiamento non è un'eccezione futura: è la **stessa logica** del caso federato, applicata progressivamente anche ai flussi che oggi appaiono sincroni.
@@ -55,4 +55,4 @@ Nel client cloud Alfred il livello 2 segue il **server come fonte di verità**: 
 ## Riferimenti
 
 - [full-stack.md](../architecture/full-stack.md) — architettura client; [PROM-MESSAGE-STATUS](../specs/promises/product/PROM-MESSAGE-STATUS.md) spunte
-- [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md) — regola vincolante: nessuna distinzione chat interna/esterna a nessun livello
+- [no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md) — regola vincolante: nessuna distinzione chat locale/federata a nessun livello

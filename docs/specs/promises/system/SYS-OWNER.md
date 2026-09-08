@@ -48,3 +48,17 @@ Campi ammessi in `instance.branding` (tutti opzionali):
 - `SURF-INBOX` — icona config server + pannello statistiche (solo owner)
 - `SURF-PEER-PROFILE` — sezione moderazione ban/unban (solo owner viewer)
 - `SURF-INSTANCE-CONFIG` — schermata editing `instance_config`
+
+---
+
+## Tracciabilità
+
+| SYS-ID | Verifica |
+|--------|----------|
+| SYS-OWNER-001, 003 | `supabase/tests/owner_accounts_smoke.sql` — enum `owner`, colonna `disabled_at` |
+| SYS-OWNER-004 | `owner_accounts_smoke.sql` — `assert_session_active` eseguibile da `authenticated` |
+| SYS-OWNER-005, 007 | `owner_accounts_smoke.sql` — `ban_profile`, `get_instance_stats` |
+| SYS-OWNER-006 | `instance_config_schema_test.dart` — quattro chiavi top-level `InstanceSettings` |
+| SYS-OWNER-001, 002 | `owner_account_test.dart` — `ProfileKind.owner`, inbox personale owner |
+
+Gate: `bash scripts/check-spec-sync.sh` + `supabase/tests/owner_accounts_smoke.sql`

@@ -36,7 +36,7 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PERSONAL-CONTACTS-006** | «Scrivi» da rubrica: contatto interno → apre chat con quel peer; contatto esterno → errore «Indirizzo esterno non ancora supportato» (scope attuale) |
+| **PROM-PERSONAL-CONTACTS-006** | «Scrivi» da rubrica: contatto locale (stessa istanza) → apre chat con quel peer; contatto federato → errore «Indirizzo esterno non ancora supportato» (scope attuale) |
 | **PROM-PERSONAL-CONTACTS-007** | Rubrica scoped all'account in **focus** — [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) |
 | **PROM-PERSONAL-CONTACTS-008** | Filtro lista: conforme a [PROM-LIST-FILTER](./PROM-LIST-FILTER.md) + [SURF-CONTACTS](../../surfaces/SURF-CONTACTS.md) |
 
@@ -44,7 +44,7 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PERSONAL-CONTACTS-010** | UI rubrica: sottotitolo «Utente Alfred» per internal; indirizzo esterno per federati (senza etichetta protocollo in inbox) |
+| **PROM-PERSONAL-CONTACTS-010** | UI rubrica: sottotitolo «Utente Alfred» per locale (stessa istanza); indirizzo federato per altre istanze (senza etichetta protocollo in inbox) |
 | **PROM-PERSONAL-CONTACTS-011** | Dopo aggiunta contatto: reload lista |
 
 ### MUST NOT
@@ -83,7 +83,7 @@ Schema CRUD (`contacts`, `search_profiles`): [SYS-CONTACTS](../system/SYS-CONTAC
 
 | PROM-ID | Verifica |
 |---------|----------|
-| PROM-PERSONAL-CONTACTS-006 | `compose_service_test.dart` — `peerFromContact` internal/external |
+| PROM-PERSONAL-CONTACTS-006 | `compose_service_test.dart` — `peerFromContact` locale/federato |
 | PROM-PERSONAL-CONTACTS-007 | `main.dart` — `ChangeNotifierProxyProvider<AuthController, ContactsController?>` |
 | PROM-PERSONAL-CONTACTS-008 | `list_filter_test.dart`; `contacts_screen_test.dart` |
 | PROM-PERSONAL-CONTACTS-003, PROM-PERSONAL-CONTACTS-004 | `send_message_to_profile_smoke.sql`; `SYS-MAILBOX-045` |

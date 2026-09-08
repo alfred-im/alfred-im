@@ -261,7 +261,7 @@ find_profile_by_username(p_username text) → table (
 )
 ```
 
-Risoluzione indirizzo Alfred interno → profilo pubblico (avatar, cover, pronomi; `profile_kind` per routing shell). Richiede `auth.uid()`; **esclude** il proprio profilo (`p.id <> auth.uid()`).
+Risoluzione indirizzo Alfred locale (stessa istanza) → profilo pubblico (avatar, cover, pronomi; `profile_kind` per routing shell). Richiede `auth.uid()`; **esclude** il proprio profilo (`p.id <> auth.uid()`).
 
 **Migrazioni**: `20260806190000_profile_cover_url.sql` (`cover_url`); `20260810120000_peer_relationship_flags.sql` (flag relazione viewer).
 

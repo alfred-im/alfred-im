@@ -201,7 +201,7 @@ Vedi [address-based-messaging.md](../decisions/address-based-messaging.md).
 
 ## 5. Mapping Gotham ↔ piattaforma Alfred
 
-Stesso bus **outbox** per internal e federato; differisce solo il consumer in fondo.
+Stesso bus **outbox** per recapito locale e federato; differisce solo il consumer in fondo.
 
 | Gotham `kind` | `outbox.event_kind` | Payload outbox (campi chiave) |
 |---------------|---------------------|-------------------------------|
@@ -322,7 +322,7 @@ Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `gro
 | Ack MESSAGE = solo HTTP status | `push_notify` sul wire |
 | | Body di ack strutturato |
 
-I gruppi restano **internal** sulla stessa istanza (`group_erogate`, `broadcast_message_to_allowlist`).
+I gruppi restano **locale** (stessa istanza) — `group_erogate`, `broadcast_message_to_allowlist`.
 
 ---
 

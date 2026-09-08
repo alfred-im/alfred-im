@@ -14,7 +14,7 @@ Promessa di prodotto: una chat è identificata da `(io, peer_profile_id)` — ne
 
 ## 1. Problema / obiettivo
 
-L'utente apre e naviga conversazioni per **indirizzo peer** (username interno / `profileId`), non per identificatori thread server. La chat esiste come vista sull'archivio titolare aggregato per `peer_profile_id`, anche prima del primo messaggio.
+L'utente apre e naviga conversazioni per **indirizzo peer** (`username` locale / `profileId`), non per identificatori thread server. La chat esiste come vista sull'archivio titolare aggregato per `peer_profile_id`, anche prima del primo messaggio.
 
 ---
 
@@ -24,7 +24,7 @@ L'utente apre e naviga conversazioni per **indirizzo peer** (username interno / 
 
 | ID | Promessa |
 |----|----------|
-| **PROM-CHAT-PEER-KEY-001** | Chat client = `(io, indirizzo peer)` — `username` interno; **nessun** `thread_id` esposto |
+| **PROM-CHAT-PEER-KEY-001** | Chat client = `(io, indirizzo peer)` — `username` locale (stessa istanza); **nessun** `thread_id` esposto |
 | **PROM-CHAT-PEER-KEY-002** | Chiave canonica conversazione 1:1 = identificativo profilo del peer |
 | **PROM-CHAT-PEER-KEY-003** | Stessa schermata chat con storico **vuoto** o **pieno** per lo stesso `profileId` |
 | **PROM-CHAT-PEER-KEY-004** | Prima riga inbox solo dopo primo messaggio nel mio archivio con quel peer |

@@ -36,7 +36,7 @@ Ogni conversazione è **una sola chat**, con lo stesso comportamento end-to-end 
 
 - Branch per **comportamento** o **semantica** della chat in base a locale vs federato
 - RPC, trigger o funzioni separate per «conversazioni locali» vs «federate»
-- Etichette, badge o sottotitoli che classificano la chat come «interna», «esterna», «in attesa federazione», ecc.
+- Etichette, badge o sottotitoli che classificano la conversazione per tipologia locale vs federata (es. «chat locale», «chat federata», «in attesa federazione»)
 - Colonne `protocol` o enum equivalenti — il routing è implicito da `peer_profile_id` vs `peer_external_address`
 
 ---
@@ -45,7 +45,7 @@ Ogni conversazione è **una sola chat**, con lo stesso comportamento end-to-end 
 
 | Destinazione | Campo DB / compose | Driver recapito |
 |--------------|-------------------|-----------------|
-| Stessa istanza | `peer_profile_id` / `username` | Worker internal (sincrono) |
+| Stessa istanza | `peer_profile_id` / `username` | Worker locale (sincrono) |
 | Altra istanza Alfred | `peer_external_address` / `user@server` | Worker federativo (async, pianificato) |
 
 L'utente vede persone e indirizzi, non protocolli né tipi di chat.

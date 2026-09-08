@@ -30,8 +30,8 @@ Vedi [SSOT.md](../SSOT.md) — non duplicare RPC/tabelle qui. Riferimenti rapidi
 
 | Tipo | Formato | Esempio | Stato attuale |
 |------|---------|---------|---------------|
-| Alfred interno | `username` | `mario_rossi` | ✅ Supportato |
-| Esterno federato | `username@server` | `mario@dominio.it` | ⏸ `unsupported` fino a gateway/worker federativo |
+| Alfred locale (stessa istanza) | `username` | `mario_rossi` | ✅ Supportato |
+| Alfred federato (altra istanza) | `username@server` | `mario@dominio.it` | ⏸ `unsupported` fino a gateway/worker federativo |
 
 ---
 

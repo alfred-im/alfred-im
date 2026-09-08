@@ -65,7 +65,7 @@ Pattern UI trasversale — nessun bounded context dedicato. Prima implementazion
 |------------|-------|------|
 | Overlay profilo peer | `implemented` | `peer_profile_overlay.dart`, [SURF-PEER-PROFILE](../../surfaces/SURF-PEER-PROFILE.md) |
 | SURF-INBOX | `implemented` | tap avatar → overlay conforme |
-| SURF-CONTACTS | `implemented` | tap avatar internal → overlay conforme |
+| SURF-CONTACTS | `implemented` | tap avatar contatto locale → overlay conforme |
 | SURF-ALLOWLIST | `implemented` | tap entry → overlay conforme |
 
 ---

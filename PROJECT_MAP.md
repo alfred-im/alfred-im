@@ -93,7 +93,7 @@
 ```
 
 - **Wire (SSOT):** `docs/architecture/gotham-protocol.md`
-- **Chat unificate** (nessuna distinzione interna/esterna): `docs/decisions/no-internal-external-chat-distinction.md`
+- **Chat unificate** (nessuna distinzione locale/federata come tipologia): `docs/decisions/no-internal-external-chat-distinction.md`
 - **Dettaglio completo**: `docs/architecture/full-stack.md`
 - **Modello caselle (mailbox)**: `docs/architecture/mailbox-inbox-outbox-spec.md` — archivio per titolare archivio + outbox; promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` (PR #159, #179)
 
@@ -159,7 +159,7 @@
 - Config: `supabase/config.toml`, `supabase/migrations/`
 - MCP agente: `execute_sql`, `apply_migration`, `list_migrations`
 - **Non deducibile — configurazione istanza (due passaggi):** (1) `config.json` al deploy — obbligatorio per connettersi a Supabase (`supabaseUrl`, `supabaseAnonKey`, `publicBaseUrl`); non modificabile dall'owner perché senza file l'app non parte. (2) `instance_config` in Supabase — nome, branding, `im_server_id`; owner da app dopo login. **Due indirizzi web:** pubblico (`publicBaseUrl`) e federativo IM (`im_server_id`), stesso dominio o due domini. SSOT: `client/deploy/fly/README.md` § Come si configura un'istanza.
-- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere l'host di `publicBaseUrl` (demo: `https://arkham-im.fly.dev/**`; rimuovere `XmppTest/**` e vecchi URL GitHub Pages se presenti); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
+- **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere l'host di `publicBaseUrl` (demo: `https://arkham-im.fly.dev/**`; rimuovere URL legacy non più usati se presenti); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
 
 ### Fly.io (`arkham-im`, `blackgate-im`, `fra`)
 
@@ -247,7 +247,7 @@ Test: `bash scripts/test.sh integration-ticks`
 
 ### Gate CI (igiene)
 
-`verify.sh` — sync spec/modello + analyze + test Dart isolati (**481**). **Non** valida il prodotto. Smoke SQL server: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, …
+`verify.sh` — sync spec/modello + analyze + test Dart isolati (**487**). **Non** valida il prodotto. Smoke SQL server: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, …
 
 Validazione release: `bash scripts/test.sh e2e` · catalogo in [client/scripts/test/README.md](client/scripts/test/README.md)
 

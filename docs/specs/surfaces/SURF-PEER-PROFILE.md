@@ -31,11 +31,11 @@ Binding UX overlay fullscreen al tap avatar di un account Alfred altrui: identit
 | **SURF-PEER-PROFILE-001** | Tap avatar peer Alfred → overlay fullscreen (`showPeerProfileOverlay`) |
 | **SURF-PEER-PROFILE-002** | Overlay mostra: avatar grande, `display_name`, `@username` se presente, pronomi se presenti |
 | **SURF-PEER-PROFILE-003** | Switch **Allow** («Consenti messaggi») ↔ `reception_allowlist` del focus — semantica [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) invariata |
-| **SURF-PEER-PROFILE-004** | Pulsante rubrica «Aggiungi alla rubrica» / «Rimuovi dalla rubrica» ↔ `contacts` internal — semantica [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md) invariata |
+| **SURF-PEER-PROFILE-004** | Pulsante rubrica «Aggiungi alla rubrica» / «Rimuovi dalla rubrica» ↔ `contacts` locale (stessa istanza) — semantica [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md) invariata |
 | **SURF-PEER-PROFILE-005** | Allow e rubrica **indipendenti** — stato UI separato |
 | **SURF-PEER-PROFILE-006** | Allow e rubrica: azione **immediata**, **senza** dialog di conferma |
 | **SURF-PEER-PROFILE-007** | Profilo proprio (`profile.id == auth.userId`): **non** aprire overlay peer |
-| **SURF-PEER-PROFILE-008** | Punti attivazione: tile inbox (solo avatar), header chat, autore messaggio gruppo, lista «Persone consentite», rubrica (solo internal) |
+| **SURF-PEER-PROFILE-008** | Punti attivazione: tile inbox (solo avatar), header chat, autore messaggio gruppo, lista «Persone consentite», rubrica (solo contatti locale) |
 | **SURF-PEER-PROFILE-009** | `ContactsController.contactForProfileId` + `removeInternalByProfileId` per rimozione rubrica da overlay |
 | **SURF-PEER-PROFILE-010** | `ReceptionAllowlistController.removeByProfileId` per toggle Allow off da overlay |
 | **SURF-PEER-PROFILE-011** | Controller legati all'account in **focus** |
