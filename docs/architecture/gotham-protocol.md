@@ -224,7 +224,7 @@ Stesso bus **outbox** per internal e federato; differisce solo il consumer in fo
      → outbox completed
 ```
 
-Routing **senza colonna protocol**: `peer_profile_id` valorizzato = recapito locale; `peer_external_address` = federato Gotham.
+Routing **senza colonna protocol**: `peer_profile_id` valorizzato = recapito locale; `peer_external_address` = federato.
 
 ### 5.2 Inbound (peer → istanza destinatario)
 
@@ -272,7 +272,7 @@ Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `gro
 
 `push_notify` è **solo internal**: accodato dal worker dopo recapito locale riuscito ([SYS-PUSH](../specs/promises/system/SYS-PUSH.md)). **Non** compare mai sul wire Gotham.
 
-**Nessun campo `protocol`:** il routing è implicito — `linked_profile_id` / `peer_profile_id` per contatti locali, `external_address` / `peer_external_address` per federato Gotham.
+**Nessun campo `protocol`:** il routing è implicito — `linked_profile_id` / `peer_profile_id` per contatti locali, `external_address` / `peer_external_address` per indirizzi federati.
 
 ---
 

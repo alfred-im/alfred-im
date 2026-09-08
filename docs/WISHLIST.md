@@ -25,9 +25,9 @@ Backlog **non vincolante** — idee future oltre le promesse `implemented` in [s
 
 ## Priorità alta
 
-### Federazione Gotham (nativa)
+### Federazione tra istanze
 
-Messaggistica tra istanze Alfred via [gotham-protocol.md](./architecture/gotham-protocol.md): gateway HTTP/3, worker outbox, materialize inbound.
+Messaggistica `user@server` verso altre istanze Alfred — contratto wire in [gotham-protocol.md](./architecture/gotham-protocol.md).
 
 | Pezzo | Stato |
 |-------|-------|
@@ -43,7 +43,7 @@ Rimozione righe dal proprio archivio senza toccare il peer; GC media con refcoun
 
 ### E2EE
 
-Fuori scope attuale; eventuale layer sopra Gotham o solo internal.
+Fuori scope attuale.
 
 ---
 

@@ -1,7 +1,7 @@
 # Alfred — Architettura (panoramica)
 
 **Data**: 2026-09-03  
-**Scope**: App completa — federazione **Gotham** (nativa) pianificata, non ancora live  
+**Scope**: App completa — **federazione** tra istanze pianificata, non ancora live  
 **Stato**: prodotto stabile su `main`
 
 > **SSOT:** [SSOT.md](../SSOT.md) — panoramica stack; non duplica catalogo promesse, RPC né flussi delivery.
@@ -26,7 +26,7 @@
                             │ (futuro: service_role)
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Gotham gateway / worker — **PIANIFICATO** (non in prod)     │
+│  Gateway / worker federativo — **PIANIFICATO** (non in prod)     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -99,9 +99,9 @@ Schema, enum, RLS, storage: **[contracts/schema.md](../specs/contracts/schema.md
 RPC business logic: **[contracts/rpc.md](../specs/contracts/rpc.md)**  
 Migrazioni: [`supabase/migrations/`](../../supabase/migrations/)
 
-### Federazione Gotham (non implementata)
+### Federazione (non implementata)
 
-Flusso delivery e gate allow list: **SSOT** [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Consegna. Protocollo wire: [gotham-protocol.md](./gotham-protocol.md).
+Flusso delivery e gate allow list: **SSOT** [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Consegna. Contratto wire: [gotham-protocol.md](./gotham-protocol.md).
 
 ---
 
@@ -109,7 +109,7 @@ Flusso delivery e gate allow list: **SSOT** [mailbox-inbox-outbox-spec.md](./mai
 
 - Password solo GoTrue; RLS su tabelle dominio
 - Publishable key nel client (SPA standard)
-- `outbox`: inaccessibile a `authenticated` (worker Gotham futuro)
+- `outbox`: inaccessibile a `authenticated` (worker federativo futuro)
 
 ---
 
@@ -140,7 +140,7 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/fly/README.md`.
 
 ---
 
-## 8. Limitazioni attuali (federazione Gotham)
+## 8. Limitazioni attuali (federazione)
 
 | Funzionalità | Stato |
 |--------------|-------|
@@ -151,18 +151,18 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/fly/README.md`.
 | Reazioni emoji | ✅ tap messaggio → picker; `apply_message_reaction` + realtime fatti — [PROM-MESSAGE-REACTIONS](../specs/promises/product/PROM-MESSAGE-REACTIONS.md) |
 | @mentions | ✅ `@username` cliccabile in body — [PROM-MESSAGE-MENTION](../specs/promises/product/PROM-MESSAGE-MENTION.md) |
 | Rubrica federata (`user@server`) | ✅ salvataggio contatto |
-| Invio federato (Gotham) | ⏸ outbox `queued` — spec [gotham-protocol.md](./gotham-protocol.md) |
-| Ricezione federata (Gotham) | ❌ gateway + worker — vedi [gotham-protocol.md](./gotham-protocol.md) |
+| Invio federato | ⏸ outbox `queued` — vedi [gotham-protocol.md](./gotham-protocol.md) |
+| Ricezione federata | ❌ gateway + worker — vedi [gotham-protocol.md](./gotham-protocol.md) |
 | Push Web (VAPID) | ✅ `implemented` — migrazione + client + Edge Function `send-push` |
 | E2EE | ❌ fuori scope |
 
 ---
 
-## 9. Prossimi passi (Gotham)
+## 9. Prossimi passi (federazione)
 
-1. Worker Gotham: claim `outbox` verso `peer_external_address`
+1. Worker federativo: claim `outbox` verso `peer_external_address`
 2. Ingestione inbound → `materialize_inbound_sender_message` + Realtime
-3. Spunte e reazioni federate sul wire Gotham
+3. Spunte e reazioni federate sul wire
 
 ---
 

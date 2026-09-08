@@ -38,7 +38,7 @@
 | **messaging** | Confine account crea solo copia mittente + accoda outbox; nessuna scrittura cross-boundary. |
 | **reception** | Gate allow list valutato **solo** nel worker (`EvaluateInboundDelivery`) prima di materializzare destinatario. |
 | **groups** | Branch gruppo in `DeliverInternal`; `GroupErogate` + `ErogateGroupMessage` per broadcast/erogazione. |
-| **federation** | Stesso outbox; destinazione `peer_external_address` → worker Gotham (pianificato) invece di recapito locale sincrono. |
+| **federation** | Stesso outbox; destinazione `peer_external_address` → worker federativo (pianificato) invece di recapito locale sincrono. |
 | **notifications** | Post-recapito: `QueuePushNotification` dal worker (SYS-PUSH). |
 
 ---

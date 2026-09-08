@@ -46,7 +46,7 @@ Ogni conversazione è **una sola chat**, con lo stesso comportamento end-to-end 
 | Destinazione | Campo DB / compose | Driver recapito |
 |--------------|-------------------|-----------------|
 | Stessa istanza | `peer_profile_id` / `username` | Worker internal (sincrono) |
-| Altra istanza Alfred | `peer_external_address` / `user@server` | Worker Gotham (async, pianificato) |
+| Altra istanza Alfred | `peer_external_address` / `user@server` | Worker federativo (async, pianificato) |
 
 L'utente vede persone e indirizzi, non protocolli né tipi di chat.
 
@@ -63,6 +63,6 @@ Differenze di **tempistica** (recapito immediato vs outbox `queued`) sono propri
 ## Riferimenti
 
 - [server-as-reception.md](./server-as-reception.md) — semantica spunte
-- [gotham-protocol.md](../architecture/gotham-protocol.md) — federazione wire
+- [gotham-protocol.md](../architecture/gotham-protocol.md) — contratto wire federazione
 - [mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md) — modello caselle
 - [full-stack.md](../architecture/full-stack.md) — panoramica stack

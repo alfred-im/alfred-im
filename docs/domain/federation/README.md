@@ -3,7 +3,7 @@
 **Bounded context:** `federation`  
 **Ultima revisione:** 2026-09-08
 
-Federazione **nativa Gotham** tra istanze Alfred. Non esistono altri protocolli federativi nel prodotto.
+Messaggistica **tra istanze Alfred** (`user@server`). Il prodotto è federato per definizione; il nome del protocollo wire compare solo nel contratto tecnico.
 
 ---
 
@@ -11,7 +11,7 @@ Federazione **nativa Gotham** tra istanze Alfred. Non esistono altri protocolli 
 
 | Componente | Stato |
 |------------|-------|
-| Spec wire + Protobuf | ✅ |
+| Contratto wire + Protobuf | ✅ |
 | Schema DB (outbox, `peer_external_address`, rubrica federata) | ✅ |
 | Gateway + worker runtime | ❌ pianificato |
 

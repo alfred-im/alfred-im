@@ -29,7 +29,7 @@
 | **Web client** | https://arkham-im.fly.dev/ — nginx + gateway shell dinamica (`client/deploy/fly/`, `client/deploy/gateway/`, `scripts/fly-deploy-client.sh`) |
 | **Deploy** | `org-site/` → `alfred-im.github.io` (`deploy-org-site.yml`, secret `ORG_SITE_PAT`); client Fly; gate `release-suite.yml` |
 | **Piattaforma** | Supabase `tvwpoxxcqwphryvuyqzu` — schema dominio + RLS + RPC |
-| **Bridge** | Rimosso — federazione solo Gotham (gateway/worker da implementare) |
+| **Bridge** | Rimosso — federazione via gateway/worker (da implementare) |
 | **Cronologia merge** | `CHANGELOG.md` |
 | **Spec (SDD)** | Registro promesse: `docs/specs/registry.md` — confine prodotto · SSOT: [docs/SSOT.md](docs/SSOT.md) |
 | **Modello** | `docs/domain/` · `docs/model/uml/` · `client/lib/machines/` — 13 bounded context con stato **`verified`** o **`documented`**; torre DDD→UML→statechart con profili UML Client/Platform; gate `scripts/check-model-sync.sh`; indice: [bounded-contexts.md](docs/domain/bounded-contexts.md) |
@@ -46,7 +46,7 @@
 
 ## 📌 Panoramica Progetto
 
-**Alfred** è software di messaggistica **consent-first** e **feminist-informed**: **Supabase + client Flutter web (PWA)**; federazione futura via protocollo nativo **Gotham**. Non è un «progetto Flutter»: Flutter è solo il client in `client/`.
+**Alfred** è software di messaggistica **consent-first** e **feminist-informed**: **Supabase + client Flutter web (PWA)**; **federato** tra istanze (recapito cross-server pianificato). Non è un «progetto Flutter»: Flutter è solo il client in `client/`.
 
 ### Caratteristiche attuali
 
@@ -59,7 +59,7 @@
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` senza federazione); archivio **per titolare archivio** in `messages` (`archive_user_id`, `author_id`, `peer_profile_id`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca liste on-demand — inbox, rubrica, persone consentite (`PROM-LIST-FILTER`, PR #132, #171)
 - **GIF / voice / location / foto / video**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client — [PROM-CHAT-MEDIA](docs/specs/promises/product/PROM-CHAT-MEDIA.md)
-- **Federazione**: outbox `queued` — attende worker Gotham (spec `docs/architecture/gotham-protocol.md`)
+- **Federazione**: outbox `queued` verso `peer_external_address` — attende gateway/worker (wire: `docs/architecture/gotham-protocol.md`)
 - **Spunte**: `delivered_at` / `read_at` sulla copia mittente — ✓ = accettato server; ✓✓/blu via worker [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md) (`deliver` + `read_receipt` outbox); lettura locale `mark_peer_read` sul destinatario — promesse `SYS-MAILBOX`, `PROM-MESSAGE-STATUS`
 - **Reazioni messaggio**: overlay reazioni su tap messaggio — `PROM-MESSAGE-REACTIONS` (PR #246)
 - **@mentions**: evidenziazione e navigazione @username in chat — `PROM-MESSAGE-MENTION`
@@ -71,7 +71,7 @@
 |-----------|------------|
 | Client | Flutter web (PWA) · Dart 3.12 |
 | Piattaforma | Supabase (Postgres, Auth, Realtime, Storage) |
-| Federazione | Gotham (gateway/worker — pianificato) |
+| Federazione | Gateway/worker — pianificato |
 | CI | GitHub Actions — `release-suite`, `spec-sync`, `docker-client-fly` |
 
 ---
@@ -88,11 +88,11 @@
 └──────────────┬──────────────┘
                │ (pianificato)
 ┌──────────────▼──────────────┐
-│   Gotham gateway / worker   │
+│   Gateway / worker federativo │
 └─────────────────────────────┘
 ```
 
-- **Gotham**: `docs/architecture/gotham-protocol.md`
+- **Wire (SSOT):** `docs/architecture/gotham-protocol.md`
 - **Chat unificate** (nessuna distinzione interna/esterna): `docs/decisions/no-internal-external-chat-distinction.md`
 - **Dettaglio completo**: `docs/architecture/full-stack.md`
 - **Modello caselle (mailbox)**: `docs/architecture/mailbox-inbox-outbox-spec.md` — archivio per titolare archivio + outbox; promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` (PR #159, #179)
@@ -220,11 +220,11 @@ bash scripts/test.sh release       # stack locale completo (alias: manual, ci)
 | Ricerca inbox on-demand, aggancio al fondo | ✅ |
 | Schema Supabase + RLS + RPC | ✅ |
 | Deploy Pages + gate CI `verify.sh` (igiene) | ✅ |
-| Bridge federazione Gotham | 🟡 Gateway/worker da implementare — vedi `docs/architecture/gotham-protocol.md` |
+| Federazione cross-istanza | 🟡 Gateway/worker da implementare — vedi `docs/architecture/gotham-protocol.md` |
 
 ### Prossimi passi
 
-- Gateway/worker Gotham (federazione nativa)
+- Gateway/worker federativo (recapito verso altre istanze)
 
 ### Design system
 

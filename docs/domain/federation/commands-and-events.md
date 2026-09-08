@@ -3,7 +3,7 @@
 **Ultima revisione:** 2026-09-08  
 **UML:** [docs/model/uml/federation/](../../model/uml/federation/)
 
-Target — worker Gotham non ancora implementato.
+Target — worker federativo non ancora implementato.
 
 ---
 
@@ -11,14 +11,14 @@ Target — worker Gotham non ancora implementato.
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `QueueFederatedSend` | Policy (invio verso `peer_external_address`) | Accoda messaggio in outbox per worker Gotham. |
-| `DeliverToFederatedPeer` | Worker Gotham | POST verso istanza peer (`/gotham/v1/events`). |
-| `ReceiveFromFederatedPeer` | Gateway Gotham | Riceve envelope inbound da peer remoto. |
-| `ApplyFederatedAck` | Worker Gotham | Propaga conferme recapito/lettura/reazione. |
+| `QueueFederatedSend` | Policy (invio verso `peer_external_address`) | Accoda messaggio in outbox per worker federativo. |
+| `DeliverToFederatedPeer` | Worker federativo | POST verso istanza peer (`/gotham/v1/events`). |
+| `ReceiveFromFederatedPeer` | Gateway federativo | Riceve envelope inbound da peer remoto. |
+| `ApplyFederatedAck` | Worker federativo | Propaga conferme recapito/lettura/reazione. |
 
 UML platform outbound (target): [seq-federation-stub.puml](../../model/uml/federation/seq-federation-stub.puml).
 
-Inbound federato: `GothamWorker` → `ReceptionGate` : `EvaluateInboundDelivery` — vedi [seq-federation-inbound.puml](../../model/uml/federation/seq-federation-inbound.puml).
+Inbound federato: `FederationWorker` → `ReceptionGate` : `EvaluateInboundDelivery` — vedi [seq-federation-inbound.puml](../../model/uml/federation/seq-federation-inbound.puml).
 
 ---
 
@@ -26,7 +26,7 @@ Inbound federato: `GothamWorker` → `ReceptionGate` : `EvaluateInboundDelivery`
 
 | Evento | Descrizione |
 |--------|-------------|
-| `FederatedSendQueued` | In attesa di worker Gotham. |
+| `FederatedSendQueued` | In attesa di worker federativo. |
 | `FederatedMessageDelivered` | Peer ha accettato (HTTP 2xx). |
 | `InboundFederatedMessageReceived` | Messaggio federato materializzato in archivio Alfred. |
 | `FederatedAckApplied` | Spunte aggiornate da evento READ/deliver federato. |

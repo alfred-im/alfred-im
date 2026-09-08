@@ -9,11 +9,11 @@
 
 | Termine | Definizione |
 |---------|-------------|
-| **Federation** | Messaggistica tra istanze Alfred tramite protocollo nativo **Gotham**. |
+| **Federation** | Messaggistica tra istanze Alfred (`user@server` verso altra istanza). |
 | **Istanza** | Deploy Alfred (Supabase + client Fly) con `im_server_id` proprio. |
 | **Indirizzo federato** | `username@im_server_id` — stesso formato in compose, rubrica e messaggistica. |
-| **Gateway Gotham** | Terminazione HTTP/3 verso peer; espone `/.well-known/gotham` e `/gotham/v1/events`. |
-| **Worker Gotham** | Claim `outbox`, traduzione Protobuf ↔ piattaforma, materialize inbound. |
+| **Gateway federativo** | Terminazione HTTP/3 verso peer; discovery e ingest eventi inbound. |
+| **Worker federativo** | Claim `outbox`, traduzione wire ↔ piattaforma, materialize inbound. |
 | **logical_message_id** | Id globale mintato dal server mittente; replicato sulla copia destinatario. |
 | **Outbox** | Coda eventi (`deliver`, `read_receipt`, `reaction_fact`, …) processata dal worker. |
 
@@ -23,13 +23,13 @@
 
 | Contesto | Relazione |
 |----------|-----------|
-| **messaging** | Stessa pipeline mailbox; federato differisce solo nel driver di recapito (worker Gotham vs internal sincrono). |
+| **messaging** | Stessa pipeline mailbox; federato differisce solo nel driver di recapito (worker federativo vs locale sincrono). |
 | **reception** | Allow list del destinatario vale anche per inbound federato. |
-| **contacts** | Rubrica può salvare `external_address`; non implica recapito finché Gotham non è live. |
+| **contacts** | Rubrica può salvare `external_address`; non implica recapito finché la federazione non è live. |
 
 ---
 
 ## Riferimenti
 
-- [gotham-protocol.md](../../architecture/gotham-protocol.md)
+- [gotham-protocol.md](../../architecture/gotham-protocol.md) — contratto wire (nome protocollo solo qui)
 - [gotham.proto](../../specs/contracts/gotham.proto)

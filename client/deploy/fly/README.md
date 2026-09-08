@@ -37,7 +37,7 @@ Dopo la connessione, il client legge e (se sei owner) modifica questi dati trami
 | Chiave | Esempio | A cosa serve |
 |--------|---------|--------------|
 | `instance.display_name` | `Arkham.im` | Nome del servizio in app — **solo DB** (owner panel o SQL); non è nel build Docker |
-| `instance.im_server_id` | `arkham-im.fly.dev` | **Dominio federativo** — parte dopo la `@` negli indirizzi (`mario@arkham-im.fly.dev`); in futuro anche federazione Gotham |
+| `instance.im_server_id` | `arkham-im.fly.dev` | **Dominio federativo** — parte dopo la `@` negli indirizzi (`mario@arkham-im.fly.dev`) |
 | `instance.branding` | oggetto JSON | Logo, colori, titolo browser |
 | `instance.legal` | oggetto JSON | Link privacy, termini, supporto |
 
@@ -210,6 +210,6 @@ bash scripts/docker-smoke-client.sh
 ## Riferimenti
 
 - Gateway: `client/deploy/gateway/`
-- Federazione (host `im_server_id`): `docs/architecture/gotham-protocol.md`
+- Federazione (host `im_server_id`): contratto wire in `docs/architecture/gotham-protocol.md`
 - SDD: `docs/specs/surfaces/SURF-INSTANCE-CONFIG.md`, `docs/specs/surfaces/SURF-AUTH.md`, `docs/specs/promises/system/SYS-OWNER.md`
 - [Fly static sites](https://fly.io/docs/languages-and-frameworks/static/)

@@ -65,7 +65,7 @@ storage: chat-media, avatars, instance-branding
 | `id` | uuid PK | |
 | `archive_user_id` | uuid FK → profiles | |
 | `linked_profile_id` | uuid FK nullable | Profilo Alfred locale (stessa istanza) |
-| `external_address` | text nullable | Indirizzo federato `user@server` (Gotham) |
+| `external_address` | text nullable | Indirizzo federato `user@server` |
 | `display_name` | text | |
 | `avatar_url` | text nullable | Snapshot opzionale |
 
@@ -117,7 +117,7 @@ storage: chat-media, avatars, instance-branding
 | `read_at` | timestamptz nullable | Uscita: spunta lettura; entrata: lettura locale |
 | `read_receipt_id` | uuid nullable | Id federativo evento lettura — mint sulla copia lettore, replicato sul mittente |
 | `failed_at` | timestamptz nullable | Invio/outbox fallito (mittente) |
-| `external_id` | text nullable | Opzionale — correlazione esterna; Gotham usa `logical_message_id` |
+| `external_id` | text nullable | Opzionale — correlazione esterna; il wire usa `logical_message_id` |
 | `created_at` | timestamptz | |
 
 **UNIQUE**: `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL`; `(archive_user_id, logical_message_id)`.
@@ -175,7 +175,7 @@ Colonna `message_id` — **ancora operativa** (polisemia per `event_kind`; vedi 
 
 **FK**: `message_id` → `messages(id)` ON DELETE CASCADE (`outbox_message_id_fkey`).
 
-Consumer internal: worker `alfred_delivery.process_outbox` (sincrono in transazione RPC account); federato Gotham: gateway/worker async (da implementare) — vedi [gotham-protocol.md](../../architecture/gotham-protocol.md).
+Consumer locale: worker `alfred_delivery.process_outbox` (sincrono in transazione RPC account); federato: gateway/worker async (da implementare) — vedi [gotham-protocol.md](../../architecture/gotham-protocol.md).
 
 **RLS**: DENY per `authenticated`.
 
@@ -197,7 +197,7 @@ Worker infrastruttura **non-account** — unico attore autorizzato a attraversar
 | `process_push_notify(uuid)` | Pipeline Web Push post-recapito ([SYS-PUSH](../promises/system/SYS-PUSH.md)) |
 | `group_erogate(uuid)` | Broadcast gruppo → allow list |
 | `erogate_group_message(...)` | Fan-out proxy partecipanti |
-| `materialize_inbound_sender_message(...)` | Inbound federato Gotham: copia destinatario con id logico messaggio dal server mittente remoto (worker/service_role) |
+| `materialize_inbound_sender_message(...)` | Inbound federato: copia destinatario con id logico messaggio dal server mittente remoto (worker/service_role) |
 
 **Tabelle infrastruttura** (non API client):
 

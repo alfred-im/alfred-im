@@ -24,7 +24,7 @@ Questo è il modello semantico dell'applicazione: il server è il punto in cui u
 | Fase | Comportamento |
 |------|----------------|
 | **Oggi (scope attuale)** | RPC account scrive copia mittente + outbox; worker `alfred_delivery.process_outbox` (stessa transazione su internal, #179) materializza destinatario e `delivered_at`/`read_at` mittente. Il destinatario vede messaggi via Realtime sulla propria copia. Gate allow list nel worker — rifiuto silenzioso se mittente non in lista. |
-| **Domani (federazione Gotham)** | Invio e ricezione restano **disaccoppiati** tra istanze: il messaggio verso `user@server` resta in outbox `queued` finché il worker Gotham non lo recapita sul peer; solo allora il mittente raggiunge il livello 2 (consegnato). |
+| **Domani (federazione)** | Invio e ricezione restano **disaccoppiati** tra istanze: il messaggio verso `user@server` resta in outbox `queued` finché il worker federativo non lo recapita sul peer; solo allora il mittente raggiunge il livello 2 (consegnato). |
 
 Il disaccoppiamento non è un'eccezione futura: è la **stessa logica** del caso federato, applicata progressivamente anche ai flussi che oggi appaiono sincroni.
 
@@ -35,16 +35,16 @@ Il disaccoppiamento non è un'eccezione futura: è la **stessa logica** del caso
 | Livello | UI | Significato nel modello cloud Alfred |
 |---------|-----|--------------------------------------|
 | **1 — Inviato** | ✓ grigia | Il messaggio è stato accettato dalla piattaforma (RPC `send_message_to_profile` / outbox `queued` per federato). |
-| **2 — Consegnato** | ✓✓ grigie | Il messaggio è **ricevuto sul server del destinatario** — disponibile nella fonte di verità per il destinatario (copia nel suo archivio Alfred, oppure ack HTTP Gotham). **Non** significa «aperto sul telefono del destinatario». Se il gate allow list rifiuta il recapito, il mittente resta al livello 1 in modo permanente e silenzioso. |
-| **3 — Lettura** | ✓✓ blu | Il destinatario ha **visualizzato** la conversazione (`mark_peer_read` / evento READ Gotham). |
+| **2 — Consegnato** | ✓✓ grigie | Il messaggio è **ricevuto sul server del destinatario** — disponibile nella fonte di verità per il destinatario (copia nel suo archivio Alfred, oppure ack HTTP dal peer remoto). **Non** significa «aperto sul telefono del destinatario». Se il gate allow list rifiuta il recapito, il mittente resta al livello 1 in modo permanente e silenzioso. |
+| **3 — Lettura** | ✓✓ blu | Il destinatario ha **visualizzato** la conversazione (`mark_peer_read` / evento READ federato). |
 
-Nel client cloud Alfred il livello 2 segue il **server come fonte di verità**: consegnato = ricevuto **nella piattaforma** (o nel server federato di destinazione tramite bridge). Il multidispositivo è coerente: tutti i device del destinatario leggono lo stesso stato dal server.
+Nel client cloud Alfred il livello 2 segue il **server come fonte di verità**: consegnato = ricevuto **nella piattaforma** (o nel server dell'altra istanza). Il multidispositivo è coerente: tutti i device del destinatario leggono lo stesso stato dal server.
 
 ---
 
 ## Conseguenze implementative
 
-1. **`delivered_at`** quando il messaggio è persistito nella fonte di verità rilevante — **non** quando il client del destinatario riceve Realtime. Meccanismo: worker `alfred_delivery` (internal) o worker Gotham (federato) — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md).
+1. **`delivered_at`** quando il messaggio è persistito nella fonte di verità rilevante — **non** quando il client del destinatario riceve Realtime. Meccanismo: worker locale (`alfred_delivery`) o worker federativo — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md).
 2. **`read_at`** legato a `mark_peer_read` / evento READ federato.
 3. **Outbox**: recapito federato può restare `queued` fino ad ack HTTP peer — non definisce una chat separata ([no-internal-external-chat-distinction.md](./no-internal-external-chat-distinction.md)).
 4. **Non confondere** con WhatsApp mobile P2P: Alfred è cloud-first; la semantica delle spunte riflette il server, non la singola sessione WebSocket del peer.

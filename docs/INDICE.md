@@ -60,8 +60,8 @@ Navigazione per AI.
 
 - [architecture/full-stack.md](./architecture/full-stack.md) — client + Supabase
 - [architecture/mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) — modello caselle
-- [architecture/gotham-protocol.md](./architecture/gotham-protocol.md) — federazione Gotham (HTTP/3, Protobuf, id, mapping outbox)
-- [specs/contracts/gotham.proto](./specs/contracts/gotham.proto) — contratto wire Gotham
+- [architecture/gotham-protocol.md](./architecture/gotham-protocol.md) — contratto wire federazione (HTTP/3, Protobuf, id, mapping outbox)
+- [specs/contracts/gotham.proto](./specs/contracts/gotham.proto) — protobuf wire
 - [architecture/README.md](./architecture/README.md)
 
 ---

@@ -13,7 +13,7 @@
 | **Rubrica** | Lista personale contatti scoped per account — scorciatoie opzionali, non prerequisito per messaggistica. |
 | **Contact** | Voce rubrica: nome visualizzato, snapshot avatar opzionale, riferimento locale o indirizzo federato. |
 | **Contatto locale** | `linked_profile_id` valorizzato — profilo Alfred sulla stessa istanza. |
-| **Contatto federato** | `external_address` valorizzato (`user@server`) — destinazione Gotham; compose da rubrica non supportato finché la federazione non è live. |
+| **Contatto federato** | `external_address` valorizzato (`user@server`); compose da rubrica non supportato finché la federazione non è live. |
 | **ArchiveUser** | Utente in focus; rubrica scoped all'account corrente. |
 | **Profile search** | Ricerca profili Alfred per aggiunta locale (soglia minima caratteri, limite risultati). |
 | **Filtered contacts** | Sottoinsieme locale per nome via filtro lista ([PROM-LIST-FILTER](../../specs/promises/product/PROM-LIST-FILTER.md)). |

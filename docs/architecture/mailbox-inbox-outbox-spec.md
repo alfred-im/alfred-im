@@ -64,7 +64,7 @@ Niente `thread_id` lato client. Niente entità «casella verso Paolo» esposta c
 2. **Nessun allineamento obbligatorio** tra il mio archivio e quello del peer.
 3. **Solo `author_id`** — niente `direction` in schema.
 4. **Il mio archivio alimenta la mia interfaccia** — casella = dove vivono i messaggi del titolare, non cache su tabella condivisa.
-5. **Outbox sempre** — anche internal passa da outbox; locale vs federato differisce solo nel driver di consegna (worker internal sincrono vs worker Gotham).
+5. **Outbox sempre** — anche internal passa da outbox; locale vs federato differisce solo nel driver di consegna (worker locale sincrono vs worker federativo).
 6. **Spunte = segnali puntuali** — aggiornano solo la copia del mittente tramite id di correlazione; **non** sincronizzano né modificano l’archivio del peer (modello federato).
 7. **Confine account** — nessuna RPC account attraversa l’archivio altrui; solo worker `alfred_delivery` (infrastruttura, non account).
 
@@ -77,14 +77,14 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e 
 | **`id` (riga archivio)** | Per archive_user | Identità **locale** del messaggio nel mio archivio (`archive_user_id = io`). Mittente e destinatario hanno **sempre** `id` diversi. |
 | **`client_message_id`** | Mittente (client + server) | Idempotenza **invio**: retry client, coda outbound, merge UI optimistic lato mittente. **Non** correla le due copie. |
 | **`logical_message_id`** | Server mittente | Identificativo **globale** del messaggio: assegnato dal **server mittente** all'accettazione dell'invio, **replicato identico** sulla copia destinatario (mai rigenerato dal recapito). Correlazione copie + segnali spunta/reaction. |
-| **`external_id`** | Opzionale | Correlazione con sistemi esterni; Gotham usa `logical_message_id` |
+| **`external_id`** | Opzionale | Correlazione esterna; il wire usa `logical_message_id` |
 
 ### Regole
 
 - Il client mittente: optimistic su `client_message_id` → poi aggancia alla riga server (`id` della **propria** copia).
 - Spunte e worker: operano su `logical_message_id`.
 - Il destinatario vede solo il **suo** `id` riga; il mittente non assume mai che coincida col proprio.
-- A volte serve l’id **come lo vede l’altro account** — il worker Gotham lo mappa sulla copia corretta lato Alfred, non il client.
+- A volte serve l’id **come lo vede l’altro account** — il worker federativo lo mappa sulla copia corretta lato Alfred, non il client.
 
 ### Idempotenza (chiavi di dedup)
 
@@ -94,13 +94,13 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per internal e 
 | Materializzazione copia destinatario | `(archive_user_id destinatario, logical_message_id)` |
 | Job outbox | `outbox.id` + `event_kind` |
 | Segnale `delivered` / `read` | `(archive_user_id mittente, logical_message_id)` |
-| Gotham inbound | `logical_message_id` (MESSAGE); `read_receipt_id` (READ); `reaction_fact_id` (REACTION) |
+| Inbound federato | `logical_message_id` (MESSAGE); `read_receipt_id` (READ); `reaction_fact_id` (REACTION) |
 
 `client_message_id` e `logical_message_id` restano **sempre** distinti: il primo è solo invio, il secondo solo correlazione e recapito.
 
 ## Consegna — stessa pipeline ovunque (vincolante)
 
-Internal e federato condividono **un solo tipo** di recapito; differisce solo il driver in fondo (worker internal sincrono vs worker Gotham async).
+Internal e federato condividono **un solo tipo** di recapito; differisce solo il driver in fondo (worker locale sincrono vs worker federativo async).
 
 | Fase | Attore | Effetto |
 |------|--------|---------|
@@ -127,7 +127,7 @@ Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istan
 
 Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 
-| Ruolo | Locale (stessa istanza) | Federato (Gotham) |
+| Ruolo | Locale (stessa istanza) | Federato (altra istanza) |
 |-------|-------------------------|-------------------|
 | Correlazione copie + spunte | `logical_message_id` | `logical_message_id` |
 | Evento lettura | `read_receipt_id` | `read_receipt_id` (wire READ) |
@@ -135,15 +135,15 @@ Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 | Copia mittente | Archivio uscita (`author_id = io`) | Archivio uscita lato Alfred |
 | Copia destinatario | Worker `deliver` | `materialize_inbound_sender_message` |
 
-Wire Gotham: [gotham-protocol.md](./gotham-protocol.md). Gotham **non** usa `external_id` sul messaggio.
+Contratto wire: [gotham-protocol.md](./gotham-protocol.md). Il messaggio federato **non** usa `external_id`.
 
 ### Tre livelli (semantica [server-as-reception](../decisions/server-as-reception.md))
 
 | Livello | UI | Significato | Internal | Federato |
 |---------|-----|-------------|----------|----------|
 | Inviato | ✓ | Accettato da piattaforma / in outbox | Copia mittente creata | Outbox `queued` |
-| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | HTTP 2xx Gotham |
-| Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` → outbox `read_receipt` | Evento READ Gotham |
+| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | HTTP 2xx peer |
+| Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` → outbox `read_receipt` | Evento READ sul wire |
 
 **Non** significa «arrivato sul device» in senso P2P: significa «nella fonte di verità rilevante» (server / piattaforma).
 
@@ -177,7 +177,7 @@ Paolo apre chat (account Paolo)
 
 Gate allow list: [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md).
 
-### Flusso federato Gotham (target)
+### Flusso federato (target)
 
 Vedi [gotham-protocol.md](./gotham-protocol.md). Sintesi:
 
@@ -185,7 +185,7 @@ Vedi [gotham-protocol.md](./gotham-protocol.md). Sintesi:
 Invio (account mittente)
   → INSERT copia mittente (logical_message_id mintato)
   → INSERT outbox (event_kind=deliver, status=queued)
-  → worker Gotham claim → POST /gotham/v1/events (GothamEnvelope MESSAGE)
+  → worker federativo claim → POST /gotham/v1/events (envelope MESSAGE)
   → peer HTTP 2xx → delivered_at mittente — ✓✓ grigie
 
 Peer segna letto
@@ -224,5 +224,5 @@ Quando si implementa: **migra e basta** — DB solo dev, niente produzione da pr
 | [SYS-ACCOUNT-BOUNDARY.md](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) | Legge madre confine account |
 | [SYS-DELIVERY.md](../specs/promises/system/SYS-DELIVERY.md) | Worker outbox + contratto spunte |
 | [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md) | Gate recapito nel worker |
-| [gotham-protocol.md](./gotham-protocol.md) | Federazione nativa Gotham (HTTP/3, Protobuf, id, mapping outbox) |
+| [gotham-protocol.md](./gotham-protocol.md) | Contratto wire federazione (HTTP/3, Protobuf, id, mapping outbox) |
 | [contracts/schema.md](../specs/contracts/schema.md) · [contracts/rpc.md](../specs/contracts/rpc.md) | Dettaglio DDL/RPC |

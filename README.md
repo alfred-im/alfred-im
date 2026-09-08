@@ -9,7 +9,7 @@
 
 *No message is delivered until the recipient has explicitly allowed the sender.*
 
-Flutter web (PWA) · Supabase · Gotham federation (planned)
+Flutter web (PWA) · Supabase · federated messaging (planned)
 
 **Project:** https://alfred-im.github.io/ · **Try it:** https://arkham-im.fly.dev/
 
@@ -59,7 +59,7 @@ The client talks to a Supabase platform layer (Postgres, Auth, Realtime, Storage
 | Message delivery status (✓ / ✓✓) | ✅ |
 | Message reactions | ✅ |
 | @mentions in chat (approved, shipping) | ✅ |
-| Gotham federation (native protocol) | Planned |
+| Federation between Alfred instances | Planned |
 
 ---
 
@@ -75,11 +75,11 @@ The client talks to a Supabase platform layer (Postgres, Auth, Realtime, Storage
 └──────────────┬──────────────┘
                │ (planned)
 ┌──────────────▼──────────────┐
-│   Gotham gateway / worker   │
+│   Federation gateway / worker   │
 └─────────────────────────────┘
 ```
 
-Federated delivery uses the native **Gotham** protocol; platform state lives in Supabase.
+Federated delivery between instances is planned; platform state lives in Supabase.
 
 ---
 
@@ -186,7 +186,7 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Roadmap
 
-- Gotham federation (native protocol between Alfred instances) — **planned**
+- Federation between Alfred instances — **planned**
 
 ---
 

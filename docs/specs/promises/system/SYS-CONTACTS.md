@@ -28,7 +28,7 @@ L'utente può salvare contatti (utenti Alfred interni o indirizzi federati futur
 | **SYS-CONTACTS-001** | Tabella `contacts` scoped per titolare archivio: `archive_user_id = auth.uid()` (RLS) |
 | **SYS-CONTACTS-002** | Contatto **locale**: `linked_profile_id` obbligatorio, `external_address` null — stessa istanza Alfred |
 | **SYS-CONTACTS-003** | **Local**: `linked_profile_id` obbligatorio, `external_address` null; `display_name` + `avatar_url` opzionale (snapshot al momento dell'aggiunta) |
-| **SYS-CONTACTS-004** | **Federato** (Gotham): `external_address` obbligatorio (`user@server`), `linked_profile_id` null; `display_name` obbligatorio |
+| **SYS-CONTACTS-004** | **Federato**: `external_address` obbligatorio (`user@server`), `linked_profile_id` null; `display_name` obbligatorio |
 | **SYS-CONTACTS-005** | Unicità: `(archive_user_id, linked_profile_id)` per internal; `(archive_user_id, lower(external_address))` per esterni |
 | **SYS-CONTACTS-006** | CRUD via PostgREST diretto su `contacts` (nessuna RPC dedicata add/delete) |
 | **SYS-CONTACTS-007** | Lista contatti: ordinata per `display_name` (client `ContactService.fetchContacts`) |
