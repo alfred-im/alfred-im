@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-09-08  
+**Ultimo aggiornamento**: 2026-09-09  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 **SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — per ogni tipo di informazione, un solo file canonico; questo documento è **mappa sessione**, non duplica promesse/RPC/test.
@@ -267,7 +267,7 @@ Validazione release: `bash scripts/test.sh e2e` · catalogo in [client/scripts/t
 
 ### Limiti noti
 
-Badge non letti su icona app; realtime account non in focus; multi-tab stesso browser: last-write-wins.
+Badge non letti su icona app; realtime account non in focus; multi-tab stesso browser: last-write-wins. **Media chat:** recapito copia solo `media_url` (blob resta nel namespace mittente) — debito isolamento; bloccante per federazione media — vedi `docs/architecture/mailbox-inbox-outbox-spec.md` § Media.
 
 ---
 
