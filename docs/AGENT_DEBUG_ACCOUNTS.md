@@ -14,7 +14,14 @@
 | Credenziali live in repository | **Nessuna** — non reintrodurre |
 | Default per test agente | Stack **locale** (`supabase start`) + account `ci-agent*` |
 
-Progetto live: `tvwpoxxcqwphryvuyqzu` (demo Pages). **Non** usare il live per script che scrivono dati senza conferma esplicita dell'utente.
+Progetti demo live (Supabase separati, stesse regole):
+
+| Istanza | Progetto Supabase | Client |
+|---------|-------------------|--------|
+| Arkham | `tvwpoxxcqwphryvuyqzu` | https://arkham-im.fly.dev/ |
+| Blackgate | `jgxkimvjmlfjdtzsuijh` | https://blackgate-im.fly.dev/ |
+
+**Non** usare i live per script che scrivono dati senza conferma esplicita dell'utente. Gli account `test1`–`test4` sotto sono sul progetto **Arkham**; Blackgate ha il proprio DB.
 
 ---
 
@@ -75,4 +82,4 @@ Account `alfredagent*` creati o ricreati sul live nonostante policy «solo local
 
 ---
 
-**Ultimo aggiornamento:** 2026-08-08
+**Ultimo aggiornamento:** 2026-09-09

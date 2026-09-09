@@ -128,7 +128,7 @@ Tracciabilità requisiti → test: tabella **Tracciabilità** in ogni promessa (
 | Web client (Fly.io) | `client/deploy/arkham/` + `client/deploy/blackgate/` + `client/deploy/shared/` + gateway `client/deploy/gateway/` — https://arkham-im.fly.dev/ · https://blackgate-im.fly.dev/ |
 | Supabase | Migrazioni in repo → MCP / `supabase db push` / dashboard (non automatiche al merge Git) |
 
-**Try it:** https://arkham-im.fly.dev/ — panoramica pubblica in [`README.md`](../../README.md).
+**Try it:** https://arkham-im.fly.dev/ · https://blackgate-im.fly.dev/ — panoramica pubblica in [`README.md`](../../README.md).
 
 **Deploy client Fly:** `bash scripts/fly-deploy-client.sh` (Arkham) / `bash scripts/fly-deploy-blackgate.sh` (Blackgate). Push su GitHub **non** deploya Fly; CI (`docker-client-fly.yml`) = smoke build. Auto-deploy Fly **solo** se abilitato in dashboard (Deployments → GitHub, working dir `.`). Vedi `client/deploy/README.md`.
 

@@ -416,6 +416,8 @@ Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `gro
 | **Gotham worker** | ❌ | Claim outbox federato; traduce ↔ Protobuf; materialize inbound |
 | **Spec in repo** | ✅ | Questo file + `gotham.proto` |
 
+Il gateway Python in `client/deploy/gateway/` serve solo la shell PWA (branding dinamico) — **non** è il gateway Gotham di questa sezione.
+
 ---
 
 ## 8. Architettura fisica

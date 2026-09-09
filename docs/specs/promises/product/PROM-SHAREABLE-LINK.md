@@ -36,8 +36,10 @@ L'utente condivide un link che punta a una **risorsa** (profilo o chat con un in
 
 | Link | Destinazione |
 |------|--------------|
-| `https://arkham-im.fly.dev/#test2` | Profilo di `test2` |
-| `https://arkham-im.fly.dev/#test2/chat` | Chat con `test2` |
+| `https://arkham-im.fly.dev/#test2` | Profilo di `test2` (istanza Arkham) |
+| `https://arkham-im.fly.dev/#test2/chat` | Chat con `test2` (istanza Arkham) |
+| `https://blackgate-im.fly.dev/#mario` | Profilo di `mario` (istanza Blackgate) |
+| `https://blackgate-im.fly.dev/#mario/chat` | Chat con `mario` (istanza Blackgate) |
 | `…/#mario@alfred.app` | Stesso peer in forma `username@server` (server locale `alfred.app`) |
 
 ### Gruppi

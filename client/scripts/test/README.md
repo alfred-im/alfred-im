@@ -105,7 +105,7 @@ Richiedono Docker + `supabase start` + browser. Eseguiti da `.github/workflows/r
 | File | Suite | Note |
 |------|-------|------|
 | **`release-snake.spec.ts`** | **`e2e`** ★ | Gate release unico — 19 scenari funzionali in un serpente |
-| `demo-live-startup-timing.spec.ts` | manuale / post-deploy Fly | Cronometra splash e transfer su demo live (`ALFRED_BASE_URL`, default `arkham-im.fly.dev`) |
+| `demo-live-startup-timing.spec.ts` | manuale / post-deploy Fly | Cronometra splash e transfer su demo live (`ALFRED_BASE_URL`; default Arkham — anche `https://blackgate-im.fly.dev/`) |
 
 Helper riusabili: `e2e/helpers/snake-*.ts`, `local-multi-account.ts`, `focus.ts`, `push.ts`, `peer-relationship.ts`, `backend-assertions.ts`.
 
