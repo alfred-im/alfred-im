@@ -18,7 +18,7 @@ import {
 } from './helpers/backend-assertions';
 import { sendPhotoFromGallery, sendPhotoFromGalleryAfterPickerResume } from './helpers/chat-media';
 import { enableFlutterAccessibility, readSavedAccountsManifest } from './helpers/flutter-a11y';
-import { attachDiagnosticLogCollector } from './helpers/diagnostic-logs';
+import { attachDiagnosticLogCollector, attachVerboseBrowserLogging, dumpDiagnosticLogsOnFailure } from './helpers/diagnostic-logs';
 import { expectFocusedUserId } from './helpers/focus';
 import { isLocalSupabaseStack } from './helpers/local-auth';
 import {
@@ -94,7 +94,13 @@ import {
   ensureManifestAccounts,
   manifestEntriesFor,
 } from './helpers/snake-manifest';
-import { snakeStep } from './helpers/snake-log';
+import {
+  snakeFinalize,
+  snakeLogBanner,
+  snakeLogFailureSummary,
+  snakeStep,
+  snakeStepAsync,
+} from './helpers/snake-log';
 import {
   expectChatHeaderShowsPeer,
   expectGroupAccountShell,
@@ -117,6 +123,8 @@ test.use({
 
 test.describe.configure({ retries: 0 });
 
+let releaseSnakeDiagLogs: string[] = [];
+
 test.describe('@release-snake gate release unico', () => {
   let cast: SnakeCast;
 
@@ -125,11 +133,24 @@ test.describe('@release-snake gate release unico', () => {
     configureLocalPushSettings();
   });
 
+  test.afterEach(({}, testInfo) => {
+    if (testInfo.status !== 'passed') {
+      snakeFinalize('test_failed');
+      snakeLogFailureSummary(testInfo.title, {
+        errors: testInfo.errors.map((e) => e.message ?? String(e)),
+      });
+      dumpDiagnosticLogsOnFailure(releaseSnakeDiagLogs, testInfo);
+    }
+  });
+
   test('serpente release — tutti i check core', async ({ page, context }) => {
     test.setTimeout(process.env.CI ? 720_000 : 480_000);
 
+    snakeLogBanner();
     const pageErrors = attachPageErrorCollector(page);
-    const diagLogs = attachDiagnosticLogCollector(page);
+    releaseSnakeDiagLogs = attachDiagnosticLogCollector(page);
+    attachVerboseBrowserLogging(page);
+    const diagLogs = releaseSnakeDiagLogs;
 
     const stamp = `${Date.now()}`;
     snakeStep('setup.cast', stamp);
@@ -527,6 +548,7 @@ test.describe('@release-snake gate release unico', () => {
     await runInstanceConfig(page, cast, stamp);
 
     snakeStep('done.ok');
+    snakeFinalize('complete');
     expect(pageErrors, `errori JS: ${pageErrors.join('; ')}`).toEqual([]);
   });
 });
@@ -537,7 +559,7 @@ async function runPushFull(
   cast: SnakeCast,
   stamp: string,
 ): Promise<void> {
-  snakeStep('core.push.full');
+  await snakeStepAsync('core.push.full', async () => {
   await addReceptionAllowlist({
     recipientUserId: cast.e1.userId,
     allowedProfileId: cast.e3.userId,
@@ -617,6 +639,7 @@ async function runPushFull(
   expect(received.peerProfileId).toBe(cast.e3.userId);
   expect(received.recipientUserId).toBe(cast.e1.userId);
   expect(received.logicalMessageId).toBe(sent.logical_message_id);
+  });
 }
 
 async function runPushTap(
@@ -626,7 +649,7 @@ async function runPushTap(
   stamp: string,
   diagLogs: string[],
 ): Promise<void> {
-  snakeStep('core.push.tap_multi_account');
+  await snakeStepAsync('core.push.tap_multi_account', async () => {
   await installPushTestEnvironment(page, context, BASE_URL);
   const saved = (await readSavedAccountsManifest(page))!;
   const account1 = manifestEntryForUsername(saved, cast.e1.username);
@@ -671,6 +694,7 @@ async function runPushTap(
     timeout: E2E_TIMEOUT.message,
   });
   expectPushNavigationDiagnostics(diagLogs);
+  });
 }
 
 async function runPushPoison(
@@ -679,7 +703,7 @@ async function runPushPoison(
   cast: SnakeCast,
   stamp: string,
 ): Promise<void> {
-  snakeStep('core.push.poison');
+  await snakeStepAsync('core.push.poison', async () => {
   const poisonBy = 'VELENO_SNAKE_B_VERSO_Y';
   const msgA = 'snake legit A';
   const msgB = 'snake legit B';
@@ -749,6 +773,7 @@ async function runPushPoison(
   expect(poisonVisible, 'INV-PUSH-MSG-3: poison non deve apparire su B|A').toBe(
     false,
   );
+  });
 }
 
 async function runPhotoResume(
@@ -756,7 +781,7 @@ async function runPhotoResume(
   context: BrowserContext,
   cast: SnakeCast,
 ): Promise<void> {
-  snakeStep('core.media.photo_resume');
+  await snakeStepAsync('core.media.photo_resume', async () => {
   await ensureManifestAccounts(page, snakeManifestOrder(cast));
   await installPushTestEnvironment(
     page,
@@ -795,6 +820,7 @@ async function runPhotoResume(
       password: cast.e1.password,
       userId: cast.e1.userId,
     },
+  });
   });
 }
 

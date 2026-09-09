@@ -47,11 +47,6 @@ source "$REPO_ROOT/scripts/ci-configure-push-local.sh"
 bash "$REPO_ROOT/scripts/ci-serve-flutter-web.sh" "$CLIENT_ROOT"
 
 echo "==> [6/6] Playwright — release snake (unico serpente, retries=0)"
-if [[ ! -x node_modules/.bin/playwright ]]; then
-  npm install
-  npx playwright install chromium
-fi
-export SUPABASE_URL SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY ALFRED_BASE_URL
-npx playwright test e2e/release-snake.spec.ts --workers=1 --retries=0
+bash "$CLIENT_ROOT/scripts/lib/run-release-snake-playwright.sh"
 
 echo "ci_release_tests_ok"

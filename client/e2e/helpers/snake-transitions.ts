@@ -13,11 +13,12 @@ import {
 } from './peer-relationship';
 import { loginSupabase } from './supabase-api';
 import { waitForAppBoot, waitForLoggedInShell } from './multi-account';
-import { snakeStep } from './snake-log';
+import { snakeLog, snakeStepAsync } from './snake-log';
 import { E2E_TIMEOUT } from './timeouts';
 
 /** Dopo mutazioni SQL la UI Flutter può restare stale — F5 sul manifest. */
 export async function resyncSnakeShell(page: Page): Promise<void> {
+  snakeLog('shell', 'resyncSnakeShell reload');
   await page.reload({
     waitUntil: 'domcontentloaded',
     timeout: E2E_TIMEOUT.boot,
@@ -25,6 +26,7 @@ export async function resyncSnakeShell(page: Page): Promise<void> {
   await waitForAppBoot(page);
   await waitForLoggedInShell(page);
   await enableFlutterAccessibility(page);
+  snakeLog('shell', 'resyncSnakeShell ready');
 }
 
 /** Allowlist bidirezionale — messaggistica possibile. */
@@ -32,7 +34,10 @@ export async function transitionMessagingReady(
   acct1: LocalE2eUser,
   acct2: LocalE2eUser,
 ): Promise<void> {
-  snakeStep('transition.messaging_ready');
+  snakeLog('transition', 'messaging_ready allowlist', {
+    acct1: acct1.username,
+    acct2: acct2.username,
+  });
   const session1 = await loginSupabase(acct1.email, acct1.password);
   const session2 = await loginSupabase(acct2.email, acct2.password);
   await addReceptionAllowlist({
@@ -54,16 +59,17 @@ export async function transitionPeerCanAdd(
   seedMessage: string,
   clientMessageId: string,
 ): Promise<void> {
-  snakeStep('transition.peer_can_add');
-  await transitionMessagingReady(acct1, acct2);
-  const session1 = await loginSupabase(acct1.email, acct1.password);
-  await sendMessageToProfile({
-    senderAccessToken: session1.accessToken,
-    recipientProfileId: acct2.userId,
-    body: seedMessage,
-    clientMessageId,
+  await snakeStepAsync('transition.peer_can_add', async () => {
+    await transitionMessagingReady(acct1, acct2);
+    const session1 = await loginSupabase(acct1.email, acct1.password);
+    await sendMessageToProfile({
+      senderAccessToken: session1.accessToken,
+      recipientProfileId: acct2.userId,
+      body: seedMessage,
+      clientMessageId,
+    });
+    clearPeerRelationshipInDb(acct1.userId, acct2.userId);
   });
-  clearPeerRelationshipInDb(acct1.userId, acct2.userId);
 }
 
 /** Rubrica + consenso già presenti (stato telefono «già collegato»). */
@@ -73,14 +79,15 @@ export async function transitionPeerEstablished(
   seedMessage: string,
   clientMessageId: string,
 ): Promise<void> {
-  snakeStep('transition.peer_established');
-  await transitionMessagingReady(acct1, acct2);
-  insertContactInDb(acct1.userId, acct2.userId, acct2.username);
-  const session1 = await loginSupabase(acct1.email, acct1.password);
-  await sendMessageToProfile({
-    senderAccessToken: session1.accessToken,
-    recipientProfileId: acct2.userId,
-    body: seedMessage,
-    clientMessageId,
+  await snakeStepAsync('transition.peer_established', async () => {
+    await transitionMessagingReady(acct1, acct2);
+    insertContactInDb(acct1.userId, acct2.userId, acct2.username);
+    const session1 = await loginSupabase(acct1.email, acct1.password);
+    await sendMessageToProfile({
+      senderAccessToken: session1.accessToken,
+      recipientProfileId: acct2.userId,
+      body: seedMessage,
+      clientMessageId,
+    });
   });
 }

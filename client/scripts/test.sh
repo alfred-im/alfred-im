@@ -109,7 +109,7 @@ run_e2e() {
     npx playwright install chromium
   fi
   echo "==> Playwright release snake (ALFRED_BASE_URL=${ALFRED_BASE_URL})"
-  npx playwright test e2e/release-snake.spec.ts --workers=1 --retries=0 "$@"
+  bash scripts/lib/run-release-snake-playwright.sh "$@"
 }
 
 run_stack() {

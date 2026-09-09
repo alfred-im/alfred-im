@@ -6,6 +6,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 
 import { enableFlutterAccessibility, readSavedAccountsManifest, type ManifestEntry } from './flutter-a11y';
 import { expectFocusedUserId, readFocusedUserId } from './focus';
+import { snakeLog } from './snake-log';
 import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
 
 export const BASE_URL =
@@ -444,9 +445,13 @@ export async function switchToAccountByDisplayName(
   displayName: string,
   userId?: string,
 ) {
+  snakeLog('account', 'switchToAccountByDisplayName', { displayName, userId });
   if (userId && (await readFocusedUserId(page)) === userId) {
     await tryCloseDrawerIfOpen(page);
     await waitForAccountShell(page);
+    snakeLog('account', 'switchToAccountByDisplayName already focused', {
+      userId,
+    });
     return;
   }
 
@@ -483,6 +488,10 @@ export async function switchToAccountByDisplayName(
 
     try {
       await waitForAccountShell(page);
+      snakeLog('account', 'switchToAccountByDisplayName ok', {
+        displayName,
+        userId,
+      });
       return;
     } catch (error) {
       if (attempt === 1) {

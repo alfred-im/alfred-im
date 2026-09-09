@@ -10,6 +10,7 @@ import {
   closeDrawerIfOpen,
   fillFlutterTextField,
 } from './multi-account';
+import { snakeLog } from './snake-log';
 import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
 
 async function clickFlutterAriaLabel(
@@ -72,6 +73,7 @@ export async function expectConfigButtonVisible(
 }
 
 export async function openInstanceConfigScreen(page: Page): Promise<void> {
+  snakeLog('instance-config', 'openInstanceConfigScreen start');
   await expectConfigButtonVisible(page, true);
   await closeDrawerIfOpen(page);
   await enableFlutterAccessibility(page);
@@ -125,6 +127,7 @@ export async function openInstanceConfigScreen(page: Page): Promise<void> {
     )
     .toBe(true);
   await saveButton.scrollIntoViewIfNeeded({ timeout: E2E_TIMEOUT.ui });
+  snakeLog('instance-config', 'openInstanceConfigScreen ready');
 }
 
 export async function clickSaveInstanceConfig(page: Page): Promise<void> {
