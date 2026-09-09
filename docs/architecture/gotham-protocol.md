@@ -316,7 +316,8 @@ Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `gro
 
 | In scope MVP Gotham | Fuori scope |
 |---------------------|-------------|
-| Messaggistica 1:1 (`MESSAGE`, `LOCATION`) | Gruppi federati |
+| Messaggistica 1:1 testo + `LOCATION` | Gruppi federati |
+| `MESSAGE` con media | Media federati **senza** ingest locale destinatario — vedi [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media |
 | READ, REACTION come eventi separati | Multi-account sul wire |
 | HTTP/3 + Protobuf + discovery | E2E encryption |
 | Ack MESSAGE = solo HTTP status | `push_notify` sul wire |
