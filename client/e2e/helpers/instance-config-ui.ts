@@ -6,8 +6,39 @@ import { expect, type Page } from '@playwright/test';
 
 import { enableFlutterAccessibility } from './flutter-a11y';
 import type { InstanceConfigExpectation } from './instance-config';
-import { fillFlutterTextField } from './multi-account';
-import { E2E_TIMEOUT } from './timeouts';
+import {
+  closeDrawerIfOpen,
+  fillFlutterTextField,
+} from './multi-account';
+import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
+
+async function clickFlutterAriaLabel(
+  page: Page,
+  ariaLabel: string,
+): Promise<boolean> {
+  return page.evaluate((label) => {
+    const nodes = Array.from(document.querySelectorAll('[aria-label]'));
+    const target = nodes.find(
+      (node) => node.getAttribute('aria-label') === label,
+    ) as HTMLElement | null;
+    if (!target) return false;
+    target.click();
+    return true;
+  }, ariaLabel);
+}
+
+async function isInstanceConfigScreenOpen(page: Page): Promise<boolean> {
+  await enableFlutterAccessibility(page);
+  const onScreen = await page
+    .getByRole('heading', { name: /^Configurazione / })
+    .isVisible()
+    .catch(() => false);
+  const saveReady = await page
+    .getByRole('button', { name: 'Salva configurazione', exact: true })
+    .isVisible()
+    .catch(() => false);
+  return onScreen || saveReady;
+}
 
 const FIELD_LABELS = {
   displayName: 'Nome visualizzato',
@@ -42,23 +73,68 @@ export async function expectConfigButtonVisible(
 
 export async function openInstanceConfigScreen(page: Page): Promise<void> {
   await expectConfigButtonVisible(page, true);
-  await page
-    .getByRole('button', { name: 'Configurazione server', exact: true })
-    .click();
+  await closeDrawerIfOpen(page);
+  await enableFlutterAccessibility(page);
+
+  const configButton = page.getByRole('button', {
+    name: 'Configurazione server',
+    exact: true,
+  });
   const saveButton = page.getByRole('button', {
     name: 'Salva configurazione',
     exact: true,
   });
-  await saveButton.scrollIntoViewIfNeeded();
-  await expect(saveButton).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+
+  await expect
+    .poll(
+      async () => {
+        if (await isInstanceConfigScreenOpen(page)) {
+          return true;
+        }
+        await closeDrawerIfOpen(page);
+        await enableFlutterAccessibility(page);
+        await configButton
+          .click({ force: true, timeout: 2_000 })
+          .catch(() => {});
+        if (!(await isInstanceConfigScreenOpen(page))) {
+          await clickFlutterAriaLabel(page, 'Configurazione server');
+        }
+        if (!(await isInstanceConfigScreenOpen(page))) {
+          const search = page.getByRole('button', { name: 'Cerca messaggi' });
+          const box = await search.boundingBox({ timeout: 2_000 }).catch(() => null);
+          if (box) {
+            await page.mouse.click(
+              box.x + box.width + 28,
+              box.y + box.height / 2,
+            );
+          }
+        }
+        return isInstanceConfigScreenOpen(page);
+      },
+      { timeout: E2E_TIMEOUT.auth, intervals: [...E2E_POLL, 1200] },
+    )
+    .toBe(true);
+
+  await expect
+    .poll(
+      async () => {
+        await enableFlutterAccessibility(page);
+        return saveButton.isVisible().catch(() => false);
+      },
+      { timeout: E2E_TIMEOUT.auth, intervals: [...E2E_POLL, 1200] },
+    )
+    .toBe(true);
+  await saveButton.scrollIntoViewIfNeeded({ timeout: E2E_TIMEOUT.ui });
 }
 
 export async function clickSaveInstanceConfig(page: Page): Promise<void> {
+  await enableFlutterAccessibility(page);
   const saveButton = page.getByRole('button', {
     name: 'Salva configurazione',
     exact: true,
   });
-  await saveButton.scrollIntoViewIfNeeded();
+  await expect(saveButton).toBeVisible({ timeout: E2E_TIMEOUT.ui });
+  await saveButton.scrollIntoViewIfNeeded({ timeout: E2E_TIMEOUT.ui });
   await saveButton.click();
 }
 

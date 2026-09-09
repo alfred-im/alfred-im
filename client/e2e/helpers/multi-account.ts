@@ -346,9 +346,10 @@ function activeAccountGroup(page: Page, displayName: string) {
 }
 
 function inboxPeerButton(page: Page, displayName: string) {
-  return page
-    .getByRole('button', { name: new RegExp(escapeRegExp(displayName)) })
-    .filter({ hasNotText: /@/ });
+  // Inbox row: "Nome, anteprima" — avatar: "Apri profilo Nome" (entrambi matchano il nome).
+  return page.getByRole('button', {
+    name: new RegExp(`^${escapeRegExp(displayName)}(,|$)`),
+  });
 }
 
 /** Inbox account utente (non gruppo): FAB o ricerca messaggi. */
@@ -616,6 +617,8 @@ export async function openPeerInInboxView(page: Page, displayName: string) {
 
 export async function backToInboxFromChat(page: Page) {
   await page.locator('flt-semantics[role="button"]').first().click();
+  await closeDrawerIfOpen(page);
+  await enableFlutterAccessibility(page);
   await expect(page.getByRole('button', { name: 'Nuovo messaggio' })).toBeVisible(
     { timeout: E2E_TIMEOUT.ui },
   );

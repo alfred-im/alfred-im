@@ -6,16 +6,23 @@ import type { Page } from '@playwright/test';
 
 /** Abilita l'albero accessibilità Flutter web (necessario per getByRole/getByLabel). */
 export async function enableFlutterAccessibility(page: Page) {
-  const enabled = await page.evaluate(() => {
-    const btn = document.querySelector(
-      '[aria-label="Enable accessibility"]',
-    ) as HTMLElement | null;
-    if (!btn) return false;
-    btn.click();
-    return true;
-  });
-  if (enabled) {
-    await page.waitForTimeout(400);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const enabled = await page.evaluate(() => {
+        const btn = document.querySelector(
+          '[aria-label="Enable accessibility"]',
+        ) as HTMLElement | null;
+        if (!btn) return false;
+        btn.click();
+        return true;
+      });
+      if (enabled) {
+        await page.waitForTimeout(400);
+      }
+      return;
+    } catch {
+      await page.waitForTimeout(300);
+    }
   }
 }
 

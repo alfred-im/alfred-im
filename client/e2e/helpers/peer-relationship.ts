@@ -334,7 +334,8 @@ export async function openPeerProfileFromChatHeader(page: Page): Promise<void> {
   await closeChatHeaderMenu(page);
   await enableFlutterAccessibility(page);
   await page
-    .getByRole('button', { name: 'Apri profilo', exact: true })
+    .getByRole('button', { name: /^Apri profilo/ })
+    .first()
     .click({ timeout: E2E_TIMEOUT.ui });
 }
 
@@ -355,8 +356,7 @@ export async function openPeerProfileFromInbox(
   await enableFlutterAccessibility(page);
   await expect(page.getByText(peerLabel)).toBeVisible({ timeout: E2E_TIMEOUT.ui });
   const profileButton = page.getByRole('button', {
-    name: 'Apri profilo',
-    exact: true,
+    name: new RegExp(`^Apri profilo.*${escapeRegExp(peerLabel)}`),
   });
   await expect(profileButton).toBeVisible({ timeout: E2E_TIMEOUT.ui });
   await profileButton.click({ timeout: E2E_TIMEOUT.ui });

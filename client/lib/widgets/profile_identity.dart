@@ -78,7 +78,7 @@ class ProfileAvatar extends StatelessWidget {
     if (onTap == null) return avatar;
 
     return Semantics(
-      label: 'Apri profilo',
+      label: 'Apri profilo ${profile.displayName}',
       button: true,
       excludeSemantics: true,
       child: Material(

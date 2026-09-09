@@ -168,6 +168,7 @@ test.describe('@release-snake gate release unico', () => {
 
     // ── Peer (PEER_CAN_ADD) ─────────────────────────────────────────────
     await transitionPeerCanAdd(cast.e1, cast.e2, peerSeed, `peer-${stamp}`);
+    await resyncSnakeShell(page);
 
     snakeStep('core.peer.profile_inbox_add');
     await switchToAccountByDisplayName(
@@ -386,7 +387,7 @@ test.describe('@release-snake gate release unico', () => {
       entry1.displayName!,
       entry1.userId,
     );
-    await page.getByText(peerLabel).first().click({ timeout: E2E_TIMEOUT.ui });
+    await openPeerInInbox(page, peerLabel);
     await waitForChatInput(page);
     await expect(page.getByText(msgIoc)).toBeVisible({
       timeout: E2E_TIMEOUT.message,
@@ -419,7 +420,7 @@ test.describe('@release-snake gate release unico', () => {
       entry1.displayName!,
       entry1.userId,
     );
-    await page.getByText(peerLabel).first().click({ timeout: E2E_TIMEOUT.ui });
+    await openPeerInInbox(page, peerLabel);
     await waitForChatInput(page);
     await backToInboxFromChat(page);
     await switchToAccountByDisplayName(
@@ -716,10 +717,7 @@ async function runPushPoison(
     account1.userId,
   );
   await enableFlutterAccessibility(page);
-  await page
-    .getByText(account2.displayName ?? cast.e2.username)
-    .first()
-    .click({ timeout: E2E_TIMEOUT.ui });
+  await openPeerInInbox(page, account2.displayName ?? cast.e2.username);
   await waitForChatInput(page);
   await simulateNotificationTap(page, {
     recipientUserId: cast.e2.userId,
@@ -826,7 +824,10 @@ async function runInstanceConfig(
     timeout: E2E_TIMEOUT.boot,
   });
   await waitForLoggedInShell(page);
+  await enableFlutterAccessibility(page);
   await expectConfigButtonVisible(page, true);
+  await page.waitForTimeout(500);
+  await enableFlutterAccessibility(page);
   const lateValues: InstanceConfigExpectation = {
     displayName: `Snake Late ${stamp}`,
     imServerId: `snake-late-${stamp}.alfred.im`,

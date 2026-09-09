@@ -39,7 +39,9 @@ class InboxPeerTile extends StatelessWidget {
             Expanded(
               child: Semantics(
                 button: true,
-                label: peer.displayName,
+                label: peer.preview.isEmpty
+                    ? peer.displayName
+                    : '${peer.displayName}, ${peer.preview}',
                 onTap: onTap,
                 excludeSemantics: true,
                 child: InkWell(
