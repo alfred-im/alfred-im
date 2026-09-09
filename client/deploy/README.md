@@ -4,8 +4,6 @@ Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container:
 
 ## Istanze demo
 
-Due istanze **paritetiche** (stesso layout, Supabase separati) per il wire federativo futuro. **Oggi** ognuna funziona come app Alfred autonoma; la messaggistica cross-istanza (`user@server` → altra demo) **non è ancora live** — vedi [gotham-protocol.md](../../docs/architecture/gotham-protocol.md) §7.
-
 | Istanza | URL | Supabase | Directory | Deploy |
 |---------|-----|----------|-----------|--------|
 | **Arkham** | https://arkham-im.fly.dev/ | `tvwpoxxcqwphryvuyqzu` | `client/deploy/arkham/` | `bash scripts/fly-deploy-client.sh` |

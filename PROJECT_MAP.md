@@ -272,7 +272,7 @@ Validazione release: `bash scripts/test.sh e2e` · catalogo in [client/scripts/t
 
 ### Limiti noti
 
-Badge non letti su icona app; realtime account non in focus; multi-tab stesso browser: last-write-wins.
+Badge non letti su icona app; realtime account non in focus; multi-tab stesso browser: last-write-wins. **Media chat:** recapito copia solo `media_url` (blob resta nel namespace mittente) — debito isolamento; bloccante per federazione media — vedi `docs/architecture/mailbox-inbox-outbox-spec.md` § Media.
 
 ---
 

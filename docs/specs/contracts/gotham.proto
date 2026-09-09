@@ -1,6 +1,14 @@
 // Gotham — protocollo federazione Alfred (wire contract)
 // SSOT testo: docs/architecture/gotham-protocol.md
 // SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Wire: envelope + discovery (questo file).
+// Piattaforma Alfred (stesso release Gotham): gotham-protocol.md § 5.4 —
+//   - reception_allowlist: allowed_profile_id (locale) | allowed_external_address (federato)
+//   - gate inbound: normalize(envelope.from_address) ∈ allow list destinatario
+//   - gate outbound: normalize(destinazione) ∈ allow list mittente
+//   - send_message_to_external_address → outbox deliver queued → worker Gotham
+//   - materialize inbound: peer_external_address + author_external_address (no profiles.id mittente)
 
 syntax = "proto3";
 
@@ -35,7 +43,10 @@ enum ReactionKind {
 
 message GothamEnvelope {
   EventKind kind = 1;
-  string from_address = 2; // es. mario@alfred.example
+  // Indirizzi Alfred normalizzati lower(user)@lower(im_server_id).
+  // from_address: usato dal gate reception inbound (allowed_external_address).
+  string from_address = 2;
+  // to_address: destinazione; usato dal gate outbound lato mittente.
   string to_address = 3;
 
   // Solo READ e REACTION: messaggio su cui agisce l'evento.

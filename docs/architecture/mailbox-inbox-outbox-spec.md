@@ -1,6 +1,6 @@
 # Modello caselle (mailbox) — implementato
 
-**Ultima revisione**: 2026-08-08  
+**Ultima revisione**: 2026-09-09  
 **Status**: ✅ **Implementato su `main`** (PR #159; gruppi #162; delivery plane #179) — promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` `implemented`  
 **Audience**: AI / implementazione
 
@@ -25,23 +25,43 @@ Tutto il resto (UI, realtime, spunte, tipi messaggio, rubrica) si deduce dall’
 
 ---
 
-## Media (GIF, voice) — file condiviso
+## Media (GIF, voice, image, video) — comportamento attuale e debito isolamento
 
-Il flusso client resta quello attuale: **un upload** nel bucket `chat-media` → **un** `media_url` → metadati sul messaggio.
+### Comportamento implementato oggi
 
-Con il modello caselle le **copie d’archivio** (mittente e destinatario) puntano allo **stesso blob** — il file **non** si duplica in storage. È una scelta deliberata (come un allegato referenziato in due caselle), non un dettaglio trascurabile.
+Il flusso client: **un upload** nel bucket `chat-media` (path `{uploader_uid}/{uuid}.*`) → **un** `media_url` → metadati sul messaggio.
 
-### Implicazioni
+Il worker `alfred_delivery` alla materializzazione della copia destinatario **non** re-ingesta il blob: copia solo il puntatore `media_url` dalla copia mittente / payload outbox (`_insert_recipient_copy` — `coalesce(payload →> 'media_url', sender.media_url)`). Nessuna duplicazione in storage.
+
+Promessa attuale: [SYS-MAILBOX-009](../specs/promises/system/SYS-MAILBOX.md) — stesso `media_url` su copia mittente e destinatario; un upload, nessuna duplicazione blob.
+
+Su **stessa istanza** il destinatario può comunque scaricare il file perché il bucket `chat-media` è pubblico e la policy `chat_media_select_authenticated` consente SELECT a qualsiasi utente autenticato su **tutto** il bucket — non perché il file viva nel suo namespace.
+
+### Debito architetturale — isolamento storage per titolare archivio
+
+Il modello caselle separa le **righe** `messages` per `archive_user_id`, ma **non** isola i blob allegati: il destinatario resta dipendente dallo storage del mittente (path sotto `{mittente_uid}/`, URL dell’istanza mittente).
+
+| Scenario | Cosa succede oggi |
+|----------|-------------------|
+| **Locale (stessa istanza)** | Destinatario legge il blob dal path del mittente; funziona finché l’oggetto esiste |
+| **Mittente elimina blob o account** | La copia destinatario resta in DB ma il `media_url` può diventare **rotto** — nessuna copia locale di riserva |
+| **Delete chat / purge futura** | Rimuovere la riga mittente non implica che il peer abbia una copia propria del file |
+| **Federazione (Gotham)** | `media_url` punta allo Storage Supabase **dell’istanza mittente** — l’istanza destinatario non può usarlo senza ingest locale; **bloccante** per media federati |
+
+**Requisito a monte (non implementato, non ancora in SDD):** al recapito (worker locale **e** worker federativo inbound) il sistema dovrebbe **materializzare una copia del blob nello storage dell’istanza / nel namespace del titolare archivio destinatario**, aggiornando `media_url` sulla copia destinatario. Solo il testo e la location (coordinate in Postgres) non richiedono ingest.
+
+Questo è coerente con il principio mailbox «archivi indipendenti»: oggi vale per le righe messaggio, **non** per gli allegati binari.
+
+### Implicazioni finché resta il modello a puntatore condiviso
 
 | Aspetto | Conseguenza |
 |---------|-------------|
 | **Riferimento** | Più righe `messages` possono condividere lo stesso `media_url` |
-| **Garbage collection** | Eliminare un messaggio o una casella **non** implica che il file sia orfano: va verificato se **altre** copie (o altri titolari archivio) referenziano ancora quell’URL prima di cancellare da `chat-media` |
-| **Delete locale** (futuro) | Cancello la chat dal mio lato → la mia riga sparisce, ma il peer può ancora referenziare lo stesso file |
-| **Rimozione lato mittente** | Cancellare il file in storage mentre il destinatario ha ancora il messaggio → **link rotto** per il peer, salvo policy esplicita |
+| **Garbage collection** | Eliminare un messaggio o una casella **non** implica che il file sia orfano: va verificato se **altre** copie referenziano ancora quell’URL prima di cancellare da `chat-media` |
 | **Retry / invio fallito** | Upload riuscito ma consegna non materializzata → blob in storage senza (o con) riga archivio — edge case da contare nel GC |
+| **Wire Gotham** | Passare `media_url` sul wire **non basta** senza strategia di fetch + ingest lato ricevente — vedi [gotham-protocol.md](./gotham-protocol.md) § Media |
 
-**Regola:** trattare i media come **risorsa condivisa con refcount logico** (o audit delle referenze), non come proprietà della singola riga archivio. La strategia GC (quando contare le referenze, job async, soft-delete) va definita **prima** di implementare delete messaggi/casella o purge storage — fuori scope attuale ma **non** ignorabile nel design.
+**Regola provvisoria (stato attuale):** trattare i media come risorsa condivisa con refcount logico. La strategia GC e l’**ingest per copia** vanno definiti **prima** di federazione media, delete chat, o purge storage affidabili.
 
 ---
 

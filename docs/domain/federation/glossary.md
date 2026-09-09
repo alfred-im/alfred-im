@@ -24,7 +24,7 @@
 | Contesto | Relazione |
 |----------|-----------|
 | **messaging** | Stessa pipeline mailbox; federato differisce solo nel driver di recapito (worker federativo vs locale sincrono). |
-| **reception** | Allow list del destinatario vale anche per inbound federato ([SYS-RECEPTION-018](../../specs/promises/system/SYS-RECEPTION.md)); il worker risolve l'indirizzo wire → `profile_id` prima del gate. |
+| **reception** | Allow list locale + esterna (`allowed_profile_id` / `allowed_external_address`) — [gotham-protocol.md § 5.4](../../architecture/gotham-protocol.md). |
 | **contacts** | Rubrica può salvare `external_address`; non implica recapito finché la federazione non è live. |
 
 ---

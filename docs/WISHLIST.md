@@ -1,6 +1,6 @@
 # Wishlist funzionalità
 
-**Ultimo aggiornamento**: 2026-09-08
+**Ultimo aggiornamento**: 2026-09-09
 
 Backlog **non vincolante** — idee future oltre le promesse `implemented` in [specs/registry.md](./specs/registry.md).
 
@@ -25,14 +25,27 @@ Backlog **non vincolante** — idee future oltre le promesse `implemented` in [s
 
 ## Priorità alta
 
+### Ingest media al recapito (isolamento storage)
+
+Oggi le copie archivio mittente/destinatario **condividono** lo stesso `media_url` (blob nel path del mittente) — [SYS-MAILBOX-009](./specs/promises/system/SYS-MAILBOX.md), [mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) § Media.
+
+| Pezzo | Stato |
+|-------|-------|
+| Upload unico lato mittente | ✅ |
+| Worker copia puntatore su destinatario | ✅ |
+| Ingest blob nel namespace destinatario | ❌ |
+| Federazione media (Gotham) | ❌ bloccata senza ingest |
+
+**Prerequisito a monte** per federazione media affidabile, delete chat, e resilienza se il mittente rimuove il file.
+
 ### Federazione tra istanze
 
-Messaggistica `user@server` verso altre istanze Alfred — contratto wire in [gotham-protocol.md](./architecture/gotham-protocol.md). Backlog implementativo: [gotham-protocol §7.1](./architecture/gotham-protocol.md#71-backlog-implementazione-ordine-suggerito). Demo paritetiche: [Arkham + Blackgate](../client/deploy/README.md#istanze-demo) (infrastruttura, federazione non ancora testabile).
+Messaggistica `user@server` verso altre istanze Alfred — contratto wire in [gotham-protocol.md](./architecture/gotham-protocol.md). Istanze demo paritarie: [client/deploy/README.md](../client/deploy/README.md) § Istanze demo.
 
 | Pezzo | Stato |
 |-------|-------|
 | Spec wire + Protobuf | ✅ in repo |
-| Gateway Gotham (HTTP/3) | ❌ |
+| Gateway Fly | ❌ |
 | Worker claim outbox | ❌ |
 | Invio verso `peer_external_address` | ⏸ outbox `queued` |
 | Ricezione inbound | ❌ |
