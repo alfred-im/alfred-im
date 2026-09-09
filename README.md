@@ -11,7 +11,7 @@
 
 Flutter web (PWA) · Supabase · federated messaging (planned)
 
-**Project:** https://alfred-im.github.io/ · **Try it:** https://arkham-im.fly.dev/
+**Project:** https://alfred-im.github.io/ · **Try it:** https://arkham-im.fly.dev/ · https://blackgate-im.fly.dev/
 
 ---
 

@@ -108,7 +108,7 @@ MessagePayload:
   logical_message_id    // id globale messaggio (server mittente) — unico id federativo
   body
   content_type          // text | gif | voice | image | video (non "location" — vedi sotto)
-  media_url?            // URL condiviso tra copie (stesso blob storage)
+  media_url?            // stesso valore URL su copia mittente e destinatario — vedi mailbox-inbox-outbox-spec § Media; in federazione il blob resta sull'istanza mittente, il peer referenzia l'URL pubblico sul wire senza duplicare il file
   duration_seconds?
   media_mime?
   media_size_bytes?
@@ -231,9 +231,9 @@ Routing **senza colonna protocol**: `peer_profile_id` valorizzato = recapito loc
 ```text
 1. Gateway Fly riceve POST /gotham/v1/events
 
-2. Worker federativo valida envelope, risolve indirizzi → profile_id
+2. Worker federativo valida envelope, risolve `from_address` / `to_address` → `profile_id` locali
 
-3. Gate reception (allow list destinatario)
+3. Gate reception (allow list destinatario) — stesso modello di recapito locale ([SYS-RECEPTION-018](../specs/promises/system/SYS-RECEPTION.md)): `is_sender_allowed_for_reception(destinatario, mittente_profile_id)` dopo la risoluzione indirizzo
      SE consentito:
        MESSAGE → alfred_delivery.materialize_inbound_sender_message(...)
                  (logical_message_id dal server mittente remoto — non rigenerare)
@@ -283,6 +283,24 @@ Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `gro
 | **Gateway Fly HTTP/3** | ❌ | Termina QUIC; espone `/.well-known/gotham` e `/gotham/v1/events` |
 | **Gotham worker** | ❌ | Claim outbox federato; traduce ↔ Protobuf; materialize inbound |
 | **Spec in repo** | ✅ | Questo file + `gotham.proto` |
+
+**Nota:** il gateway Python in `client/deploy/gateway/` serve solo la shell PWA (branding dinamico) — **non** è il gateway Gotham di questa sezione.
+
+### 7.1 Backlog implementazione (ordine suggerito)
+
+Prerequisiti piattaforma (§6) sono già su `main`. Resta il runtime wire + adattamenti client/RPC.
+
+| # | Pezzo | Dipendenze | Note |
+|---|-------|------------|------|
+| 1 | Gateway Gotham HTTP/3 per istanza | Deploy Fly | Accanto a nginx; discovery + ingest `POST /gotham/v1/events` |
+| 2 | Worker outbound | Gateway peer raggiungibile | Claim outbox con `peer_external_address`; serializza `GothamEnvelope`; retry con stessi id |
+| 3 | Worker inbound | Gateway §1 | Risolve indirizzi → `profile_id`; gate [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md); `materialize_inbound_sender_message` |
+| 4 | RPC invio verso `peer_external_address` | Worker §2 | Oggi solo `send_message_to_profile(uuid)`; compose client blocca `user@server` |
+| 5 | Inbox e storico per `peer_external_address` | RPC §4 | `list_inbox` / `list_peer_messages` oggi centrati su `peer_profile_id` |
+| 6 | READ e REACTION sul wire | Worker §2–3 | Eventi separati con `read_receipt_id` / `reaction_fact_id` |
+| 7 | Firma envelope (`public_keys`) | Discovery | Post-MVP |
+
+**Istanze demo:** [Arkham e Blackgate](../../client/deploy/README.md#istanze-demo) — deploy paritetico (client Fly + Supabase separati, `im_server_id` distinti). Servono come **coppia** per validare il wire quando §7 sarà implementato; **oggi** non c'è messaggistica cross-istanza end-to-end da testare.
 
 ---
 
@@ -354,3 +372,4 @@ I gruppi restano **locale** (stessa istanza) — `group_erogate`, `broadcast_mes
 |------|----------|
 | 2026-09-05 | Prima stesura — envelope senza `event_id` / `external_id`; id federativi nominati; mapping outbox |
 | 2026-09-08 | Rimosso `contact_protocol`; routing implicito; solo Gotham come federazione |
+| 2026-09-09 | `media_url` allineato a mailbox spec; backlog §7.1; gate reception inbound esplicito |

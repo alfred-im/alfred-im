@@ -27,12 +27,12 @@ Backlog **non vincolante** — idee future oltre le promesse `implemented` in [s
 
 ### Federazione tra istanze
 
-Messaggistica `user@server` verso altre istanze Alfred — contratto wire in [gotham-protocol.md](./architecture/gotham-protocol.md).
+Messaggistica `user@server` verso altre istanze Alfred — contratto wire in [gotham-protocol.md](./architecture/gotham-protocol.md). Backlog implementativo: [gotham-protocol §7.1](./architecture/gotham-protocol.md#71-backlog-implementazione-ordine-suggerito). Demo paritetiche: [Arkham + Blackgate](../client/deploy/README.md#istanze-demo) (infrastruttura, federazione non ancora testabile).
 
 | Pezzo | Stato |
 |-------|-------|
 | Spec wire + Protobuf | ✅ in repo |
-| Gateway Fly | ❌ |
+| Gateway Gotham (HTTP/3) | ❌ |
 | Worker claim outbox | ❌ |
 | Invio verso `peer_external_address` | ⏸ outbox `queued` |
 | Ricezione inbound | ❌ |

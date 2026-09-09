@@ -4,12 +4,14 @@ Via canonica per **pubblicare il client** di un'istanza Alfred. Stack container:
 
 ## Istanze demo
 
+Due istanze **paritetiche** (stesso layout, Supabase separati) per il wire federativo futuro. **Oggi** ognuna funziona come app Alfred autonoma; la messaggistica cross-istanza (`user@server` → altra demo) **non è ancora live** — vedi [gotham-protocol.md](../../docs/architecture/gotham-protocol.md) §7.
+
 | Istanza | URL | Supabase | Directory | Deploy |
 |---------|-----|----------|-----------|--------|
 | **Arkham** | https://arkham-im.fly.dev/ | `tvwpoxxcqwphryvuyqzu` | `client/deploy/arkham/` | `bash scripts/fly-deploy-client.sh` |
 | **Blackgate** | https://blackgate-im.fly.dev/ | `jgxkimvjmlfjdtzsuijh` | `client/deploy/blackgate/` | `bash scripts/fly-deploy-blackgate.sh` |
 
-Asset condivisi (Dockerfile, nginx, entrypoint): `client/deploy/shared/`. Gateway Python: `client/deploy/gateway/`.
+Asset condivisi (Dockerfile, nginx, entrypoint): `client/deploy/shared/`. Shell gateway Python (branding PWA, **non** gateway Gotham): `client/deploy/gateway/`.
 
 Ogni istanza ha gli stessi file: `fly.toml`, `config.json`, `instance_config.sql`.
 
@@ -203,9 +205,11 @@ La dashboard GitHub **non** espone `--depot=false`; se il workaround regione non
 
 ## Dopo il deploy client
 
-1. **Supabase** — migrazioni in `supabase/migrations/` sul progetto dell'istanza (MCP, `supabase db push`, dashboard). Per branding owner: `20260830100000_instance_branding_storage.sql` (bucket `instance-branding`).
+Ripetere **per ogni** istanza (Arkham e Blackgate hanno progetti Supabase distinti):
+
+1. **Supabase** — migrazioni in `supabase/migrations/` sul progetto dell'istanza (`tvwpoxxcqwphryvuyqzu` o `jgxkimvjmlfjdtzsuijh`; MCP, `supabase db push`, dashboard). Seed opzionale: `client/deploy/<istanza>/instance_config.sql`. Per branding owner: `20260830100000_instance_branding_storage.sql` (bucket `instance-branding`).
 2. **Edge Function** — redeploy `send-push` se cambia il payload push (`supabase/functions/send-push/`).
-3. **Supabase Auth** → Redirect URLs: host di `publicBaseUrl` (es. `https://<tua-app>.fly.dev/**`)
+3. **Supabase Auth** → Redirect URLs: host di `publicBaseUrl` dell'istanza (`https://arkham-im.fly.dev/**` o `https://blackgate-im.fly.dev/**`)
 4. Verifica: `GET /` contiene shell dinamica (`alfred-boot-splash`, no commento `$FLUTTER_BASE_HREF`); `GET /manifest.json` risponde JSON da bootstrap (non file statico pre-merge).
 
 ## Smoke test locale
