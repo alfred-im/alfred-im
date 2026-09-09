@@ -1,6 +1,6 @@
 # Gotham — protocollo federazione Alfred
 
-**Ultima revisione:** 2026-09-05  
+**Ultima revisione:** 2026-09-09  
 **Stato:** `documented` — wire contract definito; runtime non implementato  
 **Audience:** AI / implementazione gateway e worker Gotham
 
@@ -108,7 +108,7 @@ MessagePayload:
   logical_message_id    // id globale messaggio (server mittente) — unico id federativo
   body
   content_type          // text | gif | voice | image | video (non "location" — vedi sotto)
-  media_url?            // URL condiviso tra copie (stesso blob storage)
+  media_url?            // URL sorgente lato mittente — il peer deve ingest locale (vedi mailbox § Media)
   duration_seconds?
   media_mime?
   media_size_bytes?
@@ -354,3 +354,4 @@ I gruppi restano **locale** (stessa istanza) — `group_erogate`, `broadcast_mes
 |------|----------|
 | 2026-09-05 | Prima stesura — envelope senza `event_id` / `external_id`; id federativi nominati; mapping outbox |
 | 2026-09-08 | Rimosso `contact_protocol`; routing implicito; solo Gotham come federazione |
+| 2026-09-09 | `media_url` wire: ingest locale destinatario obbligatorio — vedi mailbox § Media |
