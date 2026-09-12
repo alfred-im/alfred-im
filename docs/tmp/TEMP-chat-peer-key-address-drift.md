@@ -297,11 +297,114 @@ Oggi i passi 3–7 falliscono per deriva chiave (e reception/schema federato non
 
 ## 12. Domande aperte per la conversazione di correzione
 
-1. **Stringa canonica client:** esporre sempre `user@server` anche per peer locale (con `im_server_id` istanza) per unificare, oppure `username` senza `@` in locale e `user@server` solo se federato? (ADR oggi: entrambi validi in compose/link.)
-2. **Profilo shadow:** Gotham esclude profilo obbligatorio in `profiles` per mittente remoto — confermare per display (solo rubrica + indirizzo).
-3. **Overload RPC vs parametro text unificato** per storico/lettura.
-4. **Ordine di lavoro:** amend SDD chiave indirizzo **prima** di SYS-FEDERATION / worker Gotham?
-5. **Retrocompatibilità:** chat locali restano keyed su stesso `profileId` internamente se `ConversationKey` normalizza `username` → stesso peer?
+### Risolte in review chat (2026-09-12) — vedi § 15
+
+### Ancora aperte
+
+1. **Case insensitive — storage:** confronto con `lower()` ma stringa salvata come scritta dall’utente, oppure persistenza sempre in lower?
+2. **Schema storage:** un solo campo `peer_address` (text) al posto di `peer_profile_id` + `peer_external_address`, oppure due colonne restano come encoding interno del delivery?
+3. **Allow list:** stesso modello un campo `allowed_address` text, o due colonne con mutua esclusione?
+4. **Profilo shadow:** nessun `profiles.id` obbligatorio per mittente remoto — display da rubrica o indirizzo grezzo (conferma esplicita da distillare in SDD).
+5. **Ordine di lavoro:** amend SDD chiave indirizzo **prima** di worker Gotham (confermato in discussione — da formalizzare in registry).
+
+---
+
+## 15. Chiarimenti review chat (2026-09-12)
+
+**Stato:** accordo di modello emerso in chat — da distillare in dominio / SDD `approved`; non SSOT finché non promosso.
+
+### 15.1 Non esiste locale/federato — esiste l’indirizzo
+
+- **Vietato** ragionare in termini di «chat locale» vs «chat federata» o «peer interno» vs «peer esterno» a livello account, UI, inbox, allow list, RPC account.
+- Esiste solo la **stringa indirizzo** della controparte.
+- L’unico modulo che distingue «questo `@server` è la mia istanza o un’altra» è il **delivery**, al momento del recapito (worker interno in-process vs HTTP Gotham verso altro server).
+- Gotham **non** è un tipo di chat: è solo il trasporto tra server Alfred diversi.
+
+### 15.2 Forme indirizzo — nessuna equivalenza
+
+| Input utente | Significato |
+|--------------|-------------|
+| `mario` | Indirizzo sulla **stessa istanza** (username senza server esplicito) |
+| `mario@arkham-im.fly.dev` | Indirizzo con server esplicito |
+| `mario@blackgate-im.fly.dev` | Indirizzo su **altra** istanza |
+
+**Regole vincolanti emerse:**
+
+- **Nessuna normalizzazione** tra forme: `mario` **≠** `mario@arkham-im.fly.dev` — stringhe diverse, identità diverse, chat diverse, voci allow list diverse (**per ora**).
+- **Case insensitive** sul confronto (dettaglio storage § 12 ancora aperto).
+- Entrambe le forme sono **usabili** in compose e allow list.
+
+Il delivery **riconosce** che `@arkham-im.fly.dev` (se è l’`im_server_id` locale) è recapito **interno** — stesso worker, niente Gotham — **senza** fondere le stringhe né unificare le chat.
+
+### 15.3 Inbox — chiave = controparte
+
+Ogni titolare archivio raggruppa per **l’indirizzo della controparte** (chi ho davanti), non il proprio:
+
+- Paolo su Arkham parla con Mario su Blackgate → inbox Paolo: `mario@blackgate-im.fly.dev`; inbox Mario: `paolo@arkham-im.fly.dev`.
+- Non esiste una chiave simmetrica condivisa tra i due archivi (modello caselle: due archivi indipendenti).
+
+### 15.4 Identità mittente vista dal destinatario (stessa istanza)
+
+Esempio: Paolo e Mario su `arkham-im.fly.dev`.
+
+| Paolo scrive a | Mario vede mittente come |
+|----------------|--------------------------|
+| `mario` | `paolo` |
+| `mario@arkham-im.fly.dev` | `paolo@arkham-im.fly.dev` |
+
+La forma usata per **indirizzare** la controparte determina come appare l’identità del mittente sul lato destinatario (stessa istanza). Da formalizzare in schema (`author` come indirizzo, non solo `author_id` UUID).
+
+### 15.5 Allow list
+
+- Stessa semantica letterale degli indirizzi: `mario` e `mario@arkham-im.fly.dev` sono **due voci distinte** (per ora).
+- Gate inbound/outbound: match sull’**indirizzo** (case insensitive), non su `profiles.id`.
+- Schema attuale (`allowed_profile_id` solo UUID) **non** implementa questo — gap da amend SYS-RECEPTION + Gotham § 5.4.
+
+### 15.6 Architettura a tre piani (confermata)
+
+```text
+ACCOUNT (client + RPC mittente)
+  → «Scrivo a indirizzo X» — nessuna distinzione interno/esterno
+  → copia mittente + outbox (sempre)
+
+DELIVERY (worker)
+  → unico punto che legge @server e sceglie driver recapito
+  → interno: stessa istanza (bare username o @mio_server)
+  → Gotham: @altro_server
+
+RECEPTION API (unica)
+  → materializza copia in archivio destinatario
+  → chiamata da deliver_internal (in-process) e da gateway Gotham (ingress)
+```
+
+### 15.7 Gotham — solo indirizzi completi sul wire
+
+- Sul wire **sempre** `user@server` (es. `paolo@arkham-im.fly.dev` → `mario@blackgate-im.fly.dev`): oltre confine istanza, `mario` bare non ha significato.
+- Il mittente remoto sul destinatario federato appare sempre come indirizzo completo (da envelope).
+- Gotham **non** entra** per `mario` bare né per `*@mio_server` quando il delivery classifica l’indirizzo come interno.
+
+### 15.8 Cosa resta della deriva (codice + SDD)
+
+La direttiva originale (address-based, no tipologia chat) resta **ottimale**; il lavoro è riallineare:
+
+| Livello | Azione |
+|---------|--------|
+| SDD | Amend `PROM-CHAT-PEER-KEY`, `SYS-MAILBOX`, `SYS-RECEPTION`, SURF-CHAT/INBOX, contratti |
+| SQL | Inbox/storico/lettura/send keyed su indirizzo; reception API unificata; allow list per indirizzo |
+| Client | `ChatPeer` e pipeline senza `profileId` obbligatorio; compose non blocca `user@server` |
+| Gotham | Worker outbound/ingress **dopo** modello indirizzo lato prodotto |
+
+`peer_profile_id` (se resta) = dettaglio risoluzione/join interno al delivery, **non** chiave conversazione.
+
+### 15.9 Ordine di lavoro (confermato in discussione)
+
+1. Amend SDD + dominio (chiave indirizzo, § 15)
+2. Reception API unificata + RPC account su indirizzo
+3. Client su indirizzo
+4. Allow list per indirizzo
+5. Worker Gotham
+
+Implementare Gotham prima del punto 1–3 produce messaggi in DB che inbox/client non possono mostrare.
 
 ---
 
