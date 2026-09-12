@@ -301,11 +301,8 @@ Oggi i passi 3–7 falliscono per deriva chiave (e reception/schema federato non
 
 ### Ancora aperte
 
-1. **Case insensitive — storage:** confronto con `lower()` ma stringa salvata come scritta dall’utente, oppure persistenza sempre in lower?
-2. **Schema storage:** un solo campo `peer_address` (text) al posto di `peer_profile_id` + `peer_external_address`, oppure due colonne restano come encoding interno del delivery?
-3. **Allow list:** stesso modello un campo `allowed_address` text, o due colonne con mutua esclusione?
-4. **Profilo shadow:** nessun `profiles.id` obbligatorio per mittente remoto — display da rubrica o indirizzo grezzo (conferma esplicita da distillare in SDD).
-5. **Ordine di lavoro:** amend SDD chiave indirizzo **prima** di worker Gotham (confermato in discussione — da formalizzare in registry).
+1. **Profilo shadow:** nessun `profiles.id` obbligatorio per mittente remoto — display da rubrica o indirizzo grezzo (da formalizzare in SDD).
+2. **Ordine di lavoro:** amend SDD chiave indirizzo **prima** di worker Gotham (da formalizzare in registry).
 
 ---
 
@@ -331,7 +328,7 @@ Oggi i passi 3–7 falliscono per deriva chiave (e reception/schema federato non
 **Regole vincolanti emerse:**
 
 - **Nessuna normalizzazione** tra forme: `mario` **≠** `mario@arkham-im.fly.dev` — stringhe diverse, identità diverse, chat diverse, voci allow list diverse (**per ora**).
-- **Case insensitive** sul confronto (dettaglio storage § 12 ancora aperto).
+- **Case insensitive** in compose/UI; **persistenza sempre lowercase** in DB (vedi § 15.10).
 - Entrambe le forme sono **usabili** in compose e allow list.
 
 Il delivery **riconosce** che `@arkham-im.fly.dev` (se è l’`im_server_id` locale) è recapito **interno** — stesso worker, niente Gotham — **senza** fondere le stringhe né unificare le chat.
@@ -352,13 +349,46 @@ Esempio: Paolo e Mario su `arkham-im.fly.dev`.
 | `mario` | `paolo` |
 | `mario@arkham-im.fly.dev` | `paolo@arkham-im.fly.dev` |
 
-La forma usata per **indirizzare** la controparte determina come appare l’identità del mittente sul lato destinatario (stessa istanza). Da formalizzare in schema (`author` come indirizzo, non solo `author_id` UUID).
+La forma usata per **indirizzare** la controparte determina come appare l’identità del mittente sul lato destinatario (stessa istanza). Persistenza: `author_address` text lowercase (§ 15.11).
 
 ### 15.5 Allow list
 
 - Stessa semantica letterale degli indirizzi: `mario` e `mario@arkham-im.fly.dev` sono **due voci distinte** (per ora).
-- Gate inbound/outbound: match sull’**indirizzo** (case insensitive), non su `profiles.id`.
-- Schema attuale (`allowed_profile_id` solo UUID) **non** implementa questo — gap da amend SYS-RECEPTION + Gotham § 5.4.
+- Gate inbound/outbound: match su `allowed_address` (lowercase), non su `profiles.id`.
+- Schema target: colonna `allowed_address` text — vedi § 15.11. Lo schema attuale (`allowed_profile_id` UUID) e Gotham § 5.4 con split `allowed_profile_id` / `allowed_external_address` sono **pre-chiarimento** e vanno amendati.
+
+### 15.10 Persistenza indirizzi
+
+- Input utente **case insensitive**.
+- **Salvataggio sempre in lowercase** (`mario`, `mario@arkham-im.fly.dev`, `paolo@blackgate-im.fly.dev`).
+- Nessun altro trattamento (niente equivalenza tra forme, niente `lower()` solo al confronto).
+
+### 15.11 Schema target (solo ciò che prevede il modello chiarito)
+
+Il DB attuale (`peer_profile_id` + `peer_external_address`, allow list su UUID) è **deriva implementativa** — non fa parte del modello documentato in § 15. In amend SYSTEM va **solo** quanto segue (niente colonne parallele «locale vs federato»):
+
+**`messages`**
+
+| Colonna | Tipo | Ruolo |
+|---------|------|--------|
+| `peer_address` | text NOT NULL | Controparte conversazione — chiave inbox/storico/lettura |
+| `author_address` | text NOT NULL | Identità mittente come indirizzo (§ 15.4) |
+| `author_id` | uuid nullable | Solo casi tecnici già previsti (es. erogazione gruppo — [SYS-GROUP](../specs/promises/system/SYS-GROUP.md)) |
+
+**Rimuovere** dal modello prodotto: `peer_profile_id`, `peer_external_address` come identità chat. Il delivery può risolvere username → profilo **in transazione** senza persistere UUID come chiave.
+
+**`reception_allowlist`**
+
+| Colonna | Tipo | Ruolo |
+|---------|------|--------|
+| `archive_user_id` | uuid FK | Chi filtra (invariato) |
+| `allowed_address` | text NOT NULL | Indirizzo consentito, lowercase |
+
+**UNIQUE** `(archive_user_id, allowed_address)`. CHECK: `allowed_address` non può coincidere con l’indirizzo del titolare archivio.
+
+Stesso principio per **`contacts`** in amend successivo: `address` text al posto di `linked_profile_id` / `external_address` (fuori scope immediato chiave chat, stesso vincolo § 15.1).
+
+**Contratti da amendare** (non SSOT finché non promossi): `contracts/schema.md`, `contracts/rpc.md`, Gotham § 5.4, `SYS-MAILBOX`, `SYS-RECEPTION`.
 
 ### 15.6 Architettura a tre piani (confermata)
 
@@ -381,7 +411,7 @@ RECEPTION API (unica)
 
 - Sul wire **sempre** `user@server` (es. `paolo@arkham-im.fly.dev` → `mario@blackgate-im.fly.dev`): oltre confine istanza, `mario` bare non ha significato.
 - Il mittente remoto sul destinatario federato appare sempre come indirizzo completo (da envelope).
-- Gotham **non** entra** per `mario` bare né per `*@mio_server` quando il delivery classifica l’indirizzo come interno.
+- Gotham **non** entra per `mario` bare né per `*@mio_server` quando il delivery classifica l’indirizzo come interno.
 
 ### 15.8 Cosa resta della deriva (codice + SDD)
 
@@ -390,11 +420,9 @@ La direttiva originale (address-based, no tipologia chat) resta **ottimale**; il
 | Livello | Azione |
 |---------|--------|
 | SDD | Amend `PROM-CHAT-PEER-KEY`, `SYS-MAILBOX`, `SYS-RECEPTION`, SURF-CHAT/INBOX, contratti |
-| SQL | Inbox/storico/lettura/send keyed su indirizzo; reception API unificata; allow list per indirizzo |
-| Client | `ChatPeer` e pipeline senza `profileId` obbligatorio; compose non blocca `user@server` |
-| Gotham | Worker outbound/ingress **dopo** modello indirizzo lato prodotto |
-
-`peer_profile_id` (se resta) = dettaglio risoluzione/join interno al delivery, **non** chiave conversazione.
+| SQL | Schema § 15.11; inbox/storico/lettura/send su `peer_address`; reception API unificata |
+| Client | Pipeline su indirizzo (`peer_address`); compose non blocca `user@server` |
+| Gotham | Worker outbound/ingress **dopo** modello indirizzo lato prodotto; wire lowercase `user@server` |
 
 ### 15.9 Ordine di lavoro (confermato in discussione)
 
