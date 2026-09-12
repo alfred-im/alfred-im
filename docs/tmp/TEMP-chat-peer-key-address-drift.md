@@ -1,7 +1,7 @@
 # TEMP — Deriva chiave conversazione: indirizzo vs `profileId`
 
 **Stato:** bozza temporanea per review — **da rimuovere** dopo promozione in dominio / SDD `approved`  
-**Data:** 2026-09-12 (ultimo aggiornamento: 2026-09-12 — rubrica + `get_profiles`)  
+**Data:** 2026-09-12 (ultimo aggiornamento: 2026-09-12 — profilo sempre pubblico)  
 **Branch:** `main` (commit dedicato, file eliminabile)  
 **Audience:** revisione modello / SDD / implementazione federazione
 
@@ -252,7 +252,7 @@ Allineare a Gotham §5.4:
 | `docs/domain/messaging/glossary.md` | Termine «chiave conversazione» esplicito |
 | `docs/domain/reception/` | Separato: allow list esterna |
 | `SYS-CONTACTS` | Amend: rubrica = solo `address`; rimuovere snapshot e `linked_profile_id` come identità |
-| `SYS-PROFILE` | Amend: `get_profiles(addresses[])` batch locale + federato; deprecare batch solo per UUID come unico percorso |
+| `SYS-PROFILE` | Amend: `get_profiles(addresses[])` batch locale + federato; **profilo sempre pubblico** (§ 16.6); deprecare batch solo per UUID come unico percorso |
 | `PROM-PEER-PROFILE` | Overlay per indirizzo via `get_profiles`; locale e remoto stesso percorso |
 | `docs/domain/contacts/`, `docs/domain/federation/` | Rubrica = indirizzi; profilo = interazione federata |
 | `SURF-CHAT`, `SURF-INBOX` | Binding su chiave indirizzo; display via `get_profiles` |
@@ -348,10 +348,11 @@ Oggi i passi 3–7 falliscono per deriva chiave (e reception/schema federato non
 | 7 | Dove vivono i dati profilo (nome, avatar, pronomi) | **`get_profiles(addresses[])`** — stesso sistema della scheda profilo peer |
 | 8 | `get_profile` vs batch | **`get_profiles` plurale** — una RPC per inbox, rubrica, overlay (anche batch da 1 elemento) |
 | 9 | Profilo remoto = interazione federata | Sì — stesso percorso a tre piani dei messaggi (ACCOUNT → DELIVERY → RECEPTION), materializzazione = risposta profilo, non riga `profiles` locale |
+| 10 | Gate `get_profiles` (allow list?) | **No gate** — profilo pubblico **sempre** (locale e federato). Serve a sapere *chi* chiede il permesso di scrivermi; consent-first = allow list sui **messaggi**, non profilo privato (§ 16.6) |
 
 ### Ancora aperta (solo formalizzazione SDD)
 
-Nessuna decisione di modello pendente su rubrica/profilo. Resta **scrittura** in amend `SYS-CONTACTS`, `SYS-PROFILE`, `PROM-PEER-PROFILE`, `SYS-MAILBOX`, dominio `contacts` / `federation` e `registry.md`.
+Nessuna decisione di modello pendente su rubrica/profilo/visibilità. Resta **scrittura** in amend `SYS-CONTACTS`, `SYS-PROFILE`, `PROM-PEER-PROFILE`, `SYS-MAILBOX`, dominio `contacts` / `federation` / `profile` e `registry.md`.
 
 ---
 
@@ -502,12 +503,14 @@ RUBRICA
 PRESENTAZIONE (dati pubblici peer)
   get_profiles(addresses[])  →  locale: profiles su stessa istanza
                              →  remoto: interazione federata (§ 16)
+                             →  sempre pubblico; nessun gate allow list (§ 16.6)
   fallback UI                →  stringa indirizzo
 
 VIETATO
   profilo shadow in profiles sul destinatario
   rubrica come cache di nome/avatar
   GET PROFILE singolo come percorso principale (usare batch)
+  profilo privato / get_profiles gated da allow list
 ```
 
 ---
@@ -555,9 +558,9 @@ DELIVERY
                       @altro_server → richiesta federata (worker Gotham)
 
 RECEPTION (istanza che possiede il profilo)
-  Gate (allow list / policy — da definire in amend SYS-RECEPTION)
+  Nessun gate allow list — profilo pubblico per chi conosce l’indirizzo (§ 16.6)
   Legge profiles sulla propria istanza (fonte autorevole)
-  Risponde con snapshot campi pubblici
+  Risponde con campi pubblici (username, display_name, avatar, pronomi, …)
 
 MATERIALIZZAZIONE lato richiedente
   Risposta a get_profiles — **non** INSERT in profiles
@@ -591,6 +594,34 @@ Definire il contratto `get_profiles` al passo 1 anche se il ramo federato del de
 - `get_profiles` **non** crea profilo shadow in `profiles`.
 - Inbox **non** deve attendere il batch per mostrare le righe (indirizzo subito, arricchimento async).
 - Piggyback profilo dentro ogni `MESSAGE` sul wire resta **ottimizzazione** opzionale — non sostituisce `get_profiles` per rubrica, overlay o peer senza messaggi.
+
+### 16.6 Profilo pubblico — sempre (consent-first)
+
+**Decisione (review 2026-09-12):** i dati del profilo pubblico Alfred sono **sempre leggibili** da chi conosce l’indirizzo — stessa istanza o federato. `get_profiles` **non** è gated dall’allow list né da «aver già chattato».
+
+**Perché (consent-first):**
+
+- L’allow list risponde a: «**consento** a questa persona di scrivermi?»
+- Per rispondere serve sapere **chi** è — nome, avatar, username visibili **prima** del consenso.
+- Se il profilo fosse privato fino al consenso, non potrei riconoscerti e non potrei darti **il mio** permesso in modo informato.
+
+**Responsabilità utente:**
+
+- Il profilo espone solo campi **pubblici** per design (`SYS-PROFILE`: niente email in superfici pubbliche).
+- Sta all’utente **non inserire** in `display_name`, bio, avatar, pronomi informazioni che non vuole siano pubbliche.
+- Non esiste «profilo visibile solo ai consentiti» nel modello target.
+
+**Separazione netta:**
+
+| Meccanismo | Cosa governa |
+|------------|--------------|
+| **Profilo pubblico** (`get_profiles`, `search_profiles`, scheda peer) | Identità visibile — **sempre** per indirizzo noto |
+| **Allow list** (`reception_allowlist`) | **Recapito messaggi** — chi può farmi arrivare contenuto in archivio |
+| **Rubrica** (`contacts`) | Scorciatoia personale — solo indirizzi salvati |
+
+**Federazione:** l’istanza di origine serve il profilo pubblico su richiesta federata **senza** verificare allow list del richiedente. Il gate reception resta su **messaggi** (e segnali READ/REACTION), non su lettura profilo.
+
+**Amend SDD:** `SYS-PROFILE`, `SYS-RECEPTION`, `PROM-PEER-PROFILE`, dominio `profile` / `reception` / `federation` — esplicitare MUST pubblico e MUST NOT gate `get_profiles` su allow list.
 
 ---
 
