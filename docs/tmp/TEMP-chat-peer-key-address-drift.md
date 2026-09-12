@@ -297,12 +297,25 @@ Oggi i passi 3–7 falliscono per deriva chiave (e reception/schema federato non
 
 ## 12. Domande aperte per la conversazione di correzione
 
-### Risolte in review chat (2026-09-12) — vedi § 15
+### Risolte in review chat (2026-09-12) — dettaglio § 15
 
-### Ancora aperte
+| # | Domanda originale | Decisione |
+|---|-------------------|-----------|
+| 1 | Stringa canonica (`username` vs `user@server`) | Entrambe usabili; **nessuna equivalenza** tra forme (`mario` ≠ `mario@arkham-im.fly.dev`) |
+| 2 | Profilo shadow per mittente remoto | **Nessun** `profiles.id` obbligatorio su istanza destinataria; display da rubrica o indirizzo grezzo (Gotham § 5.4) |
+| 3 | Overload RPC vs parametro text unificato | RPC account su **indirizzo** (`peer_address`); niente ramo UUID come chiave chat |
+| 4 | Ordine di lavoro | Amend SDD chiave indirizzo → reception API → client → allow list → **poi** worker Gotham (§ 15.9) |
+| 5 | Retrocompatibilità chat locali | Chiave = indirizzo; `profileId` non è identità conversazione |
+| — | Normalizzazione / case | Input case insensitive; **persistenza sempre lowercase** (§ 15.10) |
+| — | Schema DB | `peer_address`, `author_address`, `allowed_address` — niente split locale/federato (§ 15.11) |
+| — | Allow list | Una voce = un `allowed_address` lowercase; gate su indirizzo, non UUID |
+| — | Inbox | Raggruppa per **indirizzo controparte** da ogni lato (§ 15.3) |
+| — | Ruolo Gotham | Solo trasporto cross-server; indirizzi completi sul wire (§ 15.7) |
+| — | Architettura invio/ricezione | Account ignora interno/esterno; delivery sceglie driver; reception API unica (§ 15.6) |
 
-1. **Profilo shadow:** nessun `profiles.id` obbligatorio per mittente remoto — display da rubrica o indirizzo grezzo (da formalizzare in SDD).
-2. **Ordine di lavoro:** amend SDD chiave indirizzo **prima** di worker Gotham (da formalizzare in registry).
+### Ancora aperta (solo formalizzazione SDD)
+
+1. **Profilo shadow in promesse `approved`:** confermare in amend SYSTEM/PRODUCT che display inbound federato = rubrica (`contacts`) o `author_address` grezzo — nessuna creazione profilo shadow in `profiles`. Il concetto è deciso (riga tabella sopra); resta scrittura in `SYS-RECEPTION`, `SYS-MAILBOX`, dominio messaging e registry.
 
 ---
 
