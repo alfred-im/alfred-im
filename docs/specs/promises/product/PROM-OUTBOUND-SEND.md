@@ -10,7 +10,7 @@
 
 Promessa di prodotto: messaggi in uscita accodati client-side con UI optimistic fino ad ACK server; merge per `client_message_id`.
 
-Pipeline RPC `send_message_to_profile`: [SYS-MAILBOX](../system/SYS-MAILBOX.md) e [contracts/rpc.md](../../contracts/rpc.md).
+Pipeline RPC `send_message_to_address`: [SYS-MAILBOX](../system/SYS-MAILBOX.md) e [contracts/rpc.md](../../contracts/rpc.md).
 
 ---
 
@@ -27,7 +27,7 @@ L'utente vede il proprio messaggio subito in chat (stato pending) mentre il clie
 | ID | Promessa |
 |----|----------|
 | **PROM-OUTBOUND-SEND-001** | Coda client per messaggi in uscita con retry |
-| **PROM-OUTBOUND-SEND-002** | Chiave coda: `userId\|peerProfileId` — scoped per account e peer |
+| **PROM-OUTBOUND-SEND-002** | Chiave coda: `userId\|peerAddress` — scoped per account e peer |
 | **PROM-OUTBOUND-SEND-003** | Merge optimistic su `client_message_id` — una sola bolla per id client |
 | **PROM-OUTBOUND-SEND-004** | UI mittente: stato «in invio» fino a risposta server |
 | **PROM-OUTBOUND-SEND-005** | Bolle mittente identificate dall'account in focus corrente |

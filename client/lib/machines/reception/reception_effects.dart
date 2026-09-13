@@ -3,17 +3,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import '../../models/allowed_person.dart';
-import '../../models/profile_summary.dart';
 
 /// Effetti reception → [ReceptionAllowlistController] e servizi collegati.
 abstract class ReceptionEffects {
   Future<void> loadAllowlist();
 
-  bool isProfileAllowed(String profileId);
+  bool isAddressAllowed(String address);
 
-  Future<void> addAllowedProfile(ProfileSummary profile);
+  Future<void> addAllowedAddress(String address);
 
   Future<void> removeAllowedPerson(AllowedPerson person);
 
-  Future<void> removeByProfileId(String profileId);
+  Future<void> removeByAddress(String address);
 }

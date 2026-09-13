@@ -49,12 +49,13 @@ class InboxCoordinator {
   List<ChatPeer> get filteredPeers => filterByQueryFields(
         state.peers,
         _machine.searchQuery,
-        (peer) => [peer.displayName, peer.preview, peer.address ?? ''],
+        (peer) => [peer.displayName, peer.preview, peer.peerAddress],
       );
 
-  ChatPeer? findByProfileId(String profileId) {
+  ChatPeer? findByPeerAddress(String peerAddress) {
+    final normalized = peerAddress.trim().toLowerCase();
     for (final peer in state.peers) {
-      if (peer.profileId == profileId) return peer;
+      if (peer.peerAddress == normalized) return peer;
     }
     return null;
   }

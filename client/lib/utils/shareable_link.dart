@@ -29,10 +29,14 @@ class ShareableAddressResolution {
   const ShareableAddressResolution({
     required this.normalizedAddress,
     required this.localUsername,
+    this.isLocalInstance = true,
   });
 
   final String normalizedAddress;
   final String localUsername;
+
+  /// `true` se `@server` coincide con l'istanza corrente o bare username.
+  final bool isLocalInstance;
 }
 
 /// Legge il fragment corrente (senza `#`), o `null` se assente.
@@ -61,7 +65,7 @@ ShareableLinkTarget? parseShareableFragment(String? fragment) {
   );
 }
 
-/// Normalizza e verifica se l'indirizzo è risolvibile su questa istanza.
+/// Normalizza e verifica se l'indirizzo è valido per link/share.
 ShareableAddressResolution? resolveShareableAddress(String raw) {
   final parsed = parseComposeAddress(raw);
   switch (parsed.kind) {
@@ -71,21 +75,21 @@ ShareableAddressResolution? resolveShareableAddress(String raw) {
       return ShareableAddressResolution(
         normalizedAddress: parsed.normalized,
         localUsername: parsed.normalized,
+        isLocalInstance: true,
       );
     case ComposeAddressKind.externalServer:
       final at = parsed.normalized.lastIndexOf('@');
       if (at <= 0) return null;
       final username = parsed.normalized.substring(0, at);
       final server = parsed.normalized.substring(at + 1);
-      if (server != AppConfig.imServerId.toLowerCase()) {
-        return null;
-      }
       if (!AuthIdentity.isValidUsername(username)) {
         return null;
       }
+      final isLocal = server == AppConfig.imServerId.toLowerCase();
       return ShareableAddressResolution(
         normalizedAddress: parsed.normalized,
         localUsername: username,
+        isLocalInstance: isLocal,
       );
   }
 }
@@ -94,7 +98,11 @@ ShareableAddressResolution? resolveShareableAddress(String raw) {
 String canonicalShareableAddress(ProfileSummary profile) {
   final username = profile.username?.trim().toLowerCase();
   if (username == null || username.isEmpty) {
-    throw StateError('Profilo senza username condivisibile');
+    final address = profile.address?.trim().toLowerCase();
+    if (address == null || address.isEmpty) {
+      throw StateError('Profilo senza indirizzo condivisibile');
+    }
+    return address;
   }
   return username;
 }
@@ -127,7 +135,7 @@ ProfileSummary profileForSharing(
   if (profile.hasUsername) return profile;
   final username = fallbackUsername?.trim().toLowerCase();
   if (username == null || username.isEmpty) return profile;
-  return profile.copyWith(username: username);
+  return profile.copyWith(username: username, address: username);
 }
 
 /// Invocazione share di sistema sostituibile nei test.
@@ -141,7 +149,7 @@ Future<void> shareShareableProfileLink(
   String? shareTitle,
   Rect? sharePositionOrigin,
 }) async {
-  if (!profile.hasUsername) {
+  if (!profile.hasUsername && !profile.hasAddress) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

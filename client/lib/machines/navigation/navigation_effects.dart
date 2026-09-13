@@ -15,7 +15,7 @@ abstract class NavigationEffects {
   /// Transazione unica OpenConversation — policy per [OpenConversationSource].
   Future<bool> openConversation({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     required OpenConversationSource source,
     bool allowProfileFallback = true,
   });

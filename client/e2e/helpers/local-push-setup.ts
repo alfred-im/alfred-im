@@ -23,7 +23,7 @@ const ANON_KEY =
 
 export type PushPayload = {
   recipient_user_id: string;
-  peer_profile_id: string;
+  peer_address: string;
   peer_display_name: string;
   preview_text: string;
   logical_message_id: string;
@@ -61,11 +61,12 @@ export function configureLocalPushSettings(): void {
   );
 }
 
-function insertAllowlistLocalSql(recipientUserId: string, allowedProfileId: string) {
+function insertAllowlistLocalSql(recipientUserId: string, allowedAddress: string) {
+  const safeAddress = allowedAddress.replace(/'/g, "''").toLowerCase();
   const sql =
-    `INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id) ` +
-    `VALUES ('${recipientUserId}', '${allowedProfileId}') ` +
-    `ON CONFLICT (archive_user_id, allowed_profile_id) DO NOTHING;`;
+    `INSERT INTO public.reception_allowlist (archive_user_id, allowed_address) ` +
+    `VALUES ('${recipientUserId}', '${safeAddress}') ` +
+    `ON CONFLICT (archive_user_id, allowed_address) DO NOTHING;`;
   execSync(
     `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
     { stdio: 'pipe' },
@@ -94,11 +95,12 @@ export function configureLocalChatMediaBucket(): void {
 
 export function addReceptionAllowlist(options: {
   recipientUserId: string;
-  allowedProfileId: string;
+  allowedAddress: string;
   recipientAccessToken: string;
 }): Promise<void> {
+  const normalizedAddress = options.allowedAddress.trim().toLowerCase();
   if (isLocalSupabaseStack() && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    insertAllowlistLocalSql(options.recipientUserId, options.allowedProfileId);
+    insertAllowlistLocalSql(options.recipientUserId, normalizedAddress);
     return Promise.resolve();
   }
 
@@ -116,7 +118,7 @@ export function addReceptionAllowlist(options: {
     },
     body: JSON.stringify({
       archive_user_id: options.recipientUserId,
-      allowed_profile_id: options.allowedProfileId,
+      allowed_address: normalizedAddress,
     }),
   }).then(async (res) => {
     if (!res.ok && res.status !== 409) {
@@ -127,13 +129,13 @@ export function addReceptionAllowlist(options: {
   });
 }
 
-export async function sendMessageToProfile(options: {
+export async function sendMessageToAddress(options: {
   senderAccessToken: string;
-  recipientProfileId: string;
+  peerAddress: string;
   body: string;
   clientMessageId: string;
 }): Promise<SendMessageResult> {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/send_message_to_profile`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/send_message_to_address`, {
     method: 'POST',
     headers: {
       apikey: ANON_KEY,
@@ -141,7 +143,7 @@ export async function sendMessageToProfile(options: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      p_recipient_profile_id: options.recipientProfileId,
+      p_peer_address: options.peerAddress.trim().toLowerCase(),
       p_body: options.body,
       p_client_message_id: options.clientMessageId,
       p_content_type: 'text',
@@ -149,7 +151,7 @@ export async function sendMessageToProfile(options: {
   });
   if (!res.ok) {
     throw new Error(
-      `send_message_to_profile failed (${res.status}): ${await res.text()}`,
+      `send_message_to_address failed (${res.status}): ${await res.text()}`,
     );
   }
   const json = (await res.json()) as {
@@ -161,6 +163,9 @@ export async function sendMessageToProfile(options: {
     archive_user_id: json.archive_user_id,
   };
 }
+
+/** @deprecated Use sendMessageToAddress */
+export const sendMessageToProfile = sendMessageToAddress;
 
 export async function invokeSendPush(
   payload: PushPayload,

@@ -40,8 +40,8 @@ class InboxController extends ChangeNotifier {
 
   void setSearchQuery(String value) => _coordinator.setSearchQuery(value);
 
-  ChatPeer? findByProfileId(String profileId) =>
-      _coordinator.findByProfileId(profileId);
+  ChatPeer? findByPeerAddress(String profileId) =>
+      _coordinator.findByPeerAddress(profileId);
 
   Future<void> load({bool showLoadingIndicator = true}) =>
       _coordinator.load(showLoadingIndicator: showLoadingIndicator);

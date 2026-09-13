@@ -52,7 +52,7 @@ MessagesScopeInactiveReason? diagnoseMessagesScopeInactive({
   if (liveSession.userId != scope.focusUserId) {
     return MessagesScopeInactiveReason.focusMismatch;
   }
-  if (peer.profileId != scope.peerProfileId) {
+  if (peer.peerAddress != scope.peerAddress) {
     return MessagesScopeInactiveReason.peerMismatch;
   }
   if (!isConversationReady(liveSession, peer)) {
@@ -90,7 +90,7 @@ bool isMessagesScopeActive({
       reason.diagnosticCode,
       data: {
         'focusUserId': scope.focusUserId,
-        'peerProfileId': scope.peerProfileId,
+        'peerAddress': scope.peerAddress,
         'scopeEpoch': scope.sessionEpoch,
         'scopeLoadSeq': scope.loadSeq,
         'committedEpoch': committedScope?.sessionEpoch,

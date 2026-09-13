@@ -6,12 +6,14 @@
 bool isMailboxPeerMessageRelevant({
   required Map<String, dynamic> record,
   required String currentUserId,
-  required String peerProfileId,
+  required String peerAddress,
 }) {
   if (!isArchiveUserRow(record: record, currentUserId: currentUserId)) {
     return false;
   }
-  return record['peer_profile_id'] == peerProfileId;
+  final recordPeer = record['peer_address'] as String?;
+  if (recordPeer == null) return false;
+  return recordPeer.trim().toLowerCase() == peerAddress.trim().toLowerCase();
 }
 
 bool isArchiveUserRow({

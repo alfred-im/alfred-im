@@ -151,7 +151,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
   }
 
   ChatPeer _resolvedPeer(AuthController auth) {
-    return auth.activePeer?.profileId == widget.peer.profileId
+    return auth.activePeer?.peerAddress == widget.peer.peerAddress
         ? auth.activePeer!
         : widget.peer;
   }
@@ -159,7 +159,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
   PeerRelationship _relationshipFor(ChatPeer peer) {
     return PeerRelationshipActions.relationshipForPeer(
       context,
-      profileId: peer.profileId,
+      peerAddress: peer.peerAddress,
     );
   }
 
@@ -174,8 +174,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
     try {
       await PeerRelationshipActions.toggleRubrica(
         context: context,
-        profileId: peer.profileId,
-        profile: peer.profile,
+        peerAddress: peer.peerAddress,
         inRubrica: inRubrica,
       );
     } catch (e) {
@@ -193,8 +192,7 @@ class _ChatPeerOverflowMenuState extends State<_ChatPeerOverflowMenu> {
     try {
       await PeerRelationshipActions.setAllowed(
         context: context,
-        profileId: peer.profileId,
-        profile: peer.profile,
+        peerAddress: peer.peerAddress,
         value: value,
       );
     } catch (e) {

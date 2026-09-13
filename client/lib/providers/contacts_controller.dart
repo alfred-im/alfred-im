@@ -39,8 +39,8 @@ class ContactsController extends ChangeNotifier {
 
   List<Contact> get filteredContacts => _coordinator.filteredContacts;
 
-  Contact? contactForProfileId(String profileId) =>
-      _coordinator.contactForProfileId(profileId);
+  Contact? contactForAddress(String address) =>
+      _coordinator.contactForAddress(address);
 
   void setSearchQuery(String value) => _coordinator.setSearchQuery(value);
 
@@ -52,18 +52,9 @@ class ContactsController extends ChangeNotifier {
   Future<List<ProfileSummary>> searchProfiles(String query) =>
       _coordinator.searchProfiles(query);
 
-  Future<Contact> addInternal(ProfileSummary profile) =>
-      _coordinator.addInternal(profile);
+  Future<Contact> addByAddress(String address) =>
+      _coordinator.addByAddress(address);
 
-  Future<void> removeInternalByProfileId(String profileId) =>
-      _coordinator.removeInternalByProfileId(profileId);
-
-  Future<Contact> addExternal({
-    required String address,
-    required String displayName,
-  }) =>
-      _coordinator.addExternal(
-        address: address,
-        displayName: displayName,
-      );
+  Future<void> removeByAddress(String address) =>
+      _coordinator.removeByAddress(address);
 }

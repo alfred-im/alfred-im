@@ -27,7 +27,7 @@ class ContactService {
         .from('contacts')
         .select()
         .eq('archive_user_id', archiveUserId)
-        .order('display_name');
+        .order('address');
 
     return rows.map((r) => Contact.fromJson(r)).toList();
   }
@@ -36,35 +36,16 @@ class ContactService {
     return _profileSearch.searchProfiles(query);
   }
 
-  Future<Contact> addInternalContact({
+  Future<Contact> addContact({
     required String archiveUserId,
-    required ProfileSummary profile,
+    required String address,
   }) async {
+    final normalized = address.trim().toLowerCase();
     final row = await _client
         .from('contacts')
         .insert({
           'archive_user_id': _authArchiveUserId,
-          'linked_profile_id': profile.id,
-          'display_name': profile.displayName,
-          'avatar_url': ?profile.avatarUrl,
-        })
-        .select()
-        .single();
-
-    return Contact.fromJson(row);
-  }
-
-  Future<Contact> addExternalContact({
-    required String archiveUserId,
-    required String externalAddress,
-    required String displayName,
-  }) async {
-    final row = await _client
-        .from('contacts')
-        .insert({
-          'archive_user_id': _authArchiveUserId,
-          'external_address': externalAddress,
-          'display_name': displayName,
+          'address': normalized,
         })
         .select()
         .single();

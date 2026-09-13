@@ -39,14 +39,14 @@ void main() {
       (tester) async {
     const peer = ProfileSummary(
       id: 'peer-id',
-      username: 'mario',
+      username: 'mario', address: 'mario',
       displayName: 'Mario Rossi',
     );
 
     final session = await AccountSession.createForTest(
       profile: const ProfileSummary(
         id: 'focus-id',
-        username: 'alice',
+        username: 'alice', address: 'alice',
         displayName: 'ArchiveUser',
       ),
       client: createTestSupabaseClient(),

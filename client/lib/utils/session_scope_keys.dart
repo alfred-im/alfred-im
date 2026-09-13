@@ -16,7 +16,7 @@ Key navigationShellKey({
       'navigation-shell',
       focusUserId,
       committedScope?.focusUserId,
-      committedScope?.peerProfileId,
+      committedScope?.peerAddress,
       committedScope?.sessionEpoch,
       committedScope?.loadSeq,
     ),

@@ -104,7 +104,7 @@ class SessionScopedMessagesHarness extends StatefulWidget {
 
   final AuthController auth;
   final ChatPeer peer;
-  final Key Function(AccountSession session, String peerProfileId) scopeKeyFor;
+  final Key Function(AccountSession session, String peerAddress) scopeKeyFor;
   final void Function(MessagesController controller)? onControllerCreated;
 
   @override
@@ -125,7 +125,7 @@ class _SessionScopedMessagesHarnessState
         }
 
         return _SessionScopedMessagesBody(
-          key: widget.scopeKeyFor(session, widget.peer.profileId),
+          key: widget.scopeKeyFor(session, widget.peer.peerAddress),
           auth: widget.auth,
           session: session,
           peer: widget.peer,
@@ -156,7 +156,7 @@ class _SessionScopedMessagesBody extends StatelessWidget {
     return isMessagingSessionReady(
       client: live.client,
       focusUserId: live.userId,
-      peerProfileId: peer.profileId,
+      peerAddress: peer.peerAddress,
     );
   }
 
@@ -171,14 +171,14 @@ class _SessionScopedMessagesBody extends StatelessWidget {
       create: (_) {
         final scope = testConversationScope(
           userId: liveSession.userId,
-          peerProfileId: peer.profileId,
+          peerAddress: peer.peerAddress,
           sessionEpoch: 1,
         );
         final controller = MessagesController(
           scope: scope,
           messageStore: testMessageStoreFor(scope),
           userId: liveSession.userId,
-          peerProfileId: peer.profileId,
+          peerAddress: peer.peerAddress,
           peerMessages: liveSession.peerMessages,
           messageMediaService: liveSession.messageMediaService,
           inboxService: liveSession.inboxService,

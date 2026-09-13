@@ -4,7 +4,6 @@
 
 import '../models/chat_peer.dart';
 import '../models/contact.dart';
-import '../models/profile_summary.dart';
 import '../utils/compose_address.dart';
 import 'profile_service.dart';
 
@@ -19,37 +18,26 @@ class ComposeService {
       case ComposeAddressKind.invalid:
         throw StateError('Inserisci uno username o un indirizzo user@server');
       case ComposeAddressKind.externalServer:
-        throw StateError('Indirizzo esterno non ancora supportato');
       case ComposeAddressKind.internalUsername:
-        final peer =
-            await profileService.findPeerByUsername(parsed.normalized);
-        if (peer == null) {
+        final normalized = parsed.normalized;
+        final summaries =
+            await profileService.fetchSummariesByAddresses([normalized]);
+        if (summaries.isNotEmpty) {
+          return ChatPeer.fromProfile(
+            peerAddress: normalized,
+            profile: summaries.first,
+          );
+        }
+        if (parsed.kind == ComposeAddressKind.internalUsername) {
+          final peer = await profileService.findPeerByUsername(normalized);
+          if (peer != null) return peer;
           throw StateError('Utente non trovato');
         }
-        return peer;
+        return ChatPeer.fromAddress(normalized);
     }
   }
 
   ChatPeer peerFromContact(Contact contact) {
-    if (contact.isLocal) {
-      final profileId = contact.linkedProfileId;
-      if (profileId == null) {
-        throw StateError('Contatto interno non valido');
-      }
-      return ChatPeer.fromProfile(
-        profile: ProfileSummary(
-          id: profileId,
-          displayName: contact.displayName,
-          avatarUrl: contact.avatarUrl,
-        ),
-        address: contact.displayName,
-      );
-    }
-
-    final externalAddress = contact.externalAddress;
-    if (externalAddress == null || externalAddress.trim().isEmpty) {
-      throw StateError('Contatto esterno non valido');
-    }
-    throw StateError('Indirizzo esterno non ancora supportato');
+    return ChatPeer.fromAddress(contact.address);
   }
 }

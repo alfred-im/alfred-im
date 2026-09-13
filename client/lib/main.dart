@@ -73,6 +73,7 @@ class AlfredApp extends StatelessWidget {
         focusScopedProvider<ReceptionAllowlistController>(
           create: (session, _) => ReceptionAllowlistController(
             focusUserId: session.userId,
+            focusAccountAddress: session.profile.resolvedPeerAddress,
             sessionEpoch: session.epoch,
             allowlistService: session.receptionAllowlistService,
           ),

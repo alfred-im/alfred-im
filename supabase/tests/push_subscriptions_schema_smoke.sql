@@ -14,7 +14,7 @@ BEGIN
     RAISE EXCEPTION 'Missing function message_preview_text';
   END IF;
 
-  IF to_regprocedure('alfred_delivery.queue_push_after_delivery(uuid, uuid, uuid, public.message_content_type, text, uuid)') IS NULL THEN
+  IF to_regprocedure('alfred_delivery.queue_push_after_delivery(uuid, text, uuid, public.message_content_type, text, uuid)') IS NULL THEN
     RAISE EXCEPTION 'Missing function queue_push_after_delivery';
   END IF;
 

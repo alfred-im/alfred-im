@@ -4,28 +4,16 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/conversation_scope.dart';
-import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_session.dart';
 
-/// Costruisce scope da sessione viva + peer (solo test / harness).
+import 'fake_messaging_services.dart';
+
 ConversationScope conversationScopeFor(
   AccountSession session,
-  String peerProfileId,
-) {
-  return ConversationScope.fromSession(
-    session,
-    ChatPeer(
-      profile: ProfileSummary(
-        id: peerProfileId,
-        displayName: peerProfileId,
-      ),
-    ),
-  );
-}
+  String peerAddress,
+) =>
+    ConversationScope.fromSession(session, testChatPeer(peerAddress));
 
-/// Chiave Provider/chat legacy — include epoch sessione (non solo userId).
-Key messagesSessionKey(AccountSession session, String peerProfileId) {
-  return conversationScopeFor(session, peerProfileId).providerKey;
-}
+Key messagesSessionKey(AccountSession session, String peerAddress) =>
+    conversationScopeFor(session, peerAddress).providerKey;

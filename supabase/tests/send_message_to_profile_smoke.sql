@@ -20,26 +20,26 @@ BEGIN
     true
   );
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
   VALUES
     (v_sender, v_recipient),
     (v_recipient, v_sender)
   ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
-  SELECT * INTO v_msg FROM public.send_message_to_profile(
-    v_recipient,
+  SELECT * INTO v_msg FROM public.send_message_to_address(
+    'ciagent2',
     'smoke peer-only inbox',
     'smoke-client-id-' || floor(random() * 1000000)::text,
     'text'::public.message_content_type
   );
 
-  IF v_msg.archive_user_id <> v_sender OR v_msg.peer_profile_id <> v_recipient THEN
+  IF v_msg.archive_user_id <> v_sender OR v_msg.peer_address <> 'ciagent2' THEN
     RAISE EXCEPTION 'Unexpected mailbox parties';
   END IF;
 
   IF NOT EXISTS (
     SELECT 1 FROM public.list_inbox() i
-    WHERE i.peer_profile_id = v_recipient
+    WHERE i.peer_address = 'ciagent2'
   ) THEN
     RAISE EXCEPTION 'list_inbox must include peer after send';
   END IF;

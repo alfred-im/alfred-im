@@ -16,6 +16,12 @@ import '../providers/reception_allowlist_controller.dart';
 class PeerRelationshipActions {
   const PeerRelationshipActions._();
 
+  static String _normalizeAddress(String address) =>
+      address.trim().toLowerCase();
+
+  static String? addressForProfile(ProfileSummary profile) =>
+      profile.address ?? profile.username;
+
   static bool controllersReady(BuildContext context) {
     return context.read<ReceptionAllowlistController?>() != null &&
         context.read<ContactsController?>() != null;
@@ -30,28 +36,28 @@ class PeerRelationshipActions {
     ]);
   }
 
-  static bool isInContacts(BuildContext context, String profileId) {
+  static bool isInContacts(BuildContext context, String peerAddress) {
     return context
             .read<ContactsController?>()
-            ?.contactForProfileId(profileId) !=
+            ?.contactForAddress(_normalizeAddress(peerAddress)) !=
         null;
   }
 
-  static bool isAllowed(BuildContext context, String profileId) {
+  static bool isAllowed(BuildContext context, String peerAddress) {
     return context
             .read<ReceptionAllowlistController?>()
-            ?.isProfileAllowed(profileId) ??
+            ?.isAddressAllowed(_normalizeAddress(peerAddress)) ??
         false;
   }
 
-  /// Flag inbox sul peer in chat aperta, se coincide con [profileId].
-  static PeerRelationship? peerFlagsForProfile(
+  /// Flag inbox sul peer in chat aperta, se coincide con [peerAddress].
+  static PeerRelationship? peerFlagsForAddress(
     BuildContext context,
-    String profileId,
+    String peerAddress,
   ) {
     try {
       final peer = context.read<AuthController>().activePeer;
-      if (peer?.profileId != profileId) return null;
+      if (peer?.peerAddress != _normalizeAddress(peerAddress)) return null;
       return peer?.relationship;
     } on ProviderNotFoundException {
       return null;
@@ -61,41 +67,43 @@ class PeerRelationshipActions {
   /// Solo controller — verità dopo mutazione e reload.
   static PeerRelationship relationshipFromControllers(
     BuildContext context, {
-    required String profileId,
+    required String peerAddress,
   }) {
+    final normalized = _normalizeAddress(peerAddress);
     return PeerRelationship(
-      inContacts: isInContacts(context, profileId),
-      isAllowed: isAllowed(context, profileId),
+      inContacts: isInContacts(context, normalized),
+      isAllowed: isAllowed(context, normalized),
     );
   }
 
   /// Lettura UI: controller **oppure** flag sul peer attivo (cache vuota dopo switch).
   static PeerRelationship relationshipForPeer(
     BuildContext context, {
-    required String profileId,
+    required String peerAddress,
     PeerRelationship? peerFlags,
   }) {
-    final flags = peerFlags ?? peerFlagsForProfile(context, profileId);
+    final normalized = _normalizeAddress(peerAddress);
+    final flags = peerFlags ?? peerFlagsForAddress(context, normalized);
     return PeerRelationship(
-      inContacts: isInContacts(context, profileId) ||
-          (flags?.inContacts ?? false),
+      inContacts:
+          isInContacts(context, normalized) || (flags?.inContacts ?? false),
       isAllowed:
-          isAllowed(context, profileId) || (flags?.isAllowed ?? false),
+          isAllowed(context, normalized) || (flags?.isAllowed ?? false),
     );
   }
 
   /// Dopo ogni mutazione: allinea [AuthController.activePeer] ai controller.
   static void syncActivePeerRelationship(
     BuildContext context, {
-    required String profileId,
+    required String peerAddress,
   }) {
     try {
       final auth = context.read<AuthController>();
       final peer = auth.activePeer;
-      if (peer?.profileId != profileId) return;
+      if (peer?.peerAddress != _normalizeAddress(peerAddress)) return;
       auth.patchActivePeer(
         peer!.withRelationship(
-          relationshipFromControllers(context, profileId: profileId),
+          relationshipFromControllers(context, peerAddress: peerAddress),
         ),
       );
     } on ProviderNotFoundException {
@@ -130,8 +138,7 @@ class PeerRelationshipActions {
 
   static Future<void> toggleRubrica({
     required BuildContext context,
-    required String profileId,
-    required ProfileSummary profile,
+    required String peerAddress,
     required bool inRubrica,
     PeerRelationship? peerFlags,
   }) async {
@@ -141,29 +148,29 @@ class PeerRelationshipActions {
     await contacts.ensureLoaded();
     if (!context.mounted) return;
 
+    final normalized = _normalizeAddress(peerAddress);
     if (inRubrica) {
-      await contacts.removeInternalByProfileId(profileId);
+      await contacts.removeByAddress(normalized);
     } else {
       final relationship = relationshipForPeer(
         context,
-        profileId: profileId,
+        peerAddress: normalized,
         peerFlags: peerFlags,
       );
       await _addIdempotent(
         alreadyPresent: relationship.inContacts,
-        add: () => contacts.addInternal(profile),
+        add: () => contacts.addByAddress(normalized),
         reload: contacts.load,
       );
     }
 
     if (!context.mounted) return;
-    syncActivePeerRelationship(context, profileId: profileId);
+    syncActivePeerRelationship(context, peerAddress: normalized);
   }
 
   static Future<void> setAllowed({
     required BuildContext context,
-    required String profileId,
-    required ProfileSummary profile,
+    required String peerAddress,
     required bool value,
     PeerRelationship? peerFlags,
   }) async {
@@ -173,23 +180,24 @@ class PeerRelationshipActions {
     await allowlist.ensureLoaded();
     if (!context.mounted) return;
 
+    final normalized = _normalizeAddress(peerAddress);
     if (!value) {
-      await allowlist.removeByProfileId(profileId);
+      await allowlist.removeByAddress(normalized);
     } else {
       final relationship = relationshipForPeer(
         context,
-        profileId: profileId,
+        peerAddress: normalized,
         peerFlags: peerFlags,
       );
       await _addIdempotent(
         alreadyPresent: relationship.isAllowed,
-        add: () => allowlist.addProfile(profile),
+        add: () => allowlist.addAddress(normalized),
         reload: allowlist.load,
       );
     }
 
     if (!context.mounted) return;
-    syncActivePeerRelationship(context, profileId: profileId);
+    syncActivePeerRelationship(context, peerAddress: normalized);
   }
 
   static void showError(BuildContext context, Object error) {

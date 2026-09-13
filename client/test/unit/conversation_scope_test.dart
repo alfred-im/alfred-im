@@ -5,7 +5,6 @@
 import 'package:alfred_client/machines/multi-account/multi_account_adapters.dart';
 import 'package:alfred_client/machines/navigation/account_navigation_effects.dart';
 import 'package:alfred_client/machines/navigation/navigation_machine.dart';
-import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/conversation_scope.dart';
 import 'package:alfred_client/models/open_conversation_source.dart';
 import 'package:alfred_client/models/profile_summary.dart';
@@ -39,7 +38,7 @@ void main() {
     late AccountSession sessionA2;
     const peer = ProfileSummary(
       id: 'peer-z',
-      username: 'peer_z',
+      username: 'peer_z', address: 'peer_z',
       displayName: 'Peer Z',
     );
 
@@ -50,19 +49,19 @@ void main() {
       sessionA = await AccountSession.createForTest(
         profile: const ProfileSummary(
           id: 'user-a',
-          username: 'user_a',
+          username: 'user_a', address: 'user_a',
           displayName: 'User A',
         ),
         client: client,
         inboxService: FakeInboxService(
-          peers: [ChatPeer(profile: peer)],
+          peers: [inboxPeer(peer)],
         ),
       );
       sessionA2 = await AccountSession.createForTest(
         profile: sessionA.profile,
         client: client,
         inboxService: FakeInboxService(
-          peers: [ChatPeer(profile: peer)],
+          peers: [inboxPeer(peer)],
         ),
       );
       manager.focusTestSession(sessionA);
@@ -71,7 +70,7 @@ void main() {
     test('commitScope registra solo con sessione viva', () {
       final scope = ConversationScope.fromSession(
         sessionA,
-        ChatPeer(profile: peer),
+        inboxPeer(peer),
       );
       navigation.machine.commitScope(scope);
 
@@ -80,14 +79,14 @@ void main() {
 
     test('commitScope con sessione assente non registra', () {
       navigation.machine.commitScope(
-        ConversationScope.fromSession(sessionA, ChatPeer(profile: peer)),
+        ConversationScope.fromSession(sessionA, inboxPeer(peer)),
       );
       manager.clearSessionsInRamForTest();
 
       navigation.machine.commitScope(
         ConversationScope(
           focusUserId: 'user-a',
-          peerProfileId: 'peer-z',
+          peerAddress: 'peer_z',
           sessionEpoch: sessionA.epoch,
         ),
       );
@@ -98,13 +97,13 @@ void main() {
     test('openPeerOnFocusedAccount via coordinator committa scope prima di notify', () async {
       manager.focusTestSession(sessionA);
 
-      await navigation.openPeerOnFocusedAccount(ChatPeer(profile: peer));
+      await navigation.openPeerOnFocusedAccount(inboxPeer(peer));
 
-      expect(navigation.committedScope?.peerProfileId, 'peer-z');
+      expect(navigation.committedScope?.peerAddress, 'peer_z');
       expect(
         navigation.isConversationReady(
           session: sessionA,
-          peer: ChatPeer(profile: peer),
+          peer: inboxPeer(peer),
         ),
         isTrue,
       );
@@ -113,7 +112,7 @@ void main() {
     test('syncShellAfterFocusSettled non committa scope da view-state', () async {
       manager.applyAccountViewState(
         'user-a',
-        (view) => view.openChat(ChatPeer(profile: peer)),
+        (view) => view.openChat(inboxPeer(peer)),
       );
       await navigation.syncShellAfterFocusSettled();
 
@@ -123,7 +122,7 @@ void main() {
 
     test('invalidateCommittedScope su switch account', () {
       navigation.machine.commitScope(
-        ConversationScope.fromSession(sessionA, ChatPeer(profile: peer)),
+        ConversationScope.fromSession(sessionA, inboxPeer(peer)),
       );
 
       navigation.invalidateCommittedScope();
@@ -132,7 +131,7 @@ void main() {
 
     test('isConversationReady riallinea epoch su sessione ricreata', () {
       navigation.machine.commitScope(
-        ConversationScope.fromSession(sessionA, ChatPeer(profile: peer)),
+        ConversationScope.fromSession(sessionA, inboxPeer(peer)),
       );
       expect(navigation.committedScope?.loadSeq, 0);
 
@@ -144,7 +143,7 @@ void main() {
       expect(
         navigation.isConversationReady(
           session: sessionA2,
-          peer: ChatPeer(profile: peer),
+          peer: inboxPeer(peer),
         ),
         isTrue,
       );
@@ -167,13 +166,13 @@ void main() {
 
       final ok = await effects.openConversation(
         accountUserId: 'user-a',
-        peerProfileId: 'peer-z',
+        peerAddress: 'peer_z',
         source: OpenConversationSource.inbox,
       );
 
       expect(ok, isTrue);
       expect(machine.committedScope?.focusUserId, 'user-a');
-      expect(machine.committedScope?.peerProfileId, 'peer-z');
+      expect(machine.committedScope?.peerAddress, 'peer_z');
     });
   });
 }

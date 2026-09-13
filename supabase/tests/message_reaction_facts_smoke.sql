@@ -25,14 +25,14 @@ BEGIN
     true
   );
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
   VALUES
-    (v_agent1, v_agent2),
-    (v_agent2, v_agent1)
+    (v_agent1, 'ciagent2'),
+    (v_agent2, 'ciagent1')
   ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
-  SELECT * INTO v_sender FROM public.send_message_to_profile(
-    v_agent2,
+  SELECT * INTO v_sender FROM public.send_message_to_address(
+    'ciagent2',
     'reaction smoke',
     v_client_id,
     'text'::public.message_content_type

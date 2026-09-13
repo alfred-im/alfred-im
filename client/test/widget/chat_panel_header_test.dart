@@ -22,11 +22,10 @@ void main() {
 
   const peerProfile = ProfileSummary(
     id: 'peer-id',
-    username: 'mario',
+    username: 'mario', address: 'mario',
     displayName: 'Mario Rossi',
   );
-  const peer = ChatPeer(
-    profile: peerProfile,
+  const peer = ChatPeer(peerAddress: 'mario', profile: peerProfile,
     relationship: PeerRelationship(inContacts: false, isAllowed: false),
   );
 
@@ -120,14 +119,14 @@ void main() {
     await tester.tap(find.text('Aggiungi alla rubrica'));
     await tester.pumpAndSettle();
 
-    expect(contacts.contactForProfileId('peer-id'), isNotNull);
+    expect(contacts.contactForAddress('mario'), isNotNull);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Consenti'));
     await tester.pumpAndSettle();
 
-    expect(allowlist.isProfileAllowed('peer-id'), isTrue);
+    expect(allowlist.isAddressAllowed('mario'), isTrue);
   });
 
   testWidgets('menu header mostra rimuovi se peer già in rubrica', (tester) async {
@@ -143,12 +142,11 @@ void main() {
       contactService: contactService,
     );
 
-    const peerInRubrica = ChatPeer(
-      profile: peerProfile,
+    const peerInRubrica = ChatPeer(peerAddress: 'mario', profile: peerProfile,
       relationship: PeerRelationship(inContacts: true, isAllowed: false),
     );
 
-    await contacts.addInternal(peerProfile);
+    await contacts.addByAddress('mario');
 
     await tester.pumpWidget(
       MaterialApp(
@@ -182,7 +180,7 @@ void main() {
   test('fromInboxRow mappa flag relazione peer', () {
     final parsed = ChatPeer.fromInboxRow({
       'display_name': 'Mario Rossi',
-      'peer_profile_id': 'peer-id',
+      'peer_address': 'mario',
       'peer_in_contacts': true,
       'peer_is_allowed': false,
       'last_message_preview': 'Ciao',

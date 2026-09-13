@@ -34,13 +34,13 @@ void main() {
       const groupProfile = ProfileSummary(
         id: groupId,
         displayName: 'Famiglia',
-        username: 'famiglia',
+        username: 'famiglia', address: 'famiglia',
         profileKind: ProfileKind.group,
       );
       const mario = ProfileSummary(
         id: marioId,
         displayName: 'Mario',
-        username: 'mario',
+        username: 'mario', address: 'mario',
       );
 
       final client = createTestSupabaseClient();
@@ -57,7 +57,7 @@ void main() {
       ];
 
       final profileService = FakeProfileService(client)
-        ..profilesById[marioId] = mario;
+        ..profilesByAddress[marioId] = mario;
 
       final session = await AccountSession.createForTest(
         profile: groupProfile,
@@ -107,7 +107,7 @@ void main() {
           profile: const ProfileSummary(
             id: groupId,
             displayName: 'Famiglia',
-            username: 'famiglia',
+            username: 'famiglia', address: 'famiglia',
             profileKind: ProfileKind.group,
           ),
           client: client,
@@ -117,7 +117,7 @@ void main() {
         profile: const ProfileSummary(
           id: groupId,
           displayName: 'Famiglia',
-          username: 'famiglia',
+          username: 'famiglia', address: 'famiglia',
           profileKind: ProfileKind.group,
         ),
         profileService: FakeProfileService(client),

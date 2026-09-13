@@ -32,7 +32,7 @@ bool isAccountSessionReady({
 bool isMessagingSessionReady({
   required SupabaseClient client,
   required String focusUserId,
-  required String peerProfileId,
+  required String peerAddress,
   bool Function()? whenNoGoTrueSession,
 }) {
   if (clientHasGoTrueSession(client)) {
@@ -40,7 +40,7 @@ bool isMessagingSessionReady({
       return false;
     }
     final authUserId = client.auth.currentUser?.id;
-    if (authUserId == null || peerProfileId == authUserId) return false;
+    if (authUserId == null || peerAddress == authUserId) return false;
     return true;
   }
   if (whenNoGoTrueSession != null) return whenNoGoTrueSession();

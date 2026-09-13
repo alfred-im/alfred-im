@@ -10,7 +10,7 @@ void main() {
   test('push suppression state keys are stable', () {
     PushPlatform.updateSuppression(
       recipientUserId: 'user-a',
-      activePeerProfileId: 'peer-b',
+      activePeerAddress: 'peer-b',
       appVisible: true,
     );
     expect(PushPlatform.openChatIntents, isA<Stream<PushOpenChatIntent>>());
@@ -19,28 +19,28 @@ void main() {
   test('PushOpenChatIntent carries PushConversationKey', () {
     final intent = PushOpenChatIntent.fromParts(
       recipientUserId: 'account-a',
-      peerProfileId: 'peer-b',
+      peerAddress: 'peer-b',
     );
     expect(
       intent.conversation,
       const PushConversationKey(
         recipientUserId: 'account-a',
-        peerProfileId: 'peer-b',
+        peerAddress: 'peer-b',
       ),
     );
     expect(intent.recipientUserId, 'account-a');
-    expect(intent.peerProfileId, 'peer-b');
+    expect(intent.peerAddress, 'peer-b');
   });
 
   test('cross-account: same peer does not match wrong account suppression', () {
     const pushForAccountB = PushConversationKey(
       recipientUserId: 'account-b',
-      peerProfileId: 'shared-peer',
+      peerAddress: 'shared-peer',
     );
     expect(
       pushForAccountB.shouldSuppressInForeground(
         focusUserId: 'account-a',
-        activePeerProfileId: 'shared-peer',
+        activePeerAddress: 'shared-peer',
         appVisible: true,
       ),
       isFalse,

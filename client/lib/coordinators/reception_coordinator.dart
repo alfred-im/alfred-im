@@ -22,16 +22,19 @@ class ReceptionState {
 class ReceptionCoordinator {
   ReceptionCoordinator({
     required this._focusUserId,
+    this._focusAccountAddress,
     required this._allowlistService,
     required this._onStateChanged,
   }) {
     _machine = ReceptionMachine(
       _LiveReceptionEffects._(this),
       focusUserId: _focusUserId,
+      focusAccountAddress: _focusAccountAddress,
     );
   }
 
   final String _focusUserId;
+  final String? _focusAccountAddress;
   final ReceptionAllowlistService _allowlistService;
   final void Function() _onStateChanged;
   late final ReceptionMachine _machine;
@@ -43,8 +46,8 @@ class ReceptionCoordinator {
         (person) => person.displayName,
       );
 
-  Set<String> get allowedProfileIds =>
-      state.allowedPeople.map((p) => p.profile.id).toSet();
+  Set<String> get allowedAddresses =>
+      state.allowedPeople.map((p) => p.allowedAddress).toSet();
 
   void setSearchQuery(String value) {
     unawaited(_machine.send(SetSearchQuery(value)));
@@ -58,6 +61,10 @@ class ReceptionCoordinator {
     return _allowlistService.searchProfiles(query);
   }
 
+  Future<void> addAddress(String address) {
+    return _machine.send(AddAllowedAddress(address));
+  }
+
   Future<void> addProfile(ProfileSummary profile) {
     return _machine.send(AddAllowedProfile(profile));
   }
@@ -66,8 +73,8 @@ class ReceptionCoordinator {
     return _machine.send(RemoveAllowedPerson(person));
   }
 
-  Future<void> removeByProfileId(String profileId) {
-    return _machine.send(RemoveAllowedByProfileId(profileId));
+  Future<void> removeByAddress(String address) {
+    return _machine.send(RemoveAllowedByAddress(address));
   }
 
   void _syncLoadingFromMachine() {
@@ -101,15 +108,15 @@ class _LiveReceptionEffects implements ReceptionEffects {
   }
 
   @override
-  bool isProfileAllowed(String profileId) {
-    return _c.allowedProfileIds.contains(profileId);
+  bool isAddressAllowed(String address) {
+    return _c.allowedAddresses.contains(address.trim().toLowerCase());
   }
 
   @override
-  Future<void> addAllowedProfile(ProfileSummary profile) async {
-    await _c._allowlistService.addAllowedProfile(
+  Future<void> addAllowedAddress(String address) async {
+    await _c._allowlistService.addAllowedAddress(
       archiveUserId: _c._focusUserId,
-      profile: profile,
+      address: address,
     );
   }
 
@@ -119,10 +126,11 @@ class _LiveReceptionEffects implements ReceptionEffects {
   }
 
   @override
-  Future<void> removeByProfileId(String profileId) async {
+  Future<void> removeByAddress(String address) async {
+    final normalized = address.trim().toLowerCase();
     AllowedPerson? person;
     for (final entry in _c.state.allowedPeople) {
-      if (entry.profile.id == profileId) {
+      if (entry.allowedAddress == normalized) {
         person = entry;
         break;
       }

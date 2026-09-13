@@ -19,7 +19,7 @@ BEGIN
     SELECT 1
     FROM public.messages m
     WHERE m.archive_user_id = v_archive_user
-      AND m.peer_profile_id = v_peer
+      AND m.peer_address = (SELECT lower(username) FROM public.profiles WHERE id = v_peer)
     HAVING count(*) > 100
   ) THEN
     RAISE NOTICE 'mailbox_peer_messages_window_smoke_skip need >100 messages between test peers';
@@ -35,7 +35,7 @@ BEGIN
   SELECT i.last_message_preview, i.last_message_at
   INTO v_inbox_preview, v_inbox_at
   FROM public.list_inbox() i
-  WHERE i.peer_profile_id = v_peer;
+  WHERE i.peer_address = (SELECT lower(username) FROM public.profiles WHERE id = v_peer);
 
   IF v_inbox_at IS NULL THEN
     RAISE EXCEPTION 'list_inbox missing peer row for window smoke';
@@ -45,7 +45,7 @@ BEGIN
          (array_agg(trim(m.body) ORDER BY m.created_at DESC))[1],
          min(m.created_at)
   INTO v_window_count, v_window_latest_body, v_oldest_in_window
-  FROM public.list_peer_messages(v_peer, 100) m;
+  FROM public.list_peer_messages((SELECT lower(username) FROM public.profiles WHERE id = v_peer), 100) m;
 
   IF v_window_count < 1 THEN
     RAISE EXCEPTION 'list_peer_messages returned empty window';
@@ -53,7 +53,7 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1
-    FROM public.list_peer_messages(v_peer, 100) m
+    FROM public.list_peer_messages((SELECT lower(username) FROM public.profiles WHERE id = v_peer), 100) m
     WHERE m.created_at = v_inbox_at
   ) THEN
     RAISE EXCEPTION 'inbox latest not in initial peer window preview=% at=% latest_in_window=%',
@@ -62,7 +62,7 @@ BEGIN
 
   SELECT count(*)::integer
   INTO v_page_count
-  FROM public.list_peer_messages(v_peer, 100, v_oldest_in_window) m;
+  FROM public.list_peer_messages((SELECT lower(username) FROM public.profiles WHERE id = v_peer), 100, v_oldest_in_window) m;
 
   IF v_page_count < 1 THEN
     RAISE EXCEPTION 'pagination cursor returned no older messages';

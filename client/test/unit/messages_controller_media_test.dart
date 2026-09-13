@@ -40,14 +40,14 @@ void main() {
       outboundQueue = OutboundMessageQueue();
       final scope = testConversationScope(
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: _agent2,
         sessionEpoch: 1,
       );
       controller = MessagesController(
         scope: scope,
         messageStore: testMessageStoreFor(scope),
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: _agent2,
         peerMessages: messageService.peerMessages,
         messageMediaService: mediaService,
         inboxService: FakeInboxService(),

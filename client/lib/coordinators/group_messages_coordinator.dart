@@ -371,7 +371,9 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
         final profiles =
             await _c._profileService.fetchSummariesByIds(missingIds);
         for (final profile in profiles) {
-          _c._knownAuthorProfiles[profile.id] = profile;
+          if (profile.id != null) {
+            _c._knownAuthorProfiles[profile.id!] = profile;
+          }
         }
       }
     }
@@ -380,7 +382,7 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
         .map(
           (m) => enrichMessageAuthor(
             message: m,
-            profilesById: _c._knownAuthorProfiles,
+            profilesByAddress: _c._knownAuthorProfiles,
             currentUserId: _c._userId,
           ).copyWith(
             timeLabel: formatMessageTime(m.createdAt ?? DateTime.now()),
@@ -405,13 +407,15 @@ class _LiveGroupMessagesEffects implements GroupMessagesEffects {
       final profiles =
           await _c._profileService.fetchSummariesByIds([authorId]);
       for (final profile in profiles) {
-        _c._knownAuthorProfiles[profile.id] = profile;
+        if (profile.id != null) {
+          _c._knownAuthorProfiles[profile.id!] = profile;
+        }
       }
     }
 
     return enrichMessageAuthor(
       message: message,
-      profilesById: _c._knownAuthorProfiles,
+      profilesByAddress: _c._knownAuthorProfiles,
       currentUserId: _c._userId,
     ).copyWith(
       timeLabel: formatMessageTime(message.createdAt ?? DateTime.now()),

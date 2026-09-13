@@ -136,10 +136,13 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     if (session == null) return;
 
     try {
-      final peer = await session.profileService.getPeerContext(widget.profile.id);
+      final peer = await session.profileService
+          .getPeerContext(widget.profile.resolvedPeerAddress);
       if (!mounted || peer == null) return;
       setState(() {
-        _profile = widget.profile.mergeDisplay(peer.profile);
+        _profile = widget.profile.mergeDisplay(
+          peer.profile ?? ProfileSummary.fromAddress(peer.peerAddress),
+        );
         _peerIsDisabled = peer.peerIsDisabled;
       });
     } catch (_) {
@@ -156,7 +159,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
   PeerRelationship _relationshipFor(BuildContext context) {
     return PeerRelationshipActions.relationshipForPeer(
       context,
-      profileId: _profile.id,
+      peerAddress: _profile.resolvedPeerAddress,
     );
   }
 
@@ -186,8 +189,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     try {
       await PeerRelationshipActions.setAllowed(
         context: context,
-        profileId: _profile.id,
-        profile: _profile,
+        peerAddress: _profile.resolvedPeerAddress,
         value: value,
       );
     } catch (e) {
@@ -204,8 +206,7 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     try {
       await PeerRelationshipActions.toggleRubrica(
         context: context,
-        profileId: widget.profile.id,
-        profile: _profile,
+        peerAddress: _profile.resolvedPeerAddress,
         inRubrica: inRubrica,
       );
     } catch (e) {
@@ -220,8 +221,8 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     final profile = await _profileForActions();
     if (!mounted) return;
     final peer = ChatPeer.fromProfile(
+      peerAddress: profile.resolvedPeerAddress,
       profile: profile,
-      address: profile.username,
     );
     Navigator.of(context).pop();
     auth.openConversation(peer);
@@ -294,9 +295,9 @@ class _PeerProfileOverlayState extends State<PeerProfileOverlay> {
     setState(() => _moderationBusy = true);
     try {
       if (ban) {
-        await session.ownerService.banProfile(_profile.id);
+        await session.ownerService.banProfile(_profile.id!);
       } else {
-        await session.ownerService.unbanProfile(_profile.id);
+        await session.ownerService.unbanProfile(_profile.id!);
       }
       if (!mounted) return;
       setState(() => _peerIsDisabled = ban);

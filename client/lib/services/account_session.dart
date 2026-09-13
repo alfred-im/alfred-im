@@ -465,12 +465,12 @@ class AccountSession {
     MessageMediaService? messageMediaService,
     ProfileService? profileService,
   }) async {
-    final resolvedClient = client ?? createClient(profile.id);
+    final resolvedClient = client ?? createClient(profile.id!);
     final resolvedInboxService = inboxService ?? InboxService(resolvedClient);
     final resolvedProfileService =
         profileService ?? ProfileService(resolvedClient);
     final session = AccountSession._(
-      userId: profile.id,
+      userId: profile.id!,
       epoch: ++_nextEpoch,
       client: resolvedClient,
       inboxService: resolvedInboxService,
@@ -485,7 +485,7 @@ class AccountSession {
       composeService: ComposeService(profileService: resolvedProfileService),
       ownerService: OwnerService(resolvedClient),
       inboxController: InboxController(
-        userId: profile.id,
+        userId: profile.id!,
         inboxService: resolvedInboxService,
         enableRealtime: false,
         enableInboxLoads: profile.hasPersonalInbox,

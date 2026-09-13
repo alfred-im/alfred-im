@@ -9,11 +9,11 @@ import '../utils/date_format.dart';
 import 'peer_relationship.dart';
 import 'profile_summary.dart';
 
-/// Controparte di una chat — identificata da [ProfileSummary] + metadati inbox.
+/// Controparte di una chat — identificata da [peerAddress] + metadati inbox.
 class ChatPeer {
   const ChatPeer({
-    required this.profile,
-    this.address,
+    required this.peerAddress,
+    this.profile,
     this.preview = '',
     this.timeLabel = '',
     this.unreadCount = 0,
@@ -22,8 +22,12 @@ class ChatPeer {
     this.relationship,
   });
 
-  final ProfileSummary profile;
-  final String? address;
+  /// Chiave canonica conversazione — lowercase `username` o `user@server`.
+  final String peerAddress;
+
+  /// Presentazione profilo — opzionale; arricchita via `get_profiles`.
+  final ProfileSummary? profile;
+
   final String preview;
   final String timeLabel;
   final int unreadCount;
@@ -31,10 +35,14 @@ class ChatPeer {
   final Color? avatarColor;
   final PeerRelationship? relationship;
 
-  String get profileId => profile.id;
-  String get displayName => profile.displayName;
-  String? get avatarUrl => profile.avatarUrl;
-  String? get pronouns => profile.pronouns;
+  /// UUID profilo locale — solo cache; non chiave conversazione.
+  String? get profileId => profile?.id;
+
+  String get displayName => profile?.displayName ?? peerAddress;
+
+  String? get avatarUrl => profile?.avatarUrl;
+
+  String? get pronouns => profile?.pronouns;
 
   bool get hasRelationship => relationship != null;
 
@@ -45,18 +53,21 @@ class ChatPeer {
   bool get peerIsDisabled => relationship?.isDisabled ?? false;
 
   Color get resolvedAvatarColor =>
-      avatarColor ?? avatarColorForId(profile.id);
+      avatarColor ?? avatarColorForId(profile?.id ?? peerAddress);
 
   bool get hasInboxHistory => lastMessageAt != null;
 
-  bool get isGroup => profile.isGroup;
+  bool get isGroup => profile?.isGroup ?? false;
 
   factory ChatPeer.fromInboxRow(Map<String, dynamic> json) {
+    final peerAddress =
+        (json['peer_address'] as String).trim().toLowerCase();
     final lastAt = json['last_message_at'] != null
         ? DateTime.parse(json['last_message_at'] as String)
         : null;
 
     return ChatPeer(
+      peerAddress: peerAddress,
       profile: ProfileSummary.fromInboxRow(json),
       preview: (json['last_message_preview'] as String?) ?? '',
       timeLabel: formatConversationTime(lastAt),
@@ -67,29 +78,41 @@ class ChatPeer {
   }
 
   factory ChatPeer.fromPeerContextRow(Map<String, dynamic> json) {
+    final username = (json['username'] as String?)?.trim().toLowerCase();
+    final address = username ?? '';
     return ChatPeer(
-      profile: ProfileSummary.fromProfilesRow(json),
-      address: json['username'] as String?,
+      peerAddress: address,
+      profile: ProfileSummary.fromProfilesRow(json).copyWith(address: address),
       relationship: PeerRelationship.fromRow(json),
     );
   }
 
   factory ChatPeer.fromProfile({
-    required ProfileSummary profile,
-    String? address,
+    required String peerAddress,
+    ProfileSummary? profile,
     PeerRelationship? relationship,
   }) {
+    final normalized = peerAddress.trim().toLowerCase();
     return ChatPeer(
-      profile: profile,
-      address: address,
+      peerAddress: normalized,
+      profile: profile?.copyWith(address: profile.address ?? normalized) ??
+          ProfileSummary.fromAddress(normalized),
       relationship: relationship,
+    );
+  }
+
+  factory ChatPeer.fromAddress(String address) {
+    final normalized = address.trim().toLowerCase();
+    return ChatPeer(
+      peerAddress: normalized,
+      profile: ProfileSummary.fromAddress(normalized),
     );
   }
 
   ChatPeer withRelationship(PeerRelationship relationship) {
     return ChatPeer(
+      peerAddress: peerAddress,
       profile: profile,
-      address: address,
       preview: preview,
       timeLabel: timeLabel,
       unreadCount: unreadCount,
@@ -100,9 +123,11 @@ class ChatPeer {
   }
 
   ChatPeer mergeFromInbox(ChatPeer inboxRow) {
+    if (inboxRow.peerAddress != peerAddress) return this;
     return ChatPeer(
-      profile: profile.mergeDisplay(inboxRow.profile),
-      address: address,
+      peerAddress: peerAddress,
+      profile: profile?.mergeDisplay(inboxRow.profile ?? ProfileSummary.fromAddress(peerAddress)) ??
+          inboxRow.profile,
       preview: inboxRow.preview,
       timeLabel: inboxRow.timeLabel,
       unreadCount: inboxRow.unreadCount,
@@ -111,4 +136,21 @@ class ChatPeer {
       relationship: inboxRow.relationship ?? relationship,
     );
   }
+
+  ChatPeer mergeProfile(ProfileSummary enriched) {
+    return ChatPeer(
+      peerAddress: peerAddress,
+      profile: (profile ?? ProfileSummary.fromAddress(peerAddress))
+          .mergeDisplay(enriched),
+      preview: preview,
+      timeLabel: timeLabel,
+      unreadCount: unreadCount,
+      lastMessageAt: lastMessageAt,
+      avatarColor: avatarColor,
+      relationship: relationship,
+    );
+  }
+
+  bool matchesAddress(String other) =>
+      peerAddress == other.trim().toLowerCase();
 }

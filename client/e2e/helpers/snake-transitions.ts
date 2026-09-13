@@ -6,7 +6,7 @@ import type { Page } from '@playwright/test';
 
 import { enableFlutterAccessibility } from './flutter-a11y';
 import type { LocalE2eUser } from './local-auth';
-import { addReceptionAllowlist, sendMessageToProfile } from './local-push-setup';
+import { addReceptionAllowlist, sendMessageToAddress } from './local-push-setup';
 import {
   clearPeerRelationshipInDb,
   insertContactInDb,
@@ -42,12 +42,12 @@ export async function transitionMessagingReady(
   const session2 = await loginSupabase(acct2.email, acct2.password);
   await addReceptionAllowlist({
     recipientUserId: acct1.userId,
-    allowedProfileId: acct2.userId,
+    allowedAddress: acct2.username,
     recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
     recipientUserId: acct2.userId,
-    allowedProfileId: acct1.userId,
+    allowedAddress: acct1.username,
     recipientAccessToken: session2.accessToken,
   });
 }
@@ -62,13 +62,13 @@ export async function transitionPeerCanAdd(
   await snakeStepAsync('transition.peer_can_add', async () => {
     await transitionMessagingReady(acct1, acct2);
     const session1 = await loginSupabase(acct1.email, acct1.password);
-    await sendMessageToProfile({
+    await sendMessageToAddress({
       senderAccessToken: session1.accessToken,
-      recipientProfileId: acct2.userId,
+      peerAddress: acct2.username,
       body: seedMessage,
       clientMessageId,
     });
-    clearPeerRelationshipInDb(acct1.userId, acct2.userId);
+    clearPeerRelationshipInDb(acct1.userId, acct2.username);
   });
 }
 
@@ -81,11 +81,11 @@ export async function transitionPeerEstablished(
 ): Promise<void> {
   await snakeStepAsync('transition.peer_established', async () => {
     await transitionMessagingReady(acct1, acct2);
-    insertContactInDb(acct1.userId, acct2.userId, acct2.username);
+    insertContactInDb(acct1.userId, acct2.username);
     const session1 = await loginSupabase(acct1.email, acct1.password);
-    await sendMessageToProfile({
+    await sendMessageToAddress({
       senderAccessToken: session1.accessToken,
-      recipientProfileId: acct2.userId,
+      peerAddress: acct2.username,
       body: seedMessage,
       clientMessageId,
     });

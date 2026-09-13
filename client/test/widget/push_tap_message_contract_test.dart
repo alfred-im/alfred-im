@@ -4,7 +4,6 @@
 
 import 'dart:async';
 
-import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/auth_controller.dart';
@@ -13,7 +12,6 @@ import 'package:alfred_client/screens/home_screen.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
-import 'package:alfred_client/services/profile_service.dart';
 import 'package:alfred_client/theme/alfred_theme.dart';
 import 'package:alfred_client/utils/push_stub.dart';
 import 'package:alfred_client/widgets/chat_panel.dart';
@@ -24,6 +22,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fake_messaging_services.dart';
+import '../support/seed_multi_account_machine.dart';
 
 /// Contratto utente — tap push con messaggi corretti (PROM-CONVERSATION-SCOPE-006)
 ///
@@ -37,15 +36,6 @@ const _poisonBtoY = 'VELENO_MAILBOX_B_VERSO_Y';
 const _msgFromA = 'ciao da A';
 const _msgFromB = 'risposta precedente B';
 
-class _FakeProfileService extends ProfileService {
-  _FakeProfileService(this._peers) : super(createTestSupabaseClient());
-
-  final Map<String, ProfileSummary> _peers;
-
-  @override
-  Future<ProfileSummary?> findById(String id) async => _peers[id];
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -58,17 +48,17 @@ void main() {
     (tester) async {
       const accountA = ProfileSummary(
         id: 'account-a',
-        username: 'agent_a',
+        username: 'agent_a', address: 'agent_a',
         displayName: 'Agent A',
       );
       const accountB = ProfileSummary(
         id: 'account-b',
-        username: 'agent_b',
+        username: 'agent_b', address: 'agent_b',
         displayName: 'Agent B',
       );
       const accountY = ProfileSummary(
         id: 'account-y',
-        username: 'agent_y',
+        username: 'agent_y', address: 'agent_y',
         displayName: 'Agent Y',
       );
 
@@ -84,7 +74,7 @@ void main() {
 
       messageServiceA.messagesByConversation[conversationKey(
         userId: 'account-a',
-        peerProfileId: 'account-b',
+        peerAddress: 'agent_b',
       )] = [
         ChatMessage(
           id: 'm-a-poison',
@@ -105,7 +95,7 @@ void main() {
       ];
       messageServiceB.messagesByConversation[conversationKey(
         userId: 'account-b',
-        peerProfileId: 'account-a',
+        peerAddress: 'agent_a',
       )] = [
         ChatMessage(
           id: 'm-b1',
@@ -126,7 +116,7 @@ void main() {
       ];
       messageServiceB.messagesByConversation[conversationKey(
         userId: 'account-b',
-        peerProfileId: 'account-y',
+        peerAddress: 'agent_y',
       )] = [
         ChatMessage(
           id: 'm-by',
@@ -145,12 +135,12 @@ void main() {
         peerMessages: messageServiceA.peerMessages,
         groupArchive: messageServiceA.groupArchive,
         inboxService: FakeInboxService(
-          peers: [ChatPeer(profile: accountB)],
+          peers: [inboxPeer(accountB)],
         ),
-        profileService: _FakeProfileService({
-          'account-b': accountB,
-          'account-y': accountY,
-        }),
+        profileService: MapBackedFakeProfileService.fromProfiles([
+          accountB,
+          accountY,
+        ]),
       );
       final sessionB = await AccountSession.createForTest(
         profile: accountB,
@@ -159,14 +149,14 @@ void main() {
         groupArchive: messageServiceB.groupArchive,
         inboxService: FakeInboxService(
           peers: [
-            ChatPeer(profile: accountA),
-            ChatPeer(profile: accountY),
+            inboxPeer(accountA),
+            inboxPeer(accountY),
           ],
         ),
-        profileService: _FakeProfileService({
-          'account-a': accountA,
-          'account-y': accountY,
-        }),
+        profileService: MapBackedFakeProfileService.fromProfiles([
+          accountA,
+          accountY,
+        ]),
       );
 
       sessionA.wireStorage(storage);
@@ -182,8 +172,13 @@ void main() {
 
       final auth = AuthController(accountManager: manager);
       await auth.initialize();
+      await seedMultiAccountMachineForTest(
+        auth,
+        openAccountUserIds: const ['account-a', 'account-b'],
+        focusUserId: 'account-a',
+      );
 
-      auth.openConversation(ChatPeer(profile: accountB));
+      await auth.openConversation(inboxPeer(accountB));
 
       final intents = StreamController<PushOpenChatIntent>.broadcast();
       addTearDown(intents.close);
@@ -216,10 +211,17 @@ void main() {
         () => listenerState.processOpenChatForTest(
           PushOpenChatIntent.fromParts(
             recipientUserId: 'account-b',
-            peerProfileId: 'account-a',
+            peerAddress: 'agent_a',
           ),
         ),
       );
+      for (var i = 0; i < 200; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+        if (auth.userId == 'account-b' &&
+            auth.activePeer?.peerAddress == 'agent_a') {
+          break;
+        }
+      }
 
       MessagesController? messagesController;
       for (var i = 0; i < 800; i++) {
@@ -232,14 +234,14 @@ void main() {
         if (!messagesController.isLoading &&
             messagesController.messages.isNotEmpty &&
             auth.userId == 'account-b' &&
-            auth.activePeer?.profile.id == 'account-a') {
+            auth.activePeer?.peerAddress == 'agent_a') {
           break;
         }
       }
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(auth.userId, 'account-b');
-      expect(auth.activePeer?.profile.id, 'account-a');
+      expect(auth.activePeer?.peerAddress, 'agent_a');
       expect(messagesController, isNotNull);
 
       final bodies = messagesController!.messages.map((m) => m.body).toList();

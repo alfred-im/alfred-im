@@ -10,13 +10,15 @@ import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/theme/alfred_theme.dart';
 import 'package:alfred_client/widgets/inbox_panel.dart';
 
+import '../support/fake_messaging_services.dart';
+
 ChatPeer _peer({
   required String id,
   required String name,
   String preview = 'ciao',
 }) {
-  return ChatPeer(
-    profile: ProfileSummary(id: id, displayName: name, username: id),
+  return inboxPeer(
+    ProfileSummary(id: id, displayName: name, username: id, address: id),
     preview: preview,
     lastMessageAt: DateTime.utc(2026, 6, 29, 12),
   );
@@ -33,7 +35,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         InboxPanel(
-          selectedPeerId: null,
+          selectedPeerAddress: null,
           peers: const [],
           isLoading: false,
           onSelected: (_) {},
@@ -63,13 +65,13 @@ void main() {
     final profile = ProfileSummary(
       id: 'user-1',
       displayName: 'Mario',
-      username: 'mario',
+      username: 'mario', address: 'mario',
     );
 
     await tester.pumpWidget(
       _wrap(
         InboxPanel(
-          selectedPeerId: null,
+          selectedPeerAddress: null,
           peers: const [],
           isLoading: false,
           onSelected: (_) {},
@@ -103,7 +105,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         InboxPanel(
-          selectedPeerId: 'peer-b',
+          selectedPeerAddress: 'peer-b',
           peers: [
             _peer(id: 'peer-a', name: 'Alice'),
             _peer(id: 'peer-b', name: 'Bob', preview: 'ultimo'),
@@ -126,7 +128,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         InboxPanel(
-          selectedPeerId: null,
+          selectedPeerAddress: null,
           peers: const [],
           isLoading: false,
           onSelected: (_) {},

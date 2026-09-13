@@ -14,13 +14,13 @@ import 'chat_peer.dart';
 class ConversationScope {
   const ConversationScope({
     required this.focusUserId,
-    required this.peerProfileId,
+    required this.peerAddress,
     required this.sessionEpoch,
     this.loadSeq = 0,
-  }) : assert(focusUserId != peerProfileId);
+  });
 
   final String focusUserId;
-  final String peerProfileId;
+  final String peerAddress;
 
   /// Incrementato a ogni restore/dispose sessione GoTrue ([SessionAuthority.identityGeneration]).
   final int sessionEpoch;
@@ -38,7 +38,7 @@ class ConversationScope {
   }) {
     return ConversationScope(
       focusUserId: session.userId,
-      peerProfileId: peer.profileId,
+      peerAddress: peer.peerAddress,
       sessionEpoch: session.epoch,
       loadSeq: loadSeq,
     );
@@ -50,7 +50,7 @@ class ConversationScope {
   }) {
     return ConversationScope(
       focusUserId: focusUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       sessionEpoch: sessionEpoch ?? this.sessionEpoch,
       loadSeq: loadSeq ?? this.loadSeq,
     );
@@ -59,7 +59,7 @@ class ConversationScope {
   bool matchesSession(AccountSession session) =>
       session.userId == focusUserId && session.epoch == sessionEpoch;
 
-  bool matchesPeer(ChatPeer peer) => peer.profileId == peerProfileId;
+  bool matchesPeer(ChatPeer peer) => peer.peerAddress == peerAddress;
 
   bool matches(AccountSession session, ChatPeer peer) =>
       matchesSession(session) && matchesPeer(peer);
@@ -67,20 +67,20 @@ class ConversationScope {
   /// Stessa conversazione (account + peer), indipendentemente da epoch/loadSeq.
   bool isSameConversationAs(ConversationScope other) =>
       focusUserId == other.focusUserId &&
-      peerProfileId == other.peerProfileId;
+      peerAddress == other.peerAddress;
 
   /// Identità conversazione senza generazione sessione/caricamento.
   bool isSameConversation({
     required String focusUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) =>
-      this.focusUserId == focusUserId && this.peerProfileId == peerProfileId;
+      this.focusUserId == focusUserId && this.peerAddress == peerAddress;
 
   Key get providerKey => ValueKey(
         Object.hash(
           'conversation-scope',
           focusUserId,
-          peerProfileId,
+          peerAddress,
           sessionEpoch,
           loadSeq,
         ),
@@ -91,11 +91,11 @@ class ConversationScope {
       identical(this, other) ||
       other is ConversationScope &&
           focusUserId == other.focusUserId &&
-          peerProfileId == other.peerProfileId &&
+          peerAddress == other.peerAddress &&
           sessionEpoch == other.sessionEpoch &&
           loadSeq == other.loadSeq;
 
   @override
   int get hashCode =>
-      Object.hash(focusUserId, peerProfileId, sessionEpoch, loadSeq);
+      Object.hash(focusUserId, peerAddress, sessionEpoch, loadSeq);
 }

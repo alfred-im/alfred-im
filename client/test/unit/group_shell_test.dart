@@ -13,7 +13,7 @@ void main() {
       const group = ProfileSummary(
         id: 'g1',
         displayName: 'Famiglia',
-        username: 'famiglia',
+        username: 'famiglia', address: 'famiglia',
         profileKind: ProfileKind.group,
       );
 

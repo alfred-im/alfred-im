@@ -26,41 +26,32 @@ void main() {
     );
   });
 
-  // spec: PROM-PERSONAL-CONTACTS-006
   group('ComposeService.peerFromContact', () {
-    test('maps internal contact to ChatPeer', () {
+    test('maps contact address to ChatPeer', () {
       final peer = composeService.peerFromContact(
         Contact(
           id: 'c1',
           archiveUserId: 'alice',
-          linkedProfileId: 'peer-1',
-          displayName: 'Alice',
-          avatarUrl: 'https://example.com/a.jpg',
+          address: 'peer-1',
           createdAt: DateTime.utc(2026, 6, 28),
         ),
       );
 
-      expect(peer.profileId, 'peer-1');
-      expect(peer.displayName, 'Alice');
+      expect(peer.peerAddress, 'peer-1');
+      expect(peer.displayName, 'peer-1');
     });
 
-    test('rejects external contact (scope attuale)', () {
-      expect(
-        () => composeService.peerFromContact(
-          Contact(
-            id: 'c2',
-            archiveUserId: 'alice',
-            externalAddress: 'alice@arkham-im.fly.dev',
-            displayName: 'Alice federata',
-            createdAt: DateTime.utc(2026, 6, 28),
-          ),
-        ),
-        throwsA(
-          predicate<StateError>(
-            (e) => e.message.contains('Indirizzo esterno non ancora supportato'),
-          ),
+    test('supports federated address', () {
+      final peer = composeService.peerFromContact(
+        Contact(
+          id: 'c2',
+          archiveUserId: 'alice',
+          address: 'alice@arkham-im.fly.dev',
+          createdAt: DateTime.utc(2026, 6, 28),
         ),
       );
+
+      expect(peer.peerAddress, 'alice@arkham-im.fly.dev');
     });
   });
 }

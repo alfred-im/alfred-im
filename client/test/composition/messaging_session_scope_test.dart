@@ -21,14 +21,14 @@ const _peerId = 'peer-b';
 bool _focusedSessionValid(
   AuthController auth,
   String expectedUserId,
-  String peerProfileId,
+  String peerAddress,
 ) {
   final live = auth.focusedSession;
   if (live == null || live.userId != expectedUserId) return false;
   return isMessagingSessionReady(
     client: live.client,
     focusUserId: expectedUserId,
-    peerProfileId: peerProfileId,
+    peerAddress: peerAddress,
   );
 }
 
@@ -110,14 +110,14 @@ void main() {
 
       final scope = testConversationScope(
         userId: _userA,
-        peerProfileId: _peerId,
+        peerAddress: _peerId,
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: scope,
         messageStore: testMessageStoreFor(scope),
         userId: _userA,
-        peerProfileId: _peerId,
+        peerAddress: _peerId,
         peerMessages: staleService.peerMessages,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: FakeInboxService(),
@@ -166,14 +166,14 @@ void main() {
 
       final scope = testConversationScope(
         userId: _userA,
-        peerProfileId: _peerId,
+        peerAddress: _peerId,
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: scope,
         messageStore: testMessageStoreFor(scope),
         userId: _userA,
-        peerProfileId: _peerId,
+        peerAddress: _peerId,
         peerMessages: liveSession.peerMessages,
         messageMediaService: liveSession.messageMediaService,
         inboxService: liveSession.inboxService,

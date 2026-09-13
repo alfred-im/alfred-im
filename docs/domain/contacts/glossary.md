@@ -1,8 +1,9 @@
 # Glossario — contesto contacts
 
 **Bounded context:** `contacts`  
-**Ultima revisione:** 2026-09-08  
-**Promesse SDD:** [PROM-PERSONAL-CONTACTS](../../specs/promises/product/PROM-PERSONAL-CONTACTS.md), [SYS-CONTACTS](../../specs/promises/system/SYS-CONTACTS.md)
+**Ultima revisione:** 2026-09-13  
+**Promesse SDD:** [PROM-PERSONAL-CONTACTS](../../specs/promises/product/PROM-PERSONAL-CONTACTS.md), [SYS-CONTACTS](../../specs/promises/system/SYS-CONTACTS.md)  
+**Amend:** rubrica solo `address` — distillazione TEMP §7
 
 ---
 
@@ -11,14 +12,14 @@
 | Termine | Definizione |
 |---------|-------------|
 | **Rubrica** | Lista personale contatti scoped per account — scorciatoie opzionali, non prerequisito per messaggistica. |
-| **Contact** | Voce rubrica: nome visualizzato, snapshot avatar opzionale, riferimento locale o indirizzo federato. |
-| **Contatto locale** | `linked_profile_id` valorizzato — profilo Alfred sulla stessa istanza. |
-| **Contatto federato** | `external_address` valorizzato (`user@server`); compose da rubrica non supportato finché la federazione non è live. |
+| **Contact** | Voce rubrica: **solo** `address` text lowercase — UNIQUE `(archive_user_id, address)`. |
+| **address** | Indirizzo IM del contatto: `username` bare o `user@server`. Unico campo identità in rubrica. |
 | **ArchiveUser** | Utente in focus; rubrica scoped all'account corrente. |
-| **Profile search** | Ricerca profili Alfred per aggiunta locale (soglia minima caratteri, limite risultati). |
-| **Filtered contacts** | Sottoinsieme locale per nome via filtro lista ([PROM-LIST-FILTER](../../specs/promises/product/PROM-LIST-FILTER.md)). |
-| **Compose shortcut** | Avvio conversazione da contatto locale verso navigation. |
-| **Peer profile overlay** | Scheda identità peer da tap avatar contatto locale ([PROM-PEER-PROFILE](../../specs/promises/product/PROM-PEER-PROFILE.md)). |
+| **Profile search** | Ricerca profili Alfred per aggiunta (`search_profiles` — soglia minima caratteri, limite risultati). |
+| **get_profiles** | Batch presentazione nome/avatar contatti — **non** persistito in `contacts`. |
+| **Filtered contacts** | Sottoinsieme locale per nome/indirizzo via filtro lista ([PROM-LIST-FILTER](../../specs/promises/product/PROM-LIST-FILTER.md)). |
+| **Compose shortcut** | Avvio conversazione da contatto verso navigation con `peer_address`. |
+| **Peer profile overlay** | Scheda identità peer da tap avatar — **qualsiasi** indirizzo valido ([PROM-PEER-PROFILE](../../specs/promises/product/PROM-PEER-PROFILE.md)). |
 
 ---
 
@@ -26,10 +27,10 @@
 
 | Contesto | Relazione |
 |----------|-----------|
-| **profile** | Identità pubblica per ricerca e snapshot locale. |
-| **reception** | Allow list **separata** — rubrica non implica consenso ricezione. |
+| **profile** | `get_profiles(addresses[])` per presentazione; `search_profiles` per aggiunta. |
+| **reception** | Allow list **separata** (`allowed_address`) — rubrica non implica consenso ricezione. |
 | **messaging** | Inbox deriva solo da archivio messaggi; invio sempre address-based. |
-| **navigation** | «Scrivi» da rubrica restituisce peer conversazione al chiamante. |
+| **navigation** | «Scrivi» da rubrica restituisce `peer_address` al chiamante. |
 | **multi-account** | Rubrica scoped all'account in focus; ricreata al cambio focus. |
 
 ---
@@ -40,5 +41,6 @@
 2. Aggiunta contatto non crea conversazione in inbox.
 3. Nessun id contatto richiesto per invio messaggio.
 4. Dopo aggiunta/rimozione contatto → rubrica ricaricata.
-5. Lookup contatto per profilo considera solo contatti con `linked_profile_id`.
-6. Contatti federati: nessun overlay peer al tap avatar.
+5. Lookup contatto per `address` — un solo campo identità.
+6. **Nessun** snapshot nome/avatar in `contacts` — presentazione via `get_profiles`.
+7. Overlay peer disponibile per **qualsiasi** indirizzo, incluso `user@other-server`.

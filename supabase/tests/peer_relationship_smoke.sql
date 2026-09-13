@@ -24,19 +24,18 @@ BEGIN
 
   INSERT INTO public.contacts (
     archive_user_id,
-    linked_profile_id,
-    display_name
+    address
   )
-  VALUES (v_agent1, v_agent2, 'Agent 2')
-  ON CONFLICT DO NOTHING;
+  VALUES (v_agent1, 'ciagent2')
+  ON CONFLICT ON CONSTRAINT contacts_archive_user_address_unique DO NOTHING;
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
-  VALUES (v_agent1, v_agent2)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
+  VALUES (v_agent1, 'ciagent2')
   ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
   SELECT i.peer_in_contacts, i.peer_is_allowed
   INTO v_in_contacts, v_is_allowed
-  FROM public.get_peer_context(v_agent2) i;
+  FROM public.get_peer_context('ciagent2') i;
 
   IF coalesce(v_in_contacts, false) IS NOT TRUE THEN
     RAISE EXCEPTION 'get_peer_context peer_in_contacts expected true';

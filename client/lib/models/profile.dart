@@ -17,7 +17,7 @@ class UserProfile {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  String get id => summary.id;
+  String get id => summary.id!;
   String get username => summary.username ?? '';
   String get displayName => summary.displayName;
   String? get pronouns => summary.pronouns;

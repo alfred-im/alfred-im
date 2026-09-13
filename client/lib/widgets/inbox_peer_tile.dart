@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/chat_peer.dart';
+import '../models/profile_summary.dart';
 import '../theme/alfred_colors.dart';
 import 'peer_profile_overlay.dart';
 import 'profile_identity.dart';
@@ -32,8 +33,11 @@ class InboxPeerTile extends StatelessWidget {
         child: Row(
           children: [
             ProfileAvatar(
-              profile: peer.profile,
-              onTap: () => showPeerProfileOverlay(context, peer.profile),
+              profile: peer.profile ?? ProfileSummary.fromAddress(peer.peerAddress),
+              onTap: () => showPeerProfileOverlay(
+                context,
+                peer.profile ?? ProfileSummary.fromAddress(peer.peerAddress),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -78,10 +82,10 @@ class InboxPeerTile extends StatelessWidget {
                             ),
                           ],
                         ),
-                        if (peer.profile.hasPronouns) ...[
+                        if (peer.profile?.hasPronouns ?? false) ...[
                           const SizedBox(height: 2),
                           Text(
-                            peer.profile.pronouns!,
+                            peer.profile!.pronouns!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.labelSmall?.copyWith(

@@ -13,19 +13,22 @@ import '../services/reception_allowlist_service.dart';
 class ReceptionAllowlistController extends ChangeNotifier {
   ReceptionAllowlistController({
     required this.focusUserId,
+    this.focusAccountAddress,
     this.sessionEpoch = 0,
     required ReceptionAllowlistService allowlistService,
   }) {
     _coordinator = ReceptionCoordinator(
       focusUserId: focusUserId,
+      focusAccountAddress: focusAccountAddress,
       allowlistService: allowlistService,
       onStateChanged: notifyListeners,
     );
   }
 
   final String focusUserId;
+  final String? focusAccountAddress;
 
-  /// Allineato a [AccountSession.epoch] — invalida il controller su restore sessione.
+  /// Allineato a [AccountSession.epoch] — invalida il controller epoch.
   final int sessionEpoch;
 
   late final ReceptionCoordinator _coordinator;
@@ -40,10 +43,10 @@ class ReceptionAllowlistController extends ChangeNotifier {
   List<AllowedPerson> get filteredAllowedPeople =>
       _coordinator.filteredAllowedPeople;
 
-  Set<String> get allowedProfileIds => _coordinator.allowedProfileIds;
+  Set<String> get allowedAddresses => _coordinator.allowedAddresses;
 
-  bool isProfileAllowed(String profileId) =>
-      allowedProfileIds.contains(profileId);
+  bool isAddressAllowed(String address) =>
+      allowedAddresses.contains(address.trim().toLowerCase());
 
   void setSearchQuery(String value) => _coordinator.setSearchQuery(value);
 
@@ -55,11 +58,18 @@ class ReceptionAllowlistController extends ChangeNotifier {
   Future<List<ProfileSummary>> searchProfiles(String query) =>
       _coordinator.searchProfiles(query);
 
-  Future<void> addProfile(ProfileSummary profile) =>
-      _coordinator.addProfile(profile);
+  Future<void> addAddress(String address) => _coordinator.addAddress(address);
+
+  Future<void> addProfile(ProfileSummary profile) {
+    final address = profile.address ?? profile.username;
+    if (address == null || address.isEmpty) {
+      throw StateError('Profilo senza indirizzo');
+    }
+    return _coordinator.addProfile(profile);
+  }
 
   Future<void> remove(AllowedPerson person) => _coordinator.remove(person);
 
-  Future<void> removeByProfileId(String profileId) =>
-      _coordinator.removeByProfileId(profileId);
+  Future<void> removeByAddress(String address) =>
+      _coordinator.removeByAddress(address);
 }

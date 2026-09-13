@@ -4,8 +4,8 @@
 |-------|--------|
 | **Promessa ID** | `SYS-RECEPTION` |
 | **Classe** | SYSTEM |
-| **Status** | `implemented` |
-| **Ultima revisione** | 2026-08-08 |
+| **Status** | `approved` — amend §7 allowed_address (implementazione pendente) |
+| **Ultima revisione** | 2026-09-13 |
 | **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) |
 | **PR** | #161, #179 |
 
@@ -26,11 +26,12 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 | ID | Promessa |
 |----|----------|
 | **SYS-RECEPTION-001** | Tabella `reception_allowlist` scoped per `archive_user_id` (destinatario che filtra) con RLS `archive_user_id = auth.uid()` |
-| **SYS-RECEPTION-002** | Colonne: `id` uuid PK, `archive_user_id` FK → profiles, `allowed_profile_id` FK → profiles, `created_at` timestamptz |
-| **SYS-RECEPTION-003** | Unicità `(archive_user_id, allowed_profile_id)`; `allowed_profile_id ≠ archive_user_id` |
+| **SYS-RECEPTION-002** | Colonne: `id` uuid PK, `archive_user_id` FK → profiles, **`allowed_address`** text NOT NULL (lowercase), `created_at` timestamptz |
+| **SYS-RECEPTION-003** | Unicità `(archive_user_id, allowed_address)`; indirizzo consentito ≠ indirizzo titolare archivio |
+| **SYS-RECEPTION-003b** | Regola §7.2/§7.6: `mario` e `mario@<im_server_id>` = **voci allow list distinte** |
 | **SYS-RECEPTION-004** | CRUD lista via PostgREST diretto su `reception_allowlist` (nessuna RPC dedicata obbligatoria) |
 | **SYS-RECEPTION-005** | Gate server nel worker [SYS-DELIVERY](./SYS-DELIVERY.md) **prima** della materializzazione copia destinatario |
-| **SYS-RECEPTION-006** | Condizione recapito: esiste riga `reception_allowlist` con `archive_user_id = destinatario` AND `allowed_profile_id = mittente` |
+| **SYS-RECEPTION-006** | Condizione recapito **inbound**: esiste riga `reception_allowlist` con `archive_user_id = destinatario` AND `allowed_address = author_address` del mittente (lowercase) |
 | **SYS-RECEPTION-007** | Lista vuota → **nessun** mittente soddisfa il gate → tutti i messaggi nuovi rifiutati |
 | **SYS-RECEPTION-008** | Su rifiuto: INSERT copia mittente + outbox come oggi; **nessuna** INSERT copia destinatario; `delivered_at` resta null sulla copia mittente |
 | **SYS-RECEPTION-009** | Su rifiuto **inbound**: RPC ritorna la copia mittente senza errore (rifiuto silenzioso) |
@@ -40,15 +41,16 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 | **SYS-RECEPTION-013** | Nuovo account: lista vuota di default (nessuno può scrivere finché non si aggiunge qualcuno) |
 | **SYS-RECEPTION-014** | Filtro sempre attivo — **nessun** flag globale enable/disable a livello utente o piattaforma |
 | **SYS-RECEPTION-018** | Stesso gate per recapito **federato**: prima di materializzare copia ingresso, verificare allow list del destinatario; stesso silenzio verso mittente esterno |
-| **SYS-RECEPTION-029** | Gate **outbound** in `send_message_to_profile` **prima** di INSERT copia mittente |
-| **SYS-RECEPTION-030** | Condizione outbound: `is_sender_allowed_for_reception(auth.uid(), recipient_profile_id)` |
+| **SYS-RECEPTION-029** | Gate **outbound** in `send_message_to_address` **prima** di INSERT copia mittente |
+| **SYS-RECEPTION-030** | Condizione outbound: `p_peer_address` ∈ allow list del mittente (`allowed_address`) |
 | **SYS-RECEPTION-031** | Su violazione outbound: `raise exception 'recipient not in reception allowlist'` — nessuna riga messaggio mittente |
 
 ### SHOULD
 
 | ID | Promessa |
 |----|----------|
-| **SYS-RECEPTION-019** | Lista ordinata per `display_name` del profilo consentito (join `profiles`) |
+| **SYS-RECEPTION-019** | Lista ordinata per indirizzo consentito; display via `get_profiles` batch |
+| **SYS-RECEPTION-032** | Allow list governa **recapito messaggi** — **non** visibilità profilo (`get_profiles` sempre consentito — §7.12) |
 
 ### MUST NOT
 
@@ -61,7 +63,8 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 | **SYS-RECEPTION-025** | Eliminare dall'archivio messaggi già ricevuti quando si rimuove qualcuno dalla lista |
 | **SYS-RECEPTION-026** | Toggle globale on/off della funzionalità allow list |
 | **SYS-RECEPTION-027** | Mostrare al mittente che il destinatario usa un filtro di ricezione |
-| **SYS-RECEPTION-028** | `GRANT EXECUTE` su `is_sender_allowed_for_reception` al ruolo `authenticated` — helper solo per RPC `SECURITY DEFINER` interne |
+| **SYS-RECEPTION-028** | `GRANT EXECUTE` su `is_address_allowed_for_reception` al ruolo `authenticated` — helper solo per RPC `SECURITY DEFINER` interne |
+| **SYS-RECEPTION-033** | **MUST NOT** gate `get_profiles` su allow list del richiedente |
 
 ---
 
@@ -71,7 +74,7 @@ L'utente Alfred controlla chi può consegnargli messaggi tramite allow list pers
 
 Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md) § Consegna / Flusso locale
 
-Helper interno: `is_sender_allowed_for_reception(p_archive_user_id, p_sender_profile_id) boolean` — `SECURITY DEFINER`, usata da RPC invio (outbound + idempotenza) e worker delivery (inbound).
+Helper interno: `is_address_allowed_for_reception(p_archive_user_id, p_allowed_address) boolean` — `SECURITY DEFINER`, usata da RPC invio (outbound + idempotenza) e worker delivery (inbound).
 
 Vedi [contracts/schema.md](../../contracts/schema.md) · [SYS-MAILBOX](./SYS-MAILBOX.md) SYS-MAILBOX-020.
 

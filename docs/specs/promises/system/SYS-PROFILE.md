@@ -4,8 +4,8 @@
 |-------|--------|
 | **Promessa ID** | `SYS-PROFILE` |
 | **Classe** | SYSTEM |
-| **Status** | `implemented` |
-| **Ultima revisione** | 2026-08-08 |
+| **Status** | `approved` — amend §7 get_profiles + presentazione (implementazione pendente) |
+| **Ultima revisione** | 2026-09-13 |
 | **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) |
 | **PR** | #118, #134 |
 
@@ -15,7 +15,7 @@ Promesse di piattaforma per tabella `profiles`, bucket avatar, RLS e RPC di espo
 
 ## 1. Problema / obiettivo
 
-Ogni utente Alfred ha un profilo pubblico legato 1:1 a `auth.users`. Il backend garantisce schema, vincoli, storage avatar e campi profilo peer esposti da RPC inbox e ricerca — senza email in superfici pubbliche.
+Ogni utente Alfred ha un profilo pubblico legato 1:1 a `auth.users`. Il backend espone **`get_profiles(addresses[])`** per presentazione batch (locale + federato); inbox e overlay usano lo stesso batch — fallback indirizzo grezzo.
 
 ---
 
@@ -31,8 +31,11 @@ Ogni utente Alfred ha un profilo pubblico legato 1:1 a `auth.users`. Il backend 
 | **SYS-PROFILE-004** | Campi editabili (scope attuale): `display_name` (obbligatorio), `bio`, `pronouns`, `avatar_url`, `cover_url` |
 | **SYS-PROFILE-005** | Avatar: bucket `avatars`, path `{userId}/avatar.{jpg\|png\|webp}`, max **2 MB**, URL pubblico; upsert sullo stesso path |
 | **SYS-PROFILE-005b** | Copertina: bucket `avatars`, path `{userId}/cover.{jpg\|png\|webp}`, max **2 MB**, URL pubblico; upsert sullo stesso path |
-| **SYS-PROFILE-006** | RPC `list_inbox()` espone `peer_avatar_url`, `peer_cover_url`, `peer_pronouns` per ogni riga peer |
-| **SYS-PROFILE-007** | RPC `find_profile_by_username` ritorna `id`, `username`, `display_name`, `avatar_url`, `cover_url`, `pronouns` |
+| **SYS-PROFILE-006** | RPC `list_inbox()` espone `peer_address`; display name/avatar via join locale o fallback — arricchimento client via `get_profiles` |
+| **SYS-PROFILE-007** | RPC `find_profile_by_username` — lookup bare username locale (shareable-link, compose) |
+| **SYS-PROFILE-009** | RPC **`get_profiles(p_addresses text[])`** → profilo pubblico per ogni indirizzo; **non** gated da allow list (§7.12) |
+| **SYS-PROFILE-010** | Peer federato: risposta RPC senza INSERT in `profiles` — nessun profilo shadow |
+| **SYS-PROFILE-011** | RPC `get_peer_context(p_peer_address text)` — profilo + flag relazione per indirizzo |
 
 ### SHOULD
 
@@ -46,6 +49,8 @@ Ogni utente Alfred ha un profilo pubblico legato 1:1 a `auth.users`. Il backend 
 |----|----------|
 | **SYS-PROFILE-015** | Esporre email in `search_profiles`, `list_inbox` o altre RPC/query profilo pubblico |
 | **SYS-PROFILE-017** | Avatar fuori dalla cartella `auth.uid()` in bucket `avatars` |
+| **SYS-PROFILE-018** | INSERT profili shadow per peer su altre istanze |
+| **SYS-PROFILE-019** | Gating `get_profiles` su allow list del richiedente |
 
 ---
 
@@ -56,8 +61,10 @@ Ogni utente Alfred ha un profilo pubblico legato 1:1 a `auth.users`. Il backend 
 | `profiles` | RLS: SELECT authenticated; UPDATE solo propria riga |
 | `profiles.pronouns` | Testo libero opzionale |
 | Bucket `avatars` | Pubblico; MIME jpeg/png/webp; 2 MB; RLS cartella = `auth.uid()` |
-| `list_inbox()` | Join `profiles` → `peer_avatar_url`, `peer_cover_url`, `peer_pronouns` |
-| `find_profile_by_username` | Risoluzione username → profilo pubblico (`avatar_url`, `cover_url`, `pronouns`, …) |
+| `list_inbox()` | Ritorna `peer_address`; campi display opzionali da join locale |
+| `get_profiles(text[])` | Batch presentazione — `{ address, display_name, avatar_url, cover_url, pronouns, profile_kind }` |
+| `get_peer_context(text)` | Singolo indirizzo + flag `peer_in_contacts`, `peer_is_allowed` |
+| `find_profile_by_username` | Solo bare username stessa istanza |
 
 Migrazioni: `20260624200000_alfred_domain_schema.sql`, `20260628000000_profile_pronouns_avatars.sql`, `20260628100000_inbox_peer_profile_fields.sql`, `20260806190000_profile_cover_url.sql`.
 

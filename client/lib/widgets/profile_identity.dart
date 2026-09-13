@@ -60,7 +60,7 @@ class ProfileAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatar = CircleAvatar(
       radius: radius,
-      backgroundColor: avatarColorForId(profile.id),
+      backgroundColor: avatarColorForId(profile.presentationKey),
       backgroundImage:
           profile.avatarUrl != null ? NetworkImage(profile.avatarUrl!) : null,
       child: profile.avatarUrl == null

@@ -33,7 +33,7 @@ Binding UX shell dedicata quando focus su account `profile_kind = group`: home s
 | **SURF-GROUP-SHELL-001** | Dopo login account gruppo: compare nel manifest multi-account come ogni altro account |
 | **SURF-GROUP-SHELL-002** | Account gruppo in focus: schermata **default** = [SURF-GROUP-HOME](./SURF-GROUP-HOME.md) (non conversazione diretta) |
 | **SURF-GROUP-SHELL-003** | Entry profilo e allow list **propria** nella home gruppo (header); non più barra profilo/allow list sopra la chat |
-| **SURF-GROUP-SHELL-004** | Account `user`: inbox e chat invariati; peer gruppo = `peer_profile_id` del profilo gruppo |
+| **SURF-GROUP-SHELL-004** | Account `user`: inbox e chat invariati; peer gruppo = `peer_address` del profilo gruppo |
 | **SURF-GROUP-SHELL-005** | Profilo gruppo: stessi campi e UI di [SURF-PROFILE](./SURF-PROFILE.md) (`display_name`, `bio`, `avatar_url`, `pronouns`; username non editabile) |
 | **SURF-GROUP-SHELL-006** | Client registrazione: stessa schermata auth utente con opzione tipo account (`user` / `group`) |
 

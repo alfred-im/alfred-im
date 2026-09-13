@@ -38,11 +38,11 @@ Future<GroupHomeAggregates> buildGroupHomeAggregates({
   var activeAuthors = const <GroupActiveAuthor>[];
   if (counts.isNotEmpty) {
     final profiles =
-        await profileService.fetchSummariesByIds(counts.keys.toList());
-    final profilesById = {for (final profile in profiles) profile.id: profile};
+        await profileService.fetchSummariesByAddresses(counts.keys.toList());
+    final profilesByAddress = {for (final profile in profiles) profile.id: profile};
     activeAuthors = counts.entries
         .map((entry) {
-          final summary = profilesById[entry.key];
+          final summary = profilesByAddress[entry.key];
           if (summary == null) return null;
           return GroupActiveAuthor(
             profile: summary,
@@ -71,7 +71,8 @@ ChatPeer buildGroupConversationTile({
   required ProfileSummary profile,
 }) {
   if (messages.isEmpty) {
-    return ChatPeer.fromProfile(profile: profile);
+    final address = profile.address ?? profile.username ?? profile.id ?? '';
+    return ChatPeer.fromProfile(peerAddress: address, profile: profile);
   }
 
   final sorted = List<ChatMessage>.from(messages)
@@ -82,7 +83,9 @@ ChatPeer buildGroupConversationTile({
   final last = sorted.last;
   final lastAt = last.createdAt;
 
+  final address = profile.address ?? profile.username ?? profile.id ?? '';
   return ChatPeer(
+    peerAddress: address,
     profile: profile,
     preview: inboxPreviewForMessage(last),
     timeLabel: formatConversationTime(lastAt),

@@ -45,12 +45,12 @@ export async function prepareLocalMessagingPair(
 
   await addReceptionAllowlist({
     recipientUserId: acct1.userId,
-    allowedProfileId: acct2.userId,
+    allowedAddress: acct2.username,
     recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
     recipientUserId: acct2.userId,
-    allowedProfileId: acct1.userId,
+    allowedAddress: acct1.username,
     recipientAccessToken: session2.accessToken,
   });
 
@@ -81,25 +81,25 @@ export async function prepareLocalFiveAccountManifest(
   for (const other of [users[1], users[2], users[3], group]) {
     await addReceptionAllowlist({
       recipientUserId: users[0].userId,
-      allowedProfileId: other.userId,
+      allowedAddress: other.username,
       recipientAccessToken: session1.accessToken,
     });
     const sessionOther = await loginSupabase(other.email, other.password);
     await addReceptionAllowlist({
       recipientUserId: other.userId,
-      allowedProfileId: users[0].userId,
+      allowedAddress: users[0].username,
       recipientAccessToken: sessionOther.accessToken,
     });
   }
   const session2 = await loginSupabase(users[1].email, users[1].password);
   await addReceptionAllowlist({
     recipientUserId: users[1].userId,
-    allowedProfileId: users[0].userId,
+    allowedAddress: users[0].username,
     recipientAccessToken: session2.accessToken,
   });
   await addReceptionAllowlist({
     recipientUserId: users[0].userId,
-    allowedProfileId: users[1].userId,
+    allowedAddress: users[1].username,
     recipientAccessToken: session1.accessToken,
   });
 

@@ -51,11 +51,11 @@ void main() {
     test('openConversationOnAccount sostituisce chat stale', () async {
       final ok = await nav.openConversationOnAccount(
         accountUserId: accountId,
-        peerProfileId: linkPeerId,
+        peerAddress: 'link_z',
       );
 
       expect(ok, isTrue);
-      expect(manager.viewState.activePeer?.profileId, linkPeerId);
+      expect(manager.viewState.activePeer?.peerAddress, 'link_z');
     });
 
     test('fallback profilo se assente da inbox', () async {
@@ -70,11 +70,11 @@ void main() {
 
       final ok = await nav.openConversationOnAccount(
         accountUserId: accountId,
-        peerProfileId: linkPeerId,
+        peerAddress: 'link_z',
       );
 
       expect(ok, isTrue);
-      expect(manager.viewState.activePeer?.profileId, linkPeerId);
+      expect(manager.viewState.activePeer?.peerAddress, 'link_z');
     });
   });
 }

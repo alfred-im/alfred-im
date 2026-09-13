@@ -5,7 +5,6 @@
 import 'package:alfred_client/machines/multi-account/multi_account_adapters.dart';
 import 'package:alfred_client/machines/navigation/account_navigation_effects.dart';
 import 'package:alfred_client/machines/navigation/navigation_machine.dart';
-import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/open_conversation_source.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_manager.dart';
@@ -36,16 +35,15 @@ void main() {
       sessionA = await AccountSession.createForTest(
         profile: const ProfileSummary(
           id: 'account-a',
-          username: 'agent_a',
+          username: 'agent_a', address: 'agent_a',
           displayName: 'Agent A',
         ),
         client: createTestSupabaseClient(),
         inboxService: FakeInboxService(
-          peers: const [
-            ChatPeer(
-              profile: ProfileSummary(
+          peers: [
+            inboxPeer(const ProfileSummary(
                 id: 'account-b',
-                username: 'agent_b',
+                username: 'agent_b', address: 'agent_b',
                 displayName: 'Agent B',
               ),
             ),
@@ -57,7 +55,7 @@ void main() {
       sessionB = await AccountSession.createForTest(
         profile: const ProfileSummary(
           id: 'account-b',
-          username: 'agent_b',
+          username: 'agent_b', address: 'agent_b',
           displayName: 'Agent B',
         ),
         client: createTestSupabaseClient(),
@@ -145,18 +143,17 @@ void main() {
         manager.injectTestSession(sessionB);
 
         await navigation.openPeerOnFocusedAccount(
-          const ChatPeer(
-            profile: ProfileSummary(
+          inboxPeer(const ProfileSummary(
               id: 'account-b',
-              username: 'agent_b',
+              username: 'agent_b', address: 'agent_b',
               displayName: 'Agent B',
             ),
           ),
         );
 
         expect(navigation.committedScope?.focusUserId, 'account-a');
-        expect(navigation.committedScope?.peerProfileId, 'account-b');
-        expect(manager.viewState.activePeer?.profileId, 'account-b');
+        expect(navigation.committedScope?.peerAddress, 'agent_b');
+        expect(manager.viewState.activePeer?.peerAddress, 'agent_b');
 
         await pumpEventQueue(times: 20);
 
@@ -168,13 +165,13 @@ void main() {
 
         final ok = await navigation.openConversationOnAccount(
           accountUserId: 'account-a',
-          peerProfileId: 'account-b',
+          peerAddress: 'agent_b',
           allowProfileFallback: false,
         );
 
         expect(ok, isTrue);
         expect(manager.isSessionReadyForAccount('account-a'), isTrue);
-        expect(navigation.committedScope?.peerProfileId, 'account-b');
+        expect(navigation.committedScope?.peerAddress, 'agent_b');
       });
     });
 
@@ -192,7 +189,7 @@ void main() {
 
         final ok = await effects.openConversation(
           accountUserId: 'account-a',
-          peerProfileId: 'account-b',
+          peerAddress: 'agent_b',
           source: OpenConversationSource.inbox,
         );
 
@@ -200,7 +197,7 @@ void main() {
         await pumpEventQueue(times: 20);
         expect(manager.isSessionReadyForAccount('account-a'), isTrue);
         expect(machine.committedScope?.focusUserId, 'account-a');
-        expect(machine.committedScope?.peerProfileId, 'account-b');
+        expect(machine.committedScope?.peerAddress, 'agent_b');
       });
     });
   });

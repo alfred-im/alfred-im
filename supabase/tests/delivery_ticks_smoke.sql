@@ -27,10 +27,10 @@ BEGIN
   -- Fase 1: rifiuto allow list → solo ✓ (delivered_at null permanente)
   -- -------------------------------------------------------------------------
   DELETE FROM public.reception_allowlist
-  WHERE archive_user_id = v_agent2 AND allowed_profile_id = v_agent1;
+  WHERE archive_user_id = v_agent2 AND allowed_address = 'ciagent1';
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
-  VALUES (v_agent1, v_agent2)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
+  VALUES (v_agent1, 'ciagent2')
   ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
   PERFORM set_config(
@@ -39,8 +39,8 @@ BEGIN
     true
   );
 
-  SELECT * INTO v_sender FROM public.send_message_to_profile(
-    v_agent2,
+  SELECT * INTO v_sender FROM public.send_message_to_address(
+    'ciagent2',
     'ticks reject',
     v_reject_client,
     'text'::public.message_content_type
@@ -80,11 +80,11 @@ BEGIN
   -- -------------------------------------------------------------------------
   -- Fase 2: allow list → worker deliver → ✓✓ grigie (delivered_at, read_at null)
   -- -------------------------------------------------------------------------
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
-  VALUES (v_agent2, v_agent1);
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
+  VALUES (v_agent2, 'ciagent1');
 
-  SELECT * INTO v_sender FROM public.send_message_to_profile(
-    v_agent2,
+  SELECT * INTO v_sender FROM public.send_message_to_address(
+    'ciagent2',
     'ticks deliver',
     v_deliver_client,
     'text'::public.message_content_type
@@ -102,7 +102,7 @@ BEGIN
   FROM public.messages m
   WHERE m.archive_user_id = v_agent2
     AND m.logical_message_id = v_sender.logical_message_id
-    AND m.author_id = v_agent1;
+    AND m.author_address = 'ciagent1';
 
   IF v_recipient_count <> 1 THEN
     RAISE EXCEPTION 'deliver phase: expected one recipient copy, got %', v_recipient_count;
@@ -126,8 +126,8 @@ BEGIN
   -- -------------------------------------------------------------------------
   -- Fase 3: lettore segna letto → outbox read_receipt → ✓✓ blu sul mittente
   -- -------------------------------------------------------------------------
-  SELECT * INTO v_sender FROM public.send_message_to_profile(
-    v_agent2,
+  SELECT * INTO v_sender FROM public.send_message_to_address(
+    'ciagent2',
     'ticks read',
     v_read_client,
     'text'::public.message_content_type
@@ -139,13 +139,13 @@ BEGIN
     true
   );
 
-  PERFORM public.mark_peer_read(v_agent1);
+  PERFORM public.mark_peer_read('ciagent1');
 
   IF NOT EXISTS (
     SELECT 1 FROM public.messages m
     WHERE m.archive_user_id = v_agent2
       AND m.logical_message_id = v_sender.logical_message_id
-      AND m.author_id = v_agent1
+      AND m.author_address = 'ciagent1'
       AND m.read_at IS NOT NULL
   ) THEN
     RAISE EXCEPTION 'read phase: recipient incoming read_at not set locally';

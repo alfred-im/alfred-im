@@ -6,25 +6,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:alfred_client/machines/notifications/notifications_machine.dart';
-import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/models/push_conversation_key.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
-import 'package:alfred_client/services/profile_service.dart';
 
 import '../support/fake_messaging_services.dart';
 import '../support/wiring_test_fixtures.dart';
-
-class _FakeProfileService extends ProfileService {
-  _FakeProfileService(this._peers) : super(createTestSupabaseClient());
-
-  final Map<String, ProfileSummary> _peers;
-
-  @override
-  Future<ProfileSummary?> findById(String id) async => _peers[id];
-}
 
 /// Wiring: NotificationsAdapters → AuthNotificationsEffects → AuthController navigation.
 void main() {
@@ -36,62 +25,35 @@ void main() {
     late AccountSession sessionA;
     late AccountSession sessionB;
 
+    const agentA = ProfileSummary(
+      id: 'account-a',
+      username: 'agent_a',
+      address: 'agent_a',
+      displayName: 'Agent A',
+    );
+    const agentB = ProfileSummary(
+      id: 'account-b',
+      username: 'agent_b',
+      address: 'agent_b',
+      displayName: 'Agent B',
+    );
+
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       storage = AccountStorageService();
       manager = AccountManager(storage: storage);
 
       sessionA = await AccountSession.createForTest(
-        profile: const ProfileSummary(
-          id: 'account-a',
-          username: 'agent_a',
-          displayName: 'Agent A',
-        ),
+        profile: agentA,
         client: createTestSupabaseClient(),
-        inboxService: FakeInboxService(
-          peers: [
-            ChatPeer(
-              profile: const ProfileSummary(
-                id: 'account-b',
-                username: 'agent_b',
-                displayName: 'Agent B',
-              ),
-            ),
-          ],
-        ),
-        profileService: _FakeProfileService({
-          'account-b': const ProfileSummary(
-            id: 'account-b',
-            username: 'agent_b',
-            displayName: 'Agent B',
-          ),
-        }),
+        inboxService: FakeInboxService(peers: [inboxPeer(agentB)]),
+        profileService: MapBackedFakeProfileService.fromProfiles([agentB]),
       );
       sessionB = await AccountSession.createForTest(
-        profile: const ProfileSummary(
-          id: 'account-b',
-          username: 'agent_b',
-          displayName: 'Agent B',
-        ),
+        profile: agentB,
         client: createTestSupabaseClient(),
-        inboxService: FakeInboxService(
-          peers: [
-            ChatPeer(
-              profile: const ProfileSummary(
-                id: 'account-a',
-                username: 'agent_a',
-                displayName: 'Agent A',
-              ),
-            ),
-          ],
-        ),
-        profileService: _FakeProfileService({
-          'account-a': const ProfileSummary(
-            id: 'account-a',
-            username: 'agent_a',
-            displayName: 'Agent A',
-          ),
-        }),
+        inboxService: FakeInboxService(peers: [inboxPeer(agentA)]),
+        profileService: MapBackedFakeProfileService.fromProfiles([agentA]),
       );
 
       sessionA.wireStorage(storage);
@@ -112,7 +74,7 @@ void main() {
       auth.notificationsAdapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           recipientUserId: 'account-b',
-          peerProfileId: 'account-a',
+          peerAddress: 'agent_a',
         ),
         sessionReady: true,
         hasOpenAccount: true,
@@ -131,7 +93,7 @@ void main() {
         NotificationsOpenChatState.idle,
       );
       expect(auth.userId, 'account-b');
-      expect(auth.activePeer?.profileId, 'account-a');
+      expect(auth.activePeer?.peerAddress, 'agent_a');
     });
 
     test('open chat intent senza sessione pronta mette in coda', () async {
@@ -141,7 +103,7 @@ void main() {
       auth.notificationsAdapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           recipientUserId: 'account-b',
-          peerProfileId: 'account-a',
+          peerAddress: 'agent_a',
         ),
         sessionReady: false,
         hasOpenAccount: true,

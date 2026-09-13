@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/message.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
@@ -44,7 +43,7 @@ void main() {
       );
       service.messagesByConversation[conversationKey(
         userId: _accountA,
-        peerProfileId: _accountB,
+        peerAddress: _accountB,
       )] = [
         ChatMessage(
           id: 'poison-1',
@@ -58,16 +57,16 @@ void main() {
 
       final scopeAtoB = testConversationScope(
         userId: _accountA,
-        peerProfileId: _accountB,
+        peerAddress: _accountB,
         sessionEpoch: 1,
       );
-      final peerB = ChatPeer(profile: _profile(_accountB));
+      final peerB = inboxPeer(_profile(_accountB));
 
       final controller = MessagesController(
         scope: scopeAtoB,
         messageStore: testMessageStoreFor(scopeAtoB),
         userId: _accountA,
-        peerProfileId: _accountB,
+        peerAddress: _accountB,
         peerMessages: service.peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
@@ -93,7 +92,7 @@ void main() {
       );
       service.messagesByConversation[conversationKey(
         userId: _accountA,
-        peerProfileId: _accountB,
+        peerAddress: _accountB,
       )] = [
         ChatMessage(
           id: 'poison-1',
@@ -107,7 +106,7 @@ void main() {
 
       final scopeAtoB = testConversationScope(
         userId: _accountA,
-        peerProfileId: _accountB,
+        peerAddress: _accountB,
         sessionEpoch: 1,
       );
 
@@ -115,7 +114,7 @@ void main() {
         scope: scopeAtoB,
         messageStore: testMessageStoreFor(scopeAtoB),
         userId: _accountA,
-        peerProfileId: _accountB,
+        peerAddress: _accountB,
         peerMessages: service.peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
@@ -137,10 +136,10 @@ void main() {
         profile: _profile(_accountA),
         client: client,
       );
-      final peerB = ChatPeer(profile: _profile(_accountB));
+      final peerB = inboxPeer(_profile(_accountB));
       final frozenScope = testConversationScope(
         userId: _accountA,
-        peerProfileId: _accountB,
+        peerAddress: _accountB,
         sessionEpoch: sessionV1.epoch,
       );
       final reconciledScope = frozenScope.copyWith(
@@ -169,7 +168,7 @@ void main() {
       );
       service.messagesByConversation[conversationKey(
         userId: _accountA,
-        peerProfileId: _accountB,
+        peerAddress: _accountB,
       )] = [
         ChatMessage(
           id: 'msg-1',
@@ -183,10 +182,10 @@ void main() {
 
       final staleScope = testConversationScope(
         userId: _accountA,
-        peerProfileId: _accountB,
+        peerAddress: _accountB,
         sessionEpoch: 1,
       );
-      final peerB = ChatPeer(profile: _profile(_accountB));
+      final peerB = inboxPeer(_profile(_accountB));
       final liveSession = await AccountSession.createForTest(
         profile: _profile(_accountA),
         client: client,
@@ -196,7 +195,7 @@ void main() {
         scope: staleScope,
         messageStore: testMessageStoreFor(staleScope),
         userId: _accountA,
-        peerProfileId: _accountB,
+        peerAddress: _accountB,
         peerMessages: service.peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),

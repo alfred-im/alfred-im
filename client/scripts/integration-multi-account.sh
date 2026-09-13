@@ -28,10 +28,12 @@ ANON_KEY="${SUPABASE_ANON_KEY:-${ANON_KEY:-}}"
 AGENT1_EMAIL="${AGENT1_EMAIL:-$CI_AGENT1_EMAIL}"
 AGENT1_PASS="${AGENT1_PASS:-$CI_AGENT1_PASS}"
 AGENT1_ID="${AGENT1_ID:-$CI_AGENT1_ID}"
+AGENT1_USERNAME="${AGENT1_USERNAME:-$CI_AGENT1_USERNAME}"
 
 AGENT2_EMAIL="${AGENT2_EMAIL:-$CI_AGENT2_EMAIL}"
 AGENT2_PASS="${AGENT2_PASS:-$CI_AGENT2_PASS}"
 AGENT2_ID="${AGENT2_ID:-$CI_AGENT2_ID}"
+AGENT2_USERNAME="${AGENT2_USERNAME:-$CI_AGENT2_USERNAME}"
 
 if [[ ! "$SUPABASE_URL" =~ localhost|127\.0\.0\.1 ]]; then
   echo "integration richiede stack Supabase locale (SUPABASE_URL=${SUPABASE_URL})" >&2
@@ -81,27 +83,25 @@ rest_delete() {
 }
 
 rest_insert_allow() {
-  local jwt="$1" archive_user="$2" allowed="$3"
-  curl -sf -m 30 -X POST "${SUPABASE_URL}/rest/v1/reception_allowlist" \
-    -H "apikey: ${ANON_KEY}" \
-    -H "Authorization: Bearer ${jwt}" \
-    -H "Content-Type: application/json" \
-    -H "Prefer: resolution=ignore-duplicates" \
-    -d "{\"archive_user_id\":\"${archive_user}\",\"allowed_profile_id\":\"${allowed}\"}" > /dev/null
+  local archive_user="$1" allowed_address="$2"
+  # Local stack: INSERT via psql (RLS policy references profile_bare_address revoked for authenticated).
+  docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c \
+    "INSERT INTO public.reception_allowlist (archive_user_id, allowed_address) VALUES ('${archive_user}', '${allowed_address}') ON CONFLICT (archive_user_id, allowed_address) DO NOTHING;" \
+    > /dev/null
 }
 
 peer_body() {
-  python3 -c "import json,sys; print(json.dumps({'p_peer_profile_id': sys.argv[1], 'p_limit': 200}))" "$1"
+  python3 -c "import json,sys; print(json.dumps({'p_peer_address': sys.argv[1], 'p_limit': 200}))" "$1"
 }
 
 send_body() {
-  local recipient="$1" body="$2" client_id="$3"
-  python3 -c "import json,sys; print(json.dumps({'p_recipient_profile_id':sys.argv[1],'p_body':sys.argv[2],'p_client_message_id':sys.argv[3],'p_content_type':'text'}))" \
-    "$recipient" "$body" "$client_id"
+  local peer_address="$1" body="$2" client_id="$3"
+  python3 -c "import json,sys; print(json.dumps({'p_peer_address':sys.argv[1],'p_body':sys.argv[2],'p_client_message_id':sys.argv[3],'p_content_type':'text'}))" \
+    "$peer_address" "$body" "$client_id"
 }
 
 mark_read_body() {
-  python3 -c "import json,sys; print(json.dumps({'p_peer_profile_id': sys.argv[1]}))" "$1"
+  python3 -c "import json,sys; print(json.dumps({'p_peer_address': sys.argv[1]}))" "$1"
 }
 
 assert_ticks_contract() {
@@ -114,9 +114,9 @@ assert_ticks_contract() {
   read_id="int-ticks-read-${stamp}-$$"
 
   echo "==> ticks contract: fase 1 — rifiuto allow list (solo ✓)"
-  rest_delete "$a2_jwt" "reception_allowlist?archive_user_id=eq.${AGENT2_ID}&allowed_profile_id=eq.${AGENT1_ID}" || true
+  rest_delete "$a2_jwt" "reception_allowlist?archive_user_id=eq.${AGENT2_ID}&allowed_address=eq.${AGENT1_USERNAME}" || true
 
-  rpc "$a1_jwt" send_message_to_profile "$(send_body "$AGENT2_ID" "integration ticks reject" "$reject_id")" | python3 -c "
+  rpc "$a1_jwt" send_message_to_address "$(send_body "$AGENT2_USERNAME" "integration ticks reject" "$reject_id")" | python3 -c "
 import json,sys
 m=json.load(sys.stdin)
 assert m.get('archive_user_id') and m.get('logical_message_id'), 'missing sender row'
@@ -126,9 +126,9 @@ print('    reject: single tick ok (delivered_at=null)')
 "
 
   echo "==> ticks contract: fase 2 — allow list + deliver worker (✓✓ grigie)"
-  rest_insert_allow "$a2_jwt" "$AGENT2_ID" "$AGENT1_ID"
+  rest_insert_allow "$AGENT2_ID" "$AGENT1_USERNAME"
 
-  rpc "$a1_jwt" send_message_to_profile "$(send_body "$AGENT2_ID" "integration ticks deliver" "$deliver_id")" | python3 -c "
+  rpc "$a1_jwt" send_message_to_address "$(send_body "$AGENT2_USERNAME" "integration ticks deliver" "$deliver_id")" | python3 -c "
 import json,sys
 m=json.load(sys.stdin)
 assert m.get('delivered_at'), 'deliver: delivered_at required (double grey)'
@@ -138,17 +138,18 @@ print(f'    deliver: double grey ok lambda={lam[:8]}…')
 "
 
   echo "==> ticks contract: fase 3 — mark_peer_read + read_receipt worker (✓✓ blu)"
-  SEND_JSON="$(rpc "$a1_jwt" send_message_to_profile "$(send_body "$AGENT2_ID" "integration ticks read" "$read_id")")"
+  SEND_JSON="$(rpc "$a1_jwt" send_message_to_address "$(send_body "$AGENT2_USERNAME" "integration ticks read" "$read_id")")"
   export LAMBDA
   LAMBDA="$(echo "$SEND_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['logical_message_id'])")"
-  rpc "$a2_jwt" mark_peer_read "$(mark_read_body "$AGENT1_ID")" > /dev/null
+  rpc "$a2_jwt" mark_peer_read "$(mark_read_body "$AGENT1_USERNAME")" > /dev/null
 
-  rpc "$a1_jwt" list_peer_messages "$(peer_body "$AGENT2_ID")" | python3 -c "
+  export AGENT1_USERNAME
+  rpc "$a1_jwt" list_peer_messages "$(peer_body "$AGENT2_USERNAME")" | python3 -c "
 import json,sys,os
 lam=os.environ['LAMBDA']
-agent1=os.environ['AGENT1_ID']
+agent1_username=os.environ['AGENT1_USERNAME']
 rows=json.load(sys.stdin)
-mine=[r for r in rows if r.get('logical_message_id')==lam and r.get('author_id')==agent1]
+mine=[r for r in rows if r.get('logical_message_id')==lam and r.get('author_address')==agent1_username]
 assert mine, 'no outgoing row for read test'
 row=mine[0]
 assert row.get('delivered_at'), 'read: delivered_at must be set'
@@ -156,12 +157,12 @@ assert row.get('read_at'), 'read: read_at must be set on sender (double blue via
 print('    read: double blue ok on sender copy')
 "
 
-  rpc "$a2_jwt" list_peer_messages "$(peer_body "$AGENT1_ID")" | python3 -c "
+  rpc "$a2_jwt" list_peer_messages "$(peer_body "$AGENT1_USERNAME")" | python3 -c "
 import json,sys,os
 lam=os.environ['LAMBDA']
-agent1=os.environ['AGENT1_ID']
+agent1_username=os.environ['AGENT1_USERNAME']
 rows=json.load(sys.stdin)
-inc=[r for r in rows if r.get('logical_message_id')==lam and r.get('author_id')==agent1]
+inc=[r for r in rows if r.get('logical_message_id')==lam and r.get('author_address')==agent1_username]
 assert inc and inc[0].get('read_at'), 'recipient incoming read_at must be set locally'
 print('    read: recipient local read_at ok')
 "
@@ -173,16 +174,16 @@ echo "==> login agent1"
 A1_JSON="$(login "$AGENT1_EMAIL" "$AGENT1_PASS")"
 A1_JWT="$(echo "$A1_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")"
 A1_UID="$(echo "$A1_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['user']['id'])")"
-echo "    user_id=$A1_UID"
+echo "    user_id=$A1_UID username=$AGENT1_USERNAME"
 
 echo "==> login agent2"
 A2_JSON="$(login "$AGENT2_EMAIL" "$AGENT2_PASS")"
 A2_JWT="$(echo "$A2_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")"
 A2_UID="$(echo "$A2_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['user']['id'])")"
-echo "    user_id=$A2_UID"
+echo "    user_id=$A2_UID username=$AGENT2_USERNAME"
 
 if [[ "$MODE" == "ticks" ]]; then
-  export AGENT1_ID AGENT2_ID
+  export AGENT1_ID AGENT2_ID AGENT1_USERNAME AGENT2_USERNAME
   assert_ticks_contract "$A1_JWT" "$A2_JWT"
   echo "integration_ticks_ok"
   exit 0
@@ -197,14 +198,14 @@ A2_INBOX_COUNT="$(rpc "$A2_JWT" list_inbox | python3 -c "import json,sys; d=json
 echo "    rows=$A2_INBOX_COUNT"
 
 echo "==> agent1 list_peer_messages → agent2"
-A1_PEER_COUNT="$(rpc "$A1_JWT" list_peer_messages "$(peer_body "$AGENT2_ID")" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d) if isinstance(d,list) else 0)")"
+A1_PEER_COUNT="$(rpc "$A1_JWT" list_peer_messages "$(peer_body "$AGENT2_USERNAME")" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d) if isinstance(d,list) else 0)")"
 echo "    messages=$A1_PEER_COUNT"
 
 echo "==> agent2 list_peer_messages → agent1"
-A2_PEER_COUNT="$(rpc "$A2_JWT" list_peer_messages "$(peer_body "$AGENT1_ID")" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d) if isinstance(d,list) else 0)")"
+A2_PEER_COUNT="$(rpc "$A2_JWT" list_peer_messages "$(peer_body "$AGENT1_USERNAME")" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d) if isinstance(d,list) else 0)")"
 echo "    messages=$A2_PEER_COUNT"
 
-export AGENT1_ID AGENT2_ID
+export AGENT1_ID AGENT2_ID AGENT1_USERNAME AGENT2_USERNAME
 assert_ticks_contract "$A1_JWT" "$A2_JWT"
 
 if [[ "$A1_PEER_COUNT" -lt 1 || "$A2_PEER_COUNT" -lt 1 ]]; then

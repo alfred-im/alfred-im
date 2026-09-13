@@ -4,12 +4,14 @@
 
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:alfred_client/machines/messaging/conversation_message_store.dart';
 import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/conversation_scope.dart';
 import 'package:alfred_client/models/message.dart';
+import 'package:alfred_client/models/peer_relationship.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/messages_controller.dart';
 import 'package:alfred_client/services/group_archive_service.dart';
@@ -54,9 +56,113 @@ Future<void> installTestAuthSession(
 /// Chiave conversazione come in MessagesController.outboundQueueKey.
 String conversationKey({
   required String userId,
-  required String peerProfileId,
+  required String peerAddress,
 }) =>
-    '$userId|$peerProfileId';
+    '$userId|$peerAddress';
+
+ProfileSummary testProfile(
+  String address, {
+  String? id,
+  String? displayName,
+  String? avatarUrl,
+}) {
+  final normalized = address.trim().toLowerCase();
+  final at = normalized.lastIndexOf('@');
+  final bareUsername = at > 0 ? normalized.substring(0, at) : normalized;
+  return ProfileSummary(
+    id: id,
+    address: normalized,
+    username: bareUsername,
+    displayName: displayName ?? normalized,
+    avatarUrl: avatarUrl,
+  );
+}
+
+ChatPeer testChatPeer(
+  String address, {
+  ProfileSummary? profile,
+  PeerRelationship? relationship,
+}) {
+  final normalized = address.trim().toLowerCase();
+  return ChatPeer(
+    peerAddress: normalized,
+    profile: profile ?? testProfile(normalized),
+    relationship: relationship,
+  );
+}
+
+ChatPeer inboxPeer(
+  ProfileSummary profile, {
+  PeerRelationship? relationship,
+  String preview = '',
+  String timeLabel = '',
+  int unreadCount = 0,
+  DateTime? lastMessageAt,
+  Color? avatarColor,
+}) {
+  return ChatPeer(
+    peerAddress: profile.resolvedPeerAddress,
+    profile: profile,
+    relationship: relationship,
+    preview: preview,
+    timeLabel: timeLabel,
+    unreadCount: unreadCount,
+    lastMessageAt: lastMessageAt,
+    avatarColor: avatarColor,
+  );
+}
+
+/// Fake [ProfileService] keyed by [ProfileSummary.resolvedPeerAddress] (e id opzionale).
+class MapBackedFakeProfileService extends ProfileService {
+  MapBackedFakeProfileService(this._peersByKey)
+      : super(createTestSupabaseClient());
+
+  final Map<String, ProfileSummary> _peersByKey;
+
+  factory MapBackedFakeProfileService.fromProfiles(
+    Iterable<ProfileSummary> profiles,
+  ) {
+    final map = <String, ProfileSummary>{};
+    for (final profile in profiles) {
+      map[profile.resolvedPeerAddress] = profile;
+      final id = profile.id;
+      if (id != null && id.isNotEmpty) {
+        map[id] = profile;
+      }
+    }
+    return MapBackedFakeProfileService(map);
+  }
+
+  @override
+  Future<ProfileSummary?> findById(String id) async => _peersByKey[id];
+
+  @override
+  Future<ProfileSummary?> findByUsername(String username) async =>
+      _peersByKey[username.trim().toLowerCase()];
+
+  @override
+  Future<List<ProfileSummary>> fetchSummariesByAddresses(
+    List<String> addresses,
+  ) async {
+    return addresses
+        .map((address) => _peersByKey[address.trim().toLowerCase()])
+        .whereType<ProfileSummary>()
+        .toList();
+  }
+
+  @override
+  Future<ChatPeer?> getPeerContext(String peerAddress) async {
+    final normalized = peerAddress.trim().toLowerCase();
+    final summary = _peersByKey[normalized];
+    if (summary != null) {
+      return ChatPeer.fromProfile(
+        peerAddress: summary.resolvedPeerAddress,
+        profile: summary,
+      );
+    }
+    return ChatPeer.fromAddress(normalized);
+  }
+}
 
 /// Facade test che compone [FakePeerMessageService] e [FakeGroupArchiveService].
 class FakeMessageService {
@@ -98,12 +204,12 @@ class FakeMessageService {
 
   void emitRealtimeMessage({
     required String userId,
-    required String peerProfileId,
+    required String peerAddress,
     required ChatMessage message,
   }) =>
       peerMessages.emitRealtimeMessage(
         userId: userId,
-        peerProfileId: peerProfileId,
+        peerAddress: peerAddress,
         message: message,
       );
 }
@@ -122,9 +228,9 @@ class FakePeerMessageService extends PeerMessageService {
   bool sendShouldFail = false;
 
   /// Come `send_message_to_profile` su Postgres (`P0001`).
-  void enforceSendToProfileBoundary(String recipientProfileId) {
+  void enforceSendToProfileBoundary(String peerAddress) {
     final me = _host.client.auth.currentUser?.id;
-    if (me != null && recipientProfileId == me) {
+    if (me != null && peerAddress == me) {
       throw const PostgrestException(
         message: 'cannot message yourself',
         code: 'P0001',
@@ -133,8 +239,8 @@ class FakePeerMessageService extends PeerMessageService {
   }
 
   @override
-  Future<ChatMessage> sendToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> sendToAddress({
+    required String peerAddress,
     required String body,
     required String currentUserId,
     required String clientMessageId,
@@ -142,7 +248,7 @@ class FakePeerMessageService extends PeerMessageService {
     if (sendShouldFail) {
       throw StateError('fake send failed');
     }
-    enforceSendToProfileBoundary(recipientProfileId);
+    enforceSendToProfileBoundary(peerAddress);
     sentBodies.add(body);
     final message = ChatMessage(
       id: 'server-$clientMessageId',
@@ -156,22 +262,22 @@ class FakePeerMessageService extends PeerMessageService {
     );
     final key = conversationKey(
       userId: currentUserId,
-      peerProfileId: recipientProfileId,
+      peerAddress: peerAddress,
     );
     _host.messagesByConversation.putIfAbsent(key, () => []).add(message);
     return message;
   }
 
   @override
-  Future<ChatMessage> sendGifToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> sendGifToAddress({
+    required String peerAddress,
     required String mediaUrl,
     required String currentUserId,
     required String clientMessageId,
   }) async {
-    enforceSendToProfileBoundary(recipientProfileId);
+    enforceSendToProfileBoundary(peerAddress);
     gifProfileSends.add({
-      'recipientProfileId': recipientProfileId,
+      'peerAddress': peerAddress,
       'mediaUrl': mediaUrl,
       'clientMessageId': clientMessageId,
     });
@@ -185,7 +291,7 @@ class FakePeerMessageService extends PeerMessageService {
 
   @override
   Future<List<ChatMessage>> fetchPeerMessages({
-    required String peerProfileId,
+    required String peerAddress,
     required String currentUserId,
     int limit = 100,
     DateTime? beforeCreatedAt,
@@ -193,7 +299,7 @@ class FakePeerMessageService extends PeerMessageService {
     final all = List<ChatMessage>.from(
       _host.messagesByConversation[conversationKey(
             userId: currentUserId,
-            peerProfileId: peerProfileId,
+            peerAddress: peerAddress,
           )] ??
           const [],
     )..sort((a, b) {
@@ -220,33 +326,33 @@ class FakePeerMessageService extends PeerMessageService {
   @override
   RealtimeChannel subscribeToPeerMessages({
     required String currentUserId,
-    required String peerProfileId,
+    required String peerAddress,
     required void Function(ChatMessage message) onMessage,
     void Function(String logicalMessageId)? onReactionFact,
   }) {
     _realtimeHandlers[conversationKey(
       userId: currentUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
     )] = onMessage;
     return _host.client
-        .channel('test-$currentUserId-$peerProfileId')
+        .channel('test-$currentUserId-$peerAddress')
         .subscribe();
   }
 
   void emitRealtimeMessage({
     required String userId,
-    required String peerProfileId,
+    required String peerAddress,
     required ChatMessage message,
   }) {
     _realtimeHandlers[conversationKey(
       userId: userId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
     )]?.call(message);
   }
 
   @override
-  Future<ChatMessage> sendImageToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> sendImageToAddress({
+    required String peerAddress,
     required String mediaUrl,
     required String mediaMime,
     required int mediaSizeBytes,
@@ -254,9 +360,9 @@ class FakePeerMessageService extends PeerMessageService {
     required String clientMessageId,
     String body = '',
   }) async {
-    enforceSendToProfileBoundary(recipientProfileId);
+    enforceSendToProfileBoundary(peerAddress);
     imageProfileSends.add({
-      'recipientProfileId': recipientProfileId,
+      'peerAddress': peerAddress,
       'mediaUrl': mediaUrl,
       'mediaMime': mediaMime,
       'mediaSizeBytes': mediaSizeBytes,
@@ -274,8 +380,8 @@ class FakePeerMessageService extends PeerMessageService {
   }
 
   @override
-  Future<ChatMessage> sendVideoToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> sendVideoToAddress({
+    required String peerAddress,
     required String mediaUrl,
     required String mediaMime,
     required int durationSeconds,
@@ -284,9 +390,9 @@ class FakePeerMessageService extends PeerMessageService {
     required String clientMessageId,
     String body = '',
   }) async {
-    enforceSendToProfileBoundary(recipientProfileId);
+    enforceSendToProfileBoundary(peerAddress);
     videoProfileSends.add({
-      'recipientProfileId': recipientProfileId,
+      'peerAddress': peerAddress,
       'mediaUrl': mediaUrl,
       'mediaMime': mediaMime,
       'durationSeconds': durationSeconds,
@@ -488,14 +594,14 @@ class _DelayedFakePeerMessageService extends FakePeerMessageService {
 
   @override
   Future<List<ChatMessage>> fetchPeerMessages({
-    required String peerProfileId,
+    required String peerAddress,
     required String currentUserId,
     int limit = 100,
     DateTime? beforeCreatedAt,
   }) async {
     await Future<void>.delayed(fetchDelay);
     return super.fetchPeerMessages(
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       currentUserId: currentUserId,
       limit: limit,
       beforeCreatedAt: beforeCreatedAt,
@@ -506,24 +612,37 @@ class _DelayedFakePeerMessageService extends FakePeerMessageService {
 class FakeProfileService extends ProfileService {
   FakeProfileService(super.client);
 
-  final Map<String, ProfileSummary> profilesById = {};
+  final Map<String, ProfileSummary> profilesByAddress = {};
 
   @override
   Future<List<ProfileSummary>> fetchSummariesByIds(List<String> ids) async {
     return ids
-        .map((id) => profilesById[id])
+        .map((id) => profilesByAddress.values.where((p) => p.id == id).firstOrNull)
         .whereType<ProfileSummary>()
         .toList();
   }
 
   @override
-  Future<ChatPeer?> getPeerContext(String profileId) async {
-    final summary = profilesById[profileId];
-    if (summary == null) return null;
-    return ChatPeer.fromProfile(
-      profile: summary,
-      address: summary.username,
-    );
+  Future<List<ProfileSummary>> fetchSummariesByAddresses(
+    List<String> addresses,
+  ) async {
+    return addresses
+        .map((address) => profilesByAddress[address.trim().toLowerCase()])
+        .whereType<ProfileSummary>()
+        .toList();
+  }
+
+  @override
+  Future<ChatPeer?> getPeerContext(String peerAddress) async {
+    final normalized = peerAddress.trim().toLowerCase();
+    final summary = profilesByAddress[normalized];
+    if (summary != null) {
+      return ChatPeer.fromProfile(
+        peerAddress: normalized,
+        profile: summary,
+      );
+    }
+    return ChatPeer.fromAddress(normalized);
   }
 }
 
@@ -541,21 +660,21 @@ class FakeInboxService extends InboxService {
   }
 
   @override
-  Future<void> markRead(String peerProfileId) async {
-    markReadCalls.add(peerProfileId);
+  Future<void> markRead(String peerAddress) async {
+    markReadCalls.add(peerAddress);
   }
 }
 
 /// Scope di test — collegare [ConversationMessageStore.bindCommittedScope] prima del load.
 ConversationScope testConversationScope({
   required String userId,
-  required String peerProfileId,
+  required String peerAddress,
   int sessionEpoch = 1,
   int loadSeq = 0,
 }) {
   return ConversationScope(
     focusUserId: userId,
-    peerProfileId: peerProfileId,
+    peerAddress: peerAddress,
     sessionEpoch: sessionEpoch,
     loadSeq: loadSeq,
   );

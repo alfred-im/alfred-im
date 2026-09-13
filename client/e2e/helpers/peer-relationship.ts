@@ -11,7 +11,7 @@ import { createLocalConfirmedUser } from './local-auth';
 import {
   addReceptionAllowlist,
   configureLocalChatMediaBucket,
-  sendMessageToProfile,
+  sendMessageToAddress,
 } from './local-push-setup';
 import { loginSupabase } from './supabase-api';
 import { E2E_TIMEOUT } from './timeouts';
@@ -31,16 +31,21 @@ function runPsqlScalar(sql: string): string {
   ).trim();
 }
 
+function normalizePeerAddress(peerAddress: string): string {
+  return peerAddress.trim().toLowerCase().replace(/'/g, "''");
+}
+
 /** Rimuove rubrica e allow list viewer→peer (setup pulito per insert da UI). */
 export function clearPeerRelationshipInDb(
   focusUserId: string,
-  peerProfileId: string,
+  peerAddress: string,
 ): void {
+  const safePeer = normalizePeerAddress(peerAddress);
   const sql =
     `DELETE FROM public.contacts ` +
-    `WHERE archive_user_id = '${focusUserId}' AND linked_profile_id = '${peerProfileId}'; ` +
+    `WHERE archive_user_id = '${focusUserId}' AND address = '${safePeer}'; ` +
     `DELETE FROM public.reception_allowlist ` +
-    `WHERE archive_user_id = '${focusUserId}' AND allowed_profile_id = '${peerProfileId}';`;
+    `WHERE archive_user_id = '${focusUserId}' AND allowed_address = '${safePeer}';`;
   execSync(
     `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
     { stdio: 'pipe' },
@@ -49,30 +54,32 @@ export function clearPeerRelationshipInDb(
 
 export function countContactsInDb(
   focusUserId: string,
-  peerProfileId: string,
+  peerAddress: string,
 ): number {
+  const safePeer = normalizePeerAddress(peerAddress);
   const sql =
     `SELECT count(*)::int FROM public.contacts ` +
-    `WHERE archive_user_id = '${focusUserId}' AND linked_profile_id = '${peerProfileId}';`;
+    `WHERE archive_user_id = '${focusUserId}' AND address = '${safePeer}';`;
   return Number.parseInt(runPsqlScalar(sql), 10);
 }
 
 export function countAllowlistInDb(
   focusUserId: string,
-  peerProfileId: string,
+  peerAddress: string,
 ): number {
+  const safePeer = normalizePeerAddress(peerAddress);
   const sql =
     `SELECT count(*)::int FROM public.reception_allowlist ` +
-    `WHERE archive_user_id = '${focusUserId}' AND allowed_profile_id = '${peerProfileId}';`;
+    `WHERE archive_user_id = '${focusUserId}' AND allowed_address = '${safePeer}';`;
   return Number.parseInt(runPsqlScalar(sql), 10);
 }
 
 export async function expectContactInDb(
   focusUserId: string,
-  peerProfileId: string,
+  peerAddress: string,
 ): Promise<void> {
   await expect
-    .poll(() => countContactsInDb(focusUserId, peerProfileId), {
+    .poll(() => countContactsInDb(focusUserId, peerAddress), {
       timeout: E2E_TIMEOUT.db,
     })
     .toBe(1);
@@ -80,10 +87,10 @@ export async function expectContactInDb(
 
 export async function expectAllowlistInDb(
   focusUserId: string,
-  peerProfileId: string,
+  peerAddress: string,
 ): Promise<void> {
   await expect
-    .poll(() => countAllowlistInDb(focusUserId, peerProfileId), {
+    .poll(() => countAllowlistInDb(focusUserId, peerAddress), {
       timeout: E2E_TIMEOUT.db,
     })
     .toBe(1);
@@ -91,10 +98,10 @@ export async function expectAllowlistInDb(
 
 export async function expectContactAbsentInDb(
   focusUserId: string,
-  peerProfileId: string,
+  peerAddress: string,
 ): Promise<void> {
   await expect
-    .poll(() => countContactsInDb(focusUserId, peerProfileId), {
+    .poll(() => countContactsInDb(focusUserId, peerAddress), {
       timeout: E2E_TIMEOUT.db,
     })
     .toBe(0);
@@ -103,13 +110,12 @@ export async function expectContactAbsentInDb(
 /** Inserisce riga rubrica interna viewer→peer (setup «già in rubrica»). */
 export function insertContactInDb(
   focusUserId: string,
-  peerProfileId: string,
-  displayName: string,
+  peerAddress: string,
 ): void {
-  const safeName = displayName.replace(/'/g, "''");
+  const safePeer = normalizePeerAddress(peerAddress);
   const sql =
-    `INSERT INTO public.contacts (archive_user_id, linked_profile_id, display_name) ` +
-    `VALUES ('${focusUserId}', '${peerProfileId}', '${safeName}') ` +
+    `INSERT INTO public.contacts (archive_user_id, address) ` +
+    `VALUES ('${focusUserId}', '${safePeer}') ` +
     `ON CONFLICT DO NOTHING;`;
   execSync(
     `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
@@ -134,38 +140,38 @@ export async function prepareLocalPeerWithRubricaAndConsent(
 
   await addReceptionAllowlist({
     recipientUserId: acct1.userId,
-    allowedProfileId: acct2.userId,
+    allowedAddress: acct2.username,
     recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
     recipientUserId: acct2.userId,
-    allowedProfileId: acct1.userId,
+    allowedAddress: acct1.username,
     recipientAccessToken: session2.accessToken,
   });
 
-  insertContactInDb(acct1.userId, acct2.userId, `E2E ${label2}`);
+  insertContactInDb(acct1.userId, acct2.username);
 
   const stamp = Date.now();
   const seedMessage = `rubrica-consent-${stamp}`;
-  await sendMessageToProfile({
+  await sendMessageToAddress({
     senderAccessToken: session1.accessToken,
-    recipientProfileId: acct2.userId,
+    peerAddress: acct2.username,
     body: seedMessage,
     clientMessageId: `rubrica-consent-${stamp}`,
   });
 
-  expect(countAllowlistInDb(acct1.userId, acct2.userId)).toBe(1);
-  expect(countContactsInDb(acct1.userId, acct2.userId)).toBe(1);
+  expect(countAllowlistInDb(acct1.userId, acct2.username)).toBe(1);
+  expect(countContactsInDb(acct1.userId, acct2.username)).toBe(1);
 
   return { acct1, acct2, session1, session2, seedMessage };
 }
 
 export async function expectAllowlistAbsentInDb(
   focusUserId: string,
-  peerProfileId: string,
+  peerAddress: string,
 ): Promise<void> {
   await expect
-    .poll(() => countAllowlistInDb(focusUserId, peerProfileId), {
+    .poll(() => countAllowlistInDb(focusUserId, peerAddress), {
       timeout: E2E_TIMEOUT.db,
     })
     .toBe(0);
@@ -188,35 +194,36 @@ export async function prepareLocalConsentedPeerPair(
 
   await addReceptionAllowlist({
     recipientUserId: acct1.userId,
-    allowedProfileId: acct2.userId,
+    allowedAddress: acct2.username,
     recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
     recipientUserId: acct2.userId,
-    allowedProfileId: acct1.userId,
+    allowedAddress: acct1.username,
     recipientAccessToken: session2.accessToken,
   });
 
   const stamp = Date.now();
   const seedMessage = `consent-toggle-${stamp}`;
-  await sendMessageToProfile({
+  await sendMessageToAddress({
     senderAccessToken: session1.accessToken,
-    recipientProfileId: acct2.userId,
+    peerAddress: acct2.username,
     body: seedMessage,
     clientMessageId: `consent-toggle-${stamp}`,
   });
 
   // Rubrica pulita; allow list acct1→acct2 resta (profilo già consentito).
+  const safePeer = normalizePeerAddress(acct2.username);
   const sql =
     `DELETE FROM public.contacts ` +
-    `WHERE archive_user_id = '${acct1.userId}' AND linked_profile_id = '${acct2.userId}';`;
+    `WHERE archive_user_id = '${acct1.userId}' AND address = '${safePeer}';`;
   execSync(
     `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
     { stdio: 'pipe' },
   );
 
-  expect(countAllowlistInDb(acct1.userId, acct2.userId)).toBe(1);
-  expect(countContactsInDb(acct1.userId, acct2.userId)).toBe(0);
+  expect(countAllowlistInDb(acct1.userId, acct2.username)).toBe(1);
+  expect(countContactsInDb(acct1.userId, acct2.username)).toBe(0);
 
   return { acct1, acct2, session1, session2, seedMessage };
 }
@@ -238,28 +245,28 @@ export async function prepareLocalPeerRelationshipPair(
 
   await addReceptionAllowlist({
     recipientUserId: acct1.userId,
-    allowedProfileId: acct2.userId,
+    allowedAddress: acct2.username,
     recipientAccessToken: session1.accessToken,
   });
   await addReceptionAllowlist({
     recipientUserId: acct2.userId,
-    allowedProfileId: acct1.userId,
+    allowedAddress: acct1.username,
     recipientAccessToken: session2.accessToken,
   });
 
   const stamp = Date.now();
   const seedMessage = `peer-rel-${stamp}`;
-  await sendMessageToProfile({
+  await sendMessageToAddress({
     senderAccessToken: session1.accessToken,
-    recipientProfileId: acct2.userId,
+    peerAddress: acct2.username,
     body: seedMessage,
     clientMessageId: `peer-rel-${stamp}`,
   });
 
-  clearPeerRelationshipInDb(acct1.userId, acct2.userId);
+  clearPeerRelationshipInDb(acct1.userId, acct2.username);
 
-  expect(countContactsInDb(acct1.userId, acct2.userId)).toBe(0);
-  expect(countAllowlistInDb(acct1.userId, acct2.userId)).toBe(0);
+  expect(countContactsInDb(acct1.userId, acct2.username)).toBe(0);
+  expect(countAllowlistInDb(acct1.userId, acct2.username)).toBe(0);
 
   return { acct1, acct2, session1, session2, seedMessage };
 }

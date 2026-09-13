@@ -46,12 +46,12 @@ class _RecordingNavigationEffects implements NavigationEffects {
   @override
   Future<bool> openConversation({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     required OpenConversationSource source,
     bool allowProfileFallback = true,
   }) async {
     lastOpenAccountId = accountUserId;
-    lastOpenPeerId = peerProfileId;
+    lastOpenPeerId = peerAddress;
     lastSource = source;
     lastAllowFallback = allowProfileFallback;
     return openResult;
@@ -88,9 +88,11 @@ class _RecordingNavigationEffects implements NavigationEffects {
 }
 
 ChatPeer _peer(String id) => ChatPeer(
+      peerAddress: id,
       profile: ProfileSummary(
         id: id,
         username: id,
+        address: id,
         displayName: id,
       ),
     );
@@ -105,7 +107,7 @@ void main() {
         ..commitScope(
           const ConversationScope(
             focusUserId: 'user-a',
-            peerProfileId: 'peer-b',
+            peerAddress: 'peer-b',
             sessionEpoch: 1,
           ),
         )
@@ -144,7 +146,7 @@ void main() {
       await machine.send(OpenPeerOnFocusedAccount(_peer('peer-b')));
 
       expect(machine.shellState, NavigationShellState.chatOpen);
-      expect(effects.lastPeer?.profileId, 'peer-b');
+      expect(effects.lastPeer?.peerAddress, 'peer-b');
     });
 
     test('OpenPeerOnFocusedAccount rejected → inboxVisible', () async {
@@ -163,7 +165,7 @@ void main() {
       await machine.send(
         const OpenConversationOnAccount(
           accountUserId: 'user-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
           source: OpenConversationSource.inbox,
         ),
       );
@@ -179,7 +181,7 @@ void main() {
       await machine.send(
         const OpenConversationOnAccount(
           accountUserId: 'user-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
         ),
       );
 
@@ -194,7 +196,7 @@ void main() {
       await machine.send(
         const OpenConversationOnAccount(
           accountUserId: 'user-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
         ),
       );
 
@@ -208,7 +210,7 @@ void main() {
       await machine.send(
         const OpenConversationOnAccount(
           accountUserId: 'user-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
           source: OpenConversationSource.shareableLink,
         ),
       );
@@ -225,7 +227,7 @@ void main() {
       await machine.send(
         const OpenConversationOnAccount(
           accountUserId: 'user-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
           source: OpenConversationSource.compose,
         ),
       );
@@ -241,7 +243,7 @@ void main() {
       await machine.send(
         const OpenConversationOnAccount(
           accountUserId: 'user-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
           source: OpenConversationSource.push,
         ),
       );
@@ -289,7 +291,7 @@ void main() {
         ..commitScope(
           const ConversationScope(
             focusUserId: 'group-a',
-            peerProfileId: 'peer-b',
+            peerAddress: 'peer-b',
             sessionEpoch: 1,
           ),
         )
@@ -335,7 +337,7 @@ void main() {
 
       await nav.openPeerOnFocusedAccount(_peer('peer-b'));
 
-      expect(manager.viewState.activePeer?.profileId, 'peer-b');
+      expect(manager.viewState.activePeer?.peerAddress, 'peer-b');
       expect(manager.viewState.showInboxOnMobile, isFalse);
     });
 
@@ -345,7 +347,7 @@ void main() {
 
       await nav.closeConversation();
 
-      expect(manager.viewState.activePeer?.profileId, 'peer-b');
+      expect(manager.viewState.activePeer?.peerAddress, 'peer-b');
       expect(manager.viewState.showInboxOnMobile, isTrue);
     });
 
@@ -379,7 +381,7 @@ void main() {
 
       expect(nav.committedScope, isNull);
       expect(nav.machine.shellState, NavigationShellState.inboxVisible);
-      expect(manager.viewState.activePeer?.profileId, 'peer-x');
+      expect(manager.viewState.activePeer?.peerAddress, 'peer-x');
       expect(manager.viewState.showInboxOnMobile, isTrue);
     });
 
@@ -411,7 +413,7 @@ void main() {
       expect(manager.viewState.activePeer, isNull);
 
       await manager.sessionAuthority.requestFocusSwitch('account-b');
-      expect(manager.viewState.activePeer?.profileId, 'peer-x');
+      expect(manager.viewState.activePeer?.peerAddress, 'peer-x');
     });
   });
 }

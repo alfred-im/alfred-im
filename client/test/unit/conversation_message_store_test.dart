@@ -14,7 +14,7 @@ void main() {
       final store = ConversationMessageStore();
       final scope = testConversationScope(
         userId: 'account-a',
-        peerProfileId: 'account-b',
+        peerAddress: 'agent_b',
       );
       final applied = store.applyLoadedMessages(
         scope,
@@ -37,7 +37,7 @@ void main() {
       final store = ConversationMessageStore();
       final scope = testConversationScope(
         userId: 'account-a',
-        peerProfileId: 'account-b',
+        peerAddress: 'agent_b',
       );
       store.bindCommittedScope(scope);
       store.applyLoadedMessages(
@@ -62,12 +62,12 @@ void main() {
       final store = ConversationMessageStore();
       final scopeA = testConversationScope(
         userId: 'account-a',
-        peerProfileId: 'peer',
+        peerAddress: 'peer',
         loadSeq: 1,
       );
       final scopeB = testConversationScope(
         userId: 'account-b',
-        peerProfileId: 'peer',
+        peerAddress: 'peer',
         loadSeq: 2,
       );
       store.bindCommittedScope(scopeA);

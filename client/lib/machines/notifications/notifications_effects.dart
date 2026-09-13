@@ -6,12 +6,12 @@
 abstract class NotificationsEffects {
   Future<bool> forwardOpenFromPushTap({
     required String recipientUserId,
-    required String peerProfileId,
+    required String peerAddress,
   });
 
   void persistPendingOpenChat({
     required String recipientUserId,
-    required String peerProfileId,
+    required String peerAddress,
   });
 
   void clearPendingOpenChat();

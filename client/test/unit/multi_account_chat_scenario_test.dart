@@ -14,28 +14,18 @@ import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
 import 'package:alfred_client/services/message_media_service.dart';
-import 'package:alfred_client/services/profile_service.dart';
-
 import '../support/fake_messaging_services.dart';
 import '../support/wiring_test_fixtures.dart';
 
 const _agent1 = 'efd885fe-b36e-48fc-a796-0e3f153e40d6';
 const _agent2 = '0a81f785-173c-4f1c-b5df-3937086a2482';
 
-class _FakeProfileService extends ProfileService {
-  _FakeProfileService(this._peers) : super(createTestSupabaseClient());
-
-  final Map<String, ProfileSummary> _peers;
-
-  @override
-  Future<ProfileSummary?> findById(String id) async => _peers[id];
-}
-
-ChatPeer _peer(ProfileSummary profile) => ChatPeer.fromProfile(profile: profile);
+ChatPeer _peer(ProfileSummary profile) => ChatPeer.fromProfile(peerAddress: profile.resolvedPeerAddress, profile: profile);
 
 ProfileSummary _profile(String id, String username) => ProfileSummary(
       id: id,
       username: username,
+      address: username,
       displayName: username,
     );
 
@@ -66,14 +56,14 @@ void main() {
 
       messageService.messagesByConversation[conversationKey(
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
       )] = [
         _msg('1', 'ciao da agent1', _agent1),
         _msg('2', 'risposta agent2', _agent2),
       ];
       messageService.messagesByConversation[conversationKey(
         userId: _agent2,
-        peerProfileId: _agent1,
+        peerAddress: 'alfredagent1',
       )] = [
         _msg('1', 'ciao da agent1', _agent1),
         _msg('2', 'risposta agent2', _agent2),
@@ -85,10 +75,10 @@ void main() {
           profile: profile,
           client: client,
           inboxService: inboxService,
-          profileService: _FakeProfileService({
-            _agent1: _profile(_agent1, 'alfredagent1'),
-            _agent2: _profile(_agent2, 'alfredagent2'),
-          }),
+          profileService: MapBackedFakeProfileService.fromProfiles([
+            _profile(_agent1, 'alfredagent1'),
+            _profile(_agent2, 'alfredagent2'),
+          ]),
         );
       };
     });
@@ -119,18 +109,18 @@ void main() {
 
       await auth.setFocus(_agent1);
       await nav.openConversation(peer1);
-      expect(auth.viewState.activePeer?.profileId, _agent2);
+      expect(auth.viewState.activePeer?.peerAddress, 'alfredagent2');
 
       final scopeAgent1 = testConversationScope(
         userId: _agent1,
-        peerProfileId: auth.viewState.activePeer!.profileId,
+        peerAddress: auth.viewState.activePeer!.peerAddress,
         sessionEpoch: 1,
       );
       final chatAsAgent1 = MessagesController(
         scope: scopeAgent1,
         messageStore: testMessageStoreFor(scopeAgent1),
         userId: _agent1,
-        peerProfileId: auth.viewState.activePeer!.profileId,
+        peerAddress: auth.viewState.activePeer!.peerAddress,
         peerMessages: messageService.peerMessages,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: inboxService,
@@ -141,18 +131,18 @@ void main() {
 
       await auth.setFocus(_agent2);
       await nav.openConversation(peer2);
-      expect(auth.viewState.activePeer?.profileId, _agent1);
+      expect(auth.viewState.activePeer?.peerAddress, 'alfredagent1');
 
       final scopeAgent2 = testConversationScope(
         userId: _agent2,
-        peerProfileId: auth.viewState.activePeer!.profileId,
+        peerAddress: auth.viewState.activePeer!.peerAddress,
         sessionEpoch: 1,
       );
       final chatAsAgent2 = MessagesController(
         scope: scopeAgent2,
         messageStore: testMessageStoreFor(scopeAgent2),
         userId: _agent2,
-        peerProfileId: auth.viewState.activePeer!.profileId,
+        peerAddress: auth.viewState.activePeer!.peerAddress,
         peerMessages: messageService.peerMessages,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: inboxService,
@@ -162,18 +152,18 @@ void main() {
       expect(chatAsAgent2.messages.length, 2);
 
       await auth.setFocus(_agent1);
-      expect(auth.viewState.activePeer?.profileId, _agent2);
+      expect(auth.viewState.activePeer?.peerAddress, 'alfredagent2');
 
       final scopeAgainAgent1 = testConversationScope(
         userId: _agent1,
-        peerProfileId: auth.viewState.activePeer!.profileId,
+        peerAddress: auth.viewState.activePeer!.peerAddress,
         sessionEpoch: 1,
       );
       final chatAgainAgent1 = MessagesController(
         scope: scopeAgainAgent1,
         messageStore: testMessageStoreFor(scopeAgainAgent1),
         userId: _agent1,
-        peerProfileId: auth.viewState.activePeer!.profileId,
+        peerAddress: auth.viewState.activePeer!.peerAddress,
         peerMessages: messageService.peerMessages,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: inboxService,

@@ -4,7 +4,7 @@
 
 import '../models/push_conversation_key.dart';
 
-/// Deep link tap notifica: `#push-chat/{recipientUserId}/{peerProfileId}`.
+/// Deep link tap notifica: `#push-chat/{recipientUserId}/{peerAddress}`.
 class PushDeepLink {
   const PushDeepLink._();
 
@@ -23,10 +23,10 @@ class PushDeepLink {
 
     return PushConversationKey.tryFromPayload({
       'recipientUserId': rest.substring(0, slash),
-      'peerProfileId': rest.substring(slash + 1),
+      'peerAddress': rest.substring(slash + 1),
     });
   }
 
   static String hashFor(PushConversationKey conversation) =>
-      '#$fragmentPrefix${conversation.recipientUserId}/${conversation.peerProfileId}';
+      '#$fragmentPrefix${conversation.recipientUserId}/${conversation.peerAddress}';
 }

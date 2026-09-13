@@ -175,7 +175,7 @@ void main() {
         OpenAccount(
           profile: const ProfileSummary(
             id: 'agent-a',
-            username: 'alfredagent1',
+            username: 'alfredagent1', address: 'alfredagent1',
             displayName: 'Agent A',
           ),
           refreshToken: 'stale-refresh',

@@ -65,11 +65,11 @@ void main() {
     const alice = ProfileSummary(
       id: 'alice-id',
       displayName: 'Alice',
-      username: 'alice',
+      username: 'alice', address: 'alice',
     );
     final service = FakeReceptionAllowlistService()
       ..people = [
-        const AllowedPerson(entryId: 'entry-1', profile: alice),
+        AllowedPerson(entryId: 'entry-1', allowedAddress: 'alice', profile: alice),
       ];
     final controller = ReceptionAllowlistController(
       focusUserId: 'focus-id',

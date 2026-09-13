@@ -16,34 +16,34 @@ class ExternalIntentAdapter {
   /// Tap notifica push — PROM-PUSH-NOTIFY-030/036, SURF-NOTIFICATIONS-007.
   Future<bool> openFromPushTap({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) {
     return _navigation.openFromPushTap(
       accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
     );
   }
 
   /// Fragment `#indirizzo/chat` — PROM-SHAREABLE-LINK-004/024.
   Future<bool> openFromShareableLink({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) {
     return _navigation.openFromShareableLink(
       accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
     );
   }
 
   /// Nuovo messaggio da indirizzo (compose) sull'account in focus o specificato.
   Future<bool> openFromCompose({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     bool allowProfileFallback = true,
   }) {
     return _navigation.openFromCompose(
       accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       allowProfileFallback: allowProfileFallback,
     );
   }

@@ -19,13 +19,13 @@ sealed class NotificationsEvent {
 final class OpenChatFromNotification extends NotificationsEvent {
   const OpenChatFromNotification({
     required this.recipientUserId,
-    required this.peerProfileId,
+    required this.peerAddress,
     required this.sessionReady,
     required this.hasOpenAccount,
   });
 
   final String recipientUserId;
-  final String peerProfileId;
+  final String peerAddress;
   final bool sessionReady;
   final bool hasOpenAccount;
 }
@@ -45,7 +45,7 @@ class NotificationsMachine {
 
   NotificationsOpenChatState openChatState = NotificationsOpenChatState.idle;
 
-  final List<({String recipientUserId, String peerProfileId})> _pendingWhileBusy =
+  final List<({String recipientUserId, String peerAddress})> _pendingWhileBusy =
       [];
   bool _openChatChainBusy = false;
 
@@ -62,7 +62,7 @@ class NotificationsMachine {
     if (_openChatChainBusy) {
       _pendingWhileBusy.add((
         recipientUserId: event.recipientUserId,
-        peerProfileId: event.peerProfileId,
+        peerAddress: event.peerAddress,
       ));
       openChatState = NotificationsOpenChatState.queued;
       return;
@@ -71,7 +71,7 @@ class NotificationsMachine {
       openChatState = NotificationsOpenChatState.queued;
       _effects?.persistPendingOpenChat(
         recipientUserId: event.recipientUserId,
-        peerProfileId: event.peerProfileId,
+        peerAddress: event.peerAddress,
       );
       return;
     }
@@ -80,16 +80,16 @@ class NotificationsMachine {
       _effects?.clearPendingOpenChat();
       return;
     }
-    _startOpenChatProcessing(event.recipientUserId, event.peerProfileId);
+    _startOpenChatProcessing(event.recipientUserId, event.peerAddress);
   }
 
   void _drainQueuedOpenChat() {
     if (_openChatChainBusy || _pendingWhileBusy.isEmpty) return;
     final next = _pendingWhileBusy.removeAt(0);
-    _startOpenChatProcessing(next.recipientUserId, next.peerProfileId);
+    _startOpenChatProcessing(next.recipientUserId, next.peerAddress);
   }
 
-  void _startOpenChatProcessing(String recipientUserId, String peerProfileId) {
+  void _startOpenChatProcessing(String recipientUserId, String peerAddress) {
     _openChatChainBusy = true;
     openChatState = NotificationsOpenChatState.processing;
     final effects = _effects;
@@ -100,7 +100,7 @@ class NotificationsMachine {
     effects
         .forwardOpenFromPushTap(
           recipientUserId: recipientUserId,
-          peerProfileId: peerProfileId,
+          peerAddress: peerAddress,
         )
         .then((forwarded) => _completeOpenChat(forwarded: forwarded))
         .catchError((_) => _completeOpenChat(forwarded: false));

@@ -15,7 +15,7 @@ void main() {
     const focusUserId = 'focus-1';
     final alice = ProfileSummary(
       id: 'alice-id',
-      username: 'alice',
+      username: 'alice', address: 'alice',
       displayName: 'Alice',
     );
 
@@ -43,8 +43,8 @@ void main() {
 
       await controller.addProfile(alice);
 
-      expect(service.added, contains(alice));
-      expect(controller.allowedProfileIds, contains(alice.id));
+      expect(service.addedAddresses, contains('alice'));
+      expect(controller.allowedAddresses, contains('alice'));
     });
   });
 }

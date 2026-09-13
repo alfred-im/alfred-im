@@ -8,9 +8,16 @@ import 'package:alfred_client/models/account_view_state.dart';
 import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 
+import '../support/fake_messaging_services.dart';
+
 ChatPeer _peer(String id, {String preview = 'ciao'}) {
-  return ChatPeer(
-    profile: ProfileSummary(id: id, displayName: 'Peer $id'),
+  return inboxPeer(
+    ProfileSummary(
+      id: id,
+      username: id,
+      address: id,
+      displayName: 'Peer $id',
+    ),
     preview: preview,
     lastMessageAt: DateTime.utc(2026, 6, 29),
   );

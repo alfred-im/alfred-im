@@ -51,18 +51,18 @@ void main() {
     test('openConversationOnAccount sostituisce chat stale', () async {
       final ok = await nav.openConversationOnAccount(
         accountUserId: accountId,
-        peerProfileId: targetPeerId,
+        peerAddress: 'target_z',
       );
 
       expect(ok, isTrue);
-      expect(manager.viewState.activePeer?.profileId, targetPeerId);
-      expect(manager.viewState.activePeer?.profileId, isNot(stalePeerId));
+      expect(manager.viewState.activePeer?.peerAddress, 'target_z');
+      expect(manager.viewState.activePeer?.peerAddress, isNot('stale_y'));
     });
 
     test('peer irrisolvibile → inbox senza chat', () async {
       final ok = await nav.openConversationOnAccount(
         accountUserId: accountId,
-        peerProfileId: 'unknown-peer',
+        peerAddress: 'unknown-peer',
         allowProfileFallback: false,
       );
 

@@ -66,7 +66,7 @@ class PushNotificationListenerState extends State<PushNotificationListener> {
       'handler.enqueue',
       data: {
         'recipientUserId': conversation.recipientUserId,
-        'peerProfileId': conversation.peerProfileId,
+        'peerAddress': conversation.peerAddress,
       },
     );
     auth.notificationsAdapters.onOpenChatFromNotification(

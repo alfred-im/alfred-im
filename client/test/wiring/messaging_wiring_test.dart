@@ -33,14 +33,14 @@ void main() {
       var sessionValid = true;
       final scope = testConversationScope(
         userId: _userId,
-        peerProfileId: _peerId,
+        peerAddress: _peerId,
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: scope,
         messageStore: testMessageStoreFor(scope),
         userId: _userId,
-        peerProfileId: _peerId,
+        peerAddress: _peerId,
         peerMessages: messageService.peerMessages,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: inboxService,
@@ -60,14 +60,14 @@ void main() {
     test('sendText attraversa coordinator ed effects live', () async {
       final scope = testConversationScope(
         userId: _userId,
-        peerProfileId: _peerId,
+        peerAddress: _peerId,
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: scope,
         messageStore: testMessageStoreFor(scope),
         userId: _userId,
-        peerProfileId: _peerId,
+        peerAddress: _peerId,
         peerMessages: messageService.peerMessages,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: inboxService,
@@ -85,10 +85,10 @@ void main() {
       expect(messageService.sentBodies, contains('ciao wiring'));
     });
 
-    test('queue key nel controller combina userId e peerProfileId', () {
+    test('queue key nel controller combina userId e peerAddress', () {
       final key = MessagesController.outboundQueueKey(
         userId: _userId,
-        peerProfileId: _peerId,
+        peerAddress: _peerId,
       );
       expect(key, '$_userId|$_peerId');
     });

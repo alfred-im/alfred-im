@@ -34,7 +34,7 @@ Il disaccoppiamento non è un'eccezione futura: è la **stessa logica** del caso
 
 | Livello | UI | Significato nel modello cloud Alfred |
 |---------|-----|--------------------------------------|
-| **1 — Inviato** | ✓ grigia | Il messaggio è stato accettato dalla piattaforma (RPC `send_message_to_profile` / outbox `queued` per federato). |
+| **1 — Inviato** | ✓ grigia | Il messaggio è stato accettato dalla piattaforma (RPC `send_message_to_address` / outbox `queued` per federato). |
 | **2 — Consegnato** | ✓✓ grigie | Il messaggio è **ricevuto sul server del destinatario** — disponibile nella fonte di verità per il destinatario (copia nel suo archivio Alfred, oppure ack HTTP dal peer remoto). **Non** significa «aperto sul telefono del destinatario». Se il gate allow list rifiuta il recapito, il mittente resta al livello 1 in modo permanente e silenzioso. |
 | **3 — Lettura** | ✓✓ blu | Il destinatario ha **visualizzato** la conversazione (`mark_peer_read` / evento READ federato). |
 

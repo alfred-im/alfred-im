@@ -37,7 +37,13 @@ class AccountViewStateStore {
 
   void openConversationOnFocusedAccount(ChatPeer peer) {
     final userId = _manager.focusUserId;
-    if (userId == null || peer.profileId == userId) return;
+    if (userId == null) return;
+    final account = _manager.focusedSession;
+    if (account != null &&
+        account.userId == userId &&
+        account.profile.resolvedPeerAddress == peer.peerAddress) {
+      return;
+    }
     apply(userId, (view) => view.openChat(peer));
   }
 
@@ -48,11 +54,11 @@ class AccountViewStateStore {
   /// Link / compose: azzera chat solo se il peer attivo è diverso dal target.
   void clearStaleConversationUnlessPeer(
     String accountUserId,
-    String peerProfileId,
+    String peerAddress,
   ) {
     if (!_manager.hasOpenAccount(accountUserId)) return;
-    final active = viewStateFor(accountUserId).activePeer?.profileId;
-    if (active != null && active != peerProfileId) {
+    final active = viewStateFor(accountUserId).activePeer?.peerAddress;
+    if (active != null && active != peerAddress.trim().toLowerCase()) {
       clearConversationForAccount(accountUserId);
     }
   }

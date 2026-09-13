@@ -4,11 +4,11 @@
 //
 // Wire: envelope + discovery (questo file).
 // Piattaforma Alfred (stesso release Gotham): gotham-protocol.md § 5.4 —
-//   - reception_allowlist: allowed_profile_id (locale) | allowed_external_address (federato)
+//   - reception_allowlist: allowed_address (username bare o user@server)
 //   - gate inbound: normalize(envelope.from_address) ∈ allow list destinatario
-//   - gate outbound: normalize(destinazione) ∈ allow list mittente
-//   - send_message_to_external_address → outbox deliver queued → worker Gotham
-//   - materialize inbound: peer_external_address + author_external_address (no profiles.id mittente)
+//   - gate outbound: normalize(p_peer_address) ∈ allow list mittente
+//   - send_message_to_address → outbox deliver queued → worker Gotham
+//   - materialize inbound: peer_address + author_address (no profiles.id mittente)
 
 syntax = "proto3";
 
@@ -44,7 +44,7 @@ enum ReactionKind {
 message GothamEnvelope {
   EventKind kind = 1;
   // Indirizzi Alfred normalizzati lower(user)@lower(im_server_id).
-  // from_address: usato dal gate reception inbound (allowed_external_address).
+  // from_address: usato dal gate reception inbound (allowed_address).
   string from_address = 2;
   // to_address: destinazione; usato dal gate outbound lato mittente.
   string to_address = 3;

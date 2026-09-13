@@ -125,7 +125,7 @@ void main() {
       const profile = ProfileSummary(
         id: 'u1',
         displayName: 'Marco Rossi',
-        username: 'marco',
+        username: 'marco', address: 'marco',
       );
 
       expect(authorLabelForProfile(profile), 'Marco Rossi');
@@ -135,7 +135,7 @@ void main() {
       const profile = ProfileSummary(
         id: 'u2',
         displayName: '',
-        username: 'marco',
+        username: 'marco', address: 'marco',
       );
 
       expect(authorLabelForProfile(profile), 'marco');
@@ -153,13 +153,13 @@ void main() {
       const profile = ProfileSummary(
         id: 'human-1',
         displayName: 'Giulia',
-        username: 'giulia',
+        username: 'giulia', address: 'giulia',
         avatarUrl: 'https://example.com/a.png',
       );
 
       final enriched = enrichMessageAuthor(
         message: message,
-        profilesById: {'human-1': profile},
+        profilesByAddress: {'human-1': profile},
         currentUserId: 'me',
       );
 
@@ -180,7 +180,7 @@ void main() {
 
       final enriched = enrichMessageAuthor(
         message: message,
-        profilesById: const {},
+        profilesByAddress: const {},
         currentUserId: 'me',
       );
 

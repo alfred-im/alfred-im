@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/auth_controller.dart';
 import 'package:alfred_client/services/account_manager.dart';
@@ -25,12 +24,12 @@ void main() {
 
   const focusProfile = ProfileSummary(
     id: 'account-a',
-    username: 'agent_a',
+    username: 'agent_a', address: 'agent_a',
     displayName: 'Agent A',
   );
   const peer = ProfileSummary(
     id: 'account-b',
-    username: 'agent_b',
+    username: 'agent_b', address: 'agent_b',
     displayName: 'Agent B',
   );
 
@@ -47,7 +46,7 @@ void main() {
       profile: focusProfile,
       client: createTestSupabaseClient(),
       inboxService: FakeInboxService(
-        peers: const [ChatPeer(profile: peer)],
+        peers: [inboxPeer(peer)],
       ),
     );
     await installTestAuthSession(sessionA.client, userId: 'account-a');
@@ -76,7 +75,7 @@ void main() {
       focusUserId: 'account-a',
       hasFocusedSession: false,
     );
-    await auth.openConversation(const ChatPeer(profile: peer));
+    await auth.openConversation(inboxPeer(peer));
 
     addTearDown(() => sessionA.disposeResources(clearAuthStorage: false));
 

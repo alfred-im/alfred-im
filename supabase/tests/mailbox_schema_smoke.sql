@@ -2,7 +2,7 @@
 --
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
--- Mailbox schema smoke: archive user, no legacy receipts.
+-- Mailbox schema smoke: peer_address identity columns.
 
 DO $$
 BEGIN
@@ -15,6 +15,34 @@ BEGIN
     WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'archive_user_id'
   ) THEN
     RAISE EXCEPTION 'messages.archive_user_id missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'peer_address'
+  ) THEN
+    RAISE EXCEPTION 'messages.peer_address missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'author_address'
+  ) THEN
+    RAISE EXCEPTION 'messages.author_address missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'peer_profile_id'
+  ) THEN
+    RAISE EXCEPTION 'messages.peer_profile_id must be removed';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'peer_external_address'
+  ) THEN
+    RAISE EXCEPTION 'messages.peer_external_address must be removed';
   END IF;
 
   IF NOT EXISTS (

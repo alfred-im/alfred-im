@@ -13,6 +13,8 @@ import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/inbox_controller.dart';
 import 'package:alfred_client/services/inbox_service.dart';
 
+import '../support/fake_messaging_services.dart';
+
 class _AuthModel extends ChangeNotifier {
   bool sessionReady = true;
   String? userId = 'user-1';
@@ -33,9 +35,14 @@ class _ImmediateInboxService extends InboxService {
 
   @override
   Future<List<ChatPeer>> fetchInbox() async {
-    return const [
-      ChatPeer(
-        profile: ProfileSummary(id: 'peer-1', displayName: 'Alice'),
+    return [
+      inboxPeer(
+        const ProfileSummary(
+          id: 'peer-1',
+          username: 'alice',
+          address: 'alice',
+          displayName: 'Alice',
+        ),
         preview: 'Ciao',
         timeLabel: '12:00',
         unreadCount: 0,

@@ -4,8 +4,8 @@
 |-------|--------|
 | **Promessa ID** | `SYS-CONTACTS` |
 | **Classe** | SYSTEM |
-| **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Status** | `approved` — amend §7 contacts.address only (implementazione pendente) |
+| **Ultima revisione** | 2026-09-13 |
 | **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) |
 | **PR** | #109, #134 |
 
@@ -15,7 +15,7 @@ Promesse di piattaforma per tabella `contacts`, RLS, unicità e RPC `search_prof
 
 ## 1. Problema / obiettivo
 
-L'utente può salvare contatti (utenti Alfred locale (stessa istanza) o indirizzi federati) come rubrica personale scoped per titolare archivio. Il backend garantisce schema, CRUD PostgREST e ricerca profili per aggiunta — senza legare rubrica a invio o inbox.
+L'utente può salvare contatti come rubrica personale scoped per titolare archivio — **solo indirizzo** (`username` o `user@server`, lowercase). Presentazione nome/avatar via `get_profiles` — **non** snapshot in `contacts`.
 
 ---
 
@@ -26,13 +26,14 @@ L'utente può salvare contatti (utenti Alfred locale (stessa istanza) o indirizz
 | ID | Promessa |
 |----|----------|
 | **SYS-CONTACTS-001** | Tabella `contacts` scoped per titolare archivio: `archive_user_id = auth.uid()` (RLS) |
-| **SYS-CONTACTS-002** | Contatto **locale**: `linked_profile_id` obbligatorio, `external_address` null — stessa istanza Alfred |
-| **SYS-CONTACTS-003** | **Local**: `linked_profile_id` obbligatorio, `external_address` null; `display_name` + `avatar_url` opzionale (snapshot al momento dell'aggiunta) |
-| **SYS-CONTACTS-004** | **Federato**: `external_address` obbligatorio (`user@server`), `linked_profile_id` null; `display_name` obbligatorio |
-| **SYS-CONTACTS-005** | Unicità: `(archive_user_id, linked_profile_id)` per locale; `(archive_user_id, lower(external_address))` per federati |
+| **SYS-CONTACTS-002** | Colonna **`address`** text NOT NULL — unico dato identità contatto (lowercase) |
+| **SYS-CONTACTS-003** | Unicità `(archive_user_id, address)` |
+| **SYS-CONTACTS-004** | **MUST NOT** colonne `linked_profile_id`, `external_address`, `display_name`, `avatar_url` — deriva rimossa |
+| **SYS-CONTACTS-005** | Input case insensitive; persistenza **sempre lowercase** |
 | **SYS-CONTACTS-006** | CRUD via PostgREST diretto su `contacts` (nessuna RPC dedicata add/delete) |
-| **SYS-CONTACTS-007** | Lista contatti: ordinata per `display_name` (client `ContactService.fetchContacts`) |
-| **SYS-CONTACTS-008** | Ricerca utenti Alfred per aggiunta: RPC `search_profiles(p_query, p_limit)` — min **2** caratteri lato client; max 50 server-side |
+| **SYS-CONTACTS-007** | Lista contatti: ordinata per `address` (client); display via `get_profiles` batch |
+| **SYS-CONTACTS-008** | Ricerca utenti Alfred per aggiunta: RPC `search_profiles` → salvare **`username`** come `contacts.address` |
+| **SYS-CONTACTS-009** | Aggiunta contatto federato: salvare `user@server` come `address` — stesso schema locale/federato |
 
 ### MUST NOT
 
@@ -41,7 +42,7 @@ L'utente può salvare contatti (utenti Alfred locale (stessa istanza) o indirizz
 | **SYS-CONTACTS-016** | Prerequisito `contact_id` per inviare messaggi a utenti Alfred |
 | **SYS-CONTACTS-017** | Creare conversazione/thread al salvataggio contatto |
 | **SYS-CONTACTS-018** | Usare `contacts` come fonte di verità inbox (inbox deriva da `messages` only) |
-| **SYS-CONTACTS-019** | `contacts` come fonte o proxy dell'allow list di ricezione |
+| **SYS-CONTACTS-020** | Rubrica come cache profilo (snapshot nome/avatar) — presentazione solo via `get_profiles` |
 
 ---
 
@@ -49,9 +50,10 @@ L'utente può salvare contatti (utenti Alfred locale (stessa istanza) o indirizz
 
 | Elemento | Comportamento |
 |----------|---------------|
-| `contacts` | Colonne: `id`, `archive_user_id`, `protocol`, `linked_profile_id`, `external_address`, `display_name`, `avatar_url`, timestamps |
+| `contacts` | Colonne: `id`, `archive_user_id`, **`address`** text NOT NULL, timestamps |
 | RLS | SELECT/INSERT/UPDATE/DELETE solo `archive_user_id = auth.uid()` |
-| `search_profiles(text, int)` | Cerca `username` o `display_name` ILIKE; esclude self; ritorna `id`, `username`, `display_name`, `avatar_url` |
+| `search_profiles(text, int)` | Cerca profili locali; client salva `username` come `address` |
+| `get_profiles(text[])` | Presentazione batch — vedi [SYS-PROFILE](./SYS-PROFILE.md) |
 
 Migrazione base: `20260624200000_alfred_domain_schema.sql`.
 

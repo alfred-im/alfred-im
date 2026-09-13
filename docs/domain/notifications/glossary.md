@@ -12,7 +12,7 @@
 |---------|-------------|
 | **Device** | Browser/dispositivo fisico identificato in modo persistente sul client. Condiviso tra tutti gli account sullo stesso browser. |
 | **Push subscription** | Coppia endpoint + chiavi crittografiche registrata nel service worker per un device. Una subscription per coppia account-device. |
-| **PushConversationKey** | Identità canonica di una notifica: `(recipient_user_id, peer_profile_id)` — mai solo peer. |
+| **PushConversationKey** | Identità canonica di una notifica: `(recipient_user_id, peer_address)` — mai solo peer. |
 | **Recipient account** | Account Alfred destinatario del messaggio. Può essere non in focus. |
 | **Peer** | Controparte nella chat. |
 | **Logical message id** | Id messaggio logico per tag notifica e deduplica sul device. |

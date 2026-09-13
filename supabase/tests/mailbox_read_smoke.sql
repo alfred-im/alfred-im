@@ -23,14 +23,14 @@ BEGIN
     true
   );
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
   VALUES
-    (v_agent1, v_agent2),
-    (v_agent2, v_agent1)
+    (v_agent1, 'ciagent2'),
+    (v_agent2, 'ciagent1')
   ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
-  SELECT * INTO v_sender FROM public.send_message_to_profile(
-    v_agent2,
+  SELECT * INTO v_sender FROM public.send_message_to_address(
+    'ciagent2',
     'read smoke',
     v_client_id,
     'text'::public.message_content_type
@@ -42,13 +42,13 @@ BEGIN
     true
   );
 
-  PERFORM public.mark_peer_read(v_agent1);
+  PERFORM public.mark_peer_read('ciagent1');
 
   IF NOT EXISTS (
     SELECT 1 FROM public.messages m
     WHERE m.archive_user_id = v_agent2
       AND m.logical_message_id = v_sender.logical_message_id
-      AND m.author_id = v_agent1
+      AND m.author_address = 'ciagent1'
       AND m.read_at IS NOT NULL
   ) THEN
     RAISE EXCEPTION 'recipient incoming read_at not set';
@@ -68,7 +68,7 @@ BEGIN
     INNER JOIN public.messages sender ON sender.logical_message_id = reader.logical_message_id
     WHERE reader.archive_user_id = v_agent2
       AND reader.logical_message_id = v_sender.logical_message_id
-      AND reader.author_id = v_agent1
+      AND reader.author_address = 'ciagent1'
       AND reader.read_receipt_id IS NOT NULL
       AND sender.id = v_sender.id
       AND sender.read_receipt_id = reader.read_receipt_id

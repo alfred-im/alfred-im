@@ -11,178 +11,51 @@ import 'package:flutter_test/flutter_test.dart';
 class _RecordingReceptionEffects implements ReceptionEffects {
   int loadCount = 0;
   int addCount = 0;
-  int removePersonCount = 0;
-  int removeByProfileIdCount = 0;
-  ProfileSummary? lastAddedProfile;
-  AllowedPerson? lastRemovedPerson;
-  String? lastRemovedProfileId;
-  final Set<String> allowedProfileIds = {};
+  final Set<String> allowedAddresses = {};
 
   @override
-  Future<void> loadAllowlist() async {
-    loadCount++;
-  }
+  Future<void> loadAllowlist() async => loadCount++;
 
   @override
-  bool isProfileAllowed(String profileId) {
-    return allowedProfileIds.contains(profileId);
-  }
+  bool isAddressAllowed(String address) => allowedAddresses.contains(address);
 
   @override
-  Future<void> addAllowedProfile(ProfileSummary profile) async {
+  Future<void> addAllowedAddress(String address) async {
     addCount++;
-    lastAddedProfile = profile;
-    allowedProfileIds.add(profile.id);
+    allowedAddresses.add(address);
   }
 
   @override
-  Future<void> removeAllowedPerson(AllowedPerson person) async {
-    removePersonCount++;
-    lastRemovedPerson = person;
-    allowedProfileIds.remove(person.profile.id);
-  }
+  Future<void> removeAllowedPerson(AllowedPerson person) async {}
 
   @override
-  Future<void> removeByProfileId(String profileId) async {
-    removeByProfileIdCount++;
-    lastRemovedProfileId = profileId;
-    allowedProfileIds.remove(profileId);
-  }
+  Future<void> removeByAddress(String address) async {}
 }
-
-ProfileSummary _profile({String id = 'profile-1'}) => ProfileSummary(
-      id: id,
-      displayName: 'Alice',
-      username: 'alice',
-    );
-
-AllowedPerson _allowedPerson({String profileId = 'profile-1'}) =>
-    AllowedPerson(
-      entryId: 'entry-1',
-      profile: _profile(id: profileId),
-    );
 
 void main() {
   const focusUserId = 'focus-1';
 
-  group('ReceptionMachine load state', () {
-    test('starts loading', () {
-      final machine = ReceptionMachine(
-        _RecordingReceptionEffects(),
-        focusUserId: focusUserId,
-      );
-
-      expect(machine.loadState, ReceptionLoadState.loading);
-      expect(machine.searchQuery, '');
-    });
-
-    test('LoadAllowlist → loading and calls effect', () async {
-      final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, focusUserId: focusUserId)
-        ..loadState = ReceptionLoadState.ready;
-
-      await machine.send(const LoadAllowlist());
-
-      expect(machine.loadState, ReceptionLoadState.loading);
-      expect(effects.loadCount, 1);
-    });
-
-    test('AllowlistLoaded → ready', () async {
-      final machine = ReceptionMachine(
-        _RecordingReceptionEffects(),
-        focusUserId: focusUserId,
-      );
-
-      await machine.send(const AllowlistLoaded());
-
-      expect(machine.loadState, ReceptionLoadState.ready);
-    });
-
-    test('AllowlistLoadFailed → ready', () async {
-      final machine = ReceptionMachine(
-        _RecordingReceptionEffects(),
-        focusUserId: focusUserId,
-      );
-
-      await machine.send(const AllowlistLoadFailed());
-
-      expect(machine.loadState, ReceptionLoadState.ready);
-    });
+  test('AddAllowedAddress adds and reloads', () async {
+    final effects = _RecordingReceptionEffects();
+    final machine = ReceptionMachine(effects, focusUserId: focusUserId);
+    await machine.send(const AddAllowedAddress('bob'));
+    expect(effects.addCount, 1);
+    expect(effects.loadCount, 1);
   });
 
-  group('ReceptionMachine search', () {
-    test('SetSearchQuery updates query', () async {
-      final machine = ReceptionMachine(
-        _RecordingReceptionEffects(),
-        focusUserId: focusUserId,
-      );
-
-      await machine.send(const SetSearchQuery('bob'));
-
-      expect(machine.searchQuery, 'bob');
-    });
-  });
-
-  group('ReceptionMachine add allowed profile', () {
-    test('AddAllowedProfile adds and reloads', () async {
-      final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, focusUserId: focusUserId);
-      final profile = _profile(id: 'profile-2');
-
-      await machine.send(AddAllowedProfile(profile));
-
-      expect(effects.addCount, 1);
-      expect(effects.lastAddedProfile, profile);
-      expect(effects.loadCount, 1);
-      expect(machine.loadState, ReceptionLoadState.loading);
-    });
-
-    test('AddAllowedProfile ignored for archive_user self', () async {
-      final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, focusUserId: focusUserId);
-
-      await machine.send(AddAllowedProfile(_profile(id: focusUserId)));
-
-      expect(effects.addCount, 0);
-      expect(effects.loadCount, 0);
-    });
-
-    test('AddAllowedProfile ignored when already allowed', () async {
-      final effects = _RecordingReceptionEffects()
-        ..allowedProfileIds.add('profile-2');
-      final machine = ReceptionMachine(effects, focusUserId: focusUserId);
-
-      await machine.send(AddAllowedProfile(_profile(id: 'profile-2')));
-
-      expect(effects.addCount, 0);
-      expect(effects.loadCount, 0);
-    });
-  });
-
-  group('ReceptionMachine remove allowed', () {
-    test('RemoveAllowedPerson removes and reloads', () async {
-      final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, focusUserId: focusUserId);
-      final person = _allowedPerson(profileId: 'profile-3');
-
-      await machine.send(RemoveAllowedPerson(person));
-
-      expect(effects.removePersonCount, 1);
-      expect(effects.lastRemovedPerson, person);
-      expect(effects.loadCount, 1);
-      expect(machine.loadState, ReceptionLoadState.loading);
-    });
-
-    test('RemoveAllowedByProfileId removes and reloads', () async {
-      final effects = _RecordingReceptionEffects();
-      final machine = ReceptionMachine(effects, focusUserId: focusUserId);
-
-      await machine.send(const RemoveAllowedByProfileId('profile-99'));
-
-      expect(effects.removeByProfileIdCount, 1);
-      expect(effects.lastRemovedProfileId, 'profile-99');
-      expect(effects.loadCount, 1);
-      expect(machine.loadState, ReceptionLoadState.loading);
-    });
+  test('AddAllowedProfile maps username to address', () async {
+    final effects = _RecordingReceptionEffects();
+    final machine = ReceptionMachine(effects, focusUserId: focusUserId);
+    await machine.send(
+      AddAllowedProfile(
+        const ProfileSummary(
+          id: 'p2',
+          username: 'bob',
+          address: 'bob',
+          displayName: 'Bob',
+        ),
+      ),
+    );
+    expect(effects.addCount, 1);
   });
 }

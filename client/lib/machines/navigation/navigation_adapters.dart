@@ -32,13 +32,13 @@ class NavigationAdapters {
 
   Future<bool> openConversationOnAccount({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     bool allowProfileFallback = true,
   }) async {
     await _machine.send(
       OpenConversationOnAccount(
         accountUserId: accountUserId,
-        peerProfileId: peerProfileId,
+        peerAddress: peerAddress,
         allowProfileFallback: allowProfileFallback,
       ),
     );
@@ -47,34 +47,34 @@ class NavigationAdapters {
 
   Future<bool> openFromPushTap({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) {
     return _openConversationWithSource(
       accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       source: OpenConversationSource.push,
     );
   }
 
   Future<bool> openFromShareableLink({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) {
     return _openConversationWithSource(
       accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       source: OpenConversationSource.shareableLink,
     );
   }
 
   Future<bool> openFromCompose({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     bool allowProfileFallback = true,
   }) {
     return _openConversationWithSource(
       accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       source: OpenConversationSource.compose,
       allowProfileFallback: allowProfileFallback,
     );
@@ -82,14 +82,14 @@ class NavigationAdapters {
 
   Future<bool> _openConversationWithSource({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     required OpenConversationSource source,
     bool allowProfileFallback = true,
   }) async {
     await _machine.send(
       OpenConversationOnAccount(
         accountUserId: accountUserId,
-        peerProfileId: peerProfileId,
+        peerAddress: peerAddress,
         source: source,
         allowProfileFallback: allowProfileFallback,
       ),

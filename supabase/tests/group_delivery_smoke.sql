@@ -23,19 +23,19 @@ BEGIN
   UPDATE public.profiles SET profile_kind = 'group' WHERE id = v_group;
 
   DELETE FROM public.reception_allowlist
-  WHERE (archive_user_id, allowed_profile_id) IN (
-    (v_agent1, v_group),
-    (v_group, v_agent1),
-    (v_group, v_observer),
-    (v_observer, v_group)
+  WHERE (archive_user_id, allowed_address) IN (
+    (v_agent1, 'ciagent2'),
+    (v_group, 'ciagent1'),
+    (v_group, 'ciobserver'),
+    (v_observer, 'ciagent2')
   );
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
   VALUES
-    (v_group, v_agent1),
-    (v_group, v_observer),
-    (v_agent1, v_group),
-    (v_observer, v_group);
+    (v_group, 'ciagent1'),
+    (v_group, 'ciobserver'),
+    (v_agent1, 'ciagent2'),
+    (v_observer, 'ciagent2');
 
   PERFORM set_config(
     'request.jwt.claims',
@@ -43,8 +43,8 @@ BEGIN
     true
   );
 
-  SELECT * INTO v_sender FROM public.send_message_to_profile(
-    v_group,
+  SELECT * INTO v_sender FROM public.send_message_to_address(
+    'ciagent2',
     'group delivery hello',
     v_client,
     'text'::public.message_content_type
@@ -90,22 +90,22 @@ BEGIN
     RAISE EXCEPTION 'group archive must set original_author to human sender';
   END IF;
 
-  IF v_erogated.peer_profile_id <> v_group THEN
+  IF v_erogated.peer_address <> 'ciagent2' THEN
     RAISE EXCEPTION 'erogated peer must be group';
   END IF;
 
   UPDATE public.profiles SET profile_kind = 'user' WHERE id = v_group;
 
   DELETE FROM public.reception_allowlist
-  WHERE (archive_user_id, allowed_profile_id) IN (
-    (v_agent1, v_group),
-    (v_group, v_agent1),
-    (v_group, v_observer),
-    (v_observer, v_group)
+  WHERE (archive_user_id, allowed_address) IN (
+    (v_agent1, 'ciagent2'),
+    (v_group, 'ciagent1'),
+    (v_group, 'ciobserver'),
+    (v_observer, 'ciagent2')
   );
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
-  VALUES (v_agent1, v_group), (v_group, v_agent1)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
+  VALUES (v_agent1, 'ciagent2'), (v_group, 'ciagent1')
   ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
   RAISE NOTICE 'group_delivery_smoke_ok';

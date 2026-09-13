@@ -4,9 +4,10 @@
 |-------|--------|
 | **Promessa ID** | `PROM-SHAREABLE-LINK` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
+| **Status** | `approved` |
+| **Ultima revisione** | 2026-09-13 |
 | **PR origine** | #178 |
+| **Amend** | equivalenza a strati §7.13–7.14 — distillazione [TEMP-chat-peer-key-address-drift.md](../../../tmp/TEMP-chat-peer-key-address-drift.md) §7 |
 
 Promessa di prodotto: **formato URL condivisibile e stabile** verso profilo pubblico di un peer Alfred (account utente o gruppo) e verso la conversazione con quel peer. Il contratto è il **fragment `#`**; come la app naviga internamente è conseguenza, non oggetto della promessa.
 
@@ -29,7 +30,7 @@ L'utente condivide un link che punta a una **risorsa** (profilo o chat con un in
 |----------|--------|
 | `{origine}{base-path}` | Dove è deployata l'istanza (es. demo Fly, localhost). **Non** fa parte dell'identità stabile della risorsa. |
 | `#` | **Obbligatorio** — navigazione tramite fragment. |
-| `{indirizzo}` | Identità IM del peer: `username` **oppure** `username@server` — **equivalenti**, entrambi sempre validi. |
+| `{indirizzo}` | Identità IM del peer: `username` **oppure** `username@server` — entrambi validi in ingresso. |
 | `/chat` | Suffisso opzionale: apre la conversazione con quel peer sull'account Alfred in focus. |
 
 ### Esempi
@@ -40,7 +41,8 @@ L'utente condivide un link che punta a una **risorsa** (profilo o chat con un in
 | `https://arkham-im.fly.dev/#test2/chat` | Chat con `test2` (istanza Arkham) |
 | `https://blackgate-im.fly.dev/#mario` | Profilo di `mario` (istanza Blackgate) |
 | `https://blackgate-im.fly.dev/#mario/chat` | Chat con `mario` (istanza Blackgate) |
-| `…/#mario@alfred.app` | Stesso peer in forma `username@server` (server locale `alfred.app`) |
+| `…/#mario@blackgate-im.fly.dev` | Profilo peer su altra istanza |
+| `…/#mario@blackgate-im.fly.dev/chat` | Chat con peer su altra istanza |
 
 ### Gruppi
 
@@ -54,19 +56,34 @@ Navigazione personale **senza** link pubblici: rubrica, allow list, **schermata 
 
 ---
 
-## 3. Promesse
+## 3. Equivalenza a strati (link vs chiave messaggistica)
+
+Due livelli distinti — **non** contraddizione da ridiscutere:
+
+| Livello | `mario` vs `mario@mio_server` |
+|---------|-------------------------------|
+| **Link / lookup profilo locale** | Entrambe valide; se `@server` = istanza corrente, stesso profilo (`shareable_link.dart`: stesso `localUsername`, `normalizedAddress` può differire) |
+| **Chiave `peer_address` / allow list / inbox / storico** | **Distinte** — stringhe diverse = conversazioni diverse — vedi [PROM-CHAT-PEER-KEY](./PROM-CHAT-PEER-KEY.md) §2 |
+| **Link in uscita (Condividi)** | Forma canonica preferita: bare `username` (`canonicalShareableAddress`, PROM-SHAREABLE-LINK-030) |
+
+Amend esplicito: non unificare i due livelli.
+
+---
+
+## 4. Promesse
 
 ### MUST — formato e semantica
 
 | ID | Promessa |
 |----|----------|
 | **PROM-SHAREABLE-LINK-001** | Fragment `#` obbligatorio per ogni link condivisibile |
-| **PROM-SHAREABLE-LINK-002** | `{indirizzo}` accetta **sia** `username` **sia** `username@server` — nessuna distinzione semantica tra i due formati |
+| **PROM-SHAREABLE-LINK-002** | `{indirizzo}` accetta **sia** `username` **sia** `username@server` — per **link e lookup profilo locale**, entrambe valide; per **chiave messaggistica** (`peer_address`), le forme sono **distinte** — vedi §3 |
 | **PROM-SHAREABLE-LINK-003** | `#indirizzo` → profilo pubblico del peer (scheda identità: allow, rubrica, ecc. — vedi [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md)) |
 | **PROM-SHAREABLE-LINK-004** | `#indirizzo/chat` → conversazione con quel peer sull'account in focus — [PROM-CHAT-PEER-KEY](./PROM-CHAT-PEER-KEY.md); **non** lasciare visibile chat con altro peer |
 | **PROM-SHAREABLE-LINK-005** | Il link identifica la **risorsa**, non l'account Alfred del visitatore — nessun segmento «account viewer» nell'URL |
-| **PROM-SHAREABLE-LINK-006** | Peer/gruppo **inesistente** o indirizzo non risolvibile → **risorsa non trovata** (404 o equivalente UI) |
+| **PROM-SHAREABLE-LINK-006** | Indirizzo **malformato** o peer **inesistente** (lookup locale fallito e nessun profilo federato) → **risorsa non trovata** (404 o equivalente UI). **Non** 404 solo perché il peer non ha `profiles.id` locale — indirizzi `user@other-server` validi aprono profilo/chat con fallback indirizzo grezzo finché wire profilo federato non è live |
 | **PROM-SHAREABLE-LINK-007** | Link condivisibile **non** espone `profile_id`, `thread_id` né altri id interni |
+| **PROM-SHAREABLE-LINK-008** | Apertura da fragment: `peer_address` dal fragment → chat/overlay; `get_profiles([…])` in async; fallback indirizzo grezzo |
 
 ### MUST — apertura e multi-account
 
@@ -101,15 +118,11 @@ Navigazione personale **senza** link pubblici: rubrica, allow list, **schermata 
 | **PROM-SHAREABLE-LINK-042** | Segmento URL legato all'account in focus del visitatore |
 | **PROM-SHAREABLE-LINK-043** | Usare **solo** clipboard al posto del foglio Condividi di sistema |
 | **PROM-SHAREABLE-LINK-044** | `#indirizzo/chat` che lascia visibile chat con peer diverso da quello linkato |
-
-### Federazione
-
-Federazione **in pausa** — vedi [address-based-messaging.md](../../../decisions/address-based-messaging.md). Indirizzi su server non raggiungibili da questa istanza: gestione come oggi (non oggetto di questa promessa oltre a **risorsa non trovata**).
+| **PROM-SHAREABLE-LINK-045** | Rifiutare indirizzi `user@other-server` solo perché assenti da `profiles` locale |
 
 ---
 
-
-## 4. Modello (riferimento)
+## 5. Modello (riferimento)
 
 | Elemento | Artefatto |
 |----------|-----------|
@@ -120,24 +133,25 @@ Federazione **in pausa** — vedi [address-based-messaging.md](../../../decision
 
 **Implementazione (non vincolante):** [docs/guides/shareable-link.md](../../../guides/shareable-link.md)
 
+---
 
-## 4. Superfici conformi
+## 6. Superfici conformi
 
 | Superficie | Stato | File |
 |------------|-------|------|
-| SURF-PEER-PROFILE | `implemented` | [SURF-PEER-PROFILE.md](../../surfaces/SURF-PEER-PROFILE.md) — Condividi |
-| SURF-CHAT | `implemented` | [SURF-CHAT.md](../../surfaces/SURF-CHAT.md) — apertura da `#…/chat` |
+| SURF-PEER-PROFILE | `approved` | [SURF-PEER-PROFILE.md](../../surfaces/SURF-PEER-PROFILE.md) — Condividi |
+| SURF-CHAT | `approved` | [SURF-CHAT.md](../../surfaces/SURF-CHAT.md) — apertura da `#…/chat` |
 | SURF-AUTH | `implemented` | [SURF-AUTH.md](../../surfaces/SURF-AUTH.md) — pending link con 0 account |
 | SURF-ACCOUNT-SIDEBAR | `implemented` | [SURF-ACCOUNT-SIDEBAR.md](../../surfaces/SURF-ACCOUNT-SIDEBAR.md) — Condividi account attivo |
 
 ---
 
-## 5. Tracciabilità
+## 7. Tracciabilità
 
 | PROM-ID | Verifica |
 |---------|----------|
-| PROM-SHAREABLE-LINK-001, 002 | `shareable_link_test.dart` — parse fragment, equivalenza formati |
-| PROM-SHAREABLE-LINK-003, 006 | Scenario manuale / widget — `#test2` apre profilo; indirizzo assente → non trovato |
+| PROM-SHAREABLE-LINK-001, 002 | `shareable_link_test.dart` — parse fragment, equivalenza formati link |
+| PROM-SHAREABLE-LINK-003, 006, 008, 045 | Scenario manuale / widget — `#test2` apre profilo; `#mario@other-server` apre con fallback; indirizzo malformato → non trovato |
 | PROM-SHAREABLE-LINK-004 | Scenario manuale — `#test2/chat` apre chat; `shareable_link_stale_chat_verification_test.dart` |
 | PROM-SHAREABLE-LINK-010, 011 | Scenario manuale — 0 account → auth → profilo linkato |
 | PROM-SHAREABLE-LINK-020, 021, 022 | `peer_profile_overlay_test.dart` — Condividi → `ShareParams` |
@@ -148,12 +162,12 @@ Gate (post-implementazione): `bash scripts/check-spec-sync.sh` + `cd client && b
 
 ---
 
-## 6. Riferimenti
+## 8. Riferimenti
 
 | Documento | Ruolo |
 |-----------|--------|
 | [registry.md](../../registry.md) | Indice promesse |
-| [PROM-CHAT-PEER-KEY](./PROM-CHAT-PEER-KEY.md) | Chiave conversazione per peer |
+| [PROM-CHAT-PEER-KEY](./PROM-CHAT-PEER-KEY.md) | Chiave conversazione per `peer_address` |
 | [PROM-PEER-PROFILE](./PROM-PEER-PROFILE.md) | Scheda profilo peer |
 | [PROM-MULTI-ACCOUNT](./PROM-MULTI-ACCOUNT.md) | Manifest, overlay auth, focus |
 | [address-based-messaging.md](../../../decisions/address-based-messaging.md) | Indirizzo IM |

@@ -16,7 +16,7 @@ String authorLabelForProfile(ProfileSummary profile) {
 /// Arricchisce [message] con nome e avatar dell'autore del contenuto.
 ChatMessage enrichMessageAuthor({
   required ChatMessage message,
-  required Map<String, ProfileSummary> profilesById,
+  required Map<String, ProfileSummary> profilesByAddress,
   required String currentUserId,
 }) {
   final authorId = message.contentAuthorId ?? message.authorId;
@@ -29,7 +29,7 @@ ChatMessage enrichMessageAuthor({
     );
   }
 
-  final profile = profilesById[authorId];
+  final profile = profilesByAddress[authorId];
   if (profile == null) return message;
 
   return message.copyWith(

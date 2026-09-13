@@ -2,42 +2,22 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { execSync } from 'node:child_process';
-
 import { expect } from '@playwright/test';
 
 import {
+  isMessageFromSender,
   listPeerMessages,
   loginSupabase,
-  peerAuthorId,
   type PeerMessage,
   waitForMessageInDb,
 } from './supabase-api';
 import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
 
-async function fetchImageRowsForArchiveUser(
-  focusUserId: string,
-  peerUserId: string,
-): Promise<PeerMessage[]> {
-  const sql =
-    `SELECT coalesce(json_agg(row_to_json(t)), '[]'::json) FROM (` +
-    `SELECT id, body, author_id, content_type, media_url, delivered_at, read_at ` +
-    `FROM public.messages ` +
-    `WHERE archive_user_id = '${focusUserId}' AND peer_profile_id = '${peerUserId}' AND content_type = 'image' ` +
-    `ORDER BY created_at DESC LIMIT 20` +
-    `) t;`;
-  const raw = execSync(
-    `docker exec -i supabase_db_alfred psql -U postgres -d postgres -t -A -c ${JSON.stringify(sql)}`,
-    { encoding: 'utf8' },
-  ).trim();
-  if (!raw) return [];
-  return JSON.parse(raw) as PeerMessage[];
-}
-
 export type AccountCredentials = {
   email: string;
   password: string;
   userId: string;
+  username: string;
 };
 
 /** Messaggio in archivio mittente e destinatario (gate backend). */
@@ -51,17 +31,17 @@ export async function expectMessagePersistedBothSides(options: {
   const senderRow = await waitForMessageInDb({
     viewerEmail: options.sender.email,
     viewerPassword: options.sender.password,
-    peerProfileId: options.recipient.userId,
+    peerAddress: options.recipient.username,
     body: options.body,
-    expectedSenderId: options.sender.userId,
+    expectedSender: options.sender,
     contentType,
   });
   await waitForMessageInDb({
     viewerEmail: options.recipient.email,
     viewerPassword: options.recipient.password,
-    peerProfileId: options.sender.userId,
+    peerAddress: options.sender.username,
     body: options.body,
-    expectedSenderId: options.sender.userId,
+    expectedSender: options.sender,
     contentType,
   });
   return senderRow;
@@ -70,7 +50,7 @@ export async function expectMessagePersistedBothSides(options: {
 /** Attende read_at sulla copia mittente (spunta blu backend). */
 export async function waitForSenderReadAt(options: {
   sender: AccountCredentials;
-  peerUserId: string;
+  peerAddress: string;
   body?: string;
   contentType?: string;
   timeoutMs?: number;
@@ -84,11 +64,11 @@ export async function waitForSenderReadAt(options: {
   while (Date.now() < deadline) {
     const messages = await listPeerMessages(
       session.accessToken,
-      options.peerUserId,
+      options.peerAddress,
     );
     const token = options.body?.match(/\d{8,}/)?.[0] ?? options.body;
     const row = messages.find((m) => {
-      if (peerAuthorId(m) !== options.sender.userId || m.read_at == null) {
+      if (!isMessageFromSender(m, options.sender) || m.read_at == null) {
         return false;
       }
       if (options.contentType === 'image') {
@@ -103,39 +83,48 @@ export async function waitForSenderReadAt(options: {
     await new Promise((r) => setTimeout(r, 500));
   }
 
-  const last = await listPeerMessages(session.accessToken, options.peerUserId);
+  const last = await listPeerMessages(session.accessToken, options.peerAddress);
   throw new Error(
-    `read_at assente su copia mittente per "${options.body}" (peer=${options.peerUserId}). Ultimi: ${JSON.stringify(last.slice(-4).map((m) => ({ body: m.body, read_at: m.read_at, content_type: m.content_type })))}`,
+    `read_at assente su copia mittente per "${options.body}" (peer=${options.peerAddress}). Ultimi: ${JSON.stringify(last.slice(-4).map((m) => ({ body: m.body, read_at: m.read_at, content_type: m.content_type })))}`,
   );
 }
 
-/** Attende messaggio immagine con media_url valorizzato. */
+/** Attende messaggio immagine con media_url valorizzato (via RPC list_peer_messages). */
 export async function waitForImageMessageInDb(options: {
   viewer: AccountCredentials;
-  peerUserId: string;
-  expectedSenderId: string;
+  peerAddress: string;
+  expectedSender: AccountCredentials;
   caption?: string;
   timeoutMs?: number;
 }): Promise<PeerMessage> {
-  const deadline = Date.now() + (options.timeoutMs ?? E2E_TIMEOUT.db * 6);
+  const deadline = Date.now() + (options.timeoutMs ?? E2E_TIMEOUT.db * 8);
+  const session = await loginSupabase(
+    options.viewer.email,
+    options.viewer.password,
+  );
+  const captionToken =
+    options.caption?.match(/\d{8,}/)?.[0] ?? options.caption ?? '';
 
   while (Date.now() < deadline) {
-    const messages = await fetchImageRowsForArchiveUser(
-      options.viewer.userId,
-      options.peerUserId,
+    const messages = await listPeerMessages(
+      session.accessToken,
+      options.peerAddress,
     );
     const row = messages.find(
       (m) =>
-        peerAuthorId(m) === options.expectedSenderId &&
+        isMessageFromSender(m, options.expectedSender) &&
         m.content_type === 'image' &&
-        (m.media_url?.length ?? 0) > 0,
+        (m.media_url?.length ?? 0) > 0 &&
+        (captionToken.length === 0 ||
+          m.body === options.caption ||
+          m.body.includes(captionToken)),
     );
     if (row) return row;
     await new Promise((r) => setTimeout(r, 500));
   }
 
   throw new Error(
-    `messaggio image assente (viewer=${options.viewer.email}, peer=${options.peerUserId})`,
+    `messaggio image assente (viewer=${options.viewer.email}, peer=${options.peerAddress})`,
   );
 }
 
@@ -146,14 +135,14 @@ export async function expectImagePersistedBothSides(options: {
 }) {
   await waitForImageMessageInDb({
     viewer: options.sender,
-    peerUserId: options.recipient.userId,
-    expectedSenderId: options.sender.userId,
+    peerAddress: options.recipient.username,
+    expectedSender: options.sender,
     caption: options.caption,
   });
   await waitForImageMessageInDb({
     viewer: options.recipient,
-    peerUserId: options.sender.userId,
-    expectedSenderId: options.sender.userId,
+    peerAddress: options.sender.username,
+    expectedSender: options.sender,
     caption: options.caption,
   });
 }
@@ -161,7 +150,7 @@ export async function expectImagePersistedBothSides(options: {
 /** Poll backend finché delivered_at è valorizzato (doppia spunta grigia). */
 export async function waitForSenderDeliveredAt(options: {
   sender: AccountCredentials;
-  peerUserId: string;
+  peerAddress: string;
   body: string;
 }): Promise<PeerMessage> {
   await expect
@@ -173,13 +162,13 @@ export async function waitForSenderDeliveredAt(options: {
         );
         const messages = await listPeerMessages(
           session.accessToken,
-          options.peerUserId,
+          options.peerAddress,
         );
         const token = options.body.match(/\d{8,}/)?.[0] ?? options.body;
         const row = messages.find(
           (m) =>
             (m.body === options.body || m.body.includes(token)) &&
-            peerAuthorId(m) === options.sender.userId,
+            isMessageFromSender(m, options.sender),
         );
         return row?.delivered_at != null;
       },
@@ -193,15 +182,12 @@ export async function waitForSenderDeliveredAt(options: {
   );
   const messages = await listPeerMessages(
     session.accessToken,
-    options.peerUserId,
+    options.peerAddress,
   );
+  const token = options.body.match(/\d{8,}/)?.[0] ?? options.body;
   return messages.find(
-    (m) => {
-      const token = options.body.match(/\d{8,}/)?.[0] ?? options.body;
-      return (
-        (m.body === options.body || m.body.includes(token)) &&
-        peerAuthorId(m) === options.sender.userId
-      );
-    },
+    (m) =>
+      (m.body === options.body || m.body.includes(token)) &&
+      isMessageFromSender(m, options.sender),
   )!;
 }

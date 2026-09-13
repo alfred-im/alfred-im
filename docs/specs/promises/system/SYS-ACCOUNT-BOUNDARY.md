@@ -52,7 +52,7 @@ Violazioni note (debito risolto da SYS-DELIVERY): `send_message_to_profile` che 
 | Elemento | Documento / codice |
 |----------|-------------------|
 | Schema `alfred_delivery` | `supabase/migrations/*account_boundary*` |
-| RPC account refactored | `send_message_to_profile`, `mark_peer_read`, `broadcast_message_to_allowlist` |
+| RPC account refactored | `send_message_to_address`, `mark_peer_read`, `broadcast_message_to_allowlist` |
 | Worker sincrono locale (stessa istanza) | `alfred_delivery.process_outbox` |
 | Revoke helper da client | `20260707190000_revoke_helper_rpc_from_authenticated.sql` |
 

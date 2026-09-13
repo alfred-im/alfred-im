@@ -10,7 +10,7 @@ void main() {
     test('canonicalKey is recipient|peer', () {
       const key = PushConversationKey(
         recipientUserId: 'account-a',
-        peerProfileId: 'peer-b',
+        peerAddress: 'peer-b',
       );
       expect(key.canonicalKey, 'account-a|peer-b');
     });
@@ -18,7 +18,7 @@ void main() {
     test('tryParseCanonical round-trips', () {
       const original = PushConversationKey(
         recipientUserId: 'account-a',
-        peerProfileId: 'peer-b',
+        peerAddress: 'peer-b',
       );
       expect(
         PushConversationKey.tryParseCanonical('account-a|peer-b'),
@@ -37,28 +37,28 @@ void main() {
       expect(
         PushConversationKey.tryFromPayload({
           'recipientUserId': 'account-a',
-          'peerProfileId': 'peer-b',
+          'peerAddress': 'peer-b',
         }),
         const PushConversationKey(
           recipientUserId: 'account-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
         ),
       );
       expect(
         PushConversationKey.tryFromPayload({
           'recipient_user_id': 'account-a',
-          'peer_profile_id': 'peer-b',
+          'peer_address': 'peer-b',
         }),
         const PushConversationKey(
           recipientUserId: 'account-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
         ),
       );
     });
 
     test('tryFromPayload rejects incomplete pair', () {
       expect(
-        PushConversationKey.tryFromPayload({'peerProfileId': 'peer-b'}),
+        PushConversationKey.tryFromPayload({'peerAddress': 'peer-b'}),
         isNull,
       );
       expect(
@@ -68,7 +68,7 @@ void main() {
       expect(
         PushConversationKey.tryFromPayload({
           'recipientUserId': 'x',
-          'peerProfileId': 'x',
+          'peerAddress': 'x',
         }),
         isNull,
       );
@@ -77,7 +77,7 @@ void main() {
     test('notificationTag includes account and peer', () {
       const key = PushConversationKey(
         recipientUserId: 'account-a',
-        peerProfileId: 'peer-b',
+        peerAddress: 'peer-b',
       );
       expect(
         key.notificationTag('msg-uuid'),
@@ -89,11 +89,11 @@ void main() {
     test('distinct tags for same peer on different accounts', () {
       const keyA = PushConversationKey(
         recipientUserId: 'account-a',
-        peerProfileId: 'shared-peer',
+        peerAddress: 'shared-peer',
       );
       const keyB = PushConversationKey(
         recipientUserId: 'account-b',
-        peerProfileId: 'shared-peer',
+        peerAddress: 'shared-peer',
       );
       expect(
         keyA.notificationTag('same-logical-id'),
@@ -105,7 +105,7 @@ void main() {
       expect(
         PushConversationKey.outboundQueueKey(
           recipientUserId: 'account-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
         ),
         'account-a|peer-b',
       );
@@ -114,12 +114,12 @@ void main() {
     test('shouldSuppressInForeground matches account+peer only', () {
       const key = PushConversationKey(
         recipientUserId: 'account-b',
-        peerProfileId: 'peer-a',
+        peerAddress: 'peer-a',
       );
       expect(
         key.shouldSuppressInForeground(
           focusUserId: 'account-b',
-          activePeerProfileId: 'peer-a',
+          activePeerAddress: 'peer-a',
           appVisible: true,
         ),
         isTrue,
@@ -127,7 +127,7 @@ void main() {
       expect(
         key.shouldSuppressInForeground(
           focusUserId: 'account-a',
-          activePeerProfileId: 'peer-a',
+          activePeerAddress: 'peer-a',
           appVisible: true,
         ),
         isFalse,
@@ -135,7 +135,7 @@ void main() {
       expect(
         key.shouldSuppressInForeground(
           focusUserId: 'account-b',
-          activePeerProfileId: 'peer-other',
+          activePeerAddress: 'peer-other',
           appVisible: true,
         ),
         isFalse,
@@ -143,7 +143,7 @@ void main() {
       expect(
         key.shouldSuppressInForeground(
           focusUserId: 'account-b',
-          activePeerProfileId: 'peer-a',
+          activePeerAddress: 'peer-a',
           appVisible: false,
         ),
         isFalse,

@@ -19,10 +19,10 @@ BEGIN
   END IF;
 
   DELETE FROM public.reception_allowlist
-  WHERE archive_user_id = v_agent1 AND allowed_profile_id = v_agent2;
+  WHERE archive_user_id = v_agent1 AND allowed_address = 'ciagent2';
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
-  VALUES (v_agent2, v_agent1)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
+  VALUES (v_agent2, 'ciagent1')
   ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
   PERFORM set_config(
@@ -32,8 +32,8 @@ BEGIN
   );
 
   BEGIN
-    PERFORM public.send_message_to_profile(
-      v_agent2,
+    PERFORM public.send_message_to_address(
+      'ciagent2',
       'outbound gate reject',
       v_client_reject,
       'text'::public.message_content_type
@@ -55,12 +55,12 @@ BEGIN
     RAISE EXCEPTION 'outbound reject: must not persist sender copy';
   END IF;
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
-  VALUES (v_agent1, v_agent2)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
+  VALUES (v_agent1, 'ciagent2')
   ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
-  SELECT * INTO v_sender FROM public.send_message_to_profile(
-    v_agent2,
+  SELECT * INTO v_sender FROM public.send_message_to_address(
+    'ciagent2',
     'outbound gate allow',
     v_client_allow,
     'text'::public.message_content_type

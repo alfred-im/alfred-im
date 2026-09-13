@@ -17,7 +17,7 @@ Client web collegato a Supabase (contatti, inbox, chat realtime, profilo, **mult
 | **Deploy** | Fly: `bash scripts/fly-deploy-client.sh` (Arkham) / `bash scripts/fly-deploy-blackgate.sh` (Blackgate) — vedi `deploy/README.md` |
 | **Layout** | Lista inbox + chat (stile WhatsApp Web) |
 | **Inbox** | RPC `list_inbox()` — aggregazione on-read su `messages` |
-| **Chat** | Identificata da `peer_profile_id` (`ChatPeer`) |
+| **Chat** | Identificata da `peer_address` (`ChatPeer.address`) |
 | **Media** | Testo, GIF, voice (WebM/Opus), foto, video, location (mappa OSM) |
 | **Web Push** | Notifiche browser (VAPID) — `SYS-PUSH` |
 | **Nuovo messaggio** | FAB → username → stessa chat (vuota o con storico) |
@@ -27,7 +27,7 @@ Client web collegato a Supabase (contatti, inbox, chat realtime, profilo, **mult
 | **Gruppi** | Account `profile_kind = group`; `GroupHomePanel` + chat; partecipazione allow list bidirezionale — `SYS-GROUP` |
 | **Reazioni** | Tap messaggio → overlay reazioni — `PROM-MESSAGE-REACTIONS` |
 | **@mentions** | Evidenziazione e navigazione @username in chat — `PROM-MESSAGE-MENTION` |
-| **Invio** | `send_message_to_profile` |
+| **Invio** | `send_message_to_address` |
 | **Gate test** | `verify.sh` — **487** test unit/widget (zero issue analyze) |
 
 Build native mobile/desktop non è focus del progetto oggi; la superficie supportata è il web client.

@@ -1,6 +1,6 @@
 # Gotham — protocollo federazione Alfred
 
-**Ultima revisione:** 2026-09-09  
+**Ultima revisione:** 2026-09-13  
 **Stato:** `documented` — wire contract definito; runtime non implementato  
 **Audience:** AI / implementazione gateway e worker Gotham
 
@@ -37,7 +37,7 @@ Ogni fatto ha **un nome preciso**. Non esistono campi generici `event_id` o `ext
 
 | Fatto | Campo id | Chi lo assegna | Quando |
 |-------|----------|----------------|--------|
-| **Messaggio** (testo, media, location) | `logical_message_id` | Server **mittente** | Accettazione invio (`send_message_to_profile`) |
+| **Messaggio** (testo, media, location) | `logical_message_id` | Server **mittente** | Accettazione invio (`send_message_to_address`) |
 | **Lettura** | `read_receipt_id` | Server **lettore** | `mark_peer_read` |
 | **Reaction** | `reaction_fact_id` | Server **chi reagisce** | Accettazione reaction (`apply_message_reaction` / worker) |
 
@@ -212,29 +212,30 @@ Stesso bus **outbox** per recapito locale e federato; differisce solo il consume
 
 | Gotham `kind` | `outbox.event_kind` | Payload outbox (campi chiave) |
 |---------------|---------------------|-------------------------------|
-| MESSAGE / LOCATION | `deliver` | `logical_message_id`, snapshot contenuto; **locale:** `recipient_profile_id`; **federato:** `peer_external_address` |
-| READ | `read_receipt` | `logical_message_id`, `read_receipt_id`; **locale:** `reader_id`, `sender_profile_id`; **federato:** indirizzi wire |
-| REACTION | `reaction_fact` | `logical_message_id`, `reaction_fact_id`, `kind`, `emoji`; **federato:** indirizzi wire |
+| MESSAGE / LOCATION | `deliver` | `logical_message_id`, snapshot contenuto; **`peer_address`** destinatario (locale o federato) |
+| READ | `read_receipt` | `logical_message_id`, `read_receipt_id`; indirizzi wire (`reader_address`, `sender_address`) |
+| REACTION | `reaction_fact` | `logical_message_id`, `reaction_fact_id`, `kind`, `emoji`; indirizzi wire |
 
 ### 5.1 Outbound (istanza mittente → peer)
 
 ```text
 1. RPC account
-     Locale:  send_message_to_profile(recipient_profile_id, …)
-     Federato: send_message_to_external_address(peer_external_address, …)  ← con Gotham
-     → gate outbound allow list (§ 5.4)
-     → INSERT copia mittente (logical_message_id mintato; peer_profile_id O peer_external_address)
+     send_message_to_address(p_peer_address, …)
+     → gate outbound allow list (§ 5.4) su p_peer_address
+     → INSERT copia mittente (logical_message_id mintato; peer_address = p_peer_address)
      → INSERT outbox (event_kind=deliver, status=queued)
 
-2. Stessa istanza: worker `alfred_delivery.process_outbox` sincrono
-   Altra istanza: outbox resta `queued` → worker Gotham → POST /gotham/v1/events
+2. Stessa istanza (server di p_peer_address = im_server_id locale):
+     worker `alfred_delivery.process_outbox` sincrono
+   Altra istanza:
+     outbox resta `queued` → worker Gotham → POST /gotham/v1/events
 
 3. HTTP 2xx dal peer (federato)
      → delivered_at sulla copia mittente
      → outbox completed
 ```
 
-Routing **senza colonna protocol**: `peer_profile_id` valorizzato = recapito locale; `peer_external_address` = federato.
+Routing **senza colonna protocol**: il server in `peer_address` (`user@server`) determina recapito locale vs federato.
 
 ### 5.2 Inbound (peer → istanza destinatario)
 
@@ -244,18 +245,18 @@ Routing **senza colonna protocol**: `peer_profile_id` valorizzato = recapito loc
 2. Worker federativo valida envelope (kind, indirizzi normalizzati, id dedup)
 
 3. Gate reception (allow list destinatario) — § 5.4
-     confronto envelope.from_address con allowed_external_address del destinatario
+     confronto envelope.from_address con allowed_address del destinatario
 
 4. SE consentito:
        MESSAGE / LOCATION → materialize copia destinatario
-         (logical_message_id remoto; peer_external_address = from_address; peer_profile_id null)
+         (logical_message_id remoto; peer_address = from_address; author_address = from_address)
        READ    → propaga read_at + read_receipt_id sulla copia mittente locale (per λ)
        REACTION→ INSERT message_reaction_facts
 
 5. HTTP 2xx (anche su rifiuto silenzioso allow list — evento processato, nessuna copia)
 ```
 
-L’helper attuale `materialize_inbound_sender_message` (profile_id locale mittente) **non** è sufficiente per Gotham: va esteso o affiancato da una variante **indirizzo-based** — vedi § 5.4.
+Materializzazione inbound federata: variante **indirizzo-based** su `peer_address` / `author_address` — vedi § 5.4.
 
 ### 5.3 Spunte
 
@@ -267,36 +268,29 @@ L’helper attuale `materialize_inbound_sender_message` (profile_id locale mitte
 
 Semantica UI: [server-as-reception.md](../decisions/server-as-reception.md).
 
-### 5.4 Reception — allow list locale ed esterna (con Gotham)
+### 5.4 Reception — allow list address-based (con Gotham)
 
-Stessa semantica [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) del recapito locale, estesa agli indirizzi federati. La lista **non** è solo profili locali: ogni titolare archivio può consentire **utenti Alfred sulla stessa istanza** e **indirizzi `user@server` su altre istanze**. Stesso modello della rubrica (`contacts`: `linked_profile_id` **oppure** `external_address`).
+Stessa semantica [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) del recapito locale, estesa agli indirizzi federati. Ogni titolare archivio consente mittenti tramite **`allowed_address`** (`username` bare o `user@server`). Stesso modello della rubrica (`contacts.address`).
 
-**Implementazione:** introdotta **insieme a Gotham** (oggi `reception_allowlist` ha solo `allowed_profile_id` — vedi § 6).
+**Piattaforma (implementato):** `reception_allowlist.allowed_address` — vedi [schema.md](../specs/contracts/schema.md).
 
-#### Schema `reception_allowlist` (target)
+#### Schema `reception_allowlist`
 
 | Colonna | Uso |
 |---------|-----|
-| `archive_user_id` | Titolare archivio che filtra (invariato) |
-| `allowed_profile_id` | Peer **stessa istanza** (`profiles.id`) |
-| `allowed_external_address` | Peer **federato** (`username@im_server_id`) |
+| `archive_user_id` | Titolare archivio che filtra |
+| `allowed_address` | Mittente consentito — `username` o `user@server` (lowercase) |
 
-**Vincoli:**
-
-- Esattamente **uno** tra `allowed_profile_id` e `allowed_external_address` valorizzato (mutua esclusione, come `contacts`).
-- `allowed_external_address` normalizzato: `lower(username)@lower(server)`.
-- UNIQUE `(archive_user_id, allowed_profile_id)` dove `allowed_profile_id IS NOT NULL`.
-- UNIQUE `(archive_user_id, lower(allowed_external_address))` dove `allowed_external_address IS NOT NULL`.
-- `allowed_profile_id <> archive_user_id` se valorizzato.
+**Vincoli:** UNIQUE `(archive_user_id, allowed_address)`; `allowed_address` ≠ indirizzo del titolare archivio.
 
 #### Gate inbound (destinatario riceve da peer remoto)
 
-Condizione recapito federato (equivalente a SYS-RECEPTION-006 per profili locali):
+Condizione recapito federato (equivalente a SYS-RECEPTION-006):
 
 ```text
 EXISTS reception_allowlist
   WHERE archive_user_id = destinatario_locale
-    AND allowed_external_address = normalize(envelope.from_address)
+    AND allowed_address = normalize(envelope.from_address)
 ```
 
 - Lista vuota → nessun `from_address` passa → nessuna copia destinatario (silenzio verso mittente remoto).
@@ -310,41 +304,40 @@ Prima di INSERT copia mittente federata:
 ```text
 EXISTS reception_allowlist
   WHERE archive_user_id = mittente_locale
-    AND allowed_external_address = normalize(destinazione)
+    AND allowed_address = normalize(p_peer_address)
 ```
 
 Su violazione: `raise exception 'recipient not in reception allowlist'` — **nessuna** copia mittente (come outbound locale, SYS-RECEPTION-031).
 
-#### RPC invio federato (piattaforma, con Gotham)
+#### RPC invio (piattaforma)
 
-Nuovo punto di invio account (nome indicativo):
+Punto di invio unificato (locale e federato):
 
 ```sql
-send_message_to_external_address(
-  p_peer_external_address text,
-  … stessi campi contenuto di send_message_to_profile …
+send_message_to_address(
+  p_peer_address text,
+  … campi contenuto …
 ) → messages
 ```
 
-Semantica:
+Semantica federata (server di `p_peer_address` ≠ `im_server_id` locale):
 
-1. Normalizza `p_peer_external_address`; rifiuta se `server` = `im_server_id` locale (usa flusso locale).
-2. Gate outbound § sopra.
-3. INSERT copia mittente: `peer_external_address` valorizzato, `peer_profile_id` null, `logical_message_id` mintato.
-4. INSERT `outbox` (`event_kind = deliver`, `status = queued`, payload con `peer_external_address`).
-5. **Non** chiama `process_outbox` sincrono — il consumer Gotham claima la riga.
+1. Normalizza `p_peer_address`; gate outbound § sopra.
+2. INSERT copia mittente: `peer_address` = `p_peer_address`, `logical_message_id` mintato.
+3. INSERT `outbox` (`event_kind = deliver`, `status = queued`, payload con `peer_address`).
+4. **Non** chiama `process_outbox` sincrono — il consumer Gotham claima la riga.
 
 Il client smette di rifiutare il compose verso `user@server` quando Gotham è attivo ([SYS-MAILBOX-030](../specs/promises/system/SYS-MAILBOX.md) revocato per federazione).
 
 #### Materializzazione inbound (copia destinatario)
 
-Nuova RPC/helper (o estensione di `materialize_inbound_sender_message`):
+Helper federato (indirizzo-based):
 
 ```sql
-materialize_inbound_federated_message(
-  p_recipient_profile_id uuid,      -- auth.uid() / destinatario locale
-  p_from_address text,              -- envelope.from_address normalizzato
-  p_logical_message_id uuid,        -- dal server mittente remoto — mai rigenerare
+alfred_delivery.materialize_inbound_sender_message(
+  p_recipient_profile_id uuid,      -- destinatario locale
+  p_sender_address text,            -- envelope.from_address normalizzato
+  p_sender_message_id uuid,         -- logical_message_id dal server mittente remoto — mai rigenerare
   … snapshot contenuto …
 ) → messages
 ```
@@ -354,25 +347,20 @@ Riga archivio destinatario:
 | Campo | Valore |
 |-------|--------|
 | `archive_user_id` | destinatario locale |
-| `peer_external_address` | `p_from_address` |
-| `peer_profile_id` | null |
+| `peer_address` | `p_sender_address` |
+| `author_address` | `p_sender_address` |
 | `logical_message_id` | dal mittente remoto |
-| `author_external_address` | `p_from_address` (nuova colonna — vedi sotto) |
-| `author_id` | null su ingresso federato |
+| `author_id` | null su ingresso federato (opzionale se profilo locale esiste) |
 
-**Autore senza profilo locale:** il mittente remoto non ha `profiles.id` sulla istanza destinataria. Estensione `messages`:
-
-- `author_external_address text nullable` — valorizzato su messaggi in entrata federati.
-- CHECK: messaggio in entrata ha `author_id` **oppure** `author_external_address` (uno dei due).
-- UI / inbox: display da rubrica (`contacts.external_address`) o da `from_address`; nessun profilo shadow obbligatorio in `profiles`.
+**Autore senza profilo locale:** il mittente remoto non ha `profiles.id` sulla istanza destinataria. Display da rubrica (`contacts.address`) o da `author_address`; nessun profilo shadow obbligatorio in `profiles`.
 
 #### UI allow list (riferimento superficie)
 
-Allineata a [SURF-CONTACTS-007](../specs/surfaces/SURF-CONTACTS.md):
+Allineata a [SURF-ALLOWLIST](../specs/surfaces/SURF-ALLOWLIST.md):
 
-- Aggiunta **locale:** `search_profiles` → `allowed_profile_id`.
-- Aggiunta **federata:** form `user@server` + etichetta → `allowed_external_address`.
-- Lista mostra nome / `@username` per locali e indirizzo completo per federati.
+- Aggiunta locale: `search_profiles` → `allowed_address` (bare username).
+- Aggiunta federata: form `user@server` → `allowed_address`.
+- Lista: display via `get_profiles([allowed_address])` o indirizzo grezzo.
 
 #### READ / REACTION federati sul wire
 
@@ -395,16 +383,16 @@ Prerequisiti piattaforma per Gotham (implementati):
 
 | Requisito | Note |
 |-----------|------|
-| `reception_allowlist.allowed_external_address` | § 5.4 — allow list locale + federata |
-| `send_message_to_external_address` | Invio verso `peer_external_address` + outbox federato |
-| `materialize_inbound_federated_message` + `messages.author_external_address` | Inbound senza `profiles.id` mittente |
+| `reception_allowlist.allowed_address` | § 5.4 — **implementato** (locale + federato) |
+| `send_message_to_address` | Invio unificato; outbox federato quando server ≠ locale |
+| `materialize_inbound_sender_message` | Inbound con `peer_address` / `author_address` |
 | Consumer outbox federato + Gotham ingress (HTTP/3) | § 7 |
 
 Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `group_erogate`, `push_notify`.
 
 `push_notify` è **solo locale** (piattaforma): accodato dal worker dopo recapito locale riuscito ([SYS-PUSH](../specs/promises/system/SYS-PUSH.md)). **Non** compare mai sul wire federato.
 
-**Nessun campo `protocol`:** il routing è implicito — `linked_profile_id` / `peer_profile_id` per contatti locali, `external_address` / `peer_external_address` per indirizzi federati.
+**Nessun campo `protocol`:** il routing è implicito — server in `peer_address` / `allowed_address` / `contacts.address` determina locale vs federato.
 
 ---
 
@@ -491,3 +479,4 @@ I gruppi restano **locale** (stessa istanza) — `group_erogate`, `broadcast_mes
 | 2026-09-08 | Rimosso `contact_protocol`; routing implicito; solo Gotham come federazione |
 | 2026-09-09 | `media_url` wire: ingest locale destinatario obbligatorio — vedi mailbox § Media |
 | 2026-09-09 | § 5.4 — `reception_allowlist` locale + esterna; RPC invio/materialize federato; gate su `from_address` |
+| 2026-09-13 | § 5.4 — modello address-based unificato (`peer_address`, `author_address`, `allowed_address`); TEMP §8 audit risolto |

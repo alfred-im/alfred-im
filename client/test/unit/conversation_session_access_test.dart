@@ -38,7 +38,7 @@ void main() {
           isMessagingSessionReady(
             client: client,
             focusUserId: _archiveUserA,
-            peerProfileId: _peerB,
+            peerAddress: _peerB,
           ),
           isTrue,
         );
@@ -52,7 +52,7 @@ void main() {
           isMessagingSessionReady(
             client: client,
             focusUserId: _archiveUserA,
-            peerProfileId: _peerB,
+            peerAddress: _peerB,
           ),
           isFalse,
         );
@@ -87,14 +87,14 @@ void main() {
       MessagesController misalignedController() {
         final scope = testConversationScope(
           userId: _archiveUserA,
-          peerProfileId: _peerB,
+          peerAddress: _peerB,
           sessionEpoch: 1,
         );
         return MessagesController(
           scope: scope,
           messageStore: testMessageStoreFor(scope),
           userId: _archiveUserA,
-          peerProfileId: _peerB,
+          peerAddress: _peerB,
           peerMessages: messageService.peerMessages,
           messageMediaService: mediaService,
           inboxService: FakeInboxService(),
@@ -102,7 +102,7 @@ void main() {
           hasValidSession: () => isMessagingSessionReady(
             client: messageService.client,
             focusUserId: _archiveUserA,
-            peerProfileId: _peerB,
+            peerAddress: _peerB,
             whenNoGoTrueSession: () => false,
           ),
           isScopeCommitted: () => true,
