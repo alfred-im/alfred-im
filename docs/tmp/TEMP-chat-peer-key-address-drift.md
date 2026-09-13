@@ -363,6 +363,173 @@ Le quattro voci della quarta passata sono chiuse in §7:
 | D3 Push | Solo `peerAddress`; niente dual-read | §7.19 |
 | D4 «Per ora» §7.2 | Regola valida nel modello corrente; non voce da riaprire | §7.2 |
 
+### 9.1 Catalogo completo domanda → risposta (review 2026-09-13)
+
+Tutte le domande emerse in review (inclusa la lista numerata D–N). **Stato: chiuse** — risposte allineate a §7, §1.2, §7.15.
+
+---
+
+#### A — Contraddizioni documentali
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **A1** | `mario` vs `mario@arkham` nei link: vale l’«equivalenza» di `PROM-SHAREABLE-LINK-002` o la separazione chat di §7.2? | **Due livelli distinti, non in competizione** (§7.14). **Link / lookup profilo locale:** entrambe le forme valide se `@server` = istanza corrente → stesso profilo pubblico (`localUsername`). **Chiave messaggistica** (`peer_address`, allow list, inbox, storico): **stringhe distinte** → chat distinte. **Link in uscita (Condividi):** forma preferita bare `username` (`PROM-SHAREABLE-LINK-030`). La domanda «quale vince» era mal posta: il fragment `#indirizzo/chat` è `peer_address` letterale; non esiste equivalenza tra forme a livello chat. |
+| **A2** | Cos’è «§7 obsoleto» nel TEMP? | Era la **bozza pre-review** («Modello target da concordare») con regole contraddittorie (una sola chiave per encoding; split `peer_profile_id` / `peer_external_address`). **Revocata** e sostituita dal **§7 attuale** («Decisioni di modello chiuse»). Non usare la vecchia struttura §15 parallela. |
+| **A3** | Gotham è indietro rispetto alla correzione massiva? | Il **wire** (envelope, dedup, HTTP) resta valido. **§5.4 e mapping prodotto** (split colonne, RPC `*_external_*`) sono **pre-§7** e vanno **riscritti** nello stesso workstream (§8, §1.2). Amend `gotham-protocol.md` + `gotham.proto` insieme a schema/RPC client — non patch parziale né solo worker runtime. |
+
+---
+
+#### B — Schema `messages`: `author_id`, unread, lettura
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **B1** | `author_id` nei messaggi 1:1? | **`author_id` NULL su 1:1.** Identità messaggio = `author_address` (§7.7). `author_id` valorizzato **solo** flussi gruppo (erogazione, `original_author_id`) — SYS-GROUP. Il delivery risolve username → profilo in transazione senza persistere UUID come chiave. |
+| **B2** | Regola «in entrata» / `unread_count`? | **Entrata** = messaggio non scritto dal titolare archivio, determinato via **`author_address`**, non `author_id` UUID (§7.8). Per 1:1: confronto con l’identità mittente attesa (§7.4 destinatario, §7.5b mittente). `unread_count` = righe in entrata con `read_at IS NULL`. Gruppi: erogazione con `author_address` gruppo → entrata sulla persona. |
+| **B3** | `mark_peer_read(peer_address)` segna tutto il thread? | **Sì.** UPDATE sul mio archivio: `peer_address = p_peer_address`, entrata, `read_at IS NULL` → `read_at = now()` + mint `read_receipt_id` per riga (§7.8). |
+| **B4** | `author_address` sulla copia in uscita (mia)? | **Forma che fa fede nella comunicazione** (§7.5b) — **non** sempre bare: se Paolo compone verso `mario@blackgate-im.fly.dev`, sulla copia Paolo `author_address = paolo@arkham-im.fly.dev`; verso `mario` bare → `paolo`. Allineato a destinatario (§7.4) e wire Gotham. |
+
+---
+
+#### C — Migrazione dati esistenti
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **C1** | Backfill `peer_address` da `peer_profile_id`? | **No.** Wipe messaggi; schema nuovo (§7.15). |
+| **C2** | Backfill `author_address` su storico? | **No.** Stesso wipe §7.15. |
+| **C3** | `allowed_profile_id` → quale forma? | **N/A.** Wipe `reception_allowlist`; schema nuovo con `allowed_address` (§7.15). |
+| **C4** | `linked_profile_id` → quale forma? | **N/A.** Wipe `contacts`; schema nuovo con solo `address` (§7.15, §7.10). |
+| **C5** | Big-bang o fase transitoria? | **Big-bang / clean break** (§1.2): niente colonne parallele, niente `@deprecated`, niente dual-path. |
+| **C6** | Chat duplicate post-migrazione? | **N/A** (wipe). Se ricreate, `mario` e `mario@arkham` restano **due chat** (§7.2). |
+
+---
+
+#### D — Compose e validazione indirizzo
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **D1** | Bare `mario` — quando validare esistenza profilo? | **Due percorsi.** (1) **Compose / rubrica «Scrivi» / inbox:** apre chat se sintassi indirizzo valida; storico vuoto ammesso; header via `get_profiles` async, fallback indirizzo grezzo (§7.9, §7.11). (2) **Primo invio bare locale:** RPC rifiuta se username non esiste su istanza. (3) **Link `#…` bare locale / `@mention`:** risoluzione profilo locale richiesta per link/mention bare — se username assente in `profiles` → 404 (`PROM-MESSAGE-MENTION-004`; link locale §7.14). (4) **Link `#user@other-server`:** apre verso `peer_address` federato senza lookup locale (§7.13). |
+| **D2** | `mario@blackgate` — validazione compose? | **Solo sintassi indirizzo** per aprire chat. Gate allow list + delivery al invio/recapito. Nessun `profiles.id` locale richiesto (§7.1, §7.13). |
+| **D3** | `mario@arkham` su Arkham vs `mario` bare? | **Entrambi accettati; chat distinte.** Delivery interno per `@mio_server` senza fondere stringhe (§7.2). |
+| **D4** | Invio a se stesso? | **Bloccato.** RPC invio rifiuta `peer_address` coincidente con indirizzo del titolare (bare o FQDN). CHECK `allowed_address` ≠ propri indirizzi su allow list (§7.6, §7.7). |
+| **D5** | Username inesistente su istanza remota? | Compose ammesso. Fallimento a **delivery** (outbox `failed_at` / errore Gotham) se irraggiungibile. Inbound: allow list **match letterale** — nessun alias tra forme (§7.5–7.6; gap errori §11). |
+
+---
+
+#### E — RPC e contratti API
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **E1** | Naming RPC invio? | **`send_message_to_address(p_peer_address text, …)`** — sostituisce `send_message_to_profile` e `send_message_to_external_address`. Nessun alias deprecated (§1.2). |
+| **E2** | `list_peer_messages` / `mark_peer_read`? | **Solo `p_peer_address text`.** Nessun overload UUID (§7.8). |
+| **E3** | `get_peer_context`? | **Sostituito da `get_profiles(p_addresses text[])`** per presentazione pubblica (§7.11). Flag relazione allow list/contacts: query dedicate o campi nel batch — **non** chiave chat. Niente UUID come parametro conversazione. |
+| **E4** | `find_profile_by_username` resta? | **Sì** — per `search_profiles`, aggiunta allow list/contatto locale, risoluzione link/mention bare. **Non** per chiave conversazione né inbox (§7.8). |
+| **E5** | Nome reception API inbound? | **`materialize_inbound_message(...)`** — unificata locale + Gotham; solo delivery/gateway, non client (§7.16). Sostituisce helper split / `materialize_inbound_federated_message`. |
+
+---
+
+#### F — Push, realtime, code client
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **F1** | Push payload → `peer_address`? | **Sì.** Breaking accettato; **nessun dual-read** `peerProfileId` (§7.19, §1.2). Amend `push-payload.md`, Edge, SW, client. |
+| **F2** | Chiave runtime client? | **`recipientUserId\|peerAddress`** — `PushConversationKey`, outbound queue, `ConversationScope`, `ValueKey` chat (§7.9, §7.19). |
+| **F3** | Realtime filtro chat? | **Sì** — subscription/filtro su `peer_address` (§7.9). |
+| **F4** | Soppressione push in foreground? | **Sì** — confronto `activePeerAddress` (stringa), non UUID (§7.19). |
+
+---
+
+#### G — Display UI
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **G1** | Titolo riga inbox — priorità? | (1) `get_profiles(peer_address)` → `display_name`; (2) fallback **`peer_address` grezzo**. Rubrica **non** fornisce titolo (§7.10: solo `address`). Niente join `profiles` per chiave UUID. |
+| **G2** | Avatar peer federato? | Da **`get_profiles`** se disponibile; altrimenti placeholder/iniziali. **Nessun** fetch profilo shadow in `profiles` (§7.9, §7.12). |
+| **G3** | Avatar peer locale senza UUID come chiave? | **Sì** — `get_profiles(['mario'])` arricchisce UI; chiave runtime resta `peer_address` (§7.9). |
+| **G4** | Overlay profilo federato? | **Stesso overlay** per qualsiasi indirizzo: `get_profiles` async + allow + rubrica (`address` only) + «Inizia a chattare»; fallback indirizzo grezzo. **No** profilo shadow (§7.9, §7.12). |
+| **G5** | `mario` vs `mario@arkham` in overlay? | **Due sessioni UI / due chat** coerenti con §7.2. |
+| **G6** | Tap avatar autore in chat gruppo? | Header autore via **`original_author_id`** / `get_profiles` sull’indirizzo umano; semantica erogazione SYS-GROUP invariata (§7.18). |
+
+---
+
+#### H — Rubrica (`contacts`)
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **H1** | Aggiunta locale dopo `search_profiles`? | Salva **`address = username` bare** lowercase del profilo scelto (§7.10). |
+| **H2** | Aggiunta federata? | Form manuale: solo **`address`** (`user@server` lowercase). **Niente** `display_name` in tabella — presentazione da `get_profiles` (§7.10). |
+| **H3** | Stesso soggetto, due voci `mario` + `mario@arkham`? | **Ammesso** — indirizzi distinti (§7.2). |
+| **H4** | «Scrivi» da rubrica? | Apre chat con **`peer_address = contacts.address` letterale** (§7.10). |
+| **H5** | Avatar federato in rubrica? | **No colonna avatar** in `contacts` (§7.10). Avatar solo da `get_profiles` in UI. |
+
+---
+
+#### I — Allow list
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **I1** | Aggiunta locale? | Come H1: **`allowed_address = username` bare** da `search_profiles` (§7.6). |
+| **I2** | Aggiunta federata? | Form `user@server` → **`allowed_address` lowercase** (§7.6). |
+| **I3** | Etichetta in «Persone consentite»? | **`get_profiles(allowed_address)`** se risolve; altrimenti indirizzo grezzo. Nessun `display_name` in tabella allow list. |
+| **I4** | Toggle allow da scheda profilo? | Crea/rimuove riga con **`allowed_address` = indirizzo della sessione UI** (forma con cui è aperto il peer) (§7.6). |
+
+---
+
+#### J — Gruppi
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **J1** | `famiglia` vs `famiglia@server` in allow list / compose? | **Stessa regola §7.2** — voci e chat distinte. |
+| **J2** | Semantica delivery gruppo su modello indirizzo? | **`peer_address`** al posto di `peer_profile_id` per faccia «account» verso esterno; **`author_id` / `original_author_id` UUID** restano per erogazione interna; `author_address` per display dove serve (§7.7, §7.18). |
+| **J3** | Broadcast storico gruppo — `peer_address`? | **NULL** sulla riga archivio gruppo (SYS-GROUP-023) — unica eccezione nullable (§7.7). |
+| **J4** | Erogazione verso membri — `peer_address`? | Copia persona: **`peer_address` = indirizzo letterale del gruppo** nella relazione allow list (§7.18). |
+| **J5** | Gruppo federato `famiglia@blackgate` — in scope? | **Modello sì** (identità address-based). **Recapito/erogazione cross-istanza** con worker Gotham — passo 5 (§7.17), stesso gate 1:1 federato. |
+| **J6** | `list_inbox` messaggio erogato da gruppo? | Riga verso **`peer_address` del gruppo**; preview autore umano via `original_author_id` / `get_profiles` (SYS-GROUP-033, §7.18). |
+| **J7** | Shell gruppo / storico interno? | Archivio `archive_user_id = gruppo`; UI autore da **`author_address` + `original_author_id`**; bounded context interno separato (§7.18). |
+
+---
+
+#### K — Link condivisibili
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **K1** | `#mario@blackgate` su Arkham? | **Apre chat/profilo federato** verso `peer_address` letterale — **non** lookup locale (§7.13). |
+| **K2** | Link in uscita — forma canonica? | **Bare `username`** per peer locali (`canonicalShareableAddress`, PROM-SHAREABLE-LINK-030). Non fonde le chat in compose (§7.14). |
+| **K3** | `#mario/chat` vs `#mario@arkham/chat`? | **`peer_address` = stringa del fragment** (lowercase); chat distinte (§7.14). |
+| **K4** | Profilo link federato cross-istanza? | Overlay/chat con **`get_profiles` async** + fallback grezzo; **non** 404 per assenza `profiles.id` locale (§7.13). |
+
+---
+
+#### L — Mention `@username`
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **L1** | Tap `@mario` in bolla? | Apre chat con **`peer_address = mario`** (bare). Se username non in `profiles` → **404** (`PROM-MESSAGE-MENTION-004`). Stesso percorso compose (`resolveAddress` + open). |
+| **L2** | Mention `@mario@server` nel body? | **Non supportato.** Mention = `@username` bare valido (`AuthIdentity.isValidUsername`). Indirizzo completo solo via compose/link. |
+
+---
+
+#### M — Federazione
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **M1** | Paolo→Mario cross-istanza — mittente visto da Mario? | **Sempre indirizzo completo wire** — es. `paolo@arkham-im.fly.dev` (§7.5, §7.5b). |
+| **M2** | Allow list — match tra forme? | **Solo letterale** su `allowed_address`; **nessun** alias `mario` ↔ `mario@server` (§7.6). |
+| **M3** | Display mittente federato in inbox? | **`get_profiles(author_address)`** poi fallback `author_address` grezzo (§7.9, G1). |
+
+---
+
+#### N — Processo
+
+| ID | Domanda | Risposta |
+|----|---------|----------|
+| **N1** | Prossimo deliverable? | **Amend SDD `draft`** (promesse + `contracts/` + dominio) **prima** del codice; UML/statechart **nello stesso passaggio** prima di implementazione che cambia comportamento (§10.1; regole modello repo). |
+| **N2** | TEMP vs SDD? | Questo file accumula decisioni → **distillazione in promesse `approved`** → **eliminazione TEMP** (§14). |
+| **N3** | Promesse satellite in scope amend? | **Sì** — `PROM-SHAREABLE-LINK`, `PROM-MESSAGE-MENTION`, `PROM-PEER-PROFILE`, `SYS-PUSH` / `push-payload`, `PROM-CONVERSATION-SCOPE`, SURF-* — clean break §1.2; niente semantica UUID residua. |
+
+---
+
+**Totale: 52 domande — 52 risposte chiuse.** Riferimento modello: §7; implementazione: §1.2, §10.
+
 ---
 
 ## 10. Lavoro da fare (non sono domande aperte)
