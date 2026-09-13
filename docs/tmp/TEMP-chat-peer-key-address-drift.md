@@ -1,7 +1,7 @@
 # TEMP — Deriva chiave conversazione: indirizzo vs `profileId`
 
 **Stato:** bozza temporanea — da eliminare dopo promozione in SDD `approved`  
-**Revisione:** 2026-09-13 (quinta passata — §9 risolto; modello completo per SDD)  
+**Revisione:** 2026-09-13 (sesta passata — clean break §1.2; wipe dati §7.15)  
 **Audience:** revisione modello / SDD / implementazione federazione  
 **Non è SSOT** — vedi `docs/SSOT.md`. Contenuto da distillare in dominio, promesse e contratti.
 
@@ -22,7 +22,22 @@
 
 **Deriva:** implementazione e promesse `implemented` hanno cristallizzato la chiave su `peer_profile_id` (UUID). Con ogni peer su profilo locale funzionava; la federazione Arkham ↔ Blackgate espone il disallineamento.
 
-**Correzione:** chiave canonica = **`peer_address`** (lowercase); **`author_address`** sulla copia mittente = identità che fa fede nella comunicazione (§7.5b). **Tutti gli account** (umani e gruppi). Presentazione = **`get_profiles(addresses[])`** (batch, profilo pubblico sempre). Push = **`peerAddress`** (no dual-read). Gotham = solo trasporto. Ordine: SDD → reception API → client → allow list → worker Gotham. **§9 vuoto** — modello pronto per distillazione SDD.
+**Correzione:** chiave canonica = **`peer_address`** (lowercase); **`author_address`** sulla copia mittente = identità che fa fede nella comunicazione (§7.5b). **Tutti gli account** (umani e gruppi). Presentazione = **`get_profiles(addresses[])`** (batch, profilo pubblico sempre). Push = **`peerAddress`** (no dual-read). Gotham = solo trasporto (+ amend doc §5.4 nello stesso workstream). Ordine: SDD → reception API → client → allow list → worker Gotham. **§9 vuoto** — modello pronto per distillazione SDD.
+
+### 1.1 Scope workstream
+
+Messaggistica 1:1, allow list, rubrica (`contacts`), gruppi, push, link, mention, `gotham-protocol.md` / `gotham.proto` (modello prodotto §5.4) — stesso vincolo §7.1 (solo stringa indirizzo).
+
+### 1.2 Clean break (implementazione)
+
+| Regola | Dettaglio |
+|--------|-----------|
+| **Rimuovere** | Colonne/RPC/tipi/promesse del modello UUID-split (`peer_profile_id`, `peer_external_address`, `linked_profile_id`, `allowed_profile_id`, `author_external_address`, overload UUID, alias `*_external_*`, dual-read push) |
+| **Vietato** | `@deprecated`, campi paralleli, doppio percorso UUID **o** indirizzo, migrazione/backfill conversazioni |
+| **Dati** | Wipe `messages` e righe derivate (allow list, contacts, outbox collegate); **account restano** (`auth.users`, `profiles`) — §7.15 |
+| **Doc** | Amend sostitutivi; Gotham §5.4 allineato a `*_address` unificato |
+
+Il delivery può risolvere username → profilo **in transazione**; l'UUID non è chiave conversazione né contratto client.
 
 ---
 
@@ -177,11 +192,11 @@ DB attuale (`peer_profile_id` + `peer_external_address`, allow list UUID, rubric
 
 | Colonna | Ruolo |
 |---------|--------|
-| `peer_address` text NOT NULL | Chiave conversazione |
+| `peer_address` text nullable | Chiave conversazione. **NULL** solo broadcast storico gruppo (SYS-GROUP-023); **NOT NULL** su 1:1 e erogazione |
 | `author_address` text NOT NULL | Identità mittente come indirizzo |
-| `author_id` uuid nullable | Solo casi tecnici (es. SYS-GROUP) |
+| `author_id` uuid nullable | Solo flussi gruppo (erogazione, `original_author_id`); **NULL** su 1:1 |
 
-Rimuovere `peer_profile_id` / `peer_external_address` come identità chat.
+Rimuovere (§1.2): `peer_profile_id`, `peer_external_address`, split allow list/contacts, RPC UUID come chiave chat.
 
 **`reception_allowlist`:** `allowed_address` text NOT NULL; UNIQUE `(archive_user_id, allowed_address)`.
 
@@ -243,14 +258,14 @@ Due livelli distinti — non contraddizione da ridiscutere:
 
 Amend SDD: esplicitare in `PROM-SHAREABLE-LINK` e `PROM-CHAT-PEER-KEY` — non unificare i due livelli.
 
-### 7.15 Migrazione dati (decisione chiusa — fonte mailbox spec)
+### 7.15 Dati esistenti (decisione chiusa — 2026-09-13)
 
-`mailbox-inbox-outbox-spec.md` § Migrazione:
+**Nessuna migrazione conversazioni.** Clean break §1.2:
 
-- **Solo DB dev** — niente produzione da preservare.
-- «Migra e basta» — niente doppia scrittura obbligatoria.
-- Backfill dev: `peer_address` da `profiles.username` dove esiste `peer_profile_id`.
-- Storico `mario` + `mario@arkham` verso stesso profilo: **restano due conversazioni** (coerente §7.2) — nessuna fusione.
+- **Cancellare** `messages`, `outbox` collegata, `reception_allowlist`, `contacts` (e tabelle derivate messaggistica) su DB dev/demo.
+- **Conservare** account (`auth.users`, `profiles`).
+- Schema nuovo con sole colonne `*_address`; niente backfill da `peer_profile_id`.
+- Dopo il wipe, `mario` e `mario@arkham` restano **due chat distinte** se create separatamente (§7.2).
 
 ### 7.16 Architettura a tre piani
 
