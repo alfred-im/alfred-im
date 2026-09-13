@@ -141,12 +141,12 @@ class NavigationCoordinator {
 
   Future<bool> openConversationOnAccount({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     bool allowProfileFallback = true,
   }) async {
     final ok = await adapters.openConversationOnAccount(
       accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       allowProfileFallback: allowProfileFallback,
     );
     _notifyStateChanged();
@@ -183,12 +183,12 @@ class NavigationCoordinator {
   @visibleForTesting
   Future<ChatPeer?> resolvePeerInInboxForTest({
     required AccountSession session,
-    required String peerProfileId,
+    required String peerAddress,
     bool allowProfileFallback = true,
   }) {
     return _effects.resolvePeerInInboxForTest(
       session: session,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       allowProfileFallback: allowProfileFallback,
     );
   }

@@ -227,12 +227,12 @@ class AuthController extends ChangeNotifier {
 
   Future<bool> openConversationAfterPushTap({
     required String recipientUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) async {
     try {
       final ok = await _navigation.externalIntents.openFromPushTap(
         accountUserId: recipientUserId,
-        peerProfileId: peerProfileId,
+        peerAddress: peerAddress,
       );
       if (ok) error = null;
       notifyListeners();
@@ -246,13 +246,13 @@ class AuthController extends ChangeNotifier {
 
   Future<bool> openConversationOnAccount({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     bool allowProfileFallback = true,
   }) async {
     try {
       final ok = await _navigation.externalIntents.openFromCompose(
         accountUserId: accountUserId,
-        peerProfileId: peerProfileId,
+        peerAddress: peerAddress,
         allowProfileFallback: allowProfileFallback,
       );
       if (ok) error = null;
@@ -267,12 +267,12 @@ class AuthController extends ChangeNotifier {
 
   Future<bool> openConversationFromShareableLink({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) async {
     try {
       final ok = await _navigation.externalIntents.openFromShareableLink(
         accountUserId: accountUserId,
-        peerProfileId: peerProfileId,
+        peerAddress: peerAddress,
       );
       if (ok) error = null;
       notifyListeners();

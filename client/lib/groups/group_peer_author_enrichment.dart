@@ -25,17 +25,20 @@ class GroupPeerAuthorEnrichment {
         .toSet()
         .toList();
 
-    var profilesById = <String, ProfileSummary>{};
+    var profilesByAddress = <String, ProfileSummary>{};
     if (authorIds.isNotEmpty) {
       final profiles = await profileService.fetchSummariesByIds(authorIds);
-      profilesById = {for (final p in profiles) p.id: p};
+      profilesByAddress = {
+        for (final p in profiles)
+          if (p.id != null) p.id!: p,
+      };
     }
 
     return source
         .map(
           (m) => enrichMessageAuthor(
             message: m,
-            profilesById: profilesById,
+            profilesByAddress: profilesByAddress,
             currentUserId: userId,
           ),
         )

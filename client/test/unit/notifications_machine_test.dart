@@ -17,7 +17,7 @@ class _RecordingEffects implements NotificationsEffects {
   @override
   Future<bool> forwardOpenFromPushTap({
     required String recipientUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) async {
     forwardCount++;
     return forwardResult;
@@ -26,7 +26,7 @@ class _RecordingEffects implements NotificationsEffects {
   @override
   void persistPendingOpenChat({
     required String recipientUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) {
     persistCount++;
   }
@@ -47,7 +47,7 @@ void main() {
       adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           recipientUserId: 'user-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
         ),
         sessionReady: false,
         hasOpenAccount: true,
@@ -66,7 +66,7 @@ void main() {
       adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           recipientUserId: 'user-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
         ),
         sessionReady: true,
         hasOpenAccount: true,
@@ -86,7 +86,7 @@ void main() {
       adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           recipientUserId: 'user-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
         ),
         sessionReady: true,
         hasOpenAccount: false,
@@ -105,7 +105,7 @@ void main() {
       adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           recipientUserId: 'user-a',
-          peerProfileId: 'peer-b',
+          peerAddress: 'peer-b',
         ),
         sessionReady: true,
         hasOpenAccount: true,
@@ -113,7 +113,7 @@ void main() {
       adapters.onOpenChatFromNotification(
         conversation: const PushConversationKey(
           recipientUserId: 'user-c',
-          peerProfileId: 'peer-d',
+          peerAddress: 'peer-d',
         ),
         sessionReady: true,
         hasOpenAccount: true,

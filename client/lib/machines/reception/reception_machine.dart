@@ -34,6 +34,11 @@ final class SetSearchQuery extends ReceptionEvent {
   final String query;
 }
 
+final class AddAllowedAddress extends ReceptionEvent {
+  const AddAllowedAddress(this.address);
+  final String address;
+}
+
 final class AddAllowedProfile extends ReceptionEvent {
   const AddAllowedProfile(this.profile);
   final ProfileSummary profile;
@@ -44,19 +49,24 @@ final class RemoveAllowedPerson extends ReceptionEvent {
   final AllowedPerson person;
 }
 
-final class RemoveAllowedByProfileId extends ReceptionEvent {
-  const RemoveAllowedByProfileId(this.profileId);
-  final String profileId;
+final class RemoveAllowedByAddress extends ReceptionEvent {
+  const RemoveAllowedByAddress(this.address);
+  final String address;
 }
 
 /// Interprete statechart reception — allineato a UML.
 ///
 /// Produzione: [ReceptionCoordinator] + [ReceptionAllowlistController].
 class ReceptionMachine {
-  ReceptionMachine(this._effects, {required this.focusUserId});
+  ReceptionMachine(
+    this._effects, {
+    required this.focusUserId,
+    this.focusAccountAddress,
+  });
 
   final ReceptionEffects _effects;
   final String focusUserId;
+  final String? focusAccountAddress;
 
   ReceptionLoadState loadState = ReceptionLoadState.loading;
   String searchQuery = '';
@@ -72,17 +82,30 @@ class ReceptionMachine {
         loadState = ReceptionLoadState.ready;
       case SetSearchQuery(:final query):
         searchQuery = query;
-      case AddAllowedProfile(:final profile):
-        if (profile.id == focusUserId) return;
-        if (_effects.isProfileAllowed(profile.id)) return;
-        await _effects.addAllowedProfile(profile);
+      case AddAllowedAddress(:final address):
+        final normalized = address.trim().toLowerCase();
+        if (normalized.isEmpty) return;
+        if (_isSelfAddress(normalized)) return;
+        if (_effects.isAddressAllowed(normalized)) return;
+        await _effects.addAllowedAddress(normalized);
         await send(const LoadAllowlist());
+      case AddAllowedProfile(:final profile):
+        final address = profile.address ?? profile.username;
+        if (address == null || address.isEmpty) return;
+        if (profile.id == focusUserId) return;
+        if (_isSelfAddress(address.trim().toLowerCase())) return;
+        await send(AddAllowedAddress(address));
       case RemoveAllowedPerson(:final person):
         await _effects.removeAllowedPerson(person);
         await send(const LoadAllowlist());
-      case RemoveAllowedByProfileId(:final profileId):
-        await _effects.removeByProfileId(profileId);
+      case RemoveAllowedByAddress(:final address):
+        await _effects.removeByAddress(address);
         await send(const LoadAllowlist());
     }
+  }
+
+  bool _isSelfAddress(String normalizedAddress) {
+    final self = focusAccountAddress?.trim().toLowerCase();
+    return self != null && self == normalizedAddress;
   }
 }

@@ -12,7 +12,6 @@ import 'package:alfred_client/screens/home_screen.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
-import 'package:alfred_client/services/profile_service.dart';
 import 'package:alfred_client/theme/alfred_theme.dart';
 import 'package:alfred_client/utils/push_stub.dart';
 import 'package:alfred_client/widgets/push_notification_listener.dart';
@@ -26,23 +25,6 @@ import '../support/fake_messaging_services.dart';
 import '../support/seed_multi_account_machine.dart';
 
 // SURF-NOTIFICATIONS-006–007 (isolato: nessun account live / test1)
-class _FakeProfileService extends ProfileService {
-  _FakeProfileService(this._peers) : super(createTestSupabaseClient());
-
-  final Map<String, ProfileSummary> _peers;
-
-  @override
-  Future<ProfileSummary?> findById(String id) async => _peers[id];
-
-  @override
-  Future<ProfileSummary?> findByUsername(String username) async {
-    for (final peer in _peers.values) {
-      if (peer.username == username) return peer;
-    }
-    return null;
-  }
-}
-
 void main() {
   setUpAll(() async {
     await chat_panel.loadLibrary();
@@ -58,12 +40,12 @@ void main() {
   ) async {
     const focusProfile = ProfileSummary(
       id: 'focus-uuid',
-      username: 'e2e_focus',
+      username: 'e2e_focus', address: 'e2e_focus',
       displayName: 'E2E Focus',
     );
     const peer = ProfileSummary(
       id: 'peer-uuid',
-      username: 'e2e_peer',
+      username: 'e2e_peer', address: 'e2e_peer',
       displayName: 'E2E Peer',
     );
 
@@ -72,9 +54,9 @@ void main() {
       profile: focusProfile,
       client: client,
       inboxService: FakeInboxService(
-        peers: [ChatPeer(profile: peer)],
+        peers: [inboxPeer(peer)],
       ),
-      profileService: _FakeProfileService({'peer-uuid': peer}),
+      profileService: MapBackedFakeProfileService.fromProfiles([peer]),
     );
     final manager = AccountManager();
     manager.focusTestSession(session);
@@ -117,7 +99,7 @@ void main() {
     intents.add(
       PushOpenChatIntent.fromParts(
         recipientUserId: 'focus-uuid',
-        peerProfileId: 'peer-uuid',
+        peerAddress: 'e2e_peer',
       ),
     );
     await tester.pump();
@@ -129,7 +111,7 @@ void main() {
 
     expect(find.text('E2E Peer'), findsWidgets);
     expect(auth.activePeer, isA<ChatPeer>());
-    expect(auth.activePeer?.profile.id, 'peer-uuid');
+    expect(auth.activePeer?.peerAddress, 'e2e_peer');
 
     await intents.close();
   });
@@ -139,12 +121,12 @@ void main() {
   ) async {
     const accountA = ProfileSummary(
       id: 'account-a',
-      username: 'agent_a',
+      username: 'agent_a', address: 'agent_a',
       displayName: 'Agent A',
     );
     const accountB = ProfileSummary(
       id: 'account-b',
-      username: 'agent_b',
+      username: 'agent_b', address: 'agent_b',
       displayName: 'Agent B',
     );
 
@@ -154,15 +136,15 @@ void main() {
       profile: accountA,
       client: client,
       inboxService: FakeInboxService(),
-      profileService: _FakeProfileService({'account-b': accountB}),
+      profileService: MapBackedFakeProfileService.fromProfiles([accountB]),
     );
     final sessionB = await AccountSession.createForTest(
       profile: accountB,
       client: createTestSupabaseClient(),
       inboxService: FakeInboxService(
-        peers: [ChatPeer(profile: accountA)],
+        peers: [inboxPeer(accountA)],
       ),
-      profileService: _FakeProfileService({'account-a': accountA}),
+      profileService: MapBackedFakeProfileService.fromProfiles([accountA]),
     );
 
     sessionA.wireStorage(storage);
@@ -213,7 +195,7 @@ void main() {
       () => listenerState.processOpenChatForTest(
         PushOpenChatIntent.fromParts(
           recipientUserId: 'account-b',
-          peerProfileId: 'account-a',
+          peerAddress: 'agent_a',
         ),
       ),
     );
@@ -224,7 +206,7 @@ void main() {
     await tester.pump();
 
     expect(auth.userId, 'account-b');
-    expect(auth.activePeer?.profile.id, 'account-a');
+    expect(auth.activePeer?.peerAddress, 'agent_a');
 
     await intents.close();
   });
@@ -234,12 +216,12 @@ void main() {
     (tester) async {
       const accountA = ProfileSummary(
         id: 'account-a',
-        username: 'agent_a',
+        username: 'agent_a', address: 'agent_a',
         displayName: 'Agent A',
       );
       const accountB = ProfileSummary(
         id: 'account-b',
-        username: 'agent_b',
+        username: 'agent_b', address: 'agent_b',
         displayName: 'Agent B',
       );
 
@@ -250,7 +232,7 @@ void main() {
 
       messageServiceA.messagesByConversation[conversationKey(
         userId: 'account-a',
-        peerProfileId: 'account-b',
+        peerAddress: 'agent_b',
       )] = [
         ChatMessage(
           id: 'm-a1',
@@ -263,7 +245,7 @@ void main() {
       ];
       messageServiceB.messagesByConversation[conversationKey(
         userId: 'account-b',
-        peerProfileId: 'account-a',
+        peerAddress: 'agent_a',
       )] = [
         ChatMessage(
           id: 'm-b1',
@@ -288,18 +270,18 @@ void main() {
         profile: accountA,
         client: clientA,
         inboxService: FakeInboxService(
-          peers: [ChatPeer(profile: accountB)],
+          peers: [inboxPeer(accountB)],
         ),
-        profileService: _FakeProfileService({'account-b': accountB}),
+        profileService: MapBackedFakeProfileService.fromProfiles([accountB]),
       );
       await installTestAuthSession(clientA, userId: 'account-a');
       final sessionB = await AccountSession.createForTest(
         profile: accountB,
         client: clientB,
         inboxService: FakeInboxService(
-          peers: [ChatPeer(profile: accountA)],
+          peers: [inboxPeer(accountA)],
         ),
-        profileService: _FakeProfileService({'account-a': accountA}),
+        profileService: MapBackedFakeProfileService.fromProfiles([accountA]),
       );
       await installTestAuthSession(clientB, userId: 'account-b');
 
@@ -317,9 +299,9 @@ void main() {
       final auth = AuthController(accountManager: manager);
       await auth.initialize();
 
-      await auth.openConversation(ChatPeer(profile: accountB));
+      await auth.openConversation(inboxPeer(accountB));
       expect(auth.userId, 'account-a');
-      expect(auth.activePeer?.profile.id, 'account-b');
+      expect(auth.activePeer?.peerAddress, 'agent_b');
 
       final intents = StreamController<PushOpenChatIntent>.broadcast();
 
@@ -353,14 +335,14 @@ void main() {
         () => listenerState.processOpenChatForTest(
           PushOpenChatIntent.fromParts(
             recipientUserId: 'account-b',
-            peerProfileId: 'account-a',
+            peerAddress: 'agent_a',
           ),
         ),
       );
       for (var i = 0; i < 500; i++) {
         await tester.pump(const Duration(milliseconds: 10));
         if (auth.userId == 'account-b' &&
-            auth.activePeer?.profile.id == 'account-a' &&
+            auth.activePeer?.peerAddress == 'agent_a' &&
             auth.isConversationReady(
               session: auth.focusedSession!,
               peer: auth.activePeer!,
@@ -372,14 +354,14 @@ void main() {
       await tester.pump();
 
       expect(auth.userId, 'account-b');
-      expect(auth.activePeer?.profile.id, 'account-a');
+      expect(auth.activePeer?.peerAddress, 'agent_a');
       expect(
         auth.committedScope?.focusUserId,
         'account-b',
       );
       expect(
-        auth.committedScope?.peerProfileId,
-        'account-a',
+        auth.committedScope?.peerAddress,
+        'agent_a',
       );
       expect(
         auth.isConversationReady(

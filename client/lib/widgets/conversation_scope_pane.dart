@@ -110,7 +110,7 @@ class _ChatWithMessages extends StatelessWidget {
     return isMessagingSessionReady(
       client: liveSession.client,
       focusUserId: liveSession.userId,
-      peerProfileId: peer.profileId,
+      peerAddress: peer.peerAddress,
     );
   }
 
@@ -139,7 +139,7 @@ class _ChatWithMessages extends StatelessWidget {
       create: (_) => MessagesController(
         scope: committed,
         userId: liveSession.userId,
-        peerProfileId: peer.profileId,
+        peerAddress: peer.peerAddress,
         peerMessages: liveSession.peerMessages,
         messageMediaService: liveSession.messageMediaService,
         inboxService: liveSession.inboxService,

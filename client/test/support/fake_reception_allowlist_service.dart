@@ -12,28 +12,26 @@ class FakeReceptionAllowlistService extends ReceptionAllowlistService {
   FakeReceptionAllowlistService() : super(createTestSupabaseClient());
 
   List<AllowedPerson> people = [];
-  final List<ProfileSummary> added = [];
+  final List<String> addedAddresses = [];
 
   @override
   Future<List<AllowedPerson>> fetchAllowedPeople(String archiveUserId) async {
     final copy = List<AllowedPerson>.of(people);
-    copy.sort(
-      (a, b) => a.displayName.toLowerCase().compareTo(
-            b.displayName.toLowerCase(),
-          ),
-    );
+    copy.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
     return copy;
   }
 
   @override
-  Future<AllowedPerson> addAllowedProfile({
+  Future<AllowedPerson> addAllowedAddress({
     required String archiveUserId,
-    required ProfileSummary profile,
+    required String address,
   }) async {
-    added.add(profile);
+    final normalized = address.trim().toLowerCase();
+    addedAddresses.add(normalized);
     final entry = AllowedPerson(
-      entryId: 'entry-${profile.id}',
-      profile: profile,
+      entryId: 'entry-$normalized',
+      allowedAddress: normalized,
+      profile: ProfileSummary.fromAddress(normalized),
     );
     people = [...people, entry];
     return entry;

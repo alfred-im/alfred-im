@@ -119,13 +119,13 @@ class PushPlatform {
 
   static void updateSuppression({
     required String? recipientUserId,
-    required String? activePeerProfileId,
+    required String? activePeerAddress,
     required bool appVisible,
   }) {
     final payload = jsonEncode({
       'type': 'alfred_push_suppression',
       'recipientUserId': recipientUserId,
-      'activePeerProfileId': activePeerProfileId,
+      'activePeerAddress': activePeerAddress,
       'appVisible': appVisible,
     });
     unawaited(_postToServiceWorker(payload));
@@ -149,12 +149,12 @@ class PushPlatform {
       'pending.persist',
       data: {
         'recipientUserId': conversation.recipientUserId,
-        'peerProfileId': conversation.peerProfileId,
+        'peerAddress': conversation.peerAddress,
       },
     );
     final payload = jsonEncode({
       'recipientUserId': conversation.recipientUserId,
-      'peerProfileId': conversation.peerProfileId,
+      'peerAddress': conversation.peerAddress,
     });
     web.window.localStorage.setItem(_pendingOpenChatKey, payload);
   }
@@ -190,7 +190,7 @@ class PushPlatform {
       'pending.drain',
       data: {
         'recipientUserId': intent.conversation.recipientUserId,
-        'peerProfileId': intent.conversation.peerProfileId,
+        'peerAddress': intent.conversation.peerAddress,
       },
     );
     // Evita ri-emissione a ogni rebuild (pending restava fino alla fine handler).
@@ -217,7 +217,7 @@ class PushPlatform {
       'open_chat.emit',
       data: {
         'recipientUserId': conversation.recipientUserId,
-        'peerProfileId': conversation.peerProfileId,
+        'peerAddress': conversation.peerAddress,
       },
     );
     _openChatController.add(PushOpenChatIntent(conversation));
@@ -259,7 +259,7 @@ class PushPlatform {
       data: {
         'type': 'open_chat',
         'recipientUserId': conversation.recipientUserId,
-        'peerProfileId': conversation.peerProfileId,
+        'peerAddress': conversation.peerAddress,
       },
     );
     _emitOpenChat(conversation);

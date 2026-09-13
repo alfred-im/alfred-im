@@ -101,26 +101,15 @@ void main() {
   });
 
   group('Contact', () {
-    test('local vs federated flags', () {
-      final local = Contact(
+    test('stores normalized address', () {
+      final contact = Contact(
         id: '1',
         archiveUserId: 'me',
-        linkedProfileId: 'peer',
-        displayName: 'Alice',
-        createdAt: DateTime.utc(2026),
-      );
-      final federated = Contact(
-        id: '2',
-        archiveUserId: 'me',
-        externalAddress: 'alice@arkham-im.fly.dev',
-        displayName: 'Alice remota',
+        address: 'alice',
         createdAt: DateTime.utc(2026),
       );
 
-      expect(local.isLocal, isTrue);
-      expect(local.isFederated, isFalse);
-      expect(federated.isFederated, isTrue);
-      expect(federated.isLocal, isFalse);
+      expect(contact.address, 'alice');
     });
   });
 
@@ -191,28 +180,28 @@ void main() {
     test('maps inbox RPC payload', () {
       final at = DateTime.utc(2026, 6, 24, 14, 30);
       final peer = ChatPeer.fromInboxRow({
+        'peer_address': 'alice',
         'display_name': 'Alice',
         'last_message_preview': 'Ciao!',
         'last_message_at': at.toIso8601String(),
         'unread_count': 2,
-        'peer_profile_id': 'peer-1',
-        'peer_avatar_url': 'https://example.com/a.jpg',
-        'peer_cover_url': 'https://example.com/c.jpg',
-        'peer_pronouns': 'lei/ella',
-        'peer_profile_kind': 'group',
+        'avatar_url': 'https://example.com/a.jpg',
+        'cover_url': 'https://example.com/c.jpg',
+        'pronouns': 'lei/ella',
+        'profile_kind': 'group',
         'peer_in_contacts': true,
         'peer_is_allowed': true,
       });
 
-      expect(peer.profileId, 'peer-1');
-      expect(peer.profile.displayName, 'Alice');
+      expect(peer.peerAddress, 'alice');
+      expect(peer.profile?.displayName, 'Alice');
       expect(peer.displayName, 'Alice');
       expect(peer.preview, 'Ciao!');
       expect(peer.unreadCount, 2);
       expect(peer.lastMessageAt, at);
-      expect(peer.profile.avatarUrl, 'https://example.com/a.jpg');
-      expect(peer.profile.coverUrl, 'https://example.com/c.jpg');
-      expect(peer.profile.pronouns, 'lei/ella');
+      expect(peer.profile?.avatarUrl, 'https://example.com/a.jpg');
+      expect(peer.profile?.coverUrl, 'https://example.com/c.jpg');
+      expect(peer.profile?.pronouns, 'lei/ella');
       expect(peer.isGroup, isTrue);
       expect(peer.peerInContacts, isTrue);
       expect(peer.peerIsAllowed, isTrue);
@@ -220,8 +209,8 @@ void main() {
 
     test('without relationship flags relationship is null', () {
       final peer = ChatPeer.fromInboxRow({
+        'peer_address': 'alice',
         'display_name': 'Alice',
-        'peer_profile_id': 'peer-1',
         'last_message_preview': 'Ciao!',
         'unread_count': 0,
       });

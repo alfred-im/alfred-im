@@ -19,11 +19,12 @@ class OpenConversationStaleHarness {
   static ProfileSummary profile(String id, String username) => ProfileSummary(
         id: id,
         username: username,
+        address: username,
         displayName: username,
       );
 
   static ChatPeer peer(ProfileSummary profile) =>
-      ChatPeer.fromProfile(profile: profile);
+      ChatPeer.fromProfile(peerAddress: profile.resolvedPeerAddress, profile: profile);
 
   static ProfileService profileService(Map<String, ProfileSummary> peers) =>
       _HarnessProfileService(peers);
@@ -34,11 +35,16 @@ class OpenConversationStaleHarness {
     List<ChatPeer> inboxPeers = const [],
     Map<String, ProfileSummary> peersById = const {},
   }) {
+    final peersByKey = <String, ProfileSummary>{};
+    for (final entry in peersById.entries) {
+      peersByKey[entry.value.resolvedPeerAddress] = entry.value;
+      peersByKey[entry.key] = entry.value;
+    }
     return AccountSession.createForTest(
       profile: profile(accountId, username),
       client: createTestSupabaseClient(),
       inboxService: FakeInboxService(peers: inboxPeers),
-      profileService: _HarnessProfileService(peersById),
+      profileService: _HarnessProfileService(peersByKey),
     );
   }
 
@@ -64,10 +70,14 @@ class _HarnessProfileService extends ProfileService {
   Future<ProfileSummary?> findById(String id) async => _peers[id];
 
   @override
-  Future<ChatPeer?> getPeerContext(String profileId) async {
-    final summary = _peers[profileId];
-    if (summary == null) return null;
+  Future<ChatPeer?> getPeerContext(String peerAddress) async {
+    final normalized = peerAddress.trim().toLowerCase();
+    final summary = _peers[normalized] ?? _peers.values.where((p) => p.id == peerAddress).firstOrNull;
+    if (summary == null) {
+      return ChatPeer.fromAddress(normalized);
+    }
     return ChatPeer.fromProfile(
+      peerAddress: summary.resolvedPeerAddress,
       profile: summary,
       relationship: const PeerRelationship(
         inContacts: false,

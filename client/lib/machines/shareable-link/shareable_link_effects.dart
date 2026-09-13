@@ -9,12 +9,13 @@ abstract class ShareableLinkEffects {
   bool get sessionReady;
   bool get hasOpenAccounts;
   String? get focusedUserId;
+  String? get focusedAccountAddress;
 
   Future<ProfileSummary?> findProfileByUsername(String localUsername);
 
   Future<bool> openSharedChat({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
   });
 
   Future<void> showProfileOverlay(ProfileSummary profile);

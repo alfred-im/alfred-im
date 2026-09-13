@@ -66,18 +66,18 @@ void main() {
       const groupProfile = ProfileSummary(
         id: 'group-1',
         displayName: 'Famiglia',
-        username: 'famiglia',
+        username: 'famiglia', address: 'famiglia',
         profileKind: ProfileKind.group,
       );
       const mario = ProfileSummary(
         id: 'mario',
         displayName: 'Mario',
-        username: 'mario',
+        username: 'mario', address: 'mario',
       );
       const lucia = ProfileSummary(
         id: 'lucia',
         displayName: 'Lucia',
-        username: 'lucia',
+        username: 'lucia', address: 'lucia',
       );
 
       final client = createTestSupabaseClient();
@@ -118,7 +118,7 @@ void main() {
       ];
 
       final profileService = FakeProfileService(client)
-        ..profilesById.addAll({
+        ..profilesByAddress.addAll({
           'mario': mario,
           'lucia': lucia,
         });

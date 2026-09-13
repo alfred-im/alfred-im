@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import '../../models/profile_summary.dart';
 import '../../utils/shareable_link.dart';
 import 'shareable_link_effects.dart';
 
@@ -110,14 +111,20 @@ class ShareableLinkMachine {
       return;
     }
 
-    final profile =
-        await _effects.findProfileByUsername(resolution.localUsername);
-    if (profile == null) {
-      state = ShareableLinkState.invalid;
-      return;
+    ProfileSummary? profile;
+    if (resolution.isLocalInstance) {
+      profile =
+          await _effects.findProfileByUsername(resolution.localUsername);
     }
 
-    if (profile.id == focusedUserId) {
+    final peerAddress = resolution.normalizedAddress;
+    final selfAddress = _effects.focusedAccountAddress?.trim().toLowerCase();
+    if (selfAddress != null && peerAddress == selfAddress) {
+      target = null;
+      state = ShareableLinkState.idle;
+      return;
+    }
+    if (profile?.id == focusedUserId) {
       target = null;
       state = ShareableLinkState.idle;
       return;
@@ -126,10 +133,12 @@ class ShareableLinkMachine {
     if (currentTarget.kind == ShareableLinkKind.chat) {
       await _effects.openSharedChat(
         accountUserId: focusedUserId,
-        peerProfileId: profile.id,
+        peerAddress: peerAddress,
       );
     } else {
-      await _effects.showProfileOverlay(profile);
+      await _effects.showProfileOverlay(
+        profile ?? ProfileSummary.fromAddress(peerAddress),
+      );
     }
 
     target = null;

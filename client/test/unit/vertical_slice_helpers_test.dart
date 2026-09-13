@@ -9,33 +9,16 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final createdAt = DateTime.utc(2026, 1, 1);
 
-  group('Contact.internalProfileSummary', () {
-    test('returns summary for internal contact with linked profile', () {
+  group('Contact.address', () {
+    test('stores canonical lowercase address', () {
       final contact = Contact(
         id: 'c1',
         archiveUserId: 'alice',
-        linkedProfileId: 'p1',
-        displayName: 'Alice',
-        avatarUrl: 'https://cdn.example/a.png',
+        address: 'bob@remote.example',
         createdAt: createdAt,
       );
 
-      expect(contact.internalProfileSummary, isNotNull);
-      expect(contact.internalProfileSummary!.id, 'p1');
-      expect(contact.internalProfileSummary!.displayName, 'Alice');
-      expect(contact.internalProfileSummary!.avatarUrl, 'https://cdn.example/a.png');
-    });
-
-    test('returns null for external contact', () {
-      final contact = Contact(
-        id: 'c2',
-        archiveUserId: 'alice',
-        externalAddress: 'a@b.c',
-        displayName: 'Bob',
-        createdAt: createdAt,
-      );
-
-      expect(contact.internalProfileSummary, isNull);
+      expect(contact.address, 'bob@remote.example');
     });
   });
 

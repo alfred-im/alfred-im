@@ -17,7 +17,7 @@ class OwnerGatedInboxPanel extends StatefulWidget {
   const OwnerGatedInboxPanel({
     super.key,
     required this.session,
-    required this.selectedPeerId,
+    required this.selectedPeerAddress,
     required this.peers,
     required this.isLoading,
     required this.onSelected,
@@ -36,7 +36,7 @@ class OwnerGatedInboxPanel extends StatefulWidget {
   });
 
   final AccountSession session;
-  final String? selectedPeerId;
+  final String? selectedPeerAddress;
   final List<ChatPeer> peers;
   final bool isLoading;
   final ValueChanged<ChatPeer> onSelected;
@@ -100,7 +100,7 @@ class _OwnerGatedInboxPanelState extends State<OwnerGatedInboxPanel> {
   @override
   Widget build(BuildContext context) {
     return InboxPanel(
-      selectedPeerId: widget.selectedPeerId,
+      selectedPeerAddress: widget.selectedPeerAddress,
       peers: widget.peers,
       isLoading: widget.isLoading,
       error: widget.error,

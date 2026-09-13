@@ -55,14 +55,14 @@ void main() {
 
       final scope = testConversationScope(
         userId: userId,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: scope,
         messageStore: testMessageStoreFor(scope),
         userId: userId,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         peerMessages: FakeMessageService(client).peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
@@ -106,14 +106,14 @@ void main() {
 
       final scope = testConversationScope(
         userId: userId,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: scope,
         messageStore: testMessageStoreFor(scope),
         userId: userId,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         peerMessages: FakeMessageService(client).peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
@@ -172,14 +172,14 @@ void main() {
       final client = createTestSupabaseClient();
       final scope = testConversationScope(
         userId: userA,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: scope,
         messageStore: testMessageStoreFor(scope),
         userId: userA,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         peerMessages: FakeMessageService(client).peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
@@ -196,14 +196,14 @@ void main() {
 
       final reboundScope = testConversationScope(
         userId: userA,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         sessionEpoch: 1,
       );
       final reboundController = MessagesController(
         scope: reboundScope,
         messageStore: testMessageStoreFor(reboundScope),
         userId: userA,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         peerMessages: liveSession.peerMessages,
         messageMediaService: MessageMediaService(createTestSupabaseClient()),
         inboxService: FakeInboxService(),
@@ -260,14 +260,14 @@ void main() {
       final client = createTestSupabaseClient();
       final scope = testConversationScope(
         userId: userA,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: scope,
         messageStore: testMessageStoreFor(scope),
         userId: userA,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         peerMessages: FakeMessageService(client).peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),
@@ -304,14 +304,14 @@ void main() {
 
       final scope = testConversationScope(
         userId: userId,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: scope,
         messageStore: testMessageStoreFor(scope),
         userId: userId,
-        peerProfileId: peerId,
+        peerAddress: peerId,
         peerMessages: FakeMessageService(client).peerMessages,
         messageMediaService: MessageMediaService(client),
         inboxService: FakeInboxService(),

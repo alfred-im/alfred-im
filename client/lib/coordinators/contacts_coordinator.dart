@@ -43,14 +43,13 @@ class ContactsCoordinator {
   List<Contact> get filteredContacts => filterByQuery(
         state.contacts,
         _machine.searchQuery,
-        (contact) => contact.displayName,
+        (contact) => contact.address,
       );
 
-  Contact? contactForProfileId(String profileId) {
+  Contact? contactForAddress(String address) {
+    final normalized = address.trim().toLowerCase();
     for (final contact in state.contacts) {
-      if (contact.isLocal && contact.linkedProfileId == profileId) {
-        return contact;
-      }
+      if (contact.address == normalized) return contact;
     }
     return null;
   }
@@ -67,40 +66,19 @@ class ContactsCoordinator {
     return _contactService.searchProfiles(query);
   }
 
-  Future<Contact> addInternal(ProfileSummary profile) async {
-    await _machine.send(AddInternalContact(profile));
-    return contactForProfileId(profile.id) ??
+  Future<Contact> addByAddress(String address) async {
+    await _machine.send(AddContactByAddress(address));
+    return contactForAddress(address) ??
         Contact(
           id: '',
           archiveUserId: focusUserId,
-          linkedProfileId: profile.id,
-          displayName: profile.displayName,
+          address: address.trim().toLowerCase(),
           createdAt: DateTime.now(),
         );
   }
 
-  Future<void> removeInternalByProfileId(String profileId) {
-    return _machine.send(RemoveInternalContact(profileId));
-  }
-
-  Future<Contact> addExternal({
-    required String address,
-    required String displayName,
-  }) async {
-    await _machine.send(
-      AddExternalContact(
-        address: address,
-        displayName: displayName,
-      ),
-    );
-    final trimmedAddress = address.trim().toLowerCase();
-    for (final contact in state.contacts) {
-      if (contact.isFederated &&
-          contact.externalAddress?.toLowerCase() == trimmedAddress) {
-        return contact;
-      }
-    }
-    return state.contacts.last;
+  Future<void> removeByAddress(String address) {
+    return _machine.send(RemoveContactByAddress(address));
   }
 
   void _syncLoadingFromMachine() {
@@ -134,28 +112,16 @@ class _LiveContactsEffects implements ContactsEffects {
   }
 
   @override
-  Future<void> addInternal(ProfileSummary profile) async {
-    await _c.contactService.addInternalContact(
+  Future<void> addByAddress(String address) async {
+    await _c.contactService.addContact(
       archiveUserId: _c.focusUserId,
-      profile: profile,
+      address: address,
     );
   }
 
   @override
-  Future<void> addExternal({
-    required String address,
-    required String displayName,
-  }) async {
-    await _c.contactService.addExternalContact(
-      archiveUserId: _c.focusUserId,
-      externalAddress: address,
-      displayName: displayName,
-    );
-  }
-
-  @override
-  Future<void> removeInternalByProfileId(String profileId) async {
-    final contact = _c.contactForProfileId(profileId);
+  Future<void> removeByAddress(String address) async {
+    final contact = _c.contactForAddress(address);
     if (contact == null) return;
     await _c.contactService.deleteContact(contact.id);
   }

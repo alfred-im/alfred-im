@@ -15,8 +15,6 @@ import '../services/compose_service.dart';
 import '../theme/alfred_colors.dart';
 import '../utils/avatar_color.dart';
 import '../widgets/collapsible_list_search.dart';
-import '../widgets/peer_profile_overlay.dart';
-import '../widgets/profile_identity.dart';
 import '../widgets/profile_search_sheet.dart';
 
 class ContactsScreen extends StatefulWidget {
@@ -59,8 +57,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
       builder: (ctx) => _AddContactSheet(
         onSearch: (query) =>
             ctx.read<ContactsController>().searchProfiles(query),
-        onAddInternal: (profile) async {
-          await ctx.read<ContactsController>().addInternal(profile);
+        onAddByAddress: (address) async {
+          await ctx.read<ContactsController>().addByAddress(address);
           if (ctx.mounted) Navigator.pop(ctx);
         },
       ),
@@ -100,25 +98,14 @@ class _ContactsScreenState extends State<ContactsScreen> {
                         separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final contact = contacts.filteredContacts[index];
-                          final internalProfile = contact.internalProfileSummary;
                           return ListTile(
-                            leading: internalProfile != null
-                                ? ProfileAvatar(
-                                    profile: internalProfile,
-                                    onTap: () => showPeerProfileOverlay(
-                                      context,
-                                      internalProfile,
-                                    ),
-                                  )
-                                : CircleAvatar(
-                                    child: Text(avatarInitial(contact.displayName)),
-                                  ),
-                            title: Text(contact.displayName),
-                            subtitle: Text(
-                              contact.isLocal
-                                  ? 'Utente Alfred'
-                                  : contact.externalAddress ?? '',
-                              style: const TextStyle(fontSize: 12),
+                            leading: CircleAvatar(
+                              child: Text(avatarInitial(contact.address)),
+                            ),
+                            title: Text(contact.address),
+                            subtitle: const Text(
+                              'Indirizzo Alfred',
+                              style: TextStyle(fontSize: 12),
                             ),
                             trailing: IconButton(
                               icon: const Icon(Icons.chat_bubble_outline),
@@ -139,11 +126,11 @@ class _ContactsScreenState extends State<ContactsScreen> {
 class _AddContactSheet extends StatefulWidget {
   const _AddContactSheet({
     required this.onSearch,
-    required this.onAddInternal,
+    required this.onAddByAddress,
   });
 
   final Future<List<ProfileSummary>> Function(String query) onSearch;
-  final Future<void> Function(ProfileSummary profile) onAddInternal;
+  final Future<void> Function(String address) onAddByAddress;
 
   @override
   State<_AddContactSheet> createState() => _AddContactSheetState();
@@ -153,7 +140,6 @@ class _AddContactSheetState extends State<_AddContactSheet>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs;
   final _addressController = TextEditingController();
-  final _nameController = TextEditingController();
 
   @override
   void initState() {
@@ -165,7 +151,6 @@ class _AddContactSheetState extends State<_AddContactSheet>
   void dispose() {
     _tabs.dispose();
     _addressController.dispose();
-    _nameController.dispose();
     super.dispose();
   }
 
@@ -195,17 +180,14 @@ class _AddContactSheetState extends State<_AddContactSheet>
                 ProfileSearchSheet(
                   embedded: true,
                   onSearch: widget.onSearch,
-                  onProfileSelected: widget.onAddInternal,
+                  onProfileSelected: (profile) async {
+                    final address = profile.address ?? profile.username;
+                    if (address == null || address.isEmpty) return;
+                    await widget.onAddByAddress(address);
+                  },
                 ),
                 Column(
                   children: [
-                    TextField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nome visualizzato',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     TextField(
                       controller: _addressController,
                       decoration: const InputDecoration(
@@ -215,9 +197,8 @@ class _AddContactSheetState extends State<_AddContactSheet>
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: () async {
-                        await contacts.addExternal(
-                          address: _addressController.text.trim(),
-                          displayName: _nameController.text.trim(),
+                        await contacts.addByAddress(
+                          _addressController.text.trim(),
                         );
                         if (context.mounted) Navigator.pop(context);
                       },

@@ -26,7 +26,7 @@ class MessagesController extends ChangeNotifier {
     required this.scope,
     required this.messageStore,
     required this.userId,
-    required this.peerProfileId,
+    required this.peerAddress,
     required this.peerMessages,
     required this.messageMediaService,
     required this.inboxService,
@@ -42,7 +42,7 @@ class MessagesController extends ChangeNotifier {
       scope: scope,
       messageStore: messageStore,
       userId: userId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       peerMessages: peerMessages,
       messageMediaService: messageMediaService,
       inboxService: inboxService,
@@ -66,7 +66,7 @@ class MessagesController extends ChangeNotifier {
   final ConversationScope scope;
   final ConversationMessageStore messageStore;
   final String userId;
-  final String peerProfileId;
+  final String peerAddress;
   final Future<void> Function()? onMessagesChanged;
   final bool Function()? hasValidSession;
   final MessageMediaService Function()? resolveMessageMediaService;
@@ -105,11 +105,11 @@ class MessagesController extends ChangeNotifier {
 
   static String outboundQueueKey({
     required String userId,
-    required String peerProfileId,
+    required String peerAddress,
   }) =>
       PushConversationKey.outboundQueueKey(
         recipientUserId: userId,
-        peerProfileId: peerProfileId,
+        peerAddress: peerAddress,
       );
 
   Future<void> reload() => _coordinator.reload();

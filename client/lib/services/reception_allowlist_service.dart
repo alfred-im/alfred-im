@@ -7,13 +7,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allowed_person.dart';
 import '../models/profile_summary.dart';
 import 'profile_search_service.dart';
+import 'profile_service.dart';
 
 class ReceptionAllowlistService {
   ReceptionAllowlistService(this._client)
-      : _profileSearch = ProfileSearchService(_client);
+      : _profileSearch = ProfileSearchService(_client),
+        _profileService = ProfileService(_client);
 
   final SupabaseClient _client;
   final ProfileSearchService _profileSearch;
+  final ProfileService _profileService;
 
   String get _authArchiveUserId {
     final id = _client.auth.currentUser?.id;
@@ -26,20 +29,29 @@ class ReceptionAllowlistService {
   Future<List<AllowedPerson>> fetchAllowedPeople(String archiveUserId) async {
     final rows = await _client
         .from('reception_allowlist')
-        .select(
-          'id, allowed_profile_id, profiles:allowed_profile_id(id, username, display_name, avatar_url, pronouns)',
-        )
+        .select('id, allowed_address')
         .eq('archive_user_id', archiveUserId)
         .order('created_at');
 
-    final people = rows.map((row) {
-      final profileJson = row['profiles'] as Map<String, dynamic>?;
-      if (profileJson == null) {
-        throw StateError('Profilo consentito mancante per ${row['id']}');
+    final addresses = rows
+        .map((row) => (row['allowed_address'] as String).trim().toLowerCase())
+        .toList();
+    final profilesByAddress = <String, ProfileSummary>{};
+    if (addresses.isNotEmpty) {
+      final profiles = await _profileService.fetchSummariesByAddresses(addresses);
+      for (final profile in profiles) {
+        final key = profile.address;
+        if (key != null) profilesByAddress[key] = profile;
       }
+    }
+
+    final people = rows.map((row) {
+      final address =
+          (row['allowed_address'] as String).trim().toLowerCase();
       return AllowedPerson(
         entryId: row['id'] as String,
-        profile: ProfileSummary.fromProfilesRow(profileJson),
+        allowedAddress: address,
+        profile: profilesByAddress[address],
       );
     }).toList();
 
@@ -55,25 +67,29 @@ class ReceptionAllowlistService {
     return _profileSearch.searchProfiles(query);
   }
 
-  Future<AllowedPerson> addAllowedProfile({
+  Future<AllowedPerson> addAllowedAddress({
     required String archiveUserId,
-    required ProfileSummary profile,
+    required String address,
   }) async {
+    final normalized = address.trim().toLowerCase();
     final row = await _client
         .from('reception_allowlist')
         .insert({
           'archive_user_id': _authArchiveUserId,
-          'allowed_profile_id': profile.id,
+          'allowed_address': normalized,
         })
-        .select(
-          'id, allowed_profile_id, profiles:allowed_profile_id(id, username, display_name, avatar_url, pronouns)',
-        )
+        .select('id, allowed_address')
         .single();
 
-    final profileJson = row['profiles'] as Map<String, dynamic>;
+    final allowedAddress =
+        (row['allowed_address'] as String).trim().toLowerCase();
+    final profiles =
+        await _profileService.fetchSummariesByAddresses([allowedAddress]);
+
     return AllowedPerson(
       entryId: row['id'] as String,
-      profile: ProfileSummary.fromProfilesRow(profileJson),
+      allowedAddress: allowedAddress,
+      profile: profiles.isEmpty ? null : profiles.first,
     );
   }
 

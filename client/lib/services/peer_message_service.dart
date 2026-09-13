@@ -9,7 +9,7 @@ import '../models/message.dart';
 import '../models/reaction_summary.dart';
 import '../utils/mailbox_message_filter.dart';
 
-/// RPC e realtime messaggi 1:1 verso un profilo peer.
+/// RPC e realtime messaggi 1:1 verso un indirizzo peer.
 class PeerMessageService {
   PeerMessageService(this._client);
 
@@ -18,13 +18,13 @@ class PeerMessageService {
   SupabaseClient get client => _client;
 
   Future<List<ChatMessage>> fetchPeerMessages({
-    required String peerProfileId,
+    required String peerAddress,
     required String currentUserId,
     int limit = 100,
     DateTime? beforeCreatedAt,
   }) async {
     final params = <String, dynamic>{
-      'p_peer_profile_id': peerProfileId,
+      'p_peer_address': peerAddress.trim().toLowerCase(),
       'p_limit': limit,
     };
     if (beforeCreatedAt != null) {
@@ -86,14 +86,14 @@ class PeerMessageService {
     );
   }
 
-  Future<ChatMessage> sendToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> sendToAddress({
+    required String peerAddress,
     required String body,
     required String currentUserId,
     required String clientMessageId,
   }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
+    return _sendToAddress(
+      peerAddress: peerAddress,
       currentUserId: currentUserId,
       clientMessageId: clientMessageId,
       contentType: 'text',
@@ -101,14 +101,14 @@ class PeerMessageService {
     );
   }
 
-  Future<ChatMessage> sendGifToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> sendGifToAddress({
+    required String peerAddress,
     required String mediaUrl,
     required String currentUserId,
     required String clientMessageId,
   }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
+    return _sendToAddress(
+      peerAddress: peerAddress,
       currentUserId: currentUserId,
       clientMessageId: clientMessageId,
       contentType: 'gif',
@@ -117,16 +117,16 @@ class PeerMessageService {
     );
   }
 
-  Future<ChatMessage> sendVoiceToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> sendVoiceToAddress({
+    required String peerAddress,
     required String mediaUrl,
     required int durationSeconds,
     required int mediaSizeBytes,
     required String currentUserId,
     required String clientMessageId,
   }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
+    return _sendToAddress(
+      peerAddress: peerAddress,
       currentUserId: currentUserId,
       clientMessageId: clientMessageId,
       contentType: 'voice',
@@ -138,15 +138,15 @@ class PeerMessageService {
     );
   }
 
-  Future<ChatMessage> sendLocationToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> sendLocationToAddress({
+    required String peerAddress,
     required double latitude,
     required double longitude,
     required String currentUserId,
     required String clientMessageId,
   }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
+    return _sendToAddress(
+      peerAddress: peerAddress,
       currentUserId: currentUserId,
       clientMessageId: clientMessageId,
       contentType: 'location',
@@ -156,8 +156,8 @@ class PeerMessageService {
     );
   }
 
-  Future<ChatMessage> sendImageToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> sendImageToAddress({
+    required String peerAddress,
     required String mediaUrl,
     required String mediaMime,
     required int mediaSizeBytes,
@@ -165,8 +165,8 @@ class PeerMessageService {
     required String clientMessageId,
     String body = '',
   }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
+    return _sendToAddress(
+      peerAddress: peerAddress,
       currentUserId: currentUserId,
       clientMessageId: clientMessageId,
       contentType: 'image',
@@ -177,8 +177,8 @@ class PeerMessageService {
     );
   }
 
-  Future<ChatMessage> sendVideoToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> sendVideoToAddress({
+    required String peerAddress,
     required String mediaUrl,
     required String mediaMime,
     required int durationSeconds,
@@ -187,8 +187,8 @@ class PeerMessageService {
     required String clientMessageId,
     String body = '',
   }) {
-    return _sendToProfile(
-      recipientProfileId: recipientProfileId,
+    return _sendToAddress(
+      peerAddress: peerAddress,
       currentUserId: currentUserId,
       clientMessageId: clientMessageId,
       contentType: 'video',
@@ -200,8 +200,8 @@ class PeerMessageService {
     );
   }
 
-  Future<ChatMessage> _sendToProfile({
-    required String recipientProfileId,
+  Future<ChatMessage> _sendToAddress({
+    required String peerAddress,
     required String currentUserId,
     required String clientMessageId,
     required String contentType,
@@ -213,24 +213,8 @@ class PeerMessageService {
     double? latitude,
     double? longitude,
   }) async {
-    if (contentType == 'text') {
-      final row = await _client.rpc(
-        'send_message_to_profile',
-        params: {
-          'p_recipient_profile_id': recipientProfileId,
-          'p_body': body,
-          'p_client_message_id': clientMessageId,
-          'p_content_type': contentType,
-        },
-      );
-      return ChatMessage.fromJson(
-        json: row as Map<String, dynamic>,
-        currentUserId: currentUserId,
-      );
-    }
-
     final params = {
-      'p_recipient_profile_id': recipientProfileId,
+      'p_peer_address': peerAddress.trim().toLowerCase(),
       'p_body': body,
       'p_client_message_id': clientMessageId,
       'p_content_type': contentType,
@@ -242,7 +226,7 @@ class PeerMessageService {
       'p_longitude': ?longitude,
     };
 
-    final row = await _client.rpc('send_message_to_profile', params: params);
+    final row = await _client.rpc('send_message_to_address', params: params);
 
     return ChatMessage.fromJson(
       json: row as Map<String, dynamic>,
@@ -252,15 +236,17 @@ class PeerMessageService {
 
   RealtimeChannel subscribeToPeerMessages({
     required String currentUserId,
-    required String peerProfileId,
+    required String peerAddress,
     required void Function(ChatMessage message) onMessage,
     void Function(String logicalMessageId)? onReactionFact,
   }) {
+    final normalizedPeer = peerAddress.trim().toLowerCase();
+
     bool isRelevant(Map<String, dynamic> record) =>
         isMailboxPeerMessageRelevant(
           record: record,
           currentUserId: currentUserId,
-          peerProfileId: peerProfileId,
+          peerAddress: normalizedPeer,
         );
 
     void handle(PostgresChangePayload payload) {
@@ -285,7 +271,7 @@ class PeerMessageService {
     }
 
     final channel = _client
-        .channel('messages-peer-$currentUserId-$peerProfileId')
+        .channel('messages-peer-$currentUserId-$normalizedPeer')
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
           schema: 'public',

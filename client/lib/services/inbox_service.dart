@@ -29,10 +29,10 @@ class InboxService {
     return peers;
   }
 
-  Future<void> markRead(String peerProfileId) async {
+  Future<void> markRead(String peerAddress) async {
     await _client.rpc(
       'mark_peer_read',
-      params: {'p_peer_profile_id': peerProfileId},
+      params: {'p_peer_address': peerAddress.trim().toLowerCase()},
     );
   }
 

@@ -20,7 +20,7 @@ import '../support/fake_messaging_services.dart';
 
 class _RecordingEffects implements MessagingEffects {
   _RecordingEffects()
-      : scope = testConversationScope(userId: 'user-a', peerProfileId: 'peer-b'),
+      : scope = testConversationScope(userId: 'user-a', peerAddress: 'peer-b'),
         messageStore = ConversationMessageStore() {
     messageStore.bindCommittedScope(scope);
   }

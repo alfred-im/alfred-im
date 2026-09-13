@@ -5,6 +5,7 @@
 import 'package:alfred_client/machines/shareable-link/shareable_link_adapters.dart';
 import 'package:alfred_client/machines/shareable-link/shareable_link_effects.dart';
 import 'package:alfred_client/machines/shareable-link/shareable_link_machine.dart';
+import 'package:alfred_client/utils/shareable_link.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,6 +16,8 @@ class _RecordingShareableLinkEffects implements ShareableLinkEffects {
   bool hasOpenAccounts = true;
   @override
   String? focusedUserId = 'user-a';
+  @override
+  String? focusedAccountAddress = 'user-a';
   ProfileSummary? profileToReturn;
   int openChatCount = 0;
   int overlayCount = 0;
@@ -29,7 +32,7 @@ class _RecordingShareableLinkEffects implements ShareableLinkEffects {
   @override
   Future<bool> openSharedChat({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) async {
     openChatCount++;
     return true;
@@ -44,6 +47,7 @@ class _RecordingShareableLinkEffects implements ShareableLinkEffects {
 ProfileSummary _profile(String id, String username) => ProfileSummary(
       id: id,
       username: username,
+      address: username,
       displayName: username,
     );
 
@@ -112,7 +116,7 @@ void main() {
       expect(effects.openChatCount, 0);
     });
 
-    test('profilo assente → invalid', () async {
+    test('profilo assente locale → overlay con indirizzo', () async {
       final effects = _RecordingShareableLinkEffects();
       final machine = ShareableLinkMachine(effects);
       final adapters = ShareableLinkAdapters(machine);
@@ -120,7 +124,8 @@ void main() {
       adapters.onFragmentChanged('unknown');
       await adapters.onHandleRequested();
 
-      expect(machine.state, ShareableLinkState.invalid);
+      expect(machine.state, ShareableLinkState.idle);
+      expect(effects.overlayCount, 1);
     });
 
     test('self peer → ignorato', () async {
@@ -141,9 +146,11 @@ void main() {
       final machine = ShareableLinkMachine(effects);
       final adapters = ShareableLinkAdapters(machine);
 
-      adapters.onFragmentChanged('unknown');
-      await adapters.onHandleRequested();
-      expect(machine.state, ShareableLinkState.invalid);
+      machine.state = ShareableLinkState.invalid;
+      machine.target = const ShareableLinkTarget(
+        address: 'missing',
+        kind: ShareableLinkKind.profile,
+      );
 
       adapters.onDismissNotFound();
       expect(machine.state, ShareableLinkState.idle);

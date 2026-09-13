@@ -16,7 +16,7 @@ void main() {
       const OpenAccount(
         profile: ProfileSummary(
           id: 'a',
-          username: 'a',
+          username: 'a', address: 'a',
           displayName: 'A',
         ),
         refreshToken: 'ra',
@@ -24,7 +24,7 @@ void main() {
       const OpenAccount(
         profile: ProfileSummary(
           id: 'b',
-          username: 'b',
+          username: 'b', address: 'b',
           displayName: 'B',
         ),
         refreshToken: 'rb',

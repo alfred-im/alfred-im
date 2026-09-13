@@ -87,7 +87,7 @@ class _PushSuppressionBinderState extends State<PushSuppressionBinder>
     final peer = auth.activePeer;
     PushPlatform.updateSuppression(
       recipientUserId: auth.userId,
-      activePeerProfileId: visible ? peer?.profileId : null,
+      activePeerAddress: visible ? peer?.peerAddress : null,
       appVisible: visible,
     );
   }

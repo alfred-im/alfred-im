@@ -20,7 +20,7 @@ class OpenAccount {
   /// Sessione non ripristinabile (errore storage/auth) — non è uno stato normale.
   bool get isDisconnected => refreshToken.isEmpty;
 
-  String get userId => profile.id;
+  String get userId => profile.id!;
   String get username => profile.username ?? '';
   String get displayName => profile.displayName;
   String? get avatarUrl => profile.avatarUrl;

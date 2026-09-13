@@ -52,27 +52,27 @@ void main() {
     test('load fetches messages for account+peer, not peer alone', () async {
       messageService.messagesByConversation[conversationKey(
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
       )] = [
         _msg(id: 'm1', body: 'da agent1', senderId: _agent1),
       ];
       messageService.messagesByConversation[conversationKey(
         userId: _agent2,
-        peerProfileId: _agent1,
+        peerAddress: 'alfredagent1',
       )] = [
         _msg(id: 'm2', body: 'da agent2', senderId: _agent2),
       ];
 
       final scopeAgent1 = testConversationScope(
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
         sessionEpoch: 1,
       );
       final asAgent1 = MessagesController(
         scope: scopeAgent1,
         messageStore: testMessageStoreFor(scopeAgent1),
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
         peerMessages: messageService.peerMessages,
         messageMediaService: mediaService,
         inboxService: inboxService,
@@ -83,14 +83,14 @@ void main() {
 
       final scopeAgent2 = testConversationScope(
         userId: _agent2,
-        peerProfileId: _agent1,
+        peerAddress: 'alfredagent1',
         sessionEpoch: 1,
       );
       final asAgent2 = MessagesController(
         scope: scopeAgent2,
         messageStore: testMessageStoreFor(scopeAgent2),
         userId: _agent2,
-        peerProfileId: _agent1,
+        peerAddress: 'alfredagent1',
         peerMessages: messageService.peerMessages,
         messageMediaService: mediaService,
         inboxService: inboxService,
@@ -108,29 +108,28 @@ void main() {
       asAgent2.dispose();
     });
 
-    test('self peer is not a valid conversation scope', () {
-      expect(
-        () => ConversationScope(
-          focusUserId: _agent1,
-          peerProfileId: _agent1,
-          sessionEpoch: 1,
-        ),
-        throwsAssertionError,
+    test('scope uses peer address distinct from focus user id', () {
+      final scope = ConversationScope(
+        focusUserId: _agent1,
+        peerAddress: 'alfredagent2',
+        sessionEpoch: 1,
       );
+      expect(scope.focusUserId, _agent1);
+      expect(scope.peerAddress, 'alfredagent2');
     });
 
     test('load surfaces service errors instead of silent empty chat', () async {
       final broken = _BrokenPeerMessageService();
       final brokenScope = testConversationScope(
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: brokenScope,
         messageStore: testMessageStoreFor(brokenScope),
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
         peerMessages: broken,
         messageMediaService: mediaService,
         inboxService: inboxService,
@@ -148,14 +147,14 @@ void main() {
     test('load reports expired session instead of silent empty chat', () async {
       final expiredScope = testConversationScope(
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: expiredScope,
         messageStore: testMessageStoreFor(expiredScope),
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
         peerMessages: messageService.peerMessages,
         messageMediaService: mediaService,
         inboxService: inboxService,
@@ -177,14 +176,14 @@ void main() {
 
       final realtimeScope = testConversationScope(
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
         sessionEpoch: 1,
       );
       final controller = MessagesController(
         scope: realtimeScope,
         messageStore: testMessageStoreFor(realtimeScope),
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
         peerMessages: messageService.peerMessages,
         messageMediaService: mediaService,
         inboxService: inboxService,
@@ -209,7 +208,7 @@ void main() {
 
       messageService.emitRealtimeMessage(
         userId: _agent1,
-        peerProfileId: _agent2,
+        peerAddress: 'alfredagent2',
         message: ChatMessage(
           id: serverId,
           body: 'inviato',
@@ -237,7 +236,7 @@ class _BrokenPeerMessageService extends FakePeerMessageService {
 
   @override
   Future<List<ChatMessage>> fetchPeerMessages({
-    required String peerProfileId,
+    required String peerAddress,
     required String currentUserId,
     int limit = 100,
     DateTime? beforeCreatedAt,

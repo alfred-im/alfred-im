@@ -5,24 +5,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
 import 'package:alfred_client/coordinators/navigation_coordinator.dart';
-import 'package:alfred_client/services/profile_service.dart';
-
 import '../support/fake_messaging_services.dart';
-
-class _FakeProfileService extends ProfileService {
-  _FakeProfileService(this._peers) : super(createTestSupabaseClient());
-
-  final Map<String, ProfileSummary> _peers;
-
-  @override
-  Future<ProfileSummary?> findById(String id) async => _peers[id];
-}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -40,48 +28,51 @@ void main() {
       manager = AccountManager(storage: storage);
       nav = NavigationCoordinator(manager);
 
+      const agentB = ProfileSummary(
+        id: 'account-b',
+        username: 'agent_b',
+        address: 'agent_b',
+        displayName: 'Agent B',
+      );
       sessionA = await AccountSession.createForTest(
         profile: const ProfileSummary(
           id: 'account-a',
           username: 'agent_a',
+          address: 'agent_a',
           displayName: 'Agent A',
         ),
         client: createTestSupabaseClient(),
         inboxService: FakeInboxService(),
-        profileService: _FakeProfileService({
-          'account-b': const ProfileSummary(
-            id: 'account-b',
-            username: 'agent_b',
-            displayName: 'Agent B',
-          ),
-        }),
+        profileService: MapBackedFakeProfileService.fromProfiles([agentB]),
       );
       await installTestAuthSession(sessionA.client, userId: 'account-a');
       sessionB = await AccountSession.createForTest(
         profile: const ProfileSummary(
           id: 'account-b',
-          username: 'agent_b',
+          username: 'agent_b', address: 'agent_b',
           displayName: 'Agent B',
         ),
         client: createTestSupabaseClient(),
         inboxService: FakeInboxService(
           peers: [
-            ChatPeer(
-              profile: const ProfileSummary(
+            inboxPeer(
+              const ProfileSummary(
                 id: 'account-a',
                 username: 'agent_a',
+                address: 'agent_a',
                 displayName: 'Agent A',
               ),
             ),
           ],
         ),
-        profileService: _FakeProfileService({
-          'account-a': const ProfileSummary(
+        profileService: MapBackedFakeProfileService.fromProfiles([
+          const ProfileSummary(
             id: 'account-a',
             username: 'agent_a',
+            address: 'agent_a',
             displayName: 'Agent A',
           ),
-        }),
+        ]),
       );
       await installTestAuthSession(sessionB.client, userId: 'account-b');
 
@@ -104,34 +95,31 @@ void main() {
     });
 
     test('openPeerOnFocusedAccount rejects self peer', () async {
-      await nav.openPeerOnFocusedAccount(
-        ChatPeer(
-          profile: const ProfileSummary(
-            id: 'account-a',
-            username: 'agent_a',
-            displayName: 'Agent A',
-          ),
-        ),
-      );
+      await nav.openPeerOnFocusedAccount(inboxPeer(const ProfileSummary(
+        id: 'account-a',
+        username: 'agent_a',
+        address: 'agent_a',
+        displayName: 'Agent A',
+      )));
       expect(manager.viewState.activePeer, isNull);
     });
 
     test('openConversationOnAccount switches account and opens inbox peer', () async {
       final ok = await nav.openConversationOnAccount(
         accountUserId: 'account-b',
-        peerProfileId: 'account-a',
+        peerAddress: 'agent_a',
         allowProfileFallback: false,
       );
 
       expect(ok, isTrue);
       expect(manager.focusUserId, 'account-b');
-      expect(manager.viewState.activePeer?.profileId, 'account-a');
+      expect(manager.viewState.activePeer?.peerAddress, 'agent_a');
     });
 
     test('openConversationOnAccount rejects self peer pair', () async {
       final ok = await nav.openConversationOnAccount(
         accountUserId: 'account-a',
-        peerProfileId: 'account-a',
+        peerAddress: 'agent_a',
       );
 
       expect(ok, isFalse);
@@ -141,13 +129,13 @@ void main() {
     test('openConversationOnAccount without inbox uses profile when allowed', () async {
       final ok = await nav.openConversationOnAccount(
         accountUserId: 'account-b',
-        peerProfileId: 'account-a',
+        peerAddress: 'agent_a',
         allowProfileFallback: true,
       );
 
       expect(ok, isTrue);
       expect(manager.focusUserId, 'account-b');
-      expect(manager.viewState.activePeer?.profileId, 'account-a');
+      expect(manager.viewState.activePeer?.peerAddress, 'agent_a');
     });
   });
 }

@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import '../../models/profile_summary.dart';
 import 'contacts_effects.dart';
 
 /// Stato caricamento — `docs/model/uml/contacts/contacts-state.puml`.
@@ -33,23 +32,14 @@ final class SetSearchQuery extends ContactsEvent {
   final String query;
 }
 
-final class AddInternalContact extends ContactsEvent {
-  const AddInternalContact(this.profile);
-  final ProfileSummary profile;
-}
-
-final class AddExternalContact extends ContactsEvent {
-  const AddExternalContact({
-    required this.address,
-    required this.displayName,
-  });
+final class AddContactByAddress extends ContactsEvent {
+  const AddContactByAddress(this.address);
   final String address;
-  final String displayName;
 }
 
-final class RemoveInternalContact extends ContactsEvent {
-  const RemoveInternalContact(this.profileId);
-  final String profileId;
+final class RemoveContactByAddress extends ContactsEvent {
+  const RemoveContactByAddress(this.address);
+  final String address;
 }
 
 /// Interprete statechart contacts — allineato a UML.
@@ -74,17 +64,11 @@ class ContactsMachine {
         loadState = ContactsLoadState.ready;
       case SetSearchQuery(:final query):
         searchQuery = query;
-      case AddInternalContact(:final profile):
-        await _effects.addInternal(profile);
+      case AddContactByAddress(:final address):
+        await _effects.addByAddress(address);
         await send(const LoadContacts());
-      case AddExternalContact(:final address, :final displayName):
-        await _effects.addExternal(
-          address: address,
-          displayName: displayName,
-        );
-        await send(const LoadContacts());
-      case RemoveInternalContact(:final profileId):
-        await _effects.removeInternalByProfileId(profileId);
+      case RemoveContactByAddress(:final address):
+        await _effects.removeByAddress(address);
         await send(const LoadContacts());
     }
   }

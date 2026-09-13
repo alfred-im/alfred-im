@@ -20,7 +20,7 @@ void main() {
       const account = OpenAccount(
         profile: ProfileSummary(
           id: 'u1',
-          username: 'mario',
+          username: 'mario', address: 'mario',
           displayName: 'Mario',
         ),
         refreshToken: 'rt',
@@ -50,11 +50,11 @@ void main() {
 
       await storage.saveAllAccounts([
         const OpenAccount(
-          profile: ProfileSummary(id: 'a', username: 'alice', displayName: 'A'),
+          profile: ProfileSummary(id: 'a', username: 'alice', address: 'alice', displayName: 'A'),
           refreshToken: 'rt-a',
         ),
         const OpenAccount(
-          profile: ProfileSummary(id: 'b', username: 'bob', displayName: 'B'),
+          profile: ProfileSummary(id: 'b', username: 'bob', address: 'bob', displayName: 'B'),
           refreshToken: 'rt-b',
         ),
       ]);
@@ -70,13 +70,13 @@ void main() {
       await Future.wait([
         storage.upsertAccount(
           const OpenAccount(
-            profile: ProfileSummary(id: 'a', username: 'alice', displayName: 'A'),
+            profile: ProfileSummary(id: 'a', username: 'alice', address: 'alice', displayName: 'A'),
             refreshToken: 'rt-a',
           ),
         ),
         storage.upsertAccount(
           const OpenAccount(
-            profile: ProfileSummary(id: 'b', username: 'bob', displayName: 'B'),
+            profile: ProfileSummary(id: 'b', username: 'bob', address: 'bob', displayName: 'B'),
             refreshToken: 'rt-b',
           ),
         ),

@@ -32,7 +32,7 @@ void main() {
     final sessionV1 = await AccountSession.createForTest(
       profile: const ProfileSummary(
         id: 'focus-id',
-        username: 'alice',
+        username: 'alice', address: 'alice',
         displayName: 'ArchiveUser',
       ),
       client: client,

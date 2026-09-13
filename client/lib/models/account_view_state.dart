@@ -39,7 +39,7 @@ class AccountViewState {
       );
 
   AccountViewState mergeActivePeer(ChatPeer inboxRow) {
-    if (activePeer?.profileId != inboxRow.profileId) return this;
+    if (activePeer?.peerAddress != inboxRow.peerAddress) return this;
     return AccountViewState(
       activePeer: activePeer!.mergeFromInbox(inboxRow),
       showInboxOnMobile: showInboxOnMobile,
@@ -47,7 +47,7 @@ class AccountViewState {
   }
 
   AccountViewState patchActivePeer(ChatPeer peer) {
-    if (activePeer?.profileId != peer.profileId) return this;
+    if (activePeer?.peerAddress != peer.peerAddress) return this;
     return AccountViewState(
       activePeer: peer,
       showInboxOnMobile: showInboxOnMobile,
@@ -56,8 +56,13 @@ class AccountViewState {
   }
 
   /// Evita chat aperte verso sé stessi (stato incoerente dopo switch account).
-  AccountViewState sanitizedForAccount(String accountUserId) {
+  AccountViewState sanitizedForAccount(String accountUserId, {String? accountAddress}) {
     if (activePeer?.profileId == accountUserId) {
+      return const AccountViewState();
+    }
+    final normalizedAddress = accountAddress?.trim().toLowerCase();
+    if (normalizedAddress != null &&
+        activePeer?.peerAddress == normalizedAddress) {
       return const AccountViewState();
     }
     return this;

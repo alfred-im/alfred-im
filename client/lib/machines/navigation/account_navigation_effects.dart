@@ -43,6 +43,33 @@ class AccountNavigationEffects implements NavigationEffects {
 
   int _ingressPrepGeneration = 0;
 
+  String? _resolvedAccountAddress(String accountUserId) {
+    final live = _manager.focusedSession;
+    if (live != null && live.userId == accountUserId) {
+      return live.profile.resolvedPeerAddress;
+    }
+    for (final session in _manager.sessions) {
+      if (session.userId == accountUserId) {
+        return session.profile.resolvedPeerAddress;
+      }
+    }
+    for (final account in _manager.openAccounts) {
+      if (account.userId == accountUserId) {
+        return account.profile.resolvedPeerAddress;
+      }
+    }
+    return null;
+  }
+
+  bool _isSelfPeerAddress(String accountUserId, String peerAddress) {
+    final normalizedPeer = peerAddress.trim().toLowerCase();
+    final accountAddress = _resolvedAccountAddress(accountUserId);
+    if (accountAddress != null) {
+      return accountAddress == normalizedPeer;
+    }
+    return accountUserId == normalizedPeer;
+  }
+
   @override
   Future<void> focusAccount(
     String accountUserId, {
@@ -94,12 +121,12 @@ class AccountNavigationEffects implements NavigationEffects {
   @override
   Future<bool> openPeerOnFocusedAccount(ChatPeer peer) async {
     final focus = _manager.focusUserId;
-    if (focus == null || peer.profileId == focus) {
+    if (focus == null || _isSelfPeerAddress(focus, peer.peerAddress)) {
       diagLogFail(
         'nav',
         'open_peer',
         focus == null ? 'no_focus' : 'self_peer',
-        data: {'peerProfileId': peer.profileId},
+        data: {'peerAddress': peer.peerAddress},
       );
       return false;
     }
@@ -117,7 +144,7 @@ class AccountNavigationEffects implements NavigationEffects {
     var peerForUi = peer;
     final session = _manager.focusedSession;
     if (session != null) {
-      final fromInbox = session.inboxController.findByProfileId(peer.profileId);
+      final fromInbox = session.inboxController.findByPeerAddress(peer.peerAddress);
       if (fromInbox != null) {
         peerForUi = fromInbox;
       }
@@ -127,13 +154,13 @@ class AccountNavigationEffects implements NavigationEffects {
     unawaited(
       _prepareConversationAfterIngress(
         accountUserId: focus,
-        peerProfileId: peer.profileId,
+        peerAddress: peer.peerAddress,
       ),
     );
     diagLog(
       'nav',
       'open_peer',
-      data: {'accountUserId': focus, 'peerProfileId': peer.profileId},
+      data: {'accountUserId': focus, 'peerAddress': peer.peerAddress},
     );
     return true;
   }
@@ -141,13 +168,13 @@ class AccountNavigationEffects implements NavigationEffects {
   @override
   Future<bool> openConversation({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     required OpenConversationSource source,
     bool allowProfileFallback = true,
   }) {
     return _openConversationImpl(
       accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       source: source,
       allowProfileFallback: allowProfileFallback,
     );
@@ -155,7 +182,7 @@ class AccountNavigationEffects implements NavigationEffects {
 
   Future<bool> _openConversationImpl({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     required OpenConversationSource source,
     bool allowProfileFallback = true,
   }) async {
@@ -164,13 +191,13 @@ class AccountNavigationEffects implements NavigationEffects {
       'open_conversation.start',
       data: {
         'accountUserId': accountUserId,
-        'peerProfileId': peerProfileId,
+        'peerAddress': peerAddress,
         'source': source.name,
         'focusBefore': _manager.focusUserId,
       },
     );
 
-    if (accountUserId == peerProfileId) {
+    if (_isSelfPeerAddress(accountUserId, peerAddress)) {
       diagLogFail(
         'nav',
         'open_conversation',
@@ -191,7 +218,7 @@ class AccountNavigationEffects implements NavigationEffects {
       case OpenConversationSource.compose:
         _viewState.clearStaleConversationUnlessPeer(
           accountUserId,
-          peerProfileId,
+          peerAddress,
         );
       case OpenConversationSource.inbox:
         break;
@@ -221,13 +248,14 @@ class AccountNavigationEffects implements NavigationEffects {
       return false;
     }
 
-    final cachedPeer = session.inboxController.findByProfileId(peerProfileId);
-    if (cachedPeer != null && cachedPeer.profileId != session.userId) {
+    final cachedPeer = session.inboxController.findByPeerAddress(peerAddress);
+    if (cachedPeer != null &&
+        !_isSelfPeerAddress(accountUserId, cachedPeer.peerAddress)) {
       _enterConversationUi(cachedPeer);
       unawaited(
         _prepareConversationAfterIngress(
           accountUserId: accountUserId,
-          peerProfileId: peerProfileId,
+          peerAddress: peerAddress,
         ),
       );
       diagLog(
@@ -235,7 +263,7 @@ class AccountNavigationEffects implements NavigationEffects {
         'open_conversation.ok',
         data: {
           'accountUserId': accountUserId,
-          'peerProfileId': peerProfileId,
+          'peerAddress': peerAddress,
           'source': source.name,
           'ingress': 'cached_peer',
         },
@@ -249,7 +277,7 @@ class AccountNavigationEffects implements NavigationEffects {
 
     final peer = await _resolvePeer(
       session: session,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       allowProfileFallback: allowProfileFallback,
       inboxRetryAttempts: inboxRetryAttempts,
       logSource: 'resolve_peer_${source.name}',
@@ -261,7 +289,7 @@ class AccountNavigationEffects implements NavigationEffects {
         'nav',
         'open_conversation',
         'peer_not_found',
-        data: {'peerProfileId': peerProfileId},
+        data: {'peerAddress': peerAddress},
       );
       return false;
     }
@@ -270,7 +298,7 @@ class AccountNavigationEffects implements NavigationEffects {
     unawaited(
       _prepareConversationAfterIngress(
         accountUserId: accountUserId,
-        peerProfileId: peer.profileId,
+        peerAddress: peer.peerAddress,
       ),
     );
     diagLog(
@@ -278,7 +306,7 @@ class AccountNavigationEffects implements NavigationEffects {
       'open_conversation.ok',
       data: {
         'accountUserId': accountUserId,
-        'peerProfileId': peerProfileId,
+        'peerAddress': peerAddress,
         'source': source.name,
         'ingress': 'resolved_peer',
       },
@@ -296,34 +324,37 @@ class AccountNavigationEffects implements NavigationEffects {
 
   Future<void> _prepareConversationAfterIngress({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) async {
     final generation = ++_ingressPrepGeneration;
     try {
       if (!await _consolidateSessionForAccount(accountUserId)) return;
       if (generation != _ingressPrepGeneration) return;
-      if (_viewState.viewStateFor(accountUserId).activePeer?.profileId !=
-          peerProfileId) {
+      if (_viewState.viewStateFor(accountUserId).activePeer?.peerAddress !=
+          peerAddress.trim().toLowerCase()) {
         return;
       }
 
       final session = _manager.focusedSession;
       if (session == null || session.userId != accountUserId) return;
 
-      var peer = session.inboxController.findByProfileId(peerProfileId);
+      var peer = session.inboxController.findByPeerAddress(peerAddress);
       if (peer == null) {
-        peer = await session.profileService.getPeerContext(peerProfileId);
-        if (peer == null || peer.profileId == session.userId) return;
+        peer = await session.profileService.getPeerContext(peerAddress);
+        if (peer == null ||
+            _isSelfPeerAddress(accountUserId, peer.peerAddress)) {
+          return;
+        }
       } else if (!peer.hasRelationship) {
-        final enriched = await session.profileService.getPeerContext(peerProfileId);
+        final enriched = await session.profileService.getPeerContext(peerAddress);
         if (enriched != null) {
           peer = peer.withRelationship(enriched.relationship!);
         }
       }
 
       if (generation != _ingressPrepGeneration) return;
-      if (_viewState.viewStateFor(accountUserId).activePeer?.profileId !=
-          peerProfileId) {
+      if (_viewState.viewStateFor(accountUserId).activePeer?.peerAddress !=
+          peerAddress.trim().toLowerCase()) {
         return;
       }
 
@@ -338,7 +369,7 @@ class AccountNavigationEffects implements NavigationEffects {
         'nav',
         'ingress_prep',
         'failed',
-        data: {'accountUserId': accountUserId, 'peerProfileId': peerProfileId},
+        data: {'accountUserId': accountUserId, 'peerAddress': peerAddress},
       );
     }
   }
@@ -388,12 +419,12 @@ class AccountNavigationEffects implements NavigationEffects {
 
   Future<ChatPeer?> resolvePeerInInboxForTest({
     required AccountSession session,
-    required String peerProfileId,
+    required String peerAddress,
     bool allowProfileFallback = true,
   }) {
     return _resolvePeer(
       session: session,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       allowProfileFallback: allowProfileFallback,
       inboxRetryAttempts: _defaultInboxRetryAttempts,
       logSource: 'resolve_peer',
@@ -402,13 +433,13 @@ class AccountNavigationEffects implements NavigationEffects {
 
   Future<ChatPeer?> _resolvePeer({
     required AccountSession session,
-    required String peerProfileId,
+    required String peerAddress,
     required bool allowProfileFallback,
     required int inboxRetryAttempts,
     required String logSource,
     bool showInboxLoadingIndicator = true,
   }) async {
-    if (peerProfileId == session.userId) return null;
+    if (peerAddress == session.userId) return null;
 
     for (var attempt = 0; attempt < inboxRetryAttempts; attempt++) {
       if (session.inboxController.isLoading) {
@@ -419,8 +450,8 @@ class AccountNavigationEffects implements NavigationEffects {
       await session.inboxController.load(
         showLoadingIndicator: showInboxLoadingIndicator,
       );
-      final peer = session.inboxController.findByProfileId(peerProfileId);
-      if (peer != null && peer.profileId != session.userId) {
+      final peer = session.inboxController.findByPeerAddress(peerAddress);
+      if (peer != null && peer.peerAddress != session.userId) {
         diagLog(
           'nav',
           logSource,
@@ -437,8 +468,8 @@ class AccountNavigationEffects implements NavigationEffects {
     if (!allowProfileFallback) return null;
 
     try {
-      final peer = await session.profileService.getPeerContext(peerProfileId);
-      if (peer != null && peer.profileId != session.userId) {
+      final peer = await session.profileService.getPeerContext(peerAddress);
+      if (peer != null && peer.peerAddress != session.userId) {
         diagLog(
           'nav',
           logSource,

@@ -44,7 +44,7 @@ void main() {
     const peerId = 'peer-b';
     const peerProfile = ProfileSummary(
       id: peerId,
-      username: 'peer_b',
+      username: 'peer_b', address: 'peer_b',
       displayName: 'Peer B',
     );
 
@@ -52,7 +52,7 @@ void main() {
     final sessionV1 = await AccountSession.createForTest(
       profile: const ProfileSummary(
         id: focusUserId,
-        username: 'user_a',
+        username: 'user_a', address: 'user_a',
         displayName: 'User A',
       ),
       client: client,
@@ -65,7 +65,7 @@ void main() {
 
     final manager = AccountManager()..focusTestSession(sessionV2);
     final navigation = NavigationCoordinator(manager);
-    final peer = ChatPeer(profile: peerProfile);
+    final peer = ChatPeer(peerAddress: 'peer_b', profile: peerProfile);
     final frozenScope = ConversationScope.fromSession(sessionV1, peer);
     navigation.machine.commitScope(frozenScope);
 
@@ -94,7 +94,7 @@ void main() {
       scope: frozenScope,
       messageStore: testMessageStoreFor(frozenScope),
       userId: focusUserId,
-      peerProfileId: peerId,
+      peerAddress: 'peer_b',
       peerMessages: sessionV2.peerMessages,
       messageMediaService: mediaService,
       inboxService: FakeInboxService(),

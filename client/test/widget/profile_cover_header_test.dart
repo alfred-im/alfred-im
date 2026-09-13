@@ -12,7 +12,7 @@ void main() {
   testWidgets('ProfileCoverHeader compact falls back without cover', (tester) async {
     const profile = ProfileSummary(
       id: 'u1',
-      username: 'alice',
+      username: 'alice', address: 'alice',
       displayName: 'Alice',
     );
 
@@ -36,7 +36,7 @@ void main() {
       (tester) async {
     const profile = ProfileSummary(
       id: 'u1',
-      username: 'alice',
+      username: 'alice', address: 'alice',
       displayName: 'Alice',
       coverUrl: 'https://example.com/cover.jpg',
     );
@@ -61,7 +61,7 @@ void main() {
       (tester) async {
     const profile = ProfileSummary(
       id: 'u1',
-      username: 'bob',
+      username: 'bob', address: 'bob',
       displayName: 'Bob',
       coverUrl: 'https://example.com/cover.jpg',
     );

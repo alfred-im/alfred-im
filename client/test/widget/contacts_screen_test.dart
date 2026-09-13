@@ -61,15 +61,13 @@ void main() {
         Contact(
           id: 'c1',
           archiveUserId: 'focus-id',
-          linkedProfileId: 'p1',
-          displayName: 'Alice',
+          address: 'alice',
           createdAt: DateTime.utc(2026, 1, 1),
         ),
         Contact(
           id: 'c2',
           archiveUserId: 'focus-id',
-          linkedProfileId: 'p2',
-          displayName: 'Bob',
+          address: 'bob',
           createdAt: DateTime.utc(2026, 1, 1),
         ),
       ];
@@ -97,7 +95,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'ali');
     await tester.pump();
 
-    expect(find.text('Alice'), findsOneWidget);
-    expect(find.text('Bob'), findsNothing);
+    expect(find.text('alice'), findsOneWidget);
+    expect(find.text('bob'), findsNothing);
   });
 }

@@ -15,7 +15,7 @@ import 'inbox_peer_tile.dart';
 class InboxPanel extends StatefulWidget {
   const InboxPanel({
     super.key,
-    required this.selectedPeerId,
+    required this.selectedPeerAddress,
     required this.peers,
     required this.isLoading,
     required this.onSelected,
@@ -34,7 +34,7 @@ class InboxPanel extends StatefulWidget {
     this.onInstanceConfigTap,
   });
 
-  final String? selectedPeerId;
+  final String? selectedPeerAddress;
   final List<ChatPeer> peers;
   final bool isLoading;
   final ValueChanged<ChatPeer> onSelected;
@@ -195,7 +195,8 @@ class _InboxPanelState extends State<InboxPanel> {
                                       return InboxPeerTile(
                                         peer: peer,
                                         selected:
-                                            peer.profileId == widget.selectedPeerId,
+                                            peer.peerAddress ==
+                                                widget.selectedPeerAddress,
                                         onTap: () => widget.onSelected(peer),
                                       );
                                     },

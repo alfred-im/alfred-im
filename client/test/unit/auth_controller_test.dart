@@ -58,7 +58,7 @@ void main() {
         profile: const ProfileSummary(
           id: 'user-1',
           displayName: 'Mario',
-          username: 'mario',
+          username: 'mario', address: 'mario',
         ),
         client: client,
       );
@@ -122,7 +122,7 @@ void main() {
         profile: const ProfileSummary(
           id: 'user-1',
           displayName: 'Mario',
-          username: 'mario',
+          username: 'mario', address: 'mario',
         ),
         client: client,
       );

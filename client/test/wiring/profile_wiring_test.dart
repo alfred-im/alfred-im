@@ -40,7 +40,7 @@ class _FakeProfileService extends ProfileService {
     return UserProfile(
       summary: ProfileSummary(
         id: userId,
-        username: 'user',
+        username: 'user', address: 'user',
         displayName: displayName,
         avatarUrl: avatarUrl,
         coverUrl: clearCoverUrl ? null : coverUrl,

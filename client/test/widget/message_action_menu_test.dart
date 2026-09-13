@@ -18,7 +18,7 @@ void main() {
   testWidgets('message action menu shows scrollable emoji catalog', (
     tester,
   ) async {
-    final scope = testConversationScope(userId: 'u1', peerProfileId: 'p1');
+    final scope = testConversationScope(userId: 'u1', peerAddress: 'p1');
     final store = ConversationMessageStore()..bindCommittedScope(scope);
     final messageService = FakeMessageService(createTestSupabaseClient());
     final message = ChatMessage(
@@ -40,7 +40,7 @@ void main() {
                 scope: scope,
                 messageStore: store,
                 userId: 'u1',
-                peerProfileId: 'p1',
+                peerAddress: 'p1',
                 peerMessages: messageService.peerMessages,
                 messageMediaService: FakeMessageMediaService(),
                 inboxService: FakeInboxService(),

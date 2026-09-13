@@ -38,7 +38,7 @@ void main() {
 
     service4.messagesByConversation[conversationKey(
       userId: _test4Id,
-      peerProfileId: _test2Id,
+      peerAddress: _test2Id,
     )] = [
       ChatMessage(
         id: 't4-poison',
@@ -51,7 +51,7 @@ void main() {
     ];
     service1.messagesByConversation[conversationKey(
       userId: _test1Id,
-      peerProfileId: _test2Id,
+      peerAddress: _test2Id,
     )] = [
       ChatMessage(
         id: 't1-1',
@@ -66,7 +66,7 @@ void main() {
     final store = ConversationMessageStore();
     final scope4 = testConversationScope(
       userId: _test4Id,
-      peerProfileId: _test2Id,
+      peerAddress: _test2Id,
       loadSeq: 1,
     );
     store.bindCommittedScope(scope4);
@@ -75,7 +75,7 @@ void main() {
       scope: scope4,
       messageStore: store,
       userId: _test4Id,
-      peerProfileId: _test2Id,
+      peerAddress: _test2Id,
       peerMessages: service4.peerMessages,
       messageMediaService: MessageMediaService(client4),
       inboxService: FakeInboxService(),
@@ -87,7 +87,7 @@ void main() {
 
     final scope1 = testConversationScope(
       userId: _test1Id,
-      peerProfileId: _test2Id,
+      peerAddress: _test2Id,
       loadSeq: 2,
     );
     store.bindCommittedScope(scope1);
@@ -96,7 +96,7 @@ void main() {
       scope: scope1,
       messageStore: store,
       userId: _test1Id,
-      peerProfileId: _test2Id,
+      peerAddress: _test2Id,
       peerMessages: service1.peerMessages,
       messageMediaService: MessageMediaService(client1),
       inboxService: FakeInboxService(),

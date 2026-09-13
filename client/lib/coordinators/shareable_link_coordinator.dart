@@ -100,6 +100,12 @@ class _LiveShareableLinkEffects implements ShareableLinkEffects {
   String? get focusedUserId => _auth.focusedSession?.userId;
 
   @override
+  String? get focusedAccountAddress {
+    final profile = _auth.focusedProfileSummary;
+    return profile?.address ?? profile?.username;
+  }
+
+  @override
   Future<ProfileSummary?> findProfileByUsername(String localUsername) {
     final session = _auth.focusedSession;
     if (session == null) return Future.value();
@@ -109,11 +115,11 @@ class _LiveShareableLinkEffects implements ShareableLinkEffects {
   @override
   Future<bool> openSharedChat({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) {
     return _auth.openConversationFromShareableLink(
       accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
     );
   }
 
@@ -136,6 +142,9 @@ class _NoopShareableLinkEffects implements ShareableLinkEffects {
   String? get focusedUserId => null;
 
   @override
+  String? get focusedAccountAddress => null;
+
+  @override
   Future<ProfileSummary?> findProfileByUsername(String localUsername) {
     return Future.value();
   }
@@ -143,7 +152,7 @@ class _NoopShareableLinkEffects implements ShareableLinkEffects {
   @override
   Future<bool> openSharedChat({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) {
     return Future.value(false);
   }

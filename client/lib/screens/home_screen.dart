@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await inbox.load();
     if (!mounted) return;
 
-    final updated = inbox.findByProfileId(activePeer.profileId);
+    final updated = inbox.findByPeerAddress(activePeer.peerAddress);
     if (updated != null) {
       auth.navigation.mergeActivePeerFromInbox(updated);
     }
@@ -144,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return OwnerGatedInboxPanel(
       key: ValueKey(accountUserId),
       session: session,
-      selectedPeerId: auth.activePeer?.profileId,
+      selectedPeerAddress: auth.activePeer?.peerAddress,
       peers: inbox.filteredPeers,
       isLoading: inbox.isLoading,
       error: inbox.error,

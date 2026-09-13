@@ -39,13 +39,13 @@ final class OpenPeerOnFocusedAccount extends NavigationEvent {
 final class OpenConversationOnAccount extends NavigationEvent {
   const OpenConversationOnAccount({
     required this.accountUserId,
-    required this.peerProfileId,
+    required this.peerAddress,
     this.source = OpenConversationSource.compose,
     this.allowProfileFallback = true,
   });
 
   final String accountUserId;
-  final String peerProfileId;
+  final String peerAddress;
   final OpenConversationSource source;
   final bool allowProfileFallback;
 }
@@ -96,7 +96,7 @@ class NavigationMachine {
       data: {
         'loadSeq': _loadSeq,
         'previousFocusUserId': previous?.focusUserId,
-        'previousPeer': previous?.peerProfileId,
+        'previousPeer': previous?.peerAddress,
       },
     );
   }
@@ -109,7 +109,7 @@ class NavigationMachine {
       'scope.commit',
       data: {
         'focusUserId': scope.focusUserId,
-        'peerProfileId': scope.peerProfileId,
+        'peerAddress': scope.peerAddress,
         'sessionEpoch': scope.sessionEpoch,
         'loadSeq': _loadSeq,
       },
@@ -144,7 +144,7 @@ class NavigationMachine {
   bool isScopeCommitted(ConversationScope scope) =>
       isConversationReadyFor(
         focusUserId: scope.focusUserId,
-        peerProfileId: scope.peerProfileId,
+        peerAddress: scope.peerAddress,
       );
 
   bool isConversationReady({
@@ -153,20 +153,20 @@ class NavigationMachine {
   }) {
     return isConversationReadyFor(
       focusUserId: session.userId,
-      peerProfileId: peer.profileId,
+      peerAddress: peer.peerAddress,
       sessionEpoch: session.epoch,
     );
   }
 
   bool isConversationReadyFor({
     required String focusUserId,
-    required String peerProfileId,
+    required String peerAddress,
     int? sessionEpoch,
   }) {
     final committed = committedScope;
     if (committed == null) return false;
     if (committed.focusUserId != focusUserId ||
-        committed.peerProfileId != peerProfileId) {
+        committed.peerAddress != peerAddress) {
       return false;
     }
     if (sessionEpoch != null && committed.sessionEpoch != sessionEpoch) {
@@ -216,13 +216,13 @@ class NavigationMachine {
                 : NavigationShellState.inboxVisible;
       case OpenConversationOnAccount(
         :final accountUserId,
-        :final peerProfileId,
+        :final peerAddress,
         :final source,
         :final allowProfileFallback,
       ):
         await _openConversation(
           accountUserId: accountUserId,
-          peerProfileId: peerProfileId,
+          peerAddress: peerAddress,
           source: source,
           allowProfileFallback: allowProfileFallback,
         );
@@ -246,14 +246,14 @@ class NavigationMachine {
 
   Future<void> _openConversation({
     required String accountUserId,
-    required String peerProfileId,
+    required String peerAddress,
     required OpenConversationSource source,
     bool allowProfileFallback = true,
   }) async {
     invalidateCommittedScope();
     final ok = await _effects.openConversation(
       accountUserId: accountUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
       source: source,
       allowProfileFallback: allowProfileFallback,
     );

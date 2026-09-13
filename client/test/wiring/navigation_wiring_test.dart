@@ -14,9 +14,11 @@ import 'package:alfred_client/services/account_storage_service.dart';
 import '../support/wiring_test_fixtures.dart';
 
 ChatPeer _peer(String id, String username) => ChatPeer.fromProfile(
+      peerAddress: username,
       profile: ProfileSummary(
         id: id,
         username: username,
+        address: username,
         displayName: username,
       ),
     );
@@ -49,7 +51,7 @@ void main() {
       await auth.navigation.openConversation(_peer('peer-b', 'bob'));
 
       expect(auth.navigationCoordinator.machine.shellState, NavigationShellState.chatOpen);
-      expect(auth.viewState.activePeer?.profileId, 'peer-b');
+      expect(auth.viewState.activePeer?.peerAddress, 'bob');
     });
 
     test('externalIntents.openFromCompose attraversa adapter unificato', () async {
@@ -69,7 +71,7 @@ void main() {
 
       final ok = await auth.externalIntents.openFromCompose(
         accountUserId: 'account-a',
-        peerProfileId: 'peer-c',
+        peerAddress: 'peer-c',
         allowProfileFallback: false,
       );
 

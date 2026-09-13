@@ -33,7 +33,7 @@ void main() {
     const groupProfile = ProfileSummary(
       id: 'group-focus-id',
       displayName: 'Famiglia',
-      username: 'famiglia',
+      username: 'famiglia', address: 'famiglia',
       profileKind: ProfileKind.group,
     );
 
@@ -89,7 +89,7 @@ void main() {
     const groupProfile = ProfileSummary(
       id: 'group-focus-id',
       displayName: 'Famiglia',
-      username: 'famiglia',
+      username: 'famiglia', address: 'famiglia',
       profileKind: ProfileKind.group,
     );
 

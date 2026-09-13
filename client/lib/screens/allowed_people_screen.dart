@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/allowed_person.dart';
+import '../models/profile_summary.dart';
 import '../providers/reception_allowlist_controller.dart';
 import '../theme/alfred_colors.dart';
 import '../widgets/collapsible_list_search.dart';
@@ -42,9 +43,9 @@ class _AllowedPeopleScreenState extends State<AllowedPeopleScreen> {
         showAvatar: true,
         onSearch: allowlist.searchProfiles,
         isProfileSelectable: (profile) =>
-            !allowlist.allowedProfileIds.contains(profile.id),
+            !allowlist.allowedAddresses.contains(profile.id),
         profileTrailing: (profile) {
-          if (allowlist.allowedProfileIds.contains(profile.id)) {
+          if (allowlist.allowedAddresses.contains(profile.id)) {
             return const Icon(Icons.check, color: AlfredColors.textSecondary);
           }
           return null;
@@ -153,18 +154,22 @@ class _AllowedPeopleScreenState extends State<AllowedPeopleScreen> {
                             itemBuilder: (context, index) {
                               final person =
                                   allowlist.filteredAllowedPeople[index];
+                              final profile = person.profile ??
+                                  ProfileSummary.fromAddress(
+                                    person.allowedAddress,
+                                  );
                               return ListTile(
                                 leading: ProfileAvatar(
-                                  profile: person.profile,
+                                  profile: profile,
                                   onTap: () => showPeerProfileOverlay(
                                     context,
-                                    person.profile,
+                                    profile,
                                   ),
                                 ),
                                 title: Text(person.displayName),
-                                subtitle: person.profile.hasUsername
+                                subtitle: profile.hasUsername
                                     ? Text(
-                                        person.profile.handle,
+                                        profile.handle,
                                         style: const TextStyle(fontSize: 12),
                                       )
                                     : null,

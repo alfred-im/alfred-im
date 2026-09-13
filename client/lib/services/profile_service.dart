@@ -70,20 +70,43 @@ class ProfileService {
     return ChatPeer.fromPeerContextRow(row as Map<String, dynamic>);
   }
 
-  Future<ChatPeer?> getPeerContext(String profileId) async {
-    final row = await _client.rpc(
-      'get_peer_context',
-      params: {'p_peer_profile_id': profileId},
-    );
-
-    if (row == null) return null;
-    if (row is List) {
-      if (row.isEmpty) return null;
-      return ChatPeer.fromPeerContextRow(row.first as Map<String, dynamic>);
+  Future<ChatPeer?> getPeerContext(String peerAddress) async {
+    final normalized = peerAddress.trim().toLowerCase();
+    final summaries = await fetchSummariesByAddresses([normalized]);
+    if (summaries.isEmpty) {
+      return ChatPeer.fromAddress(normalized);
     }
-    return ChatPeer.fromPeerContextRow(row as Map<String, dynamic>);
+    return ChatPeer.fromProfile(
+      peerAddress: normalized,
+      profile: summaries.first,
+    );
   }
 
+  Future<List<ProfileSummary>> fetchSummariesByAddresses(
+    List<String> addresses,
+  ) async {
+    if (addresses.isEmpty) return [];
+
+    final normalized = addresses
+        .map((a) => a.trim().toLowerCase())
+        .where((a) => a.isNotEmpty)
+        .toList();
+    if (normalized.isEmpty) return [];
+
+    final rows = await _client.rpc(
+      'get_profiles',
+      params: {'p_addresses': normalized},
+    );
+
+    return (rows as List<dynamic>)
+        .map(
+          (row) =>
+              ProfileSummary.fromGetProfilesRow(row as Map<String, dynamic>),
+        )
+        .toList();
+  }
+
+  @Deprecated('Use fetchSummariesByAddresses for peer presentation')
   Future<List<ProfileSummary>> fetchSummariesByIds(List<String> ids) async {
     if (ids.isEmpty) return [];
 
@@ -97,6 +120,7 @@ class ProfileService {
         .toList();
   }
 
+  @Deprecated('Use getPeerContext with peer address')
   Future<ProfileSummary?> findById(String profileId) async {
     final summaries = await fetchSummariesByIds([profileId]);
     if (summaries.isEmpty) return null;

@@ -45,7 +45,7 @@ void main() {
     final trace = DiagnosticHub.instance.beginTrace(
       DiagnosticFlows.messaging,
       op: DiagnosticOps.sendText,
-      data: {'peerProfileId': 'peer-b'},
+      data: {'peerAddress': 'peer-b'},
     );
     trace.step('session.check', data: {'ok': true});
     trace.end();

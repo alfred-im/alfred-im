@@ -24,7 +24,7 @@ class NotificationsAdapters {
     _machine.send(
       OpenChatFromNotification(
         recipientUserId: conversation.recipientUserId,
-        peerProfileId: conversation.peerProfileId,
+        peerAddress: conversation.peerAddress,
         sessionReady: sessionReady,
         hasOpenAccount: hasOpenAccount,
       ),

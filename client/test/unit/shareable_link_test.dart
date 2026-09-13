@@ -41,8 +41,10 @@ void main() {
       expect(parseShareableFragment('!!'), isNull);
     });
 
-    test('external server not resolvable on this instance', () {
-      expect(parseShareableFragment('mario@dominio.it'), isNull);
+    test('external server is accepted in fragment', () {
+      final target = parseShareableFragment('mario@dominio.it');
+      expect(target?.address, 'mario@dominio.it');
+      expect(target?.kind, ShareableLinkKind.profile);
     });
   });
 
@@ -58,8 +60,10 @@ void main() {
       expect(resolution?.localUsername, 'mario');
     });
 
-    test('remote server rejected', () {
-      expect(resolveShareableAddress('mario@dominio.it'), isNull);
+    test('remote server resolves with isLocalInstance false', () {
+      final resolution = resolveShareableAddress('mario@dominio.it');
+      expect(resolution?.normalizedAddress, 'mario@dominio.it');
+      expect(resolution?.isLocalInstance, isFalse);
     });
   });
 
@@ -68,7 +72,7 @@ void main() {
       const profile = ProfileSummary(
         id: 'id',
         displayName: 'Mario',
-        username: 'Mario_Rossi',
+        username: 'Mario_Rossi', address: 'Mario_Rossi',
       );
       expect(canonicalShareableAddress(profile), 'mario_rossi');
     });

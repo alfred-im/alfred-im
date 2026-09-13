@@ -43,7 +43,7 @@ class ChatPanel extends StatefulWidget {
 class _ChatPanelState extends State<ChatPanel> {
   ChatPeer _resolvedPeer(AuthController? auth) {
     final active = auth?.activePeer;
-    if (active != null && active.profileId == widget.peer.profileId) {
+    if (active != null && active.peerAddress == widget.peer.peerAddress) {
       return active;
     }
     return widget.peer;
@@ -60,7 +60,7 @@ class _ChatPanelState extends State<ChatPanel> {
         ? peer.peerIsAllowed
         : allowlist != null &&
             !allowlist.isLoading &&
-            allowlist.isProfileAllowed(peer.profileId);
+            allowlist.isAddressAllowed(peer.peerAddress);
 
     return ColoredBox(
       color: AlfredColors.surface,

@@ -16,23 +16,23 @@ class AuthNotificationsEffects implements NotificationsEffects {
   @override
   Future<bool> forwardOpenFromPushTap({
     required String recipientUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) {
     return _auth.openConversationAfterPushTap(
       recipientUserId: recipientUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
     );
   }
 
   @override
   void persistPendingOpenChat({
     required String recipientUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) {
     PushPlatform.persistPendingOpenChat(
       PushConversationKey(
         recipientUserId: recipientUserId,
-        peerProfileId: peerProfileId,
+        peerAddress: peerAddress,
       ),
     );
   }

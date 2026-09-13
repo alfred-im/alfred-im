@@ -5,24 +5,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/account_manager.dart';
 import 'package:alfred_client/services/account_session.dart';
 import 'package:alfred_client/services/account_storage_service.dart';
-import 'package:alfred_client/services/profile_service.dart';
-
 import '../support/fake_messaging_services.dart';
 import '../support/wiring_test_fixtures.dart';
-
-class _FakeProfileService extends ProfileService {
-  _FakeProfileService(this._peers) : super(createTestSupabaseClient());
-
-  final Map<String, ProfileSummary> _peers;
-
-  @override
-  Future<ProfileSummary?> findById(String id) async => _peers[id];
-}
 
 /// Wiring: AuthController.openConversationFromShareableLink → ExternalIntentAdapter.
 void main() {
@@ -40,28 +28,30 @@ void main() {
       final session = await AccountSession.createForTest(
         profile: const ProfileSummary(
           id: accountId,
-          username: 'agent_a',
+          username: 'agent_a', address: 'agent_a',
           displayName: 'Agent A',
         ),
         client: createTestSupabaseClient(),
         inboxService: FakeInboxService(
           peers: [
-            ChatPeer(
-              profile: const ProfileSummary(
+            inboxPeer(
+              const ProfileSummary(
                 id: linkPeerId,
                 username: 'link_z',
+                address: 'link_z',
                 displayName: 'Link Z',
               ),
             ),
           ],
         ),
-        profileService: _FakeProfileService({
-          linkPeerId: const ProfileSummary(
+        profileService: MapBackedFakeProfileService.fromProfiles([
+          const ProfileSummary(
             id: linkPeerId,
             username: 'link_z',
+            address: 'link_z',
             displayName: 'Link Z',
           ),
-        }),
+        ]),
       );
       session.wireStorage(storage);
       await session.persistOpenAccount(refreshToken: 'refresh-a');
@@ -73,11 +63,11 @@ void main() {
 
       final ok = await auth.openConversationFromShareableLink(
         accountUserId: accountId,
-        peerProfileId: linkPeerId,
+        peerAddress: 'link_z',
       );
 
       expect(ok, isTrue);
-      expect(auth.activePeer?.profileId, linkPeerId);
+      expect(auth.activePeer?.peerAddress, 'link_z');
     });
 
     test('peer irrisolvibile lascia inbox senza chat aperta', () async {
@@ -88,12 +78,12 @@ void main() {
       final session = await AccountSession.createForTest(
         profile: const ProfileSummary(
           id: accountId,
-          username: 'agent_a',
+          username: 'agent_a', address: 'agent_a',
           displayName: 'Agent A',
         ),
         client: createTestSupabaseClient(),
         inboxService: FakeInboxService(),
-        profileService: _FakeProfileService({}),
+        profileService: MapBackedFakeProfileService({}),
       );
       session.wireStorage(storage);
       await session.persistOpenAccount(refreshToken: 'refresh-a');
@@ -105,7 +95,7 @@ void main() {
 
       final ok = await auth.openConversationOnAccount(
         accountUserId: accountId,
-        peerProfileId: 'unknown-peer',
+        peerAddress: 'unknown-peer',
         allowProfileFallback: false,
       );
 

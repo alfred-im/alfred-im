@@ -10,7 +10,7 @@ void main() {
   group('PushDeepLink', () {
     const conversation = PushConversationKey(
       recipientUserId: 'account-a',
-      peerProfileId: 'peer-b',
+      peerAddress: 'peer-b',
     );
 
     test('tryParseFragment round-trips hash', () {

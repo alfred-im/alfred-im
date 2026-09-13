@@ -32,7 +32,7 @@ void main() {
       sessionA = await AccountSession.createForTest(
         profile: const ProfileSummary(
           id: 'account-a',
-          username: 'agent_a',
+          username: 'agent_a', address: 'agent_a',
           displayName: 'Agent A',
         ),
         client: createTestSupabaseClient(),
@@ -41,7 +41,7 @@ void main() {
       sessionB = await AccountSession.createForTest(
         profile: const ProfileSummary(
           id: 'account-b',
-          username: 'agent_b',
+          username: 'agent_b', address: 'agent_b',
           displayName: 'Agent B',
         ),
         client: createTestSupabaseClient(),

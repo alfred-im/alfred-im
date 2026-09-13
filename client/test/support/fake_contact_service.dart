@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'package:alfred_client/models/contact.dart';
-import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/services/contact_service.dart';
 
 import 'fake_messaging_services.dart';
@@ -15,21 +14,19 @@ class FakeContactService extends ContactService {
   final List<String> deletedIds = [];
 
   @override
-  Future<List<Contact>> fetchContacts(String archiveUserId) async {
-    return List.of(contacts);
-  }
+  Future<List<Contact>> fetchContacts(String archiveUserId) async =>
+      List.of(contacts);
 
   @override
-  Future<Contact> addInternalContact({
+  Future<Contact> addContact({
     required String archiveUserId,
-    required ProfileSummary profile,
+    required String address,
   }) async {
+    final normalized = address.trim().toLowerCase();
     final contact = Contact(
-      id: 'contact-${profile.id}',
+      id: 'contact-$normalized',
       archiveUserId: archiveUserId,
-      linkedProfileId: profile.id,
-      displayName: profile.displayName,
-      avatarUrl: profile.avatarUrl,
+      address: normalized,
       createdAt: DateTime.utc(2026, 1, 1),
     );
     contacts = [...contacts, contact];

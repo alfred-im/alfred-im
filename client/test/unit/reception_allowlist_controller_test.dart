@@ -16,12 +16,12 @@ void main() {
   const focusUserId = 'focus-1';
   final alice = ProfileSummary(
     id: 'alice-id',
-    username: 'alice',
+    username: 'alice', address: 'alice',
     displayName: 'Alice',
   );
   final bob = ProfileSummary(
     id: 'bob-id',
-    username: 'bob',
+    username: 'bob', address: 'bob',
     displayName: 'Bob',
   );
 
@@ -34,12 +34,12 @@ void main() {
   });
 
   test('load populates allowed people', () async {
-    service.people = [AllowedPerson(entryId: 'entry-1', profile: alice)];
+    service.people = [AllowedPerson(entryId: 'entry-1', allowedAddress: alice.resolvedPeerAddress, profile: alice)];
 
     await controller.load();
 
     expect(controller.allowedPeople, hasLength(1));
-    expect(controller.allowedProfileIds, {'alice-id'});
+    expect(controller.allowedAddresses, {'alice'});
     expect(controller.isLoading, isFalse);
   });
 
@@ -47,15 +47,20 @@ void main() {
     await controller.load();
 
     await controller.addProfile(
-      ProfileSummary(id: focusUserId, displayName: 'Me'),
+      ProfileSummary(
+        id: focusUserId,
+        username: 'me',
+        address: 'me',
+        displayName: 'Me',
+      ),
     );
-    expect(service.added, isEmpty);
+    expect(service.addedAddresses, isEmpty);
 
-    service.people = [AllowedPerson(entryId: 'e1', profile: alice)];
+    service.people = [AllowedPerson(entryId: 'e1', allowedAddress: alice.resolvedPeerAddress, profile: alice)];
     await controller.load();
 
     await controller.addProfile(alice);
-    expect(service.added, isEmpty);
+    expect(service.addedAddresses, isEmpty);
   });
 
   test('addProfile calls service and reloads', () async {
@@ -63,19 +68,31 @@ void main() {
 
     await controller.addProfile(bob);
 
-    expect(service.added.single.id, bob.id);
-    expect(controller.allowedPeople.single.profile.id, bob.id);
+    expect(service.addedAddresses.single, 'bob');
+    expect(controller.allowedPeople.single.allowedAddress, 'bob');
   });
 
   test('load sorts allowed people by display name', () async {
     service.people = [
       AllowedPerson(
         entryId: 'e1',
-        profile: ProfileSummary(id: 'z-id', displayName: 'Zara'),
+        allowedAddress: 'zara',
+        profile: ProfileSummary(
+          id: 'z-id',
+          username: 'zara',
+          address: 'zara',
+          displayName: 'Zara',
+        ),
       ),
       AllowedPerson(
         entryId: 'e2',
-        profile: ProfileSummary(id: 'a-id', displayName: 'Anna'),
+        allowedAddress: 'anna',
+        profile: ProfileSummary(
+          id: 'a-id',
+          username: 'anna',
+          address: 'anna',
+          displayName: 'Anna',
+        ),
       ),
     ];
 
@@ -89,21 +106,21 @@ void main() {
 
   test('filteredAllowedPeople respects search query', () async {
     service.people = [
-      AllowedPerson(entryId: 'e1', profile: alice),
-      AllowedPerson(entryId: 'e2', profile: bob),
+      AllowedPerson(entryId: 'e1', allowedAddress: alice.resolvedPeerAddress, profile: alice),
+      AllowedPerson(entryId: 'e2', allowedAddress: bob.resolvedPeerAddress, profile: bob),
     ];
     await controller.load();
 
     controller.setSearchQuery('ali');
     expect(controller.filteredAllowedPeople, hasLength(1));
-    expect(controller.filteredAllowedPeople.single.profile.id, alice.id);
+    expect(controller.filteredAllowedPeople.single.profile?.id, alice.id);
   });
 
-  test('removeByProfileId removes matching entry', () async {
-    service.people = [AllowedPerson(entryId: 'e1', profile: alice)];
+  test('removeByAddress removes matching entry', () async {
+    service.people = [AllowedPerson(entryId: 'e1', allowedAddress: alice.resolvedPeerAddress, profile: alice)];
     await controller.load();
 
-    await controller.removeByProfileId(alice.id);
+    await controller.removeByAddress('alice');
 
     expect(controller.allowedPeople, isEmpty);
     expect(service.people, isEmpty);

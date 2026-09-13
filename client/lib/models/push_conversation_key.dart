@@ -9,27 +9,27 @@
 class PushConversationKey {
   const PushConversationKey({
     required this.recipientUserId,
-    required this.peerProfileId,
-  }) : assert(recipientUserId != peerProfileId);
+    required this.peerAddress,
+  });
 
   /// Account Alfred che riceve il messaggio (`recipient_user_id` nel payload).
   final String recipientUserId;
 
-  /// Profilo controparte nella chat (`peer_profile_id` nel payload).
-  final String peerProfileId;
+  /// Indirizzo controparte nella chat (`peerAddress` nel payload).
+  final String peerAddress;
 
   static const separator = '|';
 
-  String get canonicalKey => '$recipientUserId$separator$peerProfileId';
+  String get canonicalKey => '$recipientUserId$separator$peerAddress';
 
   /// Chiave outbound queue / realtime — stesso formato del push.
   static String outboundQueueKey({
     required String recipientUserId,
-    required String peerProfileId,
+    required String peerAddress,
   }) {
     return PushConversationKey(
       recipientUserId: recipientUserId,
-      peerProfileId: peerProfileId,
+      peerAddress: peerAddress,
     ).canonicalKey;
   }
 
@@ -44,28 +44,36 @@ class PushConversationKey {
     final parts = raw.split(separator);
     if (parts.length != 2) return null;
     final recipient = parts[0].trim();
-    final peer = parts[1].trim();
+    final peer = parts[1].trim().toLowerCase();
     if (recipient.isEmpty || peer.isEmpty || recipient == peer) return null;
-    return PushConversationKey(recipientUserId: recipient, peerProfileId: peer);
+    return PushConversationKey(recipientUserId: recipient, peerAddress: peer);
   }
 
   /// Da payload push (camelCase SW o snake_case server).
   static PushConversationKey? tryFromPayload(Map<String, dynamic> map) {
     final recipient = map['recipientUserId'] ?? map['recipient_user_id'];
-    final peer = map['peerProfileId'] ?? map['peer_profile_id'];
+    final peer = map['peerAddress'] ?? map['peer_address'];
     if (recipient is! String || peer is! String) return null;
-    if (recipient.isEmpty || peer.isEmpty || recipient == peer) return null;
-    return PushConversationKey(recipientUserId: recipient, peerProfileId: peer);
+    final normalizedPeer = peer.trim().toLowerCase();
+    if (recipient.isEmpty ||
+        normalizedPeer.isEmpty ||
+        recipient == normalizedPeer) {
+      return null;
+    }
+    return PushConversationKey(
+      recipientUserId: recipient,
+      peerAddress: normalizedPeer,
+    );
   }
 
   /// Soppressione: push invisibile se app in foreground su questa conversazione.
   bool shouldSuppressInForeground({
     required String? focusUserId,
-    required String? activePeerProfileId,
+    required String? activePeerAddress,
     required bool appVisible,
   }) {
     if (!appVisible) return false;
-    return focusUserId == recipientUserId && activePeerProfileId == peerProfileId;
+    return focusUserId == recipientUserId && activePeerAddress == peerAddress;
   }
 
   @override
@@ -73,8 +81,8 @@ class PushConversationKey {
       identical(this, other) ||
       other is PushConversationKey &&
           recipientUserId == other.recipientUserId &&
-          peerProfileId == other.peerProfileId;
+          peerAddress == other.peerAddress;
 
   @override
-  int get hashCode => Object.hash(recipientUserId, peerProfileId);
+  int get hashCode => Object.hash(recipientUserId, peerAddress);
 }

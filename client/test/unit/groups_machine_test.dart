@@ -85,12 +85,12 @@ void main() {
       const profile = ProfileSummary(
         id: 'group-1',
         displayName: 'Famiglia',
-        username: 'famiglia',
+        username: 'famiglia', address: 'famiglia',
       );
       final snapshot = GroupHomeSnapshot(
         createdAt: DateTime.utc(2026, 3, 12),
         totalMessageCount: 2,
-        conversationTile: ChatPeer.fromProfile(profile: profile),
+        conversationTile: ChatPeer.fromProfile(peerAddress: profile.resolvedPeerAddress, profile: profile),
       );
       final machine = GroupHomeMachine(_RecordingGroupHomeEffects());
 
@@ -218,17 +218,17 @@ void main() {
       const groupProfile = ProfileSummary(
         id: 'group-1',
         displayName: 'Famiglia',
-        username: 'famiglia',
+        username: 'famiglia', address: 'famiglia',
       );
       const mario = ProfileSummary(
         id: 'mario',
         displayName: 'Mario',
-        username: 'mario',
+        username: 'mario', address: 'mario',
       );
 
       final client = createTestSupabaseClient();
       final profileService = FakeProfileService(client)
-        ..profilesById['mario'] = mario;
+        ..profilesByAddress['mario'] = mario;
 
       final aggregates = await buildGroupHomeAggregates(
         messages: [

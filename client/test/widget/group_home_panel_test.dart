@@ -30,17 +30,17 @@ void main() {
     const groupProfile = ProfileSummary(
       id: 'group-1',
       displayName: 'Famiglia',
-      username: 'famiglia',
+      username: 'famiglia', address: 'famiglia',
       profileKind: ProfileKind.group,
     );
 
     final client = createTestSupabaseClient();
     final messageService = FakeMessageService(client);
     final profileService = FakeProfileService(client)
-      ..profilesById['mario'] = const ProfileSummary(
+      ..profilesByAddress['mario'] = const ProfileSummary(
         id: 'mario',
         displayName: 'Mario',
-        username: 'mario',
+        username: 'mario', address: 'mario',
       );
     messageService.archiveMessagesByUserId['group-1'] = [];
 

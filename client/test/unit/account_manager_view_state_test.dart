@@ -15,7 +15,13 @@ import '../support/fake_messaging_services.dart';
 
 ChatPeer _peer(String id) {
   return ChatPeer(
-    profile: ProfileSummary(id: id, displayName: 'Peer $id'),
+    peerAddress: id,
+    profile: ProfileSummary(
+      id: id,
+      username: id,
+      address: id,
+      displayName: 'Peer $id',
+    ),
     preview: 'ciao',
     lastMessageAt: DateTime.utc(2026, 6, 29),
   );
@@ -23,7 +29,12 @@ ChatPeer _peer(String id) {
 
 Future<AccountSession> _session(String id) {
   return AccountSession.createForTest(
-    profile: ProfileSummary(id: id, username: id, displayName: id),
+    profile: ProfileSummary(
+      id: id,
+      username: id,
+      address: id,
+      displayName: id,
+    ),
     client: createTestSupabaseClient(),
     inboxService: FakeInboxService(),
   );
@@ -56,10 +67,10 @@ void main() {
       await nav.openPeerOnFocusedAccount(_peer('account-a'));
 
       await manager.sessionAuthority.requestFocusSwitch('account-a');
-      expect(manager.viewState.activePeer?.profileId, 'account-b');
+      expect(manager.viewState.activePeer?.peerAddress, 'account-b');
 
       await manager.sessionAuthority.requestFocusSwitch('account-b');
-      expect(manager.viewState.activePeer?.profileId, 'account-a');
+      expect(manager.viewState.activePeer?.peerAddress, 'account-a');
     });
 
     test('setFocus does not clear other accounts view state', () async {
@@ -75,7 +86,7 @@ void main() {
       expect(manager.viewState.activePeer, isNull);
 
       await manager.sessionAuthority.requestFocusSwitch('account-a');
-      expect(manager.viewState.activePeer?.profileId, 'account-b');
+      expect(manager.viewState.activePeer?.peerAddress, 'account-b');
     });
 
     test('removeAccount drops saved view for that user', () async {

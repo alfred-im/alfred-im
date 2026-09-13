@@ -26,11 +26,10 @@ void main() {
   const focusUserId = 'focus-id';
   const peer = ProfileSummary(
     id: 'peer-id',
-    username: 'mario',
+    username: 'mario', address: 'mario',
     displayName: 'Mario Rossi',
   );
-  final chatPeer = ChatPeer(
-    profile: peer,
+  final chatPeer = inboxPeer(peer,
     relationship: const PeerRelationship(inContacts: false, isAllowed: false),
   );
 
@@ -49,14 +48,14 @@ void main() {
     );
     final scope = testConversationScope(
       userId: focusUserId,
-      peerProfileId: peer.id,
+      peerAddress: peer.resolvedPeerAddress,
       sessionEpoch: 1,
     );
     messagesController = MessagesController(
       scope: scope,
       messageStore: testMessageStoreFor(scope),
       userId: focusUserId,
-      peerProfileId: peer.id,
+      peerAddress: peer.resolvedPeerAddress,
       peerMessages: messageService.peerMessages,
       messageMediaService: FakeMessageMediaService(),
       inboxService: FakeInboxService(),
@@ -105,8 +104,7 @@ void main() {
   });
 
   testWidgets('ChatInputBar enabled when peer is allowed', (tester) async {
-    final allowedPeer = ChatPeer(
-      profile: peer,
+    final allowedPeer = inboxPeer(peer,
       relationship: const PeerRelationship(inContacts: false, isAllowed: true),
     );
     await pumpChatPanel(tester, allowedPeer);

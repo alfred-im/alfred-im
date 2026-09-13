@@ -2,12 +2,12 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:alfred_client/models/chat_peer.dart';
 import 'package:alfred_client/models/profile_summary.dart';
 import 'package:alfred_client/providers/inbox_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/fake_inbox_service.dart';
+import '../support/fake_messaging_services.dart' show inboxPeer;
 
 /// PROM-CONVERSATION-SCOPE-010 / SURF-INBOX-011 — refresh inbox non blocca ingresso chat.
 void main() {
@@ -18,11 +18,10 @@ void main() {
       final inbox = InboxController(
         userId: 'user-a',
         inboxService: FakeInboxService(
-          peers: const [
-            ChatPeer(
-              profile: ProfileSummary(
+          peers: [
+            inboxPeer(const ProfileSummary(
                 id: 'peer-b',
-                username: 'bob',
+                username: 'bob', address: 'bob',
                 displayName: 'Bob',
               ),
             ),

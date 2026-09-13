@@ -66,19 +66,19 @@ void main() {
     test('openFromPushTap apre mittente su account destinatario', () async {
       final ok = await nav.adapters.openFromPushTap(
         accountUserId: accountB,
-        peerProfileId: pushSenderId,
+        peerAddress: 'sender_z',
       );
 
       expect(ok, isTrue);
       expect(manager.focusUserId, accountB);
-      expect(manager.viewState.activePeer?.profileId, pushSenderId);
+      expect(manager.viewState.activePeer?.peerAddress, 'sender_z');
     });
 
     test('switch focus senza tap non commette scope', () async {
       await nav.switchToAccount(accountB);
 
       expect(manager.focusUserId, accountB);
-      expect(manager.viewState.activePeer?.profileId, stalePeerId);
+      expect(manager.viewState.activePeer?.peerAddress, 'stale_y');
       expect(nav.committedScope, isNull);
       expect(nav.machine.shellState, NavigationShellState.inboxVisible);
     });

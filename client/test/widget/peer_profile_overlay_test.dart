@@ -36,7 +36,7 @@ void main() {
 
   final peer = ProfileSummary(
     id: 'peer-id',
-    username: 'mario',
+    username: 'mario', address: 'mario',
     displayName: 'Mario Rossi',
     pronouns: 'lui/egli',
   );
@@ -132,11 +132,11 @@ void main() {
 
     await tester.tap(find.text('Aggiungi alla rubrica'));
     await tester.pumpAndSettle();
-    expect(contacts.contactForProfileId('peer-id'), isNotNull);
+    expect(contacts.contactForAddress('mario'), isNotNull);
 
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
-    expect(allowlist.isProfileAllowed('peer-id'), isTrue);
+    expect(allowlist.isAddressAllowed('mario'), isTrue);
   });
 
   testWidgets('Inizia a chattare closes overlay and opens conversation',
@@ -146,7 +146,7 @@ void main() {
       profile: const ProfileSummary(
         id: 'focus-id',
         displayName: 'ArchiveUser',
-        username: 'alice',
+        username: 'alice', address: 'alice',
       ),
       client: client,
     );
@@ -205,7 +205,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Mario Rossi'), findsNothing);
-    expect(auth.activePeer?.profileId, 'peer-id');
+    expect(auth.activePeer?.peerAddress, 'mario');
     expect(auth.activePeer?.displayName, 'Mario Rossi');
   });
 
@@ -266,16 +266,16 @@ void main() {
 
     final client = createTestSupabaseClient();
     final profileService = FakeProfileService(client)
-      ..profilesById['peer-id'] = const ProfileSummary(
+      ..profilesByAddress['peer-id'] = const ProfileSummary(
         id: 'peer-id',
         displayName: 'Mario Rossi',
-        username: 'mario',
+        username: 'mario', address: 'mario',
       );
     final focusSession = await AccountSession.createForTest(
       profile: const ProfileSummary(
         id: 'focus-id',
         displayName: 'ArchiveUser',
-        username: 'alice',
+        username: 'alice', address: 'alice',
       ),
       client: client,
       profileService: profileService,
