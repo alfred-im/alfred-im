@@ -390,6 +390,8 @@ Prerequisiti piattaforma per Gotham (implementati):
 
 Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `group_erogate`, `push_notify`.
 
+**Gruppi (locale, `20260913120000`):** erogazione gruppo→membro passa dallo stesso `event_kind = deliver` del 1:1 — `erogate_group_message` / `group_erogate` sono **orchestratori** che accodano N outbox `deliver`, non percorsi INSERT separati. Vedi § 9.1.
+
 `push_notify` è **solo locale** (piattaforma): accodato dal worker dopo recapito locale riuscito ([SYS-PUSH](../specs/promises/system/SYS-PUSH.md)). **Non** compare mai sul wire federato.
 
 **Nessun campo `protocol`:** il routing è implicito — server in `peer_address` / `allowed_address` / `contacts.address` determina locale vs federato.
@@ -445,7 +447,55 @@ Il gateway Python in `client/deploy/gateway/` serve solo la shell PWA (branding 
 | HTTP/3 + Protobuf + discovery | Body di ack strutturato |
 | Ack MESSAGE = solo HTTP status | |
 
-I gruppi **non** sono fuori scope: seguono lo stesso contratto address-based e la stessa pipeline outbox della messaggistica 1:1 ([SYS-GROUP](../specs/promises/system/SYS-GROUP.md)). Partecipazione = allow list bidirezionale su indirizzo (inclusi `user@server`). Recapito locale oggi (`group_erogate`, `broadcast_message_to_allowlist`); federato = stesso bus (`deliver`, `group_erogate`) con driver Gotham quando una gamba coinvolge un indirizzo su altra istanza. Nessuna tipologia «gruppo locale» vs «gruppo federato» in UI o wire ([no-internal-external-chat-distinction.md](../decisions/no-internal-external-chat-distinction.md)).
+I gruppi **non** sono fuori scope: seguono lo stesso contratto address-based e la **stessa pipeline `deliver` / `deliver_internal`** della messaggistica 1:1 ([SYS-GROUP](../specs/promises/system/SYS-GROUP.md), [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md)). Partecipazione = allow list bidirezionale su indirizzo (inclusi `user@server`). Entrypoint RPC: `send_message_to_address` (umano→gruppo), `broadcast_message_to_allowlist` (broadcast gruppo). Federato = stesso bus con driver Gotham quando una **gamba** coinvolge un indirizzo su altra istanza. Nessuna tipologia «gruppo locale» vs «gruppo federato» in UI o wire ([no-internal-external-chat-distinction.md](../decisions/no-internal-external-chat-distinction.md)).
+
+### 9.1 Recapito gruppo — due gambe (implementato su `main`)
+
+Ogni messaggio umano→gruppo ha **due gambe** indipendenti sul piano delivery. Le spunte che vede il mittente umano riguardano **solo la gamba 1** ([PROM-GROUP-TICKS](../specs/promises/product/PROM-GROUP-TICKS.md)).
+
+| Gamba | Mittente (copia uscita) | Destinatario | Outbox | Ack (`delivered_at`) |
+|-------|-------------------------|--------------|--------|----------------------|
+| **1 — umano→gruppo** | Copia mittente umano | Archivio gruppo (inbound, `peer_address` = mittente) | `deliver` (da `send_message_to_address`) | Copia **umana** (✓✓ = gruppo ha ricevuto) |
+| **2 — gruppo→membro** | Copia uscita gruppo (`peer_address` = membro) *oppure* riga broadcast unica | Archivio membro (proxy inbound) | `deliver` per ogni membro eleggibile | Copia **uscita gruppo** di quella gamba — **non** la copia umana |
+
+**Gamba 1 (invariata):**
+
+```text
+send_message_to_address(gruppo)
+  → INSERT copia mittente umano + outbox deliver
+  → deliver_internal: INSERT inbound archivio gruppo + delivered_at su copia umana
+  → erogate_group_message (orchestratore gamba 2)
+```
+
+**Gamba 2 — messaggio umano→gruppo (fanout):**
+
+```text
+erogate_group_message
+  per ogni allowed_address con gate bidirezionale:
+    → INSERT copia uscita gruppo (stesso λ, peer_address = membro)
+    → INSERT outbox deliver (message_id = copia uscita)
+    → deliver_internal: INSERT proxy su archivio membro + delivered_at su copia uscita gruppo
+    → push_notify locale (se membro locale)
+```
+
+Gate bidirezionale fallito → skip silenzioso su quel membro; **non** modifica spunte gamba 1.
+
+**Gamba 2 — broadcast gruppo:**
+
+```text
+broadcast_message_to_allowlist
+  → INSERT unica riga archivio gruppo (peer_address NULL) + outbox group_erogate
+  → group_erogate → erogate_group_message (p_fanout_source = riga broadcast)
+  per ogni membro eleggibile:
+    → outbox deliver (message_id = riga broadcast, recipient_address nel payload)
+    → deliver_internal (stesso binario sopra)
+```
+
+Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gruppo (`list_archive_messages` le filtra); servono solo al tracking delivery gamba 2.
+
+**Federazione (target Gotham):** ogni outbox `deliver` verso `user@server` segue lo stesso consumer federativo del 1:1 — nessun `event_kind` dedicato «gruppo federato». Il worker Gotham claima la riga, invia envelope `MESSAGE` con lo stesso `logical_message_id`, e l’istanza peer materializza il proxy sul membro remoto. Gamba con entrambi gli endpoint locali resta sincrona in transazione come oggi.
+
+**Schema:** UNIQUE `(archive_user_id, logical_message_id, peer_address)` NULLS NOT DISTINCT — consente inbound umano + N uscite membro sullo stesso archivio gruppo ([contracts/schema.md](../specs/contracts/schema.md)).
 
 ---
 
@@ -481,3 +531,4 @@ I gruppi **non** sono fuori scope: seguono lo stesso contratto address-based e l
 | 2026-09-09 | § 5.4 — `reception_allowlist` locale + esterna; RPC invio/materialize federato; gate su `from_address` |
 | 2026-09-13 | § 5.4 — modello address-based unificato (`peer_address`, `author_address`, `allowed_address`); TEMP §8 audit risolto |
 | 2026-09-13 | § 9 — gruppi **in scope** federazione (correzione: non solo locale) |
+| 2026-09-13 | § 6, § 9.1 — erogazione gruppo→membro allineata a pipeline `deliver` standard (PR #284); due gambe; `erogate_group_message` orchestratore |
