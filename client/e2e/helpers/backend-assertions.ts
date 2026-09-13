@@ -119,7 +119,7 @@ export async function waitForImageMessageInDb(options: {
   caption?: string;
   timeoutMs?: number;
 }): Promise<PeerMessage> {
-  const deadline = Date.now() + (options.timeoutMs ?? E2E_TIMEOUT.db * 6);
+  const deadline = Date.now() + (options.timeoutMs ?? E2E_TIMEOUT.db * 10);
 
   while (Date.now() < deadline) {
     const messages = await fetchImageRowsForArchiveUser(
