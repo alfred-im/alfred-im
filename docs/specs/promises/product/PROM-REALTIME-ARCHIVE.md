@@ -33,7 +33,7 @@ Multi-account: realtime solo sull'account in focus — [PROM-MULTI-ACCOUNT](./PR
 
 | ID | Promessa |
 |----|----------|
-| **PROM-REALTIME-ARCHIVE-003** | Realtime chat: stessa tabella `messages`; filtro `archive_user_id = io` AND `peer_profile_id` (canale per peer o filtro client) |
+| **PROM-REALTIME-ARCHIVE-003** | Realtime chat: stessa tabella `messages`; filtro `archive_user_id = io` AND `peer_address` (canale per peer o filtro client) |
 | **PROM-REALTIME-ARCHIVE-004** | `MessageService.subscribeToPeerMessages` — non più modello sender/recipient condiviso |
 
 ### MUST — spunte mittente

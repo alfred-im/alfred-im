@@ -15,7 +15,7 @@ Refactoring del layer lista messaggi chat 1:1: **un modulo**, **un'identità** (
 | Nome | File | Ruolo |
 |------|------|--------|
 | **Archivio messaggi** | `client/lib/machines/messaging/conversation_message_store.dart` | Unica mutazione lista DM |
-| **Chiave conversazione** | `client/lib/models/conversation_scope.dart` | `focusUserId`, `peerProfileId`, `sessionEpoch`, `loadSeq` |
+| **Chiave conversazione** | `client/lib/models/conversation_scope.dart` | `focusUserId`, `peerAddress`, `sessionEpoch`, `loadSeq` |
 | **Navigazione** | `navigation_machine.dart` | `commitScope` / `invalidateCommittedScope` / `reconcileSessionEpoch` |
 | **Consolidamento sessione** | `session_authority.dart` | `ensureFocusReady` — GoTrue allineato all'account UI |
 

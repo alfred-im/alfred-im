@@ -5,8 +5,8 @@
 | **Promessa ID** | `PROM-PUSH-NOTIFY` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-28 |
-| **Amend** | Politica sync multi-account (post-incidente foto PWA #229) |
+| **Ultima revisione** | 2026-09-13 |
+| **Amend** | payload `peerAddress` — distillazione TEMP §7.19; politica sync multi-account (post-incidente foto PWA #229) |
 
 Promessa di prodotto: notifiche Web Push su tutti i dispositivi attivi per account e per tutti gli account aperti sullo stesso dispositivo; anteprima testo; soppressione in chat attiva.
 
@@ -71,9 +71,9 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PUSH-NOTIFY-033** | Identità push = coppia **`(recipient_user_id, peer_profile_id)`** — stessa semantica di archivio `(archive_user_id, peer_profile_id)`; **mai** interpretare target, soppressione, tap o tag come «solo peer» |
-| **PROM-PUSH-NOTIFY-034** | Chiave canonica client/SW: `recipient_user_id|peer_profile_id`; payload incompleto → nessuna UI, nessuna apertura chat |
-| **PROM-PUSH-NOTIFY-035** | Tag notifica browser = `recipient_user_id|peer_profile_id|logical_message_id` — distinto per account anche con stesso peer o stesso messaggio logico su altro account |
+| **PROM-PUSH-NOTIFY-033** | Identità push = coppia **`(recipient_user_id, peer_address)`** — stessa semantica di archivio `(archive_user_id, peer_address)`; **mai** interpretare target, soppressione, tap o tag come «solo peer» |
+| **PROM-PUSH-NOTIFY-034** | Chiave canonica client/SW: `recipientUserId|peerAddress`; payload incompleto → nessuna UI, nessuna apertura chat |
+| **PROM-PUSH-NOTIFY-035** | Tag notifica browser = `recipientUserId|peerAddress|logical_message_id` — distinto per account anche con stesso peer o stesso messaggio logico su altro account |
 
 ### MUST — soppressione e permesso
 
@@ -81,7 +81,7 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 |----|----------|
 | **PROM-PUSH-NOTIFY-020** | Permesso browser: con stato `default`, richiesto tramite `pushManager.subscribe` (`userVisibleOnly: true`); se `denied`, app senza push e nessun retry invasivo |
 | **PROM-PUSH-NOTIFY-021** | Stato `denied` → app funziona senza push; nessun retry invasivo |
-| **PROM-PUSH-NOTIFY-022** | Soppressione: **nessuna** notifica visibile se app in foreground + account destinatario in focus + chat con quel `peer_profile_id` aperta |
+| **PROM-PUSH-NOTIFY-022** | Soppressione: **nessuna** notifica visibile se app in foreground + account destinatario in focus + chat con quel `peerAddress` aperta |
 | **PROM-PUSH-NOTIFY-023** | Soppressione: account in focus ma chat diversa o inbox → push consentita |
 | **PROM-PUSH-NOTIFY-024** | Stato soppressione sincronizzato client Flutter → service worker via `postMessage` (`alfred_push_suppression`); stato in RAM nel SW |
 
@@ -89,9 +89,9 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 
 | ID | Promessa |
 |----|----------|
-| **PROM-PUSH-NOTIFY-030** | Tap notifica → focus account destinatario + apre chat con `peer_profile_id`; **non** mostrare chat precedente con altro peer su quell'account |
+| **PROM-PUSH-NOTIFY-030** | Tap notifica → focus account destinatario + apre chat con `peerAddress`; **non** mostrare chat precedente con altro peer su quell'account |
 | **PROM-PUSH-NOTIFY-031** | Deep link coerente con [PROM-SHAREABLE-LINK](./PROM-SHAREABLE-LINK.md) dove applicabile |
-| **PROM-PUSH-NOTIFY-036** | Tap notifica: prima di aprire, azzera `activePeer` stale sull'account destinatario; se il peer non è ancora in inbox → retry caricamento + `profile_fallback` sul `peer_profile_id` del payload (messaggio già recapitato) |
+| **PROM-PUSH-NOTIFY-036** | Tap notifica: prima di aprire, azzera `activePeer` stale sull'account destinatario; se il peer non è ancora in inbox → retry caricamento + `profile_fallback` sul `peerAddress` del payload (messaggio già recapitato) |
 
 ### SHOULD
 
@@ -107,8 +107,8 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 | **PROM-PUSH-NOTIFY-040** | Notifica per messaggio non recapitato (allow list rifiutata) |
 | **PROM-PUSH-NOTIFY-041** | Notifica duplicata visibile in chat già aperta e visibile (soppressione) |
 | **PROM-PUSH-NOTIFY-042** | Subscription di un account associata al `user_id` di un altro |
-| **PROM-PUSH-NOTIFY-043** | Handler push che apre chat o sopprime notifica usando solo `peer_profile_id` senza `recipient_user_id` |
-| **PROM-PUSH-NOTIFY-044** | Tap notifica che lascia visibile chat con peer diverso da `peer_profile_id` del payload (stale UI) |
+| **PROM-PUSH-NOTIFY-043** | Handler push che apre chat o sopprime notifica usando solo `peerAddress` senza `recipientUserId` |
+| **PROM-PUSH-NOTIFY-044** | Tap notifica che lascia visibile chat con peer diverso da `peerAddress` del payload (stale UI) |
 | **PROM-PUSH-NOTIFY-045** | Resume PWA generico che innesca `RegisterDeviceForPush` con scope `AllOpenAccounts` |
 | **PROM-PUSH-NOTIFY-046** | `RegisterDeviceForPush` che invoca switch identità (`SessionAuthority.requestFocusSwitch` / dispose sessione in focus) o restore parallelo di account non in focus tramite `AccountSession.restore` nel percorso caldo |
 | **PROM-PUSH-NOTIFY-047** | Sync push durante upload media attivo (picker galleria/fotocamera aperto o coda outbound con allegato in invio) |

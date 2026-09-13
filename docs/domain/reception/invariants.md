@@ -14,7 +14,7 @@
 
 ## Gate recapito
 
-1. **Outbound** (RPC `send_message_to_profile`): destinatario deve essere in allow list del mittente — altrimenti eccezione, nessuna copia mittente (SYS-RECEPTION-029–031).
+1. **Outbound** (RPC `send_message_to_address`): destinatario deve essere in allow list del mittente — altrimenti eccezione, nessuna copia mittente (SYS-RECEPTION-029–031).
 2. **Inbound** (worker): mittente deve essere in allow list del destinatario — altrimenti rifiuto silenzioso, ✓ senza ✓✓ (SYS-RECEPTION-005–010).
 3. Rifiuto inbound: RPC ritorna copia mittente senza errore client; `delivered_at` resta null.
 

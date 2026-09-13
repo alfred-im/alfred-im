@@ -56,7 +56,7 @@ Su tentativo invio **outbound** senza consenso proprio: errore server struttural
 | ID | Promessa |
 |----|----------|
 | **PROM-RECEPTION-FILTER-011** | Per inviare a un profilo, il mittente deve averlo nella propria `reception_allowlist` |
-| **PROM-RECEPTION-FILTER-012** | Violazione gate outbound: RPC `send_message_to_profile` errore `recipient not in reception allowlist` — **nessuna** copia mittente |
+| **PROM-RECEPTION-FILTER-012** | Violazione gate outbound: RPC `send_message_to_address` errore `recipient not in reception allowlist` — **nessuna** copia mittente |
 | **PROM-RECEPTION-FILTER-013** | Chat 1:1: `ChatInputBar` disabilitato se peer ∉ allow list propria o lista in caricamento |
 
 ### MUST NOT

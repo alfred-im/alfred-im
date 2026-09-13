@@ -16,7 +16,7 @@ Pipeline erogazione server: [SYS-GROUP](../system/SYS-GROUP.md) e [contracts/rpc
 
 ## 1. Problema / obiettivo
 
-In una chat con gruppo come peer, l'utente distingue **chi ha scritto** il contenuto (`original_author_id`) dal **contesto conversazione** (`peer_profile_id` = gruppo). Il mittente tecnico (`author_id` = gruppo su messaggi erogati) non sostituisce l'autore visibile.
+In una chat con gruppo come peer, l'utente distingue **chi ha scritto** il contenuto (`original_author_id`) dal **contesto conversazione** (`peer_address` = indirizzo gruppo). Il mittente tecnico (`author_id` = gruppo su messaggi erogati) non sostituisce l'autore visibile.
 
 ---
 
@@ -28,7 +28,7 @@ In una chat con gruppo come peer, l'utente distingue **chi ha scritto** il conte
 |----|----------|
 | **PROM-GROUP-AUTHOR-DISPLAY-001** | Campo canonico «chi ha scritto» in UI gruppo = autore originale del contenuto (`original_author_id`) |
 | **PROM-GROUP-AUTHOR-DISPLAY-002** | Messaggi in arrivo in contesto gruppo: intestazione sopra la bolla con **avatar** (foto o iniziale colorata) e **nome leggibile** (`display_name`, fallback username senza `@`) |
-| **PROM-GROUP-AUTHOR-DISPLAY-003** | Contesto conversazione resta con **gruppo** come `peer_profile_id` — non confondere autore contenuto con peer chat |
+| **PROM-GROUP-AUTHOR-DISPLAY-003** | Contesto conversazione resta con **gruppo** come `peer_address` — non confondere autore contenuto con peer chat |
 | **PROM-GROUP-AUTHOR-DISPLAY-004** | Messaggi in arrivo in chat gruppo: intestazione autore (avatar + nome) sopra la bolla |
 
 ### SHOULD — inbox e realtime

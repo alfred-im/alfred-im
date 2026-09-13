@@ -113,10 +113,8 @@ Semantica ✓ / ✓✓ / blu: [server-as-reception.md](./server-as-reception.md)
 
 Solo storico **indirizzamento** e drop cache inbox; delivery plane (#159, #179) in mailbox spec e `supabase/migrations/`.
 
-**Prossima migrazione (§7.7)**: `peer_address`, `author_address`, `allowed_address`, `contacts.address`; drop colonne UUID chat.
-
 - `20260627200000_address_based_messaging.sql` — `find_profile_by_username`
 - `20260627230000_messages_only_inbox.sql` — drop `inbox_threads`
 - `20260704120000_mailbox_per_archive_user.sql` — archivio per titolare archivio (#159)
 - `20260719220000_list_peer_messages_recent_window.sql` — finestra recente + cursore
-- *(pendente)* `peer_address_migration` — amend §7 TEMP
+- `20260913100000_peer_address_identity.sql` — `peer_address`, `author_address`, `allowed_address`; drop colonne UUID chat (amend §7 applicato)
