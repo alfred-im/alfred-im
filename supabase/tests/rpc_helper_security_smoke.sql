@@ -37,7 +37,7 @@ BEGIN
 
   IF has_function_privilege(
     'authenticated',
-    'alfred_delivery.erogate_group_message(uuid, uuid, uuid, text, public.message_content_type, text, integer, text, bigint, double precision, double precision)',
+    'alfred_delivery.erogate_group_message(uuid, uuid, uuid, text, public.message_content_type, text, integer, text, bigint, double precision, double precision, uuid)',
     'EXECUTE'
   ) THEN
     RAISE EXCEPTION 'alfred_delivery.erogate_group_message must not be executable by authenticated';

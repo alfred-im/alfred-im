@@ -43,7 +43,7 @@ Requisiti **client/UI** (shell senza inbox, registrazione toggle tipo account, b
 
 | ID | Promessa |
 |----|----------|
-| **SYS-GROUP-007** | Vista storico gruppo: messaggi ordinati per `created_at` su archivio `archive_user_id = gruppo` |
+| **SYS-GROUP-007** | Vista storico gruppo: messaggi ordinati per `created_at` su archivio `archive_user_id = gruppo`; **esclude** gambe uscita fanout interne (copia delivery verso membro, stesso λ dell'inbound umano) |
 
 #### MUST NOT
 
@@ -85,8 +85,9 @@ Requisiti **client/UI** (shell senza inbox, registrazione toggle tipo account, b
 | **SYS-GROUP-017** | Gate recapito umano→gruppo: indirizzo mittente ∈ allow list del **gruppo** **e** indirizzo gruppo ∈ allow list del **mittente** |
 | **SYS-GROUP-018** | Su recapito al gruppo: INSERT storico gruppo; `peer_address` = indirizzo mittente umano; `author_address` = indirizzo mittente; `author_id` = mittente umano; **`original_author_id` = mittente umano** |
 | **SYS-GROUP-019** | Su recapito al gruppo: UPDATE copia mittente umano `delivered_at = now()` (✓✓ = **gruppo ha ricevuto**) |
-| **SYS-GROUP-020** | **Erogazione automatica**: per ogni `allowed_address` in allow list del gruppo tentare recapito verso quell'indirizzo |
-| **SYS-GROUP-021** | Gate erogazione: indirizzo gruppo ∈ allow list persona **e** indirizzo persona ∈ allow list gruppo |
+| **SYS-GROUP-020** | **Erogazione automatica**: per ogni `allowed_address` in allow list del gruppo → outbox `deliver` + `deliver_internal` (stesso binario 1:1 / federato) |
+| **SYS-GROUP-021** | Gate erogazione: indirizzo gruppo ∈ allow list persona **e** indirizzo persona ∈ allow list gruppo — skip silenzioso se fallisce |
+| **SYS-GROUP-021b** | Fanout umano→gruppo: copia uscita su archivio gruppo (`peer_address` = membro, stesso λ dell'inbound); broadcast usa la riga archivio unica (`peer_address` NULL) |
 | **SYS-GROUP-022** | Riga erogata su archivio persona: `peer_address` = indirizzo gruppo; `author_address` = indirizzo gruppo; `author_id` = gruppo; `original_author_id` = mittente umano; stesso λ |
 | **SYS-GROUP-023** | Gruppo broadcast: storico gruppo con `peer_address` NULL; `author_address` = indirizzo gruppo; `original_author_id` = gruppo |
 | **SYS-GROUP-024** | Copie membri da broadcast: `peer_address` = indirizzo gruppo; `author_address` = indirizzo gruppo; `original_author_id` = gruppo |
@@ -163,7 +164,7 @@ broadcast_message_to_allowlist() — solo riga storico gruppo + outbox group_ero
 | `send_message_to_address` (branch gruppo), `broadcast_message_to_allowlist`, worker `alfred_delivery.erogate_group_message` | [contracts/rpc.md](../../contracts/rpc.md) |
 | Gate bidirezionale | `is_bidirectional_allowed` (SECURITY DEFINER, no GRANT authenticated) |
 | Migrazioni gruppo | `supabase/migrations/*group*` |
-| Smoke SQL | `supabase/tests/group_schema_smoke.sql`, `group_delivery_smoke.sql`, `group_broadcast_smoke.sql`, `rpc_helper_security_smoke.sql` |
+| Smoke SQL | `supabase/tests/group_schema_smoke.sql`, `group_delivery_smoke.sql`, `group_delivery_gate_smoke.sql`, `group_broadcast_smoke.sql`, `rpc_helper_security_smoke.sql` |
 
 ---
 

@@ -127,7 +127,7 @@ storage: chat-media, avatars, instance-branding
 
 **Rimossi come identità chat** (deriva): `peer_profile_id`, `peer_external_address`.
 
-**UNIQUE**: `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL`; `(archive_user_id, logical_message_id)`.
+**UNIQUE**: `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL`; `(archive_user_id, logical_message_id, peer_address)` NULLS NOT DISTINCT — consente più righe per λ su archivio gruppo (inbound umano + uscite verso membri).
 
 **Indici target**: `(archive_user_id, peer_address, created_at DESC)`, `(archive_user_id, logical_message_id)`.
 
