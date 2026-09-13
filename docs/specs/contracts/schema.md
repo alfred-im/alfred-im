@@ -1,12 +1,10 @@
 # Contratto schema — dominio mailbox (mailbox)
 
 **Ultima revisione**: 2026-09-13  
-**Status**: `approved` — amend §7 peer_address (migrazione dev pendente; codice attuale ancora su `peer_profile_id`)  
-**Fonte di verità target**: migrazione post-approvazione in `supabase/migrations/`
+**Status**: `implemented` — amend §7 `peer_address` / `author_address` / `allowed_address`  
+**Fonte di verità**: migrazioni in `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
-
-**Riferimento modello**: [TEMP-chat-peer-key-address-drift.md](../../tmp/TEMP-chat-peer-key-address-drift.md) §7 (da eliminare post-implementazione).
 
 ---
 
@@ -298,4 +296,4 @@ Verifica post-migrazione: `supabase/tests/schema_smoke.sql`, `mailbox_schema_smo
 - Backfill dev: `peer_address` da `profiles.username` dove esiste storico con `peer_profile_id`; federati da `peer_external_address`.
 - Storico `mario` + `mario@<im_server_id>` verso stesso profilo: **restano due conversazioni** (coerente §7.2) — nessuna fusione.
 
-Elenco migrazioni esistenti: directory [`supabase/migrations/`](../../../supabase/migrations/) — nuova migrazione peer_address post-implementazione.
+Elenco migrazioni: directory [`supabase/migrations/`](../../../supabase/migrations/) — migrazione `peer_address` applicata.

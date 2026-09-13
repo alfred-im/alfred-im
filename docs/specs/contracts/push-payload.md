@@ -1,8 +1,8 @@
 # Contratto push payload — Web Push VAPID
 
 **Ultima revisione**: 2026-09-13  
-**Status**: `approved` — amend §7.19 `peerAddress` (migrazione dev pendente; codice attuale ancora su `peerProfileId`)  
-**Fonte di verità target**: `supabase/functions/send-push/index.ts`, `client/web/push_sw.js`, `client/lib/models/push_conversation_key.dart`
+**Status**: `implemented` — amend §7.19 `peerAddress`  
+**Fonte di verità**: `supabase/functions/send-push/index.ts`, `client/web/push_sw.js`, `client/lib/models/push_conversation_key.dart`
 
 Contratto **wire format** per notifiche Web Push: payload server → browser, messaggi `postMessage` service worker ↔ client, e identità conversazione (`PushConversationKey`).
 

@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-09-09  
+**Ultimo aggiornamento**: 2026-09-13  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 **SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — per ogni tipo di informazione, un solo file canonico; questo documento è **mappa sessione**, non duplica promesse/RPC/test.
@@ -56,7 +56,7 @@
 - **Ricezione filtrata**: allow list personale `reception_allowlist` — sempre attiva; lista vuota = nessun recapito; rifiuto silenzioso (✓ singola) — promesse `SYS-RECEPTION`, `PROM-RECEPTION-FILTER`, `SURF-ALLOWLIST`; toggle rapido anche da scheda profilo peer (tap avatar) — promesse `PROM-PEER-PROFILE`, `SURF-PEER-PROFILE`
 - **Link condivisibili**: fragment `#indirizzo` / `#indirizzo/chat`; share di sistema da profilo peer e sidebar account — `PROM-SHAREABLE-LINK` (PR #178)
 - **Gruppi**: account `profile_kind = group` con identità propria; partecipazione **solo** allow list bidirezionale (no membership); shell senza inbox; erogazione automatica verso allow list del gruppo; UI autore (avatar + nome) in chat — promessa `SYS-GROUP` (PR #162)
-- **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` senza federazione); archivio **per titolare archivio** in `messages` (`archive_user_id`, `author_id`, `peer_profile_id`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_profile_id`
+- **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` senza federazione); archivio **per titolare archivio** in `messages` (`archive_user_id`, `author_id`, `peer_address`, `author_address`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_address`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca liste on-demand — inbox, rubrica, persone consentite (`PROM-LIST-FILTER`, PR #132, #171)
 - **GIF / voice / location / foto / video**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client — [PROM-CHAT-MEDIA](docs/specs/promises/product/PROM-CHAT-MEDIA.md)
 - **Federazione**: outbox `queued` verso `peer_external_address` — attende gateway/worker (wire: `docs/architecture/gotham-protocol.md`)
@@ -132,7 +132,7 @@
 
 **Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `inbox`, `messaging`, `navigation`, `group_home`, `group_messages`, `shareable_link` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — **unico ingresso** push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `coordinators/` (facade: `MessagesController`).
 
-**Non deducibile — multi-account client**: `MultiAccountMachine` **possiede** `focusUserId` (intent focus); `AccountManager` esegue dispose/restore GoTrue via effetti. Manifest `alfred_saved_accounts` elenca **tutti** gli account aperti; in RAM **al massimo una** `AccountSession` GoTrue (quella in focus). Storage auth per account: `SharedPreferencesLocalStorage` → `alfred_auth_{userId}`. Persistenza **dichiarativa** per entry (`persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). **Boot:** `bootstrapManifest` → `switchToAccount(deferInboxLoad: true)` → `sessionReady` → inbox in background (`refreshFocusedInboxSilently`). **Vista UI** (`AccountViewState` per `userId`): mutazione **solo** via `AccountViewStateStore` (`client/lib/stores/`) — chat aperta + inbox/chat su mobile **indipendenti per account**. Inbox: `InboxCoordinator` + `InboxController` (macchina in `machines/inbox/`). Coda invio: `userId|peerProfileId`. Overlay credenziali su `HomeScreen`. Doc: `docs/guides/multi-account.md`, `docs/decisions/multi-account-parallel-sessions.md`.
+**Non deducibile — multi-account client**: `MultiAccountMachine` **possiede** `focusUserId` (intent focus); `AccountManager` esegue dispose/restore GoTrue via effetti. Manifest `alfred_saved_accounts` elenca **tutti** gli account aperti; in RAM **al massimo una** `AccountSession` GoTrue (quella in focus). Storage auth per account: `SharedPreferencesLocalStorage` → `alfred_auth_{userId}`. Persistenza **dichiarativa** per entry (`persistOpenAccount` / `upsertAccount` al login e `tokenRefreshed` — **vietato** `saveAllAccounts` nel runtime). **Boot:** `bootstrapManifest` → `switchToAccount(deferInboxLoad: true)` → `sessionReady` → inbox in background (`refreshFocusedInboxSilently`). **Vista UI** (`AccountViewState` per `userId`): mutazione **solo** via `AccountViewStateStore` (`client/lib/stores/`) — chat aperta + inbox/chat su mobile **indipendenti per account**. Inbox: `InboxCoordinator` + `InboxController` (macchina in `machines/inbox/`). Coda invio: `userId|peerAddress`. Overlay credenziali su `HomeScreen`. Doc: `docs/guides/multi-account.md`, `docs/decisions/multi-account-parallel-sessions.md`.
 
 **Non deducibile — auth bootstrap**: login/add-account usa client effimero; **non** chiamare `signOut` sul bootstrap dopo adozione sessione dedicata (revoca refresh GoTrue). PKCE: `EphemeralPkceStorage`. **Chiudi account** = logout **solo locale** (`close()` cancella storage, nessuna `POST /auth/v1/logout`). Doc: `docs/guides/multi-account.md`.
 
@@ -186,7 +186,7 @@ Client web Fly: `client/deploy/arkham/` + `client/deploy/blackgate/` + `client/d
 | Storage `instance-branding` | Logo/favicon istanza owner (`branding/{logo\|favicon}/{uuid}.ext`, max 2 MB; scrittura solo owner) |
 | Client `SharedPreferences` | Account aperti (`OpenAccount` + refresh token) e `focusUserId` |
 
-RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_profile`, `list_peer_messages`, `list_archive_messages`, `broadcast_message_to_allowlist`, `mark_peer_read`.
+RPC principali: `list_inbox`, `find_profile_by_username`, `send_message_to_address`, `list_peer_messages`, `list_archive_messages`, `broadcast_message_to_allowlist`, `mark_peer_read`.
 
 Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §4 e [contracts/schema.md](docs/specs/contracts/schema.md).
 
@@ -207,7 +207,7 @@ bash scripts/test.sh release       # stack locale completo (alias: manual, ci)
 - **Gate CI** (`verify.sh`): lint + test Dart isolati — non sostituisce test sul telefono
 - CI gate: `release-suite.yml` → `verify.sh`; smoke client Fly: `docker-client-fly.yml`
 - E2E: `client/e2e/` (Playwright)
-- SQL smoke: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `reception_allowlist_*.sql`, `group_*.sql`, `rpc_helper_security_smoke.sql`, `send_message_to_profile_smoke.sql`
+- SQL smoke: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `reception_allowlist_*.sql`, `group_*.sql`, `rpc_helper_security_smoke.sql`, `send_message_to_address_smoke.sql`
 - Integrazione spunte: `bash scripts/test.sh integration-ticks` (contratto ✓ / ✓✓ / allow list)
 
 ---

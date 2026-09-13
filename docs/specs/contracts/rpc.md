@@ -1,10 +1,10 @@
 # Contratto RPC — messaggistica
 
 **Ultima revisione**: 2026-09-13  
-**Status**: `approved` — amend §7 peer_address (migrazione dev pendente; codice attuale ancora su UUID)  
+**Status**: `implemented` — amend §7 `peer_address`  
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md)
 
-Fonte di verità target: migrazione post-approvazione in `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
+Fonte di verità: migrazioni in `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
 
 **Identità conversazione**: parametro unificato **`peer_address` text** (lowercase) — **MUST NOT** usare UUID come chiave conversazione nelle RPC account.
 

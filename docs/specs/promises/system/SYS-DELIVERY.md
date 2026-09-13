@@ -38,7 +38,7 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 | **SYS-DELIVERY-006** | Payload `read_receipt` include id logico messaggio, `read_receipt_id`, `reader_id`, `sender_profile_id` |
 | **SYS-DELIVERY-007** | RLS `outbox`: deny `authenticated` (solo worker/service) |
 | **SYS-DELIVERY-008** | `event_kind = push_notify` — invio notifica Web Push post-recapito ([SYS-PUSH](./SYS-PUSH.md), `implemented`) |
-| **SYS-DELIVERY-009** | Payload `push_notify` include `recipient_user_id`, `peer_profile_id`, `peer_display_name`, `preview_text`, `logical_message_id`, `content_type` |
+| **SYS-DELIVERY-009** | Payload `push_notify` include `recipient_user_id`, `peer_address`, `peer_display_name`, `preview_text`, `logical_message_id`, `content_type` |
 
 ### WORKER — `alfred_delivery`
 
