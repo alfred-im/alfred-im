@@ -111,13 +111,11 @@ export async function expectContactAbsentInDb(
 export function insertContactInDb(
   focusUserId: string,
   peerAddress: string,
-  displayName: string,
 ): void {
-  const safeName = displayName.replace(/'/g, "''");
   const safePeer = normalizePeerAddress(peerAddress);
   const sql =
-    `INSERT INTO public.contacts (archive_user_id, address, display_name) ` +
-    `VALUES ('${focusUserId}', '${safePeer}', '${safeName}') ` +
+    `INSERT INTO public.contacts (archive_user_id, address) ` +
+    `VALUES ('${focusUserId}', '${safePeer}') ` +
     `ON CONFLICT DO NOTHING;`;
   execSync(
     `docker exec -i supabase_db_alfred psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c ${JSON.stringify(sql)}`,
@@ -151,7 +149,7 @@ export async function prepareLocalPeerWithRubricaAndConsent(
     recipientAccessToken: session2.accessToken,
   });
 
-  insertContactInDb(acct1.userId, acct2.username, `E2E ${label2}`);
+  insertContactInDb(acct1.userId, acct2.username);
 
   const stamp = Date.now();
   const seedMessage = `rubrica-consent-${stamp}`;

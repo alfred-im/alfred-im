@@ -81,7 +81,7 @@ export async function transitionPeerEstablished(
 ): Promise<void> {
   await snakeStepAsync('transition.peer_established', async () => {
     await transitionMessagingReady(acct1, acct2);
-    insertContactInDb(acct1.userId, acct2.username, acct2.username);
+    insertContactInDb(acct1.userId, acct2.username);
     const session1 = await loginSupabase(acct1.email, acct1.password);
     await sendMessageToAddress({
       senderAccessToken: session1.accessToken,
