@@ -47,7 +47,7 @@ Messaggistica `user@server` verso altre istanze Alfred — contratto wire in [go
 | Spec wire + Protobuf | ✅ in repo |
 | Gateway Fly | ❌ |
 | Worker claim outbox | ❌ |
-| Invio verso `peer_external_address` | ⏸ outbox `queued` |
+| Invio verso `peer_address` federato | ⏸ outbox `queued` |
 | Ricezione inbound | ❌ |
 
 ### Delete chat locale

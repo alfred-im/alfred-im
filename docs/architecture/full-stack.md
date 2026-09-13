@@ -160,7 +160,7 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/README.md`.
 
 ## 9. Prossimi passi (federazione)
 
-1. Worker federativo: claim `outbox` verso `peer_external_address`
+1. Worker federativo: claim `outbox` verso `peer_address`
 2. Ingestione inbound → `materialize_inbound_sender_message` + Realtime
 3. Spunte e reazioni federate sul wire
 

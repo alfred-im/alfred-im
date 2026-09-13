@@ -13,7 +13,7 @@ Messaggistica **tra istanze Alfred** (`user@server`). Il prodotto è federato pe
 | Componente | Stato |
 |------------|-------|
 | Contratto wire + Protobuf | ✅ |
-| Schema DB (outbox, `peer_address`, rubrica federata) | ✅ |
+| Schema DB (outbox, `peer_address`, `contacts.address`) | ✅ |
 | Gateway Gotham + worker runtime | ❌ pianificato |
 
 ---

@@ -194,7 +194,7 @@ Contratto wire: [gotham-protocol.md](./gotham-protocol.md). Il messaggio federat
 ### Flusso locale (sintesi)
 
 ```
-Invio (account mittente) — send_message_to_profile
+Invio (account mittente) — send_message_to_address
   → gate outbound: is_sender_allowed_for_reception(mittente, destinatario)
        SE violazione: raise exception 'recipient not in reception allowlist'
                       — nessuna INSERT copia mittente

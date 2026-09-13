@@ -2,7 +2,7 @@
 
 **Bounded context:** `federation`  
 **Ultima revisione:** 2026-09-13  
-**Amend:** peer_address — distillazione TEMP §7
+**Amend:** peer_address — [PROM-CHAT-PEER-KEY](../../specs/promises/product/PROM-CHAT-PEER-KEY.md) · [schema.md](../../specs/contracts/schema.md)
 
 ---
 
