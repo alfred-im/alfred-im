@@ -7,12 +7,16 @@
 
 DO $$
 BEGIN
+  IF to_regprocedure('public.is_sender_allowed_for_reception(uuid, uuid)') IS NOT NULL THEN
+    RAISE EXCEPTION 'is_sender_allowed_for_reception must be removed';
+  END IF;
+
   IF has_function_privilege(
     'authenticated',
-    'public.is_sender_allowed_for_reception(uuid, uuid)',
+    'public.is_address_allowed_for_reception(uuid, text)',
     'EXECUTE'
   ) THEN
-    RAISE EXCEPTION 'is_sender_allowed_for_reception must not be executable by authenticated';
+    RAISE EXCEPTION 'is_address_allowed_for_reception must not be executable by authenticated';
   END IF;
 
   IF has_function_privilege(

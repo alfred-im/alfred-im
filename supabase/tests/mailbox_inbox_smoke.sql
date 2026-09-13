@@ -22,14 +22,14 @@ BEGIN
     true
   );
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
   VALUES
-    (v_agent1, v_agent2),
-    (v_agent2, v_agent1)
+    (v_agent1, 'ciagent2'),
+    (v_agent2, 'ciagent1')
   ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
 
-  PERFORM public.send_message_to_profile(
-    v_agent2,
+  PERFORM public.send_message_to_address(
+    'ciagent2',
     'inbox smoke',
     v_client_id,
     'text'::public.message_content_type
@@ -37,7 +37,7 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1 FROM public.list_inbox() i
-    WHERE i.peer_profile_id = v_agent2
+    WHERE i.peer_address = 'ciagent2'
   ) THEN
     RAISE EXCEPTION 'list_inbox missing peer after send (sender view)';
   END IF;
@@ -50,7 +50,7 @@ BEGIN
 
   SELECT i.unread_count INTO v_unread
   FROM public.list_inbox() i
-  WHERE i.peer_profile_id = v_agent1;
+  WHERE i.peer_address = 'ciagent1';
 
   IF coalesce(v_unread, 0) < 1 THEN
     RAISE EXCEPTION 'recipient unread_count expected >= 1, got %', v_unread;

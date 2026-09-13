@@ -21,10 +21,10 @@ BEGIN
   UPDATE public.profiles SET profile_kind = 'group' WHERE id = v_group;
 
   DELETE FROM public.reception_allowlist
-  WHERE (archive_user_id, allowed_profile_id) IN ((v_group, v_observer), (v_observer, v_group));
+  WHERE (archive_user_id, allowed_address) IN ((v_group, 'ciobserver'), (v_observer, 'ciagent2'));
 
-  INSERT INTO public.reception_allowlist (archive_user_id, allowed_profile_id)
-  VALUES (v_group, v_observer), (v_observer, v_group);
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
+  VALUES (v_group, 'ciobserver'), (v_observer, 'ciagent2');
 
   PERFORM set_config(
     'request.jwt.claims',
@@ -68,7 +68,7 @@ BEGIN
   UPDATE public.profiles SET profile_kind = 'user' WHERE id = v_group;
 
   DELETE FROM public.reception_allowlist
-  WHERE (archive_user_id, allowed_profile_id) IN ((v_group, v_observer), (v_observer, v_group));
+  WHERE (archive_user_id, allowed_address) IN ((v_group, 'ciobserver'), (v_observer, 'ciagent2'));
 
   RAISE NOTICE 'group_broadcast_smoke_ok';
 END $$;

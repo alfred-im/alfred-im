@@ -17,22 +17,37 @@ BEGIN
     RETURN;
   END IF;
 
+  INSERT INTO public.reception_allowlist (archive_user_id, allowed_address)
+  VALUES (v_agent1, 'ciagent2'), (v_agent2, 'ciagent1')
+  ON CONFLICT ON CONSTRAINT reception_allowlist_archive_user_allowed_unique DO NOTHING;
+
   SELECT count(*) INTO v_before
   FROM public.outbox o
   WHERE o.payload ->> 'event_kind' = 'push_notify'
     AND o.payload ->> 'logical_message_id' = v_lambda::text;
 
   INSERT INTO public.messages (
-    archive_user_id, author_id, peer_profile_id, logical_message_id, body, content_type
+    archive_user_id,
+    peer_address,
+    author_address,
+    logical_message_id,
+    body,
+    content_type
   )
   VALUES (
-    v_agent1, v_agent1, v_agent2, v_lambda, 'smoke idempotent push', 'text'
+    v_agent1,
+    'ciagent2',
+    'ciagent1',
+    v_lambda,
+    'smoke idempotent push',
+    'text'
   )
   ON CONFLICT (archive_user_id, logical_message_id) DO NOTHING;
 
   INSERT INTO public.outbox (message_id, payload, status)
   SELECT m.id, jsonb_build_object(
     'event_kind', 'deliver',
+    'recipient_address', 'ciagent2',
     'recipient_profile_id', v_agent2,
     'logical_message_id', v_lambda,
     'body', 'smoke idempotent push',
@@ -49,6 +64,7 @@ BEGIN
   INSERT INTO public.outbox (message_id, payload, status)
   SELECT m.id, jsonb_build_object(
     'event_kind', 'deliver',
+    'recipient_address', 'ciagent2',
     'recipient_profile_id', v_agent2,
     'logical_message_id', v_lambda,
     'body', 'smoke idempotent push',

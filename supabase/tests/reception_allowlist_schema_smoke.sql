@@ -2,7 +2,7 @@
 --
 -- SPDX-License-Identifier: GPL-3.0-or-later
 
--- RECEPTION-ALLOWLIST schema smoke (REQ-001–004).
+-- RECEPTION-ALLOWLIST schema smoke (address-based).
 
 DO $$
 BEGIN
@@ -10,8 +10,26 @@ BEGIN
     RAISE EXCEPTION 'Missing table reception_allowlist';
   END IF;
 
-  IF to_regprocedure('public.is_sender_allowed_for_reception(uuid, uuid)') IS NULL THEN
-    RAISE EXCEPTION 'Missing function is_sender_allowed_for_reception';
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'reception_allowlist'
+      AND column_name = 'allowed_address'
+  ) THEN
+    RAISE EXCEPTION 'reception_allowlist.allowed_address missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'reception_allowlist'
+      AND column_name = 'allowed_profile_id'
+  ) THEN
+    RAISE EXCEPTION 'reception_allowlist.allowed_profile_id must be removed';
+  END IF;
+
+  IF to_regprocedure('public.is_address_allowed_for_reception(uuid,text)') IS NULL THEN
+    RAISE EXCEPTION 'Missing function is_address_allowed_for_reception';
   END IF;
 
   IF NOT EXISTS (
