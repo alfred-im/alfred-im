@@ -24,6 +24,6 @@ Messaggistica **tra istanze Alfred** (`user@server`). Il prodotto è federato pe
 |------|-----------|
 | [glossary.md](./glossary.md) | Termini |
 | [commands-and-events.md](./commands-and-events.md) | Comandi/eventi dominio |
-| [../../architecture/gotham-protocol.md](../../architecture/gotham-protocol.md) | Contratto wire (§ 5.4 allow list locale + esterna; § 7 runtime da implementare) |
+| [../../architecture/gotham-protocol.md](../../architecture/gotham-protocol.md) | Contratto wire (`peer_address` / `allowed_address`; § 5.4 allow list; § 7 runtime da implementare) |
 
 Demo paritarie Arkham / Blackgate: [client/deploy/README.md](../../../client/deploy/README.md#istanze-demo).
