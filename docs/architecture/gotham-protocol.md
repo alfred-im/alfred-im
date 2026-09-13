@@ -438,14 +438,14 @@ Il gateway Python in `client/deploy/gateway/` serve solo la shell PWA (branding 
 
 | In scope Gotham | Fuori scope |
 |-----------------|-------------|
-| Messaggistica 1:1 testo + `LOCATION` | Gruppi federati |
-| `MESSAGE` con media (dopo ingest locale destinatario — vedi [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media) | Media federati senza ingest |
-| READ, REACTION come eventi separati | Multi-account sul wire |
-| HTTP/3 + Protobuf + discovery | E2E encryption |
-| Ack MESSAGE = solo HTTP status | `push_notify` sul wire |
-| | Body di ack strutturato |
+| Messaggistica 1:1 testo + `LOCATION` | Media federati senza ingest |
+| **Gruppi** — identità `@username` / `@username@server`; recapito umano→gruppo; erogazione verso partecipanti su allow list (locali e federati, stesso modello `allowed_address`) | Multi-account sul wire |
+| `MESSAGE` con media (dopo ingest locale destinatario — vedi [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media) | E2E encryption |
+| READ, REACTION come eventi separati | `push_notify` sul wire |
+| HTTP/3 + Protobuf + discovery | Body di ack strutturato |
+| Ack MESSAGE = solo HTTP status | |
 
-I gruppi restano **locale** (stessa istanza) — `group_erogate`, `broadcast_message_to_allowlist`.
+I gruppi **non** sono fuori scope: seguono lo stesso contratto address-based e la stessa pipeline outbox della messaggistica 1:1 ([SYS-GROUP](../specs/promises/system/SYS-GROUP.md)). Partecipazione = allow list bidirezionale su indirizzo (inclusi `user@server`). Recapito locale oggi (`group_erogate`, `broadcast_message_to_allowlist`); federato = stesso bus (`deliver`, `group_erogate`) con driver Gotham quando una gamba coinvolge un indirizzo su altra istanza. Nessuna tipologia «gruppo locale» vs «gruppo federato» in UI o wire ([no-internal-external-chat-distinction.md](../decisions/no-internal-external-chat-distinction.md)).
 
 ---
 
@@ -480,3 +480,4 @@ I gruppi restano **locale** (stessa istanza) — `group_erogate`, `broadcast_mes
 | 2026-09-09 | `media_url` wire: ingest locale destinatario obbligatorio — vedi mailbox § Media |
 | 2026-09-09 | § 5.4 — `reception_allowlist` locale + esterna; RPC invio/materialize federato; gate su `from_address` |
 | 2026-09-13 | § 5.4 — modello address-based unificato (`peer_address`, `author_address`, `allowed_address`); TEMP §8 audit risolto |
+| 2026-09-13 | § 9 — gruppi **in scope** federazione (correzione: non solo locale) |
