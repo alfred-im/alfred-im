@@ -1,6 +1,6 @@
 # Modello caselle (mailbox) — implementato
 
-**Ultima revisione**: 2026-09-09  
+**Ultima revisione**: 2026-09-13  
 **Status**: ✅ **Implementato su `main`** (PR #159; gruppi #162; delivery plane #179) — promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` `implemented`  
 **Audience**: AI / implementazione
 
@@ -19,7 +19,7 @@ L’ADR [address-based-messaging.md](../decisions/address-based-messaging.md) re
 | **Consegna** | **Outbox sempre** → worker `alfred_delivery.process_outbox` materializza destinatario e date spunte mittente — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) |
 | **Inbox** | Lista derivata dal **mio** archivio via `list_inbox()` |
 | **Storico chat** | Finestra recente via `list_peer_messages` (ultimi N, default 100); pagine più vecchie con cursore `p_before_created_at`; anteprima inbox ⊆ prima finestra (SYS-MAILBOX-057) |
-| **Identità chat** | `(io, peer_profile_id)` — indirizzo `username` o `username@server` in compose |
+| **Identità chat** | `(io, peer_address)` — indirizzo lowercase `username` o `username@server`; presentazione via `get_profiles` |
 
 Tutto il resto (UI, realtime, spunte, tipi messaggio, rubrica) si deduce dall’implementazione attuale salvo quanto sotto.
 
@@ -70,11 +70,27 @@ Questo è coerente con il principio mailbox «archivi indipendenti»: oggi vale 
 **Non serve altro** oltre a:
 
 1. **Il mio account** (`auth.uid()` / sessione corrente)
-2. **L’altro account** come indirizzo: `username` (Alfred) oppure `username@server` (esterno)
+2. **L’altro account** come **`peer_address`**: `username` (stessa istanza) oppure `username@server` (stessa o altra istanza)
 
-Niente `thread_id` lato client. Niente entità «casella verso Paolo» esposta come id separato: è **ottimizzazione interna** al server (indici, cache, raggruppamento). Il client continua come oggi: indirizzo → chat.
+Niente `thread_id` lato client. Niente UUID profilo come chiave conversazione. Niente entità «casella verso Paolo» esposta come id separato: è **ottimizzazione interna** al server (indici, raggruppamento). Il client: indirizzo → chat.
 
-«In/out» in UI = messaggi nel **mio** archivio dove `author_id` è me (uscita) o l’altro (entrata). Nessuna colonna `direction` nel DB.
+### Regole indirizzo (§7.2)
+
+| Input | Significato |
+|-------|-------------|
+| `mario` | Stessa istanza (bare username) |
+| `mario@arkham-im.fly.dev` | Server esplicito (stessa istanza se `@server` = `im_server_id` locale) |
+| `mario@blackgate-im.fly.dev` | Altra istanza |
+
+- Input case insensitive; persistenza **sempre lowercase**.
+- **`mario` ≠ `mario@<im_server_id>`** — identità, chat, allow list e inbox **distinte** (nessuna fusione).
+- Delivery legge `@server` e sceglie driver interno vs Gotham — **non** tipologia chat.
+
+### `author_address` (§7.4–§7.5b)
+
+Sulla copia mittente, `author_address` è l'identità che fa fede nella comunicazione — allineata a ciò che il destinatario vede e al wire Gotham. Scrivendo all'esterno, il mittente usa forma FQDN sulla propria copia.
+
+«In/out» in UI = messaggi nel **mio** archivio dove il mittente (`author_address`) è me (uscita) o la controparte (entrata). Nessuna colonna `direction` nel DB.
 
 ---
 
@@ -231,6 +247,15 @@ Inbound messaggio: `materialize_inbound_sender_message` con `logical_message_id`
 ## Migrazione
 
 Quando si implementa: **migra e basta** — DB solo dev, niente produzione da preservare. Niente doppia scrittura obbligatoria.
+
+Backfill dev:
+
+- `peer_address` da `profiles.username` dove esiste storico `peer_profile_id`
+- Federati da `peer_external_address`
+- Allow list: `allowed_address` da join `profiles.username` su `allowed_profile_id`
+- Contacts: `address` da bare username o `external_address`
+
+Storico `mario` + `mario@<im_server_id>` verso stesso profilo: **restano due conversazioni** (coerente §7.2) — nessuna fusione.
 
 ---
 

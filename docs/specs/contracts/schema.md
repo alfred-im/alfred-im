@@ -1,28 +1,32 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-09-08  
-**Status**: `implemented` su `main` (migrazioni fino a `20260908100000`, 59 totali in `supabase/migrations/`)  
-**Fonte di verità**: `supabase/migrations/`
+**Ultima revisione**: 2026-09-13  
+**Status**: `approved` — amend §7 peer_address (migrazione dev pendente; codice attuale ancora su `peer_profile_id`)  
+**Fonte di verità target**: migrazione post-approvazione in `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
 
+**Riferimento modello**: [TEMP-chat-peer-key-address-drift.md](../../tmp/TEMP-chat-peer-key-address-drift.md) §7 (da eliminare post-implementazione).
+
 ---
 
-## Diagramma relazioni (su `main`)
+## Diagramma relazioni (target post-migrazione)
 
 ```
 auth.users 1──1 profiles
-profiles 1──* contacts (archive_user_id)
-profiles 1──* reception_allowlist (archive_user_id → allowed_profile_id)
-profiles 1──* messages (archive_user_id = archivio; author_id = autore contenuto)
-messages *── peer profiles (peer_profile_id denormalizzato)
+profiles 1──* contacts (archive_user_id → address)
+profiles 1──* reception_allowlist (archive_user_id → allowed_address)
+profiles 1──* messages (archive_user_id = archivio; author_id nullable — casi tecnici gruppo)
+messages — chiave conversazione: peer_address (text, lowercase)
 logical_message_id (λ) 1──* message_reaction_facts (append-only; nessuna FK — λ non univoco su messages)
 messages 1──* outbox (ogni invio/lettura può accodare eventi)
 profiles 1──* push_subscriptions (user_id, device_id)
 storage: chat-media, avatars, instance-branding
 ```
 
-**Inbox**: nessuna tabella dedicata — derivata dal mio archivio `messages` via `list_inbox()`.
+**Inbox**: nessuna tabella dedicata — derivata dal mio archivio `messages` via `list_inbox()`, raggruppata per `peer_address`.
+
+**Identità chat**: `(archive_user_id, peer_address)` — **non** `peer_profile_id`, **non** `peer_external_address`, **non** profilo shadow per peer remoti.
 
 ---
 
@@ -56,6 +60,8 @@ storage: chat-media, avatars, instance-branding
 
 **Spec**: [SYS-PROFILE](../promises/system/SYS-PROFILE.md).
 
+**MUST NOT**: INSERT profili shadow per peer su altre istanze — presentazione via `get_profiles(addresses[])` ([SYS-PROFILE](../promises/system/SYS-PROFILE.md) SYS-PROFILE-009).
+
 ---
 
 ## `contacts`
@@ -63,15 +69,14 @@ storage: chat-media, avatars, instance-branding
 | Colonna | Tipo | Note |
 |---------|------|------|
 | `id` | uuid PK | |
-| `archive_user_id` | uuid FK → profiles | |
-| `linked_profile_id` | uuid FK nullable | Profilo Alfred locale (stessa istanza) |
-| `external_address` | text nullable | Indirizzo federato `user@server` |
-| `display_name` | text | |
-| `avatar_url` | text nullable | Snapshot opzionale |
+| `archive_user_id` | uuid FK → profiles | Titolare rubrica |
+| `address` | text NOT NULL | Indirizzo contatto lowercase — `username` o `user@server` |
 
-**CHECK**: esattamente uno tra `linked_profile_id` e `external_address` valorizzato.
+**UNIQUE**: `(archive_user_id, address)`.
 
 **RLS**: SELECT, INSERT, UPDATE, DELETE `archive_user_id = auth.uid()`.
+
+**Rimossi** (deriva implementativa): `linked_profile_id`, `external_address`, `display_name`, `avatar_url` — rubrica = solo indirizzo; presentazione via `get_profiles`.
 
 **Spec**: [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md).
 
@@ -83,14 +88,16 @@ storage: chat-media, avatars, instance-branding
 |---------|------|------|
 | `id` | uuid PK | |
 | `archive_user_id` | uuid FK → profiles | Destinatario che filtra |
-| `allowed_profile_id` | uuid FK → profiles | Mittente consentito |
+| `allowed_address` | text NOT NULL | Mittente consentito (lowercase) — `username` o `user@server` |
 | `created_at` | timestamptz | default `now()` |
 
-**UNIQUE**: `(archive_user_id, allowed_profile_id)`.
+**UNIQUE**: `(archive_user_id, allowed_address)`.
 
-**CHECK**: `allowed_profile_id IS NOT NULL` AND `allowed_profile_id <> archive_user_id`.
+**CHECK**: `allowed_address IS NOT NULL` AND `lower(allowed_address) <> lower(profiles.username)` del titolare archivio (non consentire sé stessi).
 
 **RLS**: SELECT, INSERT, DELETE `archive_user_id = auth.uid()` (nessuna policy UPDATE).
+
+**Regole indirizzo** (§7.2, §7.6): `mario` e `mario@<im_server_id>` sono **voci distinte** — identità, chat e allow list non si fondono.
 
 **Spec**: [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md).
 
@@ -102,10 +109,10 @@ storage: chat-media, avatars, instance-branding
 |---------|------|------|
 | `id` | uuid PK | Per archive_user |
 | `archive_user_id` | uuid FK → profiles | Archivio (`auth.uid()` in RLS) |
-| `author_id` | uuid FK → profiles | Mittente tecnico di recapito (gruppo se erogazione) |
+| `peer_address` | text NOT NULL | **Chiave conversazione** — controparte lowercase (`username` o `user@server`) |
+| `author_address` | text NOT NULL | Identità mittente come indirizzo — forma che fa fede nella comunicazione (§7.4, §7.5, §7.5b) |
+| `author_id` | uuid FK nullable → profiles | Solo casi tecnici (es. erogazione [SYS-GROUP](../promises/system/SYS-GROUP.md)) |
 | `original_author_id` | uuid FK nullable → profiles | Autore contenuto se `author_id` è gruppo — [SYS-GROUP](../promises/system/SYS-GROUP.md) |
-| `peer_profile_id` | uuid FK nullable | Controparte sulla stessa istanza |
-| `peer_external_address` | text nullable | Controparte federata `user@server` |
 | `logical_message_id` | uuid NOT NULL | Identificativo globale messaggio — assegnato dal server mittente, replicato identico sul destinatario |
 | `client_message_id` | text nullable | Solo copia mittente |
 | `body` | text | |
@@ -120,11 +127,26 @@ storage: chat-media, avatars, instance-branding
 | `external_id` | text nullable | Opzionale — correlazione esterna; il wire usa `logical_message_id` |
 | `created_at` | timestamptz | |
 
+**Rimossi come identità chat** (deriva): `peer_profile_id`, `peer_external_address`.
+
 **UNIQUE**: `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL`; `(archive_user_id, logical_message_id)`.
+
+**Indici target**: `(archive_user_id, peer_address, created_at DESC)`, `(archive_user_id, logical_message_id)`.
 
 **RLS**: SELECT `archive_user_id = auth.uid()` — **nessuna** policy INSERT/UPDATE/DELETE (mutazioni solo via RPC `SECURITY DEFINER`).
 
+**Entrata/uscita**: righe in entrata quando `author_address <> peer_address` del titolare **oppure** confronto con indirizzo canonico dell'archivio (non solo `author_id` UUID).
+
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md).
+
+### Semantica `author_address` (§7.4–§7.5b)
+
+| Caso | Regola |
+|------|--------|
+| Stessa istanza, compose bare | Mittente bare → destinatario vede mittente bare |
+| Stessa istanza, compose FQDN | Mittente FQDN → destinatario vede mittente FQDN |
+| Inbound federato | `author_address` = `from_address` envelope (sempre FQDN) |
+| Copia mittente verso esterno | `author_address` = forma FQDN del mittente (§7.5b) |
 
 ---
 
@@ -153,10 +175,12 @@ Fatti immutabili (append-only) sulle reaction — ancorati a `logical_message_id
 
 ## Partecipazione gruppo (SYS-GROUP)
 
-Nessuna tabella aggiuntiva. Partecipazione = allow list bidirezionale:
+Nessuna tabella aggiuntiva. Partecipazione = allow list bidirezionale su **indirizzo**:
 
-- `reception_allowlist(archive_user_id = gruppo, allowed_profile_id = persona)`
-- `reception_allowlist(archive_user_id = persona, allowed_profile_id = gruppo)`
+- `reception_allowlist(archive_user_id = gruppo, allowed_address = indirizzo persona)`
+- `reception_allowlist(archive_user_id = persona, allowed_address = indirizzo gruppo)`
+
+Identità gruppo verso l'esterno: `@username` come qualsiasi account (§7.18).
 
 ---
 
@@ -173,9 +197,11 @@ Colonna `message_id` — **ancora operativa** (polisemia per `event_kind`; vedi 
 | `push_notify` | Copia **destinatario** materializzata |
 | `reaction_fact` | Riga `messages` del **reagente** nel proprio archivio (stesso λ) |
 
+Payload `push_notify`: **`peer_address`** (non `peer_profile_id`) — vedi [push-payload.md](./push-payload.md).
+
 **FK**: `message_id` → `messages(id)` ON DELETE CASCADE (`outbox_message_id_fkey`).
 
-Consumer locale: worker `alfred_delivery.process_outbox` (sincrono in transazione RPC account); federato: gateway/worker async (da implementare) — vedi [gotham-protocol.md](../../architecture/gotham-protocol.md).
+Consumer locale: worker `alfred_delivery.process_outbox` (sincrono in transazione RPC account); federato: gateway/worker async — vedi [gotham-protocol.md](../../architecture/gotham-protocol.md).
 
 **RLS**: DENY per `authenticated`.
 
@@ -190,7 +216,7 @@ Worker infrastruttura **non-account** — unico attore autorizzato a attraversar
 | Funzione | Ruolo |
 |----------|--------|
 | `process_outbox(uuid)` | Dispatcher per `event_kind` |
-| `deliver_internal(uuid)` | Recapito 1:1 / verso gruppo |
+| `deliver_internal(uuid)` | Recapito 1:1 / verso gruppo — routing `@server` interno vs Gotham |
 | `process_read_receipt(uuid)` | Legge payload outbox → `propagate_read_receipt` |
 | `propagate_read_receipt(uuid, uuid, uuid)` | UPDATE `read_at` + `read_receipt_id` su copia mittente per `logical_message_id` |
 | `process_reaction_fact(uuid)` | INSERT append-only su `message_reaction_facts`; completa outbox con `reaction_fact_id` |
@@ -245,26 +271,31 @@ Pubblici (scope attuale) (URL diretti in Realtime).
 
 ---
 
-## Oggetti rimossi (non devono esistere)
+## Oggetti rimossi (non devono esistere post-migrazione)
 
-| Oggetto | Rimosso in |
-|---------|------------|
+| Oggetto | Note |
+|---------|------|
+| `messages.peer_profile_id`, `messages.peer_external_address` | Sostituiti da `peer_address` |
+| `reception_allowlist.allowed_profile_id` | Sostituito da `allowed_address` |
+| `contacts.linked_profile_id`, `contacts.external_address`, snapshot nome/avatar | Sostituito da `address` only |
 | `contact_protocol` enum; colonne `protocol` su `contacts`, `messages`, `outbox` | `20260908100000_gotham_native_drop_protocol.sql` |
 | `bridge_jobs`, `sync_cursors` | `20260908100000_gotham_native_drop_protocol.sql` |
 | `inbox_threads` | `20260627230000_messages_only_inbox.sql` |
 | `conversations`, `conversation_participants` | message-centric refactor |
 | `message_read_receipts` | `20260704120000_mailbox_per_archive_user.sql` |
-| `messages.delivery_status`, `sender_id`, `recipient_profile_id`, `marker_type`, `marker_for` | `20260704120000` (tabella ricreata) |
+| `messages.delivery_status`, `sender_id`, `recipient_profile_id`, `marker_type`, `marker_for` | `20260704120000` |
 | Trigger `on_message_inserted` | `20260704120000` |
-| `platform_agent_smoke` (tabella smoke) | `20260809130000_security_integrity_cleanup.sql` |
-| Enum `message_delivery_status` | `20260809130000` (legacy pre-mailbox, nessuna colonna su `main`) |
-| Policy `messages_update_own` (UPDATE diretto PostgREST) | `20260809130000` — mutazioni solo via RPC |
-| Indice `reception_allowlist_archive_user_id_idx` | `20260809130000` (ridondante con UNIQUE `(archive_user_id, allowed_profile_id)`) |
+| Profili shadow per peer remoti | Vietato §7.9 |
 
-Verifica: `supabase/tests/schema_smoke.sql`, `mailbox_schema_smoke.sql`.
+Verifica post-migrazione: `supabase/tests/schema_smoke.sql`, `mailbox_schema_smoke.sql` (aggiornati).
 
 ---
 
-## Migrazioni
+## Migrazione dati (§7.15)
 
-Elenco completo: directory [`supabase/migrations/`](../../../supabase/migrations/) (file `YYYYMMDD_*`, ordine lessicografico = ordine applicazione).
+- **Solo DB dev** — niente produzione da preservare.
+- «Migra e basta» — niente doppia scrittura obbligatoria.
+- Backfill dev: `peer_address` da `profiles.username` dove esiste storico con `peer_profile_id`; federati da `peer_external_address`.
+- Storico `mario` + `mario@<im_server_id>` verso stesso profilo: **restano due conversazioni** (coerente §7.2) — nessuna fusione.
+
+Elenco migrazioni esistenti: directory [`supabase/migrations/`](../../../supabase/migrations/) — nuova migrazione peer_address post-implementazione.

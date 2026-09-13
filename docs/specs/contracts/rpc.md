@@ -1,10 +1,12 @@
 # Contratto RPC — messaggistica
 
-**Ultima revisione**: 2026-09-08  
-**Status**: `implemented` su `main` (migrazioni fino a `20260908100000`, 59 totali in `supabase/migrations/`)  
-**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) (`implemented`)
+**Ultima revisione**: 2026-09-13  
+**Status**: `approved` — amend §7 peer_address (migrazione dev pendente; codice attuale ancora su UUID)  
+**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md)
 
-Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
+Fonte di verità target: migrazione post-approvazione in `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
+
+**Identità conversazione**: parametro unificato **`peer_address` text** (lowercase) — **MUST NOT** usare UUID come chiave conversazione nelle RPC account.
 
 **RPC pubbliche** (client): `SECURITY DEFINER`. **`GRANT EXECUTE` a `authenticated`** per le RPC messaggistica/profilo (revoke da `anon` e `PUBLIC`), salvo eccezione sotto.
 
@@ -14,13 +16,13 @@ Fonte di verità: `supabase/migrations/`. PostgREST espone solo overload **espli
 
 ---
 
-## `send_message_to_profile`
+## `send_message_to_address`
 
-**Unico punto invio messaggi.**
+**Unico punto invio messaggi 1:1** (sostituisce `send_message_to_profile` con UUID destinatario).
 
 ```sql
-send_message_to_profile(
-  p_recipient_profile_id uuid,
+send_message_to_address(
+  p_peer_address text,
   p_body text default '',
   p_client_message_id text default null,
   p_content_type message_content_type default 'text',
@@ -33,6 +35,10 @@ send_message_to_profile(
 ) → messages
 ```
 
+| Parametro | Regola |
+|-----------|--------|
+| `p_peer_address` | Normalizzato lowercase; `username` o `user@server`; chiave conversazione |
+
 | `content_type` | Validazione |
 |----------------|-------------|
 | `text` | `body` trim non vuoto |
@@ -40,39 +46,38 @@ send_message_to_profile(
 | `voice` | `media_url`, `duration_seconds` > 0, `media_mime` obbligatori |
 | `location` | `latitude` ∈ [-90,90], `longitude` ∈ [-180,180] |
 
-Errori comuni: `not authenticated`, `cannot message yourself`, `recipient not found`, `recipient not in reception allowlist`, `empty message`, `unsupported content_type`.
+Errori comuni: `not authenticated`, `cannot message yourself`, `invalid peer address`, `recipient not in reception allowlist`, `empty message`, `unsupported content_type`.
 
 Semantica mailbox ([SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md) — RPC account solo confine mittente):
 
-0. Gate **outbound** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): destinatario ∈ `reception_allowlist` del mittente? Se **no** → `raise exception 'recipient not in reception allowlist'` (nessuna copia mittente)
-1. INSERT copia mittente (`archive_user_id = author_id = auth.uid()`), id logico messaggio (λ) mintato dal **server mittente**, date null
-2. INSERT `outbox` (`event_kind = deliver`, `status = queued`)
-3. `alfred_delivery.process_outbox` (worker, stessa transazione):
-   - **Gate allow list** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): mittente ∈ `reception_allowlist` del destinatario?
+0. Normalizza `p_peer_address` → lowercase; risolve indirizzo mittente canonico per `author_address` (§7.5b)
+1. Gate **outbound** [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md): `p_peer_address` ∈ allow list del mittente? Se **no** → `raise exception 'recipient not in reception allowlist'`
+2. INSERT copia mittente (`archive_user_id = auth.uid()`, `peer_address`, `author_address`, `author_id` nullable se non richiesto), λ mintato, date null
+3. INSERT `outbox` (`event_kind = deliver`, `status = queued`)
+4. `alfred_delivery.process_outbox` (worker, stessa transazione):
+   - **Gate allow list inbound**: mittente ∈ allow list del destinatario (match su `author_address`)?
    - Se **sì**: INSERT copia destinatario; UPDATE mittente `delivered_at = now()`
    - Se **no**: skip copia destinatario; `delivered_at` resta null; outbox `completed` (rifiuto silenzioso)
-4. RETURN riga mittente (sempre successo se validazione ok)
+5. RETURN riga mittente
 
-Lista allow vuota → passo 3 sempre **no** (nessuno consentito).
+**Delivery** è l'unico modulo che legge `@server` e sceglie driver interno vs Gotham — non tipologia chat.
 
 Idempotenza: stesso `p_client_message_id` → stessa riga mittente (no duplicati).
 
-**MUST NOT**: promozione `delivered` senza copia destinatario materializzata; errore RPC verso mittente su rifiuto allow list **inbound**; INSERT copia mittente su violazione gate **outbound**; trigger `on_message_inserted` legacy.
+**MUST NOT**: promozione `delivered` senza copia destinatario materializzata; errore RPC verso mittente su rifiuto allow list **inbound**; INSERT copia mittente su violazione gate **outbound**; invio con parametro UUID destinatario.
 
-**Helper**: `is_sender_allowed_for_reception(archive_user_id, sender_profile_id) → boolean` — migrazione `20260704130000`; **helper interno** (non chiamabile da client).
-
-**Migrazioni**: `20260627210000`, `20260627220000` (drop overload 5-arg), `20260627120100` (voice), `20260702120100` (location), `20260704120000` (mailbox), `20260704130000` (reception allowlist gate), `20260711190000` (delivery plane), `20260905000000` (id logico messaggio solo server mittente), `20260908100000` (drop `contact_protocol` / colonne `protocol`).
+**Helper**: `is_address_allowed_for_reception(archive_user_id, allowed_address) → boolean` — gate su indirizzo; **helper interno** (non chiamabile da client).
 
 ### Destinatario gruppo (SYS-GROUP)
 
-Se `p_recipient_profile_id` ha `profile_kind = group` — recapito via worker [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md):
+Se `p_peer_address` risolve a account `profile_kind = group` sulla stessa istanza — recapito via worker [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md):
 
-1. Stessi passi 1–2 (solo copia mittente umano + outbox)
-2. Worker: gate allow list **bidirezionale** mittente ↔ gruppo — due chiamate `is_sender_allowed_for_reception` (gruppo←mittente e mittente←gruppo); **non** usa `is_bidirectional_allowed`
+1. Stessi passi 1–3 (copia mittente umano + outbox)
+2. Worker: gate allow list **bidirezionale** su indirizzo mittente ↔ indirizzo gruppo
 3. Se **sì**: INSERT storico gruppo; `delivered_at` su copia mittente; erogazione automatica verso allow list gruppo
-4. Erogazione fallita per singolo partecipante: skip silenzioso; **non** altera `delivered_at` mittente oltre passo 3
+4. Erogazione fallita per singolo partecipante: skip silenzioso
 
-Invio con `auth.uid()` = gruppo verso persona: `author_id = gruppo`, **`original_author_id = gruppo`**; gate e recapito come chat private.
+Invio con sessione gruppo verso persona: `author_id = gruppo`, `author_address` = indirizzo gruppo, `original_author_id` valorizzato.
 
 ### `broadcast_message_to_allowlist` (SYS-GROUP)
 
@@ -92,18 +97,7 @@ broadcast_message_to_allowlist(
 ) → messages
 ```
 
-| `content_type` | Validazione |
-|----------------|-------------|
-| `text` | `body` trim non vuoto |
-| `gif` | `media_url` obbligatorio |
-| `voice` | `media_url`, `duration_seconds` > 0, `media_mime` obbligatori |
-| `location` | `latitude` / `longitude` obbligatori (senza range [-90,90]/[-180,180] come `send_message_to_profile`) |
-
-Errori: `not authenticated`, `only group accounts can broadcast`, `no allow list recipients`, validazione contenuto come tabella sopra.
-
-Idempotenza: stesso `p_client_message_id` → stessa riga archivio gruppo.
-
-**Migrazioni**: `20260706120000`, `20260706140000`, `20260711190000`.
+Validazione contenuto invariata. Broadcast: `peer_address` NULL sullo storico gruppo.
 
 ---
 
@@ -117,27 +111,24 @@ list_archive_messages(
 ) → setof messages
 ```
 
-Righe WHERE `archive_user_id = auth.uid()` AND contenuto renderizzabile (`mailbox_has_renderable_content`) ORDER BY `created_at` ASC.
+Righe WHERE `archive_user_id = auth.uid()` AND contenuto renderizzabile ORDER BY `created_at` ASC.
 
-Usato da account `profile_kind = group` al posto di `list_peer_messages` — vedi [SYS-GROUP](../promises/system/SYS-GROUP.md) REQ-006/017.
-
-**Migrazioni**: `20260706120000`.
+Usato da account `profile_kind = group` al posto di `list_peer_messages`.
 
 ---
 
 ## `list_inbox`
 
-Non usato quando `auth.uid()` è account `group` — vedi [SYS-GROUP](../promises/system/SYS-GROUP.md).
+Non usato quando `auth.uid()` è account `group`.
 
 ```sql
 list_inbox() → table (
+  peer_address text,
   display_name text,
-  peer_profile_id uuid,
-  peer_external_address text,
-  peer_avatar_url text,
-  peer_cover_url text,
-  peer_pronouns text,
-  peer_profile_kind profile_kind,
+  avatar_url text,
+  cover_url text,
+  pronouns text,
+  profile_kind profile_kind,
   peer_in_contacts boolean,
   peer_is_allowed boolean,
   last_message_preview text,
@@ -148,15 +139,16 @@ list_inbox() → table (
 
 Aggregazione su `messages` WHERE `archive_user_id = auth.uid()`:
 
-- Solo righe con `peer_profile_id IS NOT NULL` **oppure** `peer_external_address IS NOT NULL`, `mailbox_has_renderable_content(body, content_type)`
-- `unread_count` = righe **in entrata** (`author_id <> archive_user_id`) con `read_at IS NULL`
+- GROUP BY **`peer_address`** (non UUID)
+- Solo righe con `peer_address IS NOT NULL` e contenuto renderizzabile
+- `unread_count` = righe **in entrata** (`author_address` ≠ indirizzo titolare archivio **oppure** `author_id <> archive_user_id` dove applicabile) con `read_at IS NULL`
 - Ordine: `last_message_at` DESC
 
-Preview per tipo: testo troncato, `[GIF]`, `format_voice_preview`, `format_location_preview`.
+Presentazione profilo: join locale `profiles` dove `peer_address` = bare username; altrimenti fallback indirizzo grezzo — arricchimento batch via `get_profiles` lato client.
 
-`peer_in_contacts` / `peer_is_allowed`: relazione viewer↔peer (rubrica locale + `reception_allowlist`).
+`peer_in_contacts` / `peer_is_allowed`: match su `contacts.address` e `reception_allowlist.allowed_address`.
 
-**Migrazioni**: `20260627230000`, `20260628100000`, aggiornamenti voice/location, `20260704120000`, `20260706130000`, `20260806190000_profile_cover_url.sql`, `20260810120000_peer_relationship_flags.sql`.
+**MUST NOT**: filtrare solo righe con UUID locale; escludere chat federate per assenza `profiles.id`.
 
 ---
 
@@ -164,39 +156,67 @@ Preview per tipo: testo troncato, `[GIF]`, `format_voice_preview`, `format_locat
 
 ```sql
 list_peer_messages(
-  p_peer_profile_id uuid,
+  p_peer_address text,
   p_limit integer default 100,
   p_before_created_at timestamptz default null
 ) → setof messages
 ```
 
-Righe WHERE `archive_user_id = auth.uid()` AND `peer_profile_id = p_peer_profile_id` AND `mailbox_has_renderable_content(...)`.
+Righe WHERE `archive_user_id = auth.uid()` AND **`peer_address = lower(p_peer_address)`** AND contenuto renderizzabile.
 
-- Senza cursore: **ultimi** `p_limit` messaggi (finestra recente), restituiti in ordine cronologico ASC.
-- Con `p_before_created_at`: fino a `p_limit` messaggi con `created_at < p_before_created_at` (pagina più vecchia), ordine ASC.
+- Senza cursore: **ultimi** `p_limit` messaggi, ordine cronologico ASC.
+- Con `p_before_created_at`: pagina più vecchia, ordine ASC.
+- `LIMIT greatest(1, least(coalesce(p_limit, 100), 500))`.
 
-`LIMIT greatest(1, least(coalesce(p_limit, 100), 500))`.
+L'anteprima `list_inbox` per un peer deve cadere nella finestra senza cursore.
 
-L'anteprima `list_inbox` per un peer deve cadere nella finestra senza cursore quando esiste storico.
-
-**Migrazioni**: `20260704120000`, `20260719220000_list_peer_messages_recent_window.sql` (SYS-MAILBOX-036/057, SURF-CHAT-015).
+**MUST NOT**: overload con `p_peer_profile_id uuid`.
 
 ---
 
 ## `mark_peer_read`
 
 ```sql
-mark_peer_read(p_peer_profile_id uuid) → void
+mark_peer_read(p_peer_address text) → void
 ```
 
-Chiamata dal **destinatario** all’apertura chat con un peer.
+Chiamata dal **destinatario** all'apertura chat con controparte identificata da indirizzo.
 
-Effetti (solo confine lettore — [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md)):
+Effetti (solo confine lettore):
 
-1. UPDATE righe in entrata nel mio archivio (`author_id = peer`, `read_at IS NULL`, contenuto renderizzabile) SET `read_at = now()`, mint `read_receipt_id = gen_random_uuid()` per ogni riga
-2. Per ogni λ: INSERT outbox `event_kind = read_receipt` con payload `read_receipt_id`, `reader_id`, `sender_profile_id`, id logico messaggio; **`message_id` = id riga lettore** (copia in entrata) → worker `process_read_receipt` → `read_at` + `read_receipt_id` sulla copia mittente
+1. UPDATE righe in entrata nel mio archivio (`peer_address = lower(p_peer_address)`, entrata, `read_at IS NULL`, contenuto renderizzabile) SET `read_at = now()`, mint `read_receipt_id`
+2. Per ogni λ: INSERT outbox `event_kind = read_receipt` → worker propaga `read_at` + `read_receipt_id` sulla copia mittente (match λ + `peer_address` / indirizzo mittente)
 
-**Migrazioni**: `20260704120000`, `20260905140000_read_receipt_id.sql`.
+**MUST NOT**: parametro UUID peer.
+
+---
+
+## `get_profiles`
+
+**Batch presentazione profilo pubblico** — non gated da allow list (§7.12).
+
+```sql
+get_profiles(p_addresses text[]) → table (
+  address text,
+  display_name text,
+  avatar_url text,
+  cover_url text,
+  pronouns text,
+  profile_kind profile_kind
+)
+```
+
+| Regola | Dettaglio |
+|--------|-----------|
+| Input | Array indirizzi lowercase; ordine output non garantito |
+| Locale | Join `profiles` per bare username o FQDN stessa istanza |
+| Federato | Risposta da reception API / wire profilo (passo 5 Gotham); finché assente → riga con solo `address` |
+| Allow list | **Non** filtra visibilità — governa solo recapito messaggi |
+| Shadow | **MUST NOT** INSERT in `profiles` per peer remoti |
+
+Usato da inbox, rubrica, overlay, header chat — stesso batch ovunque.
+
+**Spec**: [SYS-PROFILE](../promises/system/SYS-PROFILE.md) SYS-PROFILE-009–011.
 
 ---
 
@@ -206,15 +226,7 @@ Effetti (solo confine lettore — [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-
 apply_message_reaction(p_logical_message_id uuid, p_emoji text) → message_reaction_facts
 ```
 
-Registra un fatto `applied` su λ. Richiede partecipazione (`messages.archive_user_id = auth.uid()` per quel λ).
-
-- **Percorso**: accoda outbox `event_kind = reaction_fact` (`message_id` = riga messages del reagente) → worker `process_reaction_fact` esegue INSERT append-only; outbox completata con `reaction_fact_id`.
-- **Idempotenza**: stessa emoji già attiva → ritorna l'ultimo fatto `applied` senza nuovo accodamento.
-- **Cambio emoji**: nuovo fatto `applied`; i fatti precedenti restano nello storico.
-
-**Migrazioni**: `20260807200000_message_reaction_facts.sql`, `20260905120000_reaction_fact_outbox.sql`.
-
-**Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md).
+Invariato — ancorato a λ, non a identità peer.
 
 ---
 
@@ -224,11 +236,7 @@ Registra un fatto `applied` su λ. Richiede partecipazione (`messages.archive_us
 withdraw_message_reaction(p_logical_message_id uuid) → message_reaction_facts | null
 ```
 
-Registra un fatto `withdrawn` su λ. **No-op** (ritorna `null`) se nessuna reaction attiva.
-
-Accoda outbox `event_kind = reaction_fact` (payload `kind = withdrawn`, senza emoji) → worker INSERT append-only.
-
-**Migrazioni**: `20260807200000_message_reaction_facts.sql`, `20260905120000_reaction_fact_outbox.sql`.
+Invariato.
 
 ---
 
@@ -244,9 +252,7 @@ list_message_reactions(p_logical_message_ids uuid[]) → table (
 )
 ```
 
-Stato corrente **derivato**: ultimo fatto per `(λ, reactor_id)`; solo `applied` entra nell'aggregato.
-
-Solo λ presenti nel mio archivio (`archive_user_id = auth.uid()`).
+Invariato.
 
 ---
 
@@ -261,9 +267,9 @@ find_profile_by_username(p_username text) → table (
 )
 ```
 
-Risoluzione indirizzo Alfred locale (stessa istanza) → profilo pubblico (avatar, cover, pronomi; `profile_kind` per routing shell). Richiede `auth.uid()`; **esclude** il proprio profilo (`p.id <> auth.uid()`).
+Risoluzione **bare username** locale (stessa istanza). Per compose/link con `user@server` usare indirizzo diretto + `get_profiles`.
 
-**Migrazioni**: `20260806190000_profile_cover_url.sql` (`cover_url`); `20260810120000_peer_relationship_flags.sql` (flag relazione viewer).
+Flag relazione: match su `contacts.address` e `reception_allowlist.allowed_address`.
 
 **Spec**: [SYS-PROFILE](../promises/system/SYS-PROFILE.md).
 
@@ -272,19 +278,23 @@ Risoluzione indirizzo Alfred locale (stessa istanza) → profilo pubblico (avata
 ## `get_peer_context`
 
 ```sql
-get_peer_context(p_peer_profile_id uuid) → table (
-  id uuid, username text, display_name text, avatar_url text, cover_url text, pronouns text,
+get_peer_context(p_peer_address text) → table (
+  address text,
+  display_name text,
+  avatar_url text,
+  cover_url text,
+  pronouns text,
   profile_kind profile_kind,
   peer_in_contacts boolean,
   peer_is_allowed boolean
 )
 ```
 
-Profilo pubblico + flag relazione viewer↔peer. Usato quando il peer non è ancora in `list_inbox()` (push, link, compose). Esclude il proprio profilo.
+Profilo pubblico + flag relazione per indirizzo. Sostituisce overload UUID. Implementazione: delega a `get_profiles(array[p_peer_address])` + flag relazione.
 
-**Migrazioni**: `20260810120000_peer_relationship_flags.sql`.
+Usato quando il peer non è ancora in `list_inbox()` (push, link, compose).
 
-**Spec**: [SYS-PROFILE](../promises/system/SYS-PROFILE.md).
+**MUST NOT**: richiedere `profiles.id` locale per peer federato.
 
 ---
 
@@ -294,9 +304,7 @@ Profilo pubblico + flag relazione viewer↔peer. Usato quando il peer non è anc
 is_username_available(p_username text) → boolean
 ```
 
-Verifica namespace username (registrazione). **`GRANT EXECUTE` a `anon` e `authenticated`**.
-
-**Migrazioni**: `20260625120000`.
+Invariato. **`GRANT EXECUTE` a `anon` e `authenticated`**.
 
 ---
 
@@ -310,7 +318,7 @@ search_profiles(p_query text, p_limit integer default 20) → table (
 )
 ```
 
-Ricerca utenti Alfred per aggiunta contatto locale (min 2 caratteri client). Esclude `auth.uid()`. `p_limit` default 20, **cap 50** in SQL (`least(p_limit, 50)`).
+Ricerca utenti Alfred per aggiunta contatto — restituisce username da salvare come `contacts.address` (bare). Flag relazione su indirizzo.
 
 **Spec**: [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md).
 
@@ -320,108 +328,87 @@ Ricerca utenti Alfred per aggiunta contatto locale (min 2 caratteri client). Esc
 
 Funzioni `SECURITY DEFINER` invocate **solo** da worker `alfred_delivery` o altre RPC SQL. **MUST NOT** avere `GRANT EXECUTE` per `authenticated`.
 
-| Funzione | Uso interno | Migrazione |
-|----------|-------------|------------|
-| `mailbox_has_renderable_content(text, message_content_type)` | Filtro contenuto renderizzabile in inbox/liste | `20260704120000` |
-| `format_voice_preview(integer)` | Preview inbox voice | `20260627120100` |
-| `format_location_preview()` | Preview inbox location | `20260702120100` |
-| `is_sender_allowed_for_reception(uuid, uuid)` | Gate allow list nel worker delivery | `20260704130000` |
-| `is_bidirectional_allowed(uuid, uuid, uuid)` | Helper gruppo legacy — **non** invocata dal worker #179 | `20260706120000` |
-| `profile_kind_of(uuid)` | Routing `profile_kind` in RPC account | `20260706120000` |
-| `alfred_delivery.process_outbox(uuid)` | Dispatcher outbox | `20260711190000` |
-| `alfred_delivery.deliver_internal(uuid)` | Recapito 1:1 / verso gruppo | `20260711190000` |
-| `alfred_delivery.process_read_receipt(uuid)` | Legge payload outbox → propaga lettura | `20260711190000` |
-| `alfred_delivery.propagate_read_receipt(uuid, uuid, uuid)` | UPDATE `read_at` + `read_receipt_id` copia mittente per λ | `20260905140000` |
-| `alfred_delivery.process_reaction_fact(uuid)` | INSERT fatto reaction da payload outbox | `20260905120000` |
-| `alfred_delivery.process_push_notify(uuid)` | Pipeline Web Push post-recapito | `20260714100000` |
-| `alfred_delivery.group_erogate(uuid)` | Broadcast gruppo → allow list | `20260711190000` |
-| `alfred_delivery.erogate_group_message(...)` | Fan-out proxy gruppo | `20260711190000` |
-| `alfred_delivery.materialize_inbound_sender_message(...)` | Inbound federato: copia destinatario con λ remoto | `20260905000000` |
+| Funzione | Uso interno |
+|----------|-------------|
+| `mailbox_has_renderable_content(text, message_content_type)` | Filtro contenuto renderizzabile |
+| `format_voice_preview(integer)` | Preview inbox voice |
+| `format_location_preview()` | Preview inbox location |
+| `is_address_allowed_for_reception(uuid, text)` | Gate allow list su indirizzo (inbound/outbound) |
+| `resolve_local_profile_id(text)` | Risoluzione bare username → uuid (solo delivery interno) |
+| `profile_kind_of(uuid)` | Routing `profile_kind` in RPC account |
+| `alfred_delivery.process_outbox(uuid)` | Dispatcher outbox |
+| `alfred_delivery.deliver_internal(uuid)` | Recapito 1:1 / verso gruppo |
+| `alfred_delivery.process_read_receipt(uuid)` | Propaga lettura |
+| `alfred_delivery.propagate_read_receipt(...)` | UPDATE copia mittente |
+| `alfred_delivery.process_reaction_fact(uuid)` | INSERT fatto reaction |
+| `alfred_delivery.process_push_notify(uuid)` | Pipeline Web Push |
+| `alfred_delivery.group_erogate(uuid)` | Broadcast gruppo |
+| `alfred_delivery.erogate_group_message(...)` | Fan-out proxy gruppo |
+| `alfred_delivery.materialize_inbound_sender_message(...)` | Inbound federato |
 
-Revoca `authenticated`: migrazione `20260707190000`. Smoke: `supabase/tests/rpc_helper_security_smoke.sql`.
-
-Spec: SYS-RECEPTION-028, SYS-GROUP-028, SYS-GROUP-027.
+**Deprecati post-migrazione**: `is_sender_allowed_for_reception(uuid, uuid)`, `get_peer_context(uuid)`.
 
 ---
 
 ## Enum `message_content_type`
 
-Valori su `main`: `text`, `gif`, `voice`, `location`, `image`, `video`.
-
-Aggiunta enum in migrazioni separate (commit enum prima dell’uso in RPC).
+Valori: `text`, `gif`, `voice`, `location`, `image`, `video`.
 
 ---
 
-## Smoke test
+## Smoke test (target post-migrazione)
 
 | File | Verifica |
 |------|----------|
-| `supabase/tests/schema_smoke.sql` | Assenza `inbox_threads`, `message_read_receipts`; schema mailbox |
-| `supabase/tests/mailbox_schema_smoke.sql` | `archive_user_id`, assenza `delivery_status` su `messages` |
-| `supabase/tests/delivery_ticks_smoke.sql` | Contratto ✓ / ✓✓ grigie / ✓✓ blu + allow list + outbox `event_kind` |
-| `supabase/tests/mailbox_send_smoke.sql` | Invio + `delivered_at` |
-| `supabase/tests/mailbox_idempotency_smoke.sql` | Idempotenza `client_message_id` |
-| `supabase/tests/mailbox_delivery_smoke.sql` | Copia destinatario + outbox `completed` |
-| `supabase/tests/mailbox_read_smoke.sql` | `mark_peer_read` → `read_at` mittente |
-| `supabase/tests/mailbox_inbox_smoke.sql` | `list_inbox` + unread |
-| `supabase/tests/mailbox_send_media_smoke.sql` | Validazione `gif` / `location` / `image` / `video` |
-| `supabase/tests/send_message_to_profile_smoke.sql` | Invio a profilo non in rubrica |
-| `supabase/tests/reception_allowlist_schema_smoke.sql` | Tabella + helper gate |
-| `supabase/tests/reception_allowlist_gate_smoke.sql` | Rifiuto silenzioso inbound vs recapito allowed |
-| `supabase/tests/reception_outbound_gate_smoke.sql` | Errore outbound se destinatario ∉ allow list mittente |
-| `supabase/tests/rpc_helper_security_smoke.sql` | Helper interni non eseguibili da `authenticated` |
-| `supabase/tests/group_schema_smoke.sql` | `list_archive_messages`, `profile_kind`, `broadcast_message_to_allowlist` |
-| `supabase/tests/message_reaction_facts_smoke.sql` | Apply/withdraw/idempotenza/cambio emoji su λ |
+| `supabase/tests/mailbox_schema_smoke.sql` | `peer_address`, `author_address`; assenza colonne UUID chat |
+| `supabase/tests/mailbox_inbox_smoke.sql` | `list_inbox` GROUP BY `peer_address` |
+| `supabase/tests/mailbox_peer_messages_window_smoke.sql` | `list_peer_messages(text)` |
+| `supabase/tests/reception_allowlist_schema_smoke.sql` | `allowed_address` |
+| `supabase/tests/get_profiles_smoke.sql` | Batch locale + fallback federato |
+| `supabase/tests/mailbox_read_smoke.sql` | `mark_peer_read(text)` |
 
-Gate client: `verify.sh` + `bash scripts/test.sh integration` + `bash scripts/test.sh e2e`
+Gate client post-implementazione: `verify.sh` + `bash scripts/test.sh e2e`
 
 ---
 
-## Client mapping
+## Client mapping (target)
 
 | RPC | Service Dart |
 |-----|--------------|
-| `send_message_to_profile` | `PeerMessageService.sendToProfile` |
-| `broadcast_message_to_allowlist` | `GroupArchiveService.broadcastToAllowlist` / `broadcastGifToAllowlist` / … |
+| `send_message_to_address` | `PeerMessageService.sendToAddress` |
+| `broadcast_message_to_allowlist` | `GroupArchiveService.broadcastToAllowlist` |
 | `list_inbox` | `InboxService.fetchInbox` |
 | `list_peer_messages` | `PeerMessageService.fetchPeerMessages` |
 | `list_archive_messages` | `GroupArchiveService.fetchArchiveMessages` |
 | `mark_peer_read` | `InboxService.markPeerRead` |
-| `apply_message_reaction` | `PeerMessageService.applyReaction` |
-| `withdraw_message_reaction` | `PeerMessageService.withdrawReaction` |
-| `list_message_reactions` | `PeerMessageService.fetchReactionSummaries` |
-| `find_profile_by_username` | `ComposeService` / profile lookup |
-| `is_username_available` | Registrazione / validazione username |
+| `get_profiles` | `ProfileService.fetchByAddresses` |
+| `get_peer_context` | `ProfileService.fetchPeerContext` |
+| `find_profile_by_username` | Compose / shareable-link lookup locale |
 | `search_profiles` | `ContactService.searchProfiles` |
-| `reception_allowlist` (PostgREST) | `ReceptionAllowlistService` |
-| `push_subscriptions` (PostgREST) | `PushSubscriptionService` — [SYS-PUSH](../promises/system/SYS-PUSH.md) |
+| `reception_allowlist` (PostgREST) | `ReceptionAllowlistService` — CRUD su `allowed_address` |
+| `contacts` (PostgREST) | `ContactService` — CRUD su `address` |
 
 ---
 
 ## `push_subscriptions` (PostgREST — SYS-PUSH)
 
-Client autenticato: UPSERT via PostgREST su `push_subscriptions` (RLS `user_id = auth.uid()`).
-
-| Operazione | Quando |
-|------------|--------|
-| UPSERT `(user_id, device_id, endpoint, keys…)` | Permesso browser `granted`; login; aggiungi account; avvio app |
-| DELETE `WHERE user_id AND device_id` | Chiudi account |
-
-**MUST NOT**: client invoca Edge Function `send-push`.
-
-**Spec**: [SYS-PUSH](../promises/system/SYS-PUSH.md), [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md).
+Invariato — UPSERT via PostgREST.
 
 ---
 
 ## Edge Function `send-push` (SYS-PUSH)
 
-Invocata solo da infrastruttura server (hook delivery / `push_notify` outbox). Non esposta al client.
+Invocata solo da infrastruttura server. Non esposta al client.
 
-Input (JSON): `recipient_user_id`, `peer_profile_id`, `peer_display_name`, `preview_text`, `logical_message_id`, `content_type`.
+Input (JSON): `recipient_user_id`, **`peer_address`**, `peer_display_name`, `preview_text`, `logical_message_id`, `content_type`.
+
+Vedi [push-payload.md](./push-payload.md) — **`peerAddress`**, nessun `peerProfileId`, nessun dual-read.
 
 ---
 
 ## Riferimenti
 
 - [full-stack.md](../../architecture/full-stack.md) §3
-- Migrazioni in [`supabase/migrations/`](../../../supabase/migrations/)
+- [push-payload.md](./push-payload.md)
+- [schema.md](./schema.md)
+- Migrazioni target in [`supabase/migrations/`](../../../supabase/migrations/)

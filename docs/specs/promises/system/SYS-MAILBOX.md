@@ -4,8 +4,8 @@
 |-------|--------|
 | **Promessa ID** | `SYS-MAILBOX` |
 | **Classe** | SYSTEM |
-| **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
+| **Status** | `approved` — amend §7 peer_address (implementazione pendente) |
+| **Ultima revisione** | 2026-09-13 |
 | **ADR** | [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../../decisions/server-as-reception.md), [no-internal-external-chat-distinction.md](../../../decisions/no-internal-external-chat-distinction.md) |
 | **PR origine** | #159, #179, #210 |
 
@@ -37,7 +37,9 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | **SYS-MAILBOX-004** | `client_message_id` solo sulla copia mittente (`archive_user_id = author_id = mittente`); dedup UNIQUE `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL` |
 | **SYS-MAILBOX-005** | Dedup materializzazione destinatario: UNIQUE `(archive_user_id, logical_message_id)` |
 | **SYS-MAILBOX-006** | RLS: SELECT/INSERT/UPDATE solo `archive_user_id = auth.uid()` — **nessuna eccezione** |
-| **SYS-MAILBOX-007** | Colonna `peer_profile_id` denormalizzata per raggruppamento inbox/storico (locale) |
+| **SYS-MAILBOX-007** | Colonna **`peer_address`** text NOT NULL — chiave conversazione (lowercase); raggruppamento inbox/storico |
+| **SYS-MAILBOX-007b** | Colonna **`author_address`** text NOT NULL — identità mittente come indirizzo; forma che fa fede nella comunicazione (§7.4–§7.5b) |
+| **SYS-MAILBOX-007c** | Colonna `author_id` uuid **nullable** — solo casi tecnici (es. erogazione gruppo); **non** chiave conversazione |
 | **SYS-MAILBOX-008** | Migrazione prototipo: drop modello message-centric + wipe dati test; ricrea schema mailbox; pulizia blob `chat-media` **non referenziati** post-migrazione |
 | **SYS-MAILBOX-009** | Media: stesso `media_url` su copia mittente e destinatario; un upload, nessuna duplicazione blob |
 
@@ -45,8 +47,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 
 | ID | Promessa |
 |----|----------|
-| **SYS-MAILBOX-010** | Indici `(archive_user_id, peer_profile_id, created_at DESC)` e `(archive_user_id, logical_message_id)` |
-| **SYS-MAILBOX-011** | `peer_external_address` nullable per federazione futura (non usata (scope attuale) UI) |
+| **SYS-MAILBOX-010** | Indici `(archive_user_id, peer_address, created_at DESC)` e `(archive_user_id, logical_message_id)` |
 
 #### MUST NOT
 
@@ -57,6 +58,8 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | **SYS-MAILBOX-014** | Tabella `message_read_receipts` (sostituita da date su `messages`) |
 | **SYS-MAILBOX-015** | RLS che permette lettura archivio altrui |
 | **SYS-MAILBOX-016** | Doppia scrittura message-centric + mailbox |
+| **SYS-MAILBOX-016b** | Colonne `peer_profile_id`, `peer_external_address` come identità chat — deriva sostituita da `peer_address` |
+| **SYS-MAILBOX-016c** | Profili shadow in `profiles` per peer su altre istanze |
 
 ---
 
@@ -66,7 +69,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 
 | ID | Promessa |
 |----|----------|
-| **SYS-MAILBOX-017** | Unico RPC invio: `send_message_to_profile` — firma invariata PostgREST — [rpc.md](../../contracts/rpc.md) § mailbox |
+| **SYS-MAILBOX-017** | Unico RPC invio 1:1: **`send_message_to_address(p_peer_address text)`** — [rpc.md](../../contracts/rpc.md) |
 | **SYS-MAILBOX-018** | Accettazione: INSERT copia mittente (`archive_user_id = author_id = auth.uid()`), `delivered_at`/`read_at` null, λ assegnato |
 | **SYS-MAILBOX-019** | **Outbox sempre**: INSERT `outbox` (`event_kind = deliver`, `status = queued`) per ogni invio sulla stessa istanza |
 | **SYS-MAILBOX-020** | Driver locale: worker [SYS-DELIVERY](./SYS-DELIVERY.md) nella stessa transazione RPC — **se** gate reception → materializza copia destinatario + `delivered_at` mittente; **altrimenti** rifiuto silenzioso |
@@ -89,7 +92,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 |----|----------|
 | **SYS-MAILBOX-028** | Shortcut trigger `sent → delivered` senza outbox e senza copia destinatario |
 | **SYS-MAILBOX-029** | Invio a sé stessi |
-| **SYS-MAILBOX-030** | Indirizzo esterno `user@server` senza errore utente (v1: **unsupported** in compose) |
+| **SYS-MAILBOX-058** | Compose e invio verso **`user@server`** supportati — stessa UI e RPC di bare username; routing solo in delivery |
 | **SYS-MAILBOX-031** | Overload ambigui `send_message_to_profile` PostgREST |
 | **SYS-MAILBOX-032** | Pipeline invio distinta per locale vs federato (solo driver recapito differisce) |
 
@@ -102,12 +105,12 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | ID | Promessa |
 |----|----------|
 | **SYS-MAILBOX-033** | `list_inbox()` aggrega **solo** `messages` WHERE `archive_user_id = auth.uid()` |
-| **SYS-MAILBOX-034** | GROUP BY `peer_profile_id` (locale (stessa istanza)) |
-| **SYS-MAILBOX-035** | Payload riga: `peer_profile_id`, `display_name`, `last_message_preview`, `last_message_at`, `unread_count`, campi profilo peer |
-| **SYS-MAILBOX-036** | `list_peer_messages(peer, limit, before?)` = ultimi `limit` messaggi (default 100, max 500) nel mio archivio con quel peer, in ordine cronologico ASC; `before` opzionale = cursore `created_at` per pagina più vecchia |
+| **SYS-MAILBOX-034** | GROUP BY **`peer_address`** — include locale e federato; **MUST NOT** filtrare solo UUID locale |
+| **SYS-MAILBOX-035** | Payload riga: **`peer_address`**, `display_name` (via `get_profiles` o fallback indirizzo), `last_message_preview`, `last_message_at`, `unread_count` |
+| **SYS-MAILBOX-036** | `list_peer_messages(p_peer_address text, limit, before?)` = ultimi `limit` messaggi nel mio archivio con quel indirizzo, ordine cronologico ASC |
 | **SYS-MAILBOX-057** | L'ultimo messaggio usato da `list_inbox` per l'anteprima di un peer è sempre incluso nella prima finestra di `list_peer_messages(peer)` senza cursore |
 | **SYS-MAILBOX-037** | Prima riga inbox solo dopo primo messaggio nel mio archivio con quel peer |
-| **SYS-MAILBOX-038** | `unread_count`: righe in entrata (`author_id <> auth.uid()`) con `read_at IS NULL` |
+| **SYS-MAILBOX-038** | `unread_count`: righe in entrata (mittente ≠ titolare archivio — via `author_address` / confronto archivio, non solo `author_id` UUID) con `read_at IS NULL` |
 
 #### SHOULD
 
@@ -135,7 +138,9 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | ID | Promessa |
 |----|----------|
 | **SYS-MAILBOX-046** | `delivered_at` valorizzato solo dopo materializzazione copia destinatario ([SYS-MAILBOX](./SYS-MAILBOX.md) invio) — non da Realtime client destinatario |
-| **SYS-MAILBOX-047** | `mark_peer_read(peer)`: UPDATE righe in entrata nel mio archivio (`archive_user_id = io`, `author_id = peer`, `read_at IS NULL`) SET `read_at = now()` e mint `read_receipt_id` per ogni riga |
+| **SYS-MAILBOX-047** | `mark_peer_read(p_peer_address text)`: UPDATE righe in entrata nel mio archivio con `peer_address = lower(p_peer_address)` e `read_at IS NULL` SET `read_at = now()` e mint `read_receipt_id` |
+| **SYS-MAILBOX-059** | Copia mittente in uscita: `author_address` = forma che fa fede (bare verso stessa istanza bare; FQDN verso FQDN o verso esterno — §7.5b) |
+| **SYS-MAILBOX-060** | Regola indirizzo §7.2: `mario` e `mario@<im_server_id>` = **conversazioni distinte** — nessuna fusione |
 | **SYS-MAILBOX-048** | Per ogni λ letto: accoda `outbox` `event_kind = read_receipt` (payload include `read_receipt_id`); worker [SYS-DELIVERY](./SYS-DELIVERY.md) propaga `read_at` + `read_receipt_id` sulla copia mittente — **nessuna** UPDATE account cross-boundary |
 | **SYS-MAILBOX-049** | Lettura include body non vuoto OPPURE `content_type` ∈ gif, voice, location, image, video |
 | **SYS-MAILBOX-050** | `list_inbox` unread: righe in entrata con `read_at IS NULL` |
@@ -176,7 +181,7 @@ Regola: se `read_at` valorizzata su copia mittente, `delivered_at` tardivo non l
 | Elemento | Documento / codice |
 |----------|-------------------|
 | Schema `messages`, `outbox`, RLS, bucket `chat-media` | [contracts/schema.md](../../contracts/schema.md) § mailbox |
-| RPC `send_message_to_profile`, `list_inbox`, `list_peer_messages`, `mark_peer_read`, `find_profile_by_username` | [contracts/rpc.md](../../contracts/rpc.md) § mailbox |
+| RPC `send_message_to_address`, `list_inbox`, `list_peer_messages`, `mark_peer_read`, `get_profiles` | [contracts/rpc.md](../../contracts/rpc.md) |
 | Migrazioni mailbox | `supabase/migrations/*mailbox*` |
 | Pipeline invio / worker delivery | `alfred_delivery.process_outbox` in migrazione `*account_boundary_delivery*` |
 | Smoke SQL | `supabase/tests/mailbox_*.sql`, `reception_allowlist_gate_smoke.sql`, `delivery_ticks_smoke.sql` |
@@ -185,13 +190,13 @@ Regola: se `read_at` valorizzata su copia mittente, `delivered_at` tardivo non l
 ### Flusso locale (transazione RPC + worker)
 
 ```
-send_message_to_profile (solo confine mittente)
-  → INSERT messages (archive_user=mittente, author=mittente, λ, peer=dest)     ← livello ✓
+send_message_to_address (solo confine mittente)
+  → INSERT messages (archive_user=mittente, peer_address, author_address, λ)     ← livello ✓
   → INSERT outbox (event_kind=deliver, queued)
   → alfred_delivery.process_outbox
-       → gate reception_allowlist (destinatario)
+       → gate reception_allowlist su indirizzo mittente (destinatario)
        → SE allowed:
-            INSERT messages (archive_user=destinatario, …)
+            INSERT messages (archive_user=destinatario, peer_address, author_address, …)
             UPDATE messages SET delivered_at=now() WHERE archive_user=mittente AND λ  ← livello ✓✓
           ALTRIMENTI:
             delivered_at resta null (✓ senza ✓✓)
@@ -202,16 +207,16 @@ send_message_to_profile (solo confine mittente)
 ### RPC `mark_peer_read`
 
 ```sql
-mark_peer_read(p_peer_profile_id uuid) → void
+mark_peer_read(p_peer_address text) → void
 ```
 
-1. UPDATE `messages` SET `read_at = now()`, `read_receipt_id = gen_random_uuid()` WHERE `archive_user_id = auth.uid()` AND `peer_profile_id = p_peer` AND `author_id = p_peer` AND `read_at IS NULL` AND contenuto leggibile
-2. Per ogni λ: outbox `read_receipt` (payload `read_receipt_id`, `reader_id`, `sender_profile_id`) → worker propaga `read_at` + `read_receipt_id` sulla copia mittente (vedi [SYS-DELIVERY](./SYS-DELIVERY.md))
+1. UPDATE `messages` SET `read_at = now()`, `read_receipt_id = gen_random_uuid()` WHERE `archive_user_id = auth.uid()` AND `peer_address = lower(p_peer_address)` AND entrata AND `read_at IS NULL` AND contenuto leggibile
+2. Per ogni λ: outbox `read_receipt` → worker propaga `read_at` + `read_receipt_id` sulla copia mittente (vedi [SYS-DELIVERY](./SYS-DELIVERY.md))
 
 ### RPC `list_peer_messages`
 
 ```sql
-list_peer_messages(p_peer_profile_id uuid, p_limit default 100, p_before_created_at default null) → setof messages
+list_peer_messages(p_peer_address text, p_limit default 100, p_before_created_at default null) → setof messages
 ```
 
 - Senza cursore: ultimi `p_limit` messaggi nel mio archivio con quel peer, ordine cronologico ASC.

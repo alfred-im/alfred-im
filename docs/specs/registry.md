@@ -1,6 +1,6 @@
 # Registro promesse — Alfred
 
-**Ultima revisione**: 2026-09-08  
+**Ultima revisione**: 2026-09-13  
 **Metodo**: [README.md](./README.md) (SDD) · **SSOT indice**: [SSOT.md](../SSOT.md)
 
 **Catalogo unico** di promesse SYSTEM, PRODUCT e SURFACE. Per navigazione generale: [INDICE.md](../INDICE.md). Per cronologia merge: [CHANGELOG.md](../../CHANGELOG.md).
@@ -11,19 +11,21 @@ Legenda stato: `draft` | `approved` | `implemented` | `deprecated` | `superseded
 
 ## SYSTEM — piattaforma
 
-Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contracts/schema.md)** · **[contracts/rpc.md](./contracts/rpc.md)**
+Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contracts/schema.md)** · **[contracts/rpc.md](./contracts/rpc.md)** · **[push-payload.md](./contracts/push-payload.md)**
+
+> **Amend §7 peer_address** (2026-09-13): promesse sotto passano da `implemented` a **`approved`** — contratto distillato da [TEMP-chat-peer-key-address-drift.md](../tmp/TEMP-chat-peer-key-address-drift.md) §7; implementazione SQL/client pendente.
 
 | Promessa ID | Titolo | Stato | File |
 |-------------|--------|-------|------|
-| **SYS-MAILBOX** | Archivio per titolare archivio, invio, inbox on-read, spunte | `implemented` | [SYS-MAILBOX.md](./promises/system/SYS-MAILBOX.md) |
-| **SYS-GROUP** | Account gruppo, partecipazione, erogazione | `implemented` | [SYS-GROUP.md](./promises/system/SYS-GROUP.md) |
-| **SYS-PROFILE** | Tabella `profiles`, avatar, RPC profilo | `implemented` | [SYS-PROFILE.md](./promises/system/SYS-PROFILE.md) |
-| **SYS-CONTACTS** | Rubrica `contacts`, `search_profiles` | `implemented` | [SYS-CONTACTS.md](./promises/system/SYS-CONTACTS.md) |
-| **SYS-RECEPTION** | Allow list ricezione, gate nel worker delivery | `implemented` | [SYS-RECEPTION.md](./promises/system/SYS-RECEPTION.md) |
+| **SYS-MAILBOX** | Archivio per titolare archivio, invio, inbox on-read, spunte — **`peer_address` / `author_address`** | `approved` | [SYS-MAILBOX.md](./promises/system/SYS-MAILBOX.md) |
+| **SYS-GROUP** | Account gruppo, partecipazione, erogazione — identità address-based §7.18 | `approved` | [SYS-GROUP.md](./promises/system/SYS-GROUP.md) |
+| **SYS-PROFILE** | Tabella `profiles`, avatar, **`get_profiles(addresses[])`** | `approved` | [SYS-PROFILE.md](./promises/system/SYS-PROFILE.md) |
+| **SYS-CONTACTS** | Rubrica `contacts.address` only | `approved` | [SYS-CONTACTS.md](./promises/system/SYS-CONTACTS.md) |
+| **SYS-RECEPTION** | Allow list **`allowed_address`**, gate su indirizzo | `approved` | [SYS-RECEPTION.md](./promises/system/SYS-RECEPTION.md) |
 | **SYS-ACCOUNT-BOUNDARY** | Legge madre confine account (nessun cross-boundary) | `implemented` | [SYS-ACCOUNT-BOUNDARY.md](./promises/system/SYS-ACCOUNT-BOUNDARY.md) |
 | **SYS-DELIVERY** | Piano recapito outbox + worker `alfred_delivery` | `implemented` | [SYS-DELIVERY.md](./promises/system/SYS-DELIVERY.md) |
 | **SYS-PUSH** | Web Push VAPID, subscription, Edge Function | `implemented` | [SYS-PUSH.md](./promises/system/SYS-PUSH.md) |
-| **SYS-PUSH-PAYLOAD** | Wire format push (SW ↔ client, Edge Function) | `implemented` | [push-payload.md](./contracts/push-payload.md) — infrastruttura: SYS-PUSH |
+| **SYS-PUSH-PAYLOAD** | Wire format push — **`peerAddress`**, no dual-read UUID | `approved` | [push-payload.md](./contracts/push-payload.md) — infrastruttura: SYS-PUSH |
 | **SYS-OWNER** | Account owner, ban, config istanza, statistiche | `approved` | [SYS-OWNER.md](./promises/system/SYS-OWNER.md) |
 
 ---
@@ -35,20 +37,20 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **PROM-LIST-FILTER** | Filtro locale + ricerca on-demand (lente) | `implemented` | [PROM-LIST-FILTER.md](./promises/product/PROM-LIST-FILTER.md) |
 | **PROM-MULTI-ACCOUNT** | Manifest, focus, una GoTrue attiva | `implemented` | [PROM-MULTI-ACCOUNT.md](./promises/product/PROM-MULTI-ACCOUNT.md) |
 | **PROM-PROFILE-IDENTITY** | `ProfileSummary`, widget identità | `implemented` | [PROM-PROFILE-IDENTITY.md](./promises/product/PROM-PROFILE-IDENTITY.md) |
-| **PROM-PERSONAL-CONTACTS** | Rubrica isolata da inbox/allow list | `implemented` | [PROM-PERSONAL-CONTACTS.md](./promises/product/PROM-PERSONAL-CONTACTS.md) |
+| **PROM-PERSONAL-CONTACTS** | Rubrica solo `address` — isolata da inbox/allow list | `approved` | [PROM-PERSONAL-CONTACTS.md](./promises/product/PROM-PERSONAL-CONTACTS.md) |
 | **PROM-RECEPTION-FILTER** | Filtro ricezione sempre attivo, rifiuto silenzioso | `implemented` | [PROM-RECEPTION-FILTER.md](./promises/product/PROM-RECEPTION-FILTER.md) |
-| **PROM-PEER-PROFILE** | Overlay profilo peer (tap avatar) | `implemented` | [PROM-PEER-PROFILE.md](./promises/product/PROM-PEER-PROFILE.md) |
+| **PROM-PEER-PROFILE** | Overlay profilo peer address-based + `get_profiles` | `approved` | [PROM-PEER-PROFILE.md](./promises/product/PROM-PEER-PROFILE.md) |
 | **PROM-OVERLAY-DISMISS** | Chiusura overlay fullscreen | `implemented` | [PROM-OVERLAY-DISMISS.md](./promises/product/PROM-OVERLAY-DISMISS.md) |
-| **PROM-CHAT-PEER-KEY** | Chat per `peer_profile_id`, no `thread_id` | `implemented` | [PROM-CHAT-PEER-KEY.md](./promises/product/PROM-CHAT-PEER-KEY.md) |
+| **PROM-CHAT-PEER-KEY** | Chat per `peer_address`, no `thread_id` | `approved` | [PROM-CHAT-PEER-KEY.md](./promises/product/PROM-CHAT-PEER-KEY.md) |
 | **PROM-OUTBOUND-SEND** | Coda invio + merge optimistic | `implemented` | [PROM-OUTBOUND-SEND.md](./promises/product/PROM-OUTBOUND-SEND.md) |
 | **PROM-MESSAGE-STATUS** | Spunte da `delivered_at`/`read_at` | `implemented` | [PROM-MESSAGE-STATUS.md](./promises/product/PROM-MESSAGE-STATUS.md) |
 | **PROM-REALTIME-ARCHIVE** | Realtime filtrato su `archive_user_id` | `implemented` | [PROM-REALTIME-ARCHIVE.md](./promises/product/PROM-REALTIME-ARCHIVE.md) |
 | **PROM-GROUP-AUTHOR-DISPLAY** | Autore contenuto in chat gruppo | `implemented` | [PROM-GROUP-AUTHOR-DISPLAY.md](./promises/product/PROM-GROUP-AUTHOR-DISPLAY.md) |
 | **PROM-GROUP-TICKS** | Spunte limitate al rapporto con il gruppo | `implemented` | [PROM-GROUP-TICKS.md](./promises/product/PROM-GROUP-TICKS.md) |
-| **PROM-SHAREABLE-LINK** | Link condivisibili stabili (`#indirizzo`, `#indirizzo/chat`) | `implemented` | [PROM-SHAREABLE-LINK.md](./promises/product/PROM-SHAREABLE-LINK.md) |
+| **PROM-SHAREABLE-LINK** | Link condivisibili stabili — equivalenza a strati link vs chiave messaggistica | `approved` | [PROM-SHAREABLE-LINK.md](./promises/product/PROM-SHAREABLE-LINK.md) |
 | **PROM-CHAT-MEDIA** | Foto e video in chat (picker, fotocamera, didascalia) | `implemented` | [PROM-CHAT-MEDIA.md](./promises/product/PROM-CHAT-MEDIA.md) |
 | **PROM-PUSH-NOTIFY** | Push multi-device / multi-account, anteprima, soppressione, **politica sync** (amend) | `implemented` | [PROM-PUSH-NOTIFY.md](./promises/product/PROM-PUSH-NOTIFY.md) |
-| **PROM-CONVERSATION-SCOPE** | Ambito unico conversazione attiva (account + peer + sessione) | `implemented` | [PROM-CONVERSATION-SCOPE.md](./promises/product/PROM-CONVERSATION-SCOPE.md) |
+| **PROM-CONVERSATION-SCOPE** | Ambito unico conversazione attiva (account + `peer_address` + sessione) | `approved` | [PROM-CONVERSATION-SCOPE.md](./promises/product/PROM-CONVERSATION-SCOPE.md) |
 | **PROM-MESSAGE-MENTION** | Tag `@username` cliccabili in body messaggio | `implemented` | [PROM-MESSAGE-MENTION.md](./promises/product/PROM-MESSAGE-MENTION.md) |
 | **PROM-MESSAGE-REACTIONS** | Reaction emoji su messaggi (menu tap, append-only) | `implemented` | [PROM-MESSAGE-REACTIONS.md](./promises/product/PROM-MESSAGE-REACTIONS.md) |
 | **PROM-BOTTOM-ANCHOR** | Lista messaggi agganciata al fondo conversazione | `implemented` | [PROM-BOTTOM-ANCHOR.md](./promises/product/PROM-BOTTOM-ANCHOR.md) |
@@ -62,16 +64,16 @@ Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contra
 | **SURF-AUTH** | Overlay login/registrazione | `implemented` | PROM-MULTI-ACCOUNT, PROM-SHAREABLE-LINK | [SURF-AUTH.md](./surfaces/SURF-AUTH.md) |
 | **SURF-APP-SHELL** | `HomeScreen` sempre visibile | `implemented` | PROM-MULTI-ACCOUNT | [SURF-AUTH.md](./surfaces/SURF-AUTH.md) § SURF-APP-SHELL (alias SURF-AUTH-001) |
 | **SURF-ACCOUNT-SIDEBAR** | Manifest account in sidebar | `implemented` | PROM-MULTI-ACCOUNT, PROM-PROFILE-IDENTITY, PROM-SHAREABLE-LINK | [SURF-ACCOUNT-SIDEBAR.md](./surfaces/SURF-ACCOUNT-SIDEBAR.md) |
-| **SURF-INBOX** | Lista conversazioni | `implemented` | PROM-LIST-FILTER, PROM-REALTIME-ARCHIVE | [SURF-INBOX.md](./surfaces/SURF-INBOX.md) |
-| **SURF-CHAT** | Conversazione 1:1 | `implemented` | PROM-CHAT-PEER-KEY, PROM-MESSAGE-STATUS, PROM-OUTBOUND-SEND, PROM-CHAT-MEDIA, PROM-SHAREABLE-LINK, PROM-CONVERSATION-SCOPE, PROM-MESSAGE-MENTION, PROM-MESSAGE-REACTIONS, PROM-BOTTOM-ANCHOR | [SURF-CHAT.md](./surfaces/SURF-CHAT.md) |
-| **SURF-CONTACTS** | Rubrica | `implemented` | PROM-LIST-FILTER, PROM-PERSONAL-CONTACTS | [SURF-CONTACTS.md](./surfaces/SURF-CONTACTS.md) |
-| **SURF-ALLOWLIST** | Persone consentite | `implemented` | PROM-LIST-FILTER, PROM-RECEPTION-FILTER | [SURF-ALLOWLIST.md](./surfaces/SURF-ALLOWLIST.md) |
+| **SURF-INBOX** | Lista conversazioni per `peer_address` + `get_profiles` | `approved` | PROM-LIST-FILTER, PROM-REALTIME-ARCHIVE, PROM-CHAT-PEER-KEY | [SURF-INBOX.md](./surfaces/SURF-INBOX.md) |
+| **SURF-CHAT** | Conversazione 1:1 keyed su `peer_address` | `approved` | PROM-CHAT-PEER-KEY, PROM-MESSAGE-STATUS, PROM-OUTBOUND-SEND, PROM-CHAT-MEDIA, PROM-SHAREABLE-LINK, PROM-CONVERSATION-SCOPE, PROM-MESSAGE-MENTION, PROM-MESSAGE-REACTIONS, PROM-BOTTOM-ANCHOR | [SURF-CHAT.md](./surfaces/SURF-CHAT.md) |
+| **SURF-CONTACTS** | Rubrica solo `address` | `approved` | PROM-LIST-FILTER, PROM-PERSONAL-CONTACTS | [SURF-CONTACTS.md](./surfaces/SURF-CONTACTS.md) |
+| **SURF-ALLOWLIST** | Persone consentite per `allowed_address` | `approved` | PROM-LIST-FILTER, PROM-RECEPTION-FILTER | [SURF-ALLOWLIST.md](./surfaces/SURF-ALLOWLIST.md) |
 | **SURF-PROFILE** | Modifica profilo proprio | `implemented` | PROM-PROFILE-IDENTITY, SYS-PROFILE | [SURF-PROFILE.md](./surfaces/SURF-PROFILE.md) |
-| **SURF-PEER-PROFILE** | Scheda profilo peer | `implemented` | PROM-PEER-PROFILE, PROM-OVERLAY-DISMISS, PROM-SHAREABLE-LINK | [SURF-PEER-PROFILE.md](./surfaces/SURF-PEER-PROFILE.md) |
+| **SURF-PEER-PROFILE** | Scheda profilo peer address-based + `get_profiles` | `approved` | PROM-PEER-PROFILE, PROM-OVERLAY-DISMISS, PROM-SHAREABLE-LINK | [SURF-PEER-PROFILE.md](./surfaces/SURF-PEER-PROFILE.md) |
 | **SURF-GROUP-SHELL** | Shell account gruppo | `implemented` | PROM-MULTI-ACCOUNT, SYS-GROUP, SURF-GROUP-HOME | [SURF-GROUP-SHELL.md](./surfaces/SURF-GROUP-SHELL.md) |
 | **SURF-GROUP-HOME** | Home account gruppo | `implemented` | SYS-GROUP, SYS-PROFILE, PROM-PROFILE-IDENTITY, PROM-GROUP-AUTHOR-DISPLAY | [SURF-GROUP-HOME.md](./surfaces/SURF-GROUP-HOME.md) |
 | **SURF-GROUP-CONVERSATION** | Chat gruppo + erogazione UI | `implemented` | PROM-GROUP-AUTHOR-DISPLAY, PROM-GROUP-TICKS, PROM-CHAT-MEDIA, PROM-MESSAGE-MENTION, PROM-BOTTOM-ANCHOR, SURF-GROUP-HOME | [SURF-GROUP-CONVERSATION.md](./surfaces/SURF-GROUP-CONVERSATION.md) |
-| **SURF-NOTIFICATIONS** | Web Push, service worker, permesso browser, **sync scope** (amend) | `implemented` | PROM-PUSH-NOTIFY, SYS-PUSH | [SURF-NOTIFICATIONS.md](./surfaces/SURF-NOTIFICATIONS.md) |
+| **SURF-NOTIFICATIONS** | Web Push, service worker — payload `peerAddress` (no dual-read) | `approved` | PROM-PUSH-NOTIFY, SYS-PUSH, PROM-CONVERSATION-SCOPE | [SURF-NOTIFICATIONS.md](./surfaces/SURF-NOTIFICATIONS.md) |
 | **SURF-INSTANCE-CONFIG** | Pannello owner `instance_config` + upload branding | `implemented` | SYS-OWNER | [SURF-INSTANCE-CONFIG.md](./surfaces/SURF-INSTANCE-CONFIG.md) |
 
 ---

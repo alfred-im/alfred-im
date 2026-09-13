@@ -4,8 +4,8 @@
 |-------|--------|
 | **Promessa ID** | `SYS-GROUP` |
 | **Classe** | SYSTEM |
-| **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-08 |
+| **Status** | `approved` — amend §7.18 peer_address per faccia account gruppo (implementazione pendente) |
+| **Ultima revisione** | 2026-09-13 |
 | **ADR** | [address-based-messaging.md](../../../decisions/address-based-messaging.md), [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../../decisions/server-as-reception.md) |
 | **PR origine** | #162 |
 | **Correlata** | [SYS-MAILBOX](./SYS-MAILBOX.md), [SYS-RECEPTION](./SYS-RECEPTION.md), [SYS-PROFILE](./SYS-PROFILE.md) |
@@ -18,7 +18,7 @@ Promessa SYSTEM — account Alfred `profile_kind = group`, partecipazione solo v
 
 ## 1. Problema / obiettivo
 
-Un **gruppo** è un'identità Alfred (`@famiglia`) con account proprio (GoTrue + profilo). I partecipanti interagiscono come con qualsiasi peer; **partecipazione** ≡ consenso bidirezionale su `reception_allowlist` — nessuna membership separata. Recapito verso/da gruppo e erogazione automatica verso allow list del gruppo nella stessa transazione RPC di [SYS-MAILBOX](./SYS-MAILBOX.md) SEND.
+Un **gruppo** è un'identità Alfred (`@username` o `@username@server`) con account proprio. **Partecipazione** ≡ consenso bidirezionale su `reception_allowlist` per **indirizzo**. Chat umano→gruppo usa `peer_address` = indirizzo gruppo — stesse regole §7.1–§7.2 degli account umani.
 
 Requisiti **client/UI** (shell senza inbox, registrazione toggle tipo account, badge manifest, attribuzione autore in bolla, realtime subscribe) sono delegati a promesse **PRODUCT** / **SURFACE** — vedi §6.
 
@@ -61,8 +61,9 @@ Requisiti **client/UI** (shell senza inbox, registrazione toggle tipo account, b
 
 | ID | Promessa |
 |----|----------|
-| **SYS-GROUP-011** | Partecipazione effettiva ⇔ `reception_allowlist(archive_user_id = gruppo, allowed_profile_id = persona)` **e** `reception_allowlist(archive_user_id = persona, allowed_profile_id = gruppo)` |
-| **SYS-GROUP-012** | **Nessuna** «iscrizione al gruppo» — nessun RPC join/leave; aprire chat con `@gruppo` = compose verso profilo come peer |
+| **SYS-GROUP-011** | Partecipazione effettiva ⇔ allow list bidirezionale su **indirizzo** gruppo ↔ indirizzo persona |
+| **SYS-GROUP-012** | **Nessuna** «iscrizione al gruppo» — aprire chat con indirizzo gruppo = compose verso `peer_address` |
+| **SYS-GROUP-041** | Identità gruppo verso l'esterno: `@username` come qualsiasi account — stesso modello address-based §7.18 |
 
 #### MUST NOT
 
@@ -79,24 +80,24 @@ Requisiti **client/UI** (shell senza inbox, registrazione toggle tipo account, b
 
 | ID | Promessa |
 |----|----------|
-| **SYS-GROUP-015** | Invio verso gruppo: stesso RPC `send_message_to_profile(p_recipient_profile_id)` quando destinatario ha `profile_kind = group` |
+| **SYS-GROUP-015** | Invio verso gruppo: `send_message_to_address(p_peer_address)` quando indirizzo risolve a `profile_kind = group` |
 | **SYS-GROUP-016** | Pipeline invariata fino al gate allow list: copia mittente umano, outbox, λ ([SYS-MAILBOX](./SYS-MAILBOX.md) SEND) |
-| **SYS-GROUP-017** | Gate recapito umano→gruppo: mittente umano ∈ `reception_allowlist` del **gruppo** **e** gruppo ∈ allow list del **mittente** |
-| **SYS-GROUP-018** | Su recapito al gruppo: INSERT riga archivio gruppo (`archive_user_id = gruppo`); `author_id = mittente umano`; `peer_profile_id = mittente umano`; **`original_author_id = mittente umano`** |
+| **SYS-GROUP-017** | Gate recapito umano→gruppo: indirizzo mittente ∈ allow list del **gruppo** **e** indirizzo gruppo ∈ allow list del **mittente** |
+| **SYS-GROUP-018** | Su recapito al gruppo: INSERT storico gruppo; `peer_address` = indirizzo mittente umano; `author_address` = indirizzo mittente; `author_id` = mittente umano; **`original_author_id` = mittente umano** |
 | **SYS-GROUP-019** | Su recapito al gruppo: UPDATE copia mittente umano `delivered_at = now()` (✓✓ = **gruppo ha ricevuto**) |
-| **SYS-GROUP-020** | **Erogazione automatica**: nella **stessa transazione** dopo INSERT storico gruppo, per ogni `allowed_profile_id` in `reception_allowlist(archive_user_id = gruppo)` tentare recapito verso quella persona |
-| **SYS-GROUP-021** | Gate erogazione gruppo→persona: gruppo come mittente tecnico ∈ allow list della **persona**; persona ∈ allow list del **gruppo** (bidirezionale) |
-| **SYS-GROUP-022** | Riga erogata su archivio persona: `archive_user_id = persona`; `author_id = gruppo`; `original_author_id = mittente umano originale`; `peer_profile_id = gruppo`; stesso λ della catena |
-| **SYS-GROUP-023** | Gruppo broadcast: **una** riga archivio gruppo (`archive_user_id = gruppo`, `author_id = gruppo`, **`original_author_id = gruppo`**, `peer_profile_id = NULL`, un λ); distribuzione proxy verso allow list nella **stessa transazione** |
-| **SYS-GROUP-024** | Copie membri da broadcast: `author_id = gruppo`, **`original_author_id = gruppo`**, `peer_profile_id = gruppo`, stesso λ |
+| **SYS-GROUP-020** | **Erogazione automatica**: per ogni `allowed_address` in allow list del gruppo tentare recapito verso quell'indirizzo |
+| **SYS-GROUP-021** | Gate erogazione: indirizzo gruppo ∈ allow list persona **e** indirizzo persona ∈ allow list gruppo |
+| **SYS-GROUP-022** | Riga erogata su archivio persona: `peer_address` = indirizzo gruppo; `author_address` = indirizzo gruppo; `author_id` = gruppo; `original_author_id` = mittente umano; stesso λ |
+| **SYS-GROUP-023** | Gruppo broadcast: storico gruppo con `peer_address` NULL; `author_address` = indirizzo gruppo; `original_author_id` = gruppo |
+| **SYS-GROUP-024** | Copie membri da broadcast: `peer_address` = indirizzo gruppo; `author_address` = indirizzo gruppo; `original_author_id` = gruppo |
 | **SYS-GROUP-025** | Erogazione verso persona che **non** passa il gate: skip silenzioso; **non** aggiorna spunte del messaggio originale |
 | **SYS-GROUP-026** | Spunte messaggio **originale** (umano→gruppo): solo ✓ accettato e ✓✓ **recapitato al gruppo**; erogazione verso altri partecipanti **non** modifica `delivered_at` / `read_at` della copia del mittente originale |
 | **SYS-GROUP-027** | Rimozione allow list: messaggi già in archivio **restano**; solo recapiti **nuovi** bloccati — [SYS-RECEPTION](./SYS-RECEPTION.md) |
 | **SYS-GROUP-028** | Colonna `messages.original_author_id` uuid nullable FK → `profiles` — **autore contenuto**; valorizzata in tutti i flussi gruppo |
 | **SYS-GROUP-029** | Idempotenza erogazione: UNIQUE `(archive_user_id, logical_message_id)` per ogni destinatario erogato ([SYS-MAILBOX-005](./SYS-MAILBOX.md)) |
-| **SYS-GROUP-030** | Account `user`: `list_inbox()` e `list_peer_messages(gruppo)` includono messaggi erogati con `peer_profile_id = gruppo` |
+| **SYS-GROUP-030** | Account `user`: `list_inbox()` e `list_peer_messages(indirizzo_gruppo)` includono messaggi erogati |
 | **SYS-GROUP-031** | Account `group`: storico via query su `messages` WHERE `archive_user_id = auth.uid()` ORDER BY `created_at` (non `list_inbox`) |
-| **SYS-GROUP-032** | Spunte messaggio **erogato** (su archivio persona): semantica [SYS-MAILBOX](./SYS-MAILBOX.md) READ tra persona e peer **gruppo** — indipendenti dal mittente umano originale |
+| **SYS-GROUP-032** | Spunte messaggio **erogato** (su archivio persona): semantica [SYS-MAILBOX](./SYS-MAILBOX.md) READ tra persona e indirizzo **gruppo** |
 
 #### SHOULD
 
@@ -122,24 +123,24 @@ Requisiti **client/UI** (shell senza inbox, registrazione toggle tipo account, b
 
 `original_author_id` = **chi ha scritto il contenuto** (campo canonico). Valorizzato **sempre** nei flussi gruppo.
 
-| Situazione | `author_id` | `original_author_id` | `peer_profile_id` (archivio persona) |
-|------------|-------------|----------------------|--------------------------------------|
-| Umano invia a gruppo (copia umano) | umano | **umano** | gruppo |
-| Stesso messaggio su storico gruppo | umano | **umano** | umano |
-| Erogazione verso persona | **gruppo** | **umano** | **gruppo** |
+| Situazione | `author_id` | `original_author_id` | `peer_address` (archivio persona) |
+|------------|-------------|----------------------|-----------------------------------|
+| Umano invia a gruppo (copia umano) | umano | **umano** | indirizzo gruppo |
+| Stesso messaggio su storico gruppo | umano | **umano** | indirizzo mittente umano |
+| Erogazione verso persona | **gruppo** | **umano** | **indirizzo gruppo** |
 | Gruppo broadcast (storico gruppo) | **gruppo** | **gruppo** | NULL |
-| Copia membro da broadcast | **gruppo** | **gruppo** | **gruppo** |
-| Chat private user↔user | umano | NULL | controparte |
+| Copia membro da broadcast | **gruppo** | **gruppo** | **indirizzo gruppo** |
+| Chat private user↔user | umano/null | NULL | indirizzo controparte |
 
 ### Flusso umano → gruppo → erogazione (worker [SYS-DELIVERY](./SYS-DELIVERY.md))
 
 ```
-send_message_to_profile(destinatario = G) — solo copia mittente U + outbox
+send_message_to_address(p_peer_address = indirizzo_G) — solo copia mittente U + outbox
   → alfred_delivery.process_outbox:
-       SE gate allow U↔G:
-         INSERT storico gruppo (archive_user=G, author=U, original_author=U, peer=U, λ)
+       SE gate allow indirizzo U ↔ indirizzo G:
+         INSERT storico gruppo (peer_address=indirizzo_U, author_address=indirizzo_U, …)
          UPDATE copia U delivered_at = now()
-         erogate_group_message → INSERT erogazioni verso allow list
+         erogate_group_message → INSERT erogazioni verso allow list (per allowed_address)
        ALTRIMENTI delivered_at null su copia U
   → RETURN copia U
 ```

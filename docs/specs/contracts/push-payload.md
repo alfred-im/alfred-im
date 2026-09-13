@@ -1,33 +1,37 @@
 # Contratto push payload — Web Push VAPID
 
-**Ultima revisione**: 2026-08-31  
-**Status**: `implemented` su `main`  
-**Fonte di verità**: `supabase/functions/send-push/index.ts`, `client/web/push_sw.js`, `client/lib/models/push_conversation_key.dart`
+**Ultima revisione**: 2026-09-13  
+**Status**: `approved` — amend §7.19 `peerAddress` (migrazione dev pendente; codice attuale ancora su `peerProfileId`)  
+**Fonte di verità target**: `supabase/functions/send-push/index.ts`, `client/web/push_sw.js`, `client/lib/models/push_conversation_key.dart`
 
 Contratto **wire format** per notifiche Web Push: payload server → browser, messaggi `postMessage` service worker ↔ client, e identità conversazione (`PushConversationKey`).
 
-**Promessa infrastruttura**: [SYS-PUSH](../promises/system/SYS-PUSH.md) (riferimento — non duplicare REQ qui).  
+**Promessa infrastruttura**: [SYS-PUSH](../promises/system/SYS-PUSH.md).  
 **Dominio**: [docs/domain/notifications/](../../domain/notifications/README.md).  
 **Persistenza subscription**: [schema.md](./schema.md) § `push_subscriptions` · invio: [rpc.md](./rpc.md) § `send-push`.
+
+**Regola §7.19**: payload push e deep link usano **`peerAddress`** (stringa indirizzo lowercase). **Nessun periodo dual-read** — non mantenere lettura parallela di `peerProfileId`.
 
 ---
 
 ## 1. Identità conversazione (`PushConversationKey`)
 
-Ogni notifica, soppressione, tap e tag browser identifica **sempre** la coppia account destinatario + peer — mai solo `peer_profile_id`.
+Ogni notifica, soppressione, tap e tag browser identifica **sempre** la coppia account destinatario + **indirizzo controparte** — mai UUID profilo.
 
 | Campo canonico | Alias snake_case (server / outbox) | Alias camelCase (SW / client) | Tipo | Obbligatorio |
 |----------------|-------------------------------------|-------------------------------|------|--------------|
 | `recipientUserId` | `recipient_user_id` | `recipientUserId` | `string` (uuid) | **sì** |
-| `peerProfileId` | `peer_profile_id` | `peerProfileId` | `string` (uuid) | **sì** |
+| `peerAddress` | `peer_address` | `peerAddress` | `string` (indirizzo lowercase) | **sì** |
+
+**Rimosso**: `peerProfileId` / `peer_profile_id` — **MUST NOT** apparire in payload nuovi.
 
 **Invarianti**
 
-- `recipientUserId !== peerProfileId` — coppia non valida → payload ignorato (nessuna UI, nessun `open_chat`).
-- Chiave stringa: `recipientUserId + '|' + peerProfileId` (separatore `|`, allineato a `PushConversationKey.separator` e `PUSH_KEY_SEPARATOR` in `push_sw.js`).
-- Tag notifica browser: `recipient|peer|logical_message_id` se `logical_message_id` presente; altrimenti `recipient|peer`.
+- `peerAddress` non può essere l'indirizzo del titolare `recipientUserId` — coppia non valida → payload ignorato.
+- Chiave stringa: `recipientUserId + '|' + peerAddress` (separatore `|`, allineato a `PushConversationKey.separator` e `PUSH_KEY_SEPARATOR` in `push_sw.js`).
+- Tag notifica browser: `recipient|peerAddress|logical_message_id` se `logical_message_id` presente; altrimenti `recipient|peerAddress`.
 
-Implementazione: `client/lib/models/push_conversation_key.dart`, `tryParsePushConversation` in `client/web/push_sw.js`.
+Implementazione target: `client/lib/models/push_conversation_key.dart`, `tryParsePushConversation` in `client/web/push_sw.js`.
 
 ---
 
@@ -44,7 +48,7 @@ Il corpo della notifica Web Push è JSON. L'Edge Function `send-push` accetta **
   "additionalProperties": false,
   "required": [
     "recipient_user_id",
-    "peer_profile_id",
+    "peer_address",
     "peer_display_name",
     "preview_text",
     "logical_message_id"
@@ -63,14 +67,13 @@ Il corpo della notifica Web Push è JSON. L'Edge Function `send-push` accetta **
       "type": ["string", "null"],
       "description": "Username account destinatario — alternativa nel titolo."
     },
-    "peer_profile_id": {
+    "peer_address": {
       "type": "string",
-      "format": "uuid",
-      "description": "Profilo controparte nella chat."
+      "description": "Indirizzo controparte lowercase — chiave conversazione (username o user@server)."
     },
     "peer_display_name": {
       "type": "string",
-      "description": "Nome visualizzato del peer — corpo titolo notifica."
+      "description": "Nome visualizzato del peer — corpo titolo notifica (fallback: peer_address)."
     },
     "preview_text": {
       "type": "string",
@@ -84,8 +87,7 @@ Il corpo della notifica Web Push è JSON. L'Edge Function `send-push` accetta **
     "content_type": {
       "type": "string",
       "enum": ["text", "gif", "voice", "location", "image", "video"],
-      "default": "text",
-      "description": "Tipo contenuto — metadato; non espone body completo."
+      "default": "text"
     },
     "icon_url": {
       "type": ["string", "null"],
@@ -95,24 +97,22 @@ Il corpo della notifica Web Push è JSON. L'Edge Function `send-push` accetta **
 }
 ```
 
-**Validazione minima** (`send-push`): `recipient_user_id`, `peer_profile_id`, `logical_message_id` obbligatori; 400 se mancanti.
+**Validazione minima** (`send-push`): `recipient_user_id`, `peer_address`, `logical_message_id` obbligatori; 400 se mancanti.
 
-**Origine**: payload outbox `event_kind = push_notify` da `alfred_delivery.queue_push_after_delivery` (migrazioni `20260714100000`, `20260715210000`).
+**Origine**: payload outbox `event_kind = push_notify` da `alfred_delivery.queue_push_after_delivery` — campo `peer_address` da riga destinatario materializzata.
 
 ### 2.2 Payload ricevuto dal service worker (`push` event)
-
-L'Edge Function serializza in camelCase prima di `webpush.sendNotification`:
 
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["recipientUserId", "peerProfileId", "logicalMessageId"],
+  "required": ["recipientUserId", "peerAddress", "logicalMessageId"],
   "properties": {
     "recipientUserId": { "type": "string", "format": "uuid" },
     "recipientDisplayName": { "type": ["string", "null"] },
     "recipientUsername": { "type": ["string", "null"] },
-    "peerProfileId": { "type": "string", "format": "uuid" },
+    "peerAddress": { "type": "string" },
     "peerDisplayName": { "type": "string" },
     "previewText": { "type": "string" },
     "logicalMessageId": { "type": "string", "format": "uuid" },
@@ -122,13 +122,13 @@ L'Edge Function serializza in camelCase prima di `webpush.sendNotification`:
 }
 ```
 
-Il service worker accetta **entrambe** le convenzioni (camelCase e snake_case) su tutti i campi mappati in `tryParsePushConversation`, `formatNotificationTitle`, `pushNotificationTag`.
+Il service worker accetta camelCase e snake_case sui campi mappati.
 
 | Uso SW | Campi letti | Default |
 |--------|-------------|---------|
-| Titolo | `peerDisplayName` / `peer_display_name`; opz. `recipientUsername` / `recipient_username` o `recipientDisplayName` / `recipient_display_name` | peer: `'Alfred'` |
+| Titolo | `peerDisplayName` / `peer_display_name`; fallback `peerAddress` | indirizzo grezzo |
 | Body | `previewText` / `preview_text` | `'Nuovo messaggio'` |
-| Tag | `logicalMessageId` / `logical_message_id` + `PushConversationKey` | vedi §1 |
+| Tag | `logicalMessageId` + `PushConversationKey` | vedi §1 |
 | Icon / badge | `iconUrl` / `icon_url` | `'icons/Icon-192.png'` |
 | `Notification.data` | intero payload parsato | — |
 
@@ -140,86 +140,44 @@ Canale: `navigator.serviceWorker` `message` (non `window.message`). Payload: str
 
 ### 3.1 Client → SW: soppressione (`alfred_push_suppression`)
 
-Inviato da `PushPlatform.updateSuppression` (`push_web.dart`) quando cambiano focus account, peer attivo o lifecycle app (`PushSuppressionBinder`).
-
 ```json
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["type", "appVisible"],
-  "properties": {
-    "type": { "const": "alfred_push_suppression" },
-    "recipientUserId": {
-      "type": ["string", "null"],
-      "format": "uuid",
-      "description": "Account in focus (`auth.uid()` corrente); null se nessuno."
-    },
-    "activePeerProfileId": {
-      "type": ["string", "null"],
-      "format": "uuid",
-      "description": "Peer della chat aperta; null se inbox o app non visible."
-    },
-    "appVisible": {
-      "type": "boolean",
-      "description": "true solo se `AppLifecycleState.resumed`."
-    }
-  }
+  "type": "alfred_push_suppression",
+  "recipientUserId": "<uuid|null>",
+  "activePeerAddress": "<indirizzo|null>",
+  "appVisible": true
 }
 ```
 
-**Effetto SW**: aggiorna `suppressionState` in RAM. `shouldSuppress(payload)` è true quando:
+**Effetto SW**: `shouldSuppress(payload)` è true quando:
 
 - `appVisible === true`
 - `recipientUserId === recipientUserId` del payload push
-- `activePeerProfileId === peerProfileId` del payload push
+- `activePeerAddress === peerAddress` del payload push
 
-In caso di soppressione: nessuna `showNotification`, nessun `alfred_push_received`.
+**Rimosso**: `activePeerProfileId` — sostituito da `activePeerAddress`.
 
 ### 3.2 SW → client: notifica mostrata (`alfred_push_received`)
 
-Dopo `showNotification`, il SW notifica tutte le finestre controllate:
-
-```json
-{
-  "type": "alfred_push_received",
-  "payload": { }
-}
-```
-
-`payload` è l'oggetto Web Push parsato (§2.2). Il client Flutter **non** apre la chat su questo messaggio — solo aggiornamento badge/realtime opzionale.
+Invariato — `payload` è l'oggetto Web Push parsato (§2.2).
 
 ### 3.3 SW → client: tap notifica (`open_chat`)
 
-Su `notificationclick`, se esiste una finestra app:
-
 ```json
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["type", "recipientUserId", "peerProfileId"],
-  "properties": {
-    "type": { "const": "open_chat" },
-    "recipientUserId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Account destinatario (recipientUserId)."
-    },
-    "peerProfileId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Peer da aprire."
-    }
-  }
+  "type": "open_chat",
+  "recipientUserId": "<uuid>",
+  "peerAddress": "<indirizzo lowercase>"
 }
 ```
 
-**Cold start** (nessuna finestra): SW apre `./#push-chat/{recipientUserId}/{peerProfileId}`; il client persiste pending e consuma al `sessionReady`.
+**Cold start** (nessuna finestra): SW apre `./#push-chat/{recipientUserId}/{peerAddress}` (segmento URL-encoded).
 
-Il client accetta anche snake_case su `recipient_user_id` / `peer_profile_id` (`PushConversationKey.tryFromPayload`).
+Il client accetta anche snake_case su `recipient_user_id` / `peer_address`.
 
-**Handler**: `PushPlatform._handleIncomingMessage` → `PushNotificationListener` → `OpenFromPushTap` (contesto navigation).
+**Handler**: `PushPlatform._handleIncomingMessage` → `PushNotificationListener` → `OpenFromPushTap`.
+
+**MUST NOT**: fragment o messaggi con UUID peer.
 
 ---
 
@@ -232,21 +190,19 @@ Chiave: `alfred_pending_open_chat`.
 ```json
 {
   "recipientUserId": "<uuid>",
-  "peerProfileId": "<uuid>"
+  "peerAddress": "<indirizzo>"
 }
 ```
 
-Scritto se `!sessionReady` o da fragment launch; rimosso dopo `OpenChatForwarded` o drain.
-
 ### 4.2 Launch fragment
 
-URL hash riservato alle push (non shareable-link):
-
 ```
-#push-chat/{recipientUserId}/{peerProfileId}
+#push-chat/{recipientUserId}/{peerAddress}
 ```
 
-Costante: `PUSH_CHAT_FRAGMENT_PREFIX = 'push-chat/'` (`push_sw.js`, `PushDeepLink.fragmentPrefix`).
+`peerAddress` URL-encoded se contiene `@`.
+
+Costante: `PUSH_CHAT_FRAGMENT_PREFIX = 'push-chat/'`.
 
 ---
 
@@ -257,9 +213,11 @@ Costante: `PUSH_CHAT_FRAGMENT_PREFIX = 'push-chat/'` (`push_sw.js`, `PushDeepLin
 | [seq-push-received.puml](../../model/uml/notifications/seq-push-received.puml) | Delivery → Edge → SW → soppressione o notifica |
 | [seq-suppression-sync.puml](../../model/uml/notifications/seq-suppression-sync.puml) | Client → `alfred_push_suppression` → RAM SW |
 | [seq-notification-click.puml](../../model/uml/notifications/seq-notification-click.puml) | Tap → `open_chat` / cold start fragment |
-| [seq-sync-subscriptions.puml](../../model/uml/notifications/seq-sync-subscriptions.puml) | Registrazione VAPID (fuori scope payload messaggio) |
+| [seq-sync-subscriptions.puml](../../model/uml/notifications/seq-sync-subscriptions.puml) | Registrazione VAPID |
 
 State machine: [notifications-sw-state.puml](../../model/uml/notifications/notifications-sw-state.puml), [notifications-client-state.puml](../../model/uml/notifications/notifications-client-state.puml).
+
+*Nota: diagrammi UML vanno aggiornati post-implementazione per riflettere `peerAddress`.*
 
 ---
 
