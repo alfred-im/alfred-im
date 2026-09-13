@@ -1,6 +1,6 @@
 # Gotham — protocollo federazione Alfred
 
-**Ultima revisione:** 2026-09-09  
+**Ultima revisione:** 2026-09-13  
 **Stato:** `documented` — wire contract definito; runtime non implementato  
 **Audience:** AI / implementazione gateway e worker Gotham
 
@@ -37,7 +37,7 @@ Ogni fatto ha **un nome preciso**. Non esistono campi generici `event_id` o `ext
 
 | Fatto | Campo id | Chi lo assegna | Quando |
 |-------|----------|----------------|--------|
-| **Messaggio** (testo, media, location) | `logical_message_id` | Server **mittente** | Accettazione invio (`send_message_to_profile`) |
+| **Messaggio** (testo, media, location) | `logical_message_id` | Server **mittente** | Accettazione invio (`send_message_to_address`) |
 | **Lettura** | `read_receipt_id` | Server **lettore** | `mark_peer_read` |
 | **Reaction** | `reaction_fact_id` | Server **chi reagisce** | Accettazione reaction (`apply_message_reaction` / worker) |
 
@@ -245,7 +245,7 @@ Routing **senza colonna protocol**: il server in `peer_address` (`user@server`) 
 2. Worker federativo valida envelope (kind, indirizzi normalizzati, id dedup)
 
 3. Gate reception (allow list destinatario) — § 5.4
-     confronto envelope.from_address con allowed_external_address del destinatario
+     confronto envelope.from_address con allowed_address del destinatario
 
 4. SE consentito:
        MESSAGE / LOCATION → materialize copia destinatario
@@ -334,10 +334,10 @@ Il client smette di rifiutare il compose verso `user@server` quando Gotham è at
 Helper federato (indirizzo-based):
 
 ```sql
-materialize_inbound_federated_message(
-  p_recipient_profile_id uuid,      -- auth.uid() / destinatario locale
-  p_from_address text,              -- envelope.from_address normalizzato
-  p_logical_message_id uuid,        -- dal server mittente remoto — mai rigenerare
+alfred_delivery.materialize_inbound_sender_message(
+  p_recipient_profile_id uuid,      -- destinatario locale
+  p_sender_address text,            -- envelope.from_address normalizzato
+  p_sender_message_id uuid,         -- logical_message_id dal server mittente remoto — mai rigenerare
   … snapshot contenuto …
 ) → messages
 ```
@@ -347,8 +347,8 @@ Riga archivio destinatario:
 | Campo | Valore |
 |-------|--------|
 | `archive_user_id` | destinatario locale |
-| `peer_address` | `p_from_address` |
-| `author_address` | `p_from_address` |
+| `peer_address` | `p_sender_address` |
+| `author_address` | `p_sender_address` |
 | `logical_message_id` | dal mittente remoto |
 | `author_id` | null su ingresso federato (opzionale se profilo locale esiste) |
 
@@ -385,7 +385,7 @@ Prerequisiti piattaforma per Gotham (implementati):
 |-----------|------|
 | `reception_allowlist.allowed_address` | § 5.4 — **implementato** (locale + federato) |
 | `send_message_to_address` | Invio unificato; outbox federato quando server ≠ locale |
-| `materialize_inbound_federated_message` | Inbound con `peer_address` / `author_address` |
+| `materialize_inbound_sender_message` | Inbound con `peer_address` / `author_address` |
 | Consumer outbox federato + Gotham ingress (HTTP/3) | § 7 |
 
 Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `group_erogate`, `push_notify`.
@@ -479,3 +479,4 @@ I gruppi restano **locale** (stessa istanza) — `group_erogate`, `broadcast_mes
 | 2026-09-08 | Rimosso `contact_protocol`; routing implicito; solo Gotham come federazione |
 | 2026-09-09 | `media_url` wire: ingest locale destinatario obbligatorio — vedi mailbox § Media |
 | 2026-09-09 | § 5.4 — `reception_allowlist` locale + esterna; RPC invio/materialize federato; gate su `from_address` |
+| 2026-09-13 | § 5.4 — modello address-based unificato (`peer_address`, `author_address`, `allowed_address`); TEMP §8 audit risolto |

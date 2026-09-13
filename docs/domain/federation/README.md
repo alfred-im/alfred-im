@@ -2,7 +2,7 @@
 
 **Bounded context:** `federation`  
 **Stato modellazione:** `documented`  
-**Ultima revisione:** 2026-09-09
+**Ultima revisione:** 2026-09-13
 
 Messaggistica **tra istanze Alfred** (`user@server`). Il prodotto è federato per definizione; il nome del protocollo wire compare solo nel contratto tecnico.
 
@@ -13,7 +13,7 @@ Messaggistica **tra istanze Alfred** (`user@server`). Il prodotto è federato pe
 | Componente | Stato |
 |------------|-------|
 | Contratto wire + Protobuf | ✅ |
-| Schema DB (outbox, `peer_external_address`, rubrica federata) | ✅ |
+| Schema DB (outbox, `peer_address`, rubrica federata) | ✅ |
 | Gateway Gotham + worker runtime | ❌ pianificato |
 
 ---

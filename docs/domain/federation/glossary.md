@@ -39,4 +39,4 @@
 
 - [gotham-protocol.md](../../architecture/gotham-protocol.md) — contratto wire (nome protocollo solo qui)
 - [gotham.proto](../../specs/contracts/gotham.proto)
-- [TEMP-chat-peer-key-address-drift.md](../../tmp/TEMP-chat-peer-key-address-drift.md) §7 — modello address-based
+- [address-based-messaging.md](../../decisions/address-based-messaging.md) — modello address-based
