@@ -39,7 +39,7 @@ Implementazione (non vincolante): helper SQL `is_sender_allowed_for_reception(ar
 | `DeliverySilentlyBlocked` | Mittente non autorizzato dal destinatario — nessun errore al mittente. |
 | `OutboundSendDenied` | Destinatario non in allow list del mittente — errore RPC, nessuna copia mittente. |
 
-Statechart client: `AllowListReady` → evento macchina `AllowlistLoaded`; `DisallowSender` → `RemoveAllowedPerson` o `RemoveAllowedByProfileId` (toggle overlay peer).
+Statechart client: `AllowListReady` → evento macchina `AllowlistLoaded`; `DisallowSender` → `RemoveAllowedPerson` o `RemoveAllowedByAddress` (toggle overlay peer).
 
 ---
 

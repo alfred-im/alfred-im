@@ -82,7 +82,7 @@ Flusso delivery canonico: [mailbox-inbox-outbox-spec.md](../../../architecture/m
 | Elemento | Codice |
 |----------|--------|
 | Schema + worker | `supabase/migrations/*account_boundary_delivery*` |
-| RPC account | `send_message_to_profile`, `mark_peer_read`, `broadcast_message_to_allowlist` |
+| RPC account | `send_message_to_address`, `mark_peer_read`, `broadcast_message_to_allowlist` |
 | Helper gate | `is_sender_allowed_for_reception`, `is_bidirectional_allowed` (solo worker) |
 | Push | `supabase/functions/send-push/`, migrazione `push_subscriptions` — [SYS-PUSH](./SYS-PUSH.md) (`implemented`) |
 

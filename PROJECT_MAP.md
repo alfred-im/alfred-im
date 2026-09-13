@@ -59,7 +59,7 @@
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` senza federazione); archivio **per titolare archivio** in `messages` (`archive_user_id`, `author_id`, `peer_address`, `author_address`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_address`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca liste on-demand — inbox, rubrica, persone consentite (`PROM-LIST-FILTER`, PR #132, #171)
 - **GIF / voice / location / foto / video**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client — [PROM-CHAT-MEDIA](docs/specs/promises/product/PROM-CHAT-MEDIA.md)
-- **Federazione**: outbox `queued` verso `peer_external_address` — attende gateway/worker (wire: `docs/architecture/gotham-protocol.md`)
+- **Federazione**: outbox `queued` verso `peer_address` remoto — attende gateway/worker (wire: `docs/architecture/gotham-protocol.md`)
 - **Spunte**: `delivered_at` / `read_at` sulla copia mittente — ✓ = accettato server; ✓✓/blu via worker [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md) (`deliver` + `read_receipt` outbox); lettura locale `mark_peer_read` sul destinatario — promesse `SYS-MAILBOX`, `PROM-MESSAGE-STATUS`
 - **Reazioni messaggio**: overlay reazioni su tap messaggio — `PROM-MESSAGE-REACTIONS` (PR #246)
 - **@mentions**: evidenziazione e navigazione @username in chat — `PROM-MESSAGE-MENTION`

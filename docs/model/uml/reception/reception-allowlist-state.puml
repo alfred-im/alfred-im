@@ -17,12 +17,12 @@ Ready --> Loading : LoadAllowlist\n[after CRUD]
 Ready --> Ready : SetSearchQuery
 Ready --> Ready : AddAllowedProfile
 Ready --> Ready : RemoveAllowedPerson
-Ready --> Ready : RemoveAllowedByProfileId
+Ready --> Ready : RemoveAllowedByAddress
 
 note right of Ready
   Empty list is still Ready —
   UI shows informational copy.
-  allowedProfileIds is a derived view.
+  allowedAddresses is a derived view.
   SearchCandidateSenders is a command
   handled in UI sheet; results are
   local until AddAllowedProfile.

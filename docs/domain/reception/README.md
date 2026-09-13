@@ -7,7 +7,7 @@
 | Dominio | Statechart / server | Codice |
 |---------|---------------------|--------|
 | `AllowSender` | `AddAllowedProfile` | `ReceptionAllowlistService` |
-| `DisallowSender` | `RemoveAllowedPerson` / `RemoveAllowedByProfileId` | `ReceptionAllowlistService` |
+| `DisallowSender` | `RemoveAllowedPerson` / `RemoveAllowedByAddress` | `ReceptionAllowlistService` |
 | `SearchCandidateSenders` | ricerca coordinator (`searchProfiles`, non evento macchina) | allow list UI |
 | `AllowListReady` | `AllowlistLoaded` | `ReceptionMachine` |
 | `EvaluateInboundDelivery` | `DeliverInternal` → gate | `is_sender_allowed_for_reception` in worker |

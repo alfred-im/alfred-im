@@ -25,7 +25,7 @@ NotificationShown --> SuppressionReady : notificationclick\n/ postMessage open_c
 note right of SuppressionReady
   shouldSuppress quando:
   appVisible && focusUserId == recipient
-  && activePeerProfileId == peer
+  && activePeerAddress == peerAddress
 end note
 
 note right of NotificationShown

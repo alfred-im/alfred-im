@@ -37,7 +37,7 @@ Contesti: auth, multi-account, navigation, notifications, shareable-link, messag
 | Consentito | Vietato |
 |------------|---------|
 | `Utente`, `UI`, `<Context>Machine`, altre macchine del modello | `*Service`, `*Coordinator`, `*Controller`, `*Listener` |
-| `AccountManager` come unico confine effetti sessione/account | Nomi RPC/SQL (`send_message_to_profile`, `INSERT`, …) |
+| `AccountManager` come unico confine effetti sessione/account | Nomi RPC/SQL (`send_message_to_address`, `INSERT`, …) |
 | Sistemi esterni rosa: `Supabase`, `ServiceWorker`, `Browser` | Classi Dart, file `.dart`, widget screen |
 | Concetti dominio: `OutboundQueue`, `OutboundMediaCache` | `PostgresChange`, nomi tabella |
 

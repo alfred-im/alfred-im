@@ -4,7 +4,7 @@
 |-------|--------|
 | **Promessa ID** | `SYS-MAILBOX` |
 | **Classe** | SYSTEM |
-| **Status** | `approved` — amend §7 peer_address (implementazione pendente) |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-09-13 |
 | **ADR** | [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../../decisions/server-as-reception.md), [no-internal-external-chat-distinction.md](../../../decisions/no-internal-external-chat-distinction.md) |
 | **PR origine** | #159, #179, #210 |
@@ -17,7 +17,7 @@ Promessa SYSTEM — modello **mailbox** (archivio per titolare archivio), pipeli
 
 ## 1. Problema / obiettivo
 
-Ogni utente ha un **archivio messaggi indipendente** (`archive_user_id`). Mittente e destinatario hanno sempre righe distinte correlate da `logical_message_id` (λ). L'inbox non è entità DB: è aggregazione on-read sull'archivio del titolare. Invio unificato via `send_message_to_profile` (solo confine mittente); recapito locale sincrono in transazione RPC tramite worker [SYS-DELIVERY](./SYS-DELIVERY.md) con gate [SYS-RECEPTION](./SYS-RECEPTION.md). Spunte da date nullable su copia mittente; lettura locale su copia destinatario con propagazione `read_at` via worker `read_receipt`.
+Ogni utente ha un **archivio messaggi indipendente** (`archive_user_id`). Mittente e destinatario hanno sempre righe distinte correlate da `logical_message_id` (λ). L'inbox non è entità DB: è aggregazione on-read sull'archivio del titolare. Invio unificato via `send_message_to_address` (solo confine mittente); recapito locale sincrono in transazione RPC tramite worker [SYS-DELIVERY](./SYS-DELIVERY.md) con gate [SYS-RECEPTION](./SYS-RECEPTION.md). Spunte da date nullable su copia mittente; lettura locale su copia destinatario con propagazione `read_at` via worker `read_receipt`.
 
 Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering, multi-account focus, filtro lista) sono delegati a promesse **PRODUCT** / **SURFACE** — vedi §6.
 

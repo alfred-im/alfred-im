@@ -4,7 +4,7 @@
 |-------|--------|
 | **Promessa ID** | `SYS-GROUP` |
 | **Classe** | SYSTEM |
-| **Status** | `approved` — amend §7.18 peer_address per faccia account gruppo (implementazione pendente) |
+| **Status** | `implemented` |
 | **Ultima revisione** | 2026-09-13 |
 | **ADR** | [address-based-messaging.md](../../../decisions/address-based-messaging.md), [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../../decisions/server-as-reception.md) |
 | **PR origine** | #162 |
@@ -160,7 +160,7 @@ broadcast_message_to_allowlist() — solo riga storico gruppo + outbox group_ero
 | Elemento | Documento / codice |
 |----------|-------------------|
 | `profiles.profile_kind`, `messages.original_author_id` | [contracts/schema.md](../../contracts/schema.md) § gruppi |
-| `send_message_to_profile` (branch gruppo), `broadcast_message_to_allowlist`, worker `alfred_delivery.erogate_group_message` | [contracts/rpc.md](../../contracts/rpc.md) |
+| `send_message_to_address` (branch gruppo), `broadcast_message_to_allowlist`, worker `alfred_delivery.erogate_group_message` | [contracts/rpc.md](../../contracts/rpc.md) |
 | Gate bidirezionale | `is_bidirectional_allowed` (SECURITY DEFINER, no GRANT authenticated) |
 | Migrazioni gruppo | `supabase/migrations/*group*` |
 | Smoke SQL | `supabase/tests/group_schema_smoke.sql`, `group_delivery_smoke.sql`, `group_broadcast_smoke.sql`, `rpc_helper_security_smoke.sql` |
