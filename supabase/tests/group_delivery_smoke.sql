@@ -11,8 +11,8 @@ DECLARE
   v_observer uuid := '5b9fadb5-884a-41f2-89c9-4ced56be07a2'; -- ci-observer (stack locale)
   v_client text := 'smoke-group-' || floor(random() * 1000000)::text;
   v_sender public.messages;
-  v_group_count integer;
   v_erogated public.messages;
+  v_outbound public.messages;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_agent1) THEN
     RAISE NOTICE 'group_delivery_smoke_skip missing agent profiles';
@@ -54,13 +54,29 @@ BEGIN
     RAISE EXCEPTION 'group delivery must set delivered_at on sender copy';
   END IF;
 
-  SELECT count(*) INTO v_group_count
+  IF NOT EXISTS (
+    SELECT 1 FROM public.messages m
+    WHERE m.archive_user_id = v_group
+      AND m.logical_message_id = v_sender.logical_message_id
+      AND m.original_author_id = v_agent1
+      AND m.peer_address = 'ciagent1'
+  ) THEN
+    RAISE EXCEPTION 'group archive must have inbound row from human sender';
+  END IF;
+
+  SELECT * INTO v_outbound
   FROM public.messages m
   WHERE m.archive_user_id = v_group
-    AND m.logical_message_id = v_sender.logical_message_id;
+    AND m.logical_message_id = v_sender.logical_message_id
+    AND m.peer_address = 'ciobserver'
+  LIMIT 1;
 
-  IF v_group_count <> 1 THEN
-    RAISE EXCEPTION 'group archive must have one row, got %', v_group_count;
+  IF v_outbound.id IS NULL THEN
+    RAISE EXCEPTION 'missing group outbound leg for observer participant';
+  END IF;
+
+  IF v_outbound.delivered_at IS NULL THEN
+    RAISE EXCEPTION 'group outbound leg must set delivered_at after member delivery';
   END IF;
 
   SELECT * INTO v_erogated

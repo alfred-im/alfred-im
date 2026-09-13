@@ -35,8 +35,8 @@ Mobile (<720px): `GroupHomePanel` → chat full-width dopo `openGroupChat()`.
 
 ## Delivery
 
-Invio umano→gruppo: copia mittente + outbox → worker INSERT storico gruppo + `alfred_delivery.erogate_group_message`.  
-Broadcast: una riga archivio gruppo + outbox `group_erogate`.  
+Invio umano→gruppo: copia mittente + outbox → worker INSERT storico gruppo + `erogate_group_message` (N outbox `deliver` verso membri).  
+Broadcast: una riga archivio gruppo + outbox `group_erogate` → stesso binario `deliver` per membro.  
 Spunte umano→gruppo: ✓✓ = recapito al gruppo.
 
 Smoke: `group_delivery_smoke.sql`, `group_broadcast_smoke.sql`

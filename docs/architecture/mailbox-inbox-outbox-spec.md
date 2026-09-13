@@ -240,7 +240,7 @@ Inbound messaggio: `materialize_inbound_sender_message` con `logical_message_id`
 - Delete chat locale
 - Preservazione dati in migrazione (solo DB dev; niente prod)
 
-**Gruppi** — account `profile_kind = group`, erogazione via worker, shell dedicata. Vedi [groups.md](../guides/groups.md) e promessa `SYS-GROUP`.
+**Gruppi** — account `profile_kind = group`; gamba 1 umano→gruppo + gamba 2 gruppo→membro (N outbox `deliver` via `erogate_group_message` / `group_erogate`). Vedi [groups.md](../guides/groups.md) e `SYS-GROUP`.
 
 ---
 

@@ -74,8 +74,9 @@ Se `p_peer_address` risolve a account `profile_kind = group` sulla stessa istanz
 
 1. Stessi passi 1–3 (copia mittente umano + outbox)
 2. Worker: gate allow list **bidirezionale** su indirizzo mittente ↔ indirizzo gruppo
-3. Se **sì**: INSERT storico gruppo; `delivered_at` su copia mittente; erogazione automatica verso allow list gruppo
-4. Erogazione fallita per singolo partecipante: skip silenzioso
+3. Se **sì**: INSERT storico gruppo; `delivered_at` su copia mittente; `erogate_group_message` accoda outbox `deliver` per ogni membro eleggibile → `deliver_internal` materializza proxy
+4. Fanout umano→gruppo: copia uscita gruppo (`peer_address` = membro) con `delivered_at` su quella gamba; broadcast: stesso pipeline dalla riga archivio unica
+5. Erogazione fallita per singolo partecipante: skip silenzioso
 
 Invio con sessione gruppo verso persona: `author_id = gruppo`, `author_address` = indirizzo gruppo, `original_author_id` valorizzato.
 
