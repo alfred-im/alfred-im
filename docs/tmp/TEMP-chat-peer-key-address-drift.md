@@ -1,627 +1,414 @@
 # TEMP — Deriva chiave conversazione: indirizzo vs `profileId`
 
-**Stato:** bozza temporanea per review — **da rimuovere** dopo promozione in dominio / SDD `approved`  
-**Data:** 2026-09-12 (ultimo aggiornamento: 2026-09-12 — profilo sempre pubblico)  
-**Branch:** `main` (commit dedicato, file eliminabile)  
-**Audience:** revisione modello / SDD / implementazione federazione
+**Stato:** bozza temporanea — da eliminare dopo promozione in SDD `approved`  
+**Revisione:** 2026-09-13 (quinta passata — §9 risolto; modello completo per SDD)  
+**Audience:** revisione modello / SDD / implementazione federazione  
+**Non è SSOT** — vedi `docs/SSOT.md`. Contenuto da distillare in dominio, promesse e contratti.
+
+**Legenda sezioni**
+
+| Sezione | Contenuto |
+|---------|-----------|
+| §7 | Decisioni di modello **chiuse** (review 2026-09-12) — da promuovere in SDD |
+| §8 | Audit documentazione — tensioni verificate |
+| §9 | Domande aperte — **nessuna** (risolte 2026-09-13) |
+| §10 | Lavoro da fare — formalizzazione SDD + implementazione |
 
 ---
 
 ## 1. Sintesi
 
-Alfred ha una **direttiva vincolante** (address-based messaging + nessuna distinzione chat locale/federata): la conversazione 1:1 si identifica con **(mio account, identità account controparte)** — `username` sulla stessa istanza oppure `user@server` su altra istanza Alfred.
+**Direttiva vincolante** (architettura + ADR): conversazione 1:1 = `(mio account, indirizzo controparte)` — `username` o `user@server`. Nessuna tipologia «chat locale» vs «chat federata» in UI, account, inbox, allow list o RPC.
 
-L'implementazione e parte delle promesse SDD hanno invece **cristallizzato** la chiave su `peer_profile_id` (UUID in `profiles`), perché fino alla federazione ogni controparte aveva sempre un profilo locale. Non è un buco del protocollo Gotham: è una **deriva preesistente** che la federazione rende visibile.
+**Deriva:** implementazione e promesse `implemented` hanno cristallizzato la chiave su `peer_profile_id` (UUID). Con ogni peer su profilo locale funzionava; la federazione Arkham ↔ Blackgate espone il disallineamento.
 
-**Correzione di modello richiesta:** riallineare chiave conversazione all'**indirizzo account**, con `peer_profile_id` / `peer_external_address` come rappresentazioni storage (routing), non come due tipi di chat.
-
----
-
-## 2. Direttiva originale (cosa era già deciso)
-
-### 2.1 Identità chat = indirizzo, non thread
-
-Fonte: `docs/architecture/mailbox-inbox-outbox-spec.md` § Identità chat (vincolante)
-
-- Serve solo: (1) il mio account, (2) l'altro account come **indirizzo** — `username` o `username@server`.
-- Nessun `thread_id` client.
-- `peer_profile_id` in DB è **ottimizzazione interna** (indici, raggruppamento), non identità esposta.
-
-### 2.2 Nessuna tipologia «chat locale» vs «chat federata»
-
-Fonte: `docs/decisions/no-internal-external-chat-distinction.md`
-
-- Vietato ramificare comportamento UI/semantica per tipologia locale/federata.
-- Routing implicito:
-
-| Destinazione      | Compose / storage              | Driver recapito   |
-|-------------------|--------------------------------|-------------------|
-| Stessa istanza    | `username` → `peer_profile_id` | Worker locale     |
-| Altra istanza     | `user@server` → `peer_external_address` | Worker Gotham |
-
-L'utente vede **persone e indirizzi**, non protocolli.
-
-### 2.3 Messaggistica per indirizzo
-
-Fonte: `docs/decisions/address-based-messaging.md`
-
-- Si scrive a un **indirizzo**; rubrica non abilita né blocca messaggistica.
-- Inbox = aggregazione on-read sul proprio archivio.
-- Federato `username@server`: pianificato, `unsupported` fino a gateway/worker.
-
-### 2.4 Implicazione logica
-
-La **chiave concettuale** della conversazione è sempre:
-
-```text
-(io, identità controparte)
-```
-
-dove identità controparte è:
-
-- **locale:** `username` (risolvibile in `profiles.id` sulla stessa istanza)
-- **federato:** `user@im_server_id` (nessun `profiles.id` obbligatorio sulla tua istanza)
-
-Non esistono due modelli di chat — esistono due **encoding** dello stesso concetto nel persistence layer.
+**Correzione:** chiave canonica = **`peer_address`** (lowercase); **`author_address`** sulla copia mittente = identità che fa fede nella comunicazione (§7.5b). **Tutti gli account** (umani e gruppi). Presentazione = **`get_profiles(addresses[])`** (batch, profilo pubblico sempre). Push = **`peerAddress`** (no dual-read). Gotham = solo trasporto. Ordine: SDD → reception API → client → allow list → worker Gotham. **§9 vuoto** — modello pronto per distillazione SDD.
 
 ---
 
-## 3. Dove si è creata la deriva
+## 2. Direttiva originale (invariata)
 
-### 3.1 Promessa SDD incoerente con la mailbox spec
-
-Fonte: `docs/specs/promises/product/PROM-CHAT-PEER-KEY.md` (`implemented`)
-
-| ID | Testo | Problema |
-|----|-------|----------|
-| PROM-CHAT-PEER-KEY-001 | Chat = `(io, indirizzo peer)` | Allineato alla direttiva |
-| PROM-CHAT-PEER-KEY-002 | Chiave canonica = **identificativo profilo** del peer | **Contraddice** mailbox spec e -001 per peer senza profilo locale |
-| PROM-CHAT-PEER-KEY-003 | Stesso `profileId` vuoto/pieno | Assume sempre UUID profilo |
-
-La sezione «Problema / obiettivo» della promessa dice «indirizzo peer» ma aggrega inbox «per `peer_profile_id`» — mix di due livelli di astrazione.
-
-### 3.2 SYS-MAILBOX aggrega solo su profilo locale
-
-Fonte: `docs/specs/promises/system/SYS-MAILBOX.md`
-
-- **SYS-MAILBOX-034:** `list_inbox()` GROUP BY `peer_profile_id` (locale).
-- **SYS-MAILBOX-011:** `peer_external_address` «per federazione futura (non usata UI)».
-- **SYS-MAILBOX-047 / 038:** unread e `mark_peer_read` usano `author_id` / `peer_profile_id` UUID.
-
-Le promesse mailbox **non** estendono aggregazione/lettura a `peer_external_address`.
-
-### 3.3 Client: `ChatPeer` = profilo locale obbligatorio
-
-File: `client/lib/models/chat_peer.dart`, `client/lib/models/profile_summary.dart`
-
-- `ChatPeer` wrappa `ProfileSummary` con `id` obbligatorio (`profileId`).
-- `ProfileSummary.fromInboxRow` legge `peer_profile_id` — non costruisce peer solo da `peer_external_address`.
-- Navigation, push, realtime, scope chat usano `peerProfileId` come chiave runtime (`ValueKey`, filtri subscription, deep link push).
-
-### 3.4 Compose blocca il federato
-
-File: `client/lib/services/compose_service.dart`, `client/lib/utils/compose_address.dart`
-
-- `parseComposeAddress` riconosce `user@server`.
-- `resolveAddress` e `peerFromContact` lanciano `Indirizzo esterno non ancora supportato`.
-- La deriva non è «mancanza Gotham» sola: il client **non ha mai** modellato `ChatPeer` senza `profiles.id`.
-
-### 3.5 SQL: inbox esclude righe solo federate
-
-File: `supabase/migrations/20260908100000_gotham_native_drop_protocol.sql` — `list_inbox()`
-
-- CTE `direct` filtra `m.peer_profile_id is not null`.
-- Righe con solo `peer_external_address` (senza `peer_profile_id`) **non entrano** in inbox.
-- `distinct on (d.peer_profile_id)` — impossibile raggruppare per indirizzo esterno.
-
-`contracts/rpc.md` documenta `list_inbox` con righe dove `peer_profile_id IS NOT NULL **oppure** peer_external_address IS NOT NULL` — **documentazione desiderata ≠ implementazione attuale**.
-
-### 3.6 RPC storico/lettura solo UUID
-
-- `list_peer_messages(p_peer_profile_id uuid)`
-- `mark_peer_read(p_peer_profile_id uuid)` — filtra `author_id = p_peer`
-
-Nessuna variante per `peer_external_address` / indirizzo normalizzato.
-
-### 3.7 Autore messaggio: `author_id NOT NULL`
-
-Schema: `messages.author_id uuid not null references profiles`
-
-Gotham §5.4 propone inbound con `author_id` null + `author_external_address` — **non implementato**, in tensione con SYS-MAILBOX-001 e con logica unread (`author_id <> archive_user_id`).
-
-### 3.8 Rubrica e profilo: deriva su snapshot e UUID
-
-Fonte: `docs/specs/promises/system/SYS-CONTACTS.md` (`implemented`), `ProfileService.fetchSummariesByIds`
-
-| Aspetto | Stato attuale | Modello target |
-|---------|---------------|----------------|
-| `contacts` locale | `linked_profile_id` + `display_name` / `avatar_url` snapshot | **Solo `address`** (text lowercase) |
-| `contacts` federato | `external_address` + `display_name` obbligatorio | **Solo `address`** |
-| Dati profilo in UI | Join su `profiles` o campi denormalizzati in rubrica / `list_inbox` | **`get_profiles(addresses[])`** — batch unificato |
-| Peer overlay | Solo peer con `profiles.id` locale | Stesso `get_profiles` per **qualsiasi** indirizzo |
-| Remoto | Nessun overlay; nessun fetch federato profilo | Interazione federata (§ 16) — **no** profilo shadow |
-
-La rubrica oggi **duplica** dati di presentazione; nel modello corretto è solo un elenco di indirizzi. Nome, avatar, pronomi non vivono in `contacts`.
+| Fonte | Regola |
+|-------|--------|
+| `mailbox-inbox-outbox-spec.md` § Identità chat | `(io, indirizzo controparte)`; niente `thread_id` client |
+| `no-internal-external-chat-distinction.md` | Vietata tipologia chat locale/federata; routing solo in delivery |
+| `address-based-messaging.md` | Si scrive a un indirizzo; rubrica isolata; inbox on-read |
 
 ---
 
-## 4. Perché la federazione espone il bug (non lo crea)
+## 3. Deriva attuale (codice + SDD `implemented`)
 
-Prima della federazione:
+### 3.1 Promesse
 
-- Ogni peer conversabile aveva `profiles.id` sulla stessa istanza.
-- `username` ↔ `profileId` era biiezione pratica 1:1.
-- Usare UUID come chiave runtime **funzionava** senza violare l'esperienza utente.
+| Fonte | Problema |
+|-------|----------|
+| `PROM-CHAT-PEER-KEY` | `-001` (indirizzo) vs `-002`/`-003` (profileId) — contraddittorio |
+| `SYS-MAILBOX` | `-034`–`-038`, `-047`: inbox/storico/lettura/unread su UUID |
+| `SYS-MAILBOX-030` | compose federato `unsupported` (v1; da revocare con federazione) |
+| `SYS-RECEPTION` | gate su `allowed_profile_id` UUID |
+| `SYS-CONTACTS` | snapshot nome/avatar; split `linked_profile_id` / `external_address` |
+| `PROM-SHAREABLE-LINK-002` | «equivalenza forme» — da riconciliare con §7.2 (vedi §7.14) |
 
-Con federazione (Arkham ↔ Blackgate):
+### 3.2 Schema e RPC
 
-- `mario@blackgate-im.fly.dev` non ha `profiles.id` su Arkham.
-- Non si può aprire chat, inbox, lettura, push, scope con solo `peerProfileId`.
-- Il wire Gotham e `peer_external_address` in schema **esistono**; il **modello client + RPC inbox** no.
+- `messages`: split `peer_profile_id` + `peer_external_address`; `author_id NOT NULL`.
+- `list_peer_messages(uuid)`, `mark_peer_read(uuid)` — nessun parametro indirizzo.
+- `list_inbox()`: SQL filtra `peer_profile_id IS NOT NULL` — righe solo `peer_external_address` **escluse** (`contracts/rpc.md` documenta OR non implementato).
+- Nessun `get_profiles(addresses[])` — solo batch UUID (`ProfileService.fetchSummariesByIds`).
 
-La federazione è il test di regressione della direttiva address-based.
+### 3.3 Client
+
+- `ChatPeer` richiede `ProfileSummary.id`.
+- Navigation, scope, realtime, push: chiave `peerProfileId` (UUID).
+- `compose_service`: `user@server` → unsupported.
+- `shareable_link_machine`: server remoto → `invalid`; lookup `find_profile_by_username` (UUID).
+
+### 3.4 Rubrica e profilo
+
+| Aspetto | Stato attuale | Modello target (§7) |
+|---------|---------------|---------------------|
+| `contacts` locale | `linked_profile_id` + snapshot | Solo `address` lowercase |
+| `contacts` federato | `external_address` + `display_name` obbligatorio | Solo `address` |
+| Dati profilo in UI | Join `profiles` / denormalizzazione inbox | `get_profiles(addresses[])` batch |
+| Overlay peer remoto | Assente | Stesso `get_profiles` per qualsiasi indirizzo |
 
 ---
 
-## 5. Mappa sintomi → causa radice
+## 4. Perché la federazione espone la deriva (non la crea)
 
-| Sintomo osservabile | Causa radice |
-|---------------------|--------------|
-| Compose `user@server` → unsupported | Chiave runtime = profilo locale, non indirizzo |
-| Inbox non mostra chat federate | `list_inbox` GROUP BY / filtro solo `peer_profile_id` |
-| `list_peer_messages` inutilizzabile per federato | Parametro solo UUID |
-| `mark_peer_read` non applicabile | Assume `author_id` e `peer_profile_id` UUID |
-| `ChatPeer` non costruibile per peer remoto | `ProfileSummary.id` obbligatorio |
-| Push / navigation / realtime | Pipeline keyed su `peerProfileId` |
-| Link `#user@server/chat` cross-istanza | Shareable-link risolve su `find_profile_by_username` locale |
-| Unread count errato su inbound federato (futuro) | `author_id <> archive_user_id` con `author_id` null |
-| PROM-CHAT-PEER-KEY «implemented» vs federazione | Promessa chiusa sul caso locale |
-| Rubrica mostra nome senza `get_profiles` | `contacts` persiste snapshot / `linked_profile_id` invece di solo indirizzo |
-| Inbox N+1 profili | `list_inbox` join `profiles` per peer; manca batch per indirizzo |
-| Overlay profilo remoto assente | Nessun `get_profiles` federato; dominio contacts vieta overlay federato |
+Prima: ogni peer aveva `profiles.id` locale; UUID come chiave runtime era trasparente.
+
+Dopo: `mario@blackgate-im.fly.dev` non ha `profiles.id` su Arkham → inbox, chat, lettura, push, scope, overlay non funzionano. Wire Gotham e colonne federate esistono; modello account/client no.
+
+---
+
+## 5. Sintomi → causa radice
+
+| Sintomo | Causa |
+|---------|-------|
+| Compose `user@server` → unsupported | Chiave runtime = profilo locale |
+| Inbox senza chat federate | `list_inbox` solo su `peer_profile_id` |
+| Storico/lettura inutilizzabili per federato | RPC solo UUID |
+| `ChatPeer` non costruibile per remoto | `ProfileSummary.id` obbligatorio |
+| Push / navigation / realtime | Pipeline su `peerProfileId` |
+| `#user@other-server` → invalid/404 | Lookup locale; `resolveShareableAddress` rifiuta server remoto |
+| Rubrica con nome senza `get_profiles` | Snapshot in `contacts` |
+| Inbox N+1 profili | Join `profiles`; manca batch indirizzo |
 
 ---
 
 ## 6. Cosa **non** è il problema
 
-- **Gotham wire** (envelope, id federativi, dedup, HTTP ack): coerente per messaggi 1:1 testo/location/read/reaction.
-- **Due campi DB** `peer_profile_id` vs `peer_external_address`: corretti come routing implicito (ADR no-internal-external).
-- **Outbox unica** locale/federata: modello mailbox § Consegna è allineato.
-- **Allow list federata** (`allowed_external_address`): descritta in `gotham-protocol` §5.4 ma è un **altro** gap (reception), non la chiave conversazione — correlato ma distinto.
+- Wire Gotham (envelope, dedup, ack HTTP) per messaggi 1:1.
+- Outbox unica locale/federata (mailbox § Consegna).
+- Gap media ingest, READ/REACTION outbound, errori outbox — correlati, scope distinto (§11).
 
 ---
 
-## 7. Modello target (da concordare prima di implementare)
+## 7. Decisioni di modello (chiuse — review 2026-09-12 / 2026-09-13)
 
-### 7.1 Chiave canonica conversazione 1:1
+> Emersero in review documentata in questo TEMP. **Non sono SSOT** finché non in promesse `approved`. §9 **vuoto** — nessuna domanda aperta residua.
 
-```text
-ConversationKey = {
-  archiveUserId: uuid,           // io
-  peerAddress: NormalizedAddress // identità account controparte
-}
+### 7.1 Principi
 
-NormalizedAddress =
-  | Local(username)              // lower(username), stessa istanza
-  | Federated(user, im_server_id) // lower(user)@lower(server)
-```
+1. Non esiste locale/federato a livello account/UI/inbox/allow list/RPC — solo stringa indirizzo.
+2. **Delivery** è l'unico modulo che legge `@server` e sceglie driver (interno vs Gotham).
+3. **Gotham** = trasporto cross-server, non tipo di chat.
 
-**Regola:** una sola chiave per controparte; mai due chat per lo stesso indirizzo con encoding diversi.
+### 7.2 Forme indirizzo e chiave messaggistica
 
-### 7.2 Mapping storage (invariato come intento ADR)
+| Input | Significato |
+|-------|-------------|
+| `mario` | Stessa istanza (bare username) |
+| `mario@arkham-im.fly.dev` | Server esplicito (stessa istanza se `@server` = `im_server_id` locale) |
+| `mario@blackgate-im.fly.dev` | Altra istanza |
 
-| `peerAddress` | `messages.peer_profile_id` | `messages.peer_external_address` |
-|---------------|----------------------------|----------------------------------|
-| Local         | valorizzato                | null                             |
-| Federated     | null                       | valorizzato                      |
+**Regole (chiave `peer_address` / allow list / inbox):**
 
-Mutua esclusione come già documentato post-drop `protocol`.
+- **`mario` ≠ `mario@arkham-im.fly.dev`** — identità, chat e voci allow list **distinte**. «Per ora» nel testo architetturale = **regola valida nel modello corrente**, non voce da rivalutare a ogni revisione.
+- Input case insensitive; persistenza **sempre lowercase**.
+- Entrambe le forme usabili in compose e allow list.
+- Delivery: `@mio_server` → recapito interno **senza** fondere stringhe né unificare chat.
 
-### 7.3 Client
+### 7.3 Inbox
 
-- `ChatPeer` (o equivalente) deve essere costruibile con **indirizzo canonico** senza `profiles.id`.
-- **Nessun profilo shadow** in `profiles` per peer remoti.
-- **Presentazione:** `get_profiles(addresses[])` (§ 16) → dati pubblici; finché in flight o assente → **indirizzo grezzo**. La rubrica **non** fornisce nome/avatar — solo l’indirizzo da arricchire.
-- Scheda profilo peer (overlay), inbox, rubrica: **stesso** servizio batch `get_profiles` — non API separate per schermata.
-- Navigation / push / realtime / scope: keyed su `ConversationKey` o stringa canonica `peerAddress`, non solo UUID.
+Raggruppamento per **indirizzo controparte** per titolare archivio (asimmetrico tra archivi).
 
-### 7.4 RPC / inbox
+Esempio Paolo (Arkham) ↔ Mario (Blackgate): inbox Paolo → `mario@blackgate-im.fly.dev`; inbox Mario → `paolo@arkham-im.fly.dev`.
 
-- `list_inbox`: raggruppare per chiave controparte = `coalesce(peer_profile_id::text, lower(peer_external_address))` o due branch unificati in output.
-- `list_peer_messages` / `mark_peer_read`: accettare identificatore controparte = UUID **oppure** indirizzo federato normalizzato (overload o parametro unificato).
-- Unread: definire «in entrata» senza dipendere solo da `author_id` UUID — es. `author_id = auth.uid()` per uscita, altrimenti entrata; oppure `author_external_address` / `peer_external_address` per federato.
-
-### 7.5 Autore inbound federato
-
-Allineare a Gotham §5.4:
-
-- `author_external_address` su messaggi in ingresso.
-- CHECK: uscita → `author_id = archive_user_id`; entrata locale → `author_id = peer_profile_id`; entrata federata → `author_external_address` valorizzato.
-- `isMine` in UI: `author_id == currentUserId` (locale) — non usare solo confronto author per federato inbound.
-
----
-
-## 8. Documenti in tensione (da riallineare)
-
-| Documento | Azione suggerita |
-|-----------|------------------|
-| `PROM-CHAT-PEER-KEY` | Amend: chiave = indirizzo normalizzato; `profileId` dettaglio locale |
-| `SYS-MAILBOX` | Amend: SYS-MAILBOX-034/035/036/038/047 per `peer_external_address` |
-| `contracts/rpc.md` | Allineare a implementazione reale dopo amend |
-| `contracts/schema.md` | `author_external_address`, CHECK autore |
-| `docs/domain/messaging/glossary.md` | Termine «chiave conversazione» esplicito |
-| `docs/domain/reception/` | Separato: allow list esterna |
-| `SYS-CONTACTS` | Amend: rubrica = solo `address`; rimuovere snapshot e `linked_profile_id` come identità |
-| `SYS-PROFILE` | Amend: `get_profiles(addresses[])` batch locale + federato; **profilo sempre pubblico** (§ 16.6); deprecare batch solo per UUID come unico percorso |
-| `PROM-PEER-PROFILE` | Overlay per indirizzo via `get_profiles`; locale e remoto stesso percorso |
-| `docs/domain/contacts/`, `docs/domain/federation/` | Rubrica = indirizzi; profilo = interazione federata |
-| `SURF-CHAT`, `SURF-INBOX` | Binding su chiave indirizzo; display via `get_profiles` |
-| `PROM-SHAREABLE-LINK` | Regola `#user@other-server` → compose federato, non lookup locale |
-
-**Non** serve nuova tipologia chat in UI (resta vietata dall'ADR).
-
----
-
-## 9. File codice toccati (riferimento implementazione futura)
-
-Solo elenco — **nessuna modifica in questo commit**.
-
-### Client
-
-- `client/lib/models/chat_peer.dart`
-- `client/lib/models/profile_summary.dart`
-- `client/lib/services/compose_service.dart`
-- `client/lib/utils/compose_address.dart`
-- `client/lib/coordinators/navigation_coordinator.dart`
-- `client/lib/utils/conversation_scope_guard.dart`
-- `client/lib/utils/mailbox_message_filter.dart`
-- `client/lib/utils/push_web.dart`, `push_deep_link.dart`
-- `client/lib/services/peer_message_service.dart`
-- `client/lib/services/profile_service.dart` — `get_profiles` batch per indirizzo
-- `client/lib/services/contact_service.dart`
-- `client/lib/machines/navigation/`, `machines/messaging/`
-- `peer_profile_overlay.dart`, `contacts_screen.dart`, `inbox_panel.dart`
-- Test: `compose_service_test.dart`, `conversation_scope_*`, navigation tests, `peer_profile_overlay_test.dart`
-
-### Supabase
-
-- `list_inbox()`, `list_peer_messages()`, `mark_peer_read()`
-- Eventuale `send_message_to_external_address()` (Gotham §5.4)
-- `reception_allowlist.allowed_external_address` (reception federata — gap correlato)
-- `materialize_inbound_federated_message` + `author_external_address`
-- `get_profiles(p_addresses text[])` — batch locale + federato
-
----
-
-## 10. Gap correlati (stesso filone, scope distinto)
-
-Questi emergono con la federazione ma **non** sono identici alla chiave conversazione:
-
-1. **Reception allow list esterna** — schema oggi solo `allowed_profile_id`; Gotham §5.4 + SYS-RECEPTION-018 senza contratto SYSTEM completo.
-2. **READ/REACTION outbound** verso peer — mapping outbox → envelope Gotham non dettagliato.
-3. **Media ingest** — `media_url` sul wire insufficiente; mailbox § Media.
-4. **Discovery / errori outbox** federato — 4xx/5xx, `failed_at`.
-5. **SYS-FEDERATION-*** — solo backlog in `registry.md`.
-6. **`get_profiles` federato sul wire** — nuovo kind o endpoint Gotham (§ 16.4); implementazione worker al passo 5.
-
-Vanno in promesse/workstream separati; la chiave indirizzo è **prerequisito** per tutti. Il contratto `get_profiles` va definito al passo 1–2 anche se il ramo federato del delivery si implementa al passo 5.
-
----
-
-## 11. Scenario demo Arkham ↔ Blackgate (cosa il modello deve permettere)
-
-1. Utente A su Arkham aggiunge `b@blackgate-im.fly.dev` in allow list (quando reception federata esiste).
-2. Utente B su Blackgate aggiunge `a@arkham-im.fly.dev` in allow list.
-3. A compone `b@blackgate-im.fly.dev` → stessa UI chat di un peer locale.
-4. Invio → copia mittente con `peer_external_address`; outbox `queued`; worker Gotham.
-5. B riceve → copia destinatario con `peer_external_address` = `a@arkham-im.fly.dev`, `author_external_address` valorizzato.
-6. Inbox di B mostra riga verso `a@arkham-im.fly.dev` senza `profiles.id` di A.
-7. B apre chat → `mark_peer_read` → READ federato → A vede ✓✓ blu.
-
-Oggi i passi 3–7 falliscono per deriva chiave (e reception/schema federato non completi).
-
----
-
-## 12. Domande aperte per la conversazione di correzione
-
-### Risolte in review chat (2026-09-12) — dettaglio § 15
-
-| # | Domanda originale | Decisione |
-|---|-------------------|-----------|
-| 1 | Stringa canonica (`username` vs `user@server`) | Entrambe usabili; **nessuna equivalenza** tra forme (`mario` ≠ `mario@arkham-im.fly.dev`) |
-| 2 | Profilo shadow per mittente remoto | **Nessun** `profiles.id` obbligatorio su istanza destinataria; display via **`get_profiles`**; fallback indirizzo grezzo (§ 16) |
-| 3 | Overload RPC vs parametro text unificato | RPC account su **indirizzo** (`peer_address`); niente ramo UUID come chiave chat |
-| 4 | Ordine di lavoro | Amend SDD chiave indirizzo → reception API → client → allow list → **poi** worker Gotham (§ 15.9) |
-| 5 | Retrocompatibilità chat locali | Chiave = indirizzo; `profileId` non è identità conversazione |
-| — | Normalizzazione / case | Input case insensitive; **persistenza sempre lowercase** (§ 15.10) |
-| — | Schema DB | `peer_address`, `author_address`, `allowed_address` — niente split locale/federato (§ 15.11) |
-| — | Allow list | Una voce = un `allowed_address` lowercase; gate su indirizzo, non UUID |
-| — | Inbox | Raggruppa per **indirizzo controparte** da ogni lato (§ 15.3) |
-| — | Ruolo Gotham | Solo trasporto cross-server; indirizzi completi sul wire (§ 15.7) |
-| — | Architettura invio/ricezione | Account ignora interno/esterno; delivery sceglie driver; reception API unica (§ 15.6) |
-
-### Risolte in review chat (2026-09-12, secondo giro) — dettaglio § 16
-
-| # | Domanda | Decisione |
-|---|---------|-----------|
-| 6 | Cosa salva la rubrica | **Solo indirizzo** (`address` lowercase) — niente `display_name`, `avatar_url`, `linked_profile_id` come identità |
-| 7 | Dove vivono i dati profilo (nome, avatar, pronomi) | **`get_profiles(addresses[])`** — stesso sistema della scheda profilo peer |
-| 8 | `get_profile` vs batch | **`get_profiles` plurale** — una RPC per inbox, rubrica, overlay (anche batch da 1 elemento) |
-| 9 | Profilo remoto = interazione federata | Sì — stesso percorso a tre piani dei messaggi (ACCOUNT → DELIVERY → RECEPTION), materializzazione = risposta profilo, non riga `profiles` locale |
-| 10 | Gate `get_profiles` (allow list?) | **No gate** — profilo pubblico **sempre** (locale e federato). Serve a sapere *chi* chiede il permesso di scrivermi; consent-first = allow list sui **messaggi**, non profilo privato (§ 16.6) |
-
-### Ancora aperta (solo formalizzazione SDD)
-
-Nessuna decisione di modello pendente su rubrica/profilo/visibilità. Resta **scrittura** in amend `SYS-CONTACTS`, `SYS-PROFILE`, `PROM-PEER-PROFILE`, `SYS-MAILBOX`, dominio `contacts` / `federation` / `profile` e `registry.md`.
-
----
-
-## 15. Chiarimenti review chat (2026-09-12)
-
-**Stato:** accordo di modello emerso in chat — da distillare in dominio / SDD `approved`; non SSOT finché non promosso.
-
-### 15.1 Non esiste locale/federato — esiste l’indirizzo
-
-- **Vietato** ragionare in termini di «chat locale» vs «chat federata» o «peer interno» vs «peer esterno» a livello account, UI, inbox, allow list, RPC account.
-- Esiste solo la **stringa indirizzo** della controparte.
-- L’unico modulo che distingue «questo `@server` è la mia istanza o un’altra» è il **delivery**, al momento del recapito (worker interno in-process vs HTTP Gotham verso altro server).
-- Gotham **non** è un tipo di chat: è solo il trasporto tra server Alfred diversi.
-
-### 15.2 Forme indirizzo — nessuna equivalenza
-
-| Input utente | Significato |
-|--------------|-------------|
-| `mario` | Indirizzo sulla **stessa istanza** (username senza server esplicito) |
-| `mario@arkham-im.fly.dev` | Indirizzo con server esplicito |
-| `mario@blackgate-im.fly.dev` | Indirizzo su **altra** istanza |
-
-**Regole vincolanti emerse:**
-
-- **Nessuna normalizzazione** tra forme: `mario` **≠** `mario@arkham-im.fly.dev` — stringhe diverse, identità diverse, chat diverse, voci allow list diverse (**per ora**).
-- **Case insensitive** in compose/UI; **persistenza sempre lowercase** in DB (vedi § 15.10).
-- Entrambe le forme sono **usabili** in compose e allow list.
-
-Il delivery **riconosce** che `@arkham-im.fly.dev` (se è l’`im_server_id` locale) è recapito **interno** — stesso worker, niente Gotham — **senza** fondere le stringhe né unificare le chat.
-
-### 15.3 Inbox — chiave = controparte
-
-Ogni titolare archivio raggruppa per **l’indirizzo della controparte** (chi ho davanti), non il proprio:
-
-- Paolo su Arkham parla con Mario su Blackgate → inbox Paolo: `mario@blackgate-im.fly.dev`; inbox Mario: `paolo@arkham-im.fly.dev`.
-- Non esiste una chiave simmetrica condivisa tra i due archivi (modello caselle: due archivi indipendenti).
-
-### 15.4 Identità mittente vista dal destinatario (stessa istanza)
-
-Esempio: Paolo e Mario su `arkham-im.fly.dev`.
+### 7.4 `author_address` — stessa istanza
 
 | Paolo scrive a | Mario vede mittente come |
 |----------------|--------------------------|
 | `mario` | `paolo` |
 | `mario@arkham-im.fly.dev` | `paolo@arkham-im.fly.dev` |
 
-La forma usata per **indirizzare** la controparte determina come appare l’identità del mittente sul lato destinatario (stessa istanza). Persistenza: `author_address` text lowercase (§ 15.11).
+La forma usata per indirizzare la controparte determina l'identità mittente sul destinatario.
 
-### 15.5 Allow list
+### 7.5 `author_address` — federato (Gotham + §7.4)
 
-- Stessa semantica letterale degli indirizzi: `mario` e `mario@arkham-im.fly.dev` sono **due voci distinte** (per ora).
-- Gate inbound/outbound: match su `allowed_address` (lowercase), non su `profiles.id`.
-- Schema target: colonna `allowed_address` text — vedi § 15.11. Lo schema attuale (`allowed_profile_id` UUID) e Gotham § 5.4 con split `allowed_profile_id` / `allowed_external_address` sono **pre-chiarimento** e vanno amendati.
+| Caso | `author_address` |
+|------|------------------|
+| Inbound federato (B riceve da A) | Indirizzo completo mittente da envelope (`from_address`) — es. `paolo@arkham-im.fly.dev` |
+| Wire Gotham | Sempre `user@server` completo (`gotham-protocol.md` §4.3, §5.2) |
 
-### 15.10 Persistenza indirizzi
+### 7.5b Copia mittente in uscita — regola (chiusa 2026-09-13)
 
-- Input utente **case insensitive**.
-- **Salvataggio sempre in lowercase** (`mario`, `mario@arkham-im.fly.dev`, `paolo@blackgate-im.fly.dev`).
-- Nessun altro trattamento (niente equivalenza tra forme, niente `lower()` solo al confronto).
+Sulla **copia locale del mittente**, `author_address` è **sempre** l'identità che fa fede in quella comunicazione — allineata a §7.4 e al wire.
 
-### 15.11 Schema target (solo ciò che prevede il modello chiarito)
+| Paolo (Arkham) compone verso | `peer_address` (copia Paolo) | `author_address` (copia Paolo) |
+|------------------------------|------------------------------|--------------------------------|
+| `mario` (stessa istanza) | `mario` | `paolo` |
+| `mario@arkham-im.fly.dev` | `mario@arkham-im.fly.dev` | `paolo@arkham-im.fly.dev` |
+| `mario@blackgate-im.fly.dev` | `mario@blackgate-im.fly.dev` | `paolo@arkham-im.fly.dev` |
 
-Il DB attuale (`peer_profile_id` + `peer_external_address`, allow list su UUID) è **deriva implementativa** — non fa parte del modello documentato in § 15. In amend SYSTEM va **solo** quanto segue (niente colonne parallele «locale vs federato»):
+Scrivendo **all'esterno** (controparte con `@server` diverso da `im_server_id` locale), il mittente usa **forma FQDN** sulla propria copia — non `paolo` bare. Coerente con ciò che il destinatario vede e con `from_address` Gotham.
+
+### 7.6 Allow list
+
+- Una voce = un `allowed_address` lowercase; gate su indirizzo, non UUID.
+- `mario` e `mario@arkham-im.fly.dev` = due voci distinte.
+
+### 7.7 Schema target (prodotto)
+
+DB attuale (`peer_profile_id` + `peer_external_address`, allow list UUID, rubrica snapshot) = **deriva implementativa**.
 
 **`messages`**
 
-| Colonna | Tipo | Ruolo |
-|---------|------|--------|
-| `peer_address` | text NOT NULL | Controparte conversazione — chiave inbox/storico/lettura |
-| `author_address` | text NOT NULL | Identità mittente come indirizzo (§ 15.4) |
-| `author_id` | uuid nullable | Solo casi tecnici già previsti (es. erogazione gruppo — [SYS-GROUP](../specs/promises/system/SYS-GROUP.md)) |
-
-**Rimuovere** dal modello prodotto: `peer_profile_id`, `peer_external_address` come identità chat. Il delivery può risolvere username → profilo **in transazione** senza persistere UUID come chiave.
-
-**`reception_allowlist`**
-
-| Colonna | Tipo | Ruolo |
-|---------|------|--------|
-| `archive_user_id` | uuid FK | Chi filtra (invariato) |
-| `allowed_address` | text NOT NULL | Indirizzo consentito, lowercase |
-
-**UNIQUE** `(archive_user_id, allowed_address)`. CHECK: `allowed_address` non può coincidere con l’indirizzo del titolare archivio.
-
-**`contacts`** (rubrica — stesso amend, § 16):
-
-| Colonna | Tipo | Ruolo |
-|---------|------|--------|
-| `archive_user_id` | uuid FK | Titolare archivio (invariato) |
-| `address` | text NOT NULL | Indirizzo contatto, lowercase — **unico** dato identitario |
-
-**UNIQUE** `(archive_user_id, address)`. **Rimuovere** dal modello prodotto: `linked_profile_id`, `external_address`, `display_name`, `avatar_url` come persistenza rubrica. Ordinamento lista: per `display_name` restituito da `get_profiles` o per `address` in attesa di risposta.
-
-**Contratti da amendare** (non SSOT finché non promossi): `contracts/schema.md`, `contracts/rpc.md`, Gotham § 5.4, `SYS-MAILBOX`, `SYS-RECEPTION`.
-
-### 15.6 Architettura a tre piani (confermata)
-
-```text
-ACCOUNT (client + RPC mittente)
-  → «Scrivo a indirizzo X» — nessuna distinzione interno/esterno
-  → copia mittente + outbox (sempre)
-
-DELIVERY (worker)
-  → unico punto che legge @server e sceglie driver recapito
-  → interno: stessa istanza (bare username o @mio_server)
-  → Gotham: @altro_server
-
-RECEPTION API (unica)
-  → materializza copia in archivio destinatario
-  → chiamata da deliver_internal (in-process) e da gateway Gotham (ingress)
-```
-
-### 15.7 Gotham — solo indirizzi completi sul wire
-
-- Sul wire **sempre** `user@server` (es. `paolo@arkham-im.fly.dev` → `mario@blackgate-im.fly.dev`): oltre confine istanza, `mario` bare non ha significato.
-- Il mittente remoto sul destinatario federato appare sempre come indirizzo completo (da envelope).
-- Gotham **non** entra per `mario` bare né per `*@mio_server` quando il delivery classifica l’indirizzo come interno.
-
-### 15.8 Cosa resta della deriva (codice + SDD)
-
-La direttiva originale (address-based, no tipologia chat) resta **ottimale**; il lavoro è riallineare:
-
-| Livello | Azione |
+| Colonna | Ruolo |
 |---------|--------|
-| SDD | Amend `PROM-CHAT-PEER-KEY`, `SYS-MAILBOX`, `SYS-RECEPTION`, SURF-CHAT/INBOX, contratti |
-| SQL | Schema § 15.11; inbox/storico/lettura/send su `peer_address`; reception API unificata |
-| Client | Pipeline su indirizzo (`peer_address`); `get_profiles` batch; rubrica solo address; compose non blocca `user@server` |
-| Gotham | Worker outbound/ingress **dopo** modello indirizzo; wire profilo + messaggi; lowercase `user@server` |
+| `peer_address` text NOT NULL | Chiave conversazione |
+| `author_address` text NOT NULL | Identità mittente come indirizzo |
+| `author_id` uuid nullable | Solo casi tecnici (es. SYS-GROUP) |
 
-### 15.9 Ordine di lavoro (confermato in discussione)
+Rimuovere `peer_profile_id` / `peer_external_address` come identità chat.
 
-1. Amend SDD + dominio (chiave indirizzo § 15; rubrica + `get_profiles` § 16)
-2. Reception API unificata + RPC account su indirizzo
-3. Client su indirizzo
-4. Allow list per indirizzo
-5. Worker Gotham
+**`reception_allowlist`:** `allowed_address` text NOT NULL; UNIQUE `(archive_user_id, allowed_address)`.
 
-Implementare Gotham prima del punto 1–3 produce messaggi in DB che inbox/client non possono mostrare.
+**`contacts`:** `address` text NOT NULL; UNIQUE `(archive_user_id, address)`. Rimuovere snapshot e split locale/federato.
 
-### 15.12 Recap modello (identità + presentazione)
+### 7.8 RPC account
 
-```text
-IDENTITÀ (drift — chiave conversazione)
-  peer_address / author_address  →  inbox, chat, allow list, compose
+- Parametro unificato **`peer_address` text** — niente UUID come chiave conversazione.
+- `list_inbox`, `list_peer_messages`, `mark_peer_read`, send: su `peer_address`.
+- Unread: «in entrata» via `author_address` / confronto archivio, non solo `author_id` UUID.
 
-RUBRICA
-  contacts.address only  →  elenco indirizzi salvati; nessun snapshot profilo
+### 7.9 Client — identità e presentazione
 
-PRESENTAZIONE (dati pubblici peer)
-  get_profiles(addresses[])  →  locale: profiles su stessa istanza
-                             →  remoto: interazione federata (§ 16)
-                             →  sempre pubblico; nessun gate allow list (§ 16.6)
-  fallback UI                →  stringa indirizzo
+- `ChatPeer` con indirizzo canonico senza `profiles.id`.
+- **Nessun profilo shadow** in `profiles` per peer remoti.
+- `get_profiles(addresses[])` → dati pubblici; fallback → indirizzo grezzo.
+- Inbox, rubrica, overlay, header: stesso batch `get_profiles`.
+- Navigation / realtime / scope: keyed su `peer_address`.
+- Push / deep link: keyed su `peer_address` (§7.19) — niente `peerProfileId`.
 
-VIETATO
-  profilo shadow in profiles sul destinatario
-  rubrica come cache di nome/avatar
-  GET PROFILE singolo come percorso principale (usare batch)
-  profilo privato / get_profiles gated da allow list
-```
+### 7.10 Rubrica = solo indirizzo
 
----
+`contacts` salva soltanto `address` lowercase — non nome, avatar, né `linked_profile_id`.
 
-## 16. Rubrica, `get_profiles` e interazioni federate (2026-09-12)
-
-**Stato:** accordo di modello emerso in chat — da distillare in dominio / SDD `approved`; non SSOT finché non promosso.
-
-### 16.1 Rubrica = solo indirizzo
-
-- La rubrica (`contacts`) salva **soltanto** l’indirizzo dell’account (`address` text lowercase).
-- **Non** persiste `display_name`, `avatar_url`, né riferimenti `linked_profile_id` / `external_address` come modello target.
-- Aggiungere un contatto = salvare un indirizzo che l’utente vuole ritrovare — **non** copiare il profilo pubblico in rubrica.
-- `SYS-CONTACTS` attuale (`display_name` obbligatorio per federati, snapshot per locali) è **deriva** da correggere nello stesso workstream del drift.
-
-### 16.2 Presentazione = `get_profiles` (batch)
-
-I dati profilo pubblici (nome, avatar, pronomi, …) si ottengono con **una sola RPC batch**:
+### 7.11 `get_profiles` (batch)
 
 ```sql
 get_profiles(p_addresses text[]) → setof { address, display_name, avatar_url, … }
 ```
 
-| Superficie | Uso |
-|------------|-----|
-| Inbox | `list_inbox` restituisce `peer_address` per riga → client chiama `get_profiles` su tutti gli indirizzi visibili |
-| Rubrica | `contacts` elenca indirizzi → `get_profiles` per arricchire la lista |
-| Scheda profilo peer | `get_profiles([indirizzo])` — batch da un elemento, **stesso** contratto |
-| Header chat / autore gruppo | Stesso servizio |
+Profilo remoto = interazione federata (tre piani come messaggi); risposta RPC, non INSERT in `profiles`. Wire profilo: kind/endpoint dedicato (non in `gotham.proto` oggi) — passo 5.
 
-**Perché plurale:** inbox e rubrica hanno N peer; una batch evita N round-trip e unifica locale/remoto dietro un solo contratto client. Non serve esporre `get_profile` singolo come percorso principale.
+Inbox mostra indirizzo subito; arricchimento async.
 
-**Fallback UI:** finché `get_profiles` non risponde o per indirizzi sconosciuti → mostrare la **stringa indirizzo** (es. `paolo@arkham-im.fly.dev`).
+### 7.12 Profilo pubblico — sempre (consent-first)
 
-### 16.3 Interazioni federate — profilo come messaggi
+- `get_profiles` **non** gated da allow list.
+- Allow list governa **recapito messaggi**, non visibilità profilo.
+- Federazione: istanza origine serve profilo senza gate allow list del richiedente.
 
-I dati profilo di un account su **altra istanza** sono una **interazione federata**: stesso percorso a tre piani (§ 15.6) dei messaggi in ingresso/uscita, **non** un tipo di chat e **non** una riga in `profiles` locale.
+### 7.13 Link e shareable-link (decisione chiusa)
+
+- `#indirizzo` e `#indirizzo/chat` per **qualsiasi** indirizzo valido, incluso `user@other-server`.
+- **Non** 404 solo perché il peer non ha `profiles.id` locale.
+- Apertura: `peer_address` dal fragment → chat/overlay; `get_profiles` in async; fallback indirizzo grezzo.
+- Prima del passo 5 Gotham: ramo locale di `get_profiles`; federato mostra indirizzo finché il wire profilo non è live.
+
+Oggi `PROM-SHAREABLE-LINK-006` e `shareable_link_machine` (rifiuto server remoto) sono **deriva** — amend + implementazione (§10).
+
+### 7.14 Equivalenza forme link vs chiave messaggistica (decisione chiusa)
+
+Due livelli distinti — non contraddizione da ridiscutere:
+
+| Livello | `mario` vs `mario@mio_server` |
+|---------|-------------------------------|
+| **Link / lookup profilo locale** | Entrambe valide; se `@server` = istanza corrente, stesso profilo (`shareable_link.dart`: stesso `localUsername`, `normalizedAddress` può differire) |
+| **Chiave `peer_address` / allow list / inbox / storico** | **Distinte** — stringhe diverse = conversazioni diverse (§7.2) |
+| **Link in uscita (Condividi)** | Forma canonica preferita: bare `username` (`canonicalShareableAddress`, `PROM-SHAREABLE-LINK-030`) |
+
+Amend SDD: esplicitare in `PROM-SHAREABLE-LINK` e `PROM-CHAT-PEER-KEY` — non unificare i due livelli.
+
+### 7.15 Migrazione dati (decisione chiusa — fonte mailbox spec)
+
+`mailbox-inbox-outbox-spec.md` § Migrazione:
+
+- **Solo DB dev** — niente produzione da preservare.
+- «Migra e basta» — niente doppia scrittura obbligatoria.
+- Backfill dev: `peer_address` da `profiles.username` dove esiste `peer_profile_id`.
+- Storico `mario` + `mario@arkham` verso stesso profilo: **restano due conversazioni** (coerente §7.2) — nessuna fusione.
+
+### 7.16 Architettura a tre piani
 
 ```text
-ACCOUNT
-  Client / RPC: get_profiles(['paolo@arkham-im.fly.dev', …])
+ACCOUNT (client + RPC)
+  → scrivo a indirizzo X / get_profiles([…])
+  → copia mittente + outbox
 
-DELIVERY
-  Per ogni indirizzo: @mio_server → lookup locale su profiles (stessa istanza)
-                      @altro_server → richiesta federata (worker Gotham)
+DELIVERY (worker)
+  → @server → interno o Gotham
 
-RECEPTION (istanza che possiede il profilo)
-  Nessun gate allow list — profilo pubblico per chi conosce l’indirizzo (§ 16.6)
-  Legge profiles sulla propria istanza (fonte autorevole)
-  Risponde con campi pubblici (username, display_name, avatar, pronomi, …)
-
-MATERIALIZZAZIONE lato richiedente
-  Risposta a get_profiles — **non** INSERT in profiles
-  (cache opzionale con TTL in amend successivo; non è SSOT identità)
+RECEPTION API (unica)
+  → materializza messaggio destinatario
+  → serve profilo pubblico (lookup locale o risposta federata)
 ```
 
-**Distinzioni:**
+### 7.17 Ordine di lavoro
 
-| | Messaggio | Profilo pubblico |
-|--|-----------|------------------|
-| Scopo | Contenuto conversazione | Metadati identità per UI |
-| Persistenza locale | Riga `messages` | Solo risposta RPC (eventuale cache) |
-| Wire Gotham | `MESSAGE`, `READ`, … | Kind / endpoint dedicato (§ 16.4) — **non** in `gotham.proto` oggi |
-| Autorevole | Archivio mittente/destinatario | `profiles` sull’**istanza di origine** dell’indirizzo |
+1. Amend SDD + dominio (§7)
+2. Reception API + RPC su indirizzo
+3. Client su indirizzo + `get_profiles` (ramo locale)
+4. Allow list su indirizzo
+5. Worker Gotham (messaggi + profilo federato)
 
-Gotham è **solo trasporto**; la scheda profilo peer locale e remota usa lo **stesso** `get_profiles` lato client.
+Gotham prima dei punti 1–3 → messaggi in DB che inbox/client non mostrano.
 
-### 16.4 Scope implementazione
+### 7.18 Gruppi — stesso modello account (chiusa 2026-09-13)
 
-| Fase | Cosa |
-|------|------|
-| **Drift (passi 1–3)** | Contratto `get_profiles` in SDD; ramo **locale** (stessa istanza); client batch; rubrica solo `address`; overlay per indirizzo |
-| **Allow list (passo 4)** | Gate allineato su `allowed_address` |
-| **Gotham (passo 5)** | Wire request/response profilo; worker outbound/inbound; ramo federato di `get_profiles` |
+**Tutti gli account** — umani e gruppi — rientrano in questo drift. Nessun regime speciale per `SYS-GROUP` a livello identità lato utente.
 
-Definire il contratto `get_profiles` al passo 1 anche se il ramo federato del delivery arriva al passo 5 — il client non deve cambiare API tra «solo locale» e «federazione live».
+| Aspetto | Regola |
+|---------|--------|
+| Identità gruppo | `@username` come qualsiasi account (`domain/groups/glossary.md`) |
+| Chat umano → gruppo | `peer_address` = indirizzo gruppo (es. `team` o `team@arkham-im.fly.dev` secondo §7.2) |
+| Inbox / allow list / compose / link | Stesse regole §7.1–§7.2 |
+| Archivio interno gruppo | Bounded context separato (`SYS-GROUP`: broadcast, righe senza `peer_address` controparte umana) — **non** esenta il gruppo dall'identità address-based verso l'esterno |
 
-### 16.5 Cosa non implica
+Amend: `domain/groups/invariants.md` §4, `SYS-GROUP`, RPC e client gruppi — allineare a `peer_address` per la faccia «account» del gruppo.
 
-- La rubrica **non** sostituisce `get_profiles` (non ha dati profilo).
-- `get_profiles` **non** crea profilo shadow in `profiles`.
-- Inbox **non** deve attendere il batch per mostrare le righe (indirizzo subito, arricchimento async).
-- Piggyback profilo dentro ogni `MESSAGE` sul wire resta **ottimizzazione** opzionale — non sostituisce `get_profiles` per rubrica, overlay o peer senza messaggi.
+### 7.19 Push e notifiche (chiusa 2026-09-13)
 
-### 16.6 Profilo pubblico — sempre (consent-first)
+- Payload push e deep link: **`peerAddress`** (stringa indirizzo lowercase), non `peerProfileId`.
+- **Nessun periodo dual-read** — il sistema si adatta al nuovo contratto; non mantenere lettura parallela UUID.
+- Amend: `push-payload.md`, `SURF-NOTIFICATIONS`, `push_web.dart`, `push_deep_link.dart`, service worker.
 
-**Decisione (review 2026-09-12):** i dati del profilo pubblico Alfred sono **sempre leggibili** da chi conosce l’indirizzo — stessa istanza o federato. `get_profiles` **non** è gated dall’allow list né da «aver già chattato».
+### 7.20 Recap
 
-**Perché (consent-first):**
+```text
+IDENTITÀ     peer_address / author_address  →  inbox, chat, allow list, compose, push
+             author_address copia mittente   →  forma che fa fede nella comunicazione (§7.5b)
+GRUPPI       stesso modello account          →  peer_address verso gruppo; archivio interno separato
+RUBRICA      contacts.address only
+PRESENTAZIONE get_profiles(addresses[])     →  pubblico; fallback indirizzo
+PUSH         peerAddress only                →  no dual-read peerProfileId
+VIETATO      profilo shadow; rubrica come cache profilo; get_profiles gated da allow list
+```
 
-- L’allow list risponde a: «**consento** a questa persona di scrivermi?»
-- Per rispondere serve sapere **chi** è — nome, avatar, username visibili **prima** del consenso.
-- Se il profilo fosse privato fino al consenso, non potrei riconoscerti e non potrei darti **il mio** permesso in modo informato.
+---
 
-**Responsabilità utente:**
+## 8. Audit documentazione (2026-09-12 / agg. 2026-09-13)
 
-- Il profilo espone solo campi **pubblici** per design (`SYS-PROFILE`: niente email in superfici pubbliche).
-- Sta all’utente **non inserire** in `display_name`, bio, avatar, pronomi informazioni che non vuole siano pubbliche.
-- Non esiste «profilo visibile solo ai consentiti» nel modello target.
+| Documento | Stato vs §7 | Azione |
+|-----------|-------------|--------|
+| `mailbox-inbox-outbox-spec.md` § Identità chat | Allineato | — |
+| `mailbox-inbox-outbox-spec.md` § Migrazione | Allineato §7.15 | — |
+| `mailbox-inbox-outbox-spec.md` tabella modello attuale | Deriva (`peer_profile_id`) | Amend |
+| `address-based-messaging.md` | Deriva GROUP BY UUID | Amend ADR |
+| `no-internal-external-chat-distinction.md` | Routing su due colonne | Amend |
+| `gotham-protocol.md` §4–5 | Allineato inbound/wire; §5.4 split colonne obsoleto | Amend §5.4 |
+| `PROM-CHAT-PEER-KEY` | Contraddittorio | Amend |
+| `SYS-MAILBOX`, `SYS-RECEPTION`, `SYS-CONTACTS`, `SYS-PROFILE` | Deriva | Amend |
+| `SYS-GROUP`, `domain/groups/` | `peer_profile_id` lato chat; identità `@username` in dominio | Amend §7.18 |
+| `PROM-PEER-PROFILE`, `PROM-CONVERSATION-SCOPE` | UUID-centric | Amend |
+| `PROM-SHAREABLE-LINK-002` / `-006` | Tensione con §7.13–7.14 | Amend (regola a strati) |
+| `contracts/schema.md`, `rpc.md` | Deriva | Amend |
+| `push-payload.md`, `SURF-NOTIFICATIONS` | `peerProfileId` UUID | Amend §7.19 |
+| `domain/messaging/`, `navigation/`, `contacts/`, `federation/`, `profile/`, `groups/` | UUID / snapshot | Amend |
+| `guides/shareable-link.md` | Lookup locale + NotFound | Amend |
+| `PROJECT_MAP.md` | `peer_profile_id` | Amend post-SDD |
+| SQL `list_inbox()` | Solo `peer_profile_id IS NOT NULL` | Migrazione |
+| Client (`ChatPeer`, push, shareable-link) | UUID / lookup locale | Implementazione |
 
-**Separazione netta:**
+---
 
-| Meccanismo | Cosa governa |
-|------------|--------------|
-| **Profilo pubblico** (`get_profiles`, `search_profiles`, scheda peer) | Identità visibile — **sempre** per indirizzo noto |
-| **Allow list** (`reception_allowlist`) | **Recapito messaggi** — chi può farmi arrivare contenuto in archivio |
-| **Rubrica** (`contacts`) | Scorciatoia personale — solo indirizzi salvati |
+## 9. Domande aperte
 
-**Federazione:** l’istanza di origine serve il profilo pubblico su richiesta federata **senza** verificare allow list del richiedente. Il gate reception resta su **messaggi** (e segnali READ/REACTION), non su lettura profilo.
+**Nessuna** — review 2026-09-13.
 
-**Amend SDD:** `SYS-PROFILE`, `SYS-RECEPTION`, `PROM-PEER-PROFILE`, dominio `profile` / `reception` / `federation` — esplicitare MUST pubblico e MUST NOT gate `get_profiles` su allow list.
+Le quattro voci della quarta passata sono chiuse in §7:
+
+| Ex-ID | Risoluzione | Sezione |
+|-------|-------------|---------|
+| D1 Gruppi | Stesso modello account; tutti gli account nel drift | §7.18 |
+| D2 Copia mittente uscita | `author_address` = forma che fa fede (FQDN se federato) | §7.5b |
+| D3 Push | Solo `peerAddress`; niente dual-read | §7.19 |
+| D4 «Per ora» §7.2 | Regola valida nel modello corrente; non voce da riaprire | §7.2 |
+
+---
+
+## 10. Lavoro da fare (non sono domande aperte)
+
+### 10.1 Formalizzazione SDD e dominio
+
+Scrivere in promesse `approved` tutto §7, incluso:
+
+- Riconciliazione esplicita `PROM-SHAREABLE-LINK` / `PROM-CHAT-PEER-KEY` (§7.14)
+- Revoca comportamento 404/remoto su link (§7.13)
+- `get_profiles`, rubrica solo `address`, profilo pubblico sempre
+- `author_address` copia mittente (§7.5b)
+- Gruppi come account address-based (§7.18)
+- Push `peerAddress` senza dual-read (§7.19)
+- Schema §7.7, RPC §7.8
+- Registry, dominio, UML (`groups/`, `messaging/`, `navigation/`, `federation/`)
+
+### 10.2 Implementazione (dopo `approved`)
+
+| Livello | Azione |
+|---------|--------|
+| SQL | Schema §7.7; migrazione dev §7.15; RPC su `peer_address`; `get_profiles` |
+| Client | `peer_address`; batch `get_profiles`; shareable-link remoto; push `peerAddress`; chat verso gruppo |
+| Gotham | Passo 5 |
+
+### 10.3 File codice
+
+**Client:** `chat_peer.dart`, `profile_summary.dart`, `compose_service.dart`, `compose_address.dart`, `navigation_coordinator.dart`, `conversation_scope_guard.dart`, `mailbox_message_filter.dart`, `push_web.dart`, `push_deep_link.dart`, `peer_message_service.dart`, `profile_service.dart`, `contact_service.dart`, `shareable_link_machine.dart`, `machines/navigation/`, `machines/messaging/`, `peer_profile_overlay.dart`, `contacts_screen.dart`, `inbox_panel.dart`, test correlati.
+
+**Supabase:** `list_inbox`, `list_peer_messages`, `mark_peer_read`, send su `peer_address`, `get_profiles(p_addresses text[])`, reception API, migrazione §7.7.
+
+### 10.4 Post-merge
+
+Eliminare questo file TEMP.
+
+---
+
+## 11. Gap correlati (scope distinto)
+
+1. Reception allow list su schema UUID attuale
+2. READ/REACTION outbound Gotham
+3. Media ingest federato
+4. Errori outbox federato
+5. `SYS-FEDERATION-*` in backlog
+6. Wire Gotham per `get_profiles` (§7.11)
+
+Prerequisito: chiave indirizzo (§7). Contratto `get_profiles` al passo 1 anche se ramo federato al passo 5.
+
+---
+
+## 12. Scenario demo Arkham ↔ Blackgate
+
+1. A aggiunge `b@blackgate-im.fly.dev` in allow list.
+2. B aggiunge `a@arkham-im.fly.dev` in allow list.
+3. A compone `b@blackgate-im.fly.dev` → stessa UI chat locale.
+4. Invio → copia A: `peer_address` = `b@blackgate-im.fly.dev`, `author_address` = `paolo@arkham-im.fly.dev` (§7.5b); outbox; Gotham.
+5. B riceve → `peer_address` = `a@arkham-im.fly.dev`, `author_address` = `paolo@arkham-im.fly.dev`.
+6. Inbox B: riga con indirizzo; `get_profiles` arricchisce (passo 5) o grezzo.
+7. B apre → `mark_peer_read` → READ federato → A ✓✓ blu.
+
+Oggi 3–7 falliscono.
 
 ---
 
@@ -629,24 +416,24 @@ Definire il contratto `get_profiles` al passo 1 anche se il ramo federato del de
 
 | Risorsa | Path |
 |---------|------|
-| Identità chat vincolante | `docs/architecture/mailbox-inbox-outbox-spec.md` |
-| ADR no locale/federato | `docs/decisions/no-internal-external-chat-distinction.md` |
-| ADR address-based | `docs/decisions/address-based-messaging.md` |
-| Promessa chiave chat | `docs/specs/promises/product/PROM-CHAT-PEER-KEY.md` |
-| Mailbox SYSTEM | `docs/specs/promises/system/SYS-MAILBOX.md` |
-| Wire federazione | `docs/architecture/gotham-protocol.md` |
-| Schema | `docs/specs/contracts/schema.md` |
-| RPC | `docs/specs/contracts/rpc.md` |
+| Identità chat | `docs/architecture/mailbox-inbox-outbox-spec.md` |
+| Migrazione dev | `mailbox-inbox-outbox-spec.md` § Migrazione |
+| ADR | `docs/decisions/address-based-messaging.md`, `no-internal-external-chat-distinction.md` |
+| Promesse | `PROM-CHAT-PEER-KEY`, `SYS-MAILBOX`, `SYS-RECEPTION`, `SYS-CONTACTS`, `SYS-PROFILE`, `PROM-SHAREABLE-LINK`, `PROM-PEER-PROFILE` |
+| Gruppi | `docs/domain/groups/`, `SYS-GROUP` |
+| Federazione | `docs/architecture/gotham-protocol.md` |
+| Contratti | `docs/specs/contracts/schema.md`, `rpc.md`, `push-payload.md` |
+| Shareable-link (codice) | `client/lib/utils/shareable_link.dart`, `shareable_link_machine.dart` |
 | Istanze demo | `client/deploy/README.md` § Istanze demo |
 
 ---
 
 ## 14. Istruzioni post-review
 
-1. Leggere e correggere questo file in chat dedicata.
-2. Distillare amend SDD / dominio / UML approvati.
-3. **Eliminare** `docs/tmp/TEMP-chat-peer-key-address-drift.md` dal repo (non è SSOT).
-4. Implementare solo dopo promesse `approved` + conferma scrittura (regola 0 / SDD).
+1. ~~Risolvere §9~~ — fatto (2026-09-13).
+2. Distillare §7 in SDD `approved` (§10.1).
+3. Eliminare questo file dopo promozione.
+4. Implementare solo dopo `approved` + conferma scrittura (regola 0 / SDD).
 
 ---
 
