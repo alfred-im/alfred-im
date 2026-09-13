@@ -41,25 +41,25 @@ export async function createSnakeCast(stamp: string): Promise<SnakeCast> {
   for (const other of [e2, e3, e4, group]) {
     await addReceptionAllowlist({
       recipientUserId: e1.userId,
-      allowedProfileId: other.userId,
+      allowedAddress: other.username,
       recipientAccessToken: session1.accessToken,
     });
     const sessionOther = await loginSupabase(other.email, other.password);
     await addReceptionAllowlist({
       recipientUserId: other.userId,
-      allowedProfileId: e1.userId,
+      allowedAddress: e1.username,
       recipientAccessToken: sessionOther.accessToken,
     });
   }
 
   await addReceptionAllowlist({
     recipientUserId: e2.userId,
-    allowedProfileId: e1.userId,
+    allowedAddress: e1.username,
     recipientAccessToken: session2.accessToken,
   });
   await addReceptionAllowlist({
     recipientUserId: e1.userId,
-    allowedProfileId: e2.userId,
+    allowedAddress: e2.username,
     recipientAccessToken: session1.accessToken,
   });
 

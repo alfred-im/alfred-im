@@ -16,10 +16,11 @@ const ANON_KEY =
 export type PeerMessage = {
   id: string;
   body: string;
-  author_id?: string;
+  author_id?: string | null;
+  author_address?: string | null;
   sender_id?: string;
   recipient_profile_id?: string;
-  peer_profile_id?: string;
+  peer_address?: string;
   created_at?: string;
   content_type?: string;
   media_url?: string | null;
@@ -30,6 +31,16 @@ export type PeerMessage = {
 
 export function peerAuthorId(message: PeerMessage): string {
   return message.author_id ?? message.sender_id ?? '';
+}
+
+export function isMessageFromSender(
+  message: PeerMessage,
+  sender: { userId: string; username: string },
+): boolean {
+  const authorId = peerAuthorId(message);
+  if (authorId.length > 0 && authorId === sender.userId) return true;
+  const authorAddress = message.author_address?.trim().toLowerCase() ?? '';
+  return authorAddress.length > 0 && authorAddress === sender.username.trim().toLowerCase();
 }
 
 export type SupabaseSession = {
@@ -65,7 +76,7 @@ export async function loginSupabase(
 
 export async function listPeerMessages(
   accessToken: string,
-  peerProfileId: string,
+  peerAddress: string,
   limit = 100,
 ): Promise<PeerMessage[]> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/list_peer_messages`, {
@@ -76,7 +87,7 @@ export async function listPeerMessages(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      p_peer_profile_id: peerProfileId,
+      p_peer_address: peerAddress.trim().toLowerCase(),
       p_limit: limit,
     }),
   });
@@ -91,9 +102,9 @@ export async function listPeerMessages(
 export type WaitForDbMessageOptions = {
   viewerEmail: string;
   viewerPassword: string;
-  peerProfileId: string;
+  peerAddress: string;
   body: string;
-  expectedSenderId: string;
+  expectedSender: { userId: string; username: string };
   contentType?: string;
   timeoutMs?: number;
 };
@@ -112,7 +123,7 @@ export async function waitForMessageInDb(
   while (Date.now() < deadline) {
     const messages = await listPeerMessages(
       session.accessToken,
-      options.peerProfileId,
+      options.peerAddress,
     );
     lastBodies = messages.map((m) => m.body);
     const token = options.body.match(/\d{8,}/)?.[0] ?? options.body;
@@ -124,15 +135,15 @@ export async function waitForMessageInDb(
     );
     if (match) {
       expect(
-        peerAuthorId(match),
-        `author_id DB per "${options.body}"`,
-      ).toBe(options.expectedSenderId);
+        isMessageFromSender(match, options.expectedSender),
+        `author DB per "${options.body}"`,
+      ).toBe(true);
       return match;
     }
     await new Promise((r) => setTimeout(r, 500));
   }
 
   throw new Error(
-    `messaggio "${options.body}" assente su DB (viewer=${options.viewerEmail}, peer=${options.peerProfileId}). Ultimi body: ${JSON.stringify(lastBodies.slice(-8))}`,
+    `messaggio "${options.body}" assente su DB (viewer=${options.viewerEmail}, peer=${options.peerAddress}). Ultimi body: ${JSON.stringify(lastBodies.slice(-8))}`,
   );
 }

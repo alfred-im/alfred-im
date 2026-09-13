@@ -217,17 +217,18 @@ export async function deliverPushInServiceWorker(
       previewText?: string;
       logicalMessageId?: string;
       recipientUserId?: string;
-      peerProfileId?: string;
+      peerAddress?: string;
+      peer_address?: string;
     };
-    if (!data.recipientUserId || !data.peerProfileId) return;
-    if (data.recipientUserId === data.peerProfileId) return;
+    const peerAddress = data.peerAddress ?? data.peer_address;
+    if (!data.recipientUserId || !peerAddress) return;
 
     const peer = data.peerDisplayName || 'Alfred';
     const account = data.recipientUsername || data.recipientDisplayName || null;
     const title = account ? account + ' · da ' + peer : peer;
     const body = data.previewText || 'Nuovo messaggio';
     const conversationKey =
-      data.recipientUserId + SEP + data.peerProfileId;
+      data.recipientUserId + SEP + peerAddress;
     const tag = data.logicalMessageId
       ? conversationKey + SEP + data.logicalMessageId
       : conversationKey;
@@ -314,13 +315,13 @@ export async function simulateNotificationTap(
   page: Page,
   payload: {
     recipientUserId: string;
-    peerProfileId: string;
+    peerAddress: string;
   },
 ): Promise<void> {
   const openChatBody = JSON.stringify({
     type: 'open_chat',
     recipientUserId: payload.recipientUserId,
-    peerProfileId: payload.peerProfileId,
+    peerAddress: payload.peerAddress,
   });
 
   const sw =

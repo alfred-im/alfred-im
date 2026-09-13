@@ -42,7 +42,7 @@ import {
   configureLocalPushSettings,
   installPushReceivedListener,
   invokeSendPush,
-  sendMessageToProfile,
+  sendMessageToAddress,
   waitForPushReceived,
 } from './helpers/local-push-setup';
 import {
@@ -210,7 +210,7 @@ test.describe('@release-snake gate release unico', () => {
     await expect(addBtn).toBeVisible({ timeout: E2E_TIMEOUT.ui });
     await addBtn.click();
     await expectNoRelationshipError(page);
-    await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await expectContactInDb(cast.e1.userId, cast.e2.username);
     await expectRubricaShowsRemoveNotAdd(page);
     await closePeerProfileOverlay(page);
     await backToInboxFromChat(page);
@@ -235,7 +235,7 @@ test.describe('@release-snake gate release unico', () => {
     await expect(addFromChat).toBeVisible({ timeout: E2E_TIMEOUT.ui });
     await addFromChat.click();
     await expectNoRelationshipError(page);
-    await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await expectContactInDb(cast.e1.userId, cast.e2.username);
     await expectRubricaShowsRemoveNotAdd(page);
     await closePeerProfileOverlay(page);
     await backToInboxFromChat(page);
@@ -269,11 +269,11 @@ test.describe('@release-snake gate release unico', () => {
     await openChatHeaderMenu(page);
     await selectChatHeaderMenuItem(page, 'Aggiungi alla rubrica');
     await expectNoRelationshipError(page);
-    await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await expectContactInDb(cast.e1.userId, cast.e2.username);
     await openChatHeaderMenu(page);
     await selectChatHeaderMenuItem(page, 'Consenti');
     await expectNoRelationshipError(page);
-    await expectAllowlistInDb(cast.e1.userId, cast.e2.userId);
+    await expectAllowlistInDb(cast.e1.userId, cast.e2.username);
     await openChatHeaderMenu(page);
     await expect(
       page.getByRole('menuitem', { name: 'Rimuovi dalla rubrica', exact: true }),
@@ -327,16 +327,16 @@ test.describe('@release-snake gate release unico', () => {
       page.getByRole('menuitem', { name: 'Consenti', exact: true }),
     ).not.toBeVisible({ timeout: 2_000 });
     await selectChatHeaderMenuItem(page, 'Rimuovi dalla rubrica');
-    await expectContactAbsentInDb(cast.e1.userId, cast.e2.userId);
+    await expectContactAbsentInDb(cast.e1.userId, cast.e2.username);
     await openChatHeaderMenu(page);
     await selectChatHeaderMenuItem(page, 'Aggiungi alla rubrica');
-    await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await expectContactInDb(cast.e1.userId, cast.e2.username);
     await openChatHeaderMenu(page);
     await selectChatHeaderMenuItem(page, 'Revoca');
-    await expectAllowlistAbsentInDb(cast.e1.userId, cast.e2.userId);
+    await expectAllowlistAbsentInDb(cast.e1.userId, cast.e2.username);
     await openChatHeaderMenu(page);
     await selectChatHeaderMenuItem(page, 'Consenti');
-    await expectAllowlistInDb(cast.e1.userId, cast.e2.userId);
+    await expectAllowlistInDb(cast.e1.userId, cast.e2.username);
     await closeChatHeaderMenu(page);
 
     await openPeerProfileFromChatHeader(page);
@@ -353,7 +353,7 @@ test.describe('@release-snake gate release unico', () => {
     await consentRubricaBtn.click();
     await page.waitForTimeout(600);
     await expectNoRelationshipError(page);
-    await expectContactAbsentInDb(cast.e1.userId, cast.e2.userId);
+    await expectContactAbsentInDb(cast.e1.userId, cast.e2.username);
     await expect(
       page.getByRole('button', { name: 'Aggiungi alla rubrica', exact: true }),
     ).toBeVisible({ timeout: E2E_TIMEOUT.ui });
@@ -362,16 +362,16 @@ test.describe('@release-snake gate release unico', () => {
       .click();
     await page.waitForTimeout(600);
     await expectNoRelationshipError(page);
-    await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await expectContactInDb(cast.e1.userId, cast.e2.username);
     await consentAllowSwitch.click();
     await page.waitForTimeout(600);
     await expectNoRelationshipError(page);
-    await expectAllowlistAbsentInDb(cast.e1.userId, cast.e2.userId);
+    await expectAllowlistAbsentInDb(cast.e1.userId, cast.e2.username);
     await expect(consentAllowSwitch).not.toBeChecked({ timeout: E2E_TIMEOUT.ui });
     await consentAllowSwitch.click();
     await page.waitForTimeout(600);
     await expectNoRelationshipError(page);
-    await expectAllowlistInDb(cast.e1.userId, cast.e2.userId);
+    await expectAllowlistInDb(cast.e1.userId, cast.e2.username);
     await expect(consentAllowSwitch).toBeChecked({ timeout: E2E_TIMEOUT.ui });
     await closePeerProfileOverlay(page);
     await expect(consentAllowSwitch).not.toBeVisible({ timeout: E2E_TIMEOUT.ui });
@@ -384,11 +384,11 @@ test.describe('@release-snake gate release unico', () => {
     });
     await expect(removeBtn).toBeVisible({ timeout: E2E_TIMEOUT.ui });
     await removeBtn.click();
-    await expectContactAbsentInDb(cast.e1.userId, cast.e2.userId);
+    await expectContactAbsentInDb(cast.e1.userId, cast.e2.username);
     await page
       .getByRole('button', { name: 'Aggiungi alla rubrica', exact: true })
       .click();
-    await expectContactInDb(cast.e1.userId, cast.e2.userId);
+    await expectContactInDb(cast.e1.userId, cast.e2.username);
     await expect(removeBtn).toBeVisible({ timeout: E2E_TIMEOUT.ui });
     await closePeerProfileOverlay(page);
     await backToInboxFromChat(page);
@@ -397,9 +397,9 @@ test.describe('@release-snake gate release unico', () => {
     await transitionMessagingReady(cast.e1, cast.e2);
 
     snakeStep('core.chat.inbox_open');
-    await sendMessageToProfile({
+    await sendMessageToAddress({
       senderAccessToken: cast.session1.accessToken,
-      recipientProfileId: cast.e2.userId,
+      peerAddress: cast.e2.username,
       body: msgIoc,
       clientMessageId: `ioc-${stamp}`,
     });
@@ -430,9 +430,9 @@ test.describe('@release-snake gate release unico', () => {
     await backToInboxFromChat(page);
 
     snakeStep('core.chat.switch_restore');
-    await sendMessageToProfile({
+    await sendMessageToAddress({
       senderAccessToken: cast.session1.accessToken,
-      recipientProfileId: cast.e2.userId,
+      peerAddress: cast.e2.username,
       body: msgAsr,
       clientMessageId: `asr-${stamp}`,
     });
@@ -477,11 +477,13 @@ test.describe('@release-snake gate release unico', () => {
         email: cast.e1.email,
         password: cast.e1.password,
         userId: cast.e1.userId,
+        username: cast.e1.username,
       },
       recipient: {
         email: cast.e2.email,
         password: cast.e2.password,
         userId: cast.e2.userId,
+        username: cast.e2.username,
       },
     });
     await switchToAccountByDisplayName(
@@ -496,8 +498,9 @@ test.describe('@release-snake gate release unico', () => {
         email: cast.e1.email,
         password: cast.e1.password,
         userId: cast.e1.userId,
+        username: cast.e1.username,
       },
-      peerUserId: cast.e2.userId,
+      peerAddress: cast.e2.username,
       body: textBody,
     });
     await sendPhotoFromGallery(page, {
@@ -509,11 +512,13 @@ test.describe('@release-snake gate release unico', () => {
         email: cast.e2.email,
         password: cast.e2.password,
         userId: cast.e2.userId,
+        username: cast.e2.username,
       },
       recipient: {
         email: cast.e1.email,
         password: cast.e1.password,
         userId: cast.e1.userId,
+        username: cast.e1.username,
       },
       caption: photoCaption,
     });
@@ -531,8 +536,9 @@ test.describe('@release-snake gate release unico', () => {
         email: cast.e2.email,
         password: cast.e2.password,
         userId: cast.e2.userId,
+        username: cast.e2.username,
       },
-      peerUserId: cast.e1.userId,
+      peerAddress: cast.e1.username,
       contentType: 'image',
     });
 
@@ -562,12 +568,12 @@ async function runPushFull(
   await snakeStepAsync('core.push.full', async () => {
   await addReceptionAllowlist({
     recipientUserId: cast.e1.userId,
-    allowedProfileId: cast.e3.userId,
+    allowedAddress: cast.e3.username,
     recipientAccessToken: cast.session1.accessToken,
   });
   await addReceptionAllowlist({
     recipientUserId: cast.e3.userId,
-    allowedProfileId: cast.e1.userId,
+    allowedAddress: cast.e1.username,
     recipientAccessToken: cast.session3.accessToken,
   });
   await installPushSubscribeMock(page);
@@ -604,15 +610,15 @@ async function runPushFull(
   expect(subscription.endpoint.length).toBeGreaterThan(10);
   expect(subscription.device_id).toBeTruthy();
   const messageBody = `snake-push-full-${stamp}`;
-  const sent = await sendMessageToProfile({
+  const sent = await sendMessageToAddress({
     senderAccessToken: cast.session3.accessToken,
-    recipientProfileId: cast.e1.userId,
+    peerAddress: cast.e1.username,
     body: messageBody,
     clientMessageId: `push-full-${stamp}`,
   });
   const swPayload = {
     recipientUserId: cast.e1.userId,
-    peerProfileId: cast.e3.userId,
+    peerAddress: cast.e3.username,
     peerDisplayName: cast.e3.username,
     previewText: messageBody,
     logicalMessageId: sent.logical_message_id,
@@ -622,7 +628,7 @@ async function runPushFull(
   try {
     await invokeSendPush({
       recipient_user_id: cast.e1.userId,
-      peer_profile_id: cast.e3.userId,
+      peer_address: cast.e3.username,
       peer_display_name: cast.e3.username,
       preview_text: messageBody,
       logical_message_id: sent.logical_message_id,
@@ -636,7 +642,7 @@ async function runPushFull(
     await deliverPushInServiceWorker(page, swPayload);
     received = await waitForPushReceived(page, { previewText: messageBody });
   }
-  expect(received.peerProfileId).toBe(cast.e3.userId);
+  expect(received.peerAddress ?? received.peer_address).toBe(cast.e3.username);
   expect(received.recipientUserId).toBe(cast.e1.userId);
   expect(received.logicalMessageId).toBe(sent.logical_message_id);
   });
@@ -671,22 +677,22 @@ async function runPushTap(
     userId: cast.e2.userId,
   });
   const messageBody = `snake-push-tap-${stamp}`;
-  await sendMessageToProfile({
+  await sendMessageToAddress({
     senderAccessToken: cast.session1.accessToken,
-    recipientProfileId: cast.e2.userId,
+    peerAddress: cast.e2.username,
     body: messageBody,
     clientMessageId: `push-tap-${stamp}`,
   });
   await deliverPushInServiceWorker(page, {
     recipientUserId: cast.e2.userId,
-    peerProfileId: cast.e1.userId,
+    peerAddress: cast.e1.username,
     peerDisplayName: account1.displayName ?? cast.e1.username,
     recipientUsername: cast.e2.username,
     previewText: messageBody,
   });
   await simulateNotificationTap(page, {
     recipientUserId: cast.e2.userId,
-    peerProfileId: cast.e1.userId,
+    peerAddress: cast.e1.username,
   });
   await expectFocusedUserId(page, account2.userId);
   await waitForChatInput(page);
@@ -709,24 +715,24 @@ async function runPushPoison(
   const msgB = 'snake legit B';
   await addReceptionAllowlist({
     recipientUserId: cast.e2.userId,
-    allowedProfileId: cast.e3.userId,
+    allowedAddress: cast.e3.username,
     recipientAccessToken: cast.session2.accessToken,
   });
-  await sendMessageToProfile({
+  await sendMessageToAddress({
     senderAccessToken: cast.session1.accessToken,
-    recipientProfileId: cast.e2.userId,
+    peerAddress: cast.e2.username,
     body: msgA,
     clientMessageId: `pa-${stamp}`,
   });
-  await sendMessageToProfile({
+  await sendMessageToAddress({
     senderAccessToken: cast.session2.accessToken,
-    recipientProfileId: cast.e1.userId,
+    peerAddress: cast.e1.username,
     body: msgB,
     clientMessageId: `pb-${stamp}`,
   });
-  await sendMessageToProfile({
+  await sendMessageToAddress({
     senderAccessToken: cast.session2.accessToken,
-    recipientProfileId: cast.e3.userId,
+    peerAddress: cast.e3.username,
     body: poisonBy,
     clientMessageId: `py-${stamp}`,
   });
@@ -745,7 +751,7 @@ async function runPushPoison(
   await waitForChatInput(page);
   await simulateNotificationTap(page, {
     recipientUserId: cast.e2.userId,
-    peerProfileId: cast.e1.userId,
+    peerAddress: cast.e1.username,
   });
   await expectFocusedUserId(page, account2.userId);
   await waitForChatInput(page);
@@ -814,11 +820,13 @@ async function runPhotoResume(
       email: cast.e2.email,
       password: cast.e2.password,
       userId: cast.e2.userId,
+      username: cast.e2.username,
     },
     recipient: {
       email: cast.e1.email,
       password: cast.e1.password,
       userId: cast.e1.userId,
+      username: cast.e1.username,
     },
   });
   });
