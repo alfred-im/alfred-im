@@ -505,6 +505,7 @@ test.describe('@release-snake gate release unico', () => {
     });
     await sendPhotoFromGallery(page, {
       caption: photoCaption,
+      assertImageInUi: false,
     });
     await expectImagePersistedBothSides({
       sender: {

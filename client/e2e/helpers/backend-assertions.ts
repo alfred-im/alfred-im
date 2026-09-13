@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { execSync } from 'node:child_process';
-
 import { expect } from '@playwright/test';
 
 import {
@@ -14,26 +12,6 @@ import {
   waitForMessageInDb,
 } from './supabase-api';
 import { E2E_POLL, E2E_TIMEOUT } from './timeouts';
-
-async function fetchImageRowsForArchiveUser(
-  focusUserId: string,
-  peerAddress: string,
-): Promise<PeerMessage[]> {
-  const safePeer = peerAddress.replace(/'/g, "''").toLowerCase();
-  const sql =
-    `SELECT coalesce(json_agg(row_to_json(t)), '[]'::json) FROM (` +
-    `SELECT id, body, author_id, content_type, media_url, delivered_at, read_at ` +
-    `FROM public.messages ` +
-    `WHERE archive_user_id = '${focusUserId}' AND peer_address = '${safePeer}' AND content_type = 'image' ` +
-    `ORDER BY created_at DESC LIMIT 20` +
-    `) t;`;
-  const raw = execSync(
-    `docker exec -i supabase_db_alfred psql -U postgres -d postgres -t -A -c ${JSON.stringify(sql)}`,
-    { encoding: 'utf8' },
-  ).trim();
-  if (!raw) return [];
-  return JSON.parse(raw) as PeerMessage[];
-}
 
 export type AccountCredentials = {
   email: string;
@@ -111,7 +89,7 @@ export async function waitForSenderReadAt(options: {
   );
 }
 
-/** Attende messaggio immagine con media_url valorizzato. */
+/** Attende messaggio immagine con media_url valorizzato (via RPC list_peer_messages). */
 export async function waitForImageMessageInDb(options: {
   viewer: AccountCredentials;
   peerAddress: string;
@@ -119,18 +97,27 @@ export async function waitForImageMessageInDb(options: {
   caption?: string;
   timeoutMs?: number;
 }): Promise<PeerMessage> {
-  const deadline = Date.now() + (options.timeoutMs ?? E2E_TIMEOUT.db * 10);
+  const deadline = Date.now() + (options.timeoutMs ?? E2E_TIMEOUT.db * 8);
+  const session = await loginSupabase(
+    options.viewer.email,
+    options.viewer.password,
+  );
+  const captionToken =
+    options.caption?.match(/\d{8,}/)?.[0] ?? options.caption ?? '';
 
   while (Date.now() < deadline) {
-    const messages = await fetchImageRowsForArchiveUser(
-      options.viewer.userId,
+    const messages = await listPeerMessages(
+      session.accessToken,
       options.peerAddress,
     );
     const row = messages.find(
       (m) =>
         isMessageFromSender(m, options.expectedSender) &&
         m.content_type === 'image' &&
-        (m.media_url?.length ?? 0) > 0,
+        (m.media_url?.length ?? 0) > 0 &&
+        (captionToken.length === 0 ||
+          m.body === options.caption ||
+          m.body.includes(captionToken)),
     );
     if (row) return row;
     await new Promise((r) => setTimeout(r, 500));
@@ -197,13 +184,10 @@ export async function waitForSenderDeliveredAt(options: {
     session.accessToken,
     options.peerAddress,
   );
+  const token = options.body.match(/\d{8,}/)?.[0] ?? options.body;
   return messages.find(
-    (m) => {
-      const token = options.body.match(/\d{8,}/)?.[0] ?? options.body;
-      return (
-        (m.body === options.body || m.body.includes(token)) &&
-        isMessageFromSender(m, options.sender)
-      );
-    },
+    (m) =>
+      (m.body === options.body || m.body.includes(token)) &&
+      isMessageFromSender(m, options.sender),
   )!;
 }
