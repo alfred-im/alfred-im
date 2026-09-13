@@ -2,7 +2,7 @@
 
 **SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — questo file copre **solo** toolchain Cloud Agent e gotchas VM; non duplica promesse, RPC, test completi né account debug.
 
-Processo agente (regola 0, SDD, modello): [.cursor/rules/main.mdc](.cursor/rules/main.mdc)
+Processo agente (regola 0, SDD, modello, **orchestrazione 0d — solo delega**): [.cursor/rules/main.mdc](.cursor/rules/main.mdc)
 
 ---
 
