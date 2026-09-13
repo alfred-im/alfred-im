@@ -22,7 +22,7 @@
 
 **Deriva:** implementazione e promesse `implemented` hanno cristallizzato la chiave su `peer_profile_id` (UUID). Con ogni peer su profilo locale funzionava; la federazione Arkham ↔ Blackgate espone il disallineamento.
 
-**Correzione:** chiave canonica = **`peer_address`** (lowercase). Presentazione = **`get_profiles(addresses[])`** (batch, profilo pubblico sempre). Gotham = solo trasporto. Ordine: SDD → reception API → client → allow list → worker Gotham.
+**Correzione:** chiave canonica = **`peer_address`** (lowercase); **`author_address`** sulla copia mittente = identità che fa fede nella comunicazione (§7.5b). **Tutti gli account** (umani e gruppi). Presentazione = **`get_profiles(addresses[])`** (batch, profilo pubblico sempre). Push = **`peerAddress`** (no dual-read). Gotham = solo trasporto. Ordine: SDD → reception API → client → allow list → worker Gotham. **§9 vuoto** — modello pronto per distillazione SDD.
 
 ---
 
