@@ -10,7 +10,7 @@
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
 | `ShowInbox` | Utente | Mostra inbox dell'account utente in focus. |
-| `OpenConversation` | Utente / Policy | Transazione unica: focus (se serve) + risolvi peer + commit scope. Sorgente: inbox, push, link, compose. |
+| `OpenConversation` | Utente / Policy | Transazione unica: focus (se serve) + risolvi `peer_address` + commit scope. Sorgente: inbox, push, link, compose. |
 | `CloseConversation` | Utente | Chiude chat 1:1 o gruppo; torna a inbox o home gruppo. |
 | `EnterGroupShell` | Utente / Policy | Focus su account gruppo — home gruppo. |
 | `OpenGroupConversation` | Utente | Apre chat del gruppo (view-state; shell resta `GroupShell`). |
@@ -24,7 +24,7 @@
 |--------|-------------|
 | `InboxVisible` | Inbox dell'account utente in focus visibile. |
 | `ConversationVisible` | Shell chat 1:1 visibile con peer noto (header + spinner in ingresso); **non** implica ancora `ConversationScope` commesso — vedi `ConversationScopeCommitted`. |
-| `ConversationScopeCommitted` | Ambito `(archive_user, peer, epoch)` registrato — messaging autorizzato. |
+| `ConversationScopeCommitted` | Ambito `(archive_user, peer_address, epoch)` registrato — messaging autorizzato. |
 | `ConversationScopeInvalidated` | Ambito azzerato — messaging non mostra dati fino a nuovo commit. |
 | `GroupHomeVisible` | Home gruppo visibile (`GroupShell`, `groupChatOpen = false`). |
 | `GroupConversationVisible` | Chat gruppo visibile (`GroupShell`, `groupChatOpen = true`). |

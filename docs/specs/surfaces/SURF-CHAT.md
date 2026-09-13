@@ -3,12 +3,13 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-CHAT` |
-| **Status** | `implemented` |
-| **Ultima revisione** | 2026-08-08 |
+| **Status** | `approved` |
+| **Ultima revisione** | 2026-09-13 |
 | **Promesse** | [PROM-CHAT-PEER-KEY](../promises/product/PROM-CHAT-PEER-KEY.md), [PROM-MESSAGE-STATUS](../promises/product/PROM-MESSAGE-STATUS.md), [PROM-OUTBOUND-SEND](../promises/product/PROM-OUTBOUND-SEND.md), [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md), [PROM-CONVERSATION-SCOPE](../promises/product/PROM-CONVERSATION-SCOPE.md), [PROM-MESSAGE-MENTION](../promises/product/PROM-MESSAGE-MENTION.md), [PROM-MESSAGE-REACTIONS](../promises/product/PROM-MESSAGE-REACTIONS.md), [PROM-BOTTOM-ANCHOR](../promises/product/PROM-BOTTOM-ANCHOR.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) (semantica spunte) |
 | **PR** | #159, #178, #210, #234, #246 |
+| **Amend** | `peer_address` — distillazione TEMP §7 |
 
-Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pieno, spunte, invio optimistic, preview inbox.
+Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pieno, spunte, invio optimistic, preview inbox. Chiave conversazione = `peer_address`.
 
 ---
 
@@ -20,7 +21,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | Controller | `MessagesController` — solo dopo scope commesso; ingresso usa `ChatIngressPanel` senza controller |
 | Servizi | `PeerMessageService`, `OutboundMessageQueue` |
 | Parent | `HomeScreen` → `ConversationScopePane` (`auth.activePeer`, `showBackButton` su mobile) |
-| Modello | `ChatPeer`, `ChatMessage` — `isMine` da `author_id == currentUserId` |
+| Modello | `ChatPeer` (indirizzo canonico), `ChatMessage` — `isMine` da confronto `author_address` / archivio |
 
 ---
 
@@ -30,23 +31,24 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 
 | ID | Promessa |
 |----|----------|
-| **SURF-CHAT-001** | Chat UI: `ChatPeer.profileId`; stessa schermata con storico vuoto o pieno |
-| **SURF-CHAT-002** | Prima riga inbox solo dopo primo messaggio nel mio archivio con quel peer |
+| **SURF-CHAT-001** | Chat UI: `ChatPeer.address` (`peer_address`); stessa schermata con storico vuoto o pieno |
+| **SURF-CHAT-002** | Prima riga inbox solo dopo primo messaggio nel mio archivio con quel `peer_address` |
 | **SURF-CHAT-003** | UI mittente: `delivered_at` null → ✓; `delivered_at` set e `read_at` null → ✓✓ grigie; `read_at` set → ✓✓ blu |
-| **SURF-CHAT-004** | `mark_peer_read(peer)` chiamato dal destinatario in `MessagesController._init` dopo `load()` — non al tap riga inbox |
+| **SURF-CHAT-004** | `mark_peer_read(peer_address)` chiamato dal destinatario in `MessagesController._init` dopo `load()` — non al tap riga inbox |
 | **SURF-CHAT-005** | Checkmarks solo bolle `isMine` (author = io) |
 | **SURF-CHAT-006** | Coda client `OutboundMessageQueue` + merge optimistic su `client_message_id` |
 | **SURF-CHAT-007** | Stati client `pending`/`failed` solo lato mittente pre-ACK server — non persistiti come enum DB |
 | **SURF-CHAT-008** | Preview inbox per tipo: testo troncato, `[GIF]`, `🎤`, `📍 Posizione`, `📷 Foto`, `🎬 Video` (con didascalia se presente) |
 | **SURF-CHAT-013** | Allegato: galleria foto, fotocamera, video (picker); didascalia opzionale nel composer — [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md) |
 | **SURF-CHAT-014** | Composer: un solo pulsante graffetta (`attach_file`) apre pannello contenuti ricchi; icone affiancate in riga orizzontale scrollabile (solo icone, tooltip per accessibilità); GIF e posizione nel pannello, non nella barra; microfono/invio restano a destra — `ChatInputBar` |
-| **SURF-CHAT-012** | Apertura conversazione da fragment `#indirizzo/chat` — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) via `ShareableLinkController`; azzera chat stale se peer diverso; fallback profilo consentito |
+| **SURF-CHAT-012** | Apertura conversazione da fragment `#indirizzo/chat` — [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) via `ShareableLinkController`; azzera chat stale se peer diverso; fallback profilo consentito (incluso `user@other-server`) |
 | **SURF-CHAT-015** | Storico iniziale = ultimi messaggi (allineato a anteprima inbox); scroll verso messaggi più vecchi carica pagine precedenti senza saltare la posizione visibile |
 | **SURF-CHAT-016** | Ingresso da inbox (mobile): stesso frame di transizione shell → header chat del peer (nome noto dal tap) + back + spinner nel corpo; nessuna fase con header inbox ancora visibile e corpo lista in loading per effetto di `OpenConversation`; **vietata** AppBar globale recovery («Riconnessione…» / hamburger) mentre la shell chat è aperta — header solo da `ChatIngressPanel` |
-| **SURF-CHAT-017** | `ChatInputBar` disabilitato se peer ∉ `reception_allowlist` dell'account in focus o allow list in caricamento — [PROM-RECEPTION-FILTER](../promises/product/PROM-RECEPTION-FILTER.md) gate outbound |
+| **SURF-CHAT-017** | `ChatInputBar` disabilitato se `peer_address` ∉ `reception_allowlist` dell'account in focus o allow list in caricamento — [PROM-RECEPTION-FILTER](../promises/product/PROM-RECEPTION-FILTER.md) gate outbound |
 | **SURF-CHAT-018** | Body testo in bolla: `@username` validi come link → chat 1:1 — [PROM-MESSAGE-MENTION](../promises/product/PROM-MESSAGE-MENTION.md) |
 | **SURF-CHAT-019** | Aggancio lista al fondo: soglia 48 px, pulsante ↓ e badge — [PROM-BOTTOM-ANCHOR](../promises/product/PROM-BOTTOM-ANCHOR.md) |
 | **SURF-CHAT-020** | Tap bolla → menu reaction emoji — [PROM-MESSAGE-REACTIONS](../promises/product/PROM-MESSAGE-REACTIONS.md) |
+| **SURF-CHAT-021** | Header chat: presentazione peer da `get_profiles([peer_address])`; fallback indirizzo grezzo |
 
 ### SHOULD
 
@@ -60,6 +62,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 |----|----------|
 | **SURF-CHAT-010** | Semantica «consegnato» = device P2P peer |
 | **SURF-CHAT-011** | Regressione spunte: se `read_at` già set, ignorare segnale `delivered_at` tardivo |
+| **SURF-CHAT-022** | Tipologia «chat locale» vs «chat federata» in UI |
 
 ---
 
@@ -83,6 +86,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | SURF-CHAT-018 | `mention_text_test.dart`; `message_bubble_test.dart` |
 | SURF-CHAT-019 | `conversation_scroll_anchor_test.dart`; `anchored_message_list.dart` |
 | SURF-CHAT-020 | `message_reactions_test.dart`; `messaging_machine_test.dart` |
+| SURF-CHAT-021 | `get_profiles` batch in header chat |
 
 Igiene (CI): `verify.sh` + smoke SQL dove indicato in tabella  
 Release: `integration` + **`e2e`** (media / galleria / multi-account)

@@ -3,13 +3,12 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-NOTIFICATIONS` |
-| **Status** | `implemented` |
-| **Ultima revisione** | 2026-09-03 |
-| **Promesse** | [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md) |
+| **Status** | `approved` |
+| **Ultima revisione** | 2026-09-13 |
+| **Promesse** | [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md), [PROM-CONVERSATION-SCOPE](../promises/product/PROM-CONVERSATION-SCOPE.md) |
+| **Amend** | payload `peerAddress` — distillazione TEMP §7.19 |
 
-Binding UX e service worker per notifiche Web Push VAPID: permesso browser, registrazione subscription, visualizzazione notifica, tap → chat.
-
-**Amend 2026-07-28:** allineamento alla politica sync in [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) § politica sync — scope espliciti, resume solo focus, sync al cambio focus e al grant permesso.
+Binding UX e service worker per notifiche Web Push VAPID: permesso browser, registrazione subscription, visualizzazione notifica, tap → chat. Payload push e deep link keyed su **`peerAddress`** (stringa indirizzo lowercase) — **nessun** `peerProfileId` UUID; **nessun** periodo dual-read.
 
 ---
 
@@ -37,21 +36,22 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | **SURF-NOTIFICATIONS-003** | Post-login / «Aggiungi account»: re-registrazione subscription per il nuovo `user_id` (scope `NewAccount` minimo) |
 | **SURF-NOTIFICATIONS-004** | «Chiudi account»: DELETE subscription server + `unsubscribe` locale se ultimo account sul device |
 | **SURF-NOTIFICATIONS-005** | Handler SW `push`: mostra `Notification` con titolo e anteprima ([PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) PROM-PUSH-NOTIFY-010) |
-| **SURF-NOTIFICATIONS-006** | Handler SW `notificationclick`: focus finestra app + messaggio client `{ type: 'open_chat', recipientUserId, peerProfileId }` — **entrambi** obbligatori |
-| **SURF-NOTIFICATIONS-007** | Client riceve `open_chat` → parse [`PushConversationKey`](../../../client/lib/models/push_conversation_key.dart) → focus `recipientUserId` + apre chat `peerProfileId`; azzera chat stale sull'account destinatario; retry inbox + fallback profilo se il peer non è ancora in lista |
-| **SURF-NOTIFICATIONS-008** | Soppressione: SW consulta stato client (focus + peer attivo) e confronta la **coppia** account+peer del payload prima di `showNotification` |
+| **SURF-NOTIFICATIONS-006** | Handler SW `notificationclick`: focus finestra app + messaggio client `{ type: 'open_chat', recipientUserId, peerAddress }` — **entrambi** obbligatori |
+| **SURF-NOTIFICATIONS-007** | Client riceve `open_chat` → parse [`PushConversationKey`](../../../client/lib/models/push_conversation_key.dart) → focus `recipientUserId` + apre chat `peerAddress`; azzera chat stale sull'account destinatario; retry inbox + fallback profilo se il peer non è ancora in lista |
+| **SURF-NOTIFICATIONS-008** | Soppressione: SW consulta stato client (focus + peer attivo) e confronta la **coppia** account+`peerAddress` del payload prima di `showNotification` |
 | **SURF-NOTIFICATIONS-009** | Icona notifica: `icons/Icon-192.png`; `badge` coerente brand `#2D2926` |
-| **SURF-NOTIFICATIONS-010** | Payload push incompleto (manca `recipientUserId` o `peerProfileId`) → nessuna notifica visibile e nessun `open_chat` |
+| **SURF-NOTIFICATIONS-010** | Payload push incompleto (manca `recipientUserId` o `peerAddress`) → nessuna notifica visibile e nessun `open_chat` |
 | **SURF-NOTIFICATIONS-011** | Resume PWA (`AppResumed`): sync subscription scope `FocusedAccount` — **non** `AllOpenAccounts` ([PROM-PUSH-NOTIFY-045](../promises/product/PROM-PUSH-NOTIFY.md)) |
 | **SURF-NOTIFICATIONS-012** | Cambio focus sidebar: sync subscription scope `FocusedAccount` per l'account destinazione ([PROM-PUSH-NOTIFY-048](../promises/product/PROM-PUSH-NOTIFY.md)) |
 | **SURF-NOTIFICATIONS-013** | Permesso notifiche `default`/`denied` → `granted`: sync scope `AllOpenAccounts` nella stessa sessione ([PROM-PUSH-NOTIFY-049](../promises/product/PROM-PUSH-NOTIFY.md)) |
+| **SURF-NOTIFICATIONS-014** | **Nessun** dual-read `peerProfileId` — solo `peerAddress` |
 
 ### SHOULD
 
 | ID | Promessa |
 |----|----------|
 | **SURF-NOTIFICATIONS-020** | `last_seen_at` aggiornato su ogni re-registrazione subscription |
-| **SURF-NOTIFICATIONS-021** | Tag notifica = `recipient_user_id|peer_profile_id|logical_message_id` ([PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) PROM-PUSH-NOTIFY-035) |
+| **SURF-NOTIFICATIONS-021** | Tag notifica = `recipient_user_id|peer_address|logical_message_id` ([PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) PROM-PUSH-NOTIFY-035) |
 
 ### MUST NOT
 
@@ -60,9 +60,10 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | **SURF-NOTIFICATIONS-030** | Richiedere permesso ripetutamente dopo `denied` |
 | **SURF-NOTIFICATIONS-031** | Mostrare notifica senza controllare soppressione |
 | **SURF-NOTIFICATIONS-032** | Service worker che bypassa RLS o invia push autonomamente |
-| **SURF-NOTIFICATIONS-033** | Tap `open_chat` che lascia visibile chat con peer diverso da `peerProfileId` del payload |
+| **SURF-NOTIFICATIONS-033** | Tap `open_chat` che lascia visibile chat con peer diverso da `peerAddress` del payload |
 | **SURF-NOTIFICATIONS-034** | Sync push al resume che esegue `AccountSession.restore` su account non in focus ([PROM-PUSH-NOTIFY-046](../promises/product/PROM-PUSH-NOTIFY.md)) |
 | **SURF-NOTIFICATIONS-035** | Sync push mentre picker media o upload allegato è in corso ([PROM-PUSH-NOTIFY-047](../promises/product/PROM-PUSH-NOTIFY.md)) |
+| **SURF-NOTIFICATIONS-036** | Payload push con `peerProfileId` UUID — deriva pre-amend |
 
 ### Note piattaforma
 
@@ -80,7 +81,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | SURF-NOTIFICATIONS-001–002 | `client/test/unit/notification_permission_test.dart`; `client/e2e/release-snake.spec.ts` (`core.push.*`) |
 | SURF-NOTIFICATIONS-003–004 | `client/test/unit/push_subscription_service_test.dart` |
 | SURF-NOTIFICATIONS-005–008 | `client/test/unit/push_suppression_test.dart`; `client/test/unit/push_conversation_key_test.dart`; `client/e2e/release-snake.spec.ts` |
-| SURF-NOTIFICATIONS-006–007 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/release-snake.spec.ts` |
+| SURF-NOTIFICATIONS-006–007, 014 | `client/test/widget/push_notification_listener_test.dart`; `client/test/unit/push_tap_stale_chat_verification_test.dart`; `client/e2e/release-snake.spec.ts` |
 | SURF-NOTIFICATIONS-008 | `client/test/unit/push_suppression_test.dart` |
 | SURF-NOTIFICATIONS-011 | `client/e2e/release-snake.spec.ts` (`core.push.*`, `core.photo.*`) |
 | SURF-NOTIFICATIONS-012–013 | `client/test/unit/push_sync_policy_test.dart` (scope `FocusedAccount` / `AllOpenAccounts`, grant transition); `client/e2e/release-snake.spec.ts` (`core.push.tap_multi_account`); backlog e2e: `push-permission-grant-multi-account` (nome proposto — grant OS → tutti gli account) |
@@ -106,5 +107,6 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 |-----------|--------|
 | [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) | Regole prodotto |
 | [SYS-PUSH](../promises/system/SYS-PUSH.md) | Server e VAPID |
+| [push-payload.md](../contracts/push-payload.md) | Wire format `peerAddress` |
 | [SURF-APP-SHELL](./SURF-AUTH.md#surf-app-shell) | Shell sempre visibile (alias SURF-AUTH-001) |
 | [registry.md](../registry.md) | Indice promesse |

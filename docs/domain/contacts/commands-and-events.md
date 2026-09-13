@@ -1,7 +1,8 @@
 # Comandi ed eventi — contesto contacts
 
-**Ultima revisione:** 2026-07-27  
-**UML:** [docs/model/uml/contacts/](../../model/uml/contacts/)
+**Ultima revisione:** 2026-09-13  
+**UML:** [docs/model/uml/contacts/](../../model/uml/contacts/)  
+**Amend:** rubrica solo `address` — distillazione TEMP §7
 
 ---
 
@@ -9,10 +10,10 @@
 
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
-| `AddContact` | Utente | Aggiunge persona alla rubrica (locale o federata). |
-| `RemoveContact` | Utente | Rimuove contatto dalla rubrica. |
-| `SearchPeople` | Utente | Cerca profili o contatti da aggiungere. |
-| `StartChatFromContact` | Utente | Apre conversazione da un contatto locale (stessa istanza). |
+| `AddContact` | Utente | Aggiunge indirizzo (`address` lowercase) alla rubrica. |
+| `RemoveContact` | Utente | Rimuove contatto dalla rubrica per `address`. |
+| `SearchPeople` | Utente | Cerca profili da aggiungere (`search_profiles`). |
+| `StartChatFromContact` | Utente | Apre conversazione con `peer_address` del contatto. |
 
 ---
 
@@ -21,10 +22,10 @@
 | Evento | Descrizione |
 |--------|-------------|
 | `ContactListReady` | Rubrica dell'account in focus disponibile. |
-| `ContactAdded` | Persona aggiunta alla rubrica. |
-| `ContactRemoved` | Persona rimossa dalla rubrica. |
-| `ChatFromContactStarted` | Conversazione avviata da rubrica. |
-| `ChatFromContactRejected` | Contatto non idoneo per chat diretta. |
+| `ContactAdded` | Indirizzo aggiunto alla rubrica. |
+| `ContactRemoved` | Indirizzo rimosso dalla rubrica. |
+| `ChatFromContactStarted` | Conversazione avviata da rubrica con `peer_address`. |
+| `ChatFromContactRejected` | Contatto non idoneo per chat diretta (solo casi di validazione indirizzo). |
 
 ---
 
@@ -33,8 +34,9 @@
 | Policy | Descrizione |
 |--------|-------------|
 | **Rubrica isolata dall'inbox** | Contatti non implicano messaggi ricevuti. |
-| **Chat solo da contatto locale** | Contatti federati non avviano conversazione Alfred (scope attuale). |
+| **Chat da qualsiasi contatto** | Compose da rubrica con `peer_address` — locale e federato, stessa UI. |
 | **Scope per account** | Rubrica dell'account in focus. |
 | **Reload dopo CRUD** | `ContactAdded` / `ContactRemoved` non sono eventi espliciti dello statechart — `Add*` / `Remove*` innescano `LoadContacts` → `ContactsLoaded`. |
 | **Compose fuori ContactsMachine** | `StartChatFromContact` e gli esiti `ChatFromContactStarted` / `ChatFromContactRejected` sono gestiti in UI + navigation, non in [ContactsMachine]. |
-| **Vincoli CRUD a valle** | `ContactsMachine` non replica guardie reception (self-add, duplicati): vincoli su DB (`contacts` unique) e UI. Pattern allineato a reception solo dove il rischio è simmetrico. |
+| **Vincoli CRUD a valle** | `ContactsMachine` non replica guardie reception (self-add, duplicati): vincoli su DB (`contacts` unique su `address`) e UI. |
+| **Presentazione separata** | Nome/avatar via `get_profiles` — rubrica **non** è cache profilo. |
