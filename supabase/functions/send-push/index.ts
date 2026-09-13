@@ -9,7 +9,7 @@ type PushPayload = {
   recipient_user_id: string;
   recipient_display_name?: string;
   recipient_username?: string | null;
-  peer_profile_id: string;
+  peer_address: string;
   peer_display_name: string;
   preview_text: string;
   logical_message_id: string;
@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
 
   if (
     !payload.recipient_user_id ||
-    !payload.peer_profile_id ||
+    !payload.peer_address ||
     !payload.logical_message_id
   ) {
     return new Response(JSON.stringify({ error: "missing fields" }), {
@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
     recipientUserId: payload.recipient_user_id,
     recipientDisplayName: payload.recipient_display_name ?? null,
     recipientUsername: payload.recipient_username ?? null,
-    peerProfileId: payload.peer_profile_id,
+    peerAddress: payload.peer_address,
     peerDisplayName: payload.peer_display_name,
     previewText: payload.preview_text,
     logicalMessageId: payload.logical_message_id,
