@@ -1,7 +1,7 @@
 # TEMP — Deriva chiave conversazione: indirizzo vs `profileId`
 
 **Stato:** bozza temporanea — da eliminare dopo promozione in SDD `approved`  
-**Revisione:** 2026-09-13 (sesta passata — clean break §1.2; wipe dati §7.15)  
+**Revisione:** 2026-09-13 (settima passata — catalogo §9.1: 52 domande/risposte)  
 **Audience:** revisione modello / SDD / implementazione federazione  
 **Non è SSOT** — vedi `docs/SSOT.md`. Contenuto da distillare in dominio, promesse e contratti.
 
@@ -11,7 +11,7 @@
 |---------|-----------|
 | §7 | Decisioni di modello **chiuse** (review 2026-09-12) — da promuovere in SDD |
 | §8 | Audit documentazione — tensioni verificate |
-| §9 | Domande aperte — **nessuna** (risolte 2026-09-13) |
+| §9 | Domande aperte — **nessuna**; catalogo completo **§9.1** (52 Q→R) |
 | §10 | Lavoro da fare — formalizzazione SDD + implementazione |
 
 ---
