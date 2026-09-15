@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto federation
 
-**Ultima revisione:** 2026-09-13  
+**Ultima revisione:** 2026-09-15  
 **UML:** [docs/model/uml/federation/](../../model/uml/federation/)  
 **Amend:** peer_address — distillazione TEMP §7
 
@@ -15,8 +15,8 @@ Target — worker federativo non ancora implementato.
 | `QueueFederatedSend` | Policy (invio verso `peer_address` con `@server` remoto) | Accoda messaggio in outbox per worker federativo. |
 | `DeliverToFederatedPeer` | Worker federativo | POST verso istanza peer (`/gotham/v1/events`). |
 | `ReceiveFromFederatedPeer` | Gateway federativo | Riceve envelope inbound da peer remoto. |
-| `ApplyFederatedAck` | Worker federativo | Propaga conferme recapito/lettura/reazione. |
-| `FetchRemoteProfile` | Policy (UI) | `get_profiles` con ramo federato (wire profilo — passo 5). |
+| `ApplyFederatedAck` | Worker federativo (post HTTP 2xx) | Invoca modulo spunte unificato — non logica spunte parallela nel worker Gotham. |
+| `FetchRemoteProfile` | Policy (UI) | `get_profiles` → piattaforma chiama Gotham `POST /gotham/v1/profiles` sul peer (§ 4.2 gotham-protocol). |
 
 UML platform outbound (target): [seq-federation-stub.puml](../../model/uml/federation/seq-federation-stub.puml).
 
@@ -40,8 +40,16 @@ Inbound federato: `FederationWorker` → `ReceptionGate` : `EvaluateInboundDeliv
 
 | Policy | Descrizione |
 |--------|-------------|
-| **Worker stateless** | Stato autorevole solo su piattaforma (Postgres). |
+| **Outbox unificata** | Una coda per tutti i lavori in uscita; non duplicata per internal/external. |
+| **Spunte unificate** | Un modulo applica segnali sulla copia mittente; i worker di erogazione non duplicano questa logica. |
+| **Erogazione divisa** | Solo internal vs Gotham si biforca; router su `@server` in `peer_address`. |
+| **Worker = solo erogazione** | Internal (DB) o Gotham (HTTP); non indica outbox né spunte. |
+| **Worker Gotham stateless** | Stato autorevole solo su piattaforma (Postgres). |
 | **Stesso modello caselle** | Copie archivio indipendenti con correlazione `logical_message_id`; chiave = `peer_address`. |
 | **Gate reception su inbound** | Allow list su `allowed_address` anche per messaggi federati in ingresso. |
 | **Nessuna tipologia chat** | Federato e locale: stessa UI, stesso modello account — routing solo in delivery. |
 | **author_address copia mittente** | Scrivendo all'esterno: forma FQDN sulla copia mittente — vedi PROM-CHAT-PEER-KEY §3. |
+| **Wire identity** | Body: bare `from_user`/`to_user`; mittente = firmatario; destinatario = HTTP Host; `GothamSignedEvent` in produzione. |
+| **Profilo remoto** | `FetchRemoteProfile` via Gotham su `im_server_id` del peer — non `publicBaseUrl`. |
+| **Reaction inbound** | `reactor_address = fqdn(from_user, signer)` — nessun UUID profilo locale. |
+| **Media al recapito** | Erogazione mint `media_fetch_url` (external) o copia server-side (internal); inbox sempre `media_url` locale. |

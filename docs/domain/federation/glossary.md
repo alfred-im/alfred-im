@@ -1,7 +1,7 @@
 # Glossario — contesto federation
 
 **Bounded context:** `federation`  
-**Ultima revisione:** 2026-09-13  
+**Ultima revisione:** 2026-09-15  
 **Amend:** peer_address — [PROM-CHAT-PEER-KEY](../../specs/promises/product/PROM-CHAT-PEER-KEY.md) · [schema.md](../../specs/contracts/schema.md)
 
 ---
@@ -11,15 +11,24 @@
 | Termine | Definizione |
 |---------|-------------|
 | **Federation** | Messaggistica tra istanze Alfred (`user@server` verso altra istanza). |
-| **Istanza** | Deploy Alfred (Supabase + client Fly) con `im_server_id` proprio. |
+| **Istanza** | Deploy Alfred (Supabase + client) con `im_server_id` proprio. |
+| **`im_server_id`** | Dominio identità IM (`@server` negli indirizzi) **e** host del wire Gotham (discovery + `/gotham/v1/events`). |
+| **`publicBaseUrl`** | Solo hosting client web Flutter — **fuori** dal wire federativo; può essere white-label su dominio terzo. |
 | **Indirizzo federato** | `username@im_server_id` — stesso formato in compose, rubrica, allow list e messaggistica. |
 | **peer_address** | Chiave conversazione — stringa lowercase; federato e locale condividono lo stesso modello account. |
-| **author_address** | Identità mittente su copia archivio; inbound federato = indirizzo completo da envelope (`from_address`). |
+| **author_address** | Identità mittente su copia archivio; inbound federato = `fqdn(from_user, signer_im_server_id)`. |
+| **reactor_address** | Identità chi reagisce su `message_reaction_facts`; inbound federato = `fqdn(from_user, signer_im_server_id)` — nessun UUID profilo locale. |
+| **Wire identity** | Body: bare `from_user` / `to_user`; istanza mittente = firma; istanza destinataria = HTTP Host. |
 | **Gateway federativo** | Terminazione HTTP/3 verso peer; discovery e ingest eventi inbound. |
-| **Worker federativo** | Claim `outbox`, traduzione wire ↔ piattaforma, materialize inbound. |
+| **Erogazione internal** | Recapito verso destinatario sulla stessa istanza (DB locale). Implementazione: worker internal (`alfred_delivery`). |
+| **Erogazione external (Gotham)** | Recapito verso `@server` remoto via HTTP/3 + Protobuf. Implementazione: worker Gotham. |
+| **Worker** (solo in doc federazione) | **Solo erogazione** — internal o Gotham. **Non** outbox né spunte (unificate). |
+| **Modulo spunte unificato** | Applica `delivered_at` / `read_at` sulla copia mittente dopo erogazione ok — un’implementazione per internal e Gotham. |
 | **logical_message_id** | Id globale mintato dal server mittente; replicato sulla copia destinatario. |
 | **Outbox** | Coda eventi (`deliver`, `read_receipt`, `reaction_fact`, …) processata dal worker. |
-| **get_profiles (federato)** | Wire profilo dedicato (passo 5); prima del wire: ramo locale + fallback indirizzo grezzo. |
+| **get_profiles (federato)** | Piattaforma interroga Gotham sul peer (`/gotham/v1/profiles` o GET singolo); finché assente → fallback indirizzo grezzo. |
+| **PublicProfile** | Messaggio protobuf wire — profilo pubblico remoto; allinea campi RPC `get_profiles`. |
+| **media_fetch_url** | Capability temporizzata sul wire Gotham per allegati — peer fetcha e ingest locale; non è `media_url` archivio. |
 
 ---
 

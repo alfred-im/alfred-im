@@ -1,26 +1,33 @@
 @startuml seq-federation-inbound
 ' Context: federation
 ' Profile: platform
-' Revision: 2026-07-27
+' Revision: 2026-09-15
 
 title Federation — inbound federato (target)
 
 participant "FederatedServer" as EXT
-participant "FederationWorker" as B
+participant "GothamIngress" as GI
 participant "ReceptionGate" as GATE
-participant "AccountBoundary" as AB
+participant "MediaIngest" as MI
+participant "InboxMaterialize" as IM
 
-EXT -> B : ReceiveFromFederatedPeer <<future>>
-B -> GATE : EvaluateInboundDelivery
+EXT -> GI : POST /gotham/v1/events\nGothamSignedEvent
+GI -> GI : verify signature → signer_im_server_id
+GI -> GATE : EvaluateInboundDelivery\nfqdn(from_user, signer)
+
 alt allow list
-  GATE --> B : DeliveryPermitted
-  B -> AB : materialize inbound copy
-  AB --> AB : InboundFederatedMessageReceived
+  GATE --> GI : DeliveryPermitted
+  opt MESSAGE con allegato
+    GI -> EXT : GET media_fetch_url
+    GI -> MI : store blob destinatario
+  end
+  GI -> IM : materialize copia\nauthor_address = fqdn(from_user, signer)\nmedia_url locale
+  IM --> GI : InboundFederatedMessageReceived
 else bloccato
-  GATE --> B : DeliverySilentlyBlocked
-  note right of B
-    Nessuna copia destinatario;
-    ack esterno opzionale.
+  GATE --> GI : DeliverySilentlyBlocked
+  note right of GI
+    HTTP 2xx verso peer;
+    nessuna copia destinatario.
   end note
 end
 

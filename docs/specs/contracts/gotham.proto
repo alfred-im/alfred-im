@@ -2,10 +2,10 @@
 // SSOT testo: docs/architecture/gotham-protocol.md
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Wire: envelope + discovery (questo file).
+// Wire: discovery, profilo pubblico, envelope eventi (questo file).
 // Piattaforma Alfred (stesso release Gotham): gotham-protocol.md § 5.4 —
 //   - reception_allowlist: allowed_address (username bare o user@server)
-//   - gate inbound: normalize(envelope.from_address) ∈ allow list destinatario
+//   - gate inbound: lower(from_user)@lower(signer_im_server_id) ∈ allow list destinatario
 //   - gate outbound: normalize(p_peer_address) ∈ allow list mittente
 //   - send_message_to_address → outbox deliver queued → worker Gotham
 //   - materialize inbound: peer_address + author_address (no profiles.id mittente)
@@ -21,6 +21,35 @@ package alfred.gotham.v1;
 message GothamDiscovery {
   string version = 1;
   repeated string public_keys = 2; // PEM o JWK per firma/verifica (futuro)
+  // Path relativi all'host im_server_id (default se assenti).
+  string events_path = 3; // default "/gotham/v1/events"
+  string profile_path_template = 4; // default "/gotham/v1/users/{username}/profile"
+  string profiles_batch_path = 5; // default "/gotham/v1/profiles"
+}
+
+// ---------------------------------------------------------------------------
+// Profilo pubblico — GET /gotham/v1/users/{username}/profile
+//                     POST /gotham/v1/profiles (batch)
+// Non gated da allow list. Nessun profilo shadow lato richiedente.
+// ---------------------------------------------------------------------------
+
+message PublicProfile {
+  string address = 1; // lower(username)@lower(im_server_id) dell'istanza che risponde
+  string display_name = 2;
+  optional string avatar_url = 3;
+  optional string cover_url = 4;
+  optional string pronouns = 5;
+  string profile_kind = 6; // "user" | "group"
+}
+
+message ProfileBatchRequest {
+  // Bare username; l'host HTTP è im_server_id dell'istanza che risponde.
+  repeated string usernames = 1;
+}
+
+message ProfileBatchResponse {
+  repeated PublicProfile profiles = 1;
+  // Indirizzi richiesti ma non trovati: omessi (non errore batch).
 }
 
 // ---------------------------------------------------------------------------
@@ -41,13 +70,18 @@ enum ReactionKind {
   WITHDRAWN = 2;
 }
 
+// Body POST /gotham/v1/events — envelope + firma istanza mittente (obbligatoria in produzione).
+message GothamSignedEvent {
+  GothamEnvelope envelope = 1;
+  bytes signature = 2; // canonical envelope; verificata con public_keys discovery del firmatario
+}
+
 message GothamEnvelope {
   EventKind kind = 1;
-  // Indirizzi Alfred normalizzati lower(user)@lower(im_server_id).
-  // from_address: usato dal gate reception inbound (allowed_address).
-  string from_address = 2;
-  // to_address: destinazione; usato dal gate outbound lato mittente.
-  string to_address = 3;
+  // Bare username lowercase. Istanza mittente = firmatario (signer), non nel body.
+  // Istanza destinataria = HTTP Host (im_server_id).
+  string from_user = 2;
+  string to_user = 3;
 
   // Solo READ e REACTION: messaggio su cui agisce l'evento.
   optional string object_logical_message_id = 4;
@@ -64,7 +98,8 @@ message MessagePayload {
   string logical_message_id = 1; // mintato dal server mittente all'accettazione invio
   string body = 2;
   string content_type = 3; // text | gif | voice | image | video
-  optional string media_url = 4;
+  // Capability temporizzata sul blob mittente — NON media_url permanente archivio.
+  optional string media_fetch_url = 4;
   optional int32 duration_seconds = 5;
   optional string media_mime = 6;
   optional int64 media_size_bytes = 7;

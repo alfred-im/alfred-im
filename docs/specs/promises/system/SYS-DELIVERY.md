@@ -5,7 +5,7 @@
 | **Promessa ID** | `SYS-DELIVERY` |
 | **Classe** | SYSTEM |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-09-13 |
+| **Ultima revisione** | 2026-09-15 |
 | **ADR** | [server-as-reception.md](../../../decisions/server-as-reception.md), [gotham-protocol.md](../../../architecture/gotham-protocol.md) |
 | **PR origine** | #179 |
 
@@ -17,7 +17,7 @@ Promessa SYSTEM — infrastruttura **non-account** che attraversa i confini [SYS
 
 ## 1. Problema / obiettivo
 
-Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi su `outbox`. Il worker delivery materializza copie destinatario, aggiorna `delivered_at`/`read_at` sul mittente, eroga messaggi gruppo — senza sessione GoTrue di nessun utente.
+Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi su `outbox` **unificata**. Il worker delivery eroga (internal o Gotham), poi il **modulo spunte unificato** aggiorna `delivered_at`/`read_at` sul mittente; materializza copie destinatario (con ingest media se allegato) ed eroga gruppo — senza sessione GoTrue di nessun utente.
 
 ---
 
@@ -48,10 +48,10 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 |----|----------|
 | **SYS-DELIVERY-010** | Schema `alfred_delivery`; funzioni `SECURITY DEFINER`, **nessun** `GRANT` a `authenticated` |
 | **SYS-DELIVERY-011** | `process_outbox(outbox_id)` — dispatcher per `event_kind`; recapito locale sincrono nella stessa transazione RPC account |
-| **SYS-DELIVERY-012** | `deliver_internal`: valuta [SYS-RECEPTION](./SYS-RECEPTION.md); se consentito → INSERT copia destinatario (o archivio gruppo) + UPDATE `delivered_at` mittente; altrimenti skip silenzioso |
+| **SYS-DELIVERY-012** | `deliver_internal`: valuta [SYS-RECEPTION](./SYS-RECEPTION.md); se consentito → ingest media se allegato ([SYS-MAILBOX-009](./SYS-MAILBOX.md)) → INSERT copia destinatario (o archivio gruppo) + UPDATE `delivered_at` mittente; altrimenti skip silenzioso |
 | **SYS-DELIVERY-013** | Destinatario gruppo: gate bidirezionale; INSERT archivio gruppo; `erogate_group_message` accoda N outbox `deliver` (una per membro eleggibile) — **non** INSERT diretto su archivio membro |
 | **SYS-DELIVERY-014** | `propagate_read_receipt`: UPDATE copia mittente `read_at` + `read_receipt_id` (stesso id della copia lettore) WHERE `archive_user_id = sender_profile_id` AND id logico messaggio |
-| **SYS-DELIVERY-014b** | `process_reaction_fact`: INSERT su `message_reaction_facts`; payload include λ, `reactor_id`, `kind`, `emoji` (se `applied`); outbox completata con `reaction_fact_id` |
+| **SYS-DELIVERY-014b** | `process_reaction_fact`: INSERT su `message_reaction_facts`; payload include λ, `reactor_address`, `kind`, `emoji` (se `applied`); outbox completata con `reaction_fact_id` |
 | **SYS-DELIVERY-015** | `group_erogate`: per ogni partecipante allow list con gate → outbox `deliver` dalla riga archivio gruppo → `deliver_internal` materializza proxy membro (stesso λ) |
 | **SYS-DELIVERY-015b** | Fanout da messaggio umano→gruppo: copia uscita gruppo (`peer_address` = membro) + `delivered_at` su quella gamba; gamba 1 (umano) invariata |
 | **SYS-DELIVERY-016** | Al termine: `outbox.status = completed` (o `failed` con `last_error` su errore transazione) |

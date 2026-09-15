@@ -6,7 +6,7 @@
 
 Sotto-contesto di **messaging** — vedi [mapping messaging](../messaging/README.md). Guida implementativa: [docs/guides/media.md](../../guides/media.md).
 
-**Debito isolamento storage:** oggi il recapito copia solo il puntatore `media_url`, non il blob — vedi [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md) § Media. Vale intra-istanza e cross-istanza (Gotham).
+**Recapito media:** ingest al recapito — ogni archivio possiede il proprio blob. Internal = copia server-side; federato = `media_fetch_url` + fetch inbound. Vedi [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md) § Media.
 
 ## Artefatti
 

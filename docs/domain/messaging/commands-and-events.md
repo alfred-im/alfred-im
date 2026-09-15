@@ -70,7 +70,7 @@ Fatto immutabile (append-only). Vedi glossario: [glossary.md](./glossary.md).
 | **Retry automatico** | Invii falliti riprovati con backoff finché in coda. |
 | **Reaction solo su λ** | `ApplyReaction` / `WithdrawReaction` richiedono `logical_message_id` noto — messaggio in attesa (pre-ACK) escluso. |
 | **Reaction append-only** | Ogni comando reaction produce un nuovo `MessageReactionFact`; cambio emoji = nuovo `applied`, non mutazione del fatto precedente. |
-| **Una reaction attiva per utente** | Stato corrente: al massimo un'emoji attiva per `(logical_message_id, reactor_id)`; `WithdrawReaction` chiude lo slot. |
+| **Una reaction attiva per utente** | Stato corrente: al massimo un'emoji attiva per `(logical_message_id, reactor_address)`; `WithdrawReaction` chiude lo slot. |
 | **Idempotenza UI** | `ApplyReaction` con emoji già attiva, o `WithdrawReaction` senza reaction attiva: nessun nuovo fatto (no-op lato dominio). |
 | **Presentazione separata** | `get_profiles` per nome/avatar — non fa parte della chiave conversazione. |
 

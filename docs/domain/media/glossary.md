@@ -1,7 +1,7 @@
 # Glossario — contesto media
 
 **Bounded context:** `media` (sotto-contesto di messaging per allegati chat)  
-**Ultima revisione:** 2026-09-09  
+**Ultima revisione:** 2026-09-15  
 **Promesse SDD:** [PROM-CHAT-MEDIA](../../specs/promises/product/PROM-CHAT-MEDIA.md), [PROM-OUTBOUND-SEND](../../specs/promises/product/PROM-OUTBOUND-SEND.md)
 
 ---
@@ -10,9 +10,11 @@
 
 | Termine | Definizione |
 |---------|-------------|
-| **Chat media storage** | Bucket `chat-media` per allegati; path `{uploader_uid}/{uuid}.*`; URL pubblico post-upload. |
-| **Media pointer sharing** | Comportamento attuale: copia destinatario riusa lo stesso `media_url` del mittente — nessun ingest blob al recapito. |
-| **Media ingest on delivery** | Target non implementato: worker materializza blob nel namespace/storage del titolare archivio destinatario. Bloccante per federazione e per isolamento locale (delete mittente). |
+| **Chat media storage** | Bucket `chat-media` per allegati; path `{archive_user_id}/{uuid}.*`; un blob per copia archivio. |
+| **Media ingest on delivery** | Al recapito il worker materializza blob nel namespace del titolare archivio destinatario; inbox riceve sempre `media_url` locale. |
+| **Media egress internal** | Ramo erogazione stessa istanza: copia server-side blob mittente → path destinatario (niente HTTP). |
+| **Media egress federated** | Ramo Gotham: mint `media_fetch_url` (capability temporizzata) sul blob mittente per il peer. |
+| **Media fetch capability** | URL a scadenza sul wire — non `media_url` permanente; scope λ + peer autorizzato. |
 | **Media upload** | Caricamento binario con limiti byte e MIME canonici. |
 | **Outbound media cache** | Cache RAM per anteprima media pending prima dell'upload. |
 | **Image normalization** | Conversione formati (es. HEIC → JPEG); verifica magic bytes. |

@@ -1,6 +1,6 @@
 # Bounded context — Alfred
 
-**Ultima revisione**: 2026-08-08
+**Ultima revisione**: 2026-09-15
 
 Ogni riga è un **contesto delimitato** (DDD): propri glossario, comandi/eventi e diagrammi UML. I contesti comunicano tramite comandi ed eventi espliciti, non logica condivisa implicita nel codice.
 
@@ -37,7 +37,7 @@ navigation ──FocusAccount──► multi-account
 multi-account ──sessione──► auth
 messaging ──outbox──► reception, delivery
 groups ──broadcast/archive──► delivery, reception
-federation ──outbox queued──► delivery (worker federativo pianificato)
+federation ──outbox unificata──► delivery (router internal/Gotham; worker solo erogazione)
 ```
 
 ## Stato modellazione

@@ -151,8 +151,10 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/README.md`.
 | Reazioni emoji | ✅ tap messaggio → picker; `apply_message_reaction` + realtime fatti — [PROM-MESSAGE-REACTIONS](../specs/promises/product/PROM-MESSAGE-REACTIONS.md) |
 | @mentions | ✅ `@username` cliccabile in body — [PROM-MESSAGE-MENTION](../specs/promises/product/PROM-MESSAGE-MENTION.md) |
 | Rubrica federata (`user@server`) | ✅ salvataggio contatto |
-| Invio federato | ⏸ outbox `queued` — vedi [gotham-protocol.md](./gotham-protocol.md) |
-| Ricezione federata | ❌ gateway + worker — vedi [gotham-protocol.md](./gotham-protocol.md) |
+| Invio federato | ⏸ outbox `queued` — worker Gotham (modello doc ✅) — [gotham-protocol.md](./gotham-protocol.md) |
+| Ricezione federata | ❌ gateway + worker — wire identity, profilo, media ingest documentati |
+| Media federati | ❌ implementazione — target: `media_fetch_url` + ingest locale ([mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media) |
+| Reaction federate | ❌ implementazione — target: `reactor_address` ([schema.md](../specs/contracts/schema.md)) |
 | Push Web (VAPID) | ✅ `implemented` — migrazione + client + Edge Function `send-push` |
 | E2EE | ❌ fuori scope |
 
@@ -160,9 +162,11 @@ Dettaglio deploy: `PROJECT_MAP.md` § Build, `client/deploy/README.md`.
 
 ## 9. Prossimi passi (federazione)
 
-1. Worker federativo: claim `outbox` verso `peer_address`
-2. Ingestione inbound → `materialize_inbound_sender_message` + Realtime
-3. Spunte e reazioni federate sul wire
+Modello documentato (PR #286): outbox/spunte unificate, wire su `im_server_id`, profilo Gotham, `GothamSignedEvent`, `reactor_address`, media ingest.
+
+1. Gateway + worker Gotham: claim outbox → POST `/gotham/v1/events`
+2. Inbound: firma + allow list → materialize + media ingest → Realtime
+3. READ/REACTION outbound; amend schema `reactor_address` e SYS-MAILBOX-009 media
 
 ---
 

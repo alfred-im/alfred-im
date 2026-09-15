@@ -61,8 +61,8 @@ Ogni istanza ha due **ruoli** diversi su internet. Possono stare sul **stesso do
 
 | Ruolo | Dove si configura | Formato | A cosa serve |
 |-------|-------------------|---------|--------------|
-| **Indirizzo pubblico** (app) | `publicBaseUrl` in `config.json` | URL completo (`https://app.example/`) | Dove l'utente apre l'app; dove Supabase rimanda dopo email di conferma o reset password |
-| **Indirizzo federativo** (IM) | `im_server_id` in Supabase | Solo dominio (`im.example`) | Identità dell'istanza negli indirizzi messaggi (`mario@im.example`); in futuro anche il server di federazione |
+| **Indirizzo pubblico** (client web) | `publicBaseUrl` in `config.json` | URL completo (`https://app.example/`) | Dove l'utente apre il **client** Flutter (anche white-label, es. `https://app.repubblica.it/chat`). Auth redirect Supabase. **Non** identità account né federazione |
+| **Indirizzo federativo** (IM) | `im_server_id` in Supabase | Solo dominio (`im.example`) | Identità istanza negli indirizzi (`mario@im.example`); **host del wire Gotham** (discovery + eventi) — vedi [gotham-protocol.md](../../docs/architecture/gotham-protocol.md) § 4.0 |
 
 ### Stesso dominio (caso più semplice)
 
@@ -71,7 +71,7 @@ publicBaseUrl   = https://arkham-im.fly.dev/
 im_server_id    = arkham-im.fly.dev
 ```
 
-App e federazione (quando ci sarà) usano lo stesso nome.
+Coincidenza consentita in demo; la federazione usa comunque `im_server_id`, non `publicBaseUrl`.
 
 ### Due domini diversi
 

@@ -1,6 +1,6 @@
 # Alfred - Mappa Completa del Progetto
 
-**Ultimo aggiornamento**: 2026-09-13  
+**Ultimo aggiornamento**: 2026-09-15  
 **Stato**: stabile — senza versionamento release (pubspec Flutter default invariato)
 
 **SSOT documentazione:** [docs/SSOT.md](docs/SSOT.md) — per ogni tipo di informazione, un solo file canonico; questo documento è **mappa sessione**, non duplica promesse/RPC/test.
@@ -59,8 +59,8 @@
 - **Messaggistica per indirizzo**: `username` (Alfred) o `user@server` (esterno, `unsupported` senza federazione); archivio **per titolare archivio** in `messages` (`archive_user_id`, `author_id`, `peer_address`, `author_address`, `original_author_id`); inbox = `list_inbox()` on-read sul mio archivio; chat per `peer_address`
 - **Inbox + chat realtime**: Postgres + Realtime; ricerca liste on-demand — inbox, rubrica, persone consentite (`PROM-LIST-FILTER`, PR #132, #171)
 - **GIF / voice / location / foto / video**: bucket `chat-media` per media; posizione statica (lat/lng in Postgres); `OutboundMessageQueue` per retry client — [PROM-CHAT-MEDIA](docs/specs/promises/product/PROM-CHAT-MEDIA.md)
-- **Federazione**: outbox `queued` verso `peer_address` remoto — attende gateway/worker (wire: `docs/architecture/gotham-protocol.md`)
-- **Spunte**: `delivered_at` / `read_at` sulla copia mittente — ✓ = accettato server; ✓✓/blu via worker [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md) (`deliver` + `read_receipt` outbox); lettura locale `mark_peer_read` sul destinatario — promesse `SYS-MAILBOX`, `PROM-MESSAGE-STATUS`
+- **Federazione**: modello doc completo (obiezioni #1–#6) in [gotham-protocol.md](docs/architecture/gotham-protocol.md) · [federation/README.md](docs/domain/federation/README.md); runtime gateway/worker ❌; outbox `queued` verso `@server` remoto
+- **Spunte**: modulo unificato post-erogazione; `delivered_at` / `read_at` sulla copia mittente — ✓ = accettato server; ✓✓/blu via outbox `deliver`/`read_receipt` — [SYS-DELIVERY](docs/specs/promises/system/SYS-DELIVERY.md), `SYS-MAILBOX`, `PROM-MESSAGE-STATUS`
 - **Reazioni messaggio**: overlay reazioni su tap messaggio — `PROM-MESSAGE-REACTIONS` (PR #246)
 - **@mentions**: evidenziazione e navigazione @username in chat — `PROM-MESSAGE-MENTION`
 - **Brand**: `#2D2926`, layout responsive stile WhatsApp Web
@@ -163,7 +163,7 @@
 
 - Config: `supabase/config.toml`, `supabase/migrations/`
 - MCP agente: `execute_sql`, `apply_migration`, `list_migrations`
-- **Non deducibile — configurazione istanza (due passaggi):** (1) `config.json` al deploy — obbligatorio per connettersi a Supabase (`supabaseUrl`, `supabaseAnonKey`, `publicBaseUrl`); non modificabile dall'owner perché senza file l'app non parte. (2) `instance_config` in Supabase — nome, branding, `im_server_id`; owner da app dopo login. **Due indirizzi web:** pubblico (`publicBaseUrl`) e federativo IM (`im_server_id`), stesso dominio o due domini. SSOT: `client/deploy/README.md` § Come si configura un'istanza.
+- **Non deducibile — configurazione istanza (due passaggi):** (1) `config.json` al deploy — obbligatorio per connettersi a Supabase (`supabaseUrl`, `supabaseAnonKey`, `publicBaseUrl`); non modificabile dall'owner perché senza file l'app non parte. (2) `instance_config` in Supabase — nome, branding, `im_server_id`; owner da app dopo login. **`publicBaseUrl`** = solo hosting client Flutter; **wire Gotham** solo su **`im_server_id`** (può coincidere o essere domini distinti). SSOT: `client/deploy/README.md` § Come si configura un'istanza.
 - **Non deducibile — redirect auth email**: `signUp` / `resetPasswordForEmail` passano `emailRedirectTo`/`redirectTo` da `AuthRedirectUrl.resolve()` (`client/lib/utils/auth_redirect_url.dart`) — su web usa `publicBaseUrl` da `config.json` (origine corrente su localhost). Dashboard Supabase → Auth → URL Configuration: **Redirect URLs** deve includere l'host di `publicBaseUrl` per **ogni** istanza (demo: `https://arkham-im.fly.dev/**`, `https://blackgate-im.fly.dev/**`; rimuovere URL legacy non più usati se presenti); **Site URL** resta `http://localhost:3000` come **canarino** (fallback se `redirect_to` manca — segnale errore, non destinazione prodotto; promessa `SURF-AUTH-013`). Vedi `supabase/config.toml`.
 
 ### Fly.io (`arkham-im`, `blackgate-im`, `fra`)
@@ -272,7 +272,7 @@ Validazione release: `bash scripts/test.sh e2e` · catalogo in [client/scripts/t
 
 ### Limiti noti
 
-Badge non letti su icona app; realtime account non in focus; multi-tab stesso browser: last-write-wins. **Media chat:** recapito copia solo `media_url` (blob resta nel namespace mittente) — debito isolamento; bloccante per federazione media — vedi `docs/architecture/mailbox-inbox-outbox-spec.md` § Media.
+Badge non letti su icona app; realtime account non in focus; multi-tab stesso browser: last-write-wins. **Media chat:** target doc — ingest al recapito (blob per copia archivio; `media_fetch_url` su wire Gotham); codice `main` ancora a puntatore condiviso — vedi `docs/architecture/mailbox-inbox-outbox-spec.md` § Media.
 
 ---
 

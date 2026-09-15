@@ -2,35 +2,39 @@
 ' Context: federation
 ' Profile: platform
 ' SDD: SYS-DELIVERY (outbox federato)
-' Revision: 2026-07-27
+' Revision: 2026-09-15
 
-title Federation — stub outbound (target)
+title Federation — outbound federato (target)
 
-participant "UI" as C
 participant "AccountBoundary" as AB
 database "Outbox" as OB
-participant "FederationWorker" as B
+participant "DeliveryRouter" as DR
+participant "GothamEgress" as GE
+participant "TickModule" as TM
 participant "FederatedServer" as EXT
 
-C -> AB : SendContent (futuro branch federato)
-AB -> OB : QueueFederatedSend
-AB --> C : ContentSent (sender copy ✓)
-
-note over OB, B
-  Stato attuale: outbox queued,
-  nessun consumer federativo in produzione.
+AB -> OB : QueueDelivery (event_kind=deliver)\npeer_address con @server remoto
+note over OB
+  Stessa outbox locale/federato.
+  Codice main: queued senza consumer Gotham.
 end note
 
-OB --> B : FederatedSendQueued <<future>>
+OB -> DR : ProcessOutbox
+DR -> GE : claim (ramo external)
 
-B -> EXT : DeliverToFederatedPeer <<future>>
-EXT --> B : FederatedMessageDelivered <<future>>
+opt MESSAGE con allegato
+  GE -> GE : mint media_fetch_url
+end
 
-B ..> AB : ApplyFederatedAck <<future>>
-AB ..> AB : FederatedAckApplied <<future>>
+GE -> EXT : POST /gotham/v1/events\nfrom_user/to_user bare + firma
+EXT --> GE : HTTP 2xx
 
-note over OB, B
-  Inbound federato: seq-federation-inbound.puml
+GE -> TM : modulo spunte unificato\ndelivered_at mittente
+GE -> OB : DeliveryCompleted
+
+note over DR, GE
+  Ramo internal: DeliverInternal
+  (copia media server-side) — vedi seq-media-ingest-on-delivery.puml
 end note
 
 @enduml

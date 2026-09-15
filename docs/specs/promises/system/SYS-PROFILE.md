@@ -62,7 +62,7 @@ Ogni utente Alfred ha un profilo pubblico legato 1:1 a `auth.users`. Il backend 
 | `profiles.pronouns` | Testo libero opzionale |
 | Bucket `avatars` | Pubblico; MIME jpeg/png/webp; 2 MB; RLS cartella = `auth.uid()` |
 | `list_inbox()` | Ritorna `peer_address`; campi display opzionali da join locale |
-| `get_profiles(text[])` | Batch presentazione — `{ address, display_name, avatar_url, cover_url, pronouns, profile_kind }` |
+| `get_profiles(text[])` | Batch presentazione — `{ address, display_name, avatar_url, cover_url, pronouns, profile_kind }`; federato: piattaforma chiama Gotham su `im_server_id` peer ([gotham-protocol.md](../../architecture/gotham-protocol.md) § 4.2) |
 | `get_peer_context(text)` | Singolo indirizzo + flag `peer_in_contacts`, `peer_is_allowed` |
 | `find_profile_by_username` | Solo bare username stessa istanza |
 

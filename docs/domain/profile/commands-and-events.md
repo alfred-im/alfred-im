@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto profile
 
-**Ultima revisione:** 2026-09-13  
+**Ultima revisione:** 2026-09-15  
 **UML:** [docs/model/uml/profile/](../../model/uml/profile/)  
 **Amend:** `get_profiles` — distillazione TEMP §7
 
@@ -14,6 +14,7 @@ Comandi della **scheda peer** (surfaccia delegata): [peer-profile/commands](../p
 |---------|-----------|-------------|
 | `UpdateOwnProfile` | Utente | Salva nome, bio, pronomi, avatar, copertina. |
 | `FetchProfiles` | Policy (UI) | Batch `get_profiles(addresses[])` per presentazione peer. |
+| `FetchRemoteProfile` | `FetchProfiles` (indirizzo `@server` remoto) | Piattaforma chiama Gotham su `im_server_id` peer — [gotham-protocol.md](../../architecture/gotham-protocol.md) § 4.2 |
 
 ---
 

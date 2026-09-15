@@ -17,7 +17,7 @@
 
 1. Copia mittente scritta via RPC account; destinatario materializzato solo dal worker ([SYS-ACCOUNT-BOUNDARY](../../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md)).
 2. Merge optimistic via `client_message_id` sulla copia mittente; spunte via `logical_message_id`.
-3. Reazioni: append-only su `message_reaction_facts` — mai UPDATE distruttivo del fatto ([PROM-MESSAGE-REACTIONS](../../specs/promises/product/PROM-MESSAGE-REACTIONS.md)).
+3. Reazioni: append-only su `message_reaction_facts` — chiave `(logical_message_id, reactor_address)`; mai UPDATE distruttivo del fatto ([PROM-MESSAGE-REACTIONS](../../specs/promises/product/PROM-MESSAGE-REACTIONS.md)).
 
 ## Gruppi (chat con peer `profile_kind = group`)
 

@@ -1,7 +1,7 @@
 # Glossario — contesto delivery
 
 **Bounded context:** `delivery`  
-**Ultima revisione:** 2026-09-05  
+**Ultima revisione:** 2026-09-15  
 **Promesse SDD:** [SYS-DELIVERY](../../specs/promises/system/SYS-DELIVERY.md), [SYS-ACCOUNT-BOUNDARY](../../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md)
 
 ---
@@ -14,7 +14,9 @@
 | **Outbox** | Bus eventi di recapito; ogni invio account e ogni read receipt accoda un evento `queued`. |
 | **Event kind** | Discriminatore payload: `deliver`, `read_receipt`, `group_erogate`, `push_notify` (SYS-PUSH), `reaction_fact`. |
 | **Delivery worker** | Dispatcher che instrada per `event_kind` verso handler dedicato (`ProcessDeliveryQueue`). |
-| **DeliverInternal** | Recapito 1:1 o verso archivio gruppo; gate reception; materializza copia destinatario; aggiorna spunta mittente. |
+| **DeliverInternal** | Recapito 1:1 o verso archivio gruppo; gate reception; ingest media (copia server-side se allegato); materializza copia destinatario; aggiorna spunta mittente. |
+| **IngestMediaOnDelivery** | Materializza blob nel namespace destinatario prima dell'INSERT copia inbox — ramo internal (copia DB) o federato (fetch `media_fetch_url`). |
+| **MintMediaFetchCapability** | Ramo Gotham outbound: URL temporizzato sul blob mittente per il peer. |
 | **GroupErogate** | Handler broadcast: legge riga archivio gruppo e avvia erogazione fan-out. |
 | **ErogateGroupMessage** | Fan-out verso partecipanti allow list del gruppo con gate per-partecipante. |
 | **PropagateReadReceipt** | Propaga spunta lettura e `read_receipt_id` sulla copia mittente identificata da id logico messaggio (λ). |

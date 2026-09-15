@@ -1,7 +1,7 @@
 # SSOT — Single Source of Truth (documentazione)
 
 **Audience:** AI / maintainer  
-**Ultima revisione:** 2026-08-08
+**Ultima revisione:** 2026-09-15
 
 Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri file **rimandano** al SSOT — non duplicano tabelle RPC, cataloghi promesse, comandi test, regole account o flussi delivery.
 
@@ -72,6 +72,7 @@ Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri fi
 | Nuovo comportamento UI | `domain/` + UML → `specs/` (PRODUCT/SURFACE) → `guides/` (opzionale, link) |
 | Capire «cosa promette l'app» | `registry.md` → file promessa |
 | Capire delivery post-#179 | `mailbox-inbox-outbox-spec.md` → `contracts/rpc.md` |
+| Capire federazione (modello) | `domain/federation/README.md` → `gotham-protocol.md` |
 | Capire cosa significa ✓✓ | `server-as-reception.md` |
 | Eseguire test | `client/scripts/test/README.md` · filosofia: `testing/strategy.md` |
 | Debug account | `AGENT_DEBUG_ACCOUNTS.md` |

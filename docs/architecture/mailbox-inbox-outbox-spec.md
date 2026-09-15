@@ -1,6 +1,6 @@
 # Modello caselle (mailbox) — implementato
 
-**Ultima revisione**: 2026-09-13  
+**Ultima revisione**: 2026-09-15  
 **Status**: ✅ **Implementato su `main`** (PR #159; gruppi #162; delivery plane #179) — promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` `implemented`  
 **Audience**: AI / implementazione
 
@@ -16,7 +16,7 @@ L’ADR [address-based-messaging.md](../decisions/address-based-messaging.md) re
 |---------|-------------------------|
 | **Archivio** | Un archivio per titolare archivio: ogni utente ha le proprie righe `messages` (`archive_user_id`) |
 | **Confine account** | RPC account toccano **solo** il proprio archivio — [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) |
-| **Consegna** | **Outbox sempre** → worker `alfred_delivery.process_outbox` materializza destinatario e date spunte mittente — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) |
+| **Consegna** | **Outbox unificata** → router internal/Gotham (solo erogazione); modulo spunte unificato post-erogazione ok — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) · federazione: [gotham-protocol.md](./gotham-protocol.md) § 5.0 |
 | **Inbox** | Lista derivata dal **mio** archivio via `list_inbox()` |
 | **Storico chat** | Finestra recente via `list_peer_messages` (ultimi N, default 100); pagine più vecchie con cursore `p_before_created_at`; anteprima inbox ⊆ prima finestra (SYS-MAILBOX-057) |
 | **Identità chat** | `(io, peer_address)` — indirizzo lowercase `username` o `username@server`; presentazione via `get_profiles` |
@@ -25,43 +25,48 @@ Tutto il resto (UI, realtime, spunte, tipi messaggio, rubrica) si deduce dall’
 
 ---
 
-## Media (GIF, voice, image, video) — comportamento attuale e debito isolamento
+## Media (GIF, voice, image, video) — ingest al recapito
 
-### Comportamento implementato oggi
+### Principio (target vincolante)
 
-Il flusso client: **un upload** nel bucket `chat-media` (path `{uploader_uid}/{uuid}.*`) → **un** `media_url` → metadati sul messaggio.
+Ogni **copia archivio** possiede il proprio blob in `chat-media` (path sotto `{archive_user_id}/…`). Il destinatario **non** riusa il puntatore del mittente. Solo **testo** e **location** (coordinate in Postgres) non richiedono ingest binario.
 
-Il worker `alfred_delivery` alla materializzazione della copia destinatario **non** re-ingesta il blob: copia solo il puntatore `media_url` dalla copia mittente / payload outbox (`_insert_recipient_copy` — `coalesce(payload →> 'media_url', sender.media_url)`). Nessuna duplicazione in storage.
+Promessa: [SYS-MAILBOX-009](../specs/promises/system/SYS-MAILBOX.md) — amend: un blob per copia archivio; ingest al recapito.
 
-Promessa attuale: [SYS-MAILBOX-009](../specs/promises/system/SYS-MAILBOX.md) — stesso `media_url` su copia mittente e destinatario; un upload, nessuna duplicazione blob.
+### Flusso mittente (sempre)
 
-Su **stessa istanza** il destinatario può comunque scaricare il file perché il bucket `chat-media` è pubblico e la policy `chat_media_select_authenticated` consente SELECT a qualsiasi utente autenticato su **tutto** il bucket — non perché il file viva nel suo namespace.
+```text
+1. Client: upload → bucket chat-media nel namespace mittente ({auth.uid()}/{uuid}.*)
+2. RPC send: INSERT copia mittente con media_url locale (archivio mittente)
+3. INSERT outbox (event_kind=deliver) con snapshot contenuto + riferimento blob mittente
+```
 
-### Debito architetturale — isolamento storage per titolare archivio
+### Modulo erogazione → ingresso inbox unificato
 
-Il modello caselle separa le **righe** `messages` per `archive_user_id`, ma **non** isola i blob allegati: il destinatario resta dipendente dallo storage del mittente (path sotto `{mittente_uid}/`, URL dell’istanza mittente).
+Dopo gate reception, il worker di erogazione materializza il blob **prima** della copia destinatario. Internal ed external convergono sullo **stesso** helper: messaggio + `media_url` **già locale** sul destinatario. La inbox non distingue il ramo.
 
-| Scenario | Cosa succede oggi |
-|----------|-------------------|
-| **Locale (stessa istanza)** | Destinatario legge il blob dal path del mittente; funziona finché l’oggetto esiste |
-| **Mittente elimina blob o account** | La copia destinatario resta in DB ma il `media_url` può diventare **rotto** — nessuna copia locale di riserva |
-| **Delete chat / purge futura** | Rimuovere la riga mittente non implica che il peer abbia una copia propria del file |
-| **Federazione (Gotham)** | `media_url` punta allo Storage Supabase **dell’istanza mittente** — l’istanza destinatario non può usarlo senza ingest locale; **bloccante** per media federati |
+| Ramo | Trigger | Egress media | Risultato inbox destinatario |
+|------|---------|--------------|----------------------------|
+| **Internal** | `peer_address` su stessa istanza | Copia server-side blob mittente → `{destinatario_uid}/{uuid}.*` (stesso Supabase, niente HTTP) | `media_url` locale |
+| **External (Gotham)** | `@server` remoto | Mint **URL temporizzato** (`media_fetch_url`) sul blob mittente → wire | Peer: fetch HTTP → ingest in namespace destinatario → `media_url` locale |
 
-**Requisito a monte (non implementato, non ancora in SDD):** al recapito (worker locale **e** worker federativo inbound) il sistema dovrebbe **materializzare una copia del blob nello storage dell’istanza / nel namespace del titolare archivio destinatario**, aggiornando `media_url` sulla copia destinatario. Solo il testo e la location (coordinate in Postgres) non richiedono ingest.
+Wire: [gotham-protocol.md](./gotham-protocol.md) § 3.1 Media.
 
-Questo è coerente con il principio mailbox «archivi indipendenti»: oggi vale per le righe messaggio, **non** per gli allegati binari.
+### Garbage collection (target)
 
-### Implicazioni finché resta il modello a puntatore condiviso
+- Un blob per copia archivio: eliminare una riga messaggio non cancella il blob se altre righe **nello stesso archivio** referenziano lo stesso `media_url`.
+- Blob orfani (upload ok, recapito mai materializzato): edge case da contare nel GC.
+- Delete account / purge: ogni titolare rimuove solo i propri blob.
 
-| Aspetto | Conseguenza |
-|---------|-------------|
-| **Riferimento** | Più righe `messages` possono condividere lo stesso `media_url` |
-| **Garbage collection** | Eliminare un messaggio o una casella **non** implica che il file sia orfano: va verificato se **altre** copie referenziano ancora quell’URL prima di cancellare da `chat-media` |
-| **Retry / invio fallito** | Upload riuscito ma consegna non materializzata → blob in storage senza (o con) riga archivio — edge case da contare nel GC |
-| **Wire Gotham** | Passare `media_url` sul wire **non basta** senza strategia di fetch + ingest lato ricevente — vedi [gotham-protocol.md](./gotham-protocol.md) § Media |
+### Stato implementazione (`main`) — transitorio
 
-**Regola provvisoria (stato attuale):** trattare i media come risorsa condivisa con refcount logico. La strategia GC e l’**ingest per copia** vanno definiti **prima** di federazione media, delete chat, o purge storage affidabili.
+| Aspetto | Oggi | Target (questa spec) |
+|---------|------|------------------------|
+| Recapito locale | Copia solo puntatore `media_url` mittente (`_insert_recipient_copy`) | Copia blob in namespace destinatario |
+| Federazione | Bloccante (URL remoto non leggibile) | `media_fetch_url` + ingest inbound |
+| Bucket policy | `chat_media_select_authenticated` su tutto il bucket — maschera il debito locale | Isolamento per `{archive_user_id}/` |
+
+Fino alla migrazione: il codice segue ancora il modello a puntatore condiviso; la federazione media resta bloccata.
 
 ---
 
@@ -136,16 +141,22 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per recapito lo
 
 ## Consegna — stessa pipeline ovunque (vincolante)
 
-Locale e federato condividono **un solo tipo** di recapito; differisce solo il driver in fondo (worker locale sincrono vs worker federativo async).
+Locale e federato condividono **outbox unificata** e **spunte unificate**; l’unica biforcazione è l’**erogazione** (internal vs Gotham). Vedi [gotham-protocol.md](./gotham-protocol.md) § 5.0.
+
+| Strato | Unificato? | Ruolo |
+|--------|------------|--------|
+| **Outbox** | Sì | Una coda per `deliver`, `read_receipt`, `reaction_fact`, … |
+| **Spunte** | Sì | Un modulo applica `delivered_at` / `read_at` sulla copia mittente — non duplicato in internal vs Gotham |
+| **Erogazione** | Diviso | **Internal** (stesso DB) o **Gotham** (HTTP verso altra istanza) |
 
 | Fase | Attore | Effetto |
 |------|--------|---------|
 | **Accettazione** | RPC account mittente | INSERT copia mittente → UI ✓ |
 | **Accodamento** | RPC account mittente | INSERT `outbox` (`event_kind = deliver`) |
-| **Recapito** | Worker `alfred_delivery` | Gate allow list destinatario → INSERT copia destinatario |
-| **Ack consegnato** | Worker `alfred_delivery` | UPDATE `delivered_at` su copia mittente (✓✓ grigie) |
+| **Erogazione** | Worker internal **o** worker Gotham | Gate allow list destinatario → INSERT copia destinatario (locale o su peer) |
+| **Ack consegnato** | Modulo spunte unificato | UPDATE `delivered_at` su copia mittente (✓✓ grigie) — **dopo** erogazione ok |
 
-Sulla stessa istanza (locale) il worker gira **nella stessa transazione** della RPC mittente (sincrono per l’utente). Non è uno shortcut da eliminare: è il contratto [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md).
+Sulla stessa istanza l’erogazione internal gira **nella stessa transazione** della RPC mittente (sincrono per l’utente). Non è uno shortcut da eliminare: è il contratto [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md). Federato: erogazione Gotham async; ✓✓ solo dopo HTTP 2xx dal peer.
 
 ### Stati operativi
 
@@ -157,7 +168,7 @@ Sulla stessa istanza (locale) il worker gira **nella stessa transazione** della 
 
 Nel federato **non esiste** una riga condivisa tra mittente e destinatario. Ogni lato ha il proprio archivio; le spunte si risolvono con **segnali separati** che **referenziano** il messaggio originale per id — non aggiornando la copia altrui dall’RPC account.
 
-Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istanza (locale), con worker `alfred_delivery` come unico attraversamento confine.
+Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istanza (locale). L’attraversamento confine account passa dall’erogazione (internal o Gotham) e dal modulo spunte unificato — non da RPC account cross-boundary.
 
 ### Correlazione
 
@@ -169,7 +180,7 @@ Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 | Evento lettura | `read_receipt_id` | `read_receipt_id` (wire READ) |
 | Evento reaction | `reaction_fact_id` | `reaction_fact_id` (wire REACTION) |
 | Copia mittente | Archivio uscita (`author_id = io`) | Archivio uscita lato Alfred |
-| Copia destinatario | Worker `deliver` | `materialize_inbound_sender_message` |
+| Copia destinatario | Erogazione internal | Erogazione Gotham inbound (`materialize_inbound_sender_message`) |
 
 Contratto wire: [gotham-protocol.md](./gotham-protocol.md). Il messaggio federato **non** usa `external_id`.
 
@@ -178,14 +189,14 @@ Contratto wire: [gotham-protocol.md](./gotham-protocol.md). Il messaggio federat
 | Livello | UI | Significato | Locale | Federato |
 |---------|-----|-------------|----------|----------|
 | Inviato | ✓ | Accettato da piattaforma / in outbox | Copia mittente creata | Outbox `queued` |
-| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | HTTP 2xx peer |
+| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Erogazione internal ok → modulo spunte | HTTP 2xx peer → modulo spunte |
 | Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` → outbox `read_receipt` | Evento READ sul wire |
 
 **Non** significa «arrivato sul device» in senso P2P: significa «nella fonte di verità rilevante» (server / piattaforma).
 
 ### Regole
 
-- Il segnale aggiorna **solo** `delivered_at` / `read_at` sulla **copia del mittente** identificata da `logical_message_id` (+ `archive_user_id` mittente), tramite **worker** — mai da RPC account cross-boundary.
+- Il segnale aggiorna **solo** `delivered_at` / `read_at` sulla **copia del mittente** identificata da `logical_message_id` (+ `archive_user_id` mittente), tramite il **modulo spunte unificato** (dopo erogazione internal o Gotham) — mai da RPC account cross-boundary. I worker di erogazione **non** duplicano questa logica.
 - **Mai** modificare l’archivio del peer per far vedere le spunte al mittente.
 - **Mai** allineare preview, ordine o contenuto tra le due copie come effetto delle spunte.
 - Realtime mittente: subscribe agli UPDATE sulla **propria** copia (`archive_user_id = io`); merge optimistic via `client_message_id`, spunte via `logical_message_id`.
@@ -200,15 +211,16 @@ Invio (account mittente) — send_message_to_address
                       — nessuna INSERT copia mittente
   → INSERT copia mittente (λ) — ✓
   → INSERT outbox (event_kind=deliver)
-  → alfred_delivery.process_outbox:
+  → erogazione internal (process_outbox → deliver_internal):
        gate inbound: reception_allowlist(destinatario)
-       SE allowed: INSERT copia destinatario + delivered_at mittente — ✓✓ grigie
+       SE allowed: INSERT copia destinatario
+       → modulo spunte: delivered_at mittente — ✓✓ grigie
        ALTRIMENTI: reception_rejected, delivered_at null — ✓ permanente
 
 Paolo apre chat (account Paolo)
   → mark_peer_read: UPDATE read_at + mint read_receipt_id solo archivio Paolo
   → outbox read_receipt per ogni λ (payload include read_receipt_id)
-  → worker: UPDATE read_at + read_receipt_id copia Mario — ✓✓ blu
+  → erogazione (internal o Gotham) + modulo spunte: read_at + read_receipt_id copia Mario — ✓✓ blu
 ```
 
 Gate allow list: [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md).
@@ -219,18 +231,21 @@ Vedi [gotham-protocol.md](./gotham-protocol.md). Sintesi:
 
 ```
 Invio (account mittente)
-  → INSERT copia mittente (logical_message_id mintato)
+  → INSERT copia mittente (logical_message_id mintato) — ✓
   → INSERT outbox (event_kind=deliver, status=queued)
-  → worker federativo claim → POST /gotham/v1/events (envelope MESSAGE)
-  → peer HTTP 2xx → delivered_at mittente — ✓✓ grigie
+  → worker Gotham claim → POST /gotham/v1/events (envelope MESSAGE)
+  → peer HTTP 2xx (erogazione ok)
+  → modulo spunte unificato: delivered_at mittente — ✓✓ grigie
 
 Peer segna letto
-  → POST /gotham/v1/events (READ: read_receipt_id + object_logical_message_id)
-  → worker inbound → propagate_read_receipt sul mittente locale
+  → outbox read_receipt → erogazione Gotham outbound
+  → POST host istanza mittente originale (READ: from_user=lettore, to_user=mittente, firmatario=istanza lettore)
+  → inbound + modulo spunte unificato sulla copia mittente
 
 Peer reagisce
-  → POST /gotham/v1/events (REACTION: reaction_fact_id + object_logical_message_id)
-  → worker inbound → INSERT message_reaction_facts
+  → POST /gotham/v1/events (REACTION)
+  → erogazione inbound → INSERT message_reaction_facts
+       reactor_address = fqdn(from_user, signer_im_server_id)
 ```
 
 Inbound messaggio: `materialize_inbound_sender_message` con `logical_message_id` **dal server mittente remoto** — mai rigenerato.

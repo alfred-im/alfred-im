@@ -115,7 +115,7 @@ storage: chat-media, avatars, instance-branding
 | `client_message_id` | text nullable | Solo copia mittente |
 | `body` | text | |
 | `content_type` | message_content_type | |
-| `media_url` | text nullable | Condiviso tra copie |
+| `media_url` | text nullable | URL blob in `chat-media` — **per copia archivio** (namespace `{archive_user_id}/…`); ingest al recapito — [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md) § Media |
 | `duration_seconds`, `media_mime`, `media_size_bytes` | | voice |
 | `latitude`, `longitude` | double nullable | location |
 | `delivered_at` | timestamptz nullable | Solo righe uscita (author = archive_user) |
@@ -143,7 +143,7 @@ storage: chat-media, avatars, instance-branding
 |------|--------|
 | Stessa istanza, compose bare | Mittente bare → destinatario vede mittente bare |
 | Stessa istanza, compose FQDN | Mittente FQDN → destinatario vede mittente FQDN |
-| Inbound federato | `author_address` = `from_address` envelope (sempre FQDN) |
+| Inbound federato | `author_address` = `fqdn(from_user, signer_im_server_id)` — wire bare + firma istanza |
 | Copia mittente verso esterno | `author_address` = forma FQDN del mittente (§7.5b) |
 
 ---
@@ -156,10 +156,14 @@ Fatti immutabili (append-only) sulle reaction — ancorati a `logical_message_id
 |---------|------|------|
 | `id` | uuid PK | Identità del fatto |
 | `logical_message_id` | uuid NOT NULL | λ del messaggio target |
-| `reactor_id` | uuid FK → profiles | Chi compie l'azione |
+| `reactor_address` | text NOT NULL | Chi compie l'azione — indirizzo messaggistica (bare o `user@server`), stesso modello di `author_address` |
 | `kind` | message_reaction_kind | `applied` \| `withdrawn` |
 | `emoji` | text nullable | Obbligatorio se `applied`; assente se `withdrawn` (max 32 char) |
 | `occurred_at` | timestamptz | default `now()` |
+
+**Identità reagente:** nessuna FK su `profiles` — utenti federati non hanno riga locale; inbound REACTION usa `reactor_address = fqdn(from_user, signer_im_server_id)` (§3.0 [gotham-protocol.md](../../architecture/gotham-protocol.md)). Locale: RPC risolve l'indirizzo canonico del chiamante nel contesto della conversazione (stesse regole `author_address`).
+
+**Stato corrente:** migrazione pre-federazione usa ancora `reactor_id` (UUID); allineamento a `reactor_address` con implementazione Gotham.
 
 **CHECK**: `applied` ↔ `emoji` valorizzato; `withdrawn` ↔ `emoji` null.
 

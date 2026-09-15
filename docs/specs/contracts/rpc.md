@@ -211,7 +211,7 @@ get_profiles(p_addresses text[]) → table (
 |--------|-----------|
 | Input | Array indirizzi lowercase; ordine output non garantito |
 | Locale | Join `profiles` per bare username o FQDN stessa istanza |
-| Federato | Risposta da reception API / wire profilo (passo 5 Gotham); finché assente → riga con solo `address` |
+| Federato | Piattaforma chiama Gotham sul peer: `POST https://{im_server_id}/gotham/v1/profiles` (o GET singolo) → `PublicProfile`; finché assente → riga con solo `address` — vedi [gotham-protocol.md](../../architecture/gotham-protocol.md) § 4.2 |
 | Allow list | **Non** filtra visibilità — governa solo recapito messaggi |
 | Shadow | **MUST NOT** INSERT in `profiles` per peer remoti |
 
@@ -248,12 +248,14 @@ list_message_reactions(p_logical_message_ids uuid[]) → table (
   logical_message_id uuid,
   emoji text,
   reaction_count bigint,
-  reactor_ids uuid[],
+  reactor_addresses text[],
   includes_me boolean
 )
 ```
 
-Invariato.
+`includes_me`: confronto `reactor_address` con indirizzo canonico del chiamante (non UUID profilo).
+
+**Stato corrente (`main`):** implementazione usa ancora `reactor_ids uuid[]` e colonna `reactor_id` — allineamento a `reactor_address` con Gotham ([schema.md](./schema.md)).
 
 ---
 

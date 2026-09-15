@@ -3,7 +3,7 @@
 ' Profile: platform
 ' Command: ProcessDeliveryQueue
 ' SDD: SYS-DELIVERY-011
-' Revision: 2026-09-05
+' Revision: 2026-09-15
 
 title seq-process-outbox — dispatcher worker
 
@@ -38,8 +38,11 @@ else event_kind = deliver (default)
   DW -> GATE : EvaluateInboundDelivery
   alt DeliveryPermitted
     GATE --> DW : DeliveryPermitted
-    DW -> MSG : RecipientNotified
-    DW -> MSG : SenderDeliveredAtSet
+    opt allegato media
+      DW -> DW : IngestMediaOnDelivery (copia server-side)
+    end
+    DW -> MSG : RecipientNotified (media_url locale)
+    DW -> DW : TickModule unified (delivered_at mittente)
     opt destinatario è gruppo
       DW -> DW : ErogateGroupMessage
     end
@@ -57,8 +60,9 @@ end
 DW --> AB : (stessa transazione)
 
 note over AB, DW
-  Locale: sincrono nel confine account.
-  Federato: consumer = worker federativo (da implementare) — vedi federation.
+  Outbox unificata; worker = solo erogazione.
+  Locale: sincrono. Federato: GothamEgress (da implementare).
+  Spunte: modulo unificato — non duplicate nei worker.
 end note
 
 @enduml
