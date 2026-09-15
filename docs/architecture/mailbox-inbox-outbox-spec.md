@@ -1,6 +1,6 @@
 # Modello caselle (mailbox) — implementato
 
-**Ultima revisione**: 2026-09-13  
+**Ultima revisione**: 2026-09-15  
 **Status**: ✅ **Implementato su `main`** (PR #159; gruppi #162; delivery plane #179) — promesse `SYS-MAILBOX`, `SYS-ACCOUNT-BOUNDARY`, `SYS-DELIVERY` `implemented`  
 **Audience**: AI / implementazione
 
@@ -136,16 +136,22 @@ Gli id **non vanno fusi**: ognuno copre un livello diverso. Vale per recapito lo
 
 ## Consegna — stessa pipeline ovunque (vincolante)
 
-Locale e federato condividono **un solo tipo** di recapito; differisce solo il driver in fondo (worker locale sincrono vs worker federativo async).
+Locale e federato condividono **outbox unificata** e **spunte unificate**; l’unica biforcazione è l’**erogazione** (internal vs Gotham). Vedi [gotham-protocol.md](./gotham-protocol.md) § 5.0.
+
+| Strato | Unificato? | Ruolo |
+|--------|------------|--------|
+| **Outbox** | Sì | Una coda per `deliver`, `read_receipt`, `reaction_fact`, … |
+| **Spunte** | Sì | Un modulo applica `delivered_at` / `read_at` sulla copia mittente — non duplicato in internal vs Gotham |
+| **Erogazione** | Diviso | **Internal** (stesso DB) o **Gotham** (HTTP verso altra istanza) |
 
 | Fase | Attore | Effetto |
 |------|--------|---------|
 | **Accettazione** | RPC account mittente | INSERT copia mittente → UI ✓ |
 | **Accodamento** | RPC account mittente | INSERT `outbox` (`event_kind = deliver`) |
-| **Recapito** | Worker `alfred_delivery` | Gate allow list destinatario → INSERT copia destinatario |
-| **Ack consegnato** | Worker `alfred_delivery` | UPDATE `delivered_at` su copia mittente (✓✓ grigie) |
+| **Erogazione** | Worker internal **o** worker Gotham | Gate allow list destinatario → INSERT copia destinatario (locale o su peer) |
+| **Ack consegnato** | Modulo spunte unificato | UPDATE `delivered_at` su copia mittente (✓✓ grigie) — **dopo** erogazione ok |
 
-Sulla stessa istanza (locale) il worker gira **nella stessa transazione** della RPC mittente (sincrono per l’utente). Non è uno shortcut da eliminare: è il contratto [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md).
+Sulla stessa istanza l’erogazione internal gira **nella stessa transazione** della RPC mittente (sincrono per l’utente). Non è uno shortcut da eliminare: è il contratto [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md). Federato: erogazione Gotham async; ✓✓ solo dopo HTTP 2xx dal peer.
 
 ### Stati operativi
 
@@ -157,7 +163,7 @@ Sulla stessa istanza (locale) il worker gira **nella stessa transazione** della 
 
 Nel federato **non esiste** una riga condivisa tra mittente e destinatario. Ogni lato ha il proprio archivio; le spunte si risolvono con **segnali separati** che **referenziano** il messaggio originale per id — non aggiornando la copia altrui dall’RPC account.
 
-Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istanza (locale), con worker `alfred_delivery` come unico attraversamento confine.
+Alfred caselle usa lo **stesso modello** anche tra due utenti sulla stessa istanza (locale). L’attraversamento confine account passa dall’erogazione (internal o Gotham) e dal modulo spunte unificato — non da RPC account cross-boundary.
 
 ### Correlazione
 
@@ -169,7 +175,7 @@ Vedi [Identificatori](#identificatori--livelli-distinti-vincolante). In sintesi:
 | Evento lettura | `read_receipt_id` | `read_receipt_id` (wire READ) |
 | Evento reaction | `reaction_fact_id` | `reaction_fact_id` (wire REACTION) |
 | Copia mittente | Archivio uscita (`author_id = io`) | Archivio uscita lato Alfred |
-| Copia destinatario | Worker `deliver` | `materialize_inbound_sender_message` |
+| Copia destinatario | Erogazione internal | Erogazione Gotham inbound (`materialize_inbound_sender_message`) |
 
 Contratto wire: [gotham-protocol.md](./gotham-protocol.md). Il messaggio federato **non** usa `external_id`.
 
@@ -178,14 +184,14 @@ Contratto wire: [gotham-protocol.md](./gotham-protocol.md). Il messaggio federat
 | Livello | UI | Significato | Locale | Federato |
 |---------|-----|-------------|----------|----------|
 | Inviato | ✓ | Accettato da piattaforma / in outbox | Copia mittente creata | Outbox `queued` |
-| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Worker `deliver` → `delivered_at` mittente | HTTP 2xx peer |
+| Consegnato | ✓✓ grigie | Nella fonte di verità del destinatario | Erogazione internal ok → modulo spunte | HTTP 2xx peer → modulo spunte |
 | Letto | ✓✓ blu | Destinatario ha visualizzato | `mark_peer_read` → outbox `read_receipt` | Evento READ sul wire |
 
 **Non** significa «arrivato sul device» in senso P2P: significa «nella fonte di verità rilevante» (server / piattaforma).
 
 ### Regole
 
-- Il segnale aggiorna **solo** `delivered_at` / `read_at` sulla **copia del mittente** identificata da `logical_message_id` (+ `archive_user_id` mittente), tramite **worker** — mai da RPC account cross-boundary.
+- Il segnale aggiorna **solo** `delivered_at` / `read_at` sulla **copia del mittente** identificata da `logical_message_id` (+ `archive_user_id` mittente), tramite il **modulo spunte unificato** (dopo erogazione internal o Gotham) — mai da RPC account cross-boundary. I worker di erogazione **non** duplicano questa logica.
 - **Mai** modificare l’archivio del peer per far vedere le spunte al mittente.
 - **Mai** allineare preview, ordine o contenuto tra le due copie come effetto delle spunte.
 - Realtime mittente: subscribe agli UPDATE sulla **propria** copia (`archive_user_id = io`); merge optimistic via `client_message_id`, spunte via `logical_message_id`.
@@ -200,15 +206,16 @@ Invio (account mittente) — send_message_to_address
                       — nessuna INSERT copia mittente
   → INSERT copia mittente (λ) — ✓
   → INSERT outbox (event_kind=deliver)
-  → alfred_delivery.process_outbox:
+  → erogazione internal (process_outbox → deliver_internal):
        gate inbound: reception_allowlist(destinatario)
-       SE allowed: INSERT copia destinatario + delivered_at mittente — ✓✓ grigie
+       SE allowed: INSERT copia destinatario
+       → modulo spunte: delivered_at mittente — ✓✓ grigie
        ALTRIMENTI: reception_rejected, delivered_at null — ✓ permanente
 
 Paolo apre chat (account Paolo)
   → mark_peer_read: UPDATE read_at + mint read_receipt_id solo archivio Paolo
   → outbox read_receipt per ogni λ (payload include read_receipt_id)
-  → worker: UPDATE read_at + read_receipt_id copia Mario — ✓✓ blu
+  → erogazione (internal o Gotham) + modulo spunte: read_at + read_receipt_id copia Mario — ✓✓ blu
 ```
 
 Gate allow list: [SYS-RECEPTION.md](../specs/promises/system/SYS-RECEPTION.md), [PROM-RECEPTION-FILTER.md](../specs/promises/product/PROM-RECEPTION-FILTER.md), [SURF-ALLOWLIST.md](../specs/surfaces/SURF-ALLOWLIST.md).
@@ -219,18 +226,20 @@ Vedi [gotham-protocol.md](./gotham-protocol.md). Sintesi:
 
 ```
 Invio (account mittente)
-  → INSERT copia mittente (logical_message_id mintato)
+  → INSERT copia mittente (logical_message_id mintato) — ✓
   → INSERT outbox (event_kind=deliver, status=queued)
-  → worker federativo claim → POST /gotham/v1/events (envelope MESSAGE)
-  → peer HTTP 2xx → delivered_at mittente — ✓✓ grigie
+  → worker Gotham claim → POST /gotham/v1/events (envelope MESSAGE)
+  → peer HTTP 2xx (erogazione ok)
+  → modulo spunte unificato: delivered_at mittente — ✓✓ grigie
 
 Peer segna letto
-  → POST /gotham/v1/events (READ: read_receipt_id + object_logical_message_id)
-  → worker inbound → propagate_read_receipt sul mittente locale
+  → outbox read_receipt → erogazione Gotham outbound
+  → POST /gotham/v1/events (READ)
+  → erogazione inbound sul mittente + modulo spunte: propagate_read_receipt
 
 Peer reagisce
-  → POST /gotham/v1/events (REACTION: reaction_fact_id + object_logical_message_id)
-  → worker inbound → INSERT message_reaction_facts
+  → POST /gotham/v1/events (REACTION)
+  → erogazione inbound → INSERT message_reaction_facts
 ```
 
 Inbound messaggio: `materialize_inbound_sender_message` con `logical_message_id` **dal server mittente remoto** — mai rigenerato.

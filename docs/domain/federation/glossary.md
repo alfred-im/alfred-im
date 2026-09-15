@@ -1,7 +1,7 @@
 # Glossario — contesto federation
 
 **Bounded context:** `federation`  
-**Ultima revisione:** 2026-09-13  
+**Ultima revisione:** 2026-09-15  
 **Amend:** peer_address — [PROM-CHAT-PEER-KEY](../../specs/promises/product/PROM-CHAT-PEER-KEY.md) · [schema.md](../../specs/contracts/schema.md)
 
 ---
@@ -16,7 +16,10 @@
 | **peer_address** | Chiave conversazione — stringa lowercase; federato e locale condividono lo stesso modello account. |
 | **author_address** | Identità mittente su copia archivio; inbound federato = indirizzo completo da envelope (`from_address`). |
 | **Gateway federativo** | Terminazione HTTP/3 verso peer; discovery e ingest eventi inbound. |
-| **Worker federativo** | Claim `outbox`, traduzione wire ↔ piattaforma, materialize inbound. |
+| **Erogazione internal** | Recapito verso destinatario sulla stessa istanza (DB locale). Implementazione: worker internal (`alfred_delivery`). |
+| **Erogazione external (Gotham)** | Recapito verso `@server` remoto via HTTP/3 + Protobuf. Implementazione: worker Gotham. |
+| **Worker** (solo in doc federazione) | **Solo erogazione** — internal o Gotham. **Non** outbox né spunte (unificate). |
+| **Modulo spunte unificato** | Applica `delivered_at` / `read_at` sulla copia mittente dopo erogazione ok — un’implementazione per internal e Gotham. |
 | **logical_message_id** | Id globale mintato dal server mittente; replicato sulla copia destinatario. |
 | **Outbox** | Coda eventi (`deliver`, `read_receipt`, `reaction_fact`, …) processata dal worker. |
 | **get_profiles (federato)** | Wire profilo dedicato (passo 5); prima del wire: ramo locale + fallback indirizzo grezzo. |

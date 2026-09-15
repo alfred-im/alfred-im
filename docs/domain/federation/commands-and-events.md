@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto federation
 
-**Ultima revisione:** 2026-09-13  
+**Ultima revisione:** 2026-09-15  
 **UML:** [docs/model/uml/federation/](../../model/uml/federation/)  
 **Amend:** peer_address — distillazione TEMP §7
 
@@ -40,7 +40,11 @@ Inbound federato: `FederationWorker` → `ReceptionGate` : `EvaluateInboundDeliv
 
 | Policy | Descrizione |
 |--------|-------------|
-| **Worker stateless** | Stato autorevole solo su piattaforma (Postgres). |
+| **Outbox unificata** | Una coda per tutti i lavori in uscita; non duplicata per internal/external. |
+| **Spunte unificate** | Un modulo applica segnali sulla copia mittente; i worker di erogazione non duplicano questa logica. |
+| **Erogazione divisa** | Solo internal vs Gotham si biforca; router su `@server` in `peer_address`. |
+| **Worker = solo erogazione** | Internal (DB) o Gotham (HTTP); non indica outbox né spunte. |
+| **Worker Gotham stateless** | Stato autorevole solo su piattaforma (Postgres). |
 | **Stesso modello caselle** | Copie archivio indipendenti con correlazione `logical_message_id`; chiave = `peer_address`. |
 | **Gate reception su inbound** | Allow list su `allowed_address` anche per messaggi federati in ingresso. |
 | **Nessuna tipologia chat** | Federato e locale: stessa UI, stesso modello account — routing solo in delivery. |

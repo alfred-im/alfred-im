@@ -1,8 +1,8 @@
 # Gotham — protocollo federazione Alfred
 
-**Ultima revisione:** 2026-09-13  
+**Ultima revisione:** 2026-09-15  
 **Stato:** `documented` — wire contract definito; runtime non implementato  
-**Audience:** AI / implementazione gateway e worker Gotham
+**Audience:** AI / implementazione gateway e erogazione Gotham
 
 **SSOT wire:** [gotham.proto](../specs/contracts/gotham.proto)  
 **SSOT piattaforma (mailbox, outbox, id):** [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md)  
@@ -22,10 +22,12 @@ Gotham è il protocollo di federazione **nativo** tra istanze Alfred.
 | **Discovery** | `GET /.well-known/gotham` → `GothamDiscovery` |
 | **Invio eventi** | `POST /gotham/v1/events` — body = `GothamEnvelope` serializzato |
 | **Ack consegna** | Solo **codice HTTP** (2xx = accettato dal peer) |
-| **Backend istanza** | Supabase (outbox, worker `alfred_delivery`) |
-| **Federazione** | Gateway Fly HTTP/3 + worker Gotham (da implementare) |
+| **Backend istanza** | Supabase (outbox unificata + erogazione internal via `alfred_delivery`) |
+| **Federazione** | Gateway Fly HTTP/3 + worker Gotham — **solo erogazione external** (da implementare) |
 
-Il client Flutter **non** parla Gotham direttamente: parla sempre con la propria piattaforma (RPC Supabase). Solo il worker Gotham emette/riceve sul wire.
+Il client Flutter **non** parla Gotham direttamente: parla sempre con la propria piattaforma (RPC Supabase). Sul wire emette/riceve **solo** il worker Gotham (modulo di erogazione verso altra istanza).
+
+**Termine «worker» in questo documento:** indica **solo** il modulo che **eroga** un lavoro outbox verso il destinatario (internal = stesso DB, Gotham = HTTP verso peer). **Non** indica outbox né spunte — vedi § 5.0.
 
 ---
 
@@ -208,7 +210,44 @@ Vedi [address-based-messaging.md](../decisions/address-based-messaging.md).
 
 ## 5. Mapping Gotham ↔ piattaforma Alfred
 
-Stesso bus **outbox** per recapito locale e federato; differisce solo il consumer in fondo.
+### 5.0 Modello recapito — outbox, erogazione, spunte (vincolante)
+
+Tre strati; **solo l’erogazione** si biforca. Outbox e spunte restano **unificati** — nessuna duplicazione di significato né di logica spunte tra internal e external.
+
+| Strato | Unificato? | Ruolo |
+|--------|------------|--------|
+| **Outbox** | Sì | Una coda per tutti i lavori in uscita (`deliver`, `read_receipt`, `reaction_fact`, …) |
+| **Spunte** | Sì | Un solo significato (✓ / ✓✓ / ✓✓ blu) e **un solo modulo** che applica `delivered_at` / `read_at` sulla copia mittente — **non** duplicato nei worker di erogazione |
+| **Erogazione** | **Diviso** | Unico fork: **internal** (stesso DB) vs **external** (Gotham / internet verso altra istanza) |
+
+**Worker** (in questo documento) = **solo erogazione**:
+
+| Worker | Quando | Cosa fa |
+|--------|--------|---------|
+| **Internal** | `peer_address` risolve su istanza locale | Materializza copia destinatario nel DB locale; gate reception sulla destinazione |
+| **Gotham** | `@server` in `peer_address` ≠ `im_server_id` locale | Claim job outbox federato; `POST /gotham/v1/events`; sul peer inbound materializza copia destinatario |
+
+Il **router** (dispatcher outbox) legge `@server` in `peer_address` e invoca internal o Gotham. I worker **non** gestiscono spunte in parallelo: a erogazione riuscita invocano il **modulo spunte unificato** (`delivered_at`, `propagate_read_receipt`, …) e completano il job outbox — **una** implementazione, due trasporti.
+
+```text
+RPC account → copia mittente (✓) → outbox (lavoro)
+                    │
+                    ▼
+            router (peer_address)
+                    │
+         ┌──────────┴──────────┐
+         ▼                     ▼
+  worker internal        worker Gotham
+  (DB locale)            (HTTP → peer)
+         │                     │
+         └──────────┬──────────┘
+                    ▼
+         modulo spunte unificato → delivered_at / read_at mittente
+                    ▼
+              outbox completed
+```
+
+Semantica spunte: [server-as-reception.md](../decisions/server-as-reception.md). Dettaglio caselle: [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Consegna / Spunte.
 
 | Gotham `kind` | `outbox.event_kind` | Payload outbox (campi chiave) |
 |---------------|---------------------|-------------------------------|
@@ -222,27 +261,29 @@ Stesso bus **outbox** per recapito locale e federato; differisce solo il consume
 1. RPC account
      send_message_to_address(p_peer_address, …)
      → gate outbound allow list (§ 5.4) su p_peer_address
-     → INSERT copia mittente (logical_message_id mintato; peer_address = p_peer_address)
+     → INSERT copia mittente (logical_message_id mintato; peer_address = p_peer_address) — ✓
      → INSERT outbox (event_kind=deliver, status=queued)
 
-2. Stessa istanza (server di p_peer_address = im_server_id locale):
-     worker `alfred_delivery.process_outbox` sincrono
-   Altra istanza:
-     outbox resta `queued` → worker Gotham → POST /gotham/v1/events
+2. Router su peer_address:
+     stessa istanza → worker internal (sincrono in transazione RPC)
+     altra istanza   → worker Gotham claim async → POST /gotham/v1/events
 
-3. HTTP 2xx dal peer (federato)
-     → delivered_at sulla copia mittente
+3. Erogazione ok (copia destinatario materializzata sul peer, o localmente):
+     → modulo spunte unificato: delivered_at sulla copia mittente — ✓✓ grigie
      → outbox completed
+
+   Federato: «erogazione ok» = HTTP 2xx dal peer (messaggio nella fonte di verità destinatario).
+   Fino ad allora il mittente resta su ✓.
 ```
 
-Routing **senza colonna protocol**: il server in `peer_address` (`user@server`) determina recapito locale vs federato.
+Routing **senza colonna protocol**: il server in `peer_address` (`user@server`) determina worker internal vs Gotham — non tipologia chat.
 
 ### 5.2 Inbound (peer → istanza destinatario)
 
 ```text
 1. Gateway Fly riceve POST /gotham/v1/events
 
-2. Worker federativo valida envelope (kind, indirizzi normalizzati, id dedup)
+2. Worker Gotham (ingress) valida envelope (kind, indirizzi normalizzati, id dedup)
 
 3. Gate reception (allow list destinatario) — § 5.4
      confronto envelope.from_address con allowed_address del destinatario
@@ -260,11 +301,13 @@ Materializzazione inbound federata: variante **indirizzo-based** su `peer_addres
 
 ### 5.3 Spunte
 
-| Livello UI | Significato | Gotham / piattaforma |
-|------------|-------------|----------------------|
+Modulo **unificato** (§ 5.0): internal e Gotham non implementano logica spunte separata.
+
+| Livello UI | Significato | Piattaforma |
+|------------|-------------|-------------|
 | ✓ | Accettato server mittente | Copia mittente creata |
-| ✓✓ grigie | Nella fonte di verità destinatario | HTTP 2xx su MESSAGE / `delivered_at` |
-| ✓✓ blu | Destinatario ha letto | Evento READ separato con `read_receipt_id` |
+| ✓✓ grigie | Nella fonte di verità destinatario | Dopo erogazione ok → `delivered_at` (locale: internal; federato: HTTP 2xx poi modulo spunte) |
+| ✓✓ blu | Destinatario ha letto | Outbox `read_receipt` → erogazione (internal o Gotham) → modulo spunte / wire READ |
 
 Semantica UI: [server-as-reception.md](../decisions/server-as-reception.md).
 
@@ -392,7 +435,7 @@ Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `gro
 
 **Gruppi (locale, `20260913120000`):** erogazione gruppo→membro passa dallo stesso `event_kind = deliver` del 1:1 — `erogate_group_message` / `group_erogate` sono **orchestratori** che accodano N outbox `deliver`, non percorsi INSERT separati. Vedi § 9.1.
 
-`push_notify` è **solo locale** (piattaforma): accodato dal worker dopo recapito locale riuscito ([SYS-PUSH](../specs/promises/system/SYS-PUSH.md)). **Non** compare mai sul wire federato.
+`push_notify` è **solo locale** (piattaforma): accodato dopo erogazione internal riuscita ([SYS-PUSH](../specs/promises/system/SYS-PUSH.md)). **Non** compare mai sul wire federato.
 
 **Nessun campo `protocol`:** il routing è implicito — server in `peer_address` / `allowed_address` / `contacts.address` determina locale vs federato.
 
@@ -403,7 +446,9 @@ Bus outbox `event_kind` attivi: `deliver`, `read_receipt`, `reaction_fact`, `gro
 | Componente | Stato | Ruolo |
 |------------|-------|-------|
 | **Gateway Fly HTTP/3** | ❌ | Termina QUIC; espone `/.well-known/gotham` e `/gotham/v1/events` |
-| **Gotham worker** | ❌ | Claim outbox federato; traduce ↔ Protobuf; materialize inbound |
+| **Worker Gotham** (erogazione external) | ❌ | Claim outbox federato; traduce ↔ Protobuf; POST outbound / materialize inbound |
+| **Worker internal** (`alfred_delivery`) | ✅ | Erogazione su stesso DB — già in produzione |
+| **Modulo spunte unificato** (`alfred_delivery`) | ✅ | `delivered_at`, `propagate_read_receipt`, … — invocato da entrambi i worker |
 | **Spec in repo** | ✅ | Questo file + `gotham.proto` |
 
 Il gateway Python in `client/deploy/gateway/` serve solo la shell PWA (branding dinamico) — **non** è il gateway Gotham di questa sezione.
@@ -415,11 +460,11 @@ Il gateway Python in `client/deploy/gateway/` serve solo la shell PWA (branding 
 ```text
 ┌─────────────┐     RPC      ┌──────────────────┐
 │ Flutter web │ ───────────► │ Supabase (istanza)│
-└─────────────┘              │  outbox + worker  │
+└─────────────┘              │ outbox + internal │
                              └────────┬─────────┘
-                                      │ claim (federato)
+                                      │ claim (erogazione external)
                              ┌────────▼─────────┐
-                             │ Worker federativo │
+                             │ Worker Gotham     │
                              └────────┬─────────┘
                                       │ HTTP/3 + Protobuf
                              ┌────────▼─────────┐
@@ -432,7 +477,7 @@ Il gateway Python in `client/deploy/gateway/` serve solo la shell PWA (branding 
 ```
 
 - **Supabase Edge Functions** non terminano HTTP/3 — il gateway è su Fly.
-- Il worker Gotham è **stateless**: stato autorevole solo su Postgres (outbox, messages, reaction facts).
+- Il worker Gotham (erogazione external) è **stateless**: stato autorevole solo su Postgres (outbox, messages, reaction facts).
 
 ---
 
@@ -530,5 +575,6 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 | 2026-09-09 | `media_url` wire: ingest locale destinatario obbligatorio — vedi mailbox § Media |
 | 2026-09-09 | § 5.4 — `reception_allowlist` locale + esterna; RPC invio/materialize federato; gate su `from_address` |
 | 2026-09-13 | § 5.4 — modello address-based unificato (`peer_address`, `author_address`, `allowed_address`); TEMP §8 audit risolto |
+| 2026-09-15 | § 5.0 — outbox e spunte unificate; worker = solo erogazione (internal vs Gotham); modulo spunte unificato |
 | 2026-09-13 | § 9 — gruppi **in scope** federazione (correzione: non solo locale) |
 | 2026-09-13 | § 6, § 9.1 — erogazione gruppo→membro allineata a pipeline `deliver` standard (PR #284); due gambe; `erogate_group_message` orchestratore |
