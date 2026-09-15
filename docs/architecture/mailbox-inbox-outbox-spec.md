@@ -240,6 +240,7 @@ Peer segna letto
 Peer reagisce
   → POST /gotham/v1/events (REACTION)
   → erogazione inbound → INSERT message_reaction_facts
+       reactor_address = fqdn(from_user, signer_im_server_id)
 ```
 
 Inbound messaggio: `materialize_inbound_sender_message` con `logical_message_id` **dal server mittente remoto** — mai rigenerato.

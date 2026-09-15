@@ -19,7 +19,7 @@ else partecipante
   AB -> OB : QueueReactionFact
   note right of OB
     event_kind = reaction_fact
-    payload: λ, reactor_id, kind, emoji?
+    payload: λ, reactor_address, kind, emoji?
     message_id = riga messages del reagente
   end note
   OB -> DW : ProcessOutbox

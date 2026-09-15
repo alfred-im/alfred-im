@@ -248,12 +248,12 @@ list_message_reactions(p_logical_message_ids uuid[]) → table (
   logical_message_id uuid,
   emoji text,
   reaction_count bigint,
-  reactor_ids uuid[],
+  reactor_addresses text[],
   includes_me boolean
 )
 ```
 
-Invariato.
+`includes_me`: confronto `reactor_address` con indirizzo canonico del chiamante (non UUID profilo).
 
 ---
 

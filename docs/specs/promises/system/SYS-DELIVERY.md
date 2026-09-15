@@ -51,7 +51,7 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 | **SYS-DELIVERY-012** | `deliver_internal`: valuta [SYS-RECEPTION](./SYS-RECEPTION.md); se consentito → INSERT copia destinatario (o archivio gruppo) + UPDATE `delivered_at` mittente; altrimenti skip silenzioso |
 | **SYS-DELIVERY-013** | Destinatario gruppo: gate bidirezionale; INSERT archivio gruppo; `erogate_group_message` accoda N outbox `deliver` (una per membro eleggibile) — **non** INSERT diretto su archivio membro |
 | **SYS-DELIVERY-014** | `propagate_read_receipt`: UPDATE copia mittente `read_at` + `read_receipt_id` (stesso id della copia lettore) WHERE `archive_user_id = sender_profile_id` AND id logico messaggio |
-| **SYS-DELIVERY-014b** | `process_reaction_fact`: INSERT su `message_reaction_facts`; payload include λ, `reactor_id`, `kind`, `emoji` (se `applied`); outbox completata con `reaction_fact_id` |
+| **SYS-DELIVERY-014b** | `process_reaction_fact`: INSERT su `message_reaction_facts`; payload include λ, `reactor_address`, `kind`, `emoji` (se `applied`); outbox completata con `reaction_fact_id` |
 | **SYS-DELIVERY-015** | `group_erogate`: per ogni partecipante allow list con gate → outbox `deliver` dalla riga archivio gruppo → `deliver_internal` materializza proxy membro (stesso λ) |
 | **SYS-DELIVERY-015b** | Fanout da messaggio umano→gruppo: copia uscita gruppo (`peer_address` = membro) + `delivered_at` su quella gamba; gamba 1 (umano) invariata |
 | **SYS-DELIVERY-016** | Al termine: `outbox.status = completed` (o `failed` con `last_error` su errore transazione) |

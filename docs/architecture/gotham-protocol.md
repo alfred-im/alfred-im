@@ -367,7 +367,7 @@ Semantica spunte: [server-as-reception.md](../decisions/server-as-reception.md).
 |---------------|---------------------|-------------------------------|
 | MESSAGE / LOCATION | `deliver` | `logical_message_id`, snapshot contenuto; **`peer_address`** destinatario (locale o federato) |
 | READ | `read_receipt` | `logical_message_id`, `read_receipt_id`; wire: `from_user`=lettore, `to_user`=mittente originale |
-| REACTION | `reaction_fact` | `logical_message_id`, `reaction_fact_id`, `kind`, `emoji`; wire: `from_user`=reagente, `to_user`=controparte sulla copia da aggiornare |
+| REACTION | `reaction_fact` | `logical_message_id`, `reaction_fact_id`, `kind`, `emoji`, `reactor_address`; wire: `from_user`=reagente, `to_user`=controparte sulla copia da aggiornare |
 
 ### 5.1 Outbound (istanza mittente → peer)
 
@@ -406,7 +406,9 @@ Routing **senza colonna protocol**: il server in `peer_address` (`user@server`) 
        MESSAGE / LOCATION → materialize copia destinatario (`to_user` su host locale)
          peer_address = author_address = fqdn(from_user, signer_im_server_id)
        READ    → modulo spunte: copia mittente di `to_user` dove peer_address = fqdn(from_user, signer)
-       REACTION→ INSERT message_reaction_facts (stesso schema indirizzi)
+       REACTION→ INSERT message_reaction_facts
+         reactor_address = fqdn(from_user, signer_im_server_id)
+         gate partecipazione su λ (indirizzo, non UUID profilo)
 
 5. HTTP 2xx (anche su rifiuto silenzioso allow list — evento processato, nessuna copia)
 ```
@@ -538,6 +540,24 @@ Paolo@B legge messaggio da mario@A
 
 **Inbound:** gate su `fqdn(from_user, signer)` prima di propagare segnali sulla copia di `to_user`.
 
+**REACTION — identità reagente (no shadow profile):**
+
+```text
+Paolo@B reagisce a messaggio di mario@A (λ condiviso)
+  → outbox reaction_fact su B
+  → worker Gotham: POST https://{im_server_id_A}/gotham/v1/events
+       firmatario: B
+       from_user: paolo
+       to_user: mario
+       REACTION: object_logical_message_id, reaction_fact_id, kind, emoji?
+  → A: gate su fqdn(paolo, B)
+       INSERT message_reaction_facts
+         reactor_address = paolo@blackgate-im.fly.dev
+         (nessun profiles.id locale per Paolo)
+```
+
+Locale: `apply_message_reaction` accoda `reactor_address` canonico del chiamante (stesse regole `author_address`).
+
 ---
 
 ## 6. Piattaforma Alfred — stato implementazione (`main`)
@@ -549,6 +569,7 @@ Prerequisiti piattaforma per Gotham (implementati):
 | `logical_message_id` mintato dal server mittente, replicato sul destinatario | #264 — `20260905000000_sender_global_message_id.sql` |
 | Inbound materialize con id remoto | `materialize_inbound_sender_message` |
 | Reaction via outbox | #265 — `20260905120000_reaction_fact_outbox.sql` |
+| `reactor_address` (sostituisce `reactor_id` UUID) | Da implementare con federazione — allinea reaction a modello address-based |
 | `read_receipt_id` mint lettore → replica mittente | #266 — `20260905140000_read_receipt_id.sql` |
 
 **Con Gotham (da implementare insieme al protocollo):**
@@ -710,5 +731,6 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 | 2026-09-15 | § 4.0 — wire Gotham solo su `im_server_id`; `publicBaseUrl` fuori dal protocollo (solo client web) |
 | 2026-09-15 | § 4.2 — API profilo pubblico (`/users/{username}/profile`, `/profiles` batch); discovery con path |
 | 2026-09-15 | § 3.0 — wire: `from_user`/`to_user` bare; istanza da firma + Host; `GothamSignedEvent`; READ/REACTION simmetrici |
+| 2026-09-15 | § 5.2 — REACTION inbound: `reactor_address` (no FK profilo; allinea a no-shadow) |
 | 2026-09-13 | § 9 — gruppi **in scope** federazione (correzione: non solo locale) |
 | 2026-09-13 | § 6, § 9.1 — erogazione gruppo→membro allineata a pipeline `deliver` standard (PR #284); due gambe; `erogate_group_message` orchestratore |

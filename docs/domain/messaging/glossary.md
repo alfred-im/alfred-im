@@ -22,7 +22,7 @@
 | **Cursore storico** | `created_at` del messaggio più vecchio già caricato; parametro `p_before_created_at` per la pagina precedente. |
 | **Tag mention (`@username`)** | Convenzione testo nel body; rendering client aggiunge link alla chat 1:1 con quel peer. Non persistito come entità separata — vedi PROM-MESSAGE-MENTION. |
 | **Fatto di conversazione** | Evento persistito nella conversazione: messaggio, reaction, e in futuro edit/rimozione come nuova riga. Solo `INSERT`; mai `UPDATE` né `DELETE` sullo storico. |
-| **Reaction** | Fatto di conversazione: espressione emoji su un messaggio (`MessageReactionFact`), ancorata a `logical_message_id`. Stato corrente derivato dall'ultimo fatto per `(logical_message_id, reactor_id)`. |
+| **Reaction** | Fatto di conversazione: espressione emoji su un messaggio (`MessageReactionFact`), ancorata a `logical_message_id`. Stato corrente derivato dall'ultimo fatto per `(logical_message_id, reactor_address)`. |
 | **get_profiles** | RPC batch `get_profiles(addresses[])` → dati pubblici per presentazione (inbox, header chat, overlay). Fallback → indirizzo grezzo. **Non** gated da allow list. |
 
 ---
