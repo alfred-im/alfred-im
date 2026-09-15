@@ -5,7 +5,7 @@
 // Wire: discovery, profilo pubblico, envelope eventi (questo file).
 // Piattaforma Alfred (stesso release Gotham): gotham-protocol.md § 5.4 —
 //   - reception_allowlist: allowed_address (username bare o user@server)
-//   - gate inbound: normalize(envelope.from_address) ∈ allow list destinatario
+//   - gate inbound: lower(from_user)@lower(signer_im_server_id) ∈ allow list destinatario
 //   - gate outbound: normalize(p_peer_address) ∈ allow list mittente
 //   - send_message_to_address → outbox deliver queued → worker Gotham
 //   - materialize inbound: peer_address + author_address (no profiles.id mittente)
@@ -43,8 +43,8 @@ message PublicProfile {
 }
 
 message ProfileBatchRequest {
-  // Indirizzi completi; il server in ogni address deve coincidere con im_server_id locale.
-  repeated string addresses = 1;
+  // Bare username; l'host HTTP è im_server_id dell'istanza che risponde.
+  repeated string usernames = 1;
 }
 
 message ProfileBatchResponse {
@@ -70,13 +70,18 @@ enum ReactionKind {
   WITHDRAWN = 2;
 }
 
+// Body POST /gotham/v1/events — envelope + firma istanza mittente (obbligatoria in produzione).
+message GothamSignedEvent {
+  GothamEnvelope envelope = 1;
+  bytes signature = 2; // canonical envelope; verificata con public_keys discovery del firmatario
+}
+
 message GothamEnvelope {
   EventKind kind = 1;
-  // Indirizzi Alfred normalizzati lower(user)@lower(im_server_id).
-  // from_address: usato dal gate reception inbound (allowed_address).
-  string from_address = 2;
-  // to_address: destinazione; usato dal gate outbound lato mittente.
-  string to_address = 3;
+  // Bare username lowercase. Istanza mittente = firmatario (signer), non nel body.
+  // Istanza destinataria = HTTP Host (im_server_id).
+  string from_user = 2;
+  string to_user = 3;
 
   // Solo READ e REACTION: messaggio su cui agisce l'evento.
   optional string object_logical_message_id = 4;

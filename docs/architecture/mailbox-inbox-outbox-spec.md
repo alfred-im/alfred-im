@@ -234,8 +234,8 @@ Invio (account mittente)
 
 Peer segna letto
   → outbox read_receipt → erogazione Gotham outbound
-  → POST /gotham/v1/events (READ)
-  → erogazione inbound sul mittente + modulo spunte: propagate_read_receipt
+  → POST host istanza mittente originale (READ: from_user=lettore, to_user=mittente, firmatario=istanza lettore)
+  → inbound + modulo spunte unificato sulla copia mittente
 
 Peer reagisce
   → POST /gotham/v1/events (REACTION)

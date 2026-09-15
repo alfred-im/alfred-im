@@ -143,7 +143,7 @@ storage: chat-media, avatars, instance-branding
 |------|--------|
 | Stessa istanza, compose bare | Mittente bare → destinatario vede mittente bare |
 | Stessa istanza, compose FQDN | Mittente FQDN → destinatario vede mittente FQDN |
-| Inbound federato | `author_address` = `from_address` envelope (sempre FQDN) |
+| Inbound federato | `author_address` = `fqdn(from_user, signer_im_server_id)` — wire bare + firma istanza |
 | Copia mittente verso esterno | `author_address` = forma FQDN del mittente (§7.5b) |
 
 ---

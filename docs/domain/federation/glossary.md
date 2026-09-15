@@ -16,7 +16,8 @@
 | **`publicBaseUrl`** | Solo hosting client web Flutter — **fuori** dal wire federativo; può essere white-label su dominio terzo. |
 | **Indirizzo federato** | `username@im_server_id` — stesso formato in compose, rubrica, allow list e messaggistica. |
 | **peer_address** | Chiave conversazione — stringa lowercase; federato e locale condividono lo stesso modello account. |
-| **author_address** | Identità mittente su copia archivio; inbound federato = indirizzo completo da envelope (`from_address`). |
+| **author_address** | Identità mittente su copia archivio; inbound federato = `fqdn(from_user, signer_im_server_id)`. |
+| **Wire identity** | Body: bare `from_user` / `to_user`; istanza mittente = firma; istanza destinataria = HTTP Host. |
 | **Gateway federativo** | Terminazione HTTP/3 verso peer; discovery e ingest eventi inbound. |
 | **Erogazione internal** | Recapito verso destinatario sulla stessa istanza (DB locale). Implementazione: worker internal (`alfred_delivery`). |
 | **Erogazione external (Gotham)** | Recapito verso `@server` remoto via HTTP/3 + Protobuf. Implementazione: worker Gotham. |

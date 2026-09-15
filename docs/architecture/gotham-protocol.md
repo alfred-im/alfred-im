@@ -23,6 +23,7 @@ Gotham è il protocollo di federazione **nativo** tra istanze Alfred.
 | **Profilo pubblico** | `GET /gotham/v1/users/{username}/profile` · `POST /gotham/v1/profiles` (batch) |
 | **Fatti messaggistica** | `POST /gotham/v1/events` — body = `GothamEnvelope` (MESSAGE, READ, REACTION, LOCATION) |
 | **Ack eventi** | Solo **codice HTTP** (2xx = accettato dal peer) |
+| **Identità wire** | `from_user` / `to_user` bare nel body; **istanza mittente** = firma; **istanza destinataria** = HTTP Host |
 | **Backend istanza** | Supabase (outbox unificata + erogazione internal via `alfred_delivery`) |
 | **Federazione** | Gateway Fly HTTP/3 + worker Gotham — **solo erogazione external** (da implementare) |
 
@@ -88,13 +89,54 @@ Colonna DB riservata per correlazione con sistemi esterni. **Gotham nativo** usa
 
 Fonte protobuf: [gotham.proto](../specs/contracts/gotham.proto).
 
+### 3.0 Identità sul wire (vincolante)
+
+Sul wire gli utenti sono **solo bare username** nel body. Le istanze non si ripetono come `user@server` nell’envelope.
+
+| Ruolo | Dove vive | Esempio Paolo@Blackgate → Mario@Arkham |
+|-------|-----------|----------------------------------------|
+| **Utente mittente / attore** | `from_user` nel body | `paolo` |
+| **Utente destinatario** | `to_user` nel body | `mario` |
+| **Istanza che invia** (agisce per conto di `from_user`) | **Firma** dell’envelope + `public_keys` in discovery | Blackgate |
+| **Istanza che riceve** | **HTTP Host** della richiesta | `arkham-im.fly.dev` |
+
+Il server **non è** l’utente: **certifica** che `from_user` ha compiuto l’azione (messaggio, lettura, reaction), come un notaio federativo.
+
+**Indirizzo canonico DB** (costruito in ingest, non sul wire):
+
+```text
+fqdn(user, im_server_id) = lower(user) + "@" + lower(im_server_id)
+```
+
+Esempi ingest su Arkham, firma verificata di Blackgate:
+
+| Campo DB | Valore |
+|----------|--------|
+| `peer_address` / `author_address` (MESSAGE inbound) | `fqdn(from_user, blackgate_im_server_id)` → `paolo@blackgate-im.fly.dev` |
+| Gate `allowed_address` | stesso FQDN costruito da `from_user` + istanza firmataria |
+
+**Simmetria messaggio / lettura:**
+
+| Direzione | Host HTTP | Firmatario | `from_user` | `to_user` |
+|-----------|-----------|------------|-------------|-----------|
+| Messaggio (Paolo → Mario) | Arkham | Blackgate | `paolo` | `mario` |
+| Lettura (Paolo ha letto) | Arkham | Blackgate | `paolo` | `mario` |
+
+La lettura usa lo **stesso schema** del messaggio, con verso invertito a livello di effetto (aggiorna la copia **mittente** di `to_user` sul host destinatario).
+
+**Firma:** obbligatoria in produzione — senza verifica istanza un bare `from_user` non è attendibile. Body POST eventi = `GothamSignedEvent` (envelope + `signature`).
+
 ### 3.1 Root comune
 
 ```text
+GothamSignedEvent (body POST /gotham/v1/events)
+  envelope                     GothamEnvelope
+  signature                    bytes
+
 GothamEnvelope
   kind                         EventKind
-  from_address                 string   (mittente federato, es. mario@alfred.example)
-  to_address                   string   (destinatario federato)
+  from_user                    string   (bare username, lowercase)
+  to_user                      string   (bare username destinatario sull'host HTTP)
   object_logical_message_id    string?  (solo READ / REACTION)
   payload                      oneof
 ```
@@ -165,7 +207,7 @@ Il wire Gotham **non** usa `publicBaseUrl` (hosting del client Flutter/PWA). Tut
 
 | Config | Ruolo | Sul wire Gotham? |
 |--------|--------|------------------|
-| `im_server_id` | Identità istanza IM; parte `@server` negli indirizzi | **Sì** — host di discovery ed eventi |
+| `im_server_id` | Identità istanza IM; parte `@server` negli indirizzi | **Sì** — host dell’API Gotham (discovery, profilo, eventi) |
 | `publicBaseUrl` | Dove l’utente apre il client web (può essere white-label, es. `https://app.repubblica.it/chat`) | **No** — solo client; niente account né federazione |
 
 **Risoluzione peer:** da `paolo@blackgate-im.fly.dev` → base `https://blackgate-im.fly.dev` (normalizzato lowercase). API Gotham (unica superficie federativa):
@@ -209,7 +251,7 @@ Lettura **sincrona** on-demand (non passa da outbox). Allinea [SYS-PROFILE](../s
 | Visibilità | Profilo **pubblico** — **non** gated da allow list del richiedente |
 | Shadow | Il peer **non** INSERT in `profiles` locale; risposta wire → RPC `get_profiles` |
 | `{username}` | Solo bare username; l’host è `im_server_id` (equivalente a `mario@arkham-im.fly.dev` su host `arkham-im.fly.dev`) |
-| Batch | `POST /gotham/v1/profiles` — stessi campi di `get_profiles`; indirizzi il cui `@server` ≠ host → `4xx` |
+| Batch | `POST /gotham/v1/profiles` — body `usernames[]` bare; host HTTP = `im_server_id` |
 | Assente | Utente inesistente su quell’istanza → `404` (singolo) o omesso nel batch |
 | Avatar / cover | URL possono puntare allo Storage **dell’istanza origine** — vedi [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media |
 
@@ -238,19 +280,21 @@ Risposta `200`: body `ProfileBatchResponse`. Ordine non garantito; indirizzi non
 Quando `get_profiles(p_addresses)` riceve indirizzi con `@server` remoto:
 
 1. Raggruppa per `im_server_id` (parte dopo `@`).
-2. Per ogni istanza peer: `POST …/gotham/v1/profiles` (o GET singoli se batch non disponibile).
-3. Merge nel result set RPC; indirizzo senza risposta → riga con solo `address` (fallback grezzo).
+2. Per ogni istanza peer: `POST https://{im_server_id}/gotham/v1/profiles` con `usernames[]` bare (o GET singoli).
+3. Merge nel result set RPC; ogni risposta espone `address` = `fqdn(username, im_server_id)`; assente → fallback solo `address` richiesto.
 
 Il **client Flutter non chiama Gotham** — solo la piattaforma (implementazione `get_profiles` / gateway).
 
 ### 4.3 Invio evento (fatti messaggistica)
 
 ```http
-POST https://{im_server_id}/gotham/v1/events HTTP/3
+POST https://{im_server_id_destinatario}/gotham/v1/events HTTP/3
 Content-Type: application/x-protobuf
 
-<body: GothamEnvelope>
+<body: GothamSignedEvent>
 ```
+
+`im_server_id` nell’URL = istanza di **`to_user`** (destinatario dell’evento). Il firmatario è l’istanza di **`from_user`** (verificata via `signature` + discovery).
 
 | Codice | Significato |
 |--------|-------------|
@@ -264,16 +308,17 @@ Content-Type: application/x-protobuf
 
 ### 4.4 Indirizzi
 
-Formato: `username@server` dove `server` identifica l’istanza Alfred peer (es. dominio Fly dell’istanza).
+**Piattaforma / DB / UI:** `username@server` — vedi [address-based-messaging.md](../decisions/address-based-messaging.md).
 
-| Campo envelope | Ruolo |
-|----------------|--------|
-| `from_address` | Mittente federato (`mario@arkham-im.fly.dev`) |
-| `to_address` | Destinatario federato (`paolo@blackgate-im.fly.dev`) |
+**Wire Gotham (eventi):** solo `from_user` / `to_user` bare; istanze da firma (mittente) e Host HTTP (destinatario). Mapping:
 
-**Normalizzazione (vincolante):** confronto case-insensitive su username e server; formato canonico in DB e su wire = `lower(username)@lower(server)` (server = `im_server_id` dell’istanza peer).
+| Outbox / `peer_address` | POST eventi |
+|-------------------------|-------------|
+| `mario@arkham-im.fly.dev` | Host `arkham-im.fly.dev`, `to_user=mario`, firmatario = istanza locale, `from_user` = mittente bare |
 
-Vedi [address-based-messaging.md](../decisions/address-based-messaging.md).
+**Normalizzazione (vincolante):** username e server case-insensitive; canonico DB = `lower(user)@lower(im_server_id)`.
+
+**Costruzione inbound:** `fqdn(envelope.from_user, signer_im_server_id)` per `peer_address`, `author_address` e gate `allowed_address`.
 
 ---
 
@@ -321,8 +366,8 @@ Semantica spunte: [server-as-reception.md](../decisions/server-as-reception.md).
 | Gotham `kind` | `outbox.event_kind` | Payload outbox (campi chiave) |
 |---------------|---------------------|-------------------------------|
 | MESSAGE / LOCATION | `deliver` | `logical_message_id`, snapshot contenuto; **`peer_address`** destinatario (locale o federato) |
-| READ | `read_receipt` | `logical_message_id`, `read_receipt_id`; indirizzi wire (`reader_address`, `sender_address`) |
-| REACTION | `reaction_fact` | `logical_message_id`, `reaction_fact_id`, `kind`, `emoji`; indirizzi wire |
+| READ | `read_receipt` | `logical_message_id`, `read_receipt_id`; wire: `from_user`=lettore, `to_user`=mittente originale |
+| REACTION | `reaction_fact` | `logical_message_id`, `reaction_fact_id`, `kind`, `emoji`; wire: `from_user`=reagente, `to_user`=controparte sulla copia da aggiornare |
 
 ### 5.1 Outbound (istanza mittente → peer)
 
@@ -352,16 +397,16 @@ Routing **senza colonna protocol**: il server in `peer_address` (`user@server`) 
 ```text
 1. Gateway Fly riceve POST /gotham/v1/events
 
-2. Worker Gotham (ingress) valida envelope (kind, indirizzi normalizzati, id dedup)
+2. Worker Gotham (ingress) verifica firma → `signer_im_server_id`; valida envelope (kind, id dedup)
 
 3. Gate reception (allow list destinatario) — § 5.4
-     confronto envelope.from_address con allowed_address del destinatario
+     `allowed_address = fqdn(envelope.from_user, signer_im_server_id)`
 
 4. SE consentito:
-       MESSAGE / LOCATION → materialize copia destinatario
-         (logical_message_id remoto; peer_address = from_address; author_address = from_address)
-       READ    → propaga read_at + read_receipt_id sulla copia mittente locale (per λ)
-       REACTION→ INSERT message_reaction_facts
+       MESSAGE / LOCATION → materialize copia destinatario (`to_user` su host locale)
+         peer_address = author_address = fqdn(from_user, signer_im_server_id)
+       READ    → modulo spunte: copia mittente di `to_user` dove peer_address = fqdn(from_user, signer)
+       REACTION→ INSERT message_reaction_facts (stesso schema indirizzi)
 
 5. HTTP 2xx (anche su rifiuto silenzioso allow list — evento processato, nessuna copia)
 ```
@@ -402,10 +447,10 @@ Condizione recapito federato (equivalente a SYS-RECEPTION-006):
 ```text
 EXISTS reception_allowlist
   WHERE archive_user_id = destinatario_locale
-    AND allowed_address = normalize(envelope.from_address)
+    AND allowed_address = fqdn(envelope.from_user, signer_im_server_id)
 ```
 
-- Lista vuota → nessun `from_address` passa → nessuna copia destinatario (silenzio verso mittente remoto).
+- Lista vuota → nessun mittente federato passa → nessuna copia destinatario (silenzio verso istanza remota).
 - Su rifiuto: **nessuna** INSERT copia destinatario; risposta HTTP **2xx** al peer mittente (evento processato / dedup — non leak del filtro).
 - **Non** usare `contacts` come proxy della allow list (SYS-RECEPTION-022).
 
@@ -448,7 +493,7 @@ Helper federato (indirizzo-based):
 ```sql
 alfred_delivery.materialize_inbound_sender_message(
   p_recipient_profile_id uuid,      -- destinatario locale
-  p_sender_address text,            -- envelope.from_address normalizzato
+  p_sender_address text,            -- fqdn(from_user, signer_im_server_id)
   p_sender_message_id uuid,         -- logical_message_id dal server mittente remoto — mai rigenerare
   … snapshot contenuto …
 ) → messages
@@ -476,7 +521,22 @@ Allineata a [SURF-ALLOWLIST](../specs/surfaces/SURF-ALLOWLIST.md):
 
 #### READ / REACTION federati sul wire
 
-Envelope include sempre `from_address` / `to_address`. Il gate inbound per eventi che **non** creano messaggio usa la stessa allow list su `from_address` prima di propagare segnali sulla copia mittente locale.
+Stesso schema § 3.0 per tutti i `EventKind`.
+
+**Outbound (lettore su istanza B, mittente originale su istanza A):**
+
+```text
+Paolo@B legge messaggio da mario@A
+  → outbox read_receipt su B
+  → worker Gotham: POST https://{im_server_id_A}/gotham/v1/events
+       firmatario: B
+       from_user: paolo
+       to_user: mario
+       READ: object_logical_message_id, read_receipt_id
+  → A: gate su fqdn(paolo, B); modulo spunte su copia mittente di mario
+```
+
+**Inbound:** gate su `fqdn(from_user, signer)` prima di propagare segnali sulla copia di `to_user`.
 
 ---
 
@@ -619,7 +679,8 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 | Meccanismo | Stato |
 |------------|-------|
 | TLS / QUIC | Obbligatorio (HTTP/3) |
-| Firma envelope con `public_keys` da discovery | Futuro — campo presente in `GothamDiscovery` |
+| Firma `GothamSignedEvent` con `public_keys` da discovery | **Obbligatorio** in produzione — attesta istanza mittente per `from_user` |
+| Host HTTP = istanza destinataria (`to_user`) | Obbligatorio |
 | Gate reception su inbound | Obbligatorio — [SYS-RECEPTION](../specs/promises/system/SYS-RECEPTION.md) |
 
 ---
@@ -648,5 +709,6 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 | 2026-09-15 | § 5.0 — outbox e spunte unificate; worker = solo erogazione (internal vs Gotham); modulo spunte unificato |
 | 2026-09-15 | § 4.0 — wire Gotham solo su `im_server_id`; `publicBaseUrl` fuori dal protocollo (solo client web) |
 | 2026-09-15 | § 4.2 — API profilo pubblico (`/users/{username}/profile`, `/profiles` batch); discovery con path |
+| 2026-09-15 | § 3.0 — wire: `from_user`/`to_user` bare; istanza da firma + Host; `GothamSignedEvent`; READ/REACTION simmetrici |
 | 2026-09-13 | § 9 — gruppi **in scope** federazione (correzione: non solo locale) |
 | 2026-09-13 | § 6, § 9.1 — erogazione gruppo→membro allineata a pipeline `deliver` standard (PR #284); due gambe; `erogate_group_message` orchestratore |
