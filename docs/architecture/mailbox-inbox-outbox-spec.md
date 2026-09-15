@@ -25,43 +25,48 @@ Tutto il resto (UI, realtime, spunte, tipi messaggio, rubrica) si deduce dall’
 
 ---
 
-## Media (GIF, voice, image, video) — comportamento attuale e debito isolamento
+## Media (GIF, voice, image, video) — ingest al recapito
 
-### Comportamento implementato oggi
+### Principio (target vincolante)
 
-Il flusso client: **un upload** nel bucket `chat-media` (path `{uploader_uid}/{uuid}.*`) → **un** `media_url` → metadati sul messaggio.
+Ogni **copia archivio** possiede il proprio blob in `chat-media` (path sotto `{archive_user_id}/…`). Il destinatario **non** riusa il puntatore del mittente. Solo **testo** e **location** (coordinate in Postgres) non richiedono ingest binario.
 
-Il worker `alfred_delivery` alla materializzazione della copia destinatario **non** re-ingesta il blob: copia solo il puntatore `media_url` dalla copia mittente / payload outbox (`_insert_recipient_copy` — `coalesce(payload →> 'media_url', sender.media_url)`). Nessuna duplicazione in storage.
+Promessa: [SYS-MAILBOX-009](../specs/promises/system/SYS-MAILBOX.md) — amend: un blob per copia archivio; ingest al recapito.
 
-Promessa attuale: [SYS-MAILBOX-009](../specs/promises/system/SYS-MAILBOX.md) — stesso `media_url` su copia mittente e destinatario; un upload, nessuna duplicazione blob.
+### Flusso mittente (sempre)
 
-Su **stessa istanza** il destinatario può comunque scaricare il file perché il bucket `chat-media` è pubblico e la policy `chat_media_select_authenticated` consente SELECT a qualsiasi utente autenticato su **tutto** il bucket — non perché il file viva nel suo namespace.
+```text
+1. Client: upload → bucket chat-media nel namespace mittente ({auth.uid()}/{uuid}.*)
+2. RPC send: INSERT copia mittente con media_url locale (archivio mittente)
+3. INSERT outbox (event_kind=deliver) con snapshot contenuto + riferimento blob mittente
+```
 
-### Debito architetturale — isolamento storage per titolare archivio
+### Modulo erogazione → ingresso inbox unificato
 
-Il modello caselle separa le **righe** `messages` per `archive_user_id`, ma **non** isola i blob allegati: il destinatario resta dipendente dallo storage del mittente (path sotto `{mittente_uid}/`, URL dell’istanza mittente).
+Dopo gate reception, il worker di erogazione materializza il blob **prima** della copia destinatario. Internal ed external convergono sullo **stesso** helper: messaggio + `media_url` **già locale** sul destinatario. La inbox non distingue il ramo.
 
-| Scenario | Cosa succede oggi |
-|----------|-------------------|
-| **Locale (stessa istanza)** | Destinatario legge il blob dal path del mittente; funziona finché l’oggetto esiste |
-| **Mittente elimina blob o account** | La copia destinatario resta in DB ma il `media_url` può diventare **rotto** — nessuna copia locale di riserva |
-| **Delete chat / purge futura** | Rimuovere la riga mittente non implica che il peer abbia una copia propria del file |
-| **Federazione (Gotham)** | `media_url` punta allo Storage Supabase **dell’istanza mittente** — l’istanza destinatario non può usarlo senza ingest locale; **bloccante** per media federati |
+| Ramo | Trigger | Egress media | Risultato inbox destinatario |
+|------|---------|--------------|----------------------------|
+| **Internal** | `peer_address` su stessa istanza | Copia server-side blob mittente → `{destinatario_uid}/{uuid}.*` (stesso Supabase, niente HTTP) | `media_url` locale |
+| **External (Gotham)** | `@server` remoto | Mint **URL temporizzato** (`media_fetch_url`) sul blob mittente → wire | Peer: fetch HTTP → ingest in namespace destinatario → `media_url` locale |
 
-**Requisito a monte (non implementato, non ancora in SDD):** al recapito (worker locale **e** worker federativo inbound) il sistema dovrebbe **materializzare una copia del blob nello storage dell’istanza / nel namespace del titolare archivio destinatario**, aggiornando `media_url` sulla copia destinatario. Solo il testo e la location (coordinate in Postgres) non richiedono ingest.
+Wire: [gotham-protocol.md](./gotham-protocol.md) § 3.1 Media.
 
-Questo è coerente con il principio mailbox «archivi indipendenti»: oggi vale per le righe messaggio, **non** per gli allegati binari.
+### Garbage collection (target)
 
-### Implicazioni finché resta il modello a puntatore condiviso
+- Un blob per copia archivio: eliminare una riga messaggio non cancella il blob se altre righe **nello stesso archivio** referenziano lo stesso `media_url`.
+- Blob orfani (upload ok, recapito mai materializzato): edge case da contare nel GC.
+- Delete account / purge: ogni titolare rimuove solo i propri blob.
 
-| Aspetto | Conseguenza |
-|---------|-------------|
-| **Riferimento** | Più righe `messages` possono condividere lo stesso `media_url` |
-| **Garbage collection** | Eliminare un messaggio o una casella **non** implica che il file sia orfano: va verificato se **altre** copie referenziano ancora quell’URL prima di cancellare da `chat-media` |
-| **Retry / invio fallito** | Upload riuscito ma consegna non materializzata → blob in storage senza (o con) riga archivio — edge case da contare nel GC |
-| **Wire Gotham** | Passare `media_url` sul wire **non basta** senza strategia di fetch + ingest lato ricevente — vedi [gotham-protocol.md](./gotham-protocol.md) § Media |
+### Stato implementazione (`main`) — transitorio
 
-**Regola provvisoria (stato attuale):** trattare i media come risorsa condivisa con refcount logico. La strategia GC e l’**ingest per copia** vanno definiti **prima** di federazione media, delete chat, o purge storage affidabili.
+| Aspetto | Oggi | Target (questa spec) |
+|---------|------|------------------------|
+| Recapito locale | Copia solo puntatore `media_url` mittente (`_insert_recipient_copy`) | Copia blob in namespace destinatario |
+| Federazione | Bloccante (URL remoto non leggibile) | `media_fetch_url` + ingest inbound |
+| Bucket policy | `chat_media_select_authenticated` su tutto il bucket — maschera il debito locale | Isolamento per `{archive_user_id}/` |
+
+Fino alla migrazione: il codice segue ancora il modello a puntatore condiviso; la federazione media resta bloccata.
 
 ---
 

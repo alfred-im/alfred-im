@@ -153,7 +153,7 @@ MessagePayload:
   logical_message_id    // id globale messaggio (server mittente) — unico id federativo
   body
   content_type          // text | gif | voice | image | video (non "location" — vedi sotto)
-  media_url?            // URL sorgente lato mittente — il peer deve ingest locale (vedi mailbox § Media)
+  media_fetch_url?      // capability temporizzata sul blob mittente — NON media_url permanente
   duration_seconds?
   media_mime?
   media_size_bytes?
@@ -196,6 +196,30 @@ LocationPayload:
 ```
 
 **Perché `LOCATION` è un `EventKind` separato:** sul wire la posizione ha payload dedicato (lat/lng). In DB Alfred `message_content_type` include `location`; il worker mappa `EventKind.LOCATION` → `content_type = location` in ingest.
+
+### 3.3 Media — egress (mittente) e ingest (destinatario)
+
+Allegati binari (`gif`, `voice`, `image`, `video`): il wire **non** trasporta il blob né il `media_url` permanente del mittente.
+
+**Outbound (worker Gotham sulla istanza mittente):**
+
+```text
+1. Blob già in chat-media (namespace mittente) — upload client prima dell'RPC
+2. Alla claim outbox deliver: mint media_fetch_url (capability a scadenza, scope λ + peer)
+3. POST /gotham/v1/events — MessagePayload con metadati + media_fetch_url
+```
+
+**Inbound (worker Gotham sulla istanza destinatario):**
+
+```text
+1. Verifica firma + allow list (come ogni evento)
+2. GET media_fetch_url → salva blob in chat-media/{destinatario_uid}/…
+3. materialize_inbound_sender_message con media_url LOCALE destinatario
+```
+
+**Internal (stessa istanza):** nessun wire — il worker internal copia server-side il blob nel namespace destinatario, poi stesso helper di materializzazione inbox. Vedi [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media.
+
+La capability deve restare valida per la finestra di retry outbox / re-invio Gotham.
 
 ---
 
@@ -570,6 +594,7 @@ Prerequisiti piattaforma per Gotham (implementati):
 | Inbound materialize con id remoto | `materialize_inbound_sender_message` |
 | Reaction via outbox | #265 — `20260905120000_reaction_fact_outbox.sql` |
 | `reactor_address` (sostituisce `reactor_id` UUID) | Da implementare con federazione — allinea reaction a modello address-based |
+| Media ingest al recapito (`media_fetch_url` wire; copia locale internal) | Da implementare — amend SYS-MAILBOX-009 |
 | `read_receipt_id` mint lettore → replica mittente | #266 — `20260905140000_read_receipt_id.sql` |
 
 **Con Gotham (da implementare insieme al protocollo):**
@@ -636,9 +661,9 @@ Il gateway Python in `client/deploy/gateway/` serve solo la shell PWA (branding 
 | In scope Gotham | Fuori scope |
 |-----------------|-------------|
 | Messaggistica 1:1 testo + `LOCATION` | |
-| Profilo pubblico remoto (`PublicProfile` / batch) | Media federati senza ingest |
+| Profilo pubblico remoto (`PublicProfile` / batch) | Avatar/cover federati senza strategia ingest (filo separato) |
 | **Gruppi** — identità `@username` / `@username@server`; recapito umano→gruppo; erogazione verso partecipanti su allow list (locali e federati, stesso modello `allowed_address`) | Multi-account sul wire |
-| `MESSAGE` con media (dopo ingest locale destinatario — vedi [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media) | E2E encryption |
+| `MESSAGE` con media — `media_fetch_url` + ingest locale destinatario (§ 3.3; [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media) | E2E encryption |
 | READ, REACTION come eventi separati | `push_notify` sul wire |
 | HTTP/3 + Protobuf + discovery | Body di ack strutturato |
 | Ack MESSAGE = solo HTTP status | |
@@ -732,5 +757,6 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 | 2026-09-15 | § 4.2 — API profilo pubblico (`/users/{username}/profile`, `/profiles` batch); discovery con path |
 | 2026-09-15 | § 3.0 — wire: `from_user`/`to_user` bare; istanza da firma + Host; `GothamSignedEvent`; READ/REACTION simmetrici |
 | 2026-09-15 | § 5.2 — REACTION inbound: `reactor_address` (no FK profilo; allinea a no-shadow) |
+| 2026-09-15 | § 3.3 — media: `media_fetch_url` wire; ingest locale; internal = copia server-side |
 | 2026-09-13 | § 9 — gruppi **in scope** federazione (correzione: non solo locale) |
 | 2026-09-13 | § 6, § 9.1 — erogazione gruppo→membro allineata a pipeline `deliver` standard (PR #284); due gambe; `erogate_group_message` orchestratore |

@@ -115,7 +115,7 @@ storage: chat-media, avatars, instance-branding
 | `client_message_id` | text nullable | Solo copia mittente |
 | `body` | text | |
 | `content_type` | message_content_type | |
-| `media_url` | text nullable | Condiviso tra copie |
+| `media_url` | text nullable | URL blob in `chat-media` — **per copia archivio** (namespace `{archive_user_id}/…`); ingest al recapito — [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md) § Media |
 | `duration_seconds`, `media_mime`, `media_size_bytes` | | voice |
 | `latitude`, `longitude` | double nullable | location |
 | `delivered_at` | timestamptz nullable | Solo righe uscita (author = archive_user) |

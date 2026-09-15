@@ -5,7 +5,7 @@
 | **Promessa ID** | `SYS-MAILBOX` |
 | **Classe** | SYSTEM |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-09-13 |
+| **Ultima revisione** | 2026-09-15 |
 | **ADR** | [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../../decisions/server-as-reception.md), [no-internal-external-chat-distinction.md](../../../decisions/no-internal-external-chat-distinction.md) |
 | **PR origine** | #159, #179, #210 |
 
@@ -41,7 +41,7 @@ Requisiti **client/UI** (coda outbound, realtime subscribe, checkmark rendering,
 | **SYS-MAILBOX-007b** | Colonna **`author_address`** text NOT NULL — identità mittente come indirizzo; forma che fa fede nella comunicazione (§7.4–§7.5b) |
 | **SYS-MAILBOX-007c** | Colonna `author_id` uuid **nullable** — solo casi tecnici (es. erogazione gruppo); **non** chiave conversazione |
 | **SYS-MAILBOX-008** | Migrazione prototipo: drop modello message-centric + wipe dati test; ricrea schema mailbox; pulizia blob `chat-media` **non referenziati** post-migrazione |
-| **SYS-MAILBOX-009** | Media: stesso `media_url` su copia mittente e destinatario; un upload, nessuna duplicazione blob |
+| **SYS-MAILBOX-009** | Media: upload nel namespace mittente; al recapito **ingest** blob nel namespace destinatario — `media_url` **locale per copia archivio** (internal: copia server-side; federato: fetch `media_fetch_url` — [gotham-protocol.md](../../../architecture/gotham-protocol.md) § 3.3). *Implementazione `main` ancora a puntatore condiviso — amend in corso con federazione.* |
 
 #### SHOULD
 

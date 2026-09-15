@@ -2,9 +2,9 @@
 
 **Regole prodotto:** [SYS-MAILBOX](../specs/promises/system/SYS-MAILBOX.md), [PROM-CHAT-MEDIA](../specs/promises/product/PROM-CHAT-MEDIA.md), [SURF-CHAT-014](../specs/surfaces/SURF-CHAT.md)
 
-**Ultima revisione:** 2026-09-09
+**Ultima revisione:** 2026-09-15
 
-**Isolamento storage:** il recapito oggi riusa il `media_url` del mittente (nessuna copia blob lato destinatario). Debito architetturale e implicazioni federazione: [mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md) § Media.
+**Recapito e storage:** target — ogni copia archivio ha il proprio blob (`media_url` locale dopo ingest al recapito). Internal = copia server-side; federato = `media_fetch_url` sul wire + fetch inbound. Dettaglio: [mailbox-inbox-outbox-spec.md](../architecture/mailbox-inbox-outbox-spec.md) § Media, [gotham-protocol.md](../architecture/gotham-protocol.md) § 3.3.
 
 ---
 

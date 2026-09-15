@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-CHAT-MEDIA` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-07-19 |
+| **Ultima revisione** | 2026-09-15 |
 
 Promessa di prodotto: invio e visualizzazione di **foto** (`image`) e **video** (`video`) in chat, con didascalia opzionale, upload su bucket `chat-media`, coda/retry allineata a GIF/voice.
 
@@ -27,7 +27,7 @@ L'utente può condividere foto e video nelle conversazioni 1:1 e nei broadcast d
 | **PROM-CHAT-MEDIA-001b** | Il client **accetta HEIC/HEIF** da galleria/fotocamera (iPhone, social) e **converte in JPEG** prima dell’upload — l’utente non deve convertire manualmente |
 | **PROM-CHAT-MEDIA-002** | `content_type` `video`: MIME `video/mp4`, `video/webm`; `media_url`, `media_mime`, `duration_seconds` obbligatori; max **50 MB** |
 | **PROM-CHAT-MEDIA-003** | Didascalia opzionale in `body` (testo sotto il media in bolla e in anteprima inbox troncata) |
-| **PROM-CHAT-MEDIA-004** | Upload path `chat-media/{auth.uid()}/{uuid}.{ext}` — stesso blob condiviso tra copie archivio |
+| **PROM-CHAT-MEDIA-004** | Upload path `chat-media/{auth.uid()}/{uuid}.{ext}` nel namespace mittente; destinatario riceve **copia locale** al recapito ([SYS-MAILBOX-009](../system/SYS-MAILBOX.md)) |
 | **PROM-CHAT-MEDIA-005** | Foto da **galleria/file picker** e da **fotocamera** (`image_picker`) |
 | **PROM-CHAT-MEDIA-006** | Video solo da **file picker** (MP4/WebM) |
 | **PROM-CHAT-MEDIA-007** | Coda `OutboundMessageQueue` estesa a `image` e `video` — [PROM-OUTBOUND-SEND](./PROM-OUTBOUND-SEND.md) |

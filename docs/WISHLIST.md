@@ -27,16 +27,15 @@ Backlog **non vincolante** — idee future oltre le promesse `implemented` in [s
 
 ### Ingest media al recapito (isolamento storage)
 
-Oggi le copie archivio mittente/destinatario **condividono** lo stesso `media_url` (blob nel path del mittente) — [SYS-MAILBOX-009](./specs/promises/system/SYS-MAILBOX.md), [mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) § Media.
+**Target documentato:** un blob per copia archivio; internal = copia server-side; federato = `media_fetch_url` + ingest inbound — [SYS-MAILBOX-009](./specs/promises/system/SYS-MAILBOX.md), [mailbox-inbox-outbox-spec.md](./architecture/mailbox-inbox-outbox-spec.md) § Media, [gotham-protocol.md](./architecture/gotham-protocol.md) § 3.3.
 
 | Pezzo | Stato |
 |-------|-------|
-| Upload unico lato mittente | ✅ |
-| Worker copia puntatore su destinatario | ✅ |
-| Ingest blob nel namespace destinatario | ❌ |
-| Federazione media (Gotham) | ❌ bloccata senza ingest |
-
-**Prerequisito a monte** per federazione media affidabile, delete chat, e resilienza se il mittente rimuove il file.
+| Upload lato mittente | ✅ |
+| Modello doc (ingresso inbox unificato) | ✅ |
+| Worker copia puntatore su destinatario (legacy) | ✅ codice `main` |
+| Ingest blob nel namespace destinatario | ❌ implementazione |
+| Federazione media (Gotham) | ❌ implementazione |
 
 ### Federazione tra istanze
 

@@ -1,6 +1,6 @@
 # Comandi ed eventi — contesto delivery
 
-**Ultima revisione:** 2026-09-05  
+**Ultima revisione:** 2026-09-15  
 **UML:** [docs/model/uml/delivery/](../../model/uml/delivery/)
 
 Worker server — nessuno statechart client.
@@ -23,7 +23,9 @@ Worker server — nessuno statechart client.
 | Comando | Emesso da | Descrizione |
 |---------|-----------|-------------|
 | `ProcessDeliveryQueue` | Policy (worker) | Elabora prossimo evento in coda (dispatcher per `event_kind`). |
-| `DeliverInternal` | `ProcessDeliveryQueue` | Recapito 1:1 o verso archivio gruppo; gate reception prima della materializzazione. |
+| `DeliverInternal` | `ProcessDeliveryQueue` | Recapito 1:1 o verso archivio gruppo; gate reception; ingest media se allegato; materializza copia destinatario. |
+| `IngestMediaOnDelivery` | `DeliverInternal` / worker Gotham inbound | Copia blob nel namespace destinatario (internal: server-side; federato: fetch capability). |
+| `MintMediaFetchCapability` | Worker Gotham outbound | Genera `media_fetch_url` temporizzato per allegato sul wire. |
 | `PropagateReadReceipt` | `ProcessDeliveryQueue` | Propaga spunta lettura e `read_receipt_id` sulla copia mittente (λ). |
 | `GroupErogate` | `ProcessDeliveryQueue` | Legge archivio gruppo e avvia fan-out. |
 | `ErogateGroupMessage` | `DeliverInternal` / `GroupErogate` | Erogazione verso partecipanti allow list con gate per-partecipante. |

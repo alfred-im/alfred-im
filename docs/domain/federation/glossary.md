@@ -28,6 +28,7 @@
 | **Outbox** | Coda eventi (`deliver`, `read_receipt`, `reaction_fact`, …) processata dal worker. |
 | **get_profiles (federato)** | Piattaforma interroga Gotham sul peer (`/gotham/v1/profiles` o GET singolo); finché assente → fallback indirizzo grezzo. |
 | **PublicProfile** | Messaggio protobuf wire — profilo pubblico remoto; allinea campi RPC `get_profiles`. |
+| **media_fetch_url** | Capability temporizzata sul wire Gotham per allegati — peer fetcha e ingest locale; non è `media_url` archivio. |
 
 ---
 

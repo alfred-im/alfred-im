@@ -1,0 +1,46 @@
+@startuml seq-media-ingest-on-delivery
+' Context: delivery (+ federation per ramo external)
+' Profile: platform
+' Revision: 2026-09-15
+
+title seq-media-ingest-on-delivery — allegato: egress erogazione → inbox unificata
+
+participant "AccountBoundary" as AB
+participant "Outbox" as OB
+participant "DeliveryRouter" as DR
+participant "DeliverInternal" as DI
+participant "GothamEgress" as GE
+participant "PeerGothamIngress" as GI
+database "SenderStorage" as SS
+database "RecipientStorage" as RS
+participant "InboxMaterialize" as IM
+
+AB -> SS : upload (namespace mittente)
+AB -> OB : QueueDelivery (snapshot + blob ref mittente)
+
+OB -> DR : ProcessOutbox (deliver)
+
+alt internal (stessa istanza)
+  DR -> DI : DeliverInternal
+  DI -> SS : read blob mittente
+  DI -> RS : copy blob → namespace destinatario
+  DI -> IM : materialize copia (media_url locale)
+else external (Gotham)
+  DR -> GE : claim federato
+  GE -> SS : mint media_fetch_url (capability)
+  GE -> GE : POST /gotham/v1/events
+  GE --> PeerGothamIngress : MessagePayload + media_fetch_url
+  GI -> GI : verify + allow list
+  GI -> GE : GET media_fetch_url
+  GI -> RS : store blob destinatario
+  GI -> IM : materialize copia (media_url locale)
+end
+
+IM --> AB : RecipientNotified (inbox: messaggio + file locale)
+
+note over IM
+  Ingresso inbox identico per internal/external.
+  Solo erogazione biforca il trasporto blob.
+end note
+
+@enduml
