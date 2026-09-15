@@ -24,7 +24,8 @@
 | **Modulo spunte unificato** | Applica `delivered_at` / `read_at` sulla copia mittente dopo erogazione ok — un’implementazione per internal e Gotham. |
 | **logical_message_id** | Id globale mintato dal server mittente; replicato sulla copia destinatario. |
 | **Outbox** | Coda eventi (`deliver`, `read_receipt`, `reaction_fact`, …) processata dal worker. |
-| **get_profiles (federato)** | Wire profilo dedicato (passo 5); prima del wire: ramo locale + fallback indirizzo grezzo. |
+| **get_profiles (federato)** | Piattaforma interroga Gotham sul peer (`/gotham/v1/profiles` o GET singolo); finché assente → fallback indirizzo grezzo. |
+| **PublicProfile** | Messaggio protobuf wire — profilo pubblico remoto; allinea campi RPC `get_profiles`. |
 
 ---
 

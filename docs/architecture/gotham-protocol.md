@@ -19,9 +19,10 @@ Gotham è il protocollo di federazione **nativo** tra istanze Alfred.
 | **Nome** | Gotham |
 | **Trasporto** | HTTP/3 (QUIC) — terminato su **gateway Fly** per istanza |
 | **Payload** | **Protobuf** — vedi [gotham.proto](../specs/contracts/gotham.proto) |
-| **Discovery** | `GET /.well-known/gotham` → `GothamDiscovery` |
-| **Invio eventi** | `POST /gotham/v1/events` — body = `GothamEnvelope` serializzato |
-| **Ack consegna** | Solo **codice HTTP** (2xx = accettato dal peer) |
+| **Discovery** | `GET /.well-known/gotham` → `GothamDiscovery` (path API inclusi) |
+| **Profilo pubblico** | `GET /gotham/v1/users/{username}/profile` · `POST /gotham/v1/profiles` (batch) |
+| **Fatti messaggistica** | `POST /gotham/v1/events` — body = `GothamEnvelope` (MESSAGE, READ, REACTION, LOCATION) |
+| **Ack eventi** | Solo **codice HTTP** (2xx = accettato dal peer) |
 | **Backend istanza** | Supabase (outbox unificata + erogazione internal via `alfred_delivery`) |
 | **Federazione** | Gateway Fly HTTP/3 + worker Gotham — **solo erogazione external** (da implementare) |
 
@@ -167,10 +168,12 @@ Il wire Gotham **non** usa `publicBaseUrl` (hosting del client Flutter/PWA). Tut
 | `im_server_id` | Identità istanza IM; parte `@server` negli indirizzi | **Sì** — host di discovery ed eventi |
 | `publicBaseUrl` | Dove l’utente apre il client web (può essere white-label, es. `https://app.repubblica.it/chat`) | **No** — solo client; niente account né federazione |
 
-**Risoluzione peer:** da `paolo@blackgate-im.fly.dev` → base `https://blackgate-im.fly.dev` (normalizzato lowercase). Discovery ed eventi:
+**Risoluzione peer:** da `paolo@blackgate-im.fly.dev` → base `https://blackgate-im.fly.dev` (normalizzato lowercase). API Gotham (unica superficie federativa):
 
 ```text
 https://{im_server_id}/.well-known/gotham
+https://{im_server_id}/gotham/v1/users/{username}/profile
+https://{im_server_id}/gotham/v1/profiles
 https://{im_server_id}/gotham/v1/events
 ```
 
@@ -191,8 +194,56 @@ Campi minimi:
 |-------|-----------|
 | `version` | Versione protocollo (es. `"1"`) |
 | `public_keys` | Chiavi per firma/verifica envelope (futuro; può essere vuoto finché la firma non è attiva) |
+| `events_path` | Path POST fatti messaggistica (default `/gotham/v1/events`) |
+| `profile_path_template` | Template GET profilo singolo (default `/gotham/v1/users/{username}/profile`) |
+| `profiles_batch_path` | Path POST batch profili (default `/gotham/v1/profiles`) |
 
-### 4.2 Invio evento
+Dopo discovery il consumer conosce tutti i path — nessun hardcode obbligatorio oltre ai default.
+
+### 4.2 Profilo pubblico
+
+Lettura **sincrona** on-demand (non passa da outbox). Allinea [SYS-PROFILE](../specs/promises/system/SYS-PROFILE.md) SYS-PROFILE-009–010 e `get_profiles` locale.
+
+| Regola | Dettaglio |
+|--------|-----------|
+| Visibilità | Profilo **pubblico** — **non** gated da allow list del richiedente |
+| Shadow | Il peer **non** INSERT in `profiles` locale; risposta wire → RPC `get_profiles` |
+| `{username}` | Solo bare username; l’host è `im_server_id` (equivalente a `mario@arkham-im.fly.dev` su host `arkham-im.fly.dev`) |
+| Batch | `POST /gotham/v1/profiles` — stessi campi di `get_profiles`; indirizzi il cui `@server` ≠ host → `4xx` |
+| Assente | Utente inesistente su quell’istanza → `404` (singolo) o omesso nel batch |
+| Avatar / cover | URL possono puntare allo Storage **dell’istanza origine** — vedi [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media |
+
+#### Singolo
+
+```http
+GET https://{im_server_id}/gotham/v1/users/{username}/profile HTTP/3
+Accept: application/x-protobuf
+```
+
+Risposta `200`: body `PublicProfile` (protobuf). `404` se username non esiste.
+
+#### Batch
+
+```http
+POST https://{im_server_id}/gotham/v1/profiles HTTP/3
+Content-Type: application/x-protobuf
+
+<body: ProfileBatchRequest>
+```
+
+Risposta `200`: body `ProfileBatchResponse`. Ordine non garantito; indirizzi non trovati omessi.
+
+#### Integrazione `get_profiles` (piattaforma)
+
+Quando `get_profiles(p_addresses)` riceve indirizzi con `@server` remoto:
+
+1. Raggruppa per `im_server_id` (parte dopo `@`).
+2. Per ogni istanza peer: `POST …/gotham/v1/profiles` (o GET singoli se batch non disponibile).
+3. Merge nel result set RPC; indirizzo senza risposta → riga con solo `address` (fallback grezzo).
+
+Il **client Flutter non chiama Gotham** — solo la piattaforma (implementazione `get_profiles` / gateway).
+
+### 4.3 Invio evento (fatti messaggistica)
 
 ```http
 POST https://{im_server_id}/gotham/v1/events HTTP/3
@@ -211,7 +262,7 @@ Content-Type: application/x-protobuf
 
 **Enum proto3:** `EVENT_KIND_UNSPECIFIED` e `REACTION_KIND_UNSPECIFIED` esistono solo per compatibilità protobuf. Sul wire **non** vanno usati; il peer rifiuta envelope con kind non riconosciuto.
 
-### 4.3 Indirizzi
+### 4.4 Indirizzi
 
 Formato: `username@server` dove `server` identifica l’istanza Alfred peer (es. dominio Fly dell’istanza).
 
@@ -503,7 +554,8 @@ Il gateway Python in `client/deploy/gateway/` serve solo la shell PWA (branding 
 
 | In scope Gotham | Fuori scope |
 |-----------------|-------------|
-| Messaggistica 1:1 testo + `LOCATION` | Media federati senza ingest |
+| Messaggistica 1:1 testo + `LOCATION` | |
+| Profilo pubblico remoto (`PublicProfile` / batch) | Media federati senza ingest |
 | **Gruppi** — identità `@username` / `@username@server`; recapito umano→gruppo; erogazione verso partecipanti su allow list (locali e federati, stesso modello `allowed_address`) | Multi-account sul wire |
 | `MESSAGE` con media (dopo ingest locale destinatario — vedi [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media) | E2E encryption |
 | READ, REACTION come eventi separati | `push_notify` sul wire |
@@ -595,5 +647,6 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 | 2026-09-13 | § 5.4 — modello address-based unificato (`peer_address`, `author_address`, `allowed_address`); TEMP §8 audit risolto |
 | 2026-09-15 | § 5.0 — outbox e spunte unificate; worker = solo erogazione (internal vs Gotham); modulo spunte unificato |
 | 2026-09-15 | § 4.0 — wire Gotham solo su `im_server_id`; `publicBaseUrl` fuori dal protocollo (solo client web) |
+| 2026-09-15 | § 4.2 — API profilo pubblico (`/users/{username}/profile`, `/profiles` batch); discovery con path |
 | 2026-09-13 | § 9 — gruppi **in scope** federazione (correzione: non solo locale) |
 | 2026-09-13 | § 6, § 9.1 — erogazione gruppo→membro allineata a pipeline `deliver` standard (PR #284); due gambe; `erogate_group_message` orchestratore |

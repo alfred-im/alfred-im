@@ -16,7 +16,7 @@ Target — worker federativo non ancora implementato.
 | `DeliverToFederatedPeer` | Worker federativo | POST verso istanza peer (`/gotham/v1/events`). |
 | `ReceiveFromFederatedPeer` | Gateway federativo | Riceve envelope inbound da peer remoto. |
 | `ApplyFederatedAck` | Worker federativo | Propaga conferme recapito/lettura/reazione. |
-| `FetchRemoteProfile` | Policy (UI) | `get_profiles` con ramo federato (wire profilo — passo 5). |
+| `FetchRemoteProfile` | Policy (UI) | `get_profiles` → piattaforma chiama Gotham `POST /gotham/v1/profiles` sul peer (§ 4.2 gotham-protocol). |
 
 UML platform outbound (target): [seq-federation-stub.puml](../../model/uml/federation/seq-federation-stub.puml).
 

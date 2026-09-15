@@ -2,7 +2,7 @@
 // SSOT testo: docs/architecture/gotham-protocol.md
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Wire: envelope + discovery (questo file).
+// Wire: discovery, profilo pubblico, envelope eventi (questo file).
 // Piattaforma Alfred (stesso release Gotham): gotham-protocol.md § 5.4 —
 //   - reception_allowlist: allowed_address (username bare o user@server)
 //   - gate inbound: normalize(envelope.from_address) ∈ allow list destinatario
@@ -21,6 +21,35 @@ package alfred.gotham.v1;
 message GothamDiscovery {
   string version = 1;
   repeated string public_keys = 2; // PEM o JWK per firma/verifica (futuro)
+  // Path relativi all'host im_server_id (default se assenti).
+  string events_path = 3; // default "/gotham/v1/events"
+  string profile_path_template = 4; // default "/gotham/v1/users/{username}/profile"
+  string profiles_batch_path = 5; // default "/gotham/v1/profiles"
+}
+
+// ---------------------------------------------------------------------------
+// Profilo pubblico — GET /gotham/v1/users/{username}/profile
+//                     POST /gotham/v1/profiles (batch)
+// Non gated da allow list. Nessun profilo shadow lato richiedente.
+// ---------------------------------------------------------------------------
+
+message PublicProfile {
+  string address = 1; // lower(username)@lower(im_server_id) dell'istanza che risponde
+  string display_name = 2;
+  optional string avatar_url = 3;
+  optional string cover_url = 4;
+  optional string pronouns = 5;
+  string profile_kind = 6; // "user" | "group"
+}
+
+message ProfileBatchRequest {
+  // Indirizzi completi; il server in ogni address deve coincidere con im_server_id locale.
+  repeated string addresses = 1;
+}
+
+message ProfileBatchResponse {
+  repeated PublicProfile profiles = 1;
+  // Indirizzi richiesti ma non trovati: omessi (non errore batch).
 }
 
 // ---------------------------------------------------------------------------

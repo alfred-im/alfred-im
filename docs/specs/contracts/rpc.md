@@ -211,7 +211,7 @@ get_profiles(p_addresses text[]) → table (
 |--------|-----------|
 | Input | Array indirizzi lowercase; ordine output non garantito |
 | Locale | Join `profiles` per bare username o FQDN stessa istanza |
-| Federato | Risposta da reception API / wire profilo (passo 5 Gotham); finché assente → riga con solo `address` |
+| Federato | Piattaforma chiama Gotham sul peer: `POST https://{im_server_id}/gotham/v1/profiles` (o GET singolo) → `PublicProfile`; finché assente → riga con solo `address` — vedi [gotham-protocol.md](../../architecture/gotham-protocol.md) § 4.2 |
 | Allow list | **Non** filtra visibilità — governa solo recapito messaggi |
 | Shadow | **MUST NOT** INSERT in `profiles` per peer remoti |
 
