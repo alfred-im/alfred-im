@@ -158,10 +158,28 @@ LocationPayload:
 
 ## 4. HTTP
 
+### 4.0 Host federativo — `im_server_id` (vincolante)
+
+Il wire Gotham **non** usa `publicBaseUrl` (hosting del client Flutter/PWA). Tutte le interazioni del protocollo federativo avvengono sull’host **`im_server_id`** dell’istanza — lo stesso dominio che compare dopo la `@` negli indirizzi IM (`mario@im.example`).
+
+| Config | Ruolo | Sul wire Gotham? |
+|--------|--------|------------------|
+| `im_server_id` | Identità istanza IM; parte `@server` negli indirizzi | **Sì** — host di discovery ed eventi |
+| `publicBaseUrl` | Dove l’utente apre il client web (può essere white-label, es. `https://app.repubblica.it/chat`) | **No** — solo client; niente account né federazione |
+
+**Risoluzione peer:** da `paolo@blackgate-im.fly.dev` → base `https://blackgate-im.fly.dev` (normalizzato lowercase). Discovery ed eventi:
+
+```text
+https://{im_server_id}/.well-known/gotham
+https://{im_server_id}/gotham/v1/events
+```
+
+`publicBaseUrl` e `im_server_id` **possono** coincidere (demo Arkham/Blackgate su `*.fly.dev`) o divergere (client su dominio editoriale, IM su `im.*`). La federazione segue sempre `im_server_id`. Vedi [client/deploy/README.md](../../client/deploy/README.md) § Due indirizzi web.
+
 ### 4.1 Discovery
 
 ```http
-GET /.well-known/gotham HTTP/3
+GET https://{im_server_id}/.well-known/gotham HTTP/3
 Accept: application/x-protobuf
 ```
 
@@ -177,7 +195,7 @@ Campi minimi:
 ### 4.2 Invio evento
 
 ```http
-POST /gotham/v1/events HTTP/3
+POST https://{im_server_id}/gotham/v1/events HTTP/3
 Content-Type: application/x-protobuf
 
 <body: GothamEnvelope>
@@ -576,5 +594,6 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 | 2026-09-09 | § 5.4 — `reception_allowlist` locale + esterna; RPC invio/materialize federato; gate su `from_address` |
 | 2026-09-13 | § 5.4 — modello address-based unificato (`peer_address`, `author_address`, `allowed_address`); TEMP §8 audit risolto |
 | 2026-09-15 | § 5.0 — outbox e spunte unificate; worker = solo erogazione (internal vs Gotham); modulo spunte unificato |
+| 2026-09-15 | § 4.0 — wire Gotham solo su `im_server_id`; `publicBaseUrl` fuori dal protocollo (solo client web) |
 | 2026-09-13 | § 9 — gruppi **in scope** federazione (correzione: non solo locale) |
 | 2026-09-13 | § 6, § 9.1 — erogazione gruppo→membro allineata a pipeline `deliver` standard (PR #284); due gambe; `erogate_group_message` orchestratore |

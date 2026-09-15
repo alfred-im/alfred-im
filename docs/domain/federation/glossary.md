@@ -11,7 +11,9 @@
 | Termine | Definizione |
 |---------|-------------|
 | **Federation** | Messaggistica tra istanze Alfred (`user@server` verso altra istanza). |
-| **Istanza** | Deploy Alfred (Supabase + client Fly) con `im_server_id` proprio. |
+| **Istanza** | Deploy Alfred (Supabase + client) con `im_server_id` proprio. |
+| **`im_server_id`** | Dominio identità IM (`@server` negli indirizzi) **e** host del wire Gotham (discovery + `/gotham/v1/events`). |
+| **`publicBaseUrl`** | Solo hosting client web Flutter — **fuori** dal wire federativo; può essere white-label su dominio terzo. |
 | **Indirizzo federato** | `username@im_server_id` — stesso formato in compose, rubrica, allow list e messaggistica. |
 | **peer_address** | Chiave conversazione — stringa lowercase; federato e locale condividono lo stesso modello account. |
 | **author_address** | Identità mittente su copia archivio; inbound federato = indirizzo completo da envelope (`from_address`). |
