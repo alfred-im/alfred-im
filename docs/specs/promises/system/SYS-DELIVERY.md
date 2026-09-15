@@ -5,7 +5,7 @@
 | **Promessa ID** | `SYS-DELIVERY` |
 | **Classe** | SYSTEM |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-09-13 |
+| **Ultima revisione** | 2026-09-15 |
 | **ADR** | [server-as-reception.md](../../../decisions/server-as-reception.md), [gotham-protocol.md](../../../architecture/gotham-protocol.md) |
 | **PR origine** | #179 |
 
@@ -17,7 +17,7 @@ Promessa SYSTEM — infrastruttura **non-account** che attraversa i confini [SYS
 
 ## 1. Problema / obiettivo
 
-Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi su `outbox`. Il worker delivery materializza copie destinatario, aggiorna `delivered_at`/`read_at` sul mittente, eroga messaggi gruppo — senza sessione GoTrue di nessun utente.
+Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi su `outbox` **unificata**. Il worker delivery eroga (internal o Gotham), poi il **modulo spunte unificato** aggiorna `delivered_at`/`read_at` sul mittente; materializza copie destinatario (con ingest media se allegato) ed eroga gruppo — senza sessione GoTrue di nessun utente.
 
 ---
 

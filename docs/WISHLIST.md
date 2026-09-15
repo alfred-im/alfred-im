@@ -44,6 +44,7 @@ Messaggistica `user@server` verso altre istanze Alfred — contratto wire in [go
 | Pezzo | Stato |
 |-------|-------|
 | Spec wire + Protobuf | ✅ in repo |
+| Modello doc obiezioni #1–#6 | ✅ [federation/README.md](./domain/federation/README.md) |
 | Gateway Fly | ❌ |
 | Worker claim outbox | ❌ |
 | Invio verso `peer_address` federato | ⏸ outbox `queued` |

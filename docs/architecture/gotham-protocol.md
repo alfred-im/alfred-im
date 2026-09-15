@@ -259,7 +259,7 @@ Campi minimi:
 | Campo | Contenuto |
 |-------|-----------|
 | `version` | Versione protocollo (es. `"1"`) |
-| `public_keys` | Chiavi per firma/verifica envelope (futuro; può essere vuoto finché la firma non è attiva) |
+| `public_keys` | Chiavi per firma/verifica `GothamSignedEvent` — **obbligatorio in produzione** (§ 10); vuoto ammesso solo sandbox/dev |
 | `events_path` | Path POST fatti messaggistica (default `/gotham/v1/events`) |
 | `profile_path_template` | Template GET profilo singolo (default `/gotham/v1/users/{username}/profile`) |
 | `profiles_batch_path` | Path POST batch profili (default `/gotham/v1/profiles`) |
@@ -277,7 +277,7 @@ Lettura **sincrona** on-demand (non passa da outbox). Allinea [SYS-PROFILE](../s
 | `{username}` | Solo bare username; l’host è `im_server_id` (equivalente a `mario@arkham-im.fly.dev` su host `arkham-im.fly.dev`) |
 | Batch | `POST /gotham/v1/profiles` — body `usernames[]` bare; host HTTP = `im_server_id` |
 | Assente | Utente inesistente su quell’istanza → `404` (singolo) o omesso nel batch |
-| Avatar / cover | URL possono puntare allo Storage **dell’istanza origine** — vedi [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media |
+| Avatar / cover | URL possono puntare allo Storage **dell’istanza origine** — ingest federato avatar/cover: **filo separato** (fuori scope § 3.3 media chat) |
 
 #### Singolo
 
@@ -749,7 +749,7 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 |------|----------|
 | 2026-09-05 | Prima stesura — envelope senza `event_id` / `external_id`; id federativi nominati; mapping outbox |
 | 2026-09-08 | Rimosso `contact_protocol`; routing implicito; solo Gotham come federazione |
-| 2026-09-09 | `media_url` wire: ingest locale destinatario obbligatorio — vedi mailbox § Media |
+| 2026-09-09 | Wire media: ingest locale destinatario obbligatorio — evoluzione → `media_fetch_url` (§ 3.3) |
 | 2026-09-09 | § 5.4 — `reception_allowlist` locale + esterna; RPC invio/materialize federato; gate su `fqdn(from_user, signer)` |
 | 2026-09-13 | § 5.4 — modello address-based unificato (`peer_address`, `author_address`, `allowed_address`); TEMP §8 audit risolto |
 | 2026-09-15 | § 5.0 — outbox e spunte unificate; worker = solo erogazione (internal vs Gotham); modulo spunte unificato |

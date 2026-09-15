@@ -11,7 +11,7 @@ Regole prodotto (picker, append-only, overlay): solo nei file promessa/superfici
 | Elemento | Dettaglio |
 |----------|-----------|
 | RPC | `apply_message_reaction` / `withdraw_message_reaction` — accodano outbox `reaction_fact`; worker INSERT append-only su `message_reaction_facts` |
-| Identità reagente | Target federazione: `reactor_address` (text), non UUID profilo — [schema.md](../specs/contracts/schema.md) |
+| Identità reagente | Target: `reactor_address` (text) — [schema.md](../specs/contracts/schema.md); codice `main` ancora `reactor_id` UUID |
 | Lettura | `list_message_reactions` (`reactor_addresses[]`) / join in `list_peer_messages` |
 | Migrazione | `supabase/migrations/*message_reaction*` |
 

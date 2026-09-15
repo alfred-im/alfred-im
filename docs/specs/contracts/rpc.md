@@ -255,6 +255,8 @@ list_message_reactions(p_logical_message_ids uuid[]) → table (
 
 `includes_me`: confronto `reactor_address` con indirizzo canonico del chiamante (non UUID profilo).
 
+**Stato corrente (`main`):** implementazione usa ancora `reactor_ids uuid[]` e colonna `reactor_id` — allineamento a `reactor_address` con Gotham ([schema.md](./schema.md)).
+
 ---
 
 ## `find_profile_by_username`
