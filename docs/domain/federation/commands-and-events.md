@@ -49,3 +49,7 @@ Inbound federato: `FederationWorker` → `ReceptionGate` : `EvaluateInboundDeliv
 | **Gate reception su inbound** | Allow list su `allowed_address` anche per messaggi federati in ingresso. |
 | **Nessuna tipologia chat** | Federato e locale: stessa UI, stesso modello account — routing solo in delivery. |
 | **author_address copia mittente** | Scrivendo all'esterno: forma FQDN sulla copia mittente — vedi PROM-CHAT-PEER-KEY §3. |
+| **Wire identity** | Body: bare `from_user`/`to_user`; mittente = firmatario; destinatario = HTTP Host; `GothamSignedEvent` in produzione. |
+| **Profilo remoto** | `FetchRemoteProfile` via Gotham su `im_server_id` del peer — non `publicBaseUrl`. |
+| **Reaction inbound** | `reactor_address = fqdn(from_user, signer)` — nessun UUID profilo locale. |
+| **Media al recapito** | Erogazione mint `media_fetch_url` (external) o copia server-side (internal); inbox sempre `media_url` locale. |

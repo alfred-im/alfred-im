@@ -55,3 +55,5 @@ Worker server — nessuno statechart client.
 | **Nessuna scrittura cross-archivio** | Solo il worker attraversa il confine tra archivi. |
 | **Rifiuto silenzioso** | Gate fallito → `DeliverySilentlyBlocked`; nessun errore verso il mittente. |
 | **Push solo dopo materializzazione** | `QueuePushNotification` solo se copia destinatario creata (SYS-DELIVERY-022). |
+| **Spunte unificate** | Worker erogazione (internal/Gotham) non implementa logica spunte parallela — invoca modulo unico post-erogazione ok. |
+| **Media al recapito** | Prima di `RecipientNotified`, ingest blob nel namespace destinatario se allegato (SYS-MAILBOX-009). |

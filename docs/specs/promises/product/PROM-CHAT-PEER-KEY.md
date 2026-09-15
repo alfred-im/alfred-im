@@ -61,7 +61,7 @@ Sulla **copia locale del mittente**, `author_address` è **sempre** l'identità 
 
 Scrivendo **all'esterno** (controparte con `@server` diverso da `im_server_id` locale), il mittente usa **forma FQDN** sulla propria copia — non `paolo` bare.
 
-Inbound federato: `author_address` = indirizzo completo mittente da envelope (`from_address`).
+Inbound federato: `author_address` = `fqdn(envelope.from_user, signer_im_server_id)` — wire bare + firma istanza mittente ([gotham-protocol.md](../../architecture/gotham-protocol.md) § 3.0).
 
 ---
 

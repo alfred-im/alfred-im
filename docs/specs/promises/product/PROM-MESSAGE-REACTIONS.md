@@ -5,7 +5,7 @@
 | **Promessa ID** | `PROM-MESSAGE-REACTIONS` |
 | **Classe** | PRODUCT |
 | **Status** | `implemented` |
-| **Ultima revisione** | 2026-09-05 |
+| **Ultima revisione** | 2026-09-15 |
 
 Promessa di prodotto: tap su un messaggio apre un menu con picker emoji; la reaction scelta è visibile sulla bolla e sincronizzata tra i partecipanti. Dati append-only (`MessageReactionFact`).
 
@@ -53,7 +53,8 @@ L'utente esprime una reaction emoji su un messaggio in conversazione, la vede su
 |----------|-----------|
 | Glossario / comandi | [docs/domain/messaging/](../../../domain/messaging/) |
 | UML | [messaging-state.puml](../../../model/uml/messaging/messaging-state.puml), [seq-message-actions-reaction.puml](../../../model/uml/messaging/seq-message-actions-reaction.puml) |
-| Schema / RPC | [contracts/schema.md](../../contracts/schema.md), [contracts/rpc.md](../../contracts/rpc.md) |
+| Schema / RPC | [contracts/schema.md](../../contracts/schema.md) (`reactor_address`), [contracts/rpc.md](../../contracts/rpc.md) |
+| Federazione | [gotham-protocol.md](../../architecture/gotham-protocol.md) § 5.2 REACTION inbound |
 | Statechart client | [client/lib/machines/messaging/](../../../../client/lib/machines/messaging/) |
 
 ---

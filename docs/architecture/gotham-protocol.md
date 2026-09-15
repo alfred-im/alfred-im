@@ -750,7 +750,7 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 | 2026-09-05 | Prima stesura — envelope senza `event_id` / `external_id`; id federativi nominati; mapping outbox |
 | 2026-09-08 | Rimosso `contact_protocol`; routing implicito; solo Gotham come federazione |
 | 2026-09-09 | `media_url` wire: ingest locale destinatario obbligatorio — vedi mailbox § Media |
-| 2026-09-09 | § 5.4 — `reception_allowlist` locale + esterna; RPC invio/materialize federato; gate su `from_address` |
+| 2026-09-09 | § 5.4 — `reception_allowlist` locale + esterna; RPC invio/materialize federato; gate su `fqdn(from_user, signer)` |
 | 2026-09-13 | § 5.4 — modello address-based unificato (`peer_address`, `author_address`, `allowed_address`); TEMP §8 audit risolto |
 | 2026-09-15 | § 5.0 — outbox e spunte unificate; worker = solo erogazione (internal vs Gotham); modulo spunte unificato |
 | 2026-09-15 | § 4.0 — wire Gotham solo su `im_server_id`; `publicBaseUrl` fuori dal protocollo (solo client web) |

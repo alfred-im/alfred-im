@@ -18,7 +18,9 @@
 | `ErogateGroupMessage` | `alfred_delivery.erogate_group_message` |
 | `ProcessPushNotification` | `alfred_delivery.process_push_notify` |
 | `ProcessReactionFact` | `alfred_delivery.process_reaction_fact` |
-| `RecipientNotified` | INSERT copia destinatario + `delivered_at` mittente |
+| `IngestMediaOnDelivery` | Copia blob nel namespace destinatario (internal) o fetch `media_fetch_url` (Gotham inbound) |
+| `MintMediaFetchCapability` | Worker Gotham outbound — URL temporizzato sul blob mittente |
+| `RecipientNotified` | INSERT copia destinatario (`media_url` locale se allegato) + modulo spunte unificato |
 | `DeliverySilentlyBlocked` | outbox `completed` + flag reception; nessuna copia destinatario |
 
 Schema: `alfred_delivery` · Migrazioni: `20260711190000_account_boundary_delivery.sql`, `20260714100000_push_subscriptions.sql`, `20260725100000_delivery_internal_helpers.sql`, `20260905000000_sender_global_message_id.sql`, `20260905120000_reaction_fact_outbox.sql`, `20260905140000_read_receipt_id.sql`
@@ -31,4 +33,4 @@ Sequence platform usano termini tecnici (`RecipientCopyMaterialized`, `SenderDel
 
 Gate reception: dominio `EvaluateInboundDelivery` / `DeliverySilentlyBlocked`; SQL `is_sender_allowed_for_reception` è helper, non nome canonico.
 
-`QueueFederatedSend` (federation) e `QueueDelivery` (locale) restano **nomi distinti** per driver outbox — non unificare senza refactor schema.
+**Outbox unificata:** locale e federato usano la stessa tabella `outbox` (`event_kind = deliver`); il router sceglie internal vs Gotham da `@server` in `peer_address`. A dominio: `QueueDelivery` (account) e `QueueFederatedSend` (policy federation) sono alias concettuali sullo stesso accodamento — vedi [federation/commands-and-events.md](../federation/commands-and-events.md).

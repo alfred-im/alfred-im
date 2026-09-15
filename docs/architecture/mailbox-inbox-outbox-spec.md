@@ -16,7 +16,7 @@ L’ADR [address-based-messaging.md](../decisions/address-based-messaging.md) re
 |---------|-------------------------|
 | **Archivio** | Un archivio per titolare archivio: ogni utente ha le proprie righe `messages` (`archive_user_id`) |
 | **Confine account** | RPC account toccano **solo** il proprio archivio — [SYS-ACCOUNT-BOUNDARY](../specs/promises/system/SYS-ACCOUNT-BOUNDARY.md) |
-| **Consegna** | **Outbox sempre** → worker `alfred_delivery.process_outbox` materializza destinatario e date spunte mittente — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) |
+| **Consegna** | **Outbox unificata** → router internal/Gotham (solo erogazione); modulo spunte unificato post-erogazione ok — [SYS-DELIVERY](../specs/promises/system/SYS-DELIVERY.md) · federazione: [gotham-protocol.md](./gotham-protocol.md) § 5.0 |
 | **Inbox** | Lista derivata dal **mio** archivio via `list_inbox()` |
 | **Storico chat** | Finestra recente via `list_peer_messages` (ultimi N, default 100); pagine più vecchie con cursore `p_before_created_at`; anteprima inbox ⊆ prima finestra (SYS-MAILBOX-057) |
 | **Identità chat** | `(io, peer_address)` — indirizzo lowercase `username` o `username@server`; presentazione via `get_profiles` |
