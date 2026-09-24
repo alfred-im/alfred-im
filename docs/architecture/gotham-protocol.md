@@ -1,6 +1,6 @@
 # Gotham — protocollo federazione Alfred
 
-**Ultima revisione:** 2026-09-15  
+**Ultima revisione:** 2026-09-24  
 **Stato:** `documented` — wire contract definito; runtime non implementato  
 **Audience:** AI / implementazione gateway e erogazione Gotham
 
@@ -731,7 +731,56 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 
 ---
 
-## 11. Riferimenti
+## 11. Review modello — decisioni chiuse e domande aperte
+
+Questa sezione traccia l’esito della **review modello** (discussione iterativa obiezione per obiezione). Non è un gate SDD né una checklist di implementazione.
+
+**Indice parallelo:** [domain/federation/README.md](../domain/federation/README.md) (tabella obiezioni #1–#6).
+
+### 11.1 Decisioni chiuse (review #1–#6)
+
+| # | Decisione | Risposta / modello concordato | Dove nel contratto |
+|---|-----------|-------------------------------|-------------------|
+| 1 | Outbox e spunte: unificate o duplicate per internal/external? | **Unificate.** Una outbox; modulo spunte unico dopo erogazione ok. Worker = **solo erogazione** (internal vs Gotham). | § 5.0 |
+| 2 | Host wire: `publicBaseUrl` o `im_server_id`? | **Solo `im_server_id`.** `publicBaseUrl` = hosting client Flutter, fuori dal wire. | § 4.0 |
+| 3 | Profilo federato: shadow profile, allow list, o API dedicata? | **`get_profiles` non gated**; peer serve profilo via Gotham GET/POST; **nessun** INSERT in `profiles` locale. | § 4.2 |
+| 4 | Indirizzi sul wire: FQDN nel body o bare + firma/Host? | **`from_user` / `to_user` bare**; istanza mittente = firmatario; destinataria = HTTP Host; `GothamSignedEvent` obbligatorio in produzione. Vale per MESSAGE, READ, REACTION, LOCATION. | § 3.0 |
+| 5 | Reaction federata: `reactor_id` UUID o indirizzo? | **`reactor_address`** (text, come `author_address`); nessun profilo shadow per il reagente remoto. | § 5.2, [schema.md](../specs/contracts/schema.md) |
+| 6 | Media federati: puntatore, push inline, o pull on ingest? | **Ingest al recapito** — blob per copia archivio. Internal: copia server-side; external: `media_fetch_url` temporizzato + fetch inbound. Ingresso inbox **unificato** (messaggio + `media_url` locale). | § 3.3, [mailbox-inbox-outbox-spec.md](./mailbox-inbox-outbox-spec.md) § Media |
+
+### 11.2 Domande aperte (elenco non esaustivo)
+
+**Non è una lista definitiva** — solo quanto emerso finora in review e analisi gap. Una sessione futura può aggiungere domande, riformularle o chiuderle.
+
+#### Review documentale (obiezioni originarie #7+, mai chiuse in discussione)
+
+| # | Domanda aperta | Contesto |
+|---|----------------|----------|
+| 7 | **Sicurezza wire:** formato firma, byte canonicali dell’envelope da firmare, algoritmo, rotazione `public_keys`, comportamento sandbox vs produzione se discovery è vuota? | § 10 è target minimo; implementazione `GothamSignedEvent` non specificata |
+| 8 | **Promesse `SYS-FEDERATION-*`:** quali ID, file spec, smoke SQL e stato registry per il runtime Gotham? | Oggi assenti o placeholder |
+| 9 | **Architettura runtime:** claim/polling outbox federato, auth gateway Fly ↔ Supabase, confine service_role, `push_notify` resta solo locale? | Worker Gotham non implementato |
+| 10 | **UML / verifica:** le sequence federation e media ingest sono **target** — serve cablaggio `verified` + test end-to-end? | [model/uml/federation/](../model/uml/federation/), `seq-media-ingest-on-delivery.puml` |
+
+#### Codice `main` vs modello documentato (da chiudere prima o in parallelo ordinato al runtime Gotham)
+
+| Domanda aperta | Oggi (`main`) | Target (questo documento + mailbox spec) |
+|----------------|---------------|------------------------------------------|
+| Media chat al recapito | Worker copia solo puntatore `media_url` mittente | Ingest blob nel namespace destinatario; amend [SYS-MAILBOX-009](../specs/promises/system/SYS-MAILBOX.md) |
+| Reaction — identità reagente | `reactor_id` UUID + `reactor_ids[]` in RPC | `reactor_address` text; migrazione + client |
+| Registry / promesse SDD | Alcune promesse restano `implemented` con semantica legacy | Allineamento esplicito registry + test dopo migrazione |
+
+#### Specifica incompleta (doc target ma senza numeri o filo dedicato)
+
+| Domanda aperta | Nota |
+|----------------|------|
+| **TTL `media_fetch_url`** | Deve coprire retry outbox / re-invio Gotham — durata, scope (λ + peer?), comportamento se scade prima dell’ingest? |
+| **Avatar / cover federati** | `PublicProfile` espone URL su storage origine; **nessuna** strategia ingest (filo separato da media chat § 3.3) |
+| **Gruppi + media federati** | Fan-out verso N membri su istanze remote: un fetch per gamba, dedup blob, ordine erogazione? |
+| **Gateway + worker Gotham** | Componenti non in produzione — dipendenze deploy, health, dedup inbound, idempotenza materialize |
+
+---
+
+## 12. Riferimenti
 
 | Documento | Ruolo |
 |-----------|-------|
@@ -760,3 +809,4 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 | 2026-09-15 | § 3.3 — media: `media_fetch_url` wire; ingest locale; internal = copia server-side |
 | 2026-09-13 | § 9 — gruppi **in scope** federazione (correzione: non solo locale) |
 | 2026-09-13 | § 6, § 9.1 — erogazione gruppo→membro allineata a pipeline `deliver` standard (PR #284); due gambe; `erogate_group_message` orchestratore |
+| 2026-09-24 | § 11 — review modello: decisioni chiuse #1–#6; domande aperte non esaustive (review #7+, gap codice/spec) |

@@ -2,7 +2,7 @@
 
 **Bounded context:** `federation`  
 **Stato modellazione:** `documented`  
-**Ultima revisione:** 2026-09-15
+**Ultima revisione:** 2026-09-24
 
 Messaggistica **tra istanze Alfred** (`user@server`). Il prodotto è federato per definizione; il nome del protocollo wire compare solo nel contratto tecnico.
 
@@ -18,6 +18,8 @@ Messaggistica **tra istanze Alfred** (`user@server`). Il prodotto è federato pe
 | 4 | **Identità wire** — `from_user`/`to_user` bare; istanza da firma + HTTP Host; `GothamSignedEvent` obbligatorio | [gotham-protocol.md](../../architecture/gotham-protocol.md) § 3.0 · [gotham.proto](../../specs/contracts/gotham.proto) |
 | 5 | **Reaction federate** — `reactor_address` (text), non `reactor_id` UUID | [schema.md](../../specs/contracts/schema.md) `message_reaction_facts` |
 | 6 | **Media ingest al recapito** — blob per copia archivio; `media_fetch_url` su wire; ingresso inbox unificato | [mailbox-inbox-outbox-spec.md](../../architecture/mailbox-inbox-outbox-spec.md) § Media · [gotham-protocol.md](../../architecture/gotham-protocol.md) § 3.3 |
+
+**Domande aperte (non esaustivo):** [gotham-protocol.md § 11.2](../../architecture/gotham-protocol.md#112-domande-aperte-elenco-non-esaustivo) — elenco vivo di quanto emerso in review; può crescere in sessioni future.
 
 ---
 
