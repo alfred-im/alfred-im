@@ -4,8 +4,8 @@
 |-------|--------|
 | **Promessa ID** | `SYS-CONTACTS` |
 | **Classe** | SYSTEM |
-| **Status** | `approved` — amend §7 contacts.address only (implementazione pendente) |
-| **Ultima revisione** | 2026-09-13 |
+| **Status** | `implemented` |
+| **Ultima revisione** | 2026-09-27 |
 | **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) |
 | **PR** | #109, #134 |
 
