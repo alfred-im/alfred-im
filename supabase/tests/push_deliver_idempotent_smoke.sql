@@ -42,7 +42,7 @@ BEGIN
     'smoke idempotent push',
     'text'
   )
-  ON CONFLICT (archive_user_id, logical_message_id) DO NOTHING;
+  ON CONFLICT (archive_user_id, logical_message_id, peer_address) DO NOTHING;
 
   INSERT INTO public.outbox (message_id, payload, status)
   SELECT m.id, jsonb_build_object(
