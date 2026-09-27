@@ -71,7 +71,7 @@ Binding UX shell dedicata quando focus su account `profile_kind = group`: home s
 | SURF-GROUP-SHELL-001 | `account_manager_persistence_test.dart` (`profileKind` manifest) |
 | SURF-GROUP-SHELL-011 | `home_screen_group_test.dart` — default non è chat |
 
-Gate: `check-spec-sync.sh` + `verify.sh` + smoke SQL gruppo
+Gate: `bash scripts/verify.sh`
 
 ---
 

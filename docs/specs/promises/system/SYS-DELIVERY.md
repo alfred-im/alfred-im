@@ -54,7 +54,7 @@ Gli account accettano invio/lettura solo nel proprio archivio e accodano eventi 
 | **SYS-DELIVERY-015** | `group_erogate`: per ogni partecipante allow list con gate → outbox `deliver` dalla riga archivio gruppo → `deliver_internal` materializza proxy membro (stesso λ) |
 | **SYS-DELIVERY-015b** | Fanout da messaggio umano→gruppo: copia uscita gruppo (`peer_address` = membro) + `delivered_at` su quella gamba; gamba 1 (umano) invariata |
 | **SYS-DELIVERY-016** | Al termine: `outbox.status = completed` (o `failed` con `last_error` su errore transazione) |
-| **SYS-DELIVERY-017** | Idempotenza destinatario: `ON CONFLICT (archive_user_id, logical_message_id) DO NOTHING` |
+| **SYS-DELIVERY-017** | Idempotenza destinatario: `ON CONFLICT (archive_user_id, logical_message_id, peer_address) DO NOTHING` |
 | **SYS-DELIVERY-018** | ✓ singola: copia mittente con `delivered_at` null permanente se gate rifiuta |
 | **SYS-DELIVERY-019** | ✓✓ grigie: worker `deliver` valorizza `delivered_at` su copia mittente; `read_at` null |
 | **SYS-DELIVERY-020** | ✓✓ blu: lettore aggiorna solo archivio locale; worker `read_receipt` propaga `read_at` alla copia mittente |

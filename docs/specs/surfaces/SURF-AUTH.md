@@ -91,7 +91,7 @@ Il `supabase/config.toml` nel repo documenta anche `localhost:8080` per sviluppo
 | SURF-AUTH-010 | `guides/multi-account.md` |
 | SURF-AUTH-013 | Verifica manuale: flusso corretto → `publicBaseUrl` istanza; localhost = canarino (errore config/deploy), non esito prodotto |
 
-Gate: `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

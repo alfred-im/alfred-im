@@ -69,7 +69,7 @@ Migrazione base: `20260624200000_alfred_domain_schema.sql`.
 | SYS-CONTACTS-016 | `send_message_to_profile_smoke.sql` — invio senza contatto in rubrica |
 | SYS-CONTACTS-018 | `SYS-MAILBOX-045` |
 
-Gate: `bash scripts/check-spec-sync.sh` · `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

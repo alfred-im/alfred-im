@@ -127,7 +127,7 @@ Inbound federato: `author_address` = `fqdn(envelope.from_user, signer_im_server_
 | PROM-CHAT-PEER-KEY-012 | `mailbox_schema_smoke.sql` — nessuna cache inbox |
 | PROM-CHAT-PEER-KEY-013, 014, 015 | Review spec + migrazione schema §7.7 TEMP |
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` · `integration` + `e2e`
+Gate: `bash scripts/verify.sh` · `bash scripts/test.sh integration`
 
 ---
 

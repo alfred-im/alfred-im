@@ -29,9 +29,8 @@ Comandi / stati / transizioni toccati: <!-- es. FocusAccount, InboxVisible; oppu
 
 ## Verifica
 
-- [ ] `cd client && bash scripts/verify.sh` (gate CI — igiene codice)
+- [ ] `bash scripts/verify.sh` (root — unica verifica)
 - [ ] `bash scripts/check-spec-sync.sh` (se toccate `docs/specs/` o `supabase/migrations/`)
-- [ ] `cd client && bash scripts/test.sh e2e` (se toccati **media**, **multi-account**, **auth**, **push-on-resume** — validazione release)
 
 ## Registro
 

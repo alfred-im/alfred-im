@@ -39,8 +39,8 @@ Navigazione per AI.
 - **Codice**: `client/` · `supabase/`
 - [client/README.md](../client/README.md) · [`.cursor/rules/main.mdc`](../.cursor/rules/main.mdc) · [AGENTS.md](../AGENTS.md)
 - [AGENT_DEBUG_ACCOUNTS.md](./AGENT_DEBUG_ACCOUNTS.md) — account agente; non toccare test1–4
-- [testing/strategy.md](./testing/strategy.md) — gate vs release; **riferimento test:** `client/e2e/release-snake.spec.ts`
-- [client/scripts/test/README.md](../client/scripts/test/README.md) — catalogo suite (`e2e`)
+- [testing/strategy.md](./testing/strategy.md) — verifica unica (`bash scripts/verify.sh`); **riferimento spec:** `client/e2e/release-snake.spec.ts`
+- [client/scripts/test/README.md](../client/scripts/test/README.md) — catalogo comandi client
 - [client/deploy/README.md](../client/deploy/README.md) — deploy Fly, build web (`--pwa-strategy=none`), benchmark avvio demo
 
 ---

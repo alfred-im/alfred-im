@@ -63,7 +63,7 @@ Pattern UI trasversale — nessun bounded context dedicato.
 |---------|----------|
 | PROM-BOTTOM-ANCHOR-001–007 | `conversation_scroll_anchor_test.dart`; `anchored_message_list.dart` |
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

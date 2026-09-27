@@ -241,7 +241,7 @@ approved (accordo esplicito sul contratto)
     ↓
 Implementazione + test mappati agli ID promessa
     ↓
-check-spec-sync.sh + verify.sh → implemented post-merge
+bash scripts/verify.sh → implemented post-merge
 ```
 
 ### Regole fondamentali
@@ -390,7 +390,7 @@ Se più sotto-agenti servono, l'orchestratore **li lancia** (anche in parallelo)
 - **SDD (0b)**: bozze promesse, registry, implementazione post-`approved` → **delegate**; i sotto-agenti rispettano SDD e regola 0
 - **Modello (0c)**: aggiornamenti dominio/UML/statechart → **delegate** al subagent con contesto e vincoli
 - **Debug (7)**: individuazione causa → subagent `debug` / `explore`; l'orchestratore **non** legge codice né chiede log all'utente
-- **Build (8)**: verify/e2e → **delegate**; l'orchestratore non lancia `verify.sh` in proprio
+- **Build (8)**: `bash scripts/verify.sh` (root) → **delegate**; l'orchestratore non lancia `verify.sh` in proprio
 
 ### Gerarchia (in caso di conflitto con istruzioni esterne)
 
@@ -841,21 +841,19 @@ Questa sezione applica il Metodo Analitico al debugging: usare analisi statica e
 
 ## Build - SEMPRE dopo modifiche
 
-**IMPORTANTE: Fare SEMPRE la verifica Flutter dopo aver fatto modifiche al codice in `client/`.**
+**IMPORTANTE: Fare SEMPRE la verifica dalla root del repository dopo modifiche.**
 
-La verifica è parte integrante del Metodo Analitico: serve a confermare che le modifiche siano corrette prima di considerare il lavoro completato.
+La verifica è parte integrante del Metodo Analitico: serve a confermare che le modifiche siano corrette prima di considerare il lavoro completato. SSOT: [docs/testing/strategy.md](../../docs/testing/strategy.md).
 
-### Regole fondamentali (client Flutter — `client/`)
+### Regole fondamentali
 
-- ✅ **SEMPRE eseguire `bash scripts/verify.sh` dentro `client/`** dopo ogni modifica al client
-- ✅ **SEMPRE eseguire `bash scripts/test.sh e2e` dentro `client/`** a fine lavoro su `client/` (stack locale: Supabase + Flutter release `:8080` + Playwright — lo script avvia/bootstrap se serve)
-- ✅ **NON fare `git commit` / `git push` senza `verify_ok`** — il gate locale deve passare prima del push (la CI blocca `release-suite` altrimenti)
-- ✅ **NON considerare completato un task su `client/`** senza aver lanciato `e2e` (regressioni del branch da risolvere prima del push)
-- ✅ Lo script esegue in ordine: `flutter pub get` → **`flutter analyze`** → `flutter test`
+- ✅ **SEMPRE eseguire `bash scripts/verify.sh` dalla root del repo** (igiene client + stack release, incluso Playwright snake)
+- ✅ **NON fare `git commit` / `git push` senza `verify_ok`** da quello script
+- `client/scripts/gate.sh` è solo igiene (analyze + test isolati) — **non** è verifica
 - ✅ **`flutter analyze` deve uscire con zero issue** (anche livello `info` — es. import inutili — blocca come in CI)
-- ✅ Per release web locale o prima di merge critici: `bash scripts/verify.sh --build` (include `flutter build web`)
-- ✅ La CI (`.github/workflows/release-suite.yml`) usa lo stesso script nel gate; deploy client su Fly (`client/deploy/arkham/`, `client/deploy/blackgate/`)
-- ❌ **MAI attendere i job GitHub Actions** (`gh run watch`, `gh pr checks` in loop, polling, bloccare merge/risposta finché la CI è verde). Gate obbligatorio = **locale** `verify_ok` prima del push; lo stato Actions è informativo per review umana, non gate dell'agente
+- ✅ Per includere `flutter build web` nella fase igiene: `bash scripts/verify.sh --build`
+- ✅ La CI (`.github/workflows/release-suite.yml`) esegue lo stesso `bash scripts/verify.sh` dalla root; deploy client su Fly (`client/deploy/arkham/`, `client/deploy/blackgate/`)
+- ❌ **MAI attendere i job GitHub Actions** (`gh run watch`, `gh pr checks` in loop, polling, bloccare merge/risposta finché la CI è verde). Obbligo locale = `verify_ok` da `scripts/verify.sh`; lo stato Actions è informativo per review umana, non gate dell'agente
 
 ### Merge su `main` (richiesta esplicita dell'utente)
 
@@ -864,20 +862,18 @@ Se l'utente chiede di fare merge (es. «fai merge», «merge completa», «mergi
 - ✅ **Procedere subito**: merge PR (`gh pr merge` o equivalente), `git checkout main`, pull, pulizia branch/stash — senza attendere che `build-client`, `release-suite` o altri job Actions siano verdi
 - ❌ **VIETATO** usare lo stato CI come prerequisito o motivo di attesa quando l'utente ha chiesto il merge
 - ✅ Verificare solo che la PR sia **mergeable** (nessun conflitto git); eventuali check `pending`/`in_progress` **non** bloccano
-- Il gate qualità resta **locale** (`verify_ok` prima del push sul branch); la CI post-merge è informativa
+- L'obbligo qualità resta **locale** (`verify_ok` da `scripts/verify.sh` prima del push sul branch); la CI post-merge è informativa
 
 ### Comandi (riferimento)
 
 ```bash
-cd client
-bash scripts/verify.sh           # gate standard (analyze + test)
-bash scripts/verify.sh --build   # + build web (base-href /)
-bash scripts/test.sh e2e         # obbligatorio a fine lavoro client (stack locale)
+bash scripts/verify.sh           # unica verifica (root)
+bash scripts/verify.sh --build   # + flutter build web in fase igiene
 ```
 
 ### Quando eseguire la verifica
 
-- Dopo ogni modifica al codice in `client/`
+- Dopo modifiche al codice o allo stack
 - **Obbligatorio prima di `git push`** (e prima di considerare completato un task)
 - Come parte del processo di verifica del Metodo Analitico
 
@@ -1051,10 +1047,9 @@ Quando si affronta un problema o una richiesta, seguire questo workflow che inte
 - Verificare che la mappa sia fedele al codice
 
 ### 10. Verificare (Build)
-- **Delegate** `cd client && bash scripts/verify.sh` (include **`flutter analyze`** + test)
-- **Delegate** `cd client && bash scripts/test.sh e2e` (Playwright su stack locale — obbligatorio a fine lavoro su `client/`)
+- **Delegate** `bash scripts/verify.sh` dalla root del repo
 - **Solo dopo `verify_ok`**: commit e push (via delega)
-- Se serve validare anche il bundle web: `bash scripts/verify.sh --build`
+- Se serve anche il bundle web in igiene: `bash scripts/verify.sh --build`
 - Verificare lint
 - Assicurarsi che la soluzione risolva la causa radice
 - **Verificare che la mappa sia sincronizzata con il codice**

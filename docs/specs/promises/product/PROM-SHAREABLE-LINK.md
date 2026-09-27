@@ -157,7 +157,7 @@ Amend esplicito: non unificare i due livelli.
 | PROM-SHAREABLE-LINK-023 | `account_sidebar_test.dart` — Condividi account attivo → `ShareParams` |
 | PROM-SHAREABLE-LINK-007, 040–043 | Review spec — assenza id interni, path viewer, no clipboard primario |
 
-Gate (post-implementazione): `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate (post-implementazione): `bash scripts/verify.sh`
 
 ---
 

@@ -109,7 +109,7 @@ Su tentativo invio **outbound** senza consenso proprio: errore server struttural
 | PROM-RECEPTION-FILTER-020, 021 | `reception_allowlist_gate_smoke.sql`; nessun campo client `reception_rejected` |
 
 
-Gate: `bash scripts/check-spec-sync.sh` + `verify.sh` + smoke SQL + `integration`
+Gate: `bash scripts/verify.sh` · `bash scripts/test.sh integration`
 
 ---
 

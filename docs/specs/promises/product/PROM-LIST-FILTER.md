@@ -96,7 +96,7 @@ Pattern UI trasversale — nessun bounded context dedicato. Binding per superfic
 | SURF-ALLOWLIST (estensione) | `allowed_people_screen.dart` + `allowed_people_screen_test.dart` |
 
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

@@ -34,8 +34,8 @@ Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri fi
 | **Diagrammi UML** | `model/uml/<context>/` | Guide |
 | **Statechart client** | `client/lib/machines/<context>/` | Guide |
 | **Guida operativa feature** | [`guides/<topic>.md`](./guides/) | Promesse (regole); domain (significato) |
-| **Gate vs release** (filosofia test) | [`testing/strategy.md`](./testing/strategy.md) | `README.md` (tabella breve) |
-| **Comandi test** (catalogo suite) | [`client/scripts/test/README.md`](../client/scripts/test/README.md) | `AGENTS.md` (hub); `PROJECT_MAP` (teaser) |
+| **Verifica** (obbligo unico) | [`testing/strategy.md`](./testing/strategy.md) | `README.md` (teaser); non copiare il comando ovunque |
+| **Comandi client/test** (catalogo hub) | [`client/scripts/test/README.md`](../client/scripts/test/README.md) | `AGENTS.md` (hub); `PROJECT_MAP` (teaser) |
 | **Account debug agente** | [`AGENT_DEBUG_ACCOUNTS.md`](./AGENT_DEBUG_ACCOUNTS.md) | `AGENTS.md`; promesse (scenario manuale → `ci-agent*`) |
 | **Credenziali CI locale** | [`scripts/ci-agents.env.sh`](../scripts/ci-agents.env.sh) | Solo stack `supabase start` |
 | **Cronologia merge** (archeologia) | [`CHANGELOG.md`](../CHANGELOG.md) | Non SSOT per comportamento attuale |
@@ -74,7 +74,7 @@ Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri fi
 | Capire delivery post-#179 | `mailbox-inbox-outbox-spec.md` → `contracts/rpc.md` |
 | Capire federazione (modello) | `domain/federation/README.md` → `gotham-protocol.md` |
 | Capire cosa significa ✓✓ | `server-as-reception.md` |
-| Eseguire test | `client/scripts/test/README.md` · filosofia: `testing/strategy.md` |
+| Eseguire verifica | `testing/strategy.md` · comandi client: `client/scripts/test/README.md` |
 | Debug account | `AGENT_DEBUG_ACCOUNTS.md` |
 | Orientamento repo | `PROJECT_MAP.md` → questo file se dubbio su duplicati |
 
@@ -88,7 +88,8 @@ Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri fi
 | Lista promesse aggiornata in `full-stack.md` | `registry.md` |
 | Regole MUST duplicate in guide | File `PROM-*` / `SURF-*` |
 | Credenziali test in più file | `ci-agents.env.sh` (locale) · niente credenziali live in repo |
-| Comandi test copiati in 4 README | `client/scripts/test/README.md` |
+| Comando di verifica copiato in 4 README | `testing/strategy.md` (rimanda) |
+| Catalogo hub client duplicato | `client/scripts/test/README.md` |
 | Flusso delivery diagrammato in 3 posti | `mailbox-inbox-outbox-spec.md` |
 
 ---

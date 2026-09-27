@@ -160,9 +160,9 @@ Ogni invocazione di `RegisterDeviceForPush` dichiara **scope** e **reason** espl
 | PROM-PUSH-NOTIFY-022 | Scenario manuale §6 |
 | **PROM-PUSH-NOTIFY-045–047** | `client/e2e/release-snake.spec.ts` (`core.push.*`, `core.photo.*`); `client/test/unit/push_sync_policy_test.dart`; `client/test/unit/session_authority_test.dart` |
 | **PROM-PUSH-NOTIFY-048–049, 053** | `client/test/unit/push_sync_policy_test.dart` (scope + `notificationPermissionJustGranted`); `client/e2e/release-snake.spec.ts` (`core.push.tap_multi_account`); backlog e2e: `push-permission-grant-multi-account` (nome proposto) |
-| **PROM-PUSH-NOTIFY-047** | `bash scripts/test.sh e2e`; `push_sync_policy_test.dart` (`PushMediaSyncGuard`) |
+| **PROM-PUSH-NOTIFY-047** | `bash scripts/verify.sh`; `push_sync_policy_test.dart` (`PushMediaSyncGuard`) |
 
-**Gate**: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` + smoke SQL + `bash scripts/test.sh e2e`
+**Gate**: `bash scripts/verify.sh`
 
 ---
 

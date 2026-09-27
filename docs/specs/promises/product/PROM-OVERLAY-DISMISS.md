@@ -78,7 +78,7 @@ Pattern UI trasversale — nessun bounded context dedicato. Prima implementazion
 | PROM-OVERLAY-DISMISS-020–021 | `peer_profile_overlay.dart` — nessun callback dismiss nel parent |
 
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

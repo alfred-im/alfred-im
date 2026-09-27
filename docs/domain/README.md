@@ -104,7 +104,7 @@ Ogni `docs/domain/<context>/README.md` dichiara **un solo** stato tra:
 
 Mappa contesti e relazioni: [bounded-contexts.md](./bounded-contexts.md) · [context-map.puml](../model/context-map.puml).
 
-Gate CI: `bash scripts/check-model-sync.sh` (invocato da `client/scripts/verify.sh`).
+Igiene: `bash scripts/check-model-sync.sh` (invocato da `client/scripts/gate.sh`, quindi da `bash scripts/verify.sh`).
 
 ---
 

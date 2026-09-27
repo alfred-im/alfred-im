@@ -86,7 +86,7 @@ Binding UX e service worker per notifiche Web Push VAPID: permesso browser, regi
 | SURF-NOTIFICATIONS-012–013 | `client/test/unit/push_sync_policy_test.dart` (scope `FocusedAccount` / `AllOpenAccounts`, grant transition); `client/e2e/release-snake.spec.ts` (`core.push.tap_multi_account`); backlog e2e: `push-permission-grant-multi-account` (nome proposto — grant OS → tutti gli account) |
 | PROM-PUSH-NOTIFY-022 | Scenario manuale in [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md) §6 |
 
-**Gate**: `bash scripts/check-spec-sync.sh` + `verify.sh` + `bash scripts/test.sh e2e` (stack locale)
+**Gate**: `bash scripts/verify.sh`
 
 ---
 

@@ -95,7 +95,7 @@ L'utente Alfred riceve notifiche su **tutti i dispositivi** dove ha aperto un ac
 | SYS-PUSH-023 | `supabase/tests/push_multi_device_smoke.sql` |
 | SYS-PUSH-013 | `supabase/functions/send-push/index.ts` (cleanup endpoint 410) |
 
-**Gate**: `bash scripts/check-spec-sync.sh` + smoke SQL + `bash scripts/test.sh integration-push` (post-implementazione)
+**Gate**: `bash scripts/verify.sh` · `bash scripts/test.sh integration-push` (post-implementazione)
 
 ---
 

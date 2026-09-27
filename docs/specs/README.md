@@ -185,7 +185,7 @@ Classificare: SYSTEM | PRODUCT | SURFACE → draft → approved
     ↓
 Implementazione + test (transizioni modello + ID promessa)
     ↓
-check-spec-sync.sh + verify.sh
+bash scripts/verify.sh
     ↓
 Post-merge: bump Stato in [registry.md](./registry.md) (`approved` → `implemented`) + CHANGELOG (+ hub sotto)
 ```
@@ -196,7 +196,7 @@ Post-merge: bump Stato in [registry.md](./registry.md) (`approved` → `implemen
 2. Aggiornare file promessa (testo MUST/SHOULD) + [registry.md](./registry.md) (**stato lifecycle solo registry**).
 3. Se backend: aggiornare `contracts/schema.md` e/o `contracts/rpc.md`.
 4. Implementare; test citano ID promessa.
-5. `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`.
+5. `bash scripts/verify.sh`.
 6. PR template: checkbox promesse compilate.
 
 ### Checklist allineamento doc (post-merge su `main`)
@@ -221,15 +221,9 @@ bash scripts/check-spec-sync.sh
 
 Verifica: registry, promesse PRODUCT/SURFACE/SYSTEM, contratti `contracts/`, coerenza migrazioni.
 
-### Gate CI vs validazione release
+### Verifica
 
-| | Gate CI | Validazione release |
-|---|---------|----------------------|
-| **Cosa** | `verify.sh` — lint + test Dart isolati | `e2e`, `integration`, `release`, … |
-| **Quando** | Ogni PR (`client/**`) | Ogni release / dopo cambi che l’utente vede |
-| **Cosa dimostra** | Il codice compila e i pezzi isolati non regrediscono | L’app funziona sul percorso reale |
-
-**SSOT test:** [SSOT.md](../SSOT.md) · [testing/strategy.md](../testing/strategy.md) · [client/scripts/test/README.md](../../client/scripts/test/README.md)
+**SSOT:** [testing/strategy.md](../testing/strategy.md) — unica verifica `bash scripts/verify.sh` (root). Comandi client: [client/scripts/test/README.md](../../client/scripts/test/README.md).
 
 ---
 

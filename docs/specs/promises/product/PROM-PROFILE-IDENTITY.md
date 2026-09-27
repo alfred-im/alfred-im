@@ -86,7 +86,7 @@ Schema backend (`profiles`, bucket `avatars`): [SYS-PROFILE](../system/SYS-PROFI
 | PROM-PROFILE-IDENTITY-020 | [SYS-CONTACTS](../system/SYS-CONTACTS.md); RPC senza campo email |
 
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

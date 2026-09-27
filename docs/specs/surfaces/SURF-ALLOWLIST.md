@@ -77,7 +77,7 @@ Binding completo schermata «Persone consentite»: filtro lista, aggiunta/rimozi
 | SURF-ALLOWLIST-011 | `reception_allowlist_controller.dart` — reload dopo add/remove |
 | SURF-ALLOWLIST-012 | Review spec — voci distinte bare vs FQDN |
 
-Gate: `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 
