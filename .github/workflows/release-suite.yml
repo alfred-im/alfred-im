@@ -8,6 +8,7 @@ on:
       - '.github/workflows/release-suite.yml'
       - 'client/**'
       - 'supabase/**'
+      - 'scripts/verify.sh'
       - 'scripts/ci-*.sh'
       - 'scripts/ci-*.sql'
       - 'scripts/run-sql-smoke.sh'
@@ -18,6 +19,7 @@ on:
       - '.github/workflows/release-suite.yml'
       - 'client/**'
       - 'supabase/**'
+      - 'scripts/verify.sh'
       - 'scripts/ci-*.sh'
       - 'scripts/ci-*.sql'
       - 'scripts/run-sql-smoke.sh'
@@ -53,9 +55,6 @@ jobs:
           cache: npm
           cache-dependency-path: client/package-lock.json
 
-      - name: Gate (verify.sh)
+      - name: Verify
         run: bash scripts/verify.sh
-        working-directory: client
-
-      - name: Release suite (stack locale, sequenziale)
-        run: bash scripts/ci-release-tests.sh
+        working-directory: .

@@ -1,12 +1,12 @@
+#!/usr/bin/env bash
 # Copyright (C) 2026 im.alfred
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
-
-#!/usr/bin/env bash
-# Gate CI — stesso script in release-suite.yml.
-# Exit code != 0 su qualsiasi issue di flutter analyze (inclusi livello info).
 #
-# Catalogo completo suite: bash scripts/test.sh list  (vedi scripts/test/README.md)
+# Igiene client — flutter analyze + test isolati. NON è verifica.
+# Verifica unica: dalla root del repository, bash scripts/verify.sh
+#
+# Catalogo comandi client: bash scripts/test.sh list  (vedi scripts/test/README.md)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -28,9 +28,10 @@ for arg in "$@"; do
       RUN_BUILD=1
       ;;
     -h|--help)
-      echo "Usage: scripts/verify.sh [--build]"
-      echo "  Default: flutter pub get, flutter analyze, flutter test"
+      echo "Usage: scripts/gate.sh [--build]"
+      echo "  Igiene client: flutter pub get, flutter analyze, flutter test"
       echo "  --build: aggiunge flutter build web (base-href /)"
+      echo "  NON è verifica. Verifica unica: bash scripts/verify.sh (root del repo)"
       exit 0
       ;;
     *)
@@ -59,4 +60,4 @@ if [[ "$RUN_BUILD" == 1 ]]; then
   flutter build web --release --base-href "/"
 fi
 
-echo "verify_ok"
+echo "gate_ok"

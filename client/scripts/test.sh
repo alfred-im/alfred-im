@@ -1,14 +1,14 @@
+#!/usr/bin/env bash
 # Copyright (C) 2026 im.alfred
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
-
-#!/usr/bin/env bash
-# Hub test Alfred — catalogo e launcher per tutte le suite.
+#
+# Hub comandi client Alfred — catalogo suite mirate (non verifica).
 #
 #   bash scripts/test.sh list          # elenco suite
-#   bash scripts/test.sh gate          # gate CI (default)
-#   bash scripts/test.sh manual        # suite release completa (stack locale)
+#   bash scripts/test.sh gate          # igiene client
 #
+# Verifica unica: dalla root del repository, bash scripts/verify.sh
 # Dettaglio: scripts/test/README.md
 set -euo pipefail
 
@@ -21,39 +21,44 @@ shift || true
 
 print_catalog() {
   cat <<'EOF'
-Alfred client — suite test
-==========================
+Alfred client — comandi test
+============================
 
-GATE (CI) — igiene codice (mock/fake, niente browser):
+IGIENE (non verifica):
   gate              flutter analyze + flutter test (esclusi tag stack, diagnostic)
-                    → bash scripts/verify.sh [--build]
+                    → bash scripts/gate.sh [--build]
+  unit              solo flutter test (esclusi tag stack)
 
-STACK LOCALE (CI + release) — supabase start + Flutter :8080:
+STACK LOCALE — comandi mirati (non verifica):
   sql-smoke         tutti gli smoke SQL (supabase/tests/*.sql)
-  e2e               ★ RELEASE: serpente Playwright unico (19 scenari, retries=0)
-  flusso-reale      alias di e2e (compatibilità)
   integration       API multi-account + contratto spunte (stack locale)
   integration-ticks Solo contratto spunte (✓ / ✓✓ grigie / ✓✓ blu)
   integration-push  Smoke SQL push (stack locale)
   stack             flutter test --tags stack (GoTrue locale)
-  release           suite completa stack (alias: manual, ci)
-  manual            alias di release
 
 UTILITÀ:
   diagnose          ambiente flutter web / Chrome CDP / Playwright
   spec-sync         bash ../scripts/check-spec-sync.sh (SDD)
 
+Verifica unica (root del repository):
+  bash scripts/verify.sh
+
 Esempi:
   bash scripts/test.sh gate
-  bash scripts/test.sh release
   bash scripts/test.sh sql-smoke
+  bash scripts/test.sh integration
 
-Documentazione: scripts/test/README.md
+Documentazione: scripts/test/README.md · docs/testing/strategy.md
 EOF
 }
 
+use_root_verify() {
+  echo "Comando rimosso dal hub client. Verifica: bash scripts/verify.sh dalla root del repository." >&2
+  exit 2
+}
+
 run_gate() {
-  bash scripts/verify.sh "$@"
+  bash scripts/gate.sh "$@"
 }
 
 run_sql_smoke() {
@@ -73,45 +78,6 @@ ensure_local_stack_env() {
   source "$REPO_ROOT/scripts/ci-ensure-local-stack.sh"
 }
 
-run_e2e() {
-  ensure_local_stack_env
-  # shellcheck source=lib/e2e-flutter-port.sh
-  source "$ROOT/scripts/lib/e2e-flutter-port.sh"
-  # shellcheck source=lib/e2e-local-stack.sh
-  source "$ROOT/scripts/lib/e2e-local-stack.sh"
-  e2e_write_web_config_json
-
-  # Riavvio pulito: config.json locale + build release (non debug DDC).
-  local stale_pids
-  stale_pids="$(_e2e_flutter_port_pids)"
-  if [[ -n "$stale_pids" ]]; then
-    echo "==> Termino Flutter su :${E2E_FLUTTER_PORT} (e2e richiede release + config.json)"
-    echo "$stale_pids" | xargs -r kill
-    sleep 2
-  fi
-
-  if ! e2e_resolve_flutter_port; then
-    SESSION_NAME="flutter-e2e-all"
-    tmux -f /exec-daemon/tmux.portal.conf kill-session -t "=$SESSION_NAME" 2>/dev/null || true
-    tmux -f /exec-daemon/tmux.portal.conf new-session -d -s "$SESSION_NAME" -c "$ROOT" -- "${SHELL:-bash}" -l
-    tmux -f /exec-daemon/tmux.portal.conf send-keys -t "$SESSION_NAME:0.0" \
-      "cd $ROOT && /opt/flutter/bin/flutter run -d web-server --release --web-port=${E2E_FLUTTER_PORT:-8080} --web-hostname=0.0.0.0 \
-      --dart-define=SUPABASE_URL=${SUPABASE_URL} \
-      --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
-      --dart-define=ALFRED_DIAGNOSTIC_LOG=true" C-m
-    e2e_wait_flutter_ready
-    e2e_warm_flutter_compile
-  fi
-
-  if [[ ! -x node_modules/.bin/playwright ]]; then
-    echo "==> npm install (Playwright)"
-    npm install
-    npx playwright install chromium
-  fi
-  echo "==> Playwright release snake (ALFRED_BASE_URL=${ALFRED_BASE_URL})"
-  bash scripts/lib/run-release-snake-playwright.sh "$@"
-}
-
 run_stack() {
   ensure_local_stack_env
   echo "==> flutter test --tags stack"
@@ -127,20 +93,11 @@ run_diagnose() {
   bash scripts/diagnose-test-env.sh "$@"
 }
 
-run_real_flow() {
-  echo "==> ★ Flusso utente reale — alias release snake (browser + DB + tap veri)"
-  run_e2e "$@"
-}
-
-run_release() {
-  bash "$REPO_ROOT/scripts/ci-release-tests.sh" "$@"
-}
-
 case "$CMD" in
   list|help|-h|--help)
     print_catalog
     ;;
-  gate|verify)
+  gate)
     run_gate "$@"
     ;;
   sql-smoke|sql)
@@ -159,12 +116,6 @@ case "$CMD" in
   integration-push|push)
     bash scripts/integration-push.sh "$@"
     ;;
-  flusso-reale|real-flow|integration-photo-repro|photo-repro)
-    run_real_flow "$@"
-    ;;
-  e2e|playwright)
-    run_e2e "$@"
-    ;;
   stack|live)
     run_stack "$@"
     ;;
@@ -174,12 +125,13 @@ case "$CMD" in
   spec-sync|sdd)
     bash ../scripts/check-spec-sync.sh "$@"
     ;;
-  release|manual|all-manual|ci)
-    run_release "$@"
+  verify|e2e|playwright|release|manual|all-manual|ci|flusso-reale|real-flow|integration-photo-repro|photo-repro)
+    use_root_verify
     ;;
   *)
     echo "Comando sconosciuto: $CMD" >&2
     echo "Usa: bash scripts/test.sh list" >&2
+    echo "Verifica: bash scripts/verify.sh dalla root del repository." >&2
     exit 2
     ;;
 esac

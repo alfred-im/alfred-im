@@ -1,9 +1,10 @@
+#!/usr/bin/env bash
 # Copyright (C) 2026 im.alfred
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
-
-#!/usr/bin/env bash
-# Suite release sequenziale — un solo stack, un solo build web, un solo Playwright.
+#
+# Implementazione stack release — invocata da scripts/verify.sh (root).
+# Non è un secondo comando pubblico di verifica. Storicamente anche hub test.sh release.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

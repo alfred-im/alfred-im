@@ -2,6 +2,7 @@
 # Copyright (C) 2026 im.alfred
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
-
-# Compatibilità: flusso-reale → release snake (unico e2e gate).
-exec bash "$(dirname "$0")/test.sh" e2e "$@"
+#
+# Non è un alias di verifica. Usare la root del repository.
+echo "Usa bash scripts/verify.sh dalla root del repository." >&2
+exit 2

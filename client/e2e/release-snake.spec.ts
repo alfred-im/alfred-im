@@ -6,7 +6,7 @@
  * Release gate — unico serpente e2e (cast comune, transizioni, ordine core).
  *
  * Copre i 19 scenari release funzionali in un solo test Playwright.
- * CI e `bash scripts/test.sh e2e` eseguono solo questo file (`--retries=0`).
+ * CI e `bash scripts/verify.sh` (root) eseguono solo questo file (`--retries=0`).
  * Benchmark Fly: `demo-live-startup-timing.spec.ts` (manuale, fuori gate).
  */
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';

@@ -1,8 +1,8 @@
+#!/usr/bin/env bash
 # Copyright (C) 2026 im.alfred
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
-
-#!/usr/bin/env bash
+#
 # Diagnostica ambiente test Cloud Agent — eseguire PRIMA di computerUse / Playwright.
 # Exit 0 = OK per test API; exit 1 = problemi noti che causano hang o falsi negativi.
 set -euo pipefail
@@ -85,11 +85,12 @@ fi
 
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then
-  echo "diagnose_ok — ambiente pronto per verify.sh e integration-multi-account.sh"
+  echo "diagnose_ok — ambiente pronto per bash scripts/verify.sh (root) e integration-multi-account.sh"
 else
   echo "diagnose_failed — NON usare computerUse finché CDP/8080 non sono sani"
   echo "  Test consigliati senza browser:"
-  echo "    bash scripts/verify.sh"
+  echo "    bash scripts/gate.sh"
   echo "    bash scripts/integration-multi-account.sh"
+  echo "  Verifica unica: bash scripts/verify.sh dalla root del repository."
 fi
 exit "$FAIL"

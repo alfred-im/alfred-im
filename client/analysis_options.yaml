@@ -27,4 +27,4 @@ linter:
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
 
-# Gate CI / scripts/verify.sh: flutter analyze deve uscire senza issue (anche info).
+# Igiene / scripts/gate.sh: flutter analyze deve uscire senza issue (anche info).
