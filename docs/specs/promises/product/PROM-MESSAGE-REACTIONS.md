@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-MESSAGE-REACTIONS` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-09-15 |
 
 Promessa di prodotto: tap su un messaggio apre un menu con picker emoji; la reaction scelta è visibile sulla bolla e sincronizzata tra i partecipanti. Dati append-only (`MessageReactionFact`).

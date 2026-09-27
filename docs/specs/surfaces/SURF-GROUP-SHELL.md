@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-GROUP-SHELL` |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-08 |
 | **Promesse** | [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-GROUP](../promises/system/SYS-GROUP.md) |
 | **PR** | #162; amend home → — |

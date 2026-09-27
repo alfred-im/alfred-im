@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-ACCOUNT-SIDEBAR` |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-07 |
 | **Promesse** | [PROM-MULTI-ACCOUNT](../promises/product/PROM-MULTI-ACCOUNT.md), [PROM-PROFILE-IDENTITY](../promises/product/PROM-PROFILE-IDENTITY.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md) (`ProfileSummary` in manifest), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
 | **PR** | #140, #147, #152, #162, #178 |

@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-PEER-PROFILE` |
-| **Status** | `approved` |
 | **Ultima revisione** | 2026-09-13 |
 | **Promesse** | [PROM-PEER-PROFILE](../promises/product/PROM-PEER-PROFILE.md), [PROM-OVERLAY-DISMISS](../promises/product/PROM-OVERLAY-DISMISS.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) |
 | **PR** | #163, #176, #178 |

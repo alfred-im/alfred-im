@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-GROUP-CONVERSATION` |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-08 |
 | **Promesse** | [PROM-GROUP-AUTHOR-DISPLAY](../promises/product/PROM-GROUP-AUTHOR-DISPLAY.md), [PROM-GROUP-TICKS](../promises/product/PROM-GROUP-TICKS.md), [PROM-CHAT-MEDIA](../promises/product/PROM-CHAT-MEDIA.md), [PROM-MESSAGE-MENTION](../promises/product/PROM-MESSAGE-MENTION.md), [PROM-BOTTOM-ANCHOR](../promises/product/PROM-BOTTOM-ANCHOR.md), [SURF-GROUP-HOME](./SURF-GROUP-HOME.md) |
 | **PR** | #162 |

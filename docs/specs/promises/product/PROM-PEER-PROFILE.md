@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-PEER-PROFILE` |
 | **Classe** | PRODUCT |
-| **Status** | `approved` |
 | **Ultima revisione** | 2026-09-13 |
 | **PR origine** | #163, #176 |
 | **Amend** | address-based + `get_profiles` — distillazione [TEMP-chat-peer-key-address-drift.md](../../../tmp/TEMP-chat-peer-key-address-drift.md) §7 |

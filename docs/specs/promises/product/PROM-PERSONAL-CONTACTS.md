@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-PERSONAL-CONTACTS` |
 | **Classe** | PRODUCT |
-| **Status** | `approved` |
 | **Ultima revisione** | 2026-09-13 |
 | **PR origine** | #109 (schema + CRUD), #134 (profili in ricerca) |
 | **Amend** | rubrica solo `address` — distillazione [TEMP-chat-peer-key-address-drift.md](../../../tmp/TEMP-chat-peer-key-address-drift.md) §7 |

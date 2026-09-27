@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-INBOX` |
-| **Status** | `approved` |
 | **Ultima revisione** | 2026-09-13 |
 | **Promesse** | [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md), [PROM-REALTIME-ARCHIVE](../promises/product/PROM-REALTIME-ARCHIVE.md), [PROM-CHAT-PEER-KEY](../promises/product/PROM-CHAT-PEER-KEY.md) |
 | **PR** | #132, #161 |

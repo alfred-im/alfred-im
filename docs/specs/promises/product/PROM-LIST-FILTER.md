@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-LIST-FILTER` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #132 (inbox); #171 (contatti e persone consentite) |
 

@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-SHAREABLE-LINK` |
 | **Classe** | PRODUCT |
-| **Status** | `approved` |
 | **Ultima revisione** | 2026-09-13 |
 | **PR origine** | #178 |
 | **Amend** | equivalenza a strati §7.13–7.14 — distillazione [TEMP-chat-peer-key-address-drift.md](../../../tmp/TEMP-chat-peer-key-address-drift.md) §7 |

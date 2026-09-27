@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `SYS-OWNER` |
 | **Classe** | SYSTEM |
-| **Status** | `approved` |
 | **Ultima revisione** | 2026-08-30 |
 
 Account `profile_kind = owner`: stesso comportamento messaging di `user`, con pannelli amministrativi in client. Assegnazione **solo manuale** (SQL su `profiles`).

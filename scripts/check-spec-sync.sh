@@ -82,6 +82,21 @@ for surf in "$SURFACES_DIR"/SURF-*.md; do
   fi
 done
 
+echo "==> SDD: nessun campo Status nei file promessa/superficie (lifecycle solo in registry)"
+# Lifecycle vive solo in registry.md colonna Stato. I file PROM/SURF/SYS/_template
+# non devono avere la riga header `| **Status** |`. Contratti (`**Status**:`) e
+# la parola Status in prosa/MUST (es. PROM-MESSAGE-STATUS) sono fuori scope.
+while IFS= read -r spec_file; do
+  [[ -n "$spec_file" ]] || continue
+  if grep -q '| \*\*Status\*\* |' "$spec_file"; then
+    echo "ERROR: $spec_file contiene riga Status — lo stato lifecycle vive solo in $REGISTRY (colonna Stato)" >&2
+    ERR=1
+  fi
+done < <(
+  find docs/specs/promises docs/specs/surfaces -name '*.md' ! -name 'README.md'
+  find docs/specs -maxdepth 1 -name '_template-*.md'
+)
+
 echo "==> SDD: nessun residuo cartella capabilities"
 if [[ -d docs/specs/capabilities ]]; then
   echo "ERROR: docs/specs/capabilities/ ancora presente — rimuovere" >&2

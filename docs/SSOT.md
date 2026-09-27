@@ -18,8 +18,8 @@ Per ogni **tipo di informazione** esiste **un** documento canonico. Gli altri fi
 | **Processo agente** (regola 0, SDD, modello, orchestrazione 0d) | [`.cursor/rules/main.mdc`](../.cursor/rules/main.mdc) | `AGENTS.md` (solo VM/toolchain) |
 | **Mappa sessione** (stack, URL, dove sta il codice) | [`PROJECT_MAP.md`](../PROJECT_MAP.md) | `README.md` (solo teaser); `full-stack.md` |
 | **Ingresso pubblico OSS** | [`README.md`](../README.md) | — |
-| **Catalogo promesse** (ID, stato, binding) | [`specs/registry.md`](./specs/registry.md) | `full-stack.md` § aree; `WISHLIST.md` «Già» |
-| **Testo promessa** (MUST/SHOULD, tracciabilità) | File in `specs/promises/` · `specs/surfaces/` | Guide (solo puntatori) |
+| **Catalogo promesse** (ID, stato, binding) | [`specs/registry.md`](./specs/registry.md) — **stato solo qui** | `full-stack.md` § aree; `WISHLIST.md` «Già» |
+| **Testo promessa** (MUST/SHOULD, tracciabilità) | File in `specs/promises/` · `specs/surfaces/` (**senza** header Status) | Guide (solo puntatori) |
 | **Processo SDD** (lifecycle, classi) | [`specs/README.md`](./specs/README.md) | `README.md` Contributing (teaser) |
 | **DDL, enum, RLS, tabelle** | [`specs/contracts/schema.md`](./specs/contracts/schema.md) | `SYS-*.md` §3 sintesi; ADR |
 | **Firme RPC, semantica SQL** | [`specs/contracts/rpc.md`](./specs/contracts/rpc.md) | ADR; `SYS-*.md` §3 |

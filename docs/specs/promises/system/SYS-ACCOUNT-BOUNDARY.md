@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `SYS-ACCOUNT-BOUNDARY` |
 | **Classe** | SYSTEM |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-11 |
 | **ADR** | [multi-account-parallel-sessions.md](../../../decisions/multi-account-parallel-sessions.md) |
 | **PR origine** | #179 |

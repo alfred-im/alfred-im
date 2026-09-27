@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-BOTTOM-ANCHOR` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-08 |
 
 Promessa di prodotto: la lista messaggi in conversazione resta **agganciata al fondo** mentre l'utente legge i messaggi recenti; scroll nello storico **stacca** l'aggancio; pulsante ↓ e badge per messaggi arrivati mentre staccato.

@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `SYS-DELIVERY` |
 | **Classe** | SYSTEM |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-09-15 |
 | **ADR** | [server-as-reception.md](../../../decisions/server-as-reception.md), [gotham-protocol.md](../../../architecture/gotham-protocol.md) |
 | **PR origine** | #179 |

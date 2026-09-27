@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-{NAME}` |
-| **Status** | `draft` \| `approved` \| `implemented` \| `deprecated` \| `superseded` |
 | **Ultima revisione** | YYYY-MM-DD |
 | **Promesse** | [PROM-…](../promises/product/PROM-….md) |
 
@@ -49,4 +48,4 @@ Binding promesse PRODUCT/SYSTEM su una schermata o widget.
 
 - [registry.md](./registry.md)
 
-Aggiornare [registry.md](./registry.md) quando si crea o cambia stato questa superficie.
+Lo stato lifecycle si aggiorna **solo** in [docs/specs/registry.md](./registry.md) (colonna Stato). Il file non ha campo Status.

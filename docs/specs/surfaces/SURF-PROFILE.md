@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-PROFILE` |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-06 |
 | **Promesse** | [SYS-PROFILE](../promises/system/SYS-PROFILE.md) |
 | **PR** | #118, #134 |

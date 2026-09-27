@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `SYS-PUSH` |
 | **Classe** | SYSTEM |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-15 |
 | **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) · [push-payload.md](../../contracts/push-payload.md) |
 | **Correlata** | [SYS-DELIVERY](./SYS-DELIVERY.md), [SYS-RECEPTION](./SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](./SYS-ACCOUNT-BOUNDARY.md) |

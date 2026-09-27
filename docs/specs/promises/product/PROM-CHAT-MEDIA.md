@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-CHAT-MEDIA` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-09-15 |
 
 Promessa di prodotto: invio e visualizzazione di **foto** (`image`) e **video** (`video`) in chat, con didascalia opzionale, upload su bucket `chat-media`, coda/retry allineata a GIF/voice.

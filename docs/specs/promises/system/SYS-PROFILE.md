@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `SYS-PROFILE` |
 | **Classe** | SYSTEM |
-| **Status** | `approved` — amend §7 get_profiles + presentazione (implementazione pendente) |
 | **Ultima revisione** | 2026-09-13 |
 | **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) |
 | **PR** | #118, #134 |

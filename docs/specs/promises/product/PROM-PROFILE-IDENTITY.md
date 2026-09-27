@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-PROFILE-IDENTITY` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-06 |
 | **PR origine** | #118 (username/email), #134 (avatar, pronomi, `ProfileSummary`) |
 

@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-AUTH` |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-12 |
 | **Promesse** | [PROM-MULTI-ACCOUNT](../promises/product/PROM-MULTI-ACCOUNT.md), [PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md) |
 | **PR** | #140, #147, #152, #139 (redirect email), #178, #184 (URL web client), Fly client (#257+) |

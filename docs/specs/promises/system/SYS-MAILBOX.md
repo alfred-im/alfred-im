@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `SYS-MAILBOX` |
 | **Classe** | SYSTEM |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-09-15 |
 | **ADR** | [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../../decisions/server-as-reception.md), [no-internal-external-chat-distinction.md](../../../decisions/no-internal-external-chat-distinction.md) |
 | **PR origine** | #159, #179, #210 |

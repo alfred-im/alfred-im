@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-RECEPTION-FILTER` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-01 |
 | **PR origine** | #161, #179 |
 

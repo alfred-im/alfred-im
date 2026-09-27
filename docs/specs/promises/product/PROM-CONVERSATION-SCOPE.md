@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-CONVERSATION-SCOPE` |
 | **Classe** | PRODUCT |
-| **Status** | `approved` |
 | **Ultima revisione** | 2026-09-13 |
 | **Amend** | scope su `peer_address` — distillazione [TEMP-chat-peer-key-address-drift.md](../../../tmp/TEMP-chat-peer-key-address-drift.md) §7 |
 

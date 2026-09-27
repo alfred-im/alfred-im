@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-OUTBOUND-SEND` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #159 |
 

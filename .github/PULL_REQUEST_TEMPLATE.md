@@ -21,9 +21,9 @@ Comandi / stati / transizioni toccati: <!-- es. FocusAccount, InboxVisible; oppu
 - [ ] **Solo cosmetica theme** (colori, spacing, font — nessuna promessa toccata)
 - [ ] **Promesse aggiornate** — registro: `docs/specs/registry.md`
 
-| Classe | ID promessa | Stato | File |
-|--------|-------------|-------|------|
-| SYSTEM / PRODUCT / SURFACE | <!-- es. PROM-LIST-FILTER, SURF-CONTACTS --> | `draft` \| `approved` \| `implemented` | <!-- path --> |
+| Classe | ID promessa | Stato (colonna in `registry.md`) | File |
+|--------|-------------|----------------------------------|------|
+| SYSTEM / PRODUCT / SURFACE | <!-- es. PROM-LIST-FILTER, SURF-CONTACTS --> | `draft` \| `approved` \| `implemented` | <!-- path; testo MUST/SHOULD, non header Status --> |
 
 - ID toccati: <!-- es. PROM-LIST-FILTER-010, SURF-CONTACTS-001, SYS-MAILBOX-020, oppure N/A -->
 

@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `SYS-RECEPTION` |
 | **Classe** | SYSTEM |
-| **Status** | `approved` — amend §7 allowed_address (implementazione pendente) |
 | **Ultima revisione** | 2026-09-13 |
 | **Contratti** | [schema.md](../../contracts/schema.md) · [rpc.md](../../contracts/rpc.md) |
 | **PR** | #161, #179 |

@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-INSTANCE-CONFIG` |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-08-31 |
 | **Promesse** | [SYS-OWNER](../promises/system/SYS-OWNER.md) |
 

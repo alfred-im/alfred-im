@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-ALLOWLIST` |
-| **Status** | `approved` |
 | **Ultima revisione** | 2026-09-13 |
 | **Promesse** | [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md), [PROM-RECEPTION-FILTER](../promises/product/PROM-RECEPTION-FILTER.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md) |
 | **PR** | #161 |

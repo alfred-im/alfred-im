@@ -86,6 +86,8 @@ draft → approved → implemented → deprecated | superseded
 | `implemented` | Su `main`; tracciabilità verificata |
 | `deprecated` / `superseded` | Non usare per nuovo lavoro |
 
+Lo stato lifecycle vive **solo** in [registry.md](./registry.md) (colonna Stato). I file PROM/SURF/SYS non hanno campo Status.
+
 ---
 
 ## Struttura directory
@@ -158,7 +160,7 @@ Solo token theme: colori, padding, font, animazioni non legate a semantica. Refa
 |--|-----|----------|
 | **Ambito** | Processo end-to-end | Solo scrittura fisica nel repo |
 | **Gate** | Promessa `approved` + tracciabilità | «Vuoi che proceda con le modifiche?» |
-| **Prima di implementare** | Promessa in `approved` | Conferma esplicita alla domanda di scrittura |
+| **Prima di implementare** | Promessa `approved` in [registry.md](./registry.md) (file = testo, non Status) | Conferma esplicita alla domanda di scrittura |
 
 **Nessun gate alternativo**: issue, PR, Cloud Agent non sostituiscono SDD né regola 0.
 
@@ -185,13 +187,13 @@ Implementazione + test (transizioni modello + ID promessa)
     ↓
 check-spec-sync.sh + verify.sh
     ↓
-Post-merge: implemented + registry + CHANGELOG (+ hub sotto)
+Post-merge: bump Stato in [registry.md](./registry.md) (`approved` → `implemented`) + CHANGELOG (+ hub sotto)
 ```
 
 ### Workflow PR
 
 1. Classificare promesse toccate (SYSTEM / PRODUCT / SURFACE).
-2. Aggiornare file promessa + [registry.md](./registry.md).
+2. Aggiornare file promessa (testo MUST/SHOULD) + [registry.md](./registry.md) (**stato lifecycle solo registry**).
 3. Se backend: aggiornare `contracts/schema.md` e/o `contracts/rpc.md`.
 4. Implementare; test citano ID promessa.
 5. `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`.
@@ -202,7 +204,7 @@ Post-merge: implemented + registry + CHANGELOG (+ hub sotto)
 1. **`README.md`** — se cambia posizionamento pubblico, getting started o community policy
 2. **`PROJECT_MAP.md`** — stato corrente
 3. **`CHANGELOG.md`** — voce in `[Unreleased]`
-4. **`docs/specs/`** — [registry.md](./registry.md) (`approved` → `implemented`); `contracts/` se SYSTEM
+4. **`docs/specs/`** — [registry.md](./registry.md) colonna Stato (`approved` → `implemented`); `contracts/` se SYSTEM. Non impostare Status sul file promessa.
 5. **`docs/architecture/full-stack.md`** — sezione interessata
 6. **`docs/INDICE.md`** — nuove guide o promesse
 7. **`client/README.md`** — se cambia toolchain client

@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-{NAME}` |
 | **Classe** | PRODUCT |
-| **Status** | `draft` \| `approved` \| `implemented` \| `deprecated` \| `superseded` |
 | **Ultima revisione** | YYYY-MM-DD |
 | **Superseded by** | `PROM-…` / `SURF-…` (se applicabile) |
 
@@ -76,6 +75,6 @@ Ogni promessa vincolante: `PROM-{NAME}-NNN`.
 |-----------|--------|
 | [registry.md](./registry.md) (da `promises/product/`: `../../registry.md`) | Indice promesse |
 
-Aggiornare il registry quando si crea o cambia stato questa promessa.
+Lo stato lifecycle si aggiorna **solo** in [docs/specs/registry.md](./registry.md) (colonna Stato). Il file non ha campo Status.
 
 > **Path:** questo template va in `docs/specs/promises/product/` — usare `../../../` per `domain/` e `model/`; `../../../../` per `client/` (da `promises/product/`).

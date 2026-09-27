@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `SYS-GROUP` |
 | **Classe** | SYSTEM |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-09-13 |
 | **ADR** | [address-based-messaging.md](../../../decisions/address-based-messaging.md), [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../../decisions/server-as-reception.md) |
 | **PR origine** | #162 |

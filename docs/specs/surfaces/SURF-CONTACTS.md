@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-CONTACTS` |
-| **Status** | `approved` |
 | **Ultima revisione** | 2026-09-13 |
 | **Promesse** | [PROM-LIST-FILTER](../promises/product/PROM-LIST-FILTER.md), [PROM-PERSONAL-CONTACTS](../promises/product/PROM-PERSONAL-CONTACTS.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md) |
 | **PR** | #109, #134 |

@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-REALTIME-ARCHIVE` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-27 |
 | **PR origine** | #159, #179 |
 

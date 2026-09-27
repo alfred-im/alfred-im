@@ -7,6 +7,8 @@
 
 Legenda stato: `draft` | `approved` | `implemented` | `deprecated` | `superseded`
 
+La colonna **Stato** è l'unica fonte lifecycle. I file PROM/SURF/SYS non hanno campo Status.
+
 ---
 
 ## SYSTEM — piattaforma

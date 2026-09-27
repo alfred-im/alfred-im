@@ -219,7 +219,7 @@ Se l'utente osserva un comportamento diverso → promessa toccata → SDD obblig
 |--|--------|----------|
 | **Ambito** | Processo end-to-end | Solo scrittura fisica nel repo |
 | **Gate** | Promessa `approved` + tracciabilità verificabile | «Vuoi che proceda con le modifiche?» |
-| **Prima di implementare** | File promessa + [registry.md](../../docs/specs/registry.md) a stato **`approved`** | Conferma esplicita alla domanda di scrittura |
+| **Prima di implementare** | [registry.md](../../docs/specs/registry.md) a stato **`approved`** (file promessa = testo MUST/SHOULD, non lifecycle) | Conferma esplicita alla domanda di scrittura |
 | **Task «completato» senza codice** | Sì — `draft`/`approved` in attesa è successo | Sì — analisi senza scrittura è successo |
 
 ### Workflow obbligatorio
@@ -233,7 +233,7 @@ Regola 0 + fix puntuali
     ↓ Promessa toccata
 Classificare SYSTEM | PRODUCT | SURFACE
     ↓
-Bozza promessa + registry (draft) — SENZA codice prodotto
+Bozza testo promessa + registry (Stato `draft`) — SENZA codice prodotto
     ↓
 approved (accordo esplicito sul contratto)
     ↓
@@ -246,7 +246,7 @@ check-spec-sync.sh + verify.sh → implemented post-merge
 
 ### Regole fondamentali
 
-- ❌ **NON** implementare prima di promessa **`approved`**
+- ❌ **NON** implementare prima di promessa **`approved`** in [registry.md](../../docs/specs/registry.md)
 - ❌ **NON** trattare issue o chat come sostituto del registro promesse
 - ❌ **NON** implementare pattern PRODUCT su superficie senza SURF-* che lo referenzia (anti-drift)
 - ❌ **NON** usare PR/commit come gate al posto della SDD

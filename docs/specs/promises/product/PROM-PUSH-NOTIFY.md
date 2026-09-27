@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-PUSH-NOTIFY` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-09-13 |
 | **Amend** | payload `peerAddress` — distillazione TEMP §7.19; politica sync multi-account (post-incidente foto PWA #229) |
 

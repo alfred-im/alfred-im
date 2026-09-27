@@ -3,7 +3,6 @@
 | Campo | Valore |
 |-------|--------|
 | **Superficie ID** | `SURF-NOTIFICATIONS` |
-| **Status** | `approved` |
 | **Ultima revisione** | 2026-09-13 |
 | **Promesse** | [PROM-PUSH-NOTIFY](../promises/product/PROM-PUSH-NOTIFY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md), [PROM-CONVERSATION-SCOPE](../promises/product/PROM-CONVERSATION-SCOPE.md) |
 | **Amend** | payload `peerAddress` — distillazione TEMP §7.19 |

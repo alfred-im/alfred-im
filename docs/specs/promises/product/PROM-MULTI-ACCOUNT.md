@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-MULTI-ACCOUNT` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-26 |
 | **PR origine** | #140 (UX/shell), #147 (persistenza), #152 (single-active GoTrue) |
 

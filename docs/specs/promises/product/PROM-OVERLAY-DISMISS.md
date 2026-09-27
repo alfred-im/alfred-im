@@ -4,7 +4,6 @@
 |-------|--------|
 | **Promessa ID** | `PROM-OVERLAY-DISMISS` |
 | **Classe** | PRODUCT |
-| **Status** | `implemented` |
 | **Ultima revisione** | 2026-07-19 |
 | **PR origine** | #163 |
 
