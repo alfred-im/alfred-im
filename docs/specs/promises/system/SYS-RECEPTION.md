@@ -92,7 +92,7 @@ Vedi [contracts/schema.md](../../contracts/schema.md) · [SYS-MAILBOX](./SYS-MAI
 | SYS-RECEPTION-005–009 | `bash scripts/test.sh integration` |
 | SYS-RECEPTION-028 | `supabase/tests/rpc_helper_security_smoke.sql` |
 
-Gate: `bash scripts/check-spec-sync.sh` · `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

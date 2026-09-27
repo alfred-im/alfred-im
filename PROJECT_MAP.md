@@ -127,7 +127,7 @@
 | **State** | **Macchine** (`client/lib/machines/<context>/`) + **coordinatori** (`client/lib/coordinators/`) + controller UI sottili; composition root: `AuthController` |
 | **Backend** | `SupabaseClient` della sessione in **focus** (una GoTrue attiva) — REST + Realtime + RPC |
 | **Config** | `lib/config/app_config.dart` — `--dart-define=SUPABASE_URL` |
-| **Gate CI** | `scripts/verify.sh` — igiene: sync spec/modello + analyze + test Dart isolati (**non** valida il prodotto) |
+| **Igiene** | `client/scripts/gate.sh` — sync spec/modello + analyze + test Dart isolati (**non** è verifica) |
 | **Build web** | Locale: `flutter build web --base-href "/"`. Release Fly: `--pwa-strategy=none` + CanvasKit in immagine — vedi `client/deploy/README.md` § Build web e avvio |
 
 **Non deducibile — client layering**: `coordinators/` — `auth_session`, `push`, `contacts`, `profile`, `reception`, `inbox`, `messaging`, `navigation`, `group_home`, `group_messages`, `shareable_link` (facade UI → macchina + effetti). `adapters/external_intent_adapter.dart` — **unico ingresso** push tap / link `#` / compose → `NavigationMachine`. Messaggistica 1:1: tre macchine (`ConversationLoadMachine`, `OutboundSendMachine`, `RealtimeAttachmentMachine`) composte da `MessagingCoordinator` in `coordinators/` (facade: `MessagesController`).
@@ -195,18 +195,13 @@ Dettaglio schema, RLS, trigger: `docs/architecture/full-stack.md` §4 e [contrac
 ## 🔧 Build e Testing
 
 ```bash
-cd client
-bash scripts/verify.sh           # gate CI — igiene codice (obbligatorio prima del push)
-bash scripts/test.sh e2e         # e2e locale — obbligatorio a fine lavoro su client/
-bash scripts/verify.sh --build   # + build web
-bash scripts/test.sh e2e  # release — valida il prodotto (browser + DB)
-bash scripts/test.sh release       # stack locale completo (alias: manual, ci)
+bash scripts/verify.sh           # unica verifica (root)
+bash scripts/verify.sh --build   # + flutter build web in fase igiene
 ```
 
-- **Test:** SSOT comandi → [client/scripts/test/README.md](client/scripts/test/README.md); filosofia gate vs release → [docs/testing/strategy.md](docs/testing/strategy.md)
-- **Gate CI** (`verify.sh`): lint + test Dart isolati — non sostituisce test sul telefono
-- CI gate: `release-suite.yml` → `verify.sh`; smoke client Fly: `docker-client-fly.yml`
-- E2E: `client/e2e/` (Playwright)
+- **Test:** verifica → [docs/testing/strategy.md](docs/testing/strategy.md); comandi client → [client/scripts/test/README.md](client/scripts/test/README.md)
+- CI: `release-suite.yml` → `bash scripts/verify.sh`; smoke client Fly: `docker-client-fly.yml`
+- Playwright: `client/e2e/` (eseguito da verify)
 - SQL smoke: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, `reception_allowlist_*.sql`, `group_*.sql`, `rpc_helper_security_smoke.sql`, `send_message_to_address_smoke.sql`
 - Integrazione spunte: `bash scripts/test.sh integration-ticks` (contratto ✓ / ✓✓ / allow list)
 
@@ -250,11 +245,9 @@ Regole prodotto: [SYS-MAILBOX](docs/specs/promises/system/SYS-MAILBOX.md), [PROM
 
 Test: `bash scripts/test.sh integration-ticks`
 
-### Gate CI (igiene)
+### Verifica
 
-`verify.sh` — sync spec/modello + analyze + test Dart isolati (**487**). **Non** valida il prodotto. Smoke SQL server: `delivery_ticks_smoke.sql`, `mailbox_*.sql`, …
-
-Validazione release: `bash scripts/test.sh e2e` · catalogo in [client/scripts/test/README.md](client/scripts/test/README.md)
+`bash scripts/verify.sh` (root). Igiene da sola: `client/scripts/gate.sh`. Catalogo client: [client/scripts/test/README.md](client/scripts/test/README.md).
 
 ### File chiave client
 

@@ -28,23 +28,22 @@ Client web collegato a Supabase (contatti, inbox, chat realtime, profilo, **mult
 | **Reazioni** | Tap messaggio → overlay reazioni — `PROM-MESSAGE-REACTIONS` |
 | **@mentions** | Evidenziazione e navigazione @username in chat — `PROM-MESSAGE-MENTION` |
 | **Invio** | `send_message_to_address` |
-| **Gate test** | `verify.sh` — **487** test unit/widget (zero issue analyze) |
+| **Igiene test** | `gate.sh` — analyze + unit/widget (**non** è verifica) |
 
 Build native mobile/desktop non è focus del progetto oggi; la superficie supportata è il web client.
 
 ## Test
 
-**SSOT:** [scripts/test/README.md](scripts/test/README.md) · [docs/testing/strategy.md](../docs/testing/strategy.md)
+**SSOT verifica:** [docs/testing/strategy.md](../docs/testing/strategy.md) · **comandi client:** [scripts/test/README.md](scripts/test/README.md)
 
 ```bash
-cd client
-bash scripts/test.sh list        # catalogo
-bash scripts/test.sh gate        # gate CI — obbligatorio prima di push
-bash scripts/test.sh e2e  # release — percorso telefono (alias: flusso-reale)
-bash scripts/test.sh release       # stack locale (alias manual)
-```
+# dalla root del repository
+bash scripts/verify.sh
 
-Gate: `bash scripts/verify.sh`
+# dalla cartella client/ — comandi mirati
+bash scripts/test.sh list
+bash scripts/test.sh gate          # solo igiene
+```
 
 ## Struttura
 

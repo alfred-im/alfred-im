@@ -88,8 +88,7 @@ Binding UX conversazione peer-to-peer: stessa schermata con storico vuoto o pien
 | SURF-CHAT-020 | `message_reactions_test.dart`; `messaging_machine_test.dart` |
 | SURF-CHAT-021 | `get_profiles` batch in header chat |
 
-Igiene (CI): `verify.sh` + smoke SQL dove indicato in tabella  
-Release: `integration` + **`e2e`** (media / galleria / multi-account)
+Verifica: `bash scripts/verify.sh` · `bash scripts/test.sh integration`
 
 ---
 

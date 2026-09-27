@@ -78,7 +78,7 @@ Binding completo schermata Contatti: filtro lista, aggiunta per indirizzo, compo
 | SURF-CONTACTS-011 | `contacts_controller.dart` — `addContact` → `load()` |
 | SURF-CONTACTS-023, 024 | Review schema `contacts.address` |
 
-Gate: `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

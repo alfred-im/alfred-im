@@ -67,7 +67,7 @@ Violazioni note (debito risolto da SYS-DELIVERY): `send_message_to_profile` che 
 | SYS-ACCOUNT-BOUNDARY-006 | `group_delivery_smoke.sql`, `group_broadcast_smoke.sql` |
 | SYS-ACCOUNT-BOUNDARY-007 | `rpc_helper_security_smoke.sql` |
 
-**Gate**: `bash scripts/check-spec-sync.sh` + smoke SQL + `bash scripts/test.sh integration`
+**Gate**: `bash scripts/verify.sh` · `bash scripts/test.sh integration`
 
 ---
 

@@ -78,7 +78,7 @@ In una chat con gruppo come peer, l'utente distingue **chi ha scritto** il conte
 | PROM-GROUP-AUTHOR-DISPLAY-011 | `group_delivery_smoke.sql`; Realtime archive filter tests |
 
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

@@ -117,10 +117,10 @@ Nessun provider inbox globale — `ChangeNotifierProxyProvider` per contatti/pro
 
 **Igiene CI:** `account_storage_test`, `account_manager_view_state_test`, `multi_account_chat_scenario_test`, `inbox_realtime_archive_filter_test`
 
-**Release:**
+**Verifica:** [docs/testing/strategy.md](../testing/strategy.md)
 
 ```bash
-bash scripts/test.sh e2e   # riferimento — percorso telefono completo (alias: flusso-reale)
+bash scripts/verify.sh
 bash scripts/test.sh integration
 ```
 

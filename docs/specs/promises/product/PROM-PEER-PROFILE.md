@@ -104,7 +104,7 @@ Presentazione: `get_profiles([peer_address])` — profilo pubblico **sempre** (c
 | PROM-PEER-PROFILE-013, 014 | `peer_profile_overlay_test.dart` — CTA visibile; tap apre conversazione |
 | PROM-PEER-PROFILE-023, 024, 025 | Scenario federato — overlay con fallback indirizzo |
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

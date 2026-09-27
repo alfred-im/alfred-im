@@ -81,7 +81,7 @@ Binding UX home account `profile_kind = group`: riepilogo, persone più attive, 
 | SURF-GROUP-HOME-005, 006, 011 | `group_home_controller_test.dart` |
 | SURF-GROUP-HOME-020, 021, 022 | assenza widget ricerca/FAB; no RPC allow list altrui |
 
-Gate: `check-spec-sync.sh` + `verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

@@ -70,7 +70,7 @@ Binding UX messaggistica gruppo: attribuzione autore contenuto, header avatar+no
 | SURF-GROUP-CONVERSATION-013 | `chat_input_bar_test.dart`; `group_conversation_screen.dart` — `ChatInputBar` |
 | SURF-GROUP-CONVERSATION-007 | realtime subscribe `messages` archive filter |
 
-Gate: `check-spec-sync.sh` + `verify.sh` + smoke SQL + `integration`
+Gate: `bash scripts/verify.sh` · `bash scripts/test.sh integration`
 
 ---
 

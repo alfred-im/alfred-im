@@ -81,7 +81,7 @@ Binding UX overlay fullscreen al tap avatar di un account Alfred altrui: identit
 | SURF-PEER-PROFILE-025, 026 | `peer_profile_overlay_test.dart` — Condividi ([PROM-SHAREABLE-LINK](../promises/product/PROM-SHAREABLE-LINK.md)) |
 | SURF-PEER-PROFILE-024 | Scenario federato — overlay con fallback indirizzo |
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

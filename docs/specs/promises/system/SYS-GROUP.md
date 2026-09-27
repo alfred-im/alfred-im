@@ -184,7 +184,7 @@ broadcast_message_to_allowlist() — solo riga storico gruppo + outbox group_ero
 | SURF-AUTH-006 | `AuthScreen` — verifica manuale / e2e |
 | PROM-MULTI-ACCOUNT-031 | `account_manager_persistence_test.dart` (`profileKind` manifest) |
 
-**Gate**: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh` + smoke SQL gruppo + `integration` esteso
+**Gate**: `bash scripts/verify.sh` · `bash scripts/test.sh integration`
 
 ---
 

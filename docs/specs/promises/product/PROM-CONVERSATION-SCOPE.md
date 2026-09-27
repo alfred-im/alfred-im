@@ -47,4 +47,4 @@
 | PROM-CONVERSATION-SCOPE-009–012 | `client/test/wiring/navigation_open_ingress_test.dart`; `client/test/widget/conversation_scope_ingress_test.dart`; `client/test/unit/conversation_open_session_test.dart`; `client/test/widget/inbox_panel_test.dart` |
 | PROM-CONVERSATION-SCOPE-013 | `push_conversation_key_test.dart`; `push_tap_message_contract_test.dart` — payload `peerAddress` |
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`

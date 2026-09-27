@@ -69,7 +69,7 @@ Binding UX modifica profilo proprio: form edit, avatar, campi read-only identitÃ
 | SURF-PROFILE-007 | `profile_avatar_service.dart`; `profile_screen.dart` picker |
 | SURF-PROFILE-008 | `models_and_utils_test.dart` â€” `UserProfile.fromJson` |
 
-Gate: `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

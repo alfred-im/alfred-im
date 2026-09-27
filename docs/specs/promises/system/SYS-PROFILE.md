@@ -85,7 +85,7 @@ Nessuna RPC dedicata `update_profile` — client usa PostgREST `.from('profiles'
 | SYS-PROFILE-008 | `models_and_utils_test.dart` — `UserProfile.fromJson` |
 | SYS-PROFILE-015 | [SYS-CONTACTS](./SYS-CONTACTS.md); RPC `search_profiles` / `list_inbox` — nessun campo email |
 
-Gate: `bash scripts/check-spec-sync.sh` · `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

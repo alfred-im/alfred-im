@@ -40,18 +40,15 @@ backend out of the box.
 
 ### Merge e CI
 
-Se l'utente chiede di fare merge («fai merge», «merge completa», «merge e pulisci», ecc.): **non attendere** GitHub Actions (`gh run watch`, `gh pr checks` in loop, polling finché verde). Merge e pulizia **subito** se la PR è mergeable — vedi `.cursor/rules/main.mdc` § Build → «Merge su main». Gate obbligatorio prima del push = locale `verify_ok` + `bash scripts/test.sh e2e` (se il branch tocca `client/`); CI post-merge è informativa.
+Se l'utente chiede di fare merge («fai merge», «merge completa», «merge e pulisci», ecc.): **non attendere** GitHub Actions (`gh run watch`, `gh pr checks` in loop, polling finché verde). Merge e pulizia **subito** se la PR è mergeable — vedi `.cursor/rules/main.mdc` § Build → «Merge su main». Obbligo prima del push: [docs/testing/strategy.md](docs/testing/strategy.md). CI post-merge è informativa.
 
 ### Lint / test / build
 
-**SSOT:** [docs/testing/strategy.md](docs/testing/strategy.md) (gate vs release) · [client/scripts/test/README.md](client/scripts/test/README.md) (catalogo comandi).
+**SSOT:** [docs/testing/strategy.md](docs/testing/strategy.md) (verifica) · [client/scripts/test/README.md](client/scripts/test/README.md) (comandi client).
 
-- Hub: `cd client && bash scripts/test.sh list`
-- Gate: `cd client && bash scripts/test.sh gate` (= `verify.sh`) — obbligatorio su PR; **non** valida il telefono
-- **E2e (fine lavoro):** `cd client && bash scripts/test.sh e2e` — **obbligatorio** a fine task su `client/` (avvia Supabase locale + Flutter release `:8080` + Playwright; genera `web/config.json` e sync in `build/web`)
-- Release: `cd client && bash scripts/test.sh release` (alias `manual`, `ci`) — stack locale completo
-- Riferimento test release: [`client/e2e/release-snake.spec.ts`](client/e2e/release-snake.spec.ts) — vedi strategy § Come si scrivono i test di release
-- Web build: `cd client && bash scripts/verify.sh --build`
+- Hub client: `cd client && bash scripts/test.sh list`
+- Spec release snake: [`client/e2e/release-snake.spec.ts`](client/e2e/release-snake.spec.ts)
+- Web build (igiene): `cd client && bash scripts/gate.sh --build`
 - Prima di test GUI: `cd client && bash scripts/test.sh diagnose` — CDP morto → `cd client && bash scripts/reset-chrome-cdp.sh`
 
 ### Log diagnostici (`ALFRED_DIAGNOSTIC_LOG`)
@@ -65,7 +62,7 @@ Modulo: `client/lib/utils/diagnostic_log.dart` — **non** è promessa SDD; solo
 | **Formato** | `[alfred][push] fase …` o `… FAIL motivo key=value` |
 | **Dove leggere** | DevTools **pagina** (Console), filtro `[alfred]` — non il pannello service worker |
 
-Il dev server e2e (`bash scripts/test.sh e2e`) abilita il define sul dev server Flutter locale.
+Lo stack di `bash scripts/verify.sh` (root) abilita il define sul server Flutter locale.
 
 **Tap push:** se dopo il tap non compare `sw.message` / `open_chat.emit`, l'intento **non è entrato** in Flutter. Il canale corretto è `navigator.serviceWorker` `message` (non `window.message` per `Client.postMessage` dal SW). Se compare la catena fino a `handler.chat_opened`, il Dart ha fatto focus + chat.
 
@@ -80,7 +77,7 @@ Il dev server e2e (`bash scripts/test.sh e2e`) abilita il define sul dev server 
 - **Try it:** https://arkham-im.fly.dev/ · https://blackgate-im.fly.dev/ — `client/deploy/arkham/` / `client/deploy/blackgate/`, deploy `scripts/fly-deploy-client.sh` / `scripts/fly-deploy-blackgate.sh`
 - Build Fly: `flutter build web --pwa-strategy=none` (no SW Flutter deprecato); CanvasKit servito dall'origine — vedi `client/deploy/README.md` § Build web e avvio
 - Benchmark avvio demo: `cd client && ALFRED_BASE_URL=https://arkham-im.fly.dev/ npx playwright test e2e/demo-live-startup-timing.spec.ts`
-- Build web: `cd client && bash scripts/verify.sh --build` (base-href `/`)
+- Build web: `cd client && bash scripts/gate.sh --build` (base-href `/`)
 - Auto-deploy (opzionale): Fly Deployments → collega repo GitHub, branch `main`, working directory `.` (vedi `client/deploy/README.md`). L'agente **non** attende il deploy Fly.
 
 ### Auth / messaging gotchas (non-obvious, hit during setup)
@@ -94,12 +91,7 @@ Il dev server e2e (`bash scripts/test.sh e2e`) abilita il define sul dev server 
 
 ### Browser (computerUse) testing of Flutter web
 - **Eseguire sempre `cd client && bash scripts/diagnose-test-env.sh` prima.** Se Chrome CDP `:9222` non risponde: `cd client && bash scripts/reset-chrome-cdp.sh` poi ritestare. Non usare computerUse con CDP morto.
-- **Per validare il prodotto** usare `cd client && bash scripts/test.sh e2e` (o `release`), non il gate da solo.
-- **Gate CI** (`cd client && bash scripts/test.sh gate`) solo per igiene Dart dopo modifiche al client.
+- Verifica e comandi client: [docs/testing/strategy.md](docs/testing/strategy.md) · [client/scripts/test/README.md](client/scripts/test/README.md).
 - **Non** riavviare flutter in loop per "sbloccare" i test GUI — peggiora lo stato (port conflict, CDP morto).
 - Inputs are typeable: **click directly into a field to focus it, then type** (don't assume canvas blocks input).
 - A brief (~1s) white flash can appear during navigation transitions in the debug web build; it self-resolves and is not a crash.
-
-### Optional e2e (Playwright, in `client/`)
-- Hub: `cd client && bash scripts/test.sh e2e` (release snake unico)
-- `npm install` then `npx playwright install chromium`. Tests default to `http://localhost:8080/`; override with `ALFRED_BASE_URL`.

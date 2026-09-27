@@ -126,12 +126,11 @@ See [`client/README.md`](client/README.md) for client-specific setup and an isol
 ## Development
 
 ```bash
-cd client
-bash scripts/verify.sh          # required before push
-bash scripts/verify.sh --build  # optional web build
+bash scripts/verify.sh          # required before push (repo root)
+bash scripts/verify.sh --build  # optional: also flutter build web in hygiene phase
 ```
 
-When changing specs, domain model, or database migrations, `verify.sh` runs sync checks automatically. Manual run from repo root:
+When changing specs, domain model, or database migrations, verify runs sync checks automatically. Manual run from repo root:
 
 ```bash
 bash scripts/check-spec-sync.sh
@@ -143,13 +142,12 @@ bash scripts/check-composition-sync.sh
 
 ## Testing
 
-| Suite | Command | Ruolo |
+| Cosa | Command | Ruolo |
 |-------|---------|--------|
-| CI gate (igiene) | `cd client && bash scripts/test.sh gate` | Lint + compile + test isolati — **non** valida il prodotto |
-| **Release snake** | `cd client && bash scripts/test.sh e2e` | **Release:** percorso telefono completo (browser + DB) |
-| Catalogo completo | [`client/scripts/test/README.md`](client/scripts/test/README.md) | Tutte le suite manuali |
+| **Verifica** | `bash scripts/verify.sh` | Igiene client + stack release (Playwright snake) |
+| Comandi client | [`client/scripts/test/README.md`](client/scripts/test/README.md) | Hub mirato (`gate`, `integration`, …) |
 
-**Verde al gate ≠ Alfred funziona.** SSOT: [docs/testing/strategy.md](docs/testing/strategy.md) · comandi: [client/scripts/test/README.md](client/scripts/test/README.md)
+SSOT: [docs/testing/strategy.md](docs/testing/strategy.md)
 
 ---
 
@@ -162,8 +160,7 @@ Alfred uses **Spec-Driven Development (SDD)** — see [`docs/specs/README.md`](d
 Before opening a PR, run:
 
 ```bash
-cd client && bash scripts/verify.sh
-bash scripts/check-spec-sync.sh   # when specs or migrations change
+bash scripts/verify.sh
 ```
 
 This project is actively developed with AI assistance; there is no separate `CONTRIBUTING.md` yet. For agent-oriented workflow notes, see [`AGENTS.md`](AGENTS.md).

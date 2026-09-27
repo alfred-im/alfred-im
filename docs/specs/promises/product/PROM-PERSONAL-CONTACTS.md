@@ -96,7 +96,7 @@ Schema CRUD target (`contacts.address`, `search_profiles` per aggiunta): [SYS-CO
 | PROM-PERSONAL-CONTACTS-012 | `get_profiles` batch in lista contatti |
 | PROM-PERSONAL-CONTACTS-011 | `contacts_controller.dart` — `addContact` → `load()` |
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 

@@ -79,7 +79,7 @@ Quando un utente invia a un gruppo, le spunte sulla **propria** copia indicano s
 | PROM-GROUP-TICKS-011 | Nessuna API/UI «read by members» per mittente originale |
 
 
-Gate: `bash scripts/check-spec-sync.sh` + `verify.sh` + smoke SQL + `integration`
+Gate: `bash scripts/verify.sh` · `bash scripts/test.sh integration`
 
 ---
 

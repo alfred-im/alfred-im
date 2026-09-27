@@ -74,7 +74,7 @@ L'utente vede il proprio messaggio subito in chat (stato pending) mentre il clie
 | PROM-OUTBOUND-SEND | `bash scripts/test.sh integration` |
 
 
-Gate: `bash scripts/check-spec-sync.sh` + `cd client && bash scripts/verify.sh`
+Gate: `bash scripts/verify.sh`
 
 ---
 
