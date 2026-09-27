@@ -1,7 +1,7 @@
 # Glossario — contesto groups
 
 **Bounded context:** `groups`  
-**Ultima revisione:** 2026-07-27  
+**Ultima revisione:** 2026-09-27  
 **Promesse SDD:** [SYS-GROUP](../../specs/promises/system/SYS-GROUP.md), [SYS-DELIVERY](../../specs/promises/system/SYS-DELIVERY.md)
 
 ---
@@ -14,7 +14,7 @@
 | **Participation** | Consenso bidirezionale su allow list: gruppo consente persona **e** persona consente gruppo — nessuna tabella membership. |
 | **Group archive** | Storico unico messaggi con titolare archivio = gruppo, ordinato per data creazione. |
 | **Group shell** | Layout client senza inbox classica: home gruppo + singola conversazione gruppo. |
-| **Broadcast** | Invio dal gruppo verso tutti i partecipanti allow list; una riga archivio gruppo + fan-out worker. |
+| **Broadcast** | Invio dal gruppo verso tutti i partecipanti allow list; una riga archivio gruppo (`peer_address` = indirizzo gruppo) + fan-out worker. |
 | **Erogazione** | Worker inserisce copie proxy su archivi partecipanti dopo recapito al gruppo o broadcast. |
 | **Original author** | Chi ha scritto il contenuto; valorizzato in tutti i flussi gruppo. |
 | **Technical sender** | Mittente tecnico della riga: umano su storico gruppo; **gruppo** su copie erogate verso partecipanti. |

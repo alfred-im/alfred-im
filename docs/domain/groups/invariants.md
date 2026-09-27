@@ -3,8 +3,8 @@
 **Bounded context:** `groups`  
 **Implementazione:** `client/lib/machines/groups/`, RPC gruppo  
 **Confine prodotto:** [SYS-GROUP](../../specs/promises/system/SYS-GROUP.md)  
-**Ultima revisione:** 2026-09-13  
-**Amend:** §7.18 TEMP — gruppi come account address-based
+**Ultima revisione:** 2026-09-27  
+**Amend:** §7.18 TEMP — gruppi come account address-based; broadcast `peer_address` = gruppo
 
 ---
 
@@ -14,4 +14,4 @@
 4. Chat umano → gruppo (account `user` verso gruppo): `peer_address` = indirizzo gruppo (es. `team` o `team@arkham-im.fly.dev` secondo regole bare vs FQDN); inbox / allow list / compose / link — stesse regole address-based di qualsiasi account.
 5. Chat 1:1 con peer gruppo: storico per `peer_address`; etichetta autore obbligatoria ([PROM-GROUP-AUTHOR-DISPLAY](../../specs/promises/product/PROM-GROUP-AUTHOR-DISPLAY.md)).
 6. Erogazione automatica verso allow list del gruppo lato worker — client non scrive archivio cross-archive.
-7. Archivio interno gruppo: bounded context separato (`SYS-GROUP`: broadcast, righe senza `peer_address` controparte umana) — **non** esenta il gruppo dall'identità address-based verso l'esterno.
+7. Archivio interno gruppo: bounded context separato (`SYS-GROUP`: broadcast con `peer_address` = indirizzo gruppo; fanout con `peer_address` = membro) — **non** esenta il gruppo dall'identità address-based verso l'esterno. Nessuna riga archivio con `peer_address` NULL.

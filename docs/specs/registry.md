@@ -1,6 +1,6 @@
 # Registro promesse — Alfred
 
-**Ultima revisione**: 2026-09-13  
+**Ultima revisione**: 2026-09-27  
 **Metodo**: [README.md](./README.md) (SDD) · **SSOT indice**: [SSOT.md](../SSOT.md)
 
 **Catalogo unico** di promesse SYSTEM, PRODUCT e SURFACE. Per navigazione generale: [INDICE.md](../INDICE.md). Per cronologia merge: [CHANGELOG.md](../../CHANGELOG.md).
@@ -16,6 +16,8 @@ La colonna **Stato** è l'unica fonte lifecycle. I file PROM/SURF/SYS non hanno 
 Dettaglio implementativo (DDL, firme RPC, RLS): **[contracts/schema.md](./contracts/schema.md)** · **[contracts/rpc.md](./contracts/rpc.md)** · **[push-payload.md](./contracts/push-payload.md)**
 
 > **Amend §7 peer_address** (2026-09-13): migrazione SQL/client completata — promesse address-based sotto a stato **`implemented`**.
+>
+> **Amend SYS-GROUP-021b / 023** (2026-09-27): riga archivio broadcast usa `peer_address` = indirizzo gruppo (destinazione = gruppo, NOT NULL) — SYS-GROUP resta **`implemented`**.
 
 | Promessa ID | Titolo | Stato | File |
 |-------------|--------|-------|------|

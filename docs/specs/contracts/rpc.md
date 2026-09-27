@@ -1,7 +1,7 @@
 # Contratto RPC — messaggistica
 
-**Ultima revisione**: 2026-09-13  
-**Status**: `implemented` — amend §7 `peer_address`  
+**Ultima revisione**: 2026-09-27  
+**Status**: `implemented` — amend §7 `peer_address`; amend broadcast `peer_address` = gruppo  
 **Spec**: [SYS-MAILBOX](../promises/system/SYS-MAILBOX.md), [SYS-GROUP](../promises/system/SYS-GROUP.md), [SYS-CONTACTS](../promises/system/SYS-CONTACTS.md), [SYS-PROFILE](../promises/system/SYS-PROFILE.md), [SYS-RECEPTION](../promises/system/SYS-RECEPTION.md), [SYS-ACCOUNT-BOUNDARY](../promises/system/SYS-ACCOUNT-BOUNDARY.md), [SYS-DELIVERY](../promises/system/SYS-DELIVERY.md), [SYS-PUSH](../promises/system/SYS-PUSH.md)
 
 Fonte di verità: migrazioni in `supabase/migrations/`. PostgREST espone solo overload **espliciti** — niente ambiguità di firma.
@@ -98,7 +98,7 @@ broadcast_message_to_allowlist(
 ) → messages
 ```
 
-Validazione contenuto invariata. Broadcast: `peer_address` NULL sullo storico gruppo.
+Validazione contenuto invariata. Broadcast: `peer_address` = indirizzo del gruppo sullo storico gruppo (destinazione = gruppo; stessa chiave conversazione delle copie membro). Colonna NOT NULL — nessuna eccezione NULL.
 
 ---
 

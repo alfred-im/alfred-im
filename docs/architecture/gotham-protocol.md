@@ -705,7 +705,7 @@ Gate bidirezionale fallito → skip silenzioso su quel membro; **non** modifica 
 
 ```text
 broadcast_message_to_allowlist
-  → INSERT unica riga archivio gruppo (peer_address NULL) + outbox group_erogate
+  → INSERT unica riga archivio gruppo (peer_address = indirizzo gruppo) + outbox group_erogate
   → group_erogate → erogate_group_message (p_fanout_source = riga broadcast)
   per ogni membro eleggibile:
     → outbox deliver (message_id = riga broadcast, recipient_address nel payload)
@@ -716,7 +716,7 @@ Le copie uscita fanout su archivio gruppo **non** compaiono nello storico UI gru
 
 **Federazione (target Gotham):** ogni outbox `deliver` verso `user@server` segue lo stesso consumer federativo del 1:1 — nessun `event_kind` dedicato «gruppo federato». Il worker Gotham claima la riga, invia envelope `MESSAGE` con lo stesso `logical_message_id`, e l’istanza peer materializza il proxy sul membro remoto. Gamba con entrambi gli endpoint locali resta sincrona in transazione come oggi.
 
-**Schema:** UNIQUE `(archive_user_id, logical_message_id, peer_address)` NULLS NOT DISTINCT — consente inbound umano + N uscite membro sullo stesso archivio gruppo ([contracts/schema.md](../specs/contracts/schema.md)).
+**Schema:** UNIQUE `(archive_user_id, logical_message_id, peer_address)` — consente inbound umano + N uscite membro sullo stesso archivio gruppo. `peer_address` è NOT NULL; la riga broadcast usa l’indirizzo del gruppo, non un NULL speciale ([contracts/schema.md](../specs/contracts/schema.md)).
 
 ---
 
@@ -810,3 +810,4 @@ Questa sezione traccia l’esito della **review modello** (discussione iterativa
 | 2026-09-13 | § 9 — gruppi **in scope** federazione (correzione: non solo locale) |
 | 2026-09-13 | § 6, § 9.1 — erogazione gruppo→membro allineata a pipeline `deliver` standard (PR #284); due gambe; `erogate_group_message` orchestratore |
 | 2026-09-24 | § 11 — review modello: decisioni chiuse #1–#6; domande aperte non esaustive (review #7+, gap codice/spec) |
+| 2026-09-27 | § 9.1 — broadcast archivio gruppo: `peer_address` = indirizzo gruppo (NOT NULL), non NULL speciale |

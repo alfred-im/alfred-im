@@ -42,6 +42,12 @@ BEGIN
     RAISE EXCEPTION 'broadcast original_author must be group';
   END IF;
 
+  IF v_broadcast.peer_address IS DISTINCT FROM public.profile_bare_address(v_group) THEN
+    RAISE EXCEPTION
+      'broadcast archive peer_address must be group address, got %',
+      v_broadcast.peer_address;
+  END IF;
+
   SELECT count(*) INTO v_group_rows
   FROM public.messages m
   WHERE m.archive_user_id = v_group

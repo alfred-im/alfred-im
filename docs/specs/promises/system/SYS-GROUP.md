@@ -4,7 +4,7 @@
 |-------|--------|
 | **Promessa ID** | `SYS-GROUP` |
 | **Classe** | SYSTEM |
-| **Ultima revisione** | 2026-09-13 |
+| **Ultima revisione** | 2026-09-27 |
 | **ADR** | [address-based-messaging.md](../../../decisions/address-based-messaging.md), [mailbox-inbox-outbox-spec.md](../../../architecture/mailbox-inbox-outbox-spec.md), [server-as-reception.md](../../../decisions/server-as-reception.md) |
 | **PR origine** | #162 |
 | **Correlata** | [SYS-MAILBOX](./SYS-MAILBOX.md), [SYS-RECEPTION](./SYS-RECEPTION.md), [SYS-PROFILE](./SYS-PROFILE.md) |
@@ -86,9 +86,9 @@ Requisiti **client/UI** (shell senza inbox, registrazione toggle tipo account, b
 | **SYS-GROUP-019** | Su recapito al gruppo: UPDATE copia mittente umano `delivered_at = now()` (✓✓ = **gruppo ha ricevuto**) |
 | **SYS-GROUP-020** | **Erogazione automatica**: per ogni `allowed_address` in allow list del gruppo → outbox `deliver` + `deliver_internal` (stesso binario 1:1 / federato) |
 | **SYS-GROUP-021** | Gate erogazione: indirizzo gruppo ∈ allow list persona **e** indirizzo persona ∈ allow list gruppo — skip silenzioso se fallisce |
-| **SYS-GROUP-021b** | Fanout umano→gruppo: copia uscita su archivio gruppo (`peer_address` = membro, stesso λ dell'inbound); broadcast usa la riga archivio unica (`peer_address` NULL) |
+| **SYS-GROUP-021b** | Fanout umano→gruppo: copia uscita su archivio gruppo (`peer_address` = membro, stesso λ dell'inbound); broadcast usa la riga archivio unica (`peer_address` = indirizzo gruppo, destinazione = gruppo) |
 | **SYS-GROUP-022** | Riga erogata su archivio persona: `peer_address` = indirizzo gruppo; `author_address` = indirizzo gruppo; `author_id` = gruppo; `original_author_id` = mittente umano; stesso λ |
-| **SYS-GROUP-023** | Gruppo broadcast: storico gruppo con `peer_address` NULL; `author_address` = indirizzo gruppo; `original_author_id` = gruppo |
+| **SYS-GROUP-023** | Gruppo broadcast: storico gruppo con `peer_address` = indirizzo gruppo (destinazione = gruppo, stessa chiave dei membri); `author_address` = indirizzo gruppo; `original_author_id` = gruppo |
 | **SYS-GROUP-024** | Copie membri da broadcast: `peer_address` = indirizzo gruppo; `author_address` = indirizzo gruppo; `original_author_id` = gruppo |
 | **SYS-GROUP-025** | Erogazione verso persona che **non** passa il gate: skip silenzioso; **non** aggiorna spunte del messaggio originale |
 | **SYS-GROUP-026** | Spunte messaggio **originale** (umano→gruppo): solo ✓ accettato e ✓✓ **recapitato al gruppo**; erogazione verso altri partecipanti **non** modifica `delivered_at` / `read_at` della copia del mittente originale |
@@ -123,12 +123,12 @@ Requisiti **client/UI** (shell senza inbox, registrazione toggle tipo account, b
 
 `original_author_id` = **chi ha scritto il contenuto** (campo canonico). Valorizzato **sempre** nei flussi gruppo.
 
-| Situazione | `author_id` | `original_author_id` | `peer_address` (archivio persona) |
-|------------|-------------|----------------------|-----------------------------------|
+| Situazione | `author_id` | `original_author_id` | `peer_address` |
+|------------|-------------|----------------------|----------------|
 | Umano invia a gruppo (copia umano) | umano | **umano** | indirizzo gruppo |
 | Stesso messaggio su storico gruppo | umano | **umano** | indirizzo mittente umano |
 | Erogazione verso persona | **gruppo** | **umano** | **indirizzo gruppo** |
-| Gruppo broadcast (storico gruppo) | **gruppo** | **gruppo** | NULL |
+| Gruppo broadcast (storico gruppo) | **gruppo** | **gruppo** | **indirizzo gruppo** (destinazione = gruppo) |
 | Copia membro da broadcast | **gruppo** | **gruppo** | **indirizzo gruppo** |
 | Chat private user↔user | umano/null | NULL | indirizzo controparte |
 
@@ -148,7 +148,7 @@ send_message_to_address(p_peer_address = indirizzo_G) — solo copia mittente U 
 ### Flusso gruppo broadcast
 
 ```
-broadcast_message_to_allowlist() — solo riga storico gruppo + outbox group_erogate
+broadcast_message_to_allowlist() — riga storico gruppo (peer_address = indirizzo_G) + outbox group_erogate
   → alfred_delivery.group_erogate → erogate_group_message verso allow list
   → RETURN riga gruppo
 ```
@@ -207,7 +207,7 @@ Scenario: Erogazione bloccata — allow list persona
 Scenario: Gruppo broadcast
   Given sessione auth.uid() = G con P in allow list
   When G invia broadcast
-  Then storico G contiene una riga con original_author G
+  Then storico G contiene una riga con original_author G e peer_address = indirizzo G
   And archivio P contiene copia author G, original_author G, peer G
 ```
 
