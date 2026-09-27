@@ -24,6 +24,16 @@ BEGIN
     RAISE EXCEPTION 'messages.peer_address missing';
   END IF;
 
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'messages'
+      AND column_name = 'peer_address'
+      AND is_nullable = 'YES'
+  ) THEN
+    RAISE EXCEPTION 'messages.peer_address must be NOT NULL';
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'author_address'

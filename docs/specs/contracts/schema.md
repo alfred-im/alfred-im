@@ -1,7 +1,7 @@
 # Contratto schema — dominio mailbox (mailbox)
 
-**Ultima revisione**: 2026-09-13  
-**Status**: `implemented` — amend §7 `peer_address` / `author_address` / `allowed_address`  
+**Ultima revisione**: 2026-09-27  
+**Status**: `implemented` — amend §7 `peer_address` / `author_address` / `allowed_address`; broadcast `peer_address` NOT NULL  
 **Fonte di verità**: migrazioni in `supabase/migrations/`
 
 Contratto **tabelle ed enum** usati dalle promesse SYSTEM. Per RPC: [rpc.md](./rpc.md). Per indice promesse: [registry.md](../registry.md).
@@ -127,7 +127,7 @@ storage: chat-media, avatars, instance-branding
 
 **Rimossi come identità chat** (deriva): `peer_profile_id`, `peer_external_address`.
 
-**UNIQUE**: `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL`; `(archive_user_id, logical_message_id, peer_address)` NULLS NOT DISTINCT — consente più righe per λ su archivio gruppo (inbound umano + uscite verso membri).
+**UNIQUE**: `(archive_user_id, client_message_id)` WHERE `client_message_id IS NOT NULL`; `(archive_user_id, logical_message_id, peer_address)` — consente più righe per λ su archivio gruppo (inbound umano + uscite verso membri). La terza colonna distingue le gambe fanout; `peer_address` è NOT NULL anche sul broadcast (destinazione = indirizzo gruppo), non un NULL speciale.
 
 **Indici target**: `(archive_user_id, peer_address, created_at DESC)`, `(archive_user_id, logical_message_id)`.
 
