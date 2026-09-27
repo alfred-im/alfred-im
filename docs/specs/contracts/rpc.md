@@ -370,7 +370,7 @@ Valori: `text`, `gif`, `voice`, `location`, `image`, `video`.
 | `supabase/tests/get_profiles_smoke.sql` | Batch locale + fallback federato |
 | `supabase/tests/mailbox_read_smoke.sql` | `mark_peer_read(text)` |
 
-Gate client post-implementazione: `bash scripts/verify.sh`
+Verifica stack post-implementazione (root): `bash scripts/verify.sh`
 
 ---
 
