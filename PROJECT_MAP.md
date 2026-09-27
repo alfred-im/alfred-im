@@ -219,7 +219,7 @@ bash scripts/verify.sh --build   # + flutter build web in fase igiene
 | Account gruppo (shell, erogazione, UI autore) | ✅ |
 | Ricerca inbox on-demand, aggancio al fondo | ✅ |
 | Schema Supabase + RLS + RPC | ✅ |
-| Deploy Pages + gate CI `verify.sh` (igiene) | ✅ |
+| Deploy Pages + CI `verify.sh` (verifica stack) | ✅ |
 | Federazione cross-istanza | 🟡 Gateway/worker da implementare — vedi `docs/architecture/gotham-protocol.md` |
 
 ### Prossimi passi
